@@ -24,7 +24,7 @@ dc_graph.diagram = function (parent, _chart) {
     var _root = null;
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
-    var _constraints = 
+    var _constraints = {};
 
     _chart.width = property(200);
     _chart.height = property(200);
@@ -36,13 +36,14 @@ dc_graph.diagram = function (parent, _chart) {
     _chart.edgeKeyAccessor = property(function(kv) { return kv.key; });
     _chart.sourceAccessor = property();
     _chart.targetAccessor = property();
+    _chart.transitionDuration = property(500);
     _chart.constrainer = property({
-        edge_enter: function(edge) {},
-        node_enter: function(node) {},
-        edge_update: function(edge) {},
-        node_update: function(node) {},
-        edge_exit: function(edge) {},
-        node_exit: function(node) {}
+        edge_enter: function(edge, constraints) { return this; },
+        node_enter: function(node, constraints) { return this; },
+        edge_update: function(edge, constraints) { return this; },
+        node_update: function(node, constraints) { return this; },
+        edge_exit: function(edge, constraints) { return this; },
+        node_exit: function(node, constraints) { return this; }
     });
 
     function original(accessor) {
@@ -77,6 +78,12 @@ dc_graph.diagram = function (parent, _chart) {
 
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge');
+        var edgeExit = edge.exit();
+        _chart.constrainer().edge_enter(edgeEnter, _constraints)
+            .edge_update(edge, _constraints)
+            .edge_exit(edgeExit, _constraints);
+        edgeExit.transition(_chart.transitionDuration()).remove();
+        
     };
 
     _chart.render = function () {
