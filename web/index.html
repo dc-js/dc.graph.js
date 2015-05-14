@@ -1,6 +1,8 @@
+<!DOCTYPE html>
 <html>
 <head>
 <title>Thing</title>
+    <meta charset="UTF-8">
 </head>
 
 <body>
@@ -12,12 +14,19 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.11/crossfilter.js"></script>
 <script type="text/javascript" src="http://dc-js.github.io/dc.js/js/dc.js"></script>
-<!-- not right, need grunt web -->
-<script type="text/javascript" src="../dc.graph.js">
 
+<!-- not right, need grunt web -->
+<script type="text/javascript" src="cola.js"></script>
+<script type="text/javascript" src="../dc.graph.js"></script>
+
+<script type="text/javascript">
   var diagram = dc_graph.diagram('#graph');
 
-  d3.csv("qfs.json", function(error, data) {
+  d3.json("qfs.json", function(error, data) {
+      if(error) {
+          console.log(error);
+          return;
+      }
       var edge_ndx = crossfilter(data.links),
           node_ndx = crossfilter(data.nodes);
 
@@ -27,14 +36,14 @@
       var nodeDim = node_ndx.dimension(function(d) { return d.name; }),
           edgeDim = edge_ndx.dimension(function(d) { return d.sourcename + '->' + d.targetname; }),
           nodeGroup = nodeDim.group().reduce(function(p, v) { return v; }, function() { return null; },function() { return null; }),
-          edgeGroup = nodeDim.group().reduce(function(p, v) { return v; }, function() { return null; },function() { return null; });
+          edgeGroup = edgeDim.group().reduce(function(p, v) { return v; }, function() { return null; },function() { return null; });
 
       // reuse defaults out of laziness
       var constrainer = diagram.constrainer();
       constrainer.edge_enter = function(es, cs, nm) {
           es.each(function(e) {
-              var s = nm[e.value.source], t = nm[e.value.target];
-              if(s.class === 'Client' && t.class === 'ChunkServer') {
+              var s = nm[e.orig.value.source], t = nm[e.orig.value.target];
+              if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
                   cs[e.key] = {
                       left: s.id,
                       right: t.id,
@@ -49,9 +58,13 @@
       diagram.width(700).height(500)
           .nodeDim(nodeDim).nodeGroup(nodeGroup)
           .edgeDim(edgeDim).edgeGroup(edgeGroup)
-          .sourceAccessor(function(e) { return e.sourcename; })
-          .targetAccessor(function(e) { return e.targetname; })
+          .sourceAccessor(function(e) { return e.value.sourcename; })
+          .targetAccessor(function(e) { return e.value.targetname; })
           .constrainer(constrainer);
+
+      diagram.render();
   });
 
 </script>
+</body>
+</html>

@@ -21,11 +21,14 @@ var property = function (defaultValue) {
 
 
 dc_graph.diagram = function (parent, _chart) {
-    var _root = null;
+    // different enough from regular dc charts that we don't use bases
+    // we should use the chart registry though
+    _chart = {};
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
     var _constraints = {};
 
+    _chart.root = property(null);
     _chart.width = property(200);
     _chart.height = property(200);
     _chart.nodeDim = property();
@@ -48,7 +51,7 @@ dc_graph.diagram = function (parent, _chart) {
 
     function original(accessor) {
         return function(x) {
-            return accessor(x.original);
+            return accessor(x.orig);
         };
     }
 
@@ -61,12 +64,12 @@ dc_graph.diagram = function (parent, _chart) {
             return result;
         }, {});
         var nodes1 = nodes.map(function(v) {
-            return {original: v};
+            return {orig: v};
         });
         var edges1 = edges.map(function(v) {
-            return {original: v,
-                    source: key_index_map[this.sourceAccessor()(v)],
-                    target: key_index_map[this.targetAccessor()(v)]};
+            return {orig: v,
+                    source: key_index_map[_chart.sourceAccessor()(v)],
+                    target: key_index_map[_chart.targetAccessor()(v)]};
         });
 
         var edge = _edgeLayer.selectAll('.edge')
@@ -87,7 +90,7 @@ dc_graph.diagram = function (parent, _chart) {
         nodeEnter.append('circle')
             .attr('r', 20)
             .text(function(d) {
-                return d.original.name;
+                return d.orig.name;
             });
         var nodeExit = node.exit();
         _chart.constrainer()
@@ -114,7 +117,7 @@ dc_graph.diagram = function (parent, _chart) {
                     return Math.sqrt(dx * dx + dy * dy);
                 });
 
-                node.attr("transform", function (d) { return "translate(" + (d.x - nodeWidth/2) + "," + (d.y-nodeHeight/2) + ")"; });
+                node.attr("transform", function (d) { return "translate(" + (d.x - 20) + "," + (d.y-20) + ")"; });
             });
         return this;
     };
@@ -132,7 +135,7 @@ dc_graph.diagram = function (parent, _chart) {
     // copied from dc's baseMixin because there is a lot of stuff we don't
     // want from there (like dimension, group)
     _chart.select = function (s) {
-        return _root.select(s);
+        return _chart.root().select(s);
     };
 
     _chart.resetSvg = function () {
@@ -147,7 +150,7 @@ dc_graph.diagram = function (parent, _chart) {
         return _svg;
     }
 
-    _root = d3.select(parent);
+    _chart.root(d3.select(parent));
 
     return _chart;
 };
