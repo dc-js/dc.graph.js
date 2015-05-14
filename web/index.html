@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Thing</title>
-    <meta charset="UTF-8">
+  <title>Thing</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="graph.css"/>
 </head>
 
 <body>
@@ -40,22 +41,54 @@
 
       // reuse defaults out of laziness
       var constrainer = diagram.constrainer();
-      constrainer.edge_enter = function(es, cs, nm) {
+      constrainer.edge_enter = function(es, cs, nodes) {
           es.each(function(e) {
-              var s = nm[e.orig.value.source], t = nm[e.orig.value.target];
-              if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
-                  cs[e.key] = {
-                      left: s.id,
-                      right: t.id,
+              var s = nodes[e.source], t = nodes[e.target];
+              if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
+                  cs[e.orig.key] = {
+                      left: e.source,
+                      right: e.target,
                       axis: 'y',
                       gap: 100
+                  }
+                  // this one is just to untangle the diagram by putting metaserver left, client right
+                  cs[e.orig.key+'-funny'] = {
+                      left: e.target,
+                      right: e.source,
+                      axis: 'x',
+                      gap: 650
+                  }
+              }
+              else if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
+                  cs[e.orig.key] = {
+                      left: e.source,
+                      right: e.target,
+                      axis: 'y',
+                      gap: 100
+                  }
+              }
+              else if(s.orig.value.class === 'Metaserver' &&
+                      (t.orig.value.class === 'Attached Volume' || t.orig.value.class === 'ChunkServer')) {
+                  cs[e.orig.key] = {
+                      left: e.source,
+                      right: e.target,
+                      axis: 'y',
+                      gap: 300
+                  }
+              }
+              else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume') {
+                  cs[e.orig.key] = {
+                      left: e.source,
+                      right: e.target,
+                      axis: 'y',
+                      gap: 300
                   }
               }
           });
           return this;
       }
 
-      diagram.width(700).height(500)
+      diagram.width(960).height(1000)
           .nodeDim(nodeDim).nodeGroup(nodeGroup)
           .edgeDim(edgeDim).edgeGroup(edgeGroup)
           .sourceAccessor(function(e) { return e.value.sourcename; })

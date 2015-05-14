@@ -409,9 +409,9 @@
             "value": "140Mbps"
         },
         {
-            "sourcename": "MS0",
+            "sourcename": "Cl0",
             "source": 1,
-            "targetname": "Cl0",
+            "targetname": "MS0",
             "target": 0,
             "value": "1Mbps"
         },

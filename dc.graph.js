@@ -27,6 +27,7 @@ dc_graph.diagram = function (parent, _chart) {
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
     var _constraints = {};
+    var DEFAULT_NODE_RADIUS = 25;
 
     _chart.root = property(null);
     _chart.width = property(200);
@@ -39,6 +40,8 @@ dc_graph.diagram = function (parent, _chart) {
     _chart.edgeKeyAccessor = property(function(kv) { return kv.key; });
     _chart.sourceAccessor = property();
     _chart.targetAccessor = property();
+    _chart.nodeRadiusAccessor = property(function() { return DEFAULT_NODE_RADIUS; });
+    _chart.nodeLabelAccessor = property(function(kv) { return kv.value.label; });
     _chart.transitionDuration = property(500);
     _chart.constrainer = property({
         edge_enter: function(edge, constraints, node_map) { return this; },
@@ -64,7 +67,9 @@ dc_graph.diagram = function (parent, _chart) {
             return result;
         }, {});
         var nodes1 = nodes.map(function(v) {
-            return {orig: v};
+            return {orig: v,
+                    width: _chart.nodeRadiusAccessor()(v)*2,
+                    height: _chart.nodeRadiusAccessor()(v)*2};
         });
         var edges1 = edges.map(function(v) {
             return {orig: v,
@@ -86,12 +91,13 @@ dc_graph.diagram = function (parent, _chart) {
 
         var node = _nodeLayer.selectAll('.node')
                 .data(nodes1, original(_chart.nodeKeyAccessor()));
-        var nodeEnter = node.enter().append('g');
+        var nodeEnter = node.enter().append('g')
+                .attr('class', 'node');
         nodeEnter.append('circle')
-            .attr('r', 20)
-            .text(function(d) {
-                return d.orig.name;
-            });
+            .attr('r', original(_chart.nodeRadiusAccessor()));
+        nodeEnter.append('text')
+            .attr('class', 'nodelabel')
+            .text(original(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
         _chart.constrainer()
             .node_enter(nodeEnter, _constraints)
@@ -106,18 +112,30 @@ dc_graph.diagram = function (parent, _chart) {
         _d3cola.nodes(nodes1)
             .links(edges1)
             .constraints(constraints1)
-            .start()
+            .symmetricDiffLinkLengths(6)
+            .start(10,20,20)
             .on('tick', function() {
-                edge.attr("transform", function (d) {
-                    var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
-                    var r = 180 * Math.atan2(dy, dx) / Math.PI;
-                    return "translate(" + d.target.x + "," + d.target.y + ") rotate(" + r + ") ";
+                edge.attr("d", function (d) {
+                    var deltaX = d.target.x - d.source.x,
+                        deltaY = d.target.y - d.source.y,
+                        dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+                        normX = deltaX / dist,
+                        normY = deltaY / dist,
+                        sourcePadding = _chart.nodeRadiusAccessor()(d.source.orig),
+                        targetPadding = _chart.nodeRadiusAccessor()(d.target.orig),
+                        sourceX = d.source.x + (sourcePadding * normX),
+                        sourceY = d.source.y + (sourcePadding * normY),
+                        targetX = d.target.x - (targetPadding * normX),
+                        targetY = d.target.y - (targetPadding * normY);
+                    return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
                 }).attr("width", function (d) {
                     var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
                     return Math.sqrt(dx * dx + dy * dy);
                 });
 
-                node.attr("transform", function (d) { return "translate(" + (d.x - 20) + "," + (d.y-20) + ")"; });
+                node.attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                });
             });
         return this;
     };
