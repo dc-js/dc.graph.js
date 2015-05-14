@@ -38,11 +38,11 @@ dc_graph.diagram = function (parent, _chart) {
     _chart.targetAccessor = property();
     _chart.transitionDuration = property(500);
     _chart.constrainer = property({
-        edge_enter: function(edge, constraints) { return this; },
+        edge_enter: function(edge, constraints, node_map) { return this; },
         node_enter: function(node, constraints) { return this; },
-        edge_update: function(edge, constraints) { return this; },
+        edge_update: function(edge, constraints, node_map) { return this; },
         node_update: function(node, constraints) { return this; },
-        edge_exit: function(edge, constraints) { return this; },
+        edge_exit: function(edge, constraints, node_map) { return this; },
         node_exit: function(node, constraints) { return this; }
     });
 
@@ -69,21 +69,54 @@ dc_graph.diagram = function (parent, _chart) {
                     target: key_index_map[this.targetAccessor()(v)]};
         });
 
-        _d3cola.nodes(nodes1)
-            .links(edges1)
-            .start();
-
         var edge = _edgeLayer.selectAll('.edge')
                 .data(edges1, original(_chart.edgeKeyAccessor()));
-
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge');
         var edgeExit = edge.exit();
-        _chart.constrainer().edge_enter(edgeEnter, _constraints)
-            .edge_update(edge, _constraints)
-            .edge_exit(edgeExit, _constraints);
+
+        _chart.constrainer()
+            .edge_enter(edgeEnter, _constraints, nodes1)
+            .edge_update(edge, _constraints, nodes1)
+            .edge_exit(edgeExit, _constraints, nodes1);
         edgeExit.transition(_chart.transitionDuration()).remove();
-        
+
+        var node = _nodeLayer.selectAll('.node')
+                .data(nodes1, original(_chart.nodeKeyAccessor()));
+        var nodeEnter = node.enter().append('g');
+        nodeEnter.append('circle')
+            .attr('r', 20)
+            .text(function(d) {
+                return d.original.name;
+            });
+        var nodeExit = node.exit();
+        _chart.constrainer()
+            .node_enter(nodeEnter, _constraints)
+            .node_update(node, _constraints)
+            .node_exit(nodeExit, _constraints);
+        nodeExit.transition(_chart.transitionDuration()).remove();
+
+        var constraints1 = [];
+        for(var key in _constraints)
+            constraints1.push(_constraints[key]);
+
+        _d3cola.nodes(nodes1)
+            .links(edges1)
+            .constraints(constraints1)
+            .start()
+            .on('tick', function() {
+                edge.attr("transform", function (d) {
+                    var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
+                    var r = 180 * Math.atan2(dy, dx) / Math.PI;
+                    return "translate(" + d.target.x + "," + d.target.y + ") rotate(" + r + ") ";
+                }).attr("width", function (d) {
+                    var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
+                    return Math.sqrt(dx * dx + dy * dy);
+                });
+
+                node.attr("transform", function (d) { return "translate(" + (d.x - nodeWidth/2) + "," + (d.y-nodeHeight/2) + ")"; });
+            });
+        return this;
     };
 
     _chart.render = function () {
@@ -92,7 +125,6 @@ dc_graph.diagram = function (parent, _chart) {
         _nodeLayer = _g.append('g');
         _edgeLayer = _g.append('g');
         _d3cola = cola.d3adaptor()
-            .linkDistance(60)
             .size([_chart.width(), _chart.height()]);
         return _chart.redraw();
     };
@@ -116,6 +148,7 @@ dc_graph.diagram = function (parent, _chart) {
     }
 
     _root = d3.select(parent);
+
     return _chart;
 };
 

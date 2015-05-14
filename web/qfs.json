@@ -1,0 +1,503 @@
+{
+    "nodes": [
+        {
+            "name": "Cl0",
+            "class": "Client",
+            "label": "Cl0",
+            "state": "off",
+            "id": 0,
+            "size": "small"
+        },
+        {
+            "name": "MS0",
+            "class": "Metaserver",
+            "label": "MS0",
+            "state": "off",
+            "id": 1,
+            "size": "medium"
+        },
+        {
+            "name": "CS0",
+            "class": "ChunkServer",
+            "label": "CS0",
+            "state": "off",
+            "id": 2,
+            "size": "small"
+        },
+        {
+            "name": "CS1",
+            "class": "ChunkServer",
+            "label": "CS1",
+            "state": "off",
+            "id": 3,
+            "size": "small"
+        },
+        {
+            "name": "CS2",
+            "class": "ChunkServer",
+            "label": "CS2",
+            "state": "off",
+            "id": 4,
+            "size": "small"
+        },
+        {
+            "name": "CS3",
+            "class": "ChunkServer",
+            "label": "CS3",
+            "state": "on",
+            "id": 5,
+            "size": "small"
+        },
+        {
+            "name": "CS4",
+            "class": "ChunkServer",
+            "label": "CS4",
+            "state": "off",
+            "id": 6,
+            "size": "small"
+        },
+        {
+            "name": "CS5",
+            "class": "ChunkServer",
+            "label": "CS5",
+            "state": "off",
+            "id": 7,
+            "size": "small"
+        },
+        {
+            "name": "CS6",
+            "class": "ChunkServer",
+            "label": "CS6",
+            "state": "on",
+            "id": 8,
+            "size": "small"
+        },
+        {
+            "name": "CS7",
+            "class": "ChunkServer",
+            "label": "CS7",
+            "state": "off",
+            "id": 9,
+            "size": "small"
+        },
+        {
+            "name": "CS8",
+            "class": "ChunkServer",
+            "label": "CS8",
+            "state": "off",
+            "id": 10,
+            "size": "small"
+        },
+        {
+            "name": "CS9",
+            "class": "ChunkServer",
+            "label": "CS9",
+            "state": "off",
+            "id": 11,
+            "size": "small"
+        },
+        {
+            "name": "CS10",
+            "class": "ChunkServer",
+            "label": "CS10",
+            "state": "off",
+            "id": 12,
+            "size": "small"
+        },
+        {
+            "name": "CS11",
+            "class": "ChunkServer",
+            "label": "CS11",
+            "state": "off",
+            "id": 13,
+            "size": "small"
+        },
+        {
+            "name": "Vol0_MS0",
+            "class": "Attached Volume",
+            "label": "Vol0",
+            "state": "off",
+            "id": 14,
+            "size": "20GB"
+        },
+        {
+            "name": "Vol1_Cl0",
+            "class": "Attached Volume",
+            "label": "Vol1",
+            "state": "off",
+            "id": 15,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol6_CS4",
+            "class": "Attached Volume",
+            "label": "Vol6",
+            "state": "off",
+            "id": 16,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol3_CS1",
+            "class": "Attached Volume",
+            "label": "Vol3",
+            "state": "off",
+            "id": 17,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol9_CS7",
+            "class": "Attached Volume",
+            "label": "Vol9",
+            "state": "off",
+            "id": 18,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol10_CS8",
+            "class": "Attached Volume",
+            "label": "Vol10",
+            "state": "off",
+            "id": 19,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol7_CS5",
+            "class": "Attached Volume",
+            "label": "Vol7",
+            "state": "off",
+            "id": 20,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol13_CS11",
+            "class": "Attached Volume",
+            "label": "Vol13",
+            "state": "off",
+            "id": 21,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol11_CS9",
+            "class": "Attached Volume",
+            "label": "Vol11",
+            "state": "off",
+            "id": 22,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol4_CS2",
+            "class": "Attached Volume",
+            "label": "Vol4",
+            "state": "off",
+            "id": 23,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol2_CS0",
+            "class": "Attached Volume",
+            "label": "Vol2",
+            "state": "off",
+            "id": 24,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol8_CS6",
+            "class": "Attached Volume",
+            "label": "Vol8",
+            "state": "off",
+            "id": 25,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol5_CS3",
+            "class": "Attached Volume",
+            "label": "Vol5",
+            "state": "off",
+            "id": 26,
+            "size": "25GB"
+        },
+        {
+            "name": "Vol12_CS10",
+            "class": "Attached Volume",
+            "label": "Vol12",
+            "state": "off",
+            "id": 27,
+            "size": "25GB"
+        }
+    ],
+    "links": [
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS11",
+            "target": 13,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS10",
+            "target": 12,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS9",
+            "target": 11,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS8",
+            "target": 10,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS5",
+            "target": 7,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS4",
+            "target": 6,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS7",
+            "target": 9,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS6",
+            "target": 8,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS1",
+            "target": 3,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS0",
+            "target": 2,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS3",
+            "target": 5,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "CS2",
+            "target": 4,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "Vol0_MS0",
+            "target": 14,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS11",
+            "target": 13,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS10",
+            "target": 12,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS9",
+            "target": 11,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS8",
+            "target": 10,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS5",
+            "target": 7,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS4",
+            "target": 6,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS7",
+            "target": 9,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS6",
+            "target": 8,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS1",
+            "target": 3,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS0",
+            "target": 2,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS3",
+            "target": 5,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "CS2",
+            "target": 4,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "Cl0",
+            "source": 0,
+            "targetname": "Vol1_Cl0",
+            "target": 15,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "MS0",
+            "source": 1,
+            "targetname": "Cl0",
+            "target": 0,
+            "value": "1Mbps"
+        },
+        {
+            "sourcename": "CS4",
+            "source": 6,
+            "targetname": "Vol6_CS4",
+            "target": 16,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS1",
+            "source": 3,
+            "targetname": "Vol3_CS1",
+            "target": 17,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS7",
+            "source": 9,
+            "targetname": "Vol9_CS7",
+            "target": 18,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS8",
+            "source": 10,
+            "targetname": "Vol10_CS8",
+            "target": 19,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS5",
+            "source": 7,
+            "targetname": "Vol7_CS5",
+            "target": 20,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS11",
+            "source": 13,
+            "targetname": "Vol13_CS11",
+            "target": 21,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS9",
+            "source": 11,
+            "targetname": "Vol11_CS9",
+            "target": 22,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS2",
+            "source": 4,
+            "targetname": "Vol4_CS2",
+            "target": 23,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS0",
+            "source": 2,
+            "targetname": "Vol2_CS0",
+            "target": 24,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS6",
+            "source": 8,
+            "targetname": "Vol8_CS6",
+            "target": 25,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS3",
+            "source": 5,
+            "targetname": "Vol5_CS3",
+            "target": 26,
+            "value": "140Mbps"
+        },
+        {
+            "sourcename": "CS10",
+            "source": 12,
+            "targetname": "Vol12_CS10",
+            "target": 27,
+            "value": "140Mbps"
+        }
+    ]
+}
