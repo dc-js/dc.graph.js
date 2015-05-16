@@ -26,7 +26,6 @@ dc_graph.diagram = function (parent, _chart) {
     _chart = {};
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
-    var _constraints = {};
     var DEFAULT_NODE_RADIUS = 25;
 
     _chart.root = property(null);
@@ -45,14 +44,7 @@ dc_graph.diagram = function (parent, _chart) {
     _chart.nodePadding = property(6);
     _chart.nodeLabelAccessor = property(function(kv) { return kv.value.label; });
     _chart.transitionDuration = property(500);
-    _chart.constrainer = property({
-        edge_enter: function(edge, constraints, node_map) { return this; },
-        node_enter: function(node, constraints) { return this; },
-        edge_update: function(edge, constraints, node_map) { return this; },
-        node_update: function(node, constraints) { return this; },
-        edge_exit: function(edge, constraints, node_map) { return this; },
-        node_exit: function(node, constraints) { return this; }
-    });
+    _chart.constrain = property(function(nodes, edges) { return []; });
 
     function original(accessor) {
         return function(x) {
@@ -85,10 +77,6 @@ dc_graph.diagram = function (parent, _chart) {
                 .attr('class', 'edge');
         var edgeExit = edge.exit();
 
-        _chart.constrainer()
-            .edge_enter(edgeEnter, _constraints, nodes1)
-            .edge_update(edge, _constraints, nodes1)
-            .edge_exit(edgeExit, _constraints, nodes1);
         edgeExit.transition(_chart.transitionDuration()).remove();
 
         var node = _nodeLayer.selectAll('.node')
@@ -104,19 +92,12 @@ dc_graph.diagram = function (parent, _chart) {
         node.select('text')
             .text(original(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
-        _chart.constrainer()
-            .node_enter(nodeEnter, _constraints)
-            .node_update(node, _constraints)
-            .node_exit(nodeExit, _constraints);
+        var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.transition(_chart.transitionDuration()).remove();
-
-        var constraints1 = [];
-        for(var key in _constraints)
-            constraints1.push(_constraints[key]);
 
         _d3cola.nodes(nodes1)
             .links(edges1)
-            .constraints(constraints1)
+            .constraints(constraints)
             .symmetricDiffLinkLengths(6)
             .start(10,20,20)
             .on('tick', function() {
