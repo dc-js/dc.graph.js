@@ -143,8 +143,8 @@ dc_graph.diagram = function (parent, _chart) {
     _chart.render = function () {
         _chart.resetSvg();
         _g = _svg.append('g');
-        _nodeLayer = _g.append('g');
         _edgeLayer = _g.append('g');
+        _nodeLayer = _g.append('g');
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
             .size([_chart.width(), _chart.height()]);
