@@ -41,6 +41,8 @@ dc_graph.diagram = function (parent, _chart) {
     _chart.sourceAccessor = property();
     _chart.targetAccessor = property();
     _chart.nodeRadiusAccessor = property(function() { return DEFAULT_NODE_RADIUS; });
+    _chart.nodeColorAccessor = property(function() { return 'white'; });
+    _chart.nodePadding = property(6);
     _chart.nodeLabelAccessor = property(function(kv) { return kv.value.label; });
     _chart.transitionDuration = property(500);
     _chart.constrainer = property({
@@ -68,8 +70,8 @@ dc_graph.diagram = function (parent, _chart) {
         }, {});
         var nodes1 = nodes.map(function(v) {
             return {orig: v,
-                    width: _chart.nodeRadiusAccessor()(v)*2,
-                    height: _chart.nodeRadiusAccessor()(v)*2};
+                    width: _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding(),
+                    height: _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding()};
         });
         var edges1 = edges.map(function(v) {
             return {orig: v,
@@ -93,10 +95,13 @@ dc_graph.diagram = function (parent, _chart) {
                 .data(nodes1, original(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node');
-        nodeEnter.append('circle')
-            .attr('r', original(_chart.nodeRadiusAccessor()));
+        nodeEnter.append('circle');
         nodeEnter.append('text')
-            .attr('class', 'nodelabel')
+            .attr('class', 'nodelabel');
+        node.select('circle')
+            .attr('r', original(_chart.nodeRadiusAccessor()))
+            .attr('fill', original(_chart.nodeColorAccessor()));
+        node.select('text')
             .text(original(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
         _chart.constrainer()
