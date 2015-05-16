@@ -31,13 +31,26 @@
       var edge_ndx = crossfilter(data.links),
           node_ndx = crossfilter(data.nodes);
 
-      // these are just identity dimension/groups, with unique keys
+      // for this example we use simple identity dimension/groups, with unique keys
       // more complex node/edge generation is possible, but it is more likely that
       // grouping will happen in other kinds of charts
+
+      // when there will be exactly one or zero items in a group, a reasonable reduction
+      // is just to use the row or null
+      function one_zero_reduce(group) {
+          group.reduce(
+              function(p, v) { return v; },
+              function() { return null; },
+              function() { return null; }
+          );
+      }
       var nodeDim = node_ndx.dimension(function(d) { return d.name; }),
           edgeDim = edge_ndx.dimension(function(d) { return d.sourcename + '->' + d.targetname; }),
-          nodeGroup = nodeDim.group().reduce(function(p, v) { return v; }, function() { return null; },function() { return null; }),
-          edgeGroup = edgeDim.group().reduce(function(p, v) { return v; }, function() { return null; },function() { return null; });
+          nodeGroup = nodeDim.group(),
+          edgeGroup = edgeDim.group();
+
+      one_zero_reduce(nodeGroup);
+      one_zero_reduce(edgeGroup);
 
       // reuse defaults out of laziness
       var constrainer = diagram.constrainer();
@@ -45,6 +58,7 @@
           es.each(function(e) {
               var s = nodes[e.source], t = nodes[e.target];
               if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
+                  // vertical displacement for Client/Metaserver
                   cs[e.orig.key] = {
                       left: e.source,
                       right: e.target,
@@ -87,6 +101,35 @@
           });
           return this;
       }
+      constrainer.edge_exit = function(es, cs, nodes) {
+          es.each(function(e) {
+              delete cs[e.orig.key];
+          });
+          return this;
+      };
+      constrainer.node_enter = function(ns, constraints) {
+          // put ChunkServers and Volumes in same levels
+          function level_start() {
+              return {
+                  offsets: [],
+                  type: 'alignment',
+                  axis: 'y'
+              };
+          }
+          var CSLevel, VolLevel;
+          CSLevel = constraints['CSLevel'] = constraints['CSLevel'] || level_start();
+          VolLevel = constraints['VolLevel'] = constraints['VolLevel'] || level_start();
+          ns.each(function(n, i) {
+              switch(n.orig.value.class) {
+              case 'ChunkServer':
+                  CSLevel.offsets.push({node: i, offset: 0});
+                  break;
+              case 'Attached Volume':
+                  VolLevel.offsets.push({node: i, offset: 0});
+              }
+          });
+          return this;
+      };
 
       diagram.width(960).height(1000)
           .nodeDim(nodeDim).nodeGroup(nodeGroup)
