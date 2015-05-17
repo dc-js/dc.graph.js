@@ -85,7 +85,7 @@
                       left: e.target,
                       right: e.source,
                       axis: 'x',
-                      gap: 650
+                      gap: 700
                   });
               }
               else if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
@@ -171,7 +171,7 @@
           .dimension(startDim)
           .group(startGroup);
 
-      timeline.filter(dc.filters.RangedFilter(0,1));
+      timeline.filter(dc.filters.RangedFilter(0,2));
 
       // do not brush too fast
       dc.constants.EVENT_DELAY = 100;
