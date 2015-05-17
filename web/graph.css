@@ -1,6 +1,5 @@
 g.node circle {
-    stroke: black;
-    stroke-width: 1.5px;
+    stroke: none;
 }
 
 .edge {
