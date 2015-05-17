@@ -8,10 +8,9 @@
 </head>
 
 <body>
-<p>Network startup example.</p>
 
-<div id="graph"></div>
-<div id="timeline"></div>
+<div id="graph" class="chart"></div>
+<div id="timeline" class="chart"></div>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.11/crossfilter.js"></script>
@@ -141,7 +140,7 @@
           return constraints;
       };
 
-      diagram.width(960).height(1000)
+      diagram.width(900).height(1000)
           .nodeDim(nodeDim).nodeGroup(nodeGroup1)
           .edgeDim(edgeDim).edgeGroup(edgeGroup1)
           .sourceAccessor(function(e) { return e.value.sourcename; })
@@ -163,16 +162,16 @@
       var startDim = node_ndx.dimension(function(d) { return d.start; }),
           startGroup = startDim.group();
 
-      timeline.width(500).height(200)
-          .x(d3.scale.linear())
+      timeline.width(400).height(200)
+          .x(d3.scale.linear().domain([0,12]))
           .xUnits(dc.units.integers)
-          .elasticX(true)
+          //.elasticX(true)
           .elasticY(true)
           .brushOn(true)
           .dimension(startDim)
           .group(startGroup);
 
-      timeline.filter(dc.filters.RangedFilter(0,1));
+      //timeline.filter(dc.filters.RangedFilter(0,1));
 
       // do not brush too fast
       dc.constants.EVENT_DELAY = 100;

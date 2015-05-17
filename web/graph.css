@@ -1,3 +1,6 @@
+div.chart {
+    float: left;
+}
 g.node circle {
     stroke: none;
 }
