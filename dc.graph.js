@@ -72,7 +72,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             return e.source!==undefined && e.target!==undefined;
         });
 
-        console.log("diagram.redraw " + nodes1.length + ',' + edges1.length);
+        // console.log("diagram.redraw " + nodes1.length + ',' + edges1.length);
 
         var edge = _edgeLayer.selectAll('.edge')
                 .data(edges1, original(_chart.edgeKeyAccessor()));
@@ -107,7 +107,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             .symmetricDiffLinkLengths(6)
             .start(10,20,20)
             .on('tick', function() {
-                console.log('tick');
                 edge.attr("d", function (d) {
                     var deltaX = d.target.x - d.source.x,
                         deltaY = d.target.y - d.source.y,
