@@ -20,10 +20,9 @@ var property = function (defaultValue) {
 };
 
 
-dc_graph.diagram = function (parent, _chart) {
+dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
-    // we should use the chart registry though
-    _chart = {};
+    var _chart = {};
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
     var DEFAULT_NODE_RADIUS = 25;
@@ -65,11 +64,15 @@ dc_graph.diagram = function (parent, _chart) {
                     width: _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding(),
                     height: _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding()};
         });
-        var edges1 = edges.map(function(v) {
-            return {orig: v,
-                    source: key_index_map[_chart.sourceAccessor()(v)],
-                    target: key_index_map[_chart.targetAccessor()(v)]};
+        var edges1 = edges.map(function(e) {
+            return {orig: e,
+                    source: key_index_map[_chart.sourceAccessor()(e)],
+                    target: key_index_map[_chart.targetAccessor()(e)]};
+        }).filter(function(e) {
+            return e.source!==undefined && e.target!==undefined;
         });
+
+        console.log("diagram.redraw " + nodes1.length + ',' + edges1.length);
 
         var edge = _edgeLayer.selectAll('.edge')
                 .data(edges1, original(_chart.edgeKeyAccessor()));
@@ -95,12 +98,16 @@ dc_graph.diagram = function (parent, _chart) {
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.transition(_chart.transitionDuration()).remove();
 
+        _d3cola = cola.d3adaptor()
+            .avoidOverlaps(true)
+            .size([_chart.width(), _chart.height()]);
         _d3cola.nodes(nodes1)
             .links(edges1)
             .constraints(constraints)
             .symmetricDiffLinkLengths(6)
             .start(10,20,20)
             .on('tick', function() {
+                console.log('tick');
                 edge.attr("d", function (d) {
                     var deltaX = d.target.x - d.source.x,
                         deltaY = d.target.y - d.source.y,
@@ -131,9 +138,6 @@ dc_graph.diagram = function (parent, _chart) {
         _g = _svg.append('g');
         _edgeLayer = _g.append('g');
         _nodeLayer = _g.append('g');
-        _d3cola = cola.d3adaptor()
-            .avoidOverlaps(true)
-            .size([_chart.width(), _chart.height()]);
         return _chart.redraw();
     };
 
@@ -157,6 +161,7 @@ dc_graph.diagram = function (parent, _chart) {
 
     _chart.root(d3.select(parent));
 
+    dc.registerChart(_chart, chartGroup);
     return _chart;
 };
 

@@ -4,6 +4,7 @@
             "name": "Cl0",
             "class": "Client",
             "label": "Cl0",
+            "start": 0,
             "state": "off",
             "id": 0,
             "size": "small"
@@ -12,6 +13,7 @@
             "name": "MS0",
             "class": "Metaserver",
             "label": "MS0",
+            "start": 0,
             "state": "off",
             "id": 1,
             "size": "medium"
@@ -20,6 +22,7 @@
             "name": "CS0",
             "class": "ChunkServer",
             "label": "CS0",
+            "start": 2,
             "state": "off",
             "id": 2,
             "size": "small"
@@ -28,6 +31,7 @@
             "name": "CS1",
             "class": "ChunkServer",
             "label": "CS1",
+            "start": 1,
             "state": "off",
             "id": 3,
             "size": "small"
@@ -36,6 +40,7 @@
             "name": "CS2",
             "class": "ChunkServer",
             "label": "CS2",
+            "start": 1,
             "state": "off",
             "id": 4,
             "size": "small"
@@ -44,6 +49,7 @@
             "name": "CS3",
             "class": "ChunkServer",
             "label": "CS3",
+            "start": 1,
             "state": "on",
             "id": 5,
             "size": "small"
@@ -52,6 +58,7 @@
             "name": "CS4",
             "class": "ChunkServer",
             "label": "CS4",
+            "start": 3,
             "state": "off",
             "id": 6,
             "size": "small"
@@ -60,6 +67,7 @@
             "name": "CS5",
             "class": "ChunkServer",
             "label": "CS5",
+            "start": 4,
             "state": "off",
             "id": 7,
             "size": "small"
@@ -68,6 +76,7 @@
             "name": "CS6",
             "class": "ChunkServer",
             "label": "CS6",
+            "start": 7,
             "state": "on",
             "id": 8,
             "size": "small"
@@ -76,6 +85,7 @@
             "name": "CS7",
             "class": "ChunkServer",
             "label": "CS7",
+            "start": 5,
             "state": "off",
             "id": 9,
             "size": "small"
@@ -84,6 +94,7 @@
             "name": "CS8",
             "class": "ChunkServer",
             "label": "CS8",
+            "start": 4,
             "state": "off",
             "id": 10,
             "size": "small"
@@ -92,6 +103,7 @@
             "name": "CS9",
             "class": "ChunkServer",
             "label": "CS9",
+            "start": 8,
             "state": "off",
             "id": 11,
             "size": "small"
@@ -100,6 +112,7 @@
             "name": "CS10",
             "class": "ChunkServer",
             "label": "CS10",
+            "start": 8,
             "state": "off",
             "id": 12,
             "size": "small"
@@ -108,6 +121,7 @@
             "name": "CS11",
             "class": "ChunkServer",
             "label": "CS11",
+            "start": 5,
             "state": "off",
             "id": 13,
             "size": "small"
@@ -116,6 +130,7 @@
             "name": "Vol0_MS0",
             "class": "Attached Volume",
             "label": "Vol0",
+            "start": 1,
             "state": "off",
             "id": 14,
             "size": "20GB"
@@ -124,6 +139,7 @@
             "name": "Vol1_Cl0",
             "class": "Attached Volume",
             "label": "Vol1",
+            "start": 1,
             "state": "off",
             "id": 15,
             "size": "25GB"
@@ -132,6 +148,7 @@
             "name": "Vol6_CS4",
             "class": "Attached Volume",
             "label": "Vol6",
+            "start": 5,
             "state": "off",
             "id": 16,
             "size": "25GB"
@@ -140,6 +157,7 @@
             "name": "Vol3_CS1",
             "class": "Attached Volume",
             "label": "Vol3",
+            "start": 7,
             "state": "off",
             "id": 17,
             "size": "25GB"
@@ -148,6 +166,7 @@
             "name": "Vol9_CS7",
             "class": "Attached Volume",
             "label": "Vol9",
+            "start": 8,
             "state": "off",
             "id": 18,
             "size": "25GB"
@@ -156,6 +175,7 @@
             "name": "Vol10_CS8",
             "class": "Attached Volume",
             "label": "Vol10",
+            "start": 5,
             "state": "off",
             "id": 19,
             "size": "25GB"
@@ -164,6 +184,7 @@
             "name": "Vol7_CS5",
             "class": "Attached Volume",
             "label": "Vol7",
+            "start": 7,
             "state": "off",
             "id": 20,
             "size": "25GB"
@@ -172,6 +193,7 @@
             "name": "Vol13_CS11",
             "class": "Attached Volume",
             "label": "Vol13",
+            "start": 8,
             "state": "off",
             "id": 21,
             "size": "25GB"
@@ -180,6 +202,7 @@
             "name": "Vol11_CS9",
             "class": "Attached Volume",
             "label": "Vol11",
+            "start": 9,
             "state": "off",
             "id": 22,
             "size": "25GB"
@@ -188,6 +211,7 @@
             "name": "Vol4_CS2",
             "class": "Attached Volume",
             "label": "Vol4",
+            "start": 3,
             "state": "off",
             "id": 23,
             "size": "25GB"
@@ -196,6 +220,7 @@
             "name": "Vol2_CS0",
             "class": "Attached Volume",
             "label": "Vol2",
+            "start": 11,
             "state": "off",
             "id": 24,
             "size": "25GB"
@@ -204,6 +229,7 @@
             "name": "Vol8_CS6",
             "class": "Attached Volume",
             "label": "Vol8",
+            "start": 9,
             "state": "off",
             "id": 25,
             "size": "25GB"
@@ -212,6 +238,7 @@
             "name": "Vol5_CS3",
             "class": "Attached Volume",
             "label": "Vol5",
+            "start": 1,
             "state": "off",
             "id": 26,
             "size": "25GB"
@@ -220,6 +247,7 @@
             "name": "Vol12_CS10",
             "class": "Attached Volume",
             "label": "Vol12",
+            "start": 11,
             "state": "off",
             "id": 27,
             "size": "25GB"
