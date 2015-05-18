@@ -80,7 +80,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('class', 'edge');
         var edgeExit = edge.exit();
 
-        edgeExit.transition(_chart.transitionDuration()).remove();
+        edgeExit.remove();
 
         var node = _nodeLayer.selectAll('.node')
                 .data(nodes1, original(_chart.nodeKeyAccessor()));
@@ -96,7 +96,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .text(original(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
         var constraints = _chart.constrain()(nodes1, edges1);
-        nodeExit.transition(_chart.transitionDuration()).remove();
+        nodeExit.remove();
 
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
