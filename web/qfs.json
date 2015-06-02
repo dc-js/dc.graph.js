@@ -184,7 +184,7 @@
             "name": "Vol7_CS5",
             "class": "Attached Volume",
             "label": "Vol7",
-            "start": 7,
+            "start": 6,
             "state": "off",
             "id": 20,
             "size": "25GB"
