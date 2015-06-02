@@ -5,26 +5,52 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="graph.css"/>
   <link rel="stylesheet" type="text/css" href="http://dc-js.github.io/dc.js/css/dc.css"/>
-</head>
-
-<body>
-
-<div id="graph" class="chart"></div>
-<div id="timeline" class="chart"></div>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.11/crossfilter.js"></script>
 <script type="text/javascript" src="http://dc-js.github.io/dc.js/js/dc.js"></script>
 
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+
 <!-- not right, need grunt web -->
 <script type="text/javascript" src="cola.js"></script>
 <script type="text/javascript" src="../dc.graph.js"></script>
+</head>
+
+<body>
+
+
+<div id="graph" class="chart"></div>
+<div id="controls" class="chart" style="width: 400px">
+  <div id="time-range">
+    <label id="now">&#x21e7;</label>
+  </div>
+  <div style="margin-top: 25px">
+    <button onclick="start_stop()">start/stop</button>
+    <div id="status"></div>
+  </div>
+</div>
+
 
 <script type="text/javascript">
 
   var diagram = dc_graph.diagram('#graph');
-  var timeline = dc.barChart('#timeline');
+//  var timeline = dc.barChart('#timeline');
 
+  var steptime = 1000, pause = 2500; // ms per click; reset
+  var min = 2, max = 14;
+  var begin = min, end = 7, curr = begin;
+  var interval = null;
+
+  function do_status() {
+      $('#now').css('left', (curr-min)/(max-min)*100 + '%');
+      $('#status').text('[' + begin + '..' + end + '] : ' + curr);
+  }
+
+  do_status();
 
   d3.json("qfs.json", function(error, data) {
       if(error) {
@@ -162,16 +188,51 @@
       var startDim = node_ndx.dimension(function(d) { return d.start; }),
           startGroup = startDim.group();
 
-      timeline.width(400).height(200)
-          .x(d3.scale.linear().domain([0,12]))
-          .xUnits(dc.units.integers)
-          //.elasticX(true)
-          .elasticY(true)
-          .brushOn(true)
-          .dimension(startDim)
-          .group(startGroup);
 
-      timeline.filter(dc.filters.RangedFilter(0,2));
+      $("#time-range").slider({
+          range: true,
+          min: min,
+          max: max,
+          values: [begin, end],
+          slide: function( event, ui ) {
+              begin = ui.values[0];
+              end = ui.values[1];
+              do_status();
+          }
+      });
+      startDim.filterRange([0,curr]);
+
+      function tick() {
+          do_status();
+          startDim.filterRange([0, curr]);
+          dc.redrawAll();
+      }
+
+      window.start_stop = function() {
+          if(interval) {
+              clearInterval(interval);
+              interval = null;
+          } else {
+              interval = setInterval(function() {
+                  if(++curr >= end) {
+                      // pause at end
+                      clearInterval(interval);
+                      interval = -17;
+                      setTimeout(function() {
+                          // if still paused (ignore if start/stop pressed)
+                          if(interval === -17) {
+                              // start from scratch
+                              interval = null;
+                              curr = begin;
+                              tick();
+                              window.start_stop();
+                          }
+                      }, pause);
+                  }
+                  tick();
+              }, steptime);
+          }
+      };
 
       // do not brush too fast
       dc.constants.EVENT_DELAY = 100;
