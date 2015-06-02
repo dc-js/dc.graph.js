@@ -24,10 +24,14 @@
 
 
 <div id="graph" class="chart"></div>
-<!--div id="timeline" class="chart"></div-->
 <div id="controls" class="chart" style="width: 400px">
-  <div id="time-range"></div>
-  <button onclick="start_stop()" style="margin-top: 15px">start/stop</button>
+  <div id="time-range">
+    <label id="now">&#x21e7;</label>
+  </div>
+  <div style="margin-top: 25px">
+    <button onclick="start_stop()">start/stop</button>
+    <div id="status"></div>
+  </div>
 </div>
 
 
@@ -37,8 +41,16 @@
 //  var timeline = dc.barChart('#timeline');
 
   var steptime = 1000, pause = 2500; // ms per click; reset
-  var begin = 2, end = 7, curr = 2;
+  var min = 2, max = 14;
+  var begin = min, end = 7, curr = begin;
   var interval = null;
+
+  function do_status() {
+      $('#now').css('left', (curr-min)/(max-min)*100 + '%');
+      $('#status').text('[' + begin + '..' + end + '] : ' + curr);
+  }
+
+  do_status();
 
   d3.json("qfs.json", function(error, data) {
       if(error) {
@@ -176,29 +188,25 @@
       var startDim = node_ndx.dimension(function(d) { return d.start; }),
           startGroup = startDim.group();
 
-      /*
-      timeline.width(400).height(200)
-          .x(d3.scale.linear().domain([0,12]))
-          .xUnits(dc.units.integers)
-          //.elasticX(true)
-          .elasticY(true)
-          .brushOn(true)
-          .dimension(startDim)
-          .group(startGroup);
-
-      */
 
       $("#time-range").slider({
           range: true,
-          min: 2,
-          max: 15,
+          min: min,
+          max: max,
           values: [begin, end],
           slide: function( event, ui ) {
               begin = ui.values[0];
               end = ui.values[1];
+              do_status();
           }
       });
       startDim.filterRange([0,curr]);
+
+      function tick() {
+          do_status();
+          startDim.filterRange([0, curr]);
+          dc.redrawAll();
+      }
 
       window.start_stop = function() {
           if(interval) {
@@ -206,7 +214,7 @@
               interval = null;
           } else {
               interval = setInterval(function() {
-                  if(++curr > end) {
+                  if(++curr >= end) {
                       // pause at end
                       clearInterval(interval);
                       interval = -17;
@@ -216,12 +224,12 @@
                               // start from scratch
                               interval = null;
                               curr = begin;
+                              tick();
                               window.start_stop();
                           }
                       }, pause);
                   }
-                  startDim.filterRange([0, curr]);
-                  dc.redrawAll();
+                  tick();
               }, steptime);
           }
       };
