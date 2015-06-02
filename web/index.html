@@ -36,7 +36,7 @@
   var diagram = dc_graph.diagram('#graph');
 //  var timeline = dc.barChart('#timeline');
 
-  var steptime = 1000; // ms per click
+  var steptime = 1000, pause = 2500; // ms per click; reset
   var begin = 2, end = 7, curr = 2;
   var interval = null;
 
@@ -206,8 +206,20 @@
               interval = null;
           } else {
               interval = setInterval(function() {
-                  if(++curr > end)
-                      curr = begin;
+                  if(++curr > end) {
+                      // pause at end
+                      clearInterval(interval);
+                      interval = -17;
+                      setTimeout(function() {
+                          // if still paused (ignore if start/stop pressed)
+                          if(interval === -17) {
+                              // start from scratch
+                              interval = null;
+                              curr = begin;
+                              window.start_stop();
+                          }
+                      }, pause);
+                  }
                   startDim.filterRange([0, curr]);
                   dc.redrawAll();
               }, steptime);
