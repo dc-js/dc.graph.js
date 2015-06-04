@@ -2,7 +2,7 @@
   "name": "dc.graph.js",
   "version": "2.1.0-dev",
   "license": "Apache-2.0",
-  "copyright": "2014",
+  "copyright": "2015",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
   "keywords": [
     "visualization",
@@ -59,16 +59,16 @@
   "scripts": {
     "test": "grunt test"
   },
-  "npmName": "dc",
+  "npmName": "dc.graph",
   "npmFileMap": [
     {
       "basePath": "/",
       "files": [
-        "dc.css",
-        "dc.min.js",
-        "dc.min.js.map",
-        "dc.js",
-        "dc.js.map"
+        "dc.graph.css",
+        "dc.graph.min.js",
+        "dc.graph.min.js.map",
+        "dc.graph.js",
+        "dc.graph.js.map"
       ]
     }
   ]
