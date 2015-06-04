@@ -9,14 +9,24 @@ dc_graph.crossfilter = crossfilter;
 dc_graph.dc = dc;
 
 var property = function (defaultValue) {
-    var value = defaultValue;
-    return function (_) {
+    var value = defaultValue, react = null;
+    var ret = function (_) {
         if (!arguments.length) {
             return value;
         }
         value = _;
+        if(react)
+            react();
         return this;
     };
+    ret.react = function(_) {
+        if (!arguments.length) {
+            return react;
+        }
+        react = _;
+        return this;
+    };
+    return ret;
 };
 
 
@@ -44,6 +54,16 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeLabelAccessor = property(function(kv) { return kv.value.label; });
     _chart.transitionDuration = property(500);
     _chart.constrain = property(function(nodes, edges) { return []; });
+    _chart.initLayoutOnRedraw = property(false);
+    _chart.modLayout = property(function(layout) {});
+
+    function initLayout() {
+        _d3cola = cola.d3adaptor()
+            .avoidOverlaps(true)
+            .size([_chart.width(), _chart.height()]);
+        if(_chart.modLayout())
+            _chart.modLayout()(_d3cola);
+    }
 
     function original(accessor) {
         return function(x) {
@@ -98,13 +118,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
-        _d3cola = cola.d3adaptor()
-            .avoidOverlaps(true)
-            .size([_chart.width(), _chart.height()]);
+        if(_chart.initLayoutOnRedraw())
+            initLayout();
         _d3cola.nodes(nodes1)
             .links(edges1)
             .constraints(constraints)
-            .symmetricDiffLinkLengths(6)
             .start(10,20,20)
             .on('tick', function() {
                 edge.attr("d", function (d) {
@@ -133,6 +151,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     _chart.render = function () {
+        if(!_chart.initLayoutOnRedraw())
+            initLayout();
         _chart.resetSvg();
         _g = _svg.append('g');
         _edgeLayer = _g.append('g');

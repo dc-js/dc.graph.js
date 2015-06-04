@@ -6,18 +6,17 @@
   <link rel="stylesheet" type="text/css" href="graph.css"/>
   <link rel="stylesheet" type="text/css" href="http://dc-js.github.io/dc.js/css/dc.css"/>
 
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.11/crossfilter.js"></script>
-<script type="text/javascript" src="http://dc-js.github.io/dc.js/js/dc.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.11/crossfilter.js"></script>
+  <script type="text/javascript" src="http://dc-js.github.io/dc.js/js/dc.js"></script>
 
-<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-<script src="//code.jquery.com/jquery-1.10.2.js"></script>
-<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 
-
-<!-- not right, need grunt web -->
-<script type="text/javascript" src="cola.js"></script>
-<script type="text/javascript" src="../dc.graph.js"></script>
+  <!-- not right, need grunt web -->
+  <script type="text/javascript" src="cola.js"></script>
+  <script type="text/javascript" src="../dc.graph.js"></script>
 </head>
 
 <body>
@@ -32,18 +31,21 @@
     <button onclick="start_stop()">start/stop</button>
     <div id="status"></div>
   </div>
+  <div style="margin-top: 15px">
+    <label><input type="checkbox" id="hierarchical" checked="true">Hierarchical</label>
+  </div>
 </div>
 
 
 <script type="text/javascript">
 
   var diagram = dc_graph.diagram('#graph');
-//  var timeline = dc.barChart('#timeline');
 
   var steptime = 1000, pause = 2500; // ms per click; reset
   var min = 2, max = 12;
   var begin = min, end = 7, curr = begin;
-  var interval = null;
+  var interval = null, doRender = true;
+  var hierarchical = true;
 
   function do_status() {
       $('#now').css('left', (curr-min)/(max-min)*100 + '%');
@@ -96,6 +98,8 @@
 
       function constrain(nodes, edges) {
           var constraints = [];
+          if(!hierarchical)
+              return constraints;
           edges.forEach(function(e) {
               var s = nodes[e.source], t = nodes[e.target];
               if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
@@ -180,7 +184,12 @@
               };
               return colors[n.value.class];
           })
-          .constrain(constrain);
+          .constrain(constrain)
+          .modLayout(function(layout) {
+              if(!hierarchical)
+                  layout.symmetricDiffLinkLengths(40)
+          });
+
 
       // this is kind of a brain-dead way to test transitions
       // i mean, you can cram the concept of adding and deleting stuff over time
@@ -200,12 +209,24 @@
               do_status();
           }
       });
-      startDim.filterRange([0,curr]);
+      $('#hierarchical').change(function(val) {
+          hierarchical = $(this).is(':checked');
+          if(interval) // flag to do on timer
+              doRender = true;
+          else
+              dc.renderAll();
+      });
 
       function tick() {
           do_status();
+          diagram.initLayoutOnRedraw(hierarchical);
           startDim.filterRange([0, curr]);
-          dc.redrawAll();
+          if(doRender) {
+              dc.renderAll();
+              doRender = false;
+          }
+          else
+              dc.redrawAll();
       }
 
       window.start_stop = function() {
@@ -237,7 +258,7 @@
       // do not brush too fast
       dc.constants.EVENT_DELAY = 100;
 
-      dc.renderAll();
+      tick();
   });
 
 </script>
