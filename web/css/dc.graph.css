@@ -1,0 +1,28 @@
+div.chart {
+    float: left;
+}
+g.node circle {
+    stroke: none;
+}
+
+.edge {
+    fill: none;
+    stroke: #000;
+    stroke-width: 2.5px;
+    opacity: 0.4;
+    marker-end: url(#end-arrow);
+}
+
+text.nodelabel {
+    font: bold 12px verdana, san-serif;
+    color: #000000;
+    text-anchor: middle;
+    alignment-baseline: middle;
+    pointer-events: none;
+}
+
+text.edgelabel {
+    font: 10px verdana, san-serif;
+    fill: #aaa;
+    pointer-events: none;
+}
