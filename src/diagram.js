@@ -1,49 +1,3 @@
-/*!
- *  dc.graph 2.1.0-dev
- *  http://dc-js.github.io/dc.graph.js/
- *  Copyright 2015 Gordon Woodhull
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-(function() { function _dc_graph(d3, crossfilter, dc) {
-'use strict';
-
-var dc_graph = {
-    version: '2.1.0-dev'
-};
-
-var property = function (defaultValue) {
-    var value = defaultValue, react = null;
-    var ret = function (_) {
-        if (!arguments.length) {
-            return value;
-        }
-        value = _;
-        if(react)
-            react();
-        return this;
-    };
-    ret.react = function(_) {
-        if (!arguments.length) {
-            return react;
-        }
-        react = _;
-        return this;
-    };
-    return ret;
-};
-
-
 dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
     var _chart = {};
@@ -198,27 +152,3 @@ dc_graph.diagram = function (parent, chartGroup) {
     return _chart;
 };
 
-
-dc_graph.d3 = d3;
-dc_graph.crossfilter = crossfilter;
-dc_graph.dc = dc;
-
-return dc_graph;
-}
-    if (typeof define === 'function' && define.amd) {
-        define(["d3", "crossfilter", "dc"], _dc_graph);
-    } else if (typeof module == "object" && module.exports) {
-        var _d3 = require('d3');
-        var _crossfilter = require('crossfilter');
-        if (typeof _crossfilter !== "function") {
-            _crossfilter = _crossfilter.crossfilter;
-        }
-        var _dc = require('dc');
-        module.exports = _dc_graph(_d3, _crossfilter, _dc);
-    } else {
-        this.dc_graph = _dc_graph(d3, crossfilter, dc);
-    }
-}
-)();
-
-//# sourceMappingURL=dc.graph.js.map
