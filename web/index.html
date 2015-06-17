@@ -144,7 +144,13 @@
           edgeGroup1 = non_null(edgeGroup);
       var doReinit = querystring.reinit==="0" ? false : true,
           doDisplacement = querystring.displace==="0" ? false : true,
-          doAlignment = querystring.align==="0" ? false : true;
+          doAlignment = querystring.align==="0" ? false : true,
+          doLinkLength = false;
+      var linkLength = 40;
+      if(querystring.linklength) {
+          doLinkLength = true;
+          linkLength = +querystring.linklength;
+      }
 
       function constrain(nodes, edges) {
           var constraints = [];
@@ -240,7 +246,7 @@
           })
           .constrain(constrain)
           .modLayout(function(layout) {
-              if(!hierarchical)
+              if(!hierarchical || doLinkLength)
                   layout.symmetricDiffLinkLengths(40)
           });
 
