@@ -86,7 +86,8 @@
 
   var diagram = dc_graph.diagram('#graph');
 
-  var steptime = 1000, pause = 2500; // ms per click; reset
+  var steptime = +querystring.interval || 1000, // ms per step
+      pause = +querystring.pause || 2500; // pause at end of loop
   var min = 2, max = 12;
   var begin = min, end = 7, curr = begin;
   var interval = null, doRender = true;
