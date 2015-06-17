@@ -42,6 +42,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.redraw = function () {
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
+        if(_d3cola)
+            _d3cola.stop();
 
         var key_index_map = nodes.reduce(function(result, value, index) {
             result[_chart.nodeKeyAccessor()(value)] = index;
