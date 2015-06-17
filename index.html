@@ -3,20 +3,21 @@
 <head>
   <title>Network example</title>
   <meta charset="UTF-8">
-  <link rel="stylesheet" type="text/css" href="graph.css"/>
-  <link rel="stylesheet" type="text/css" href="http://dc-js.github.io/dc.js/css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/runner.css"/>
+  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="css/dc.css"/>
 
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.11/crossfilter.js"></script>
-  <script type="text/javascript" src="http://dc-js.github.io/dc.js/js/dc.js"></script>
+  <script type="text/javascript" src="js/d3.js"></script>
+  <script type="text/javascript" src="js/crossfilter.js"></script>
+  <script type="text/javascript" src="js/dc.js"></script>
 
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="css/jquery-ui.css">
+  <script src="js/jquery.js"></script>
+  <script src="js/jquery-ui.js"></script>
 
-  <!-- not right, need grunt web -->
-  <script type="text/javascript" src="cola.js"></script>
-  <script type="text/javascript" src="../dc.graph.js"></script>
+  <script type="text/javascript" src="js/cola.js"></script>
+  <script type="text/javascript" src="js/dc.graph.js"></script>
+  <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 </head>
 
 <body>
@@ -39,6 +40,50 @@
 
 <script type="text/javascript">
 
+  // http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+  var querystring = (function(a) {
+      if (a == "") return {};
+      var b = {};
+      for (var i = 0; i < a.length; ++i)
+      {
+          var p=a[i].split('=', 2);
+          if (p.length == 1)
+              b[p[0]] = "";
+          else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+      }
+      return b;
+  })(window.location.search.substr(1).split('&'));
+
+  function load_graph(file, callback) {
+      if(/\.json$/.test(file))
+          d3.json(file, callback);
+      else if(/\.gv|\.dot$/.test(file))
+        d3.text(file, function (error, f) {
+            if(error) {
+                callback(error, null);
+                return;
+            }
+            var digraph = graphlibDot.parse(f);
+
+            var nodeNames = digraph.nodes();
+            var nodes = new Array(nodeNames.length);
+            nodeNames.forEach(function (name, i) {
+                var v = nodes[i] = digraph._nodes[nodeNames[i]];
+                v.id = i;
+                v.name = name;
+            });
+
+            var edges = [];
+            for (var e in digraph._edges) {
+                var edge = digraph._edges[e];
+                edges.push({ source: digraph._nodes[edge.u].id, target: digraph._nodes[edge.v].id });
+            }
+            var graph = {nodes: nodes, links: edges};
+            callback(null, graph);
+        })
+  }
+
   var diagram = dc_graph.diagram('#graph');
 
   var steptime = 1000, pause = 2500; // ms per click; reset
@@ -54,7 +99,9 @@
 
   do_status();
 
-  d3.json("qfs.json", function(error, data) {
+  var file = querystring.file || "qfs.json";
+
+  load_graph(file, function(error, data) {
       if(error) {
           console.log(error);
           return;
@@ -95,78 +142,85 @@
 
       var nodeGroup1 = non_null(nodeGroup),
           edgeGroup1 = non_null(edgeGroup);
+      var doReinit = querystring.reinit==="0" ? false : true,
+          doDisplacement = querystring.displace==="0" ? false : true,
+          doAlignment = querystring.align==="0" ? false : true;
 
       function constrain(nodes, edges) {
           var constraints = [];
           if(!hierarchical)
               return constraints;
-          edges.forEach(function(e) {
-              var s = nodes[e.source], t = nodes[e.target];
-              if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
-                  // vertical displacement for Client/Metaserver
-                  constraints.push({
-                      left: e.source,
-                      right: e.target,
-                      axis: 'y',
-                      gap: 100
-                  });
-                  // this one is just to untangle the diagram by putting metaserver left, client right
-                  constraints.push({
-                      left: e.target,
-                      right: e.source,
-                      axis: 'x',
-                      gap: 700
-                  });
-              }
-              else if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
-                  constraints.push({
-                      left: e.source,
-                      right: e.target,
-                      axis: 'y',
-                      gap: 100
-                  });
-              }
-              else if(s.orig.value.class === 'Metaserver' &&
-                      (t.orig.value.class === 'Attached Volume' || t.orig.value.class === 'ChunkServer')) {
-                  constraints.push({
-                      left: e.source,
-                      right: e.target,
-                      axis: 'y',
-                      gap: 300
-                  });
-              }
-              else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume') {
-                  constraints.push({
-                      left: e.source,
-                      right: e.target,
-                      axis: 'y',
-                      gap: 200
-                  });
-              }
-          });
-          // put ChunkServers and Volumes in same levels
-          function level_start() {
-              return {
-                  offsets: [],
-                  type: 'alignment',
-                  axis: 'y'
-              };
+          if(doDisplacement) {
+              edges.forEach(function(e) {
+                  var s = nodes[e.source], t = nodes[e.target];
+                  if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
+                      // vertical displacement for Client/Metaserver
+                      constraints.push({
+                          left: e.source,
+                          right: e.target,
+                          axis: 'y',
+                          gap: 100
+                      });
+                      // this one is just to untangle the diagram by putting metaserver left, client right
+                      constraints.push({
+                          left: e.target,
+                          right: e.source,
+                          axis: 'x',
+                          gap: 700
+                      });
+                  }
+                  else if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
+                      constraints.push({
+                          left: e.source,
+                          right: e.target,
+                          axis: 'y',
+                          gap: 100
+                      });
+                  }
+                  else if(s.orig.value.class === 'Metaserver' &&
+                          (t.orig.value.class === 'Attached Volume' || t.orig.value.class === 'ChunkServer')) {
+                      constraints.push({
+                          left: e.source,
+                          right: e.target,
+                          axis: 'y',
+                          gap: 300
+                      });
+                  }
+                  else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume') {
+                      constraints.push({
+                          left: e.source,
+                          right: e.target,
+                          axis: 'y',
+                          gap: 200
+                      });
+                  }
+              });
           }
-          var CSLevel = level_start(),
-              VolLevel = level_start();
-          nodes.forEach(function(n, i) {
-              switch(n.orig.value.class) {
-              case 'ChunkServer':
-                  CSLevel.offsets.push({node: i, offset: 0});
-                  break;
-              case 'Attached Volume':
-                  VolLevel.offsets.push({node: i, offset: 0});
+          if(doAlignment) {
+              // put ChunkServers and Volumes in same levels
+              function level_start() {
+                  return {
+                      offsets: [],
+                      type: 'alignment',
+                      axis: 'y'
+                  };
               }
-          });
-          if(CSLevel.offsets.length)
-              constraints.push(CSLevel);
-          if(VolLevel.offsets.length)
-              constraints.push(VolLevel);
+              var CSLevel = level_start(),
+                  VolLevel = level_start();
+              nodes.forEach(function(n, i) {
+                  switch(n.orig.value.class) {
+                  case 'ChunkServer':
+                      CSLevel.offsets.push({node: i, offset: 0});
+                      break;
+                  case 'Attached Volume':
+                      VolLevel.offsets.push({node: i, offset: 0});
+                  }
+              });
+              if(CSLevel.offsets.length)
+                  constraints.push(CSLevel);
+              if(VolLevel.offsets.length)
+                  constraints.push(VolLevel);
+          }
           return constraints;
       };
 
@@ -219,7 +273,8 @@
 
       function tick() {
           do_status();
-          diagram.initLayoutOnRedraw(hierarchical);
+          if(doReinit)
+              diagram.initLayoutOnRedraw(hierarchical);
           startDim.filterRange([0, curr]);
           if(doRender) {
               dc.renderAll();

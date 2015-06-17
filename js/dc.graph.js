@@ -1,12 +1,26 @@
+/*!
+ *  dc.graph 2.1.0-dev
+ *  http://dc-js.github.io/dc.graph.js/
+ *  Copyright 2015 Gordon Woodhull
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 (function() { function _dc_graph(d3, crossfilter, dc) {
 'use strict';
-var dc_graph = {
-    version: '0.1'
-};
 
-dc_graph.d3 = d3;
-dc_graph.crossfilter = crossfilter;
-dc_graph.dc = dc;
+var dc_graph = {
+    version: '2.1.0-dev'
+};
 
 var property = function (defaultValue) {
     var value = defaultValue, react = null;
@@ -184,6 +198,11 @@ dc_graph.diagram = function (parent, chartGroup) {
     return _chart;
 };
 
+
+dc_graph.d3 = d3;
+dc_graph.crossfilter = crossfilter;
+dc_graph.dc = dc;
+
 return dc_graph;
 }
     if (typeof define === 'function' && define.amd) {
@@ -201,3 +220,5 @@ return dc_graph;
     }
 }
 )();
+
+//# sourceMappingURL=dc.graph.js.map

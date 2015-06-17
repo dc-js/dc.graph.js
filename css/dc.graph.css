@@ -26,20 +26,3 @@ text.edgelabel {
     fill: #aaa;
     pointer-events: none;
 }
-
-#controls {
-    margin-top: 200px;
-}
-
-#status {
-    display: inline-block;
-    float: right;
-}
-
-#time-range label {
-    position: absolute;
-    width: 20px;
-    margin-top: 20px;
-    margin-left: -10px;
-    text-align: center;
-}
