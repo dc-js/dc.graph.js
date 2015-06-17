@@ -219,8 +219,7 @@ module.exports = function (grunt) {
                         flatten: true,
                         src: [
                             '<%= conf.pkg.name %>.css',
-                            'node_modules/dc/dc.css',
-                            'node_modules/jquery-ui/themes/smoothness/jquery-ui.css'
+                            'node_modules/dc/dc.css'
                         ],
                         dest: '<%= conf.web %>/css/'
                     },
@@ -233,7 +232,6 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.min.js',
                             '<%= conf.pkg.name %>.min.js.map',
                             'node_modules/jquery/dist/jquery.js',
-                            'node_modules/jquery-ui/jquery-ui.js',
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
                             'node_modules/crossfilter/crossfilter.js',
