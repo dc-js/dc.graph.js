@@ -153,12 +153,12 @@
       function start() {
           timedout = done = false;
           if(++curr>end) curr = begin;
-          tick();
           var t = curr < end ? steptime : pause;
           timer = setTimeout(function() {
               timedout = true;
               kontinue();
           }, t);
+          tick();
       }
       function kontinue() {
           if(!done || !timedout)
