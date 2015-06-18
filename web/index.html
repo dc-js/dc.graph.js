@@ -90,7 +90,7 @@
       pause = +querystring.pause || 2500; // pause at end of loop
   var min = 2, max = 12;
   var begin = min, end = 7, curr = begin;
-  var interval = null, doRender = true;
+  var timer = null, doRender = true;
   var hierarchical = true;
 
   function do_status() {
@@ -148,6 +148,7 @@
           doAlignment = querystring.align==="0" ? false : true,
           doLinkLength = false;
       var linkLength = 40;
+      var done = false;
       if(querystring.linklength) {
           doLinkLength = true;
           linkLength = +querystring.linklength;
@@ -249,6 +250,9 @@
           .modLayout(function(layout) {
               if(!hierarchical || doLinkLength)
                   layout.symmetricDiffLinkLengths(40)
+          })
+          .on('end', function() {
+              done = true;
           });
 
 
@@ -272,7 +276,7 @@
       });
       $('#hierarchical').change(function(val) {
           hierarchical = $(this).is(':checked');
-          if(interval) // flag to do on timer
+          if(timer) // flag to do on timer
               doRender = true;
           else
               dc.renderAll();
@@ -289,31 +293,28 @@
           }
           else
               dc.redrawAll();
+          done = false;
       }
 
+      var doStop = false;
       window.start_stop = function() {
-          if(interval) {
-              clearInterval(interval);
-              interval = null;
+          if(timer) {
+              doStop = true;
           } else {
-              interval = setInterval(function() {
-                  if(++curr >= end) {
-                      // pause at end
-                      clearInterval(interval);
-                      interval = -17;
-                      setTimeout(function() {
-                          // if still paused (ignore if start/stop pressed)
-                          if(interval === -17) {
-                              // start from scratch
-                              interval = null;
-                              curr = begin;
-                              tick();
-                              window.start_stop();
-                          }
-                      }, pause);
-                  }
+              function start() {
+                  if(++curr>end) curr = begin;
                   tick();
-              }, steptime);
+                  var t = curr < end ? steptime : pause;
+                  timer = setTimeout(function() {
+                      timer = null;
+                      if(!done)
+                          console.log('the bad thing');
+                      if(!doStop)
+                          start();
+                      doStop = false;
+                  }, t);
+              }
+              start();
           }
       };
 
