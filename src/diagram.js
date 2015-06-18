@@ -4,6 +4,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
     var DEFAULT_NODE_RADIUS = 25;
+    var _dispatch = d3.dispatch('end');
 
     _chart.root = property(null);
     _chart.width = property(200);
@@ -116,6 +117,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 node.attr("transform", function (d) {
                     return "translate(" + d.x + "," + d.y + ")";
                 });
+            })
+            .on('end', function() {
+                _dispatch.end();
             });
         return this;
     };
@@ -128,6 +132,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         _edgeLayer = _g.append('g');
         _nodeLayer = _g.append('g');
         return _chart.redraw();
+    };
+
+    _chart.on = function(event, f) {
+        _dispatch.on(event, f);
     };
 
     // copied from dc's baseMixin because there is a lot of stuff we don't
