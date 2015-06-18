@@ -29,7 +29,7 @@
     <label id="now">&#x21e7;</label>
   </div>
   <div style="margin-top: 25px">
-    <button onclick="start_stop()">start/stop</button>
+    <button onclick="start_stop()">stop/start</button>
     <div id="status"></div>
   </div>
   <div style="margin-top: 15px">
@@ -90,7 +90,7 @@
       pause = +querystring.pause || 2500; // pause at end of loop
   var min = 2, max = 12;
   var begin = min, end = 7, curr = begin;
-  var interval = null, doRender = true;
+  var timer = null, doRender = true;
   var hierarchical = true;
 
   function do_status() {
@@ -148,9 +148,30 @@
           doAlignment = querystring.align==="0" ? false : true,
           doLinkLength = false;
       var linkLength = 40;
+
+      var done = false, timedout = false;
+      function start() {
+          timedout = done = false;
+          if(++curr>end) curr = begin;
+          tick();
+          var t = curr < end ? steptime : pause;
+          timer = setTimeout(function() {
+              timedout = true;
+              kontinue();
+          }, t);
+      }
+      function kontinue() {
+          if(!done || !timedout)
+              return;
+          timer = null;
+          if(!doStop)
+              start();
+          doStop = false;
+      }
+
       if(querystring.linklength) {
           doLinkLength = true;
-          linkLength = +querystring.linklength;
+          linklength = +querystring.linklength;
       }
 
       function constrain(nodes, edges) {
@@ -166,14 +187,14 @@
                           left: e.source,
                           right: e.target,
                           axis: 'y',
-                          gap: 100
+                          gap: 50
                       });
                       // this one is just to untangle the diagram by putting metaserver left, client right
                       constraints.push({
                           left: e.target,
                           right: e.source,
                           axis: 'x',
-                          gap: 700
+                          gap: 200
                       });
                   }
                   else if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
@@ -181,7 +202,7 @@
                           left: e.source,
                           right: e.target,
                           axis: 'y',
-                          gap: 100
+                          gap: 50
                       });
                   }
                   else if(s.orig.value.class === 'Metaserver' &&
@@ -190,7 +211,7 @@
                           left: e.source,
                           right: e.target,
                           axis: 'y',
-                          gap: 300
+                          gap: 100
                       });
                   }
                   else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume') {
@@ -198,7 +219,7 @@
                           left: e.source,
                           right: e.target,
                           axis: 'y',
-                          gap: 200
+                          gap: 100
                       });
                   }
               });
@@ -248,7 +269,11 @@
           .constrain(constrain)
           .modLayout(function(layout) {
               if(!hierarchical || doLinkLength)
-                  layout.symmetricDiffLinkLengths(40)
+                  layout.symmetricDiffLinkLengths(linklength)
+          })
+          .on('end', function() {
+              done = true;
+              kontinue();
           });
 
 
@@ -272,7 +297,7 @@
       });
       $('#hierarchical').change(function(val) {
           hierarchical = $(this).is(':checked');
-          if(interval) // flag to do on timer
+          if(timer) // flag to do on timer
               doRender = true;
           else
               dc.renderAll();
@@ -289,31 +314,15 @@
           }
           else
               dc.redrawAll();
+          done = false;
       }
 
+      var doStop = false;
       window.start_stop = function() {
-          if(interval) {
-              clearInterval(interval);
-              interval = null;
+          if(timer) {
+              doStop = true;
           } else {
-              interval = setInterval(function() {
-                  if(++curr >= end) {
-                      // pause at end
-                      clearInterval(interval);
-                      interval = -17;
-                      setTimeout(function() {
-                          // if still paused (ignore if start/stop pressed)
-                          if(interval === -17) {
-                              // start from scratch
-                              interval = null;
-                              curr = begin;
-                              tick();
-                              window.start_stop();
-                          }
-                      }, pause);
-                  }
-                  tick();
-              }, steptime);
+              start();
           }
       };
 
