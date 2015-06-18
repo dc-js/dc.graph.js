@@ -169,6 +169,29 @@
           doStop = false;
       }
 
+      function tick() {
+          do_status();
+          if(doReinit)
+              diagram.initLayoutOnRedraw(hierarchical);
+          startDim.filterRange([0, curr]);
+          if(doRender) {
+              dc.renderAll();
+              doRender = false;
+          }
+          else
+              dc.redrawAll();
+          done = false;
+      }
+      var doStop = false;
+      window.start_stop = function() {
+          if(timer) {
+              doStop = true;
+          } else {
+              start();
+          }
+      };
+
+
       if(querystring.linklength) {
           doLinkLength = true;
           linklength = +querystring.linklength;
@@ -302,29 +325,6 @@
           else
               dc.renderAll();
       });
-
-      function tick() {
-          do_status();
-          if(doReinit)
-              diagram.initLayoutOnRedraw(hierarchical);
-          startDim.filterRange([0, curr]);
-          if(doRender) {
-              dc.renderAll();
-              doRender = false;
-          }
-          else
-              dc.redrawAll();
-          done = false;
-      }
-
-      var doStop = false;
-      window.start_stop = function() {
-          if(timer) {
-              doStop = true;
-          } else {
-              start();
-          }
-      };
 
       // do not brush too fast
       dc.constants.EVENT_DELAY = 100;
