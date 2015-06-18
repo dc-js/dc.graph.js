@@ -71,6 +71,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.constrain = property(function(nodes, edges) { return []; });
     _chart.initLayoutOnRedraw = property(false);
     _chart.modLayout = property(function(layout) {});
+    _chart.showTicks = property(true);
 
     function initLayout() {
         _d3cola = cola.d3adaptor()
@@ -135,40 +136,47 @@ dc_graph.diagram = function (parent, chartGroup) {
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
+        _d3cola.on('tick', _chart.showTicks() ? function() {
+            draw(node, edge);
+        } : null);
+
         if(_chart.initLayoutOnRedraw())
             initLayout();
         _d3cola.nodes(nodes1)
             .links(edges1)
             .constraints(constraints)
             .start(10,20,20)
-            .on('tick', function() {
-                edge.attr("d", function (d) {
-                    var deltaX = d.target.x - d.source.x,
-                        deltaY = d.target.y - d.source.y,
-                        dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-                        normX = deltaX / dist,
-                        normY = deltaY / dist,
-                        sourcePadding = _chart.nodeRadiusAccessor()(d.source.orig)-1,
-                        targetPadding = _chart.nodeRadiusAccessor()(d.target.orig)-1,
-                        sourceX = d.source.x + (sourcePadding * normX),
-                        sourceY = d.source.y + (sourcePadding * normY),
-                        targetX = d.target.x - (targetPadding * normX),
-                        targetY = d.target.y - (targetPadding * normY);
-                    return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
-                }).attr("width", function (d) {
-                    var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
-                    return Math.sqrt(dx * dx + dy * dy);
-                });
-
-                node.attr("transform", function (d) {
-                    return "translate(" + d.x + "," + d.y + ")";
-                });
-            })
             .on('end', function() {
+                if(!_chart.showTicks())
+                    draw(node,edge);
                 _dispatch.end();
             });
         return this;
     };
+
+    function draw(node, edge) {
+        edge.attr("d", function (d) {
+            var deltaX = d.target.x - d.source.x,
+                deltaY = d.target.y - d.source.y,
+                dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+                normX = deltaX / dist,
+                normY = deltaY / dist,
+                sourcePadding = _chart.nodeRadiusAccessor()(d.source.orig)-1,
+                targetPadding = _chart.nodeRadiusAccessor()(d.target.orig)-1,
+                sourceX = d.source.x + (sourcePadding * normX),
+                sourceY = d.source.y + (sourcePadding * normY),
+                targetX = d.target.x - (targetPadding * normX),
+                targetY = d.target.y - (targetPadding * normY);
+            return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+        }).attr("width", function (d) {
+            var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        });
+
+        node.attr("transform", function (d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        });
+    }
 
     _chart.render = function () {
         if(!_chart.initLayoutOnRedraw())
@@ -182,6 +190,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.on = function(event, f) {
         _dispatch.on(event, f);
+        return this;
     };
 
     // copied from dc's baseMixin because there is a lot of stuff we don't
