@@ -198,19 +198,6 @@ module.exports = function (grunt) {
             },
             options: {markdownOptions: {highlight: 'manual'}}
         },
-        docco: {
-            options: {
-                dst: '<%= conf.web %>/docs',
-                basepath:'<%= conf.web %>'
-            },
-            howto: {
-                files: [
-                    {
-                        src: ['<%= conf.web %>/stock.js']
-                    }
-                ]
-            }
-        },
         copy: {
             'dc-to-gh': {
                 files: [
@@ -369,7 +356,7 @@ module.exports = function (grunt) {
 
     // task aliases
     grunt.registerTask('build', ['concat', 'uglify']);
-    grunt.registerTask('docs', ['build', 'copy', 'emu', 'toc', 'markdown', 'docco', 'fileindex']);
+    grunt.registerTask('docs', ['build', 'copy', 'emu', 'toc', 'markdown', 'fileindex']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
     grunt.registerTask('server', ['docs', 'fileindex', 'jasmine:specs:build', 'connect:server', 'watch:jasmine']);
     grunt.registerTask('test', ['build', 'jasmine:specs', 'shell:hooks']);
