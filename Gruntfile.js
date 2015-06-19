@@ -333,7 +333,7 @@ module.exports = function (grunt) {
                 return toc + '  * [' + item.text + '](#' + slugify(item.text) + ')\n';
             }, '');
 
-        grunt.file.write(destFile, '# DC API\n' + toc + '\n' + source);
+        grunt.file.write(destFile, '# dc.graph.js API\n' + toc + '\n' + source);
         grunt.log.writeln('Added TOC to \'' + destFile + '\'.');
     });
     grunt.registerTask('test-stock-example', 'Test a new rendering of the stock example web page against a ' +

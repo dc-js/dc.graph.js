@@ -87,7 +87,8 @@
   var diagram = dc_graph.diagram('#graph');
 
   var steptime = +querystring.interval || 1000, // ms per step
-      pause = +querystring.pause || 2500; // pause at end of loop
+      pause = +querystring.pause || 2500, // pause at end of loop
+      showSteps = +querystring.showsteps !== 0;
   var min = 2, max = 12;
   var begin = min, end = 7, curr = begin;
   var timer = null, doRender = true;
@@ -123,10 +124,10 @@
               function() { return null; }
           );
       }
-      var nodeDim = node_ndx.dimension(function(d) { return d.name; }),
-          edgeDim = edge_ndx.dimension(function(d) { return d.sourcename + '->' + d.targetname; }),
-          nodeGroup = nodeDim.group(),
-          edgeGroup = edgeDim.group();
+      var nodeDimension = node_ndx.dimension(function(d) { return d.name; }),
+          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '->' + d.targetname; }),
+          nodeGroup = nodeDimension.group(),
+          edgeGroup = edgeDimension.group();
 
       one_zero_reduce(nodeGroup);
       one_zero_reduce(edgeGroup);
@@ -276,8 +277,9 @@
       };
 
       diagram.width(900).height(1000)
-          .nodeDim(nodeDim).nodeGroup(nodeGroup1)
-          .edgeDim(edgeDim).edgeGroup(edgeGroup1)
+          .showLayoutSteps(showSteps)
+          .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
+          .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
           .nodeColorAccessor(function(n) {
