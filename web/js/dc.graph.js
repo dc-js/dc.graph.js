@@ -97,6 +97,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         };
     }
 
+    var _nodes = {}, _edges = {};
+
     _chart.redraw = function () {
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
@@ -108,14 +110,20 @@ dc_graph.diagram = function (parent, chartGroup) {
             return result;
         }, {});
         var nodes1 = nodes.map(function(v) {
-            return {orig: v,
-                    width: _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding(),
-                    height: _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding()};
+            if(!_nodes[v.key]) _nodes[v.key] = {};
+            var v1 = _nodes[v.key];
+            v1.orig = v;
+            v1.width = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
+            v1.height = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
+            return v1;
         });
         var edges1 = edges.map(function(e) {
-            return {orig: e,
-                    source: key_index_map[_chart.sourceAccessor()(e)],
-                    target: key_index_map[_chart.targetAccessor()(e)]};
+            if(!_edges[e.key]) _edges[e.key] = {};
+            var e1 = _edges[e.key];
+            e1.orig =  e;
+            e1.source = key_index_map[_chart.sourceAccessor()(e)];
+            e1.target = key_index_map[_chart.targetAccessor()(e)];
+            return e1;
         }).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
@@ -146,12 +154,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
+        if(_chart.initLayoutOnRedraw())
+            initLayout();
+
         _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
             draw(node, edge);
         } : null);
 
-        if(_chart.initLayoutOnRedraw())
-            initLayout();
         _d3cola.nodes(nodes1)
             .links(edges1)
             .constraints(constraints)
