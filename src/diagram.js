@@ -100,12 +100,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
+        if(_chart.initLayoutOnRedraw())
+            initLayout();
+
         _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
             draw(node, edge);
         } : null);
 
-        if(_chart.initLayoutOnRedraw())
-            initLayout();
         _d3cola.nodes(nodes1)
             .links(edges1)
             .constraints(constraints)
