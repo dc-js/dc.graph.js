@@ -44,6 +44,16 @@ var property = function (defaultValue) {
 };
 
 
+/**
+## Diagram
+
+The dc_graph.diagram is a dc.js-compatible network visualization component. It registers in
+the dc.js chart registry and its nodes and edges are generated from crossfilter groups. It
+logically derives from
+[the dc.js Base Mixin](https://github.com/dc-js/dc.js/blob/master/web/docs/api-latest.md#base-mixin),
+but it does not physically derive from it since so much is different about network visualization
+versus conventional charting.
+**/
 dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
     var _chart = {};
@@ -55,9 +65,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.root = property(null);
     _chart.width = property(200);
     _chart.height = property(200);
-    _chart.nodeDim = property();
+    _chart.nodeDimension = property();
     _chart.nodeGroup = property();
-    _chart.edgeDim = property();
+    _chart.edgeDimension = property();
     _chart.edgeGroup = property();
     _chart.nodeKeyAccessor = property(function(kv) { return kv.key; });
     _chart.edgeKeyAccessor = property(function(kv) { return kv.key; });
@@ -71,7 +81,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.constrain = property(function(nodes, edges) { return []; });
     _chart.initLayoutOnRedraw = property(false);
     _chart.modLayout = property(function(layout) {});
-    _chart.showTicks = property(true);
+    _chart.showLayoutSteps = property(true);
 
     function initLayout() {
         _d3cola = cola.d3adaptor()
@@ -87,6 +97,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         };
     }
 
+    var _nodes = {}, _edges = {};
+
     _chart.redraw = function () {
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
@@ -98,14 +110,20 @@ dc_graph.diagram = function (parent, chartGroup) {
             return result;
         }, {});
         var nodes1 = nodes.map(function(v) {
-            return {orig: v,
-                    width: _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding(),
-                    height: _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding()};
+            if(!_nodes[v.key]) _nodes[v.key] = {};
+            var v1 = _nodes[v.key];
+            v1.orig = v;
+            v1.width = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
+            v1.height = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
+            return v1;
         });
         var edges1 = edges.map(function(e) {
-            return {orig: e,
-                    source: key_index_map[_chart.sourceAccessor()(e)],
-                    target: key_index_map[_chart.targetAccessor()(e)]};
+            if(!_edges[e.key]) _edges[e.key] = {};
+            var e1 = _edges[e.key];
+            e1.orig =  e;
+            e1.source = key_index_map[_chart.sourceAccessor()(e)];
+            e1.target = key_index_map[_chart.targetAccessor()(e)];
+            return e1;
         }).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
@@ -136,18 +154,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
-        _d3cola.on('tick', _chart.showTicks() ? function() {
+        if(_chart.initLayoutOnRedraw())
+            initLayout();
+
+        _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
             draw(node, edge);
         } : null);
 
-        if(_chart.initLayoutOnRedraw())
-            initLayout();
         _d3cola.nodes(nodes1)
             .links(edges1)
             .constraints(constraints)
             .start(10,20,20)
             .on('end', function() {
-                if(!_chart.showTicks())
+                if(!_chart.showLayoutSteps())
                     draw(node,edge);
                 _dispatch.end();
             });
