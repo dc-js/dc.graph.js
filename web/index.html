@@ -306,7 +306,7 @@
       // this is kind of a brain-dead way to test transitions
       // i mean, you can cram the concept of adding and deleting stuff over time
       // into crossfilter data, but do you really want to do that?
-      var startDim = node_ndx.dimension(function(d) { return d.start; }),
+      var startDim = node_ndx.dimension(function(d) { return d.start || 0; }),
           startGroup = startDim.group();
 
 
