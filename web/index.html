@@ -64,6 +64,7 @@ message:%3CD1C9465A.C62DE%25mm6769@att.com%3E<!DOCTYPE html>
       doReinit = querystring.reinit==="0" ? false : true,
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
+      isQFS = querystring.qfs==="0" ? false : true,
       doLinkLength = false,
       linkLength = 40,
       hierarchical = true;
@@ -71,6 +72,8 @@ message:%3CD1C9465A.C62DE%25mm6769@att.com%3E<!DOCTYPE html>
       doLinkLength = true;
       linkLength = +querystring.linklength;
   }
+  if(file !== 'qfs.json')
+      isQFS = false;
   if('hier' in querystring) {
       hierarchical = !!+querystring.hier;
       $('#hierarchical').prop('checked', hierarchical);
@@ -176,9 +179,9 @@ message:%3CD1C9465A.C62DE%25mm6769@att.com%3E<!DOCTYPE html>
           var constraints = [];
           if(!hierarchical)
               return constraints;
-          if(doDisplacement)
+          if(doDisplacement && isQFS)
               constraints = qfs_edges(nodes, edges, constraints);
-          if(doAlignment)
+          if(doAlignment && isQFS)
               constraints = qfs_alignment(nodes, edges, constraints);
           return constraints;
       }
@@ -190,13 +193,10 @@ message:%3CD1C9465A.C62DE%25mm6769@att.com%3E<!DOCTYPE html>
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
           .nodeColorAccessor(function(n) {
-              var colors = {
-                  ChunkServer: d3.rgb(152,251,152),
-                  Metaserver: d3.rgb(135,255,255),
-                  "Attached Volume": d3.rgb(255,180,0),
-                  Client: d3.rgb(150,184,255)
-              };
-              return colors[n.value.class];
+              if(isQFS)
+                  return qfs_color(n);
+              else
+                  return 'white';
           })
           .constrain(constrain)
           .modLayout(function(layout) {

@@ -72,3 +72,13 @@ function qfs_alignment(nodes, edges, constraints) {
         constraints.push(VolLevel);
     return constraints;
 }
+
+function qfs_color(n) {
+    var colors = {
+        ChunkServer: d3.rgb(152,251,152),
+        Metaserver: d3.rgb(135,255,255),
+        "Attached Volume": d3.rgb(255,180,0),
+        Client: d3.rgb(150,184,255)
+    };
+    return colors[n.value.class];
+}
