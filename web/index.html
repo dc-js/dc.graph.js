@@ -192,7 +192,7 @@ message:%3CD1C9465A.C62DE%25mm6769@att.com%3E<!DOCTYPE html>
           .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
-          .nodeColorAccessor(function(n) {
+          .nodeFillAccessor(function(n) {
               if(isQFS)
                   return qfs_color(n);
               else

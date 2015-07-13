@@ -23,16 +23,34 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeGroup = property();
     _chart.edgeDimension = property();
     _chart.edgeGroup = property();
-    _chart.nodeKeyAccessor = property(function(kv) { return kv.key; });
-    _chart.edgeKeyAccessor = property(function(kv) { return kv.key; });
+    _chart.nodeKeyAccessor = property(function(kv) {
+        return kv.key;
+    });
+    _chart.edgeKeyAccessor = property(function(kv) {
+        return kv.key;
+    });
     _chart.sourceAccessor = property();
     _chart.targetAccessor = property();
-    _chart.nodeRadiusAccessor = property(function() { return DEFAULT_NODE_RADIUS; });
-    _chart.nodeColorAccessor = property(function() { return 'white'; });
+    _chart.nodeRadiusAccessor = property(function() {
+        return DEFAULT_NODE_RADIUS;
+    });
+    _chart.nodeStrokeWidthAccessor = property(function() {
+        return '1';
+    });
+    _chart.nodeStrokeAccessor = property(function() {
+        return 'black';
+    });
+    _chart.nodeFillAccessor = property(function() {
+        return 'white';
+    });
     _chart.nodePadding = property(6);
-    _chart.nodeLabelAccessor = property(function(kv) { return kv.value.label; });
+    _chart.nodeLabelAccessor = property(function(kv) {
+        return kv.value.label || kv.value.name;
+    });
     _chart.transitionDuration = property(500);
-    _chart.constrain = property(function(nodes, edges) { return []; });
+    _chart.constrain = property(function(nodes, edges) {
+        return [];
+    });
     _chart.initLayoutOnRedraw = property(false);
     _chart.modLayout = property(function(layout) {});
     _chart.showLayoutSteps = property(true);
@@ -101,7 +119,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('class', 'nodelabel');
         node.select('circle')
             .attr('r', original(_chart.nodeRadiusAccessor()))
-            .attr('fill', original(_chart.nodeColorAccessor()));
+            .attr('stroke', original(_chart.nodeStrokeAccessor()))
+            .attr('stroke-width', original(_chart.nodeStrokeWidthAccessor()))
+            .attr('fill', original(_chart.nodeFillAccessor()));
         node.select('text')
             .text(original(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
