@@ -31,6 +31,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
     _chart.sourceAccessor = property();
     _chart.targetAccessor = property();
+
     _chart.nodeRadiusAccessor = property(function() {
         return DEFAULT_NODE_RADIUS;
     });
@@ -47,6 +48,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeLabelAccessor = property(function(kv) {
         return kv.value.label || kv.value.name;
     });
+
+    _chart.edgeStrokeAccessor = property(function() {
+        return 'black';
+    });
+    _chart.edgeStrokeWidthAccessor = property(function() {
+        return '1';
+    });
+    _chart.edgeOpacityAccessor = property(function() {
+        return '1';
+    });
+
     _chart.transitionDuration = property(500);
     _chart.constrain = property(function(nodes, edges) {
         return [];
@@ -105,7 +117,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         var edge = _edgeLayer.selectAll('.edge')
                 .data(edges1, original(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
-                .attr('class', 'edge');
+                .attr('class', 'edge')
+                .attr('stroke', original(_chart.edgeStrokeAccessor()))
+                .attr('stroke-width', original(_chart.edgeStrokeWidthAccessor()))
+                .attr('opacity', original(_chart.edgeOpacityAccessor()));
+
         var edgeExit = edge.exit();
 
         edgeExit.remove();
