@@ -55,35 +55,6 @@
       return b;
   })(window.location.search.substr(1).split('&'));
 
-  function load_graph(file, callback) {
-      if(/\.json$/.test(file))
-          d3.json(file, callback);
-      else if(/\.gv|\.dot$/.test(file))
-        d3.text(file, function (error, f) {
-            if(error) {
-                callback(error, null);
-                return;
-            }
-            var digraph = graphlibDot.parse(f);
-
-            var nodeNames = digraph.nodes();
-            var nodes = new Array(nodeNames.length);
-            nodeNames.forEach(function (name, i) {
-                var v = nodes[i] = digraph._nodes[nodeNames[i]];
-                v.id = i;
-                v.name = name;
-            });
-
-            var edges = [];
-            for (var e in digraph._edges) {
-                var edge = digraph._edges[e];
-                edges.push({ source: digraph._nodes[edge.u].id, target: digraph._nodes[edge.v].id });
-            }
-            var graph = {nodes: nodes, links: edges};
-            callback(null, graph);
-        })
-  }
-
   var steptime = +querystring.interval || 1000, // ms per step
       pause = +querystring.pause || 2500, // pause at end of loop
       showSteps = +querystring.showsteps !== 0,
@@ -115,7 +86,7 @@
 
   do_status();
 
-  load_graph(file, function(error, data) {
+  dc_graph.load_graph(file, function(error, data) {
       if(error) {
           console.log(error);
           return;
