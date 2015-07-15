@@ -373,5 +373,6 @@ module.exports.jsFiles = [
     'src/core.js',
     'src/diagram.js',
     'src/load_graph.js',
+    'src/generate.js',
     'src/footer.js'  // NOTE: keep this last
 ];

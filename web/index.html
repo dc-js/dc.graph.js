@@ -60,7 +60,8 @@
   var steptime = +querystring.interval || 1000, // ms per step
       pause = +querystring.pause || 2500, // pause at end of loop
       showSteps = +querystring.showsteps !== 0,
-      file = querystring.file || "qfs.json",
+      file = querystring.file || null,
+      generate = querystring.gen || null,
       doReinit = querystring.reinit==="0" ? false : true,
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
@@ -91,13 +92,30 @@
 
   do_status();
 
-  dc_graph.load_graph(file, function(error, data) {
+  var source;
+  if(!generate && !file)
+      file = "qfs.json";
+  if(file)
+      source = function(callback) {
+          dc_graph.load_graph(file, callback);
+      }
+  else if(generate)
+      source = function(callback) {
+          var parts = /^([a-zA-Z]+)([0-9]*)/.exec(generate);
+          if(!parts || !parts[0]) throw new Error("couldn't parse generator");
+          var name = parts[1], N = +parts[2];
+          dc_graph.generate(name, N, callback);
+      }
+
+  source(function(error, data) {
       if(error) {
           console.log(error);
           return;
       }
       var edge_ndx = crossfilter(data.links),
           node_ndx = crossfilter(data.nodes);
+
+      var individualLengths = data.links.some(function(e) { return !!e.length; });
 
       // for this example we use simple identity dimension/groups, with unique keys
       // more complex node/edge generation is possible, but it is more likely that
@@ -200,8 +218,12 @@
           })
           .constrain(constrain)
           .modLayout(function(layout) {
-              if(!hierarchical || doLinkLength)
+              if(!hierarchical || doLinkLength && !individualLengths)
                   layout.symmetricDiffLinkLengths(linkLength)
+              if(individualLengths)
+                  layout.linkDistance(function(e) {
+                      return e.orig.value.length;
+                  });
           })
           .on('end', function() {
               done = true;
