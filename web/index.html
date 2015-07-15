@@ -65,7 +65,7 @@
       doReinit = querystring.reinit==="0" ? false : true,
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
-      isQFS = querystring.qfs==="0" ? false : true,
+      isQFS = false,
       doLinkLength = false,
       linkLength = 40,
       hierarchical = true;
@@ -73,8 +73,6 @@
       doLinkLength = true;
       linkLength = +querystring.linklength;
   }
-  if(file !== 'qfs.json')
-      isQFS = false;
   if('hier' in querystring) {
       hierarchical = !!+querystring.hier;
       $('#hierarchical').prop('checked', hierarchical);
@@ -95,6 +93,7 @@
   var source;
   if(!generate && !file)
       file = "qfs.json";
+  isQFS = +querystring.qfs || file === 'qfs.json' && querystring.qfs !=="0";
   if(file)
       source = function(callback) {
           dc_graph.load_graph(file, callback);
