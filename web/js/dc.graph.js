@@ -311,10 +311,20 @@ dc_graph.load_graph = function(file, callback) {
 
 dc_graph.generate = function(name, N, callback) {
     var nodes, edges, i, j;
+    function nodename(i) {
+        // a-z, A-Z, aa-Zz, then quit
+        if(i<26)
+            return String.fromCharCode(97+i);
+        else if(i<52)
+            return String.fromCharCode(65+i-26);
+        else if(i<52*52)
+            return nodename(Math.floor(i/52)) + nodename(i%52);
+        else throw new Error("no, that's too large");
+    }
     function gen_node(i) {
         return {
             id: i,
-            name: String.fromCharCode(97+i)
+            name: nodename(i)
         };
     }
     function gen_edge(i, j, length) {
@@ -337,7 +347,7 @@ dc_graph.generate = function(name, N, callback) {
         }
         break;
     case 'wheel':
-        var r = 200,
+        var r = N*15,
             strutSkip = Math.floor(N/2),
             rimLength = 2 * r * Math.sin(Math.PI / N),
             strutLength = 2 * r * Math.sin(strutSkip * Math.PI / N);
