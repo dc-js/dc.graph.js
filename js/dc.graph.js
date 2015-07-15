@@ -69,16 +69,46 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeGroup = property();
     _chart.edgeDimension = property();
     _chart.edgeGroup = property();
-    _chart.nodeKeyAccessor = property(function(kv) { return kv.key; });
-    _chart.edgeKeyAccessor = property(function(kv) { return kv.key; });
+    _chart.nodeKeyAccessor = property(function(kv) {
+        return kv.key;
+    });
+    _chart.edgeKeyAccessor = property(function(kv) {
+        return kv.key;
+    });
     _chart.sourceAccessor = property();
     _chart.targetAccessor = property();
-    _chart.nodeRadiusAccessor = property(function() { return DEFAULT_NODE_RADIUS; });
-    _chart.nodeColorAccessor = property(function() { return 'white'; });
+
+    _chart.nodeRadiusAccessor = property(function() {
+        return DEFAULT_NODE_RADIUS;
+    });
+    _chart.nodeStrokeWidthAccessor = property(function() {
+        return '1';
+    });
+    _chart.nodeStrokeAccessor = property(function() {
+        return 'black';
+    });
+    _chart.nodeFillAccessor = property(function() {
+        return 'white';
+    });
     _chart.nodePadding = property(6);
-    _chart.nodeLabelAccessor = property(function(kv) { return kv.value.label; });
+    _chart.nodeLabelAccessor = property(function(kv) {
+        return kv.value.label || kv.value.name;
+    });
+
+    _chart.edgeStrokeAccessor = property(function() {
+        return 'black';
+    });
+    _chart.edgeStrokeWidthAccessor = property(function() {
+        return '1';
+    });
+    _chart.edgeOpacityAccessor = property(function() {
+        return '1';
+    });
+
     _chart.transitionDuration = property(500);
-    _chart.constrain = property(function(nodes, edges) { return []; });
+    _chart.constrain = property(function(nodes, edges) {
+        return [];
+    });
     _chart.initLayoutOnRedraw = property(false);
     _chart.modLayout = property(function(layout) {});
     _chart.showLayoutSteps = property(true);
@@ -133,7 +163,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         var edge = _edgeLayer.selectAll('.edge')
                 .data(edges1, original(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
-                .attr('class', 'edge');
+                .attr('class', 'edge')
+                .attr('stroke', original(_chart.edgeStrokeAccessor()))
+                .attr('stroke-width', original(_chart.edgeStrokeWidthAccessor()))
+                .attr('opacity', original(_chart.edgeOpacityAccessor()));
+
         var edgeExit = edge.exit();
 
         edgeExit.remove();
@@ -147,7 +181,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('class', 'nodelabel');
         node.select('circle')
             .attr('r', original(_chart.nodeRadiusAccessor()))
-            .attr('fill', original(_chart.nodeColorAccessor()));
+            .attr('stroke', original(_chart.nodeStrokeAccessor()))
+            .attr('stroke-width', original(_chart.nodeStrokeWidthAccessor()))
+            .attr('fill', original(_chart.nodeFillAccessor()));
         node.select('text')
             .text(original(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
@@ -236,6 +272,92 @@ dc_graph.diagram = function (parent, chartGroup) {
     return _chart;
 };
 
+
+// load a graph from various formats and return the data in consistent {nodes, links} format
+dc_graph.load_graph = function(file, callback) {
+    if(/\.json$/.test(file))
+        d3.json(file, callback);
+    else if(/\.gv|\.dot$/.test(file))
+        d3.text(file, function (error, f) {
+            if(error) {
+                callback(error, null);
+                return;
+            }
+            var digraph = graphlibDot.parse(f);
+
+            var nodeNames = digraph.nodes();
+            var nodes = new Array(nodeNames.length);
+            nodeNames.forEach(function (name, i) {
+                var node = nodes[i] = digraph._nodes[nodeNames[i]];
+                node.id = i;
+                node.name = name;
+            });
+
+            var edgeNames = digraph.edges();
+            var edges = [];
+            edgeNames.forEach(function(e) {
+                var edge = digraph._edges[e];
+                edges.push({
+                    source: digraph._nodes[edge.u].id,
+                    target: digraph._nodes[edge.v].id,
+                    sourcename: edge.u,
+                    targetname: edge.v
+                });
+            });
+            var graph = {nodes: nodes, links: edges};
+            callback(null, graph);
+        });
+};
+
+dc_graph.generate = function(name, N, callback) {
+    var nodes, edges, i, j;
+    function gen_node(i) {
+        return {
+            id: i,
+            name: String.fromCharCode(97+i)
+        };
+    }
+    function gen_edge(i, j, length) {
+        return {
+            source: j,
+            target: i,
+            sourcename: nodes[j].name,
+            targetname: nodes[i].name,
+            length: length
+        };
+    }
+    switch(name) {
+    case 'clique':
+        nodes = new Array(N);
+        edges = [];
+        for(i = 0; i<N; ++i) {
+            nodes[i] = gen_node(i);
+            for(j=0; j<i; ++j)
+                edges.push(gen_edge(i, j));
+        }
+        break;
+    case 'wheel':
+        var r = 200,
+            strutSkip = Math.floor(N/2),
+            rimLength = 2 * r * Math.sin(Math.PI / N),
+            strutLength = 2 * r * Math.sin(strutSkip * Math.PI / N);
+        nodes = new Array(N);
+        edges = [];
+        for(i = 0; i < N; ++i)
+            nodes[i] = gen_node(i);
+        for(i = 0; i < N; ++i) {
+            edges.push(gen_edge(i, (i+1)%N, rimLength));
+            edges.push(gen_edge(i, (i+strutSkip)%N, strutLength));
+            if(N%2)
+                edges.push(gen_edge(i, (i+N-strutSkip)%N, strutLength));
+        }
+        break;
+    default:
+        throw new Error("unknown generation type "+name);
+    }
+    var graph = {nodes: nodes, links: edges};
+    callback(null, graph);
+};
 
 dc_graph.d3 = d3;
 dc_graph.crossfilter = crossfilter;

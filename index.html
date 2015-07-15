@@ -18,6 +18,8 @@
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
+
+  <script type="text/javascript" src="qfs_constraints.js"></script>
 </head>
 
 <body>
@@ -55,42 +57,15 @@
       return b;
   })(window.location.search.substr(1).split('&'));
 
-  function load_graph(file, callback) {
-      if(/\.json$/.test(file))
-          d3.json(file, callback);
-      else if(/\.gv|\.dot$/.test(file))
-        d3.text(file, function (error, f) {
-            if(error) {
-                callback(error, null);
-                return;
-            }
-            var digraph = graphlibDot.parse(f);
-
-            var nodeNames = digraph.nodes();
-            var nodes = new Array(nodeNames.length);
-            nodeNames.forEach(function (name, i) {
-                var v = nodes[i] = digraph._nodes[nodeNames[i]];
-                v.id = i;
-                v.name = name;
-            });
-
-            var edges = [];
-            for (var e in digraph._edges) {
-                var edge = digraph._edges[e];
-                edges.push({ source: digraph._nodes[edge.u].id, target: digraph._nodes[edge.v].id });
-            }
-            var graph = {nodes: nodes, links: edges};
-            callback(null, graph);
-        })
-  }
-
   var steptime = +querystring.interval || 1000, // ms per step
       pause = +querystring.pause || 2500, // pause at end of loop
       showSteps = +querystring.showsteps !== 0,
-      file = querystring.file || "qfs.json",
+      file = querystring.file || null,
+      generate = querystring.gen || null,
       doReinit = querystring.reinit==="0" ? false : true,
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
+      isQFS = false,
       doLinkLength = false,
       linkLength = 40,
       hierarchical = true;
@@ -115,13 +90,31 @@
 
   do_status();
 
-  load_graph(file, function(error, data) {
+  var source;
+  if(!generate && !file)
+      file = "qfs.json";
+  isQFS = +querystring.qfs || file === 'qfs.json' && querystring.qfs !=="0";
+  if(file)
+      source = function(callback) {
+          dc_graph.load_graph(file, callback);
+      }
+  else if(generate)
+      source = function(callback) {
+          var parts = /^([a-zA-Z]+)([0-9]*)/.exec(generate);
+          if(!parts || !parts[0]) throw new Error("couldn't parse generator");
+          var name = parts[1], N = +parts[2];
+          dc_graph.generate(name, N, callback);
+      }
+
+  source(function(error, data) {
       if(error) {
           console.log(error);
           return;
       }
       var edge_ndx = crossfilter(data.links),
           node_ndx = crossfilter(data.nodes);
+
+      var individualLengths = data.links.some(function(e) { return !!e.length; });
 
       // for this example we use simple identity dimension/groups, with unique keys
       // more complex node/edge generation is possible, but it is more likely that
@@ -203,79 +196,12 @@
           var constraints = [];
           if(!hierarchical)
               return constraints;
-          if(doDisplacement) {
-              edges.forEach(function(e) {
-                  var s = nodes[e.source], t = nodes[e.target];
-                  if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
-                      // vertical displacement for Client/Metaserver
-                      constraints.push({
-                          left: e.source,
-                          right: e.target,
-                          axis: 'y',
-                          gap: 50
-                      });
-                      // this one is just to untangle the diagram by putting metaserver left, client right
-                      constraints.push({
-                          left: e.target,
-                          right: e.source,
-                          axis: 'x',
-                          gap: 200
-                      });
-                  }
-                  else if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
-                      constraints.push({
-                          left: e.source,
-                          right: e.target,
-                          axis: 'y',
-                          gap: 50
-                      });
-                  }
-                  else if(s.orig.value.class === 'Metaserver' &&
-                          (t.orig.value.class === 'Attached Volume' || t.orig.value.class === 'ChunkServer')) {
-                      constraints.push({
-                          left: e.source,
-                          right: e.target,
-                          axis: 'y',
-                          gap: 100
-                      });
-                  }
-                  else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume') {
-                      constraints.push({
-                          left: e.source,
-                          right: e.target,
-                          axis: 'y',
-                          gap: 100
-                      });
-                  }
-              });
-          }
-          if(doAlignment) {
-              // put ChunkServers and Volumes in same levels
-              function level_start() {
-                  return {
-                      offsets: [],
-                      type: 'alignment',
-                      axis: 'y'
-                  };
-              }
-              var CSLevel = level_start(),
-                  VolLevel = level_start();
-              nodes.forEach(function(n, i) {
-                  switch(n.orig.value.class) {
-                  case 'ChunkServer':
-                      CSLevel.offsets.push({node: i, offset: 0});
-                      break;
-                  case 'Attached Volume':
-                      VolLevel.offsets.push({node: i, offset: 0});
-                  }
-              });
-              if(CSLevel.offsets.length)
-                  constraints.push(CSLevel);
-              if(VolLevel.offsets.length)
-                  constraints.push(VolLevel);
-          }
+          if(doDisplacement && isQFS)
+              constraints = qfs_edges(nodes, edges, constraints);
+          if(doAlignment && isQFS)
+              constraints = qfs_alignment(nodes, edges, constraints);
           return constraints;
-      };
+      }
 
       diagram.width(900).height(1000)
           .showLayoutSteps(showSteps)
@@ -283,19 +209,20 @@
           .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
-          .nodeColorAccessor(function(n) {
-              var colors = {
-                  ChunkServer: d3.rgb(152,251,152),
-                  Metaserver: d3.rgb(135,255,255),
-                  "Attached Volume": d3.rgb(255,180,0),
-                  Client: d3.rgb(150,184,255)
-              };
-              return colors[n.value.class];
+          .nodeFillAccessor(function(n) {
+              if(isQFS)
+                  return qfs_color(n);
+              else
+                  return 'white';
           })
           .constrain(constrain)
           .modLayout(function(layout) {
-              if(!hierarchical || doLinkLength)
+              if(!hierarchical || doLinkLength && !individualLengths)
                   layout.symmetricDiffLinkLengths(linkLength)
+              if(individualLengths)
+                  layout.linkDistance(function(e) {
+                      return e.orig.value.length;
+                  });
           })
           .on('end', function() {
               done = true;
@@ -306,7 +233,7 @@
       // this is kind of a brain-dead way to test transitions
       // i mean, you can cram the concept of adding and deleting stuff over time
       // into crossfilter data, but do you really want to do that?
-      var startDim = node_ndx.dimension(function(d) { return d.start; }),
+      var startDim = node_ndx.dimension(function(d) { return d.start || 0; }),
           startGroup = startDim.group();
 
 
