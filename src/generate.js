@@ -26,7 +26,7 @@ dc_graph.generate = function(name, N, callback) {
         }
         break;
     case 'wheel':
-        var r = 200,
+        var r = N*15,
             strutSkip = Math.floor(N/2),
             rimLength = 2 * r * Math.sin(Math.PI / N),
             strutLength = 2 * r * Math.sin(strutSkip * Math.PI / N);
