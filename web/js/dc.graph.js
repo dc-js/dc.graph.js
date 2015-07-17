@@ -104,6 +104,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeOpacityAccessor = property(function() {
         return '1';
     });
+    _chart.edgeLabelAccessor = property(function(d) {
+        return _chart.edgeKeyAccessor()(d);
+    });
     _chart.edgeArrowhead = property(function() {
         return 'vee';
     });
@@ -131,6 +134,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         return function(x) {
             return accessor(x.orig);
         };
+    }
+    function edge_id(d) {
+        return 'edge.' + original(_chart.edgeKeyAccessor())(d);
     }
 
     var _nodes = {}, _edges = {};
@@ -170,6 +176,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(edges1, original(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
+                .attr('id', edge_id)
                 .attr('stroke', original(_chart.edgeStrokeAccessor()))
                 .attr('stroke-width', original(_chart.edgeStrokeWidthAccessor()))
                 .attr('opacity', original(_chart.edgeOpacityAccessor()))
@@ -179,6 +186,22 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('marker-start', function(d) {
                     return 'url(#' + original(_chart.edgeArrowtail())(d) + ')';
                 });
+        var edgeLabels = _edgeLayer.selectAll(".edgelabel")
+                .data(edges1, original(_chart.edgeKeyAccessor()));
+        var edgeLabelsEnter = edgeLabels.enter()
+              .append('text')
+                .attr({'class':'edgelabel',
+                       'text-anchor': 'middle',
+                       dy:-2})
+              .append('textPath')
+                .attr('startOffset', '50%')
+                .attr('xlink:href', function(d) {
+                    return '#' + edge_id(d);
+                })
+                .text(function(d){
+                    return original(_chart.edgeLabelAccessor())(d);
+                });
+        edgeLabels.exit().remove();
 
         var edgeExit = edge.exit();
 
@@ -206,7 +229,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             initLayout();
 
         _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
-            draw(node, edge);
+            draw(node, edge, edgeLabels);
         } : null);
 
         _d3cola.nodes(nodes1)
@@ -221,7 +244,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    function draw(node, edge) {
+    function draw(node, edge, edgeLabels) {
+        node.attr("transform", function (d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        });
+
         edge.attr("d", function (d) {
             var deltaX = d.target.x - d.source.x,
                 deltaY = d.target.y - d.source.y,
@@ -236,15 +263,31 @@ dc_graph.diagram = function (parent, chartGroup) {
                 sourceY = d.source.y + (sourcePadding * normY),
                 targetX = d.target.x - (targetPadding * normX),
                 targetY = d.target.y - (targetPadding * normY);
+            d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
             return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
         }).attr("width", function (d) {
             var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
             return Math.sqrt(dx * dx + dy * dy);
         });
 
-        node.attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
+        edgeLabels
+            .attr('transform', function(d,i) {
+            if (d.target.x < d.source.x) {
+                var bbox = this.getBBox(),
+                    rx = bbox.x + bbox.width/2,
+                    ry = bbox.y + bbox.height/2;
+                return 'rotate(180 ' + rx + ' ' + ry + ')';
+            }
+            else {
+                return 'rotate(0)';
+            }
+        })
+            .attr('dy', function(d, i) {
+                if (d.target.x < d.source.x)
+                    return 10;
+                else
+                    return -2;
+            });
     }
 
     _chart.render = function () {
@@ -395,10 +438,11 @@ dc_graph.generate = function(name, N, callback) {
         edges = [];
         for(i = 0; i < N; ++i)
             nodes[i] = gen_node(i);
-        for(i = 0; i < N; ++i) {
+        for(i = 0; i < N; ++i)
             edges.push(gen_edge(i, (i+1)%N, rimLength));
+        for(i = 0; i < N/2; ++i) {
             edges.push(gen_edge(i, (i+strutSkip)%N, strutLength));
-            if(N%2)
+            if(N%2 && i != Math.floor(N/2))
                 edges.push(gen_edge(i, (i+N-strutSkip)%N, strutLength));
         }
         break;
