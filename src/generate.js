@@ -44,10 +44,11 @@ dc_graph.generate = function(name, N, callback) {
         edges = [];
         for(i = 0; i < N; ++i)
             nodes[i] = gen_node(i);
-        for(i = 0; i < N; ++i) {
+        for(i = 0; i < N; ++i)
             edges.push(gen_edge(i, (i+1)%N, rimLength));
+        for(i = 0; i < N/2; ++i) {
             edges.push(gen_edge(i, (i+strutSkip)%N, strutLength));
-            if(N%2)
+            if(N%2 && i != Math.floor(N/2))
                 edges.push(gen_edge(i, (i+N-strutSkip)%N, strutLength));
         }
         break;
