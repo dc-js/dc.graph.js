@@ -18,10 +18,10 @@ dc_graph.generate = function(name, N, callback) {
     }
     function gen_edge(i, j, length) {
         return {
-            source: j,
-            target: i,
-            sourcename: nodes[j].name,
-            targetname: nodes[i].name,
+            source: i,
+            target: j,
+            sourcename: nodes[i].name,
+            targetname: nodes[j].name,
             length: length
         };
     }
