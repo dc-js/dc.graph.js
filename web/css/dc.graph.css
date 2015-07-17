@@ -3,7 +3,6 @@ div.chart {
 }
 .edge {
     fill: none;
-    marker-end: url(#end-arrow);
 }
 
 text.nodelabel {

@@ -104,6 +104,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeOpacityAccessor = property(function() {
         return '1';
     });
+    _chart.edgeArrowhead = property(function() {
+        return 'vee';
+    });
+    _chart.edgeArrowtail = property(function() {
+        return null;
+    });
 
     _chart.transitionDuration = property(500);
     _chart.constrain = property(function(nodes, edges) {
@@ -166,7 +172,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('class', 'edge')
                 .attr('stroke', original(_chart.edgeStrokeAccessor()))
                 .attr('stroke-width', original(_chart.edgeStrokeWidthAccessor()))
-                .attr('opacity', original(_chart.edgeOpacityAccessor()));
+                .attr('opacity', original(_chart.edgeOpacityAccessor()))
+                .attr('marker-end', function(d) {
+                    return 'url(#' + original(_chart.edgeArrowhead())(d) + ')';
+                })
+                .attr('marker-start', function(d) {
+                    return 'url(#' + original(_chart.edgeArrowtail())(d) + ')';
+                });
 
         var edgeExit = edge.exit();
 
@@ -216,8 +228,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
                 normX = deltaX / dist,
                 normY = deltaY / dist,
-                sourcePadding = _chart.nodeRadiusAccessor()(d.source.orig)-1,
-                targetPadding = _chart.nodeRadiusAccessor()(d.target.orig)-1,
+                sourcePadding = original(_chart.nodeRadiusAccessor())(d.source) +
+                    original(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
+                targetPadding = original(_chart.nodeRadiusAccessor())(d.target) +
+                    original(_chart.nodeStrokeWidthAccessor())(d.target) / 2,
                 sourceX = d.source.x + (sourcePadding * normX),
                 sourceY = d.source.y + (sourcePadding * normY),
                 targetX = d.target.x - (targetPadding * normX),
@@ -238,8 +252,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             initLayout();
         _chart.resetSvg();
         _g = _svg.append('g');
-        _edgeLayer = _g.append('g');
         _nodeLayer = _g.append('g');
+        _edgeLayer = _g.append('g');
         return _chart.redraw();
     };
 
@@ -259,10 +273,36 @@ dc_graph.diagram = function (parent, chartGroup) {
         return generateSvg();
     };
 
+    _chart.defineArrow = function(name, width, height, refX, refY, drawf) {
+        _svg.append('svg:defs').append('svg:marker')
+            .attr('id', name)
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', refX)
+            .attr('refY', refY)
+            .attr('markerWidth', width)
+            .attr('markerHeight', height)
+            .attr('orient', 'auto')
+            .call(drawf);
+    };
+
     function generateSvg() {
         _svg = _chart.root().append('svg')
             .attr('width', _chart.width())
             .attr('height', _chart.height());
+
+        _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+            marker.append('svg:path')
+                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('stroke-width', '0px');
+        });
+        _chart.defineArrow('dot', 7, 7, 0, 0, function(marker) {
+            marker.append('svg:circle')
+                .attr('r', 5)
+                .attr('cx', 5)
+                .attr('cy', 0)
+                .attr('stroke-width', '0px');
+        });
+
         return _svg;
     }
 
@@ -329,10 +369,10 @@ dc_graph.generate = function(name, N, callback) {
     }
     function gen_edge(i, j, length) {
         return {
-            source: j,
-            target: i,
-            sourcename: nodes[j].name,
-            targetname: nodes[i].name,
+            source: i,
+            target: j,
+            sourcename: nodes[i].name,
+            targetname: nodes[j].name,
             length: length
         };
     }
