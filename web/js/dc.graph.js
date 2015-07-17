@@ -138,12 +138,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         };
     }
     function edge_id(d) {
-        return 'edge-' + original(_chart.edgeKeyAccessor())(d);
+        return 'edge-' + original(_chart.edgeKeyAccessor())(d).replace(/[^\w-_]/g, '-');
     }
 
     var _nodes = {}, _edges = {};
 
     _chart.redraw = function () {
+        if(_chart.initLayoutOnRedraw())
+            initLayout();
+
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
         if(_d3cola)
@@ -233,7 +236,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         var node = _nodeLayer.selectAll('.node')
                 .data(nodes1, original(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
-                .attr('class', 'node');
+                .attr('class', 'node')
+                .call(_d3cola.drag);
         nodeEnter.append('circle');
         nodeEnter.append('text')
             .attr('class', 'nodelabel');
@@ -248,9 +252,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nodeExit = node.exit();
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
-
-        if(_chart.initLayoutOnRedraw())
-            initLayout();
 
         _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
             draw(node, edge, edgeHover, edgeLabels);
