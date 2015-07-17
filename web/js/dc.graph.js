@@ -65,6 +65,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.root = property(null);
     _chart.width = property(200);
     _chart.height = property(200);
+    _chart.zoomable = property(true);
+
     _chart.nodeDimension = property();
     _chart.nodeGroup = property();
     _chart.edgeDimension = property();
@@ -349,6 +351,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             .call(drawf);
     };
 
+    function doZoom() {
+        _g.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+    }
+
+
     function generateSvg() {
         _svg = _chart.root().append('svg')
             .attr('width', _chart.width())
@@ -366,6 +373,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('cy', 0)
                 .attr('stroke-width', '0px');
         });
+        if(_chart.zoomable())
+            _svg.call(d3.behavior.zoom().on("zoom", doZoom));
 
         return _svg;
     }
