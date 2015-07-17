@@ -92,7 +92,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         };
     }
     function edge_id(d) {
-        return 'edge-' + original(_chart.edgeKeyAccessor())(d);
+        return 'edge-' + original(_chart.edgeKeyAccessor())(d).replace(/[^\w-_]/g, '-');
     }
 
     var _nodes = {}, _edges = {};
