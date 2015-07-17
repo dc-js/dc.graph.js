@@ -161,7 +161,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         edgeHover.exit().remove();
 
-        var edgeLabels = _edgeLayer.selectAll(".edgelabel")
+        var edgeLabels = _edgeLayer.selectAll(".edge-label")
                 .data(edges1, original(_chart.edgeKeyAccessor()));
         var edgeLabelsEnter = edgeLabels.enter()
               .append('text')
@@ -169,7 +169,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return edge_id(d) + '-label';
                 })
                 .attr('visibility', 'hidden')
-                .attr({'class':'edgelabel',
+                .attr({'class':'edge-label',
                        'text-anchor': 'middle',
                        dy:-2})
               .append('textPath')
@@ -195,6 +195,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke-width', original(_chart.nodeStrokeWidthAccessor()))
             .attr('fill', original(_chart.nodeFillAccessor()));
         node.select('text')
+            .attr('class', 'node-label')
             .text(original(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
         var constraints = _chart.constrain()(nodes1, edges1);
@@ -258,7 +259,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         })
             .attr('dy', function(d, i) {
                 if (d.target.x < d.source.x)
-                    return 10;
+                    return 11;
                 else
                     return -2;
             });
