@@ -127,11 +127,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('stroke', original(_chart.edgeStrokeAccessor()))
                 .attr('stroke-width', original(_chart.edgeStrokeWidthAccessor()))
                 .attr('opacity', original(_chart.edgeOpacityAccessor()))
-                .style('marker-end', function(d) {
-                    return 'url(#' + original(_chart.edgeArrowhead()) + ')';
+                .attr('marker-end', function(d) {
+                    return 'url(#' + original(_chart.edgeArrowhead())(d) + ')';
                 })
-                .style('marker-start', function(d) {
-                    return 'url(#' + original(_chart.edgeArrowhead()) + ')';
+                .attr('marker-start', function(d) {
+                    return 'url(#' + original(_chart.edgeArrowtail())(d) + ')';
                 });
 
         var edgeExit = edge.exit();
@@ -227,18 +227,16 @@ dc_graph.diagram = function (parent, chartGroup) {
         return generateSvg();
     };
 
-    _chart.defineArrow = function(name, width, height, path) {
+    _chart.defineArrow = function(name, width, height, refX, refY, drawf) {
         _svg.append('svg:defs').append('svg:marker')
-            .attr('id', 'end-arrow')
+            .attr('id', name)
             .attr('viewBox', '0 -5 10 10')
-            .attr('refX', 10)
+            .attr('refX', refX)
+            .attr('refY', refY)
             .attr('markerWidth', width)
             .attr('markerHeight', height)
             .attr('orient', 'auto')
-          .append('svg:path')
-            .attr('d', path)
-            .attr('stroke-width', '0px')
-            .attr('fill', '#000');
+            .call(drawf);
     };
 
     function generateSvg() {
@@ -246,7 +244,18 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('width', _chart.width())
             .attr('height', _chart.height());
 
-        _chart.defineArrow('vee', 12, 12, 'M0,-5 L10,0 L0,5 L3,0');
+        _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+            marker.append('svg:path')
+                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('stroke-width', '0px');
+        });
+        _chart.defineArrow('dot', 7, 7, 0, 0, function(marker) {
+            marker.append('svg:circle')
+                .attr('r', 5)
+                .attr('cx', 5)
+                .attr('cy', 0)
+                .attr('stroke-width', '0px');
+        });
 
         return _svg;
     }
