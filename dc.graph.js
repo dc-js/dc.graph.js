@@ -136,7 +136,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         };
     }
     function edge_id(d) {
-        return 'edge.' + original(_chart.edgeKeyAccessor())(d);
+        return 'edge-' + original(_chart.edgeKeyAccessor())(d);
     }
 
     var _nodes = {}, _edges = {};
@@ -186,10 +186,35 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('marker-start', function(d) {
                     return 'url(#' + original(_chart.edgeArrowtail())(d) + ')';
                 });
+        var edgeExit = edge.exit();
+        edgeExit.remove();
+
+        // another wider copy of the edge just for hover events
+        var edgeHover = _edgeLayer.selectAll('.edge-hover')
+                .data(edges1, original(_chart.edgeKeyAccessor()));
+        edgeHover.enter().append('svg:path')
+            .attr('class', 'edge-hover')
+            .attr('opacity', 0)
+            .attr('stroke', 'green')
+            .attr('stroke-width', 10)
+            .on('mouseover', function(d) {
+                d3.select('#' + edge_id(d) + '-label')
+                    .attr('visibility', 'visible');
+            })
+            .on('mouseout', function(d) {
+                d3.select('#' + edge_id(d) + '-label')
+                    .attr('visibility', 'hidden');
+            });
+        edgeHover.exit().remove();
+
         var edgeLabels = _edgeLayer.selectAll(".edgelabel")
                 .data(edges1, original(_chart.edgeKeyAccessor()));
         var edgeLabelsEnter = edgeLabels.enter()
               .append('text')
+                .attr('id', function(d) {
+                    return edge_id(d) + '-label';
+                })
+                .attr('visibility', 'hidden')
                 .attr({'class':'edgelabel',
                        'text-anchor': 'middle',
                        dy:-2})
@@ -202,10 +227,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return original(_chart.edgeLabelAccessor())(d);
                 });
         edgeLabels.exit().remove();
-
-        var edgeExit = edge.exit();
-
-        edgeExit.remove();
 
         var node = _nodeLayer.selectAll('.node')
                 .data(nodes1, original(_chart.nodeKeyAccessor()));
@@ -229,7 +250,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             initLayout();
 
         _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
-            draw(node, edge, edgeLabels);
+            draw(node, edge, edgeHover, edgeLabels);
         } : null);
 
         _d3cola.nodes(nodes1)
@@ -238,37 +259,36 @@ dc_graph.diagram = function (parent, chartGroup) {
             .start(10,20,20)
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
-                    draw(node,edge);
+                    draw(node, edge, edgeHover, edgeLabels);
                 _dispatch.end();
             });
         return this;
     };
 
-    function draw(node, edge, edgeLabels) {
+    function edge_path(d) {
+        var deltaX = d.target.x - d.source.x,
+            deltaY = d.target.y - d.source.y,
+            dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+            normX = deltaX / dist,
+            normY = deltaY / dist,
+            sourcePadding = original(_chart.nodeRadiusAccessor())(d.source) +
+                original(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
+            targetPadding = original(_chart.nodeRadiusAccessor())(d.target) +
+                original(_chart.nodeStrokeWidthAccessor())(d.target) / 2,
+            sourceX = d.source.x + (sourcePadding * normX),
+            sourceY = d.source.y + (sourcePadding * normY),
+            targetX = d.target.x - (targetPadding * normX),
+            targetY = d.target.y - (targetPadding * normY);
+        d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
+        return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+    }
+    function draw(node, edge, edgeHover, edgeLabels) {
         node.attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
 
-        edge.attr("d", function (d) {
-            var deltaX = d.target.x - d.source.x,
-                deltaY = d.target.y - d.source.y,
-                dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-                normX = deltaX / dist,
-                normY = deltaY / dist,
-                sourcePadding = original(_chart.nodeRadiusAccessor())(d.source) +
-                    original(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
-                targetPadding = original(_chart.nodeRadiusAccessor())(d.target) +
-                    original(_chart.nodeStrokeWidthAccessor())(d.target) / 2,
-                sourceX = d.source.x + (sourcePadding * normX),
-                sourceY = d.source.y + (sourcePadding * normY),
-                targetX = d.target.x - (targetPadding * normX),
-                targetY = d.target.y - (targetPadding * normY);
-            d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-            return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
-        }).attr("width", function (d) {
-            var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
-            return Math.sqrt(dx * dx + dy * dy);
-        });
+        edge.attr("d", edge_path);
+        edgeHover.attr('d', edge_path);
 
         edgeLabels
             .attr('transform', function(d,i) {
@@ -295,8 +315,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             initLayout();
         _chart.resetSvg();
         _g = _svg.append('g');
-        _nodeLayer = _g.append('g');
         _edgeLayer = _g.append('g');
+        _nodeLayer = _g.append('g');
         return _chart.redraw();
     };
 

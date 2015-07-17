@@ -130,7 +130,7 @@
           );
       }
       var nodeDimension = node_ndx.dimension(function(d) { return d.name; }),
-          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '->' + d.targetname; }),
+          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '-' + d.targetname; }),
           nodeGroup = nodeDimension.group(),
           edgeGroup = edgeDimension.group();
 
