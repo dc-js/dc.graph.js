@@ -115,8 +115,6 @@
       var edge_ndx = crossfilter(data.links),
           node_ndx = crossfilter(data.nodes);
 
-      var individualLengths = data.links.some(function(e) { return !!e.length; });
-
       // for this example we use simple identity dimension/groups, with unique keys
       // more complex node/edge generation is possible, but it is more likely that
       // grouping will happen in other kinds of charts
@@ -201,6 +199,21 @@
               constraints = qfs_edges(nodes, edges, constraints);
           if(doAlignment && isQFS)
               constraints = qfs_alignment(nodes, edges, constraints);
+
+          var circles = {};
+          nodes.forEach(function(n, i) {
+              if(n.orig.value.circle) {
+                  var circ = n.orig.value.circle;
+                  if(!circles[circ]) circles[circ] = [];
+                  circles[circ].push({node: i});
+              }
+          });
+          for(var circ in circles)
+              constraints.push({
+                  type: 'circle',
+                  distance: 40,
+                  nodes: circles[circ]
+              });
           return constraints;
       }
 
@@ -217,6 +230,7 @@
                   return 'white';
           })
           .constrain(constrain)
+          .lengthStrategy(generate ? 'individual' : 'symmetric')
           .modLayout(function(layout) {
               if(!hierarchical || doLinkLength && !individualLengths)
                   layout.symmetricDiffLinkLengths(linkLength)

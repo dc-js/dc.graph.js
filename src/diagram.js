@@ -113,22 +113,24 @@ dc_graph.diagram = function (parent, chartGroup) {
             result[_chart.nodeKeyAccessor()(value)] = index;
             return result;
         }, {});
-        var nodes1 = nodes.map(function(v) {
-            if(!_nodes[v.key]) _nodes[v.key] = {};
-            var v1 = _nodes[v.key];
+        function wrap_node(v) {
+            if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
+            var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
             v1.orig = v;
             v1.width = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
             v1.height = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
             return v1;
-        });
-        var edges1 = edges.map(function(e) {
-            if(!_edges[e.key]) _edges[e.key] = {};
-            var e1 = _edges[e.key];
+        }
+        function wrap_edge(e) {
+            if(!_edges[e.key]) _edges[_chart.edgeKeyAccessor()(e)] = {};
+            var e1 = _edges[_chart.edgeKeyAccessor()(e)];
             e1.orig =  e;
             e1.source = key_index_map[_chart.sourceAccessor()(e)];
             e1.target = key_index_map[_chart.targetAccessor()(e)];
             return e1;
-        }).filter(function(e) {
+        }
+        var nodes1 = nodes.map(wrap_node);
+        var edges1 = edges.map(wrap_edge).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
 
@@ -214,6 +216,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             draw(node, edge, edgeHover, edgeLabels);
         } : null);
 
+        // pseudo-cola.js features
+
+        // 1. non-layout edges are drawn but not told to cola.js
         var layout_edges = edges1.filter(original(_chart.edgeIsLayoutAccessor()));
         var nonlayout_edges = edges1.filter(function(x) {
             return !original(_chart.edgeIsLayoutAccessor())(x);
@@ -222,9 +227,28 @@ dc_graph.diagram = function (parent, chartGroup) {
             e.source = nodes1[e.source];
             e.target = nodes1[e.target];
         });
+
+        // 2. type=circle constraints
+        var circle_constraints = constraints.filter(function(c) {
+            return c.type === 'circle';
+        });
+        var noncircle_constraints = constraints.filter(function(c) {
+            return c.type !== 'circle';
+        });
+        circle_constraints.forEach(function(c) {
+            var R = 300; // c.distance / 2*Math.sin(Math.PI/c.nodes.length);
+            var nindices = c.nodes.map(function(x) { return x.node; });
+            var namef = function(i) {
+                return original(_chart.nodeKeyAccessor())(nodes1[i]);
+            };
+            var wheel = dc_graph.wheel_edges(namef, nindices, R)
+                    .map(function(e) { return {key: null, value: e}; })
+                    .map(wrap_edge);
+            layout_edges = layout_edges.concat(wheel);
+        });
         _d3cola.nodes(nodes1)
             .links(layout_edges)
-            .constraints(constraints)
+            .constraints(noncircle_constraints)
             .start(10,20,20)
             .on('end', function() {
                 if(!_chart.showLayoutSteps())

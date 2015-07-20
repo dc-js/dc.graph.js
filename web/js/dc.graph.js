@@ -115,6 +115,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeArrowtail = property(function() {
         return null;
     });
+    _chart.edgeIsLayoutAccessor = property(function(kv) {
+        return !kv.value.notLayout;
+    });
 
     _chart.transitionDuration = property(500);
     _chart.constrain = property(function(nodes, edges) {
@@ -156,22 +159,24 @@ dc_graph.diagram = function (parent, chartGroup) {
             result[_chart.nodeKeyAccessor()(value)] = index;
             return result;
         }, {});
-        var nodes1 = nodes.map(function(v) {
-            if(!_nodes[v.key]) _nodes[v.key] = {};
-            var v1 = _nodes[v.key];
+        function wrap_node(v) {
+            if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
+            var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
             v1.orig = v;
             v1.width = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
             v1.height = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
             return v1;
-        });
-        var edges1 = edges.map(function(e) {
-            if(!_edges[e.key]) _edges[e.key] = {};
-            var e1 = _edges[e.key];
+        }
+        function wrap_edge(e) {
+            if(!_edges[e.key]) _edges[_chart.edgeKeyAccessor()(e)] = {};
+            var e1 = _edges[_chart.edgeKeyAccessor()(e)];
             e1.orig =  e;
             e1.source = key_index_map[_chart.sourceAccessor()(e)];
             e1.target = key_index_map[_chart.targetAccessor()(e)];
             return e1;
-        }).filter(function(e) {
+        }
+        var nodes1 = nodes.map(wrap_node);
+        var edges1 = edges.map(wrap_edge).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
 
@@ -257,9 +262,39 @@ dc_graph.diagram = function (parent, chartGroup) {
             draw(node, edge, edgeHover, edgeLabels);
         } : null);
 
+        // pseudo-cola.js features
+
+        // 1. non-layout edges are drawn but not told to cola.js
+        var layout_edges = edges1.filter(original(_chart.edgeIsLayoutAccessor()));
+        var nonlayout_edges = edges1.filter(function(x) {
+            return !original(_chart.edgeIsLayoutAccessor())(x);
+        });
+        nonlayout_edges.forEach(function(e) {
+            e.source = nodes1[e.source];
+            e.target = nodes1[e.target];
+        });
+
+        // 2. type=circle constraints
+        var circle_constraints = constraints.filter(function(c) {
+            return c.type === 'circle';
+        });
+        var noncircle_constraints = constraints.filter(function(c) {
+            return c.type !== 'circle';
+        });
+        circle_constraints.forEach(function(c) {
+            var R = 300; // c.distance / 2*Math.sin(Math.PI/c.nodes.length);
+            var nindices = c.nodes.map(function(x) { return x.node; });
+            var namef = function(i) {
+                return original(_chart.nodeKeyAccessor())(nodes1[i]);
+            };
+            var wheel = dc_graph.wheel_edges(namef, nindices, R)
+                    .map(function(e) { return {key: null, value: e}; })
+                    .map(wrap_edge);
+            layout_edges = layout_edges.concat(wheel);
+        });
         _d3cola.nodes(nodes1)
-            .links(edges1)
-            .constraints(constraints)
+            .links(layout_edges)
+            .constraints(noncircle_constraints)
             .start(10,20,20)
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
@@ -423,65 +458,76 @@ dc_graph.load_graph = function(file, callback) {
         });
 };
 
+dc_graph.node_name = function(i) {
+    // a-z, A-Z, aa-Zz, then quit
+    if(i<26)
+        return String.fromCharCode(97+i);
+    else if(i<52)
+        return String.fromCharCode(65+i-26);
+    else if(i<52*52)
+        return dc_graph.node_name(Math.floor(i/52)) + dc_graph.node_name(i%52);
+    else throw new Error("no, that's too large");
+};
+dc_graph.node_object = function(i, attrs) {
+    attrs = attrs || {};
+    return _.extend({
+        id: i,
+        name: dc_graph.node_name(i)
+    }, attrs);
+};
+
+dc_graph.edge_object = function(namef, i, j, attrs) {
+    attrs = attrs || {};
+    return _.extend({
+        source: i,
+        target: j,
+        sourcename: namef(i),
+        targetname: namef(j)
+    }, attrs);
+};
+
 dc_graph.generate = function(name, N, callback) {
     var nodes, edges, i, j;
-    function nodename(i) {
-        // a-z, A-Z, aa-Zz, then quit
-        if(i<26)
-            return String.fromCharCode(97+i);
-        else if(i<52)
-            return String.fromCharCode(65+i-26);
-        else if(i<52*52)
-            return nodename(Math.floor(i/52)) + nodename(i%52);
-        else throw new Error("no, that's too large");
-    }
-    function gen_node(i) {
-        return {
-            id: i,
-            name: nodename(i)
-        };
-    }
-    function gen_edge(i, j, length) {
-        return {
-            source: i,
-            target: j,
-            sourcename: nodes[i].name,
-            targetname: nodes[j].name,
-            length: length
-        };
-    }
+    var namef = function(i) {
+        return nodes[i].name;
+    };
     switch(name) {
     case 'clique':
         nodes = new Array(N);
         edges = [];
         for(i = 0; i<N; ++i) {
-            nodes[i] = gen_node(i);
+            nodes[i] = dc_graph.node_object(i, {circle: "A"});
             for(j=0; j<i; ++j)
-                edges.push(gen_edge(i, j));
+                edges.push(dc_graph.edge_object(namef, i, j, {notLayout: true }));
         }
         break;
     case 'wheel':
-        var r = N*15,
-            strutSkip = Math.floor(N/2),
-            rimLength = 2 * r * Math.sin(Math.PI / N),
-            strutLength = 2 * r * Math.sin(strutSkip * Math.PI / N);
         nodes = new Array(N);
-        edges = [];
         for(i = 0; i < N; ++i)
-            nodes[i] = gen_node(i);
-        for(i = 0; i < N; ++i)
-            edges.push(gen_edge(i, (i+1)%N, rimLength));
-        for(i = 0; i < N/2; ++i) {
-            edges.push(gen_edge(i, (i+strutSkip)%N, strutLength));
-            if(N%2 && i != Math.floor(N/2))
-                edges.push(gen_edge(i, (i+N-strutSkip)%N, strutLength));
-        }
+            nodes[i] = dc_graph.node_object(i);
+        edges = dc_graph.wheel_edges(namef, _.range(N), N*15);
         break;
     default:
         throw new Error("unknown generation type "+name);
     }
     var graph = {nodes: nodes, links: edges};
     callback(null, graph);
+};
+
+dc_graph.wheel_edges = function(namef, nindices, R) {
+    var N = nindices.length;
+    var edges = [];
+    var strutSkip = Math.floor(N/2),
+        rimLength = 2 * R * Math.sin(Math.PI / N),
+        strutLength = 2 * R * Math.sin(strutSkip * Math.PI / N);
+    for(var i = 0; i < N; ++i)
+        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+1)%N], {length: rimLength}));
+    for(i = 0; i < N/2; ++i) {
+        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+strutSkip)%N], {length: strutLength}));
+        if(N%2 && i != Math.floor(N/2))
+            edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {length: strutLength}));
+    }
+    return edges;
 };
 
 dc_graph.d3 = d3;
