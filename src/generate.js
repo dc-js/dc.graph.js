@@ -10,20 +10,22 @@ dc_graph.generate = function(name, N, callback) {
             return nodename(Math.floor(i/52)) + nodename(i%52);
         else throw new Error("no, that's too large");
     }
-    function gen_node(i) {
-        return {
+    function gen_node(i, attrs) {
+        attrs = attrs || {};
+        return _.extend({
             id: i,
             name: nodename(i)
-        };
+        }, attrs);
     }
-    function gen_edge(i, j, length) {
-        return {
+    function gen_edge(i, j, attrs) {
+        attrs = attrs || {};
+        return _.extend({
             source: i,
             target: j,
             sourcename: nodes[i].name,
             targetname: nodes[j].name,
             length: length
-        };
+        }, attrs);
     }
     switch(name) {
     case 'clique':
@@ -45,11 +47,11 @@ dc_graph.generate = function(name, N, callback) {
         for(i = 0; i < N; ++i)
             nodes[i] = gen_node(i);
         for(i = 0; i < N; ++i)
-            edges.push(gen_edge(i, (i+1)%N, rimLength));
+            edges.push(gen_edge(i, (i+1)%N, {length: rimLength}));
         for(i = 0; i < N/2; ++i) {
-            edges.push(gen_edge(i, (i+strutSkip)%N, strutLength));
+            edges.push(gen_edge(i, (i+strutSkip)%N, {length: strutLength}));
             if(N%2 && i != Math.floor(N/2))
-                edges.push(gen_edge(i, (i+N-strutSkip)%N, strutLength));
+                edges.push(gen_edge(i, (i+N-strutSkip)%N, {length: strutLength}));
         }
         break;
     default:
