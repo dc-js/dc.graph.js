@@ -69,6 +69,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeArrowtail = property(function() {
         return null;
     });
+    _chart.edgeIsLayoutAccessor = property(function(kv) {
+        return !kv.value.notLayout;
+    });
 
     _chart.transitionDuration = property(500);
     _chart.constrain = property(function(nodes, edges) {
@@ -211,8 +214,16 @@ dc_graph.diagram = function (parent, chartGroup) {
             draw(node, edge, edgeHover, edgeLabels);
         } : null);
 
+        var layout_edges = edges1.filter(original(_chart.edgeIsLayoutAccessor()));
+        var nonlayout_edges = edges1.filter(function(x) {
+            return !original(_chart.edgeIsLayoutAccessor())(x);
+        });
+        nonlayout_edges.forEach(function(e) {
+            e.source = nodes1[e.source];
+            e.target = nodes1[e.target];
+        });
         _d3cola.nodes(nodes1)
-            .links(edges1)
+            .links(layout_edges)
             .constraints(constraints)
             .start(10,20,20)
             .on('end', function() {
