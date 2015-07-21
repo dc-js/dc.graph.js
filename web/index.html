@@ -227,6 +227,9 @@
           .lengthStrategy(generate ? 'individual' :
                           hierarchical ? 'none' :
                           'symmetric')
+          .edgeArrowhead(function(kv) {
+              return !kv.value.undirected;
+          })
           .on('end', function() {
               done = true;
               kontinue();
