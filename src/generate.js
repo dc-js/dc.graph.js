@@ -33,13 +33,21 @@ dc_graph.generate = function(name, N, callback) {
     };
     switch(name) {
     case 'clique':
+    case 'cliquestf':
         nodes = new Array(N);
         edges = [];
         for(i = 0; i<N; ++i) {
             nodes[i] = dc_graph.node_object(i, {circle: "A"});
             for(j=0; j<i; ++j)
-                edges.push(dc_graph.edge_object(namef, i, j, {notLayout: true }));
+                edges.push(dc_graph.edge_object(namef, i, j, {notLayout: true, undirected: true}));
         }
+        if(name==='cliquestf')
+            for(i = 0; i<N; ++i) {
+                nodes[i+N] = dc_graph.node_object(i+N);
+                nodes[i+2*N] = dc_graph.node_object(i+2*N);
+                edges.push(dc_graph.edge_object(namef, i, i+N, {undirected: true}));
+                edges.push(dc_graph.edge_object(namef, i, i+2*N, {undirected: true}));
+            }
         break;
     case 'wheel':
         nodes = new Array(N);
