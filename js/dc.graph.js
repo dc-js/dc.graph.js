@@ -65,6 +65,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.root = property(null);
     _chart.width = property(200);
     _chart.height = property(200);
+    _chart.zoomable = property(true);
+
     _chart.nodeDimension = property();
     _chart.nodeGroup = property();
     _chart.edgeDimension = property();
@@ -104,6 +106,23 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeOpacityAccessor = property(function() {
         return '1';
     });
+    _chart.edgeLabelAccessor = property(function(d) {
+        return _chart.edgeKeyAccessor()(d);
+    });
+    _chart.edgeArrowhead = property(function() {
+        return 'vee';
+    });
+    _chart.edgeArrowtail = property(function() {
+        return null;
+    });
+    _chart.edgeIsLayoutAccessor = property(function(kv) {
+        return !kv.value.notLayout;
+    });
+    _chart.edgeDistanceAccessor = property(function(kv) {
+        return kv.value.distance;
+    });
+    _chart.baseLength = property(30);
+    _chart.lengthStrategy = property('symmetric');
 
     _chart.transitionDuration = property(500);
     _chart.constrain = property(function(nodes, edges) {
@@ -117,6 +136,23 @@ dc_graph.diagram = function (parent, chartGroup) {
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
             .size([_chart.width(), _chart.height()]);
+
+        switch(_chart.lengthStrategy()) {
+        case 'symmetric':
+            _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
+            break;
+        case 'jaccard':
+            _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
+            break;
+        case 'individual':
+            _d3cola.linkDistance(function(e) {
+                var d = e.orig ? original(_chart.edgeDistanceAccessor())(e) :
+                        e.internal && e.internal.distance;
+                return d || _chart.baseLength();
+            });
+            break;
+        }
+
         if(_chart.modLayout())
             _chart.modLayout()(_d3cola);
     }
@@ -126,10 +162,16 @@ dc_graph.diagram = function (parent, chartGroup) {
             return accessor(x.orig);
         };
     }
+    function edge_id(d) {
+        return 'edge-' + original(_chart.edgeKeyAccessor())(d).replace(/[^\w-_]/g, '-');
+    }
 
     var _nodes = {}, _edges = {};
 
     _chart.redraw = function () {
+        if(_chart.initLayoutOnRedraw())
+            initLayout();
+
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
         if(_d3cola)
@@ -139,22 +181,24 @@ dc_graph.diagram = function (parent, chartGroup) {
             result[_chart.nodeKeyAccessor()(value)] = index;
             return result;
         }, {});
-        var nodes1 = nodes.map(function(v) {
-            if(!_nodes[v.key]) _nodes[v.key] = {};
-            var v1 = _nodes[v.key];
+        function wrap_node(v) {
+            if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
+            var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
             v1.orig = v;
             v1.width = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
             v1.height = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
             return v1;
-        });
-        var edges1 = edges.map(function(e) {
-            if(!_edges[e.key]) _edges[e.key] = {};
-            var e1 = _edges[e.key];
+        }
+        function wrap_edge(e) {
+            if(!_edges[e.key]) _edges[_chart.edgeKeyAccessor()(e)] = {};
+            var e1 = _edges[_chart.edgeKeyAccessor()(e)];
             e1.orig =  e;
             e1.source = key_index_map[_chart.sourceAccessor()(e)];
             e1.target = key_index_map[_chart.targetAccessor()(e)];
             return e1;
-        }).filter(function(e) {
+        }
+        var nodes1 = nodes.map(wrap_node);
+        var edges1 = edges.map(wrap_edge).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
 
@@ -164,18 +208,63 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(edges1, original(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
+                .attr('id', edge_id)
                 .attr('stroke', original(_chart.edgeStrokeAccessor()))
                 .attr('stroke-width', original(_chart.edgeStrokeWidthAccessor()))
-                .attr('opacity', original(_chart.edgeOpacityAccessor()));
-
+                .attr('opacity', original(_chart.edgeOpacityAccessor()))
+                .attr('marker-end', function(d) {
+                    return 'url(#' + original(_chart.edgeArrowhead())(d) + ')';
+                })
+                .attr('marker-start', function(d) {
+                    return 'url(#' + original(_chart.edgeArrowtail())(d) + ')';
+                });
         var edgeExit = edge.exit();
-
         edgeExit.remove();
+
+        // another wider copy of the edge just for hover events
+        var edgeHover = _edgeLayer.selectAll('.edge-hover')
+                .data(edges1, original(_chart.edgeKeyAccessor()));
+        edgeHover.enter().append('svg:path')
+            .attr('class', 'edge-hover')
+            .attr('opacity', 0)
+            .attr('stroke', 'green')
+            .attr('stroke-width', 10)
+            .on('mouseover', function(d) {
+                d3.select('#' + edge_id(d) + '-label')
+                    .attr('visibility', 'visible');
+            })
+            .on('mouseout', function(d) {
+                d3.select('#' + edge_id(d) + '-label')
+                    .attr('visibility', 'hidden');
+            });
+        edgeHover.exit().remove();
+
+        var edgeLabels = _edgeLayer.selectAll(".edge-label")
+                .data(edges1, original(_chart.edgeKeyAccessor()));
+        var edgeLabelsEnter = edgeLabels.enter()
+              .append('text')
+                .attr('id', function(d) {
+                    return edge_id(d) + '-label';
+                })
+                .attr('visibility', 'hidden')
+                .attr({'class':'edge-label',
+                       'text-anchor': 'middle',
+                       dy:-2})
+              .append('textPath')
+                .attr('startOffset', '50%')
+                .attr('xlink:href', function(d) {
+                    return '#' + edge_id(d);
+                })
+                .text(function(d){
+                    return original(_chart.edgeLabelAccessor())(d);
+                });
+        edgeLabels.exit().remove();
 
         var node = _nodeLayer.selectAll('.node')
                 .data(nodes1, original(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
-                .attr('class', 'node');
+                .attr('class', 'node')
+                .call(_d3cola.drag);
         nodeEnter.append('circle');
         nodeEnter.append('text')
             .attr('class', 'nodelabel');
@@ -185,52 +274,105 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke-width', original(_chart.nodeStrokeWidthAccessor()))
             .attr('fill', original(_chart.nodeFillAccessor()));
         node.select('text')
+            .attr('class', 'node-label')
             .text(original(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
-        if(_chart.initLayoutOnRedraw())
-            initLayout();
-
         _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
-            draw(node, edge);
+            draw(node, edge, edgeHover, edgeLabels);
         } : null);
 
+        // pseudo-cola.js features
+
+        // 1. non-layout edges are drawn but not told to cola.js
+        var layout_edges = edges1.filter(original(_chart.edgeIsLayoutAccessor()));
+        var nonlayout_edges = edges1.filter(function(x) {
+            return !original(_chart.edgeIsLayoutAccessor())(x);
+        });
+        nonlayout_edges.forEach(function(e) {
+            e.source = nodes1[e.source];
+            e.target = nodes1[e.target];
+        });
+
+        // 2. type=circle constraints
+        var circle_constraints = constraints.filter(function(c) {
+            return c.type === 'circle';
+        });
+        var noncircle_constraints = constraints.filter(function(c) {
+            return c.type !== 'circle';
+        });
+        circle_constraints.forEach(function(c) {
+            var R = (c.distance || _chart.baseLength()*4) / (2*Math.sin(Math.PI/c.nodes.length));
+            var nindices = c.nodes.map(function(x) { return x.node; });
+            var namef = function(i) {
+                return original(_chart.nodeKeyAccessor())(nodes1[i]);
+            };
+            var wheel = dc_graph.wheel_edges(namef, nindices, R)
+                    .map(function(e) {
+                        var e1 = {internal: e};
+                        e1.source = key_index_map[e.sourcename];
+                        e1.target = key_index_map[e.targetname];
+                        return e1;
+                    });
+            layout_edges = layout_edges.concat(wheel);
+        });
         _d3cola.nodes(nodes1)
-            .links(edges1)
-            .constraints(constraints)
+            .links(layout_edges)
+            .constraints(noncircle_constraints)
             .start(10,20,20)
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
-                    draw(node,edge);
+                    draw(node, edge, edgeHover, edgeLabels);
                 _dispatch.end();
             });
         return this;
     };
 
-    function draw(node, edge) {
-        edge.attr("d", function (d) {
-            var deltaX = d.target.x - d.source.x,
-                deltaY = d.target.y - d.source.y,
-                dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-                normX = deltaX / dist,
-                normY = deltaY / dist,
-                sourcePadding = _chart.nodeRadiusAccessor()(d.source.orig)-1,
-                targetPadding = _chart.nodeRadiusAccessor()(d.target.orig)-1,
-                sourceX = d.source.x + (sourcePadding * normX),
-                sourceY = d.source.y + (sourcePadding * normY),
-                targetX = d.target.x - (targetPadding * normX),
-                targetY = d.target.y - (targetPadding * normY);
-            return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
-        }).attr("width", function (d) {
-            var dx = d.source.x - d.target.x, dy = d.source.y - d.target.y;
-            return Math.sqrt(dx * dx + dy * dy);
-        });
-
+    function edge_path(d) {
+        var deltaX = d.target.x - d.source.x,
+            deltaY = d.target.y - d.source.y,
+            dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+            normX = deltaX / dist,
+            normY = deltaY / dist,
+            sourcePadding = original(_chart.nodeRadiusAccessor())(d.source) +
+                original(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
+            targetPadding = original(_chart.nodeRadiusAccessor())(d.target) +
+                original(_chart.nodeStrokeWidthAccessor())(d.target) / 2,
+            sourceX = d.source.x + (sourcePadding * normX),
+            sourceY = d.source.y + (sourcePadding * normY),
+            targetX = d.target.x - (targetPadding * normX),
+            targetY = d.target.y - (targetPadding * normY);
+        d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
+        return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+    }
+    function draw(node, edge, edgeHover, edgeLabels) {
         node.attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
+
+        edge.attr("d", edge_path);
+        edgeHover.attr('d', edge_path);
+
+        edgeLabels
+            .attr('transform', function(d,i) {
+            if (d.target.x < d.source.x) {
+                var bbox = this.getBBox(),
+                    rx = bbox.x + bbox.width/2,
+                    ry = bbox.y + bbox.height/2;
+                return 'rotate(180 ' + rx + ' ' + ry + ')';
+            }
+            else {
+                return 'rotate(0)';
+            }
+        })
+            .attr('dy', function(d, i) {
+                if (d.target.x < d.source.x)
+                    return 11;
+                else
+                    return -2;
+            });
     }
 
     _chart.render = function () {
@@ -259,10 +401,43 @@ dc_graph.diagram = function (parent, chartGroup) {
         return generateSvg();
     };
 
+    _chart.defineArrow = function(name, width, height, refX, refY, drawf) {
+        _svg.append('svg:defs').append('svg:marker')
+            .attr('id', name)
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', refX)
+            .attr('refY', refY)
+            .attr('markerWidth', width)
+            .attr('markerHeight', height)
+            .attr('orient', 'auto')
+            .call(drawf);
+    };
+
+    function doZoom() {
+        _g.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+    }
+
+
     function generateSvg() {
         _svg = _chart.root().append('svg')
             .attr('width', _chart.width())
             .attr('height', _chart.height());
+
+        _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+            marker.append('svg:path')
+                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('stroke-width', '0px');
+        });
+        _chart.defineArrow('dot', 7, 7, 0, 0, function(marker) {
+            marker.append('svg:circle')
+                .attr('r', 5)
+                .attr('cx', 5)
+                .attr('cy', 0)
+                .attr('stroke-width', '0px');
+        });
+        if(_chart.zoomable())
+            _svg.call(d3.behavior.zoom().on("zoom", doZoom));
+
         return _svg;
     }
 
@@ -309,64 +484,84 @@ dc_graph.load_graph = function(file, callback) {
         });
 };
 
+dc_graph.node_name = function(i) {
+    // a-z, A-Z, aa-Zz, then quit
+    if(i<26)
+        return String.fromCharCode(97+i);
+    else if(i<52)
+        return String.fromCharCode(65+i-26);
+    else if(i<52*52)
+        return dc_graph.node_name(Math.floor(i/52)) + dc_graph.node_name(i%52);
+    else throw new Error("no, that's too large");
+};
+dc_graph.node_object = function(i, attrs) {
+    attrs = attrs || {};
+    return _.extend({
+        id: i,
+        name: dc_graph.node_name(i)
+    }, attrs);
+};
+
+dc_graph.edge_object = function(namef, i, j, attrs) {
+    attrs = attrs || {};
+    return _.extend({
+        source: i,
+        target: j,
+        sourcename: namef(i),
+        targetname: namef(j)
+    }, attrs);
+};
+
 dc_graph.generate = function(name, N, callback) {
     var nodes, edges, i, j;
-    function nodename(i) {
-        // a-z, A-Z, aa-Zz, then quit
-        if(i<26)
-            return String.fromCharCode(97+i);
-        else if(i<52)
-            return String.fromCharCode(65+i-26);
-        else if(i<52*52)
-            return nodename(Math.floor(i/52)) + nodename(i%52);
-        else throw new Error("no, that's too large");
-    }
-    function gen_node(i) {
-        return {
-            id: i,
-            name: nodename(i)
-        };
-    }
-    function gen_edge(i, j, length) {
-        return {
-            source: j,
-            target: i,
-            sourcename: nodes[j].name,
-            targetname: nodes[i].name,
-            length: length
-        };
-    }
+    var namef = function(i) {
+        return nodes[i].name;
+    };
     switch(name) {
     case 'clique':
+    case 'cliquestf':
         nodes = new Array(N);
         edges = [];
         for(i = 0; i<N; ++i) {
-            nodes[i] = gen_node(i);
+            nodes[i] = dc_graph.node_object(i, {circle: "A"});
             for(j=0; j<i; ++j)
-                edges.push(gen_edge(i, j));
+                edges.push(dc_graph.edge_object(namef, i, j, {notLayout: true, undirected: true}));
         }
+        if(name==='cliquestf')
+            for(i = 0; i<N; ++i) {
+                nodes[i+N] = dc_graph.node_object(i+N);
+                nodes[i+2*N] = dc_graph.node_object(i+2*N);
+                edges.push(dc_graph.edge_object(namef, i, i+N, {undirected: true}));
+                edges.push(dc_graph.edge_object(namef, i, i+2*N, {undirected: true}));
+            }
         break;
     case 'wheel':
-        var r = N*15,
-            strutSkip = Math.floor(N/2),
-            rimLength = 2 * r * Math.sin(Math.PI / N),
-            strutLength = 2 * r * Math.sin(strutSkip * Math.PI / N);
         nodes = new Array(N);
-        edges = [];
         for(i = 0; i < N; ++i)
-            nodes[i] = gen_node(i);
-        for(i = 0; i < N; ++i) {
-            edges.push(gen_edge(i, (i+1)%N, rimLength));
-            edges.push(gen_edge(i, (i+strutSkip)%N, strutLength));
-            if(N%2)
-                edges.push(gen_edge(i, (i+N-strutSkip)%N, strutLength));
-        }
+            nodes[i] = dc_graph.node_object(i);
+        edges = dc_graph.wheel_edges(namef, _.range(N), N*15);
         break;
     default:
         throw new Error("unknown generation type "+name);
     }
     var graph = {nodes: nodes, links: edges};
     callback(null, graph);
+};
+
+dc_graph.wheel_edges = function(namef, nindices, R) {
+    var N = nindices.length;
+    var edges = [];
+    var strutSkip = Math.floor(N/2),
+        rimLength = 2 * R * Math.sin(Math.PI / N),
+        strutLength = 2 * R * Math.sin(strutSkip * Math.PI / N);
+    for(var i = 0; i < N; ++i)
+        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+1)%N], {distance: rimLength}));
+    for(i = 0; i < N/2; ++i) {
+        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+strutSkip)%N], {distance: strutLength}));
+        if(N%2 && i != Math.floor(N/2))
+            edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {distance: strutLength}));
+    }
+    return edges;
 };
 
 dc_graph.d3 = d3;

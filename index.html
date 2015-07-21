@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/jquery-ui.css">
   <script src="js/jquery.js"></script>
   <script src="js/jquery-ui.js"></script>
+  <script src="js/lodash.js"></script>
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
@@ -66,13 +67,8 @@
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
       isQFS = false,
-      doLinkLength = false,
-      linkLength = 40,
+      linkLength = querystring.linklength || 0,
       hierarchical = true;
-  if(querystring.linklength) {
-      doLinkLength = true;
-      linkLength = +querystring.linklength;
-  }
   if('hier' in querystring) {
       hierarchical = !!+querystring.hier;
       $('#hierarchical').prop('checked', hierarchical);
@@ -114,8 +110,6 @@
       var edge_ndx = crossfilter(data.links),
           node_ndx = crossfilter(data.nodes);
 
-      var individualLengths = data.links.some(function(e) { return !!e.length; });
-
       // for this example we use simple identity dimension/groups, with unique keys
       // more complex node/edge generation is possible, but it is more likely that
       // grouping will happen in other kinds of charts
@@ -130,7 +124,7 @@
           );
       }
       var nodeDimension = node_ndx.dimension(function(d) { return d.name; }),
-          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '->' + d.targetname; }),
+          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '-' + d.targetname; }),
           nodeGroup = nodeDimension.group(),
           edgeGroup = edgeDimension.group();
 
@@ -200,6 +194,20 @@
               constraints = qfs_edges(nodes, edges, constraints);
           if(doAlignment && isQFS)
               constraints = qfs_alignment(nodes, edges, constraints);
+
+          var circles = {};
+          nodes.forEach(function(n, i) {
+              if(n.orig.value.circle) {
+                  var circ = n.orig.value.circle;
+                  if(!circles[circ]) circles[circ] = [];
+                  circles[circ].push({node: i});
+              }
+          });
+          for(var circ in circles)
+              constraints.push({
+                  type: 'circle',
+                  nodes: circles[circ]
+              });
           return constraints;
       }
 
@@ -216,18 +224,19 @@
                   return 'white';
           })
           .constrain(constrain)
-          .modLayout(function(layout) {
-              if(!hierarchical || doLinkLength && !individualLengths)
-                  layout.symmetricDiffLinkLengths(linkLength)
-              if(individualLengths)
-                  layout.linkDistance(function(e) {
-                      return e.orig.value.length;
-                  });
+          .lengthStrategy(generate ? 'individual' :
+                          hierarchical ? 'none' :
+                          'symmetric')
+          .edgeArrowhead(function(kv) {
+              return !kv.value.undirected;
           })
           .on('end', function() {
               done = true;
               kontinue();
           });
+      if(linkLength)
+          diagram.baseLength(linkLength)
+
 
 
       // this is kind of a brain-dead way to test transitions

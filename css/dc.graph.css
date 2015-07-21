@@ -3,19 +3,16 @@ div.chart {
 }
 .edge {
     fill: none;
-    marker-end: url(#end-arrow);
 }
 
-text.nodelabel {
-    font: bold 12px verdana, san-serif;
-    color: #000000;
+text.node-label {
+    font: bold 14px verdana, san-serif;
     text-anchor: middle;
     alignment-baseline: middle;
     pointer-events: none;
 }
 
-text.edgelabel {
+text.edge-label {
     font: 10px verdana, san-serif;
-    fill: #aaa;
     pointer-events: none;
 }

@@ -1,5 +1,5 @@
 /*!
- *  dc 2.0.0-beta.10
+ *  dc 2.0.0-beta.12
  *  http://dc-js.github.io/dc.js/
  *  Copyright 2012-2015 Nick Zhu & the dc.js Developers
  *  https://github.com/dc-js/dc.js/blob/master/AUTHORS
@@ -20,7 +20,7 @@
 'use strict';
 
 /**
-#### Version 2.0.0-beta.10
+#### Version 2.0.0-beta.12
 The entire dc.js library is scoped under the **dc** name space. It does not introduce anything else
 into the global name space.
 #### Function Chaining
@@ -41,7 +41,7 @@ that are chainable d3 objects.)
 /*jshint -W062*/
 /*jshint -W079*/
 var dc = {
-    version: '2.0.0-beta.10',
+    version: '2.0.0-beta.12',
     constants: {
         CHART_CLASS: 'dc-chart',
         DEBUG_GROUP_CLASS: 'debug',
@@ -528,7 +528,7 @@ function allows the library to smooth out the rendering by throttling events and
 the most recent event.
 
 ```js
-    chart.renderlet(function(chart){
+    chart.on('renderlet', function(chart) {
         // smooth the rendering through event throttling
         dc.events.trigger(function(){
             // focus some other chart to the range selected by user on this chart
@@ -708,7 +708,8 @@ dc.baseMixin = function (_chart) {
         'postRedraw',
         'filtered',
         'zoomed',
-        'renderlet');
+        'renderlet',
+        'pretransition');
 
     var _legend;
 
@@ -1126,6 +1127,7 @@ dc.baseMixin = function (_chart) {
     };
 
     _chart._activateRenderlets = function (event) {
+        _listeners.pretransition(_chart);
         if (_chart.transitionDuration() > 0 && _svg) {
             _svg.transition().duration(_chart.transitionDuration())
                 .each('end', function () {
@@ -1630,15 +1632,15 @@ dc.baseMixin = function (_chart) {
     #### .renderlet(renderletFunction)
     A renderlet is similar to an event listener on rendering event. Multiple renderlets can be added
     to an individual chart.  Each time a chart is rerendered or redrawn the renderlets are invoked
-    right after the chart finishes its own drawing routine, giving you a way to modify the svg
+    right after the chart finishes its transitions, giving you a way to modify the svg
     elements. Renderlet functions take the chart instance as the only input parameter and you can
     use the dc API or use raw d3 to achieve pretty much any effect.
 
     @Deprecated - Use [Listeners](#Listeners) with a 'renderlet' prefix
-    Generates a random key for the renderlet, which makes it hard for removal.
+    Generates a random key for the renderlet, which makes it hard to remove.
     ```js
-    // renderlet function
-    chart.renderlet(function(chart){
+    // do this instead of .renderlet(function(chart) { ... })
+    chart.on("renderlet", function(chart){
         // mix of dc API and d3 manipulation
         chart.select('g.y').style('display', 'none');
         // its a closure so you can also access other chart variable available in the closure scope
@@ -1756,6 +1758,9 @@ dc.baseMixin = function (_chart) {
     #### .on('renderlet', function(chart, filter){...})
     This listener function will be invoked after transitions after redraw and render. Replaces the
     deprecated `.renderlet()` method.
+
+    #### .on('pretransition', function(chart, filter){...})
+    Like `.on('renderlet', ...)` but the event is fired before transitions start.
 
     #### .on('preRender', function(chart){...})
     This listener function will be invoked before chart rendering.
@@ -2049,7 +2054,7 @@ dc.coordinateGridMixin = function (_chart) {
     var _renderHorizontalGridLine = false;
     var _renderVerticalGridLine = false;
 
-    var _refocused = false;
+    var _refocused = false, _resizing = false;
     var _unitCount;
 
     var _zoomScale = [1, Infinity];
@@ -2070,8 +2075,15 @@ dc.coordinateGridMixin = function (_chart) {
 
     var _useRightYAxis = false;
 
+    /**
+    #### .rescale()
+    When changing the domain of the x or y scale, it is necessary to tell the chart to recalculate
+    and redraw the axes. (`.rescale()` is called automatically when the x or y scale is replaced
+    with `.x()` or `.y()`, and has no effect on elastic scales.)
+    **/
     _chart.rescale = function () {
         _unitCount = undefined;
+        _resizing = true;
     };
 
     /**
@@ -2195,6 +2207,7 @@ dc.coordinateGridMixin = function (_chart) {
         }
         _x = _;
         _xOriginalDomain = _x.domain();
+        _chart.rescale();
         return _chart;
     };
 
@@ -2349,7 +2362,12 @@ dc.coordinateGridMixin = function (_chart) {
         return groups.map(_chart.keyAccessor());
     };
 
-    function prepareXAxis(g) {
+    function compareDomains(d1, d2) {
+        return !d1 || !d2 || d1.length !== d2.length ||
+            d1.some(function (elem, i) { return elem.toString() !== d2[i]; });
+    }
+
+    function prepareXAxis(g, render) {
         if (!_chart.isOrdinal()) {
             if (_chart.elasticX()) {
                 _x.domain([_chart.xAxisMin(), _chart.xAxisMax()]);
@@ -2363,7 +2381,7 @@ dc.coordinateGridMixin = function (_chart) {
 
         // has the domain changed?
         var xdom = _x.domain();
-        if (!_lastXDomain || xdom.some(function (elem, i) { return elem !== _lastXDomain[i]; })) {
+        if (render || compareDomains(_lastXDomain, xdom)) {
             _chart.rescale();
         }
         _lastXDomain = xdom;
@@ -2616,6 +2634,7 @@ dc.coordinateGridMixin = function (_chart) {
             return _y;
         }
         _y = _;
+        _chart.rescale();
         return _chart;
     };
 
@@ -2970,16 +2989,16 @@ dc.coordinateGridMixin = function (_chart) {
             _brushOn = false;
         }
 
-        prepareXAxis(_chart.g());
+        prepareXAxis(_chart.g(), render);
         _chart._prepareYAxis(_chart.g());
 
         _chart.plotData();
 
-        if (_chart.elasticX() || _refocused || render) {
+        if (_chart.elasticX() || _resizing || render) {
             _chart.renderXAxis(_chart.g());
         }
 
-        if (_chart.elasticY() || render) {
+        if (_chart.elasticY() || _resizing || render) {
             _chart.renderYAxis(_chart.g());
         }
 
@@ -2988,6 +3007,7 @@ dc.coordinateGridMixin = function (_chart) {
         } else {
             _chart.redrawBrush(_chart.g());
         }
+        _resizing = false;
     }
 
     function configureMouseZoom () {
@@ -3026,7 +3046,7 @@ dc.coordinateGridMixin = function (_chart) {
     to null, then the zoom will be reset. _For focus to work elasticX has to be turned off;
     otherwise focus will be ignored._
     ```js
-    chart.renderlet(function(chart){
+    chart.on('renderlet', function(chart) {
         // smooth the rendering through event throttling
         dc.events.trigger(function(){
             // focus some other chart to the range selected by user on this chart
