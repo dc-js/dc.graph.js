@@ -75,7 +75,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeDistanceAccessor = property(function(kv) {
         return kv.value.distance;
     });
-    _chart.baseLength = property(40);
+    _chart.baseLength = property(30);
     _chart.lengthStrategy = property('symmetric');
 
     _chart.transitionDuration = property(500);
@@ -258,7 +258,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             return c.type !== 'circle';
         });
         circle_constraints.forEach(function(c) {
-            var R = 300; // c.distance / 2*Math.sin(Math.PI/c.nodes.length);
+            var R = (c.distance || _chart.baseLength()*4) / (2*Math.sin(Math.PI/c.nodes.length));
             var nindices = c.nodes.map(function(x) { return x.node; });
             var namef = function(i) {
                 return original(_chart.nodeKeyAccessor())(nodes1[i]);

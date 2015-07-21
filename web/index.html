@@ -67,13 +67,8 @@
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
       isQFS = false,
-      doLinkLength = false,
-      linkLength = 40,
+      linkLength = querystring.linklength || 0,
       hierarchical = true;
-  if(querystring.linklength) {
-      doLinkLength = true;
-      linkLength = +querystring.linklength;
-  }
   if('hier' in querystring) {
       hierarchical = !!+querystring.hier;
       $('#hierarchical').prop('checked', hierarchical);
@@ -211,7 +206,6 @@
           for(var circ in circles)
               constraints.push({
                   type: 'circle',
-                  distance: 40,
                   nodes: circles[circ]
               });
           return constraints;
@@ -230,7 +224,6 @@
                   return 'white';
           })
           .constrain(constrain)
-          .baseLength(linkLength)
           .lengthStrategy(generate ? 'individual' :
                           hierarchical ? 'none' :
                           'symmetric')
@@ -238,6 +231,9 @@
               done = true;
               kontinue();
           });
+      if(linkLength)
+          diagram.baseLength(linkLength)
+
 
 
       // this is kind of a brain-dead way to test transitions
