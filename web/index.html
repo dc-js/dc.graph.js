@@ -230,15 +230,10 @@
                   return 'white';
           })
           .constrain(constrain)
-          .lengthStrategy(generate ? 'individual' : 'symmetric')
-          .modLayout(function(layout) {
-              if(!hierarchical || doLinkLength && !individualLengths)
-                  layout.symmetricDiffLinkLengths(linkLength)
-              if(individualLengths)
-                  layout.linkDistance(function(e) {
-                      return e.orig.value.length;
-                  });
-          })
+          .baseLength(linkLength)
+          .lengthStrategy(generate ? 'individual' :
+                          hierarchical ? 'none' :
+                          'symmetric')
           .on('end', function() {
               done = true;
               kontinue();

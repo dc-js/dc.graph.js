@@ -61,11 +61,11 @@ dc_graph.wheel_edges = function(namef, nindices, R) {
         rimLength = 2 * R * Math.sin(Math.PI / N),
         strutLength = 2 * R * Math.sin(strutSkip * Math.PI / N);
     for(var i = 0; i < N; ++i)
-        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+1)%N], {length: rimLength}));
+        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+1)%N], {distance: rimLength}));
     for(i = 0; i < N/2; ++i) {
-        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+strutSkip)%N], {length: strutLength}));
+        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+strutSkip)%N], {distance: strutLength}));
         if(N%2 && i != Math.floor(N/2))
-            edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {length: strutLength}));
+            edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {distance: strutLength}));
     }
     return edges;
 };

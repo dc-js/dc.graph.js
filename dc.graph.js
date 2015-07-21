@@ -118,6 +118,11 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeIsLayoutAccessor = property(function(kv) {
         return !kv.value.notLayout;
     });
+    _chart.edgeDistanceAccessor = property(function(kv) {
+        return kv.value.distance;
+    });
+    _chart.baseLength = property(40);
+    _chart.lengthStrategy = property('symmetric');
 
     _chart.transitionDuration = property(500);
     _chart.constrain = property(function(nodes, edges) {
@@ -131,6 +136,23 @@ dc_graph.diagram = function (parent, chartGroup) {
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
             .size([_chart.width(), _chart.height()]);
+
+        switch(_chart.lengthStrategy()) {
+        case 'symmetric':
+            _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
+            break;
+        case 'jaccard':
+            _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
+            break;
+        case 'individual':
+            _d3cola.linkDistance(function(e) {
+                var d = e.orig ? original(_chart.edgeDistanceAccessor())(e) :
+                        e.internal && e.internal.distance;
+                return d || _chart.baseLength();
+            });
+            break;
+        }
+
         if(_chart.modLayout())
             _chart.modLayout()(_d3cola);
     }
@@ -288,8 +310,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return original(_chart.nodeKeyAccessor())(nodes1[i]);
             };
             var wheel = dc_graph.wheel_edges(namef, nindices, R)
-                    .map(function(e) { return {key: null, value: e}; })
-                    .map(wrap_edge);
+                    .map(function(e) {
+                        var e1 = {internal: e};
+                        e1.source = key_index_map[e.sourcename];
+                        e1.target = key_index_map[e.targetname];
+                        return e1;
+                    });
             layout_edges = layout_edges.concat(wheel);
         });
         _d3cola.nodes(nodes1)
@@ -521,11 +547,11 @@ dc_graph.wheel_edges = function(namef, nindices, R) {
         rimLength = 2 * R * Math.sin(Math.PI / N),
         strutLength = 2 * R * Math.sin(strutSkip * Math.PI / N);
     for(var i = 0; i < N; ++i)
-        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+1)%N], {length: rimLength}));
+        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+1)%N], {distance: rimLength}));
     for(i = 0; i < N/2; ++i) {
-        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+strutSkip)%N], {length: strutLength}));
+        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+strutSkip)%N], {distance: strutLength}));
         if(N%2 && i != Math.floor(N/2))
-            edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {length: strutLength}));
+            edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {distance: strutLength}));
     }
     return edges;
 };
