@@ -63,10 +63,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeLabelAccessor = property(function(d) {
         return _chart.edgeKeyAccessor()(d);
     });
-    _chart.edgeArrowhead = property(function() {
+    _chart.edgeArrowheadAccessor = property(function() {
         return 'vee';
     });
-    _chart.edgeArrowtail = property(function() {
+    _chart.edgeArrowtailAccessor = property(function() {
         return null;
     });
     _chart.edgeIsLayoutAccessor = property(function(kv) {
@@ -167,10 +167,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('stroke-width', original(_chart.edgeStrokeWidthAccessor()))
                 .attr('opacity', original(_chart.edgeOpacityAccessor()))
                 .attr('marker-end', function(d) {
-                    return 'url(#' + original(_chart.edgeArrowhead())(d) + ')';
+                    return 'url(#' + original(_chart.edgeArrowheadAccessor())(d) + ')';
                 })
                 .attr('marker-start', function(d) {
-                    return 'url(#' + original(_chart.edgeArrowtail())(d) + ')';
+                    return 'url(#' + original(_chart.edgeArrowtailAccessor())(d) + ')';
                 });
         var edgeExit = edge.exit();
         edgeExit.remove();
