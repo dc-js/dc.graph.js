@@ -69,7 +69,7 @@ module.exports = function (grunt) {
         watch: {
             scripts: {
                 files: ['<%= conf.src %>/**/*.js'],
-                tasks: ['build', 'copy']
+                tasks: ['docs']
             },
             jasmineRunner: {
                 files: ['<%= conf.spec %>/**/*.js'],
