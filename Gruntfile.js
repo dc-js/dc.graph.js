@@ -220,6 +220,7 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.min.js.map',
                             'node_modules/jquery/dist/jquery.js',
                             'node_modules/d3/d3.js',
+                            'node_modules/queue-async/queue.js',
                             'node_modules/dc/dc.js',
                             'node_modules/crossfilter/crossfilter.js',
                             'test/env-data.js'
