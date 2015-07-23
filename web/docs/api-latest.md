@@ -151,10 +151,11 @@ can be used to generate alignment (rank) or axis constraints. See
 are built from scratch on each redraw.
 
 #### .initLayoutOnRedraw([boolean])
-Currently there are some bugs when the same instance of cola.js is used multiple times, so by default,
-dc.graph.js creates a new cola layout object on each redraw. In particular, overlaps between nodes may not
-be eliminated [if cola is not reinitialized](https://github.com/tgdwyer/WebCola/issues/118). However,
-layout seems to be more stable if this is set false, so hopefully this will be fixed soon.
+Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
+overlaps between nodes may not be eliminated [if cola is not reinitialized]
+(https://github.com/tgdwyer/WebCola/issues/118)). This flag can be set true to construct a new cola
+layout object on each redraw. However, layout seems to be more stable if this is set false, so hopefully
+this will be fixed soon.
 
 #### .modLayout([function])
 If it is desired to modify the cola layout object after it is created, this function can be called to add
