@@ -68,11 +68,15 @@
       doAlignment = querystring.align==="0" ? false : true,
       isQFS = false,
       linkLength = querystring.linklength || 0,
+      edgeColor = querystring.edgecolor || 'black',
+      opacity = +querystring.opacity || 1,
       hierarchical = true;
   if('hier' in querystring) {
       hierarchical = !!+querystring.hier;
       $('#hierarchical').prop('checked', hierarchical);
   }
+  if(edgeColor && /[0-9A-Fa-f]{6}/.test(edgeColor) || /[0-9A-Fa-f]{3}/.test(edgeColor))
+      edgeColor = '#' + edgeColor;
   var min = 2, max = 12;
   var begin = min, end = 7, curr = begin;
   var timer = null, doRender = true;
@@ -225,6 +229,8 @@
           .edgeArrowheadAccessor(function(kv) {
               return !kv.value.undirected;
           })
+          .edgeOpacityAccessor(opacity)
+          .edgeStrokeAccessor(edgeColor)
           .on('end', function() {
               done = true;
               kontinue();
