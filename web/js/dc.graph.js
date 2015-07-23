@@ -43,6 +43,19 @@ var property = function (defaultValue) {
     return ret;
 };
 
+// version of d3.functor that optionally wraps the function with another
+// one, if the parameter is a function
+dc_graph.functor_wrap = function (v, wrap) {
+    if(typeof v === "function") {
+        return wrap ? function(x) {
+            return v(wrap(x));
+        } : v;
+    }
+    else return function() {
+        return v;
+    };
+};
+
 
 /**
 ## Diagram
@@ -60,6 +73,15 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
     var _dispatch = d3.dispatch('end');
+
+    // we want to allow either values or functions to be passed to specify parameters.
+    // if a function, the function needs a preprocessor to extract the original key/value
+    // pair from the wrapper object we put it in.
+    function param(v) {
+        return dc_graph.functor_wrap(v, function(x) {
+            return x.orig;
+        });
+    }
 
     /**
      #### .width([value])
@@ -361,7 +383,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             break;
         case 'individual':
             _d3cola.linkDistance(function(e) {
-                var d = e.orig ? original(_chart.edgeDistanceAccessor())(e) :
+                var d = e.orig ? param(_chart.edgeDistanceAccessor())(e) :
                         e.internal && e.internal.distance;
                 return d || _chart.baseLength();
             });
@@ -372,13 +394,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             _chart.modLayout()(_d3cola);
     }
 
-    function original(accessor) {
-        return function(x) {
-            return accessor(x.orig);
-        };
-    }
     function edge_id(d) {
-        return 'edge-' + original(_chart.edgeKeyAccessor())(d).replace(/[^\w-_]/g, '-');
+        return 'edge-' + param(_chart.edgeKeyAccessor())(d).replace(/[^\w-_]/g, '-');
     }
 
     var _nodes = {}, _edges = {};
@@ -430,25 +447,25 @@ dc_graph.diagram = function (parent, chartGroup) {
         // console.log("diagram.redraw " + nodes1.length + ',' + edges1.length);
 
         var edge = _edgeLayer.selectAll('.edge')
-                .data(edges1, original(_chart.edgeKeyAccessor()));
+                .data(edges1, param(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
                 .attr('id', edge_id)
-                .attr('stroke', original(_chart.edgeStrokeAccessor()))
-                .attr('stroke-width', original(_chart.edgeStrokeWidthAccessor()))
-                .attr('opacity', original(_chart.edgeOpacityAccessor()))
+                .attr('stroke', param(_chart.edgeStrokeAccessor()))
+                .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
+                .attr('opacity', param(_chart.edgeOpacityAccessor()))
                 .attr('marker-end', function(d) {
-                    return 'url(#' + original(_chart.edgeArrowheadAccessor())(d) + ')';
+                    return 'url(#' + param(_chart.edgeArrowheadAccessor())(d) + ')';
                 })
                 .attr('marker-start', function(d) {
-                    return 'url(#' + original(_chart.edgeArrowtailAccessor())(d) + ')';
+                    return 'url(#' + param(_chart.edgeArrowtailAccessor())(d) + ')';
                 });
         var edgeExit = edge.exit();
         edgeExit.remove();
 
         // another wider copy of the edge just for hover events
         var edgeHover = _edgeLayer.selectAll('.edge-hover')
-                .data(edges1, original(_chart.edgeKeyAccessor()));
+                .data(edges1, param(_chart.edgeKeyAccessor()));
         edgeHover.enter().append('svg:path')
             .attr('class', 'edge-hover')
             .attr('opacity', 0)
@@ -465,7 +482,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edgeHover.exit().remove();
 
         var edgeLabels = _edgeLayer.selectAll(".edge-label")
-                .data(edges1, original(_chart.edgeKeyAccessor()));
+                .data(edges1, param(_chart.edgeKeyAccessor()));
         var edgeLabelsEnter = edgeLabels.enter()
               .append('text')
                 .attr('id', function(d) {
@@ -481,12 +498,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return '#' + edge_id(d);
                 })
                 .text(function(d){
-                    return original(_chart.edgeLabelAccessor())(d);
+                    return param(_chart.edgeLabelAccessor())(d);
                 });
         edgeLabels.exit().remove();
 
         var node = _nodeLayer.selectAll('.node')
-                .data(nodes1, original(_chart.nodeKeyAccessor()));
+                .data(nodes1, param(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .call(_d3cola.drag);
@@ -494,13 +511,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         nodeEnter.append('text')
             .attr('class', 'nodelabel');
         node.select('circle')
-            .attr('r', original(_chart.nodeRadiusAccessor()))
-            .attr('stroke', original(_chart.nodeStrokeAccessor()))
-            .attr('stroke-width', original(_chart.nodeStrokeWidthAccessor()))
-            .attr('fill', original(_chart.nodeFillAccessor()));
+            .attr('r', param(_chart.nodeRadiusAccessor()))
+            .attr('stroke', param(_chart.nodeStrokeAccessor()))
+            .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
+            .attr('fill', param(_chart.nodeFillAccessor()));
         node.select('text')
             .attr('class', 'node-label')
-            .text(original(_chart.nodeLabelAccessor()));
+            .text(param(_chart.nodeLabelAccessor()));
         var nodeExit = node.exit();
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
@@ -512,9 +529,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         // pseudo-cola.js features
 
         // 1. non-layout edges are drawn but not told to cola.js
-        var layout_edges = edges1.filter(original(_chart.edgeIsLayoutAccessor()));
+        var layout_edges = edges1.filter(param(_chart.edgeIsLayoutAccessor()));
         var nonlayout_edges = edges1.filter(function(x) {
-            return !original(_chart.edgeIsLayoutAccessor())(x);
+            return !param(_chart.edgeIsLayoutAccessor())(x);
         });
         nonlayout_edges.forEach(function(e) {
             e.source = nodes1[e.source];
@@ -532,7 +549,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             var R = (c.distance || _chart.baseLength()*4) / (2*Math.sin(Math.PI/c.nodes.length));
             var nindices = c.nodes.map(function(x) { return x.node; });
             var namef = function(i) {
-                return original(_chart.nodeKeyAccessor())(nodes1[i]);
+                return param(_chart.nodeKeyAccessor())(nodes1[i]);
             };
             var wheel = dc_graph.wheel_edges(namef, nindices, R)
                     .map(function(e) {
@@ -561,10 +578,10 @@ dc_graph.diagram = function (parent, chartGroup) {
             dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
             normX = deltaX / dist,
             normY = deltaY / dist,
-            sourcePadding = original(_chart.nodeRadiusAccessor())(d.source) +
-                original(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
-            targetPadding = original(_chart.nodeRadiusAccessor())(d.target) +
-                original(_chart.nodeStrokeWidthAccessor())(d.target) / 2,
+            sourcePadding = param(_chart.nodeRadiusAccessor())(d.source) +
+                param(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
+            targetPadding = param(_chart.nodeRadiusAccessor())(d.target) +
+                param(_chart.nodeStrokeWidthAccessor())(d.target) / 2,
             sourceX = d.source.x + (sourcePadding * normX),
             sourceY = d.source.y + (sourcePadding * normY),
             targetX = d.target.x - (targetPadding * normX),
@@ -740,7 +757,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('cy', 0)
                 .attr('stroke-width', '0px');
         });
-        if(_chart.zoomable())
+        if(_chart.mouseZoomable())
             _svg.call(d3.behavior.zoom().on("zoom", doZoom));
 
         return _svg;

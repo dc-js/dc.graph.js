@@ -91,7 +91,7 @@
 
         // aesthetics: look at kv.value for node/edge attributes and return appropriate values
         diagram
-            .nodeStrokeWidthAccessor(function() { return 0; }) // turn off outlines
+            .nodeStrokeWidthAccessor(0) // turn off outlines
             .nodeRadiusAccessor(function(kv) {
                 switch(kv.value.node_type) {
                 case 'Router': return 20;

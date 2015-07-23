@@ -217,12 +217,7 @@
           .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
-          .nodeFillAccessor(function(n) {
-              if(isQFS)
-                  return qfs_color(n);
-              else
-                  return 'white';
-          })
+          .nodeFillAccessor(isQFS ? qfs_color : 'white')
           .constrain(constrain)
           .lengthStrategy(generate ? 'individual' :
                           hierarchical ? 'none' :
