@@ -218,6 +218,7 @@ By default, will return false if the <code>notLayout</code> field of the edge is
 <li>&#39;individual&#39; - uses the <code>edgeDistanceAccessor</code> for each edge. If it returns falsy, uses the <code>baseLength</code></li>
 <li>&#39;symmetric&#39;, &#39;jaccard&#39; - compute the edge length based on the graph structure around the edge. See <a href="https://github.com/tgdwyer/WebCola/wiki/link-lengths">the
 cola.js wiki</a> for more details.</li>
+<li>&#39;none&#39; - no edge lengths will be specified</li>
 </ul>
 <h4 id="-edgedistanceaccessor-function-">.edgeDistanceAccessor([function])</h4>
 <p>When the <code>.lengthStrategy</code> is &#39;individual&#39;, this accessor will be used to read the length of each edge.

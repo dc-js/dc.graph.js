@@ -134,6 +134,7 @@ Currently, three strategies are supported for specifying the lengths of edges:
 * 'individual' - uses the `edgeDistanceAccessor` for each edge. If it returns falsy, uses the `baseLength`
 * 'symmetric', 'jaccard' - compute the edge length based on the graph structure around the edge. See [the
 cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/link-lengths) for more details.
+* 'none' - no edge lengths will be specified
 
 #### .edgeDistanceAccessor([function])
 When the `.lengthStrategy` is 'individual', this accessor will be used to read the length of each edge.

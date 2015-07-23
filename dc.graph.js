@@ -313,6 +313,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * 'individual' - uses the `edgeDistanceAccessor` for each edge. If it returns falsy, uses the `baseLength`
      * 'symmetric', 'jaccard' - compute the edge length based on the graph structure around the edge. See [the
      cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/link-lengths) for more details.
+     * 'none' - no edge lengths will be specified
      **/
     _chart.lengthStrategy = property('symmetric');
 
@@ -389,6 +390,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return d || _chart.baseLength();
             });
             break;
+        case 'none':
+        default:
         }
 
         if(_chart.modLayout())
