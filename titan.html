@@ -82,7 +82,9 @@
             edgeGroup1 = non_null(edgeGroup);
 
         // basic diagram setup
-        diagram.width(900).height(1000)
+        diagram
+            .width($(window).width())
+            .height($(window).height())
             .showLayoutSteps(true)
             .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
             .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
