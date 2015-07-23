@@ -27,7 +27,7 @@
 
 
 <div id="graph" class="chart"></div>
-<div id="controls" class="chart" style="width: 400px">
+<div id="controls" class="chart">
   <div id="time-range">
     <label id="now">&#x21e7;</label>
   </div>
@@ -215,7 +215,9 @@
           return constraints;
       }
 
-      diagram.width(900).height(1000)
+      diagram
+          .width($(window).width())
+          .height($(window).height())
           .showLayoutSteps(showSteps)
           .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
           .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
