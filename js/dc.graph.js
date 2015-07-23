@@ -313,6 +313,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * 'individual' - uses the `edgeDistanceAccessor` for each edge. If it returns falsy, uses the `baseLength`
      * 'symmetric', 'jaccard' - compute the edge length based on the graph structure around the edge. See [the
      cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/link-lengths) for more details.
+     * 'none' - no edge lengths will be specified
      **/
     _chart.lengthStrategy = property('symmetric');
 
@@ -348,10 +349,11 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      #### .initLayoutOnRedraw([boolean])
-     Currently there are some bugs when the same instance of cola.js is used multiple times, so by default,
-     dc.graph.js creates a new cola layout object on each redraw. In particular, overlaps between nodes may not
-     be eliminated [if cola is not reinitialized](https://github.com/tgdwyer/WebCola/issues/118). However,
-     layout seems to be more stable if this is set false, so hopefully this will be fixed soon.
+     Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
+     overlaps between nodes may not be eliminated [if cola is not reinitialized]
+     (https://github.com/tgdwyer/WebCola/issues/118)). This flag can be set true to construct a new cola
+     layout object on each redraw. However, layout seems to be more stable if this is set false, so hopefully
+     this will be fixed soon.
      **/
     _chart.initLayoutOnRedraw = property(false);
 
@@ -388,6 +390,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return d || _chart.baseLength();
             });
             break;
+        case 'none':
+        default:
         }
 
         if(_chart.modLayout())

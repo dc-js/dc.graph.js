@@ -192,11 +192,9 @@
 
       function constrain(nodes, edges) {
           var constraints = [];
-          if(!hierarchical)
-              return constraints;
-          if(doDisplacement && isQFS)
+          if(doDisplacement && isQFS && hierarchical)
               constraints = qfs_edges(nodes, edges, constraints);
-          if(doAlignment && isQFS)
+          if(doAlignment && isQFS && hierarchical)
               constraints = qfs_alignment(nodes, edges, constraints);
 
           var circles = {};

@@ -218,6 +218,7 @@ By default, will return false if the <code>notLayout</code> field of the edge is
 <li>&#39;individual&#39; - uses the <code>edgeDistanceAccessor</code> for each edge. If it returns falsy, uses the <code>baseLength</code></li>
 <li>&#39;symmetric&#39;, &#39;jaccard&#39; - compute the edge length based on the graph structure around the edge. See <a href="https://github.com/tgdwyer/WebCola/wiki/link-lengths">the
 cola.js wiki</a> for more details.</li>
+<li>&#39;none&#39; - no edge lengths will be specified</li>
 </ul>
 <h4 id="-edgedistanceaccessor-function-">.edgeDistanceAccessor([function])</h4>
 <p>When the <code>.lengthStrategy</code> is &#39;individual&#39;, this accessor will be used to read the length of each edge.
@@ -232,10 +233,11 @@ can be used to generate alignment (rank) or axis constraints. See
 <a href="https://github.com/tgdwyer/WebCola/wiki/Constraints">the cola.js wiki</a> for more details. The constraints
 are built from scratch on each redraw.</p>
 <h4 id="-initlayoutonredraw-boolean-">.initLayoutOnRedraw([boolean])</h4>
-<p>Currently there are some bugs when the same instance of cola.js is used multiple times, so by default,
-dc.graph.js creates a new cola layout object on each redraw. In particular, overlaps between nodes may not
-be eliminated <a href="https://github.com/tgdwyer/WebCola/issues/118">if cola is not reinitialized</a>. However,
-layout seems to be more stable if this is set false, so hopefully this will be fixed soon.</p>
+<p>Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
+overlaps between nodes may not be eliminated [if cola is not reinitialized]
+(<a href="https://github.com/tgdwyer/WebCola/issues/118">https://github.com/tgdwyer/WebCola/issues/118</a>)). This flag can be set true to construct a new cola
+layout object on each redraw. However, layout seems to be more stable if this is set false, so hopefully
+this will be fixed soon.</p>
 <h4 id="-modlayout-function-">.modLayout([function])</h4>
 <p>If it is desired to modify the cola layout object after it is created, this function can be called to add
 a modifier function which takes the layout object.</p>
