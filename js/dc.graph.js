@@ -87,7 +87,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      #### .width([value])
      Set or get the width attribute of the diagram. See `.height` below. Default: 200
      **/
-    _chart.width = property(200);
+    _chart.width = property(200).react(resizeSvg);
 
     /**
      #### .height([value])
@@ -96,7 +96,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      for method chaining. If no value is given, then the current value of the height attribute will
      be returned. Default: 200
      **/
-    _chart.height = property(200);
+    _chart.height = property(200).react(resizeSvg);
 
     /**
      #### .root([rootElement])
@@ -415,13 +415,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      chart group.
      **/
     _chart.redraw = function () {
-        if(_chart.initLayoutOnRedraw())
-            initLayout();
-
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
         if(_d3cola)
             _d3cola.stop();
+        if(_chart.initLayoutOnRedraw())
+            initLayout();
 
         var key_index_map = nodes.reduce(function(result, value, index) {
             result[_chart.nodeKeyAccessor()(value)] = index;
@@ -743,11 +742,16 @@ dc_graph.diagram = function (parent, chartGroup) {
         _g.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
     }
 
+    function resizeSvg() {
+        if(_svg) {
+            _svg.attr('width', _chart.width())
+                .attr('height', _chart.height());
+        }
+    }
 
     function generateSvg() {
-        _svg = _chart.root().append('svg')
-            .attr('width', _chart.width())
-            .attr('height', _chart.height());
+        _svg = _chart.root().append('svg');
+        resizeSvg();
 
         _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
             marker.append('svg:path')
