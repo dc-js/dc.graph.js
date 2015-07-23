@@ -238,6 +238,14 @@
       if(linkLength)
           diagram.baseLength(linkLength)
 
+      // respond to browser resize (not necessary if width/height is static)
+      $(window).resize(function() {
+          diagram
+              .width($(window).width())
+              .height($(window).height())
+              .render();
+      });
+
 
 
       // this is kind of a brain-dead way to test transitions

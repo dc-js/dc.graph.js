@@ -91,6 +91,14 @@
             .sourceAccessor(function(e) { return e.value._inV; })
             .targetAccessor(function(e) { return e.value._outV; });
 
+        // respond to browser resize (not necessary if width/height is static)
+        $(window).resize(function() {
+            diagram
+                .width($(window).width())
+                .height($(window).height())
+                .render();
+        });
+
         // aesthetics: look at kv.value for node/edge attributes and return appropriate values
         diagram
             .nodeStrokeWidthAccessor(0) // turn off outlines
