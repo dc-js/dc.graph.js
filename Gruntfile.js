@@ -5,7 +5,6 @@ module.exports = function (grunt) {
         pattern: ['grunt-*', '!grunt-lib-phantomjs', '!grunt-template-jasmine-istanbul']
     });
     require('time-grunt')(grunt);
-    var formatFileList = require('./grunt/format-file-list')(grunt);
 
     var config = {
         src: 'src',
@@ -327,9 +326,9 @@ module.exports = function (grunt) {
 
     // task aliases
     grunt.registerTask('build', ['concat', 'uglify']);
-    grunt.registerTask('docs', ['build', 'copy', 'emu', 'toc', 'markdown', 'fileindex']);
+    grunt.registerTask('docs', ['build', 'copy', 'emu', 'toc', 'markdown']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
-    grunt.registerTask('server', ['docs', 'fileindex', 'jasmine:specs:build', 'connect:server', 'watch:jasmine']);
+    grunt.registerTask('server', ['docs', 'jasmine:specs:build', 'connect:server', 'watch:jasmine']);
     grunt.registerTask('test', ['build', 'jasmine:specs', 'shell:hooks']);
     grunt.registerTask('test-browserify', ['build', 'browserify', 'jasmine:browserify']);
     grunt.registerTask('coverage', ['build', 'jasmine:coverage']);
