@@ -176,7 +176,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
-     #### .sourceAccessor([function])
+     #### .sourceAccessor([function]) - **mandatory**
      Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
      The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
      if the node is currently filtered out, the edge will not be displayed.
@@ -184,7 +184,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.sourceAccessor = property();
 
     /**
-     #### .targetAccessor([function])
+     #### .targetAccessor([function]) - **mandatory**
      Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
      The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
      if the node is currently filtered out, the edge will not be displayed.
