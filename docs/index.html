@@ -166,11 +166,11 @@ accesses the <code>key</code> field of the object passed to it. The keys should 
 <h4 id="-edgekeyaccessor-function-">.edgeKeyAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the unique key for each edge. By default, this
 accesses the <code>key</code> field of the object passed to it.</p>
-<h4 id="-sourceaccessor-function-">.sourceAccessor([function])</h4>
+<h4 id="-sourceaccessor-function-mandatory-">.sourceAccessor([function]) - <strong>mandatory</strong></h4>
 <p>Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
 The key must equal the key returned by the <code>.nodeKeyAccessor</code> for one of the nodes; if it does not, or
 if the node is currently filtered out, the edge will not be displayed.</p>
-<h4 id="-targetaccessor-function-">.targetAccessor([function])</h4>
+<h4 id="-targetaccessor-function-mandatory-">.targetAccessor([function]) - <strong>mandatory</strong></h4>
 <p>Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
 The key must equal the key returned by the <code>.nodeKeyAccessor</code> for one of the nodes; if it does not, or
 if the node is currently filtered out, the edge will not be displayed.</p>

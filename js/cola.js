@@ -3983,6 +3983,51 @@ var cola;
     })();
     cola.Layout = Layout;
 })(cola || (cola = {}));
+///<reference path="layout.ts"/>
+var cola;
+(function (cola) {
+    var LayoutAdaptor = (function (_super) {
+        __extends(LayoutAdaptor, _super);
+        function LayoutAdaptor(options) {
+            _super.call(this);
+            // take in implementation as defined by client
+            var self = this;
+            var o = options;
+            if (o.trigger) {
+                this.trigger = o.trigger;
+            }
+            if (o.kick) {
+                this.kick = o.kick;
+            }
+            if (o.drag) {
+                this.drag = o.drag;
+            }
+            if (o.on) {
+                this.on = o.on;
+            }
+            this.dragstart = this.dragStart = cola.Layout.dragStart;
+            this.dragend = this.dragEnd = cola.Layout.dragEnd;
+        }
+        // dummy functions in case not defined by client
+        LayoutAdaptor.prototype.trigger = function (e) { };
+        ;
+        LayoutAdaptor.prototype.kick = function () { };
+        ;
+        LayoutAdaptor.prototype.drag = function () { };
+        ;
+        LayoutAdaptor.prototype.on = function (eventType, listener) { return this; };
+        ;
+        return LayoutAdaptor;
+    })(cola.Layout);
+    cola.LayoutAdaptor = LayoutAdaptor;
+    /**
+     * provides an interface for use with any external graph system (e.g. Cytoscape.js):
+     */
+    function adaptor(options) {
+        return new LayoutAdaptor(options);
+    }
+    cola.adaptor = adaptor;
+})(cola || (cola = {}));
 ///<reference path="../extern/d3.d.ts"/>
 ///<reference path="layout.ts"/>
 var cola;
@@ -3994,15 +4039,18 @@ var cola;
             this.event = d3.dispatch(cola.EventType[cola.EventType.start], cola.EventType[cola.EventType.tick], cola.EventType[cola.EventType.end]);
             // bit of trickyness remapping 'this' so we can reference it in the function body.
             var d3layout = this;
+            var drag;
             this.drag = function () {
-                var drag = d3.behavior.drag()
-                    .origin(function (d) { return d; })
-                    .on("dragstart.d3adaptor", cola.Layout.dragStart)
-                    .on("drag.d3adaptor", function (d) {
-                    d.px = d3.event.x, d.py = d3.event.y;
-                    d3layout.resume(); // restart annealing
-                })
-                    .on("dragend.d3adaptor", cola.Layout.dragEnd);
+                if (!drag) {
+                    var drag = d3.behavior.drag()
+                        .origin(function (d) { return d; })
+                        .on("dragstart.d3adaptor", cola.Layout.dragStart)
+                        .on("drag.d3adaptor", function (d) {
+                        d.px = d3.event.x, d.py = d3.event.y;
+                        d3layout.resume(); // restart annealing
+                    })
+                        .on("dragend.d3adaptor", cola.Layout.dragEnd);
+                }
                 if (!arguments.length)
                     return drag;
                 // this is the context of the function, i.e. the d3 selection
