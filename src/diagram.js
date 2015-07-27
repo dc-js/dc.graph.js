@@ -184,6 +184,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         return kv.value.label || kv.value.name;
     });
 
+    /**
+     #### .nodeTitleAccessor([function])
+     Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
+     By default, uses the key of the node.
+     **/
+    _chart.nodeTitleAccessor = property(function(kv) {
+        return _chart.nodeKeyAccessor()(kv);
+    });
+
 
 
     /**
@@ -451,6 +460,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .call(_d3cola.drag);
+        nodeEnter.append('title').text(param(_chart.nodeTitleAccessor()));
+
         nodeEnter.append('circle');
         nodeEnter.append('text')
             .attr('class', 'nodelabel');
