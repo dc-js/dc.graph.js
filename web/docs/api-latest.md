@@ -155,6 +155,10 @@ can be used to generate alignment (rank) or axis constraints. See
 [the cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/Constraints) for more details. The constraints
 are built from scratch on each redraw.
 
+#### .offsetParallelEdges([boolean])
+If there are multiple edges between the same two nodes, curve them so that they don't overlap.
+Default: true
+
 #### .initLayoutOnRedraw([boolean])
 Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
 overlaps between nodes may not be eliminated [if cola is not reinitialized]

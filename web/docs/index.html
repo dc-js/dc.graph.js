@@ -235,6 +235,9 @@ layout constraints. By default, no constraints will be added beyond those for ed
 can be used to generate alignment (rank) or axis constraints. See
 <a href="https://github.com/tgdwyer/WebCola/wiki/Constraints">the cola.js wiki</a> for more details. The constraints
 are built from scratch on each redraw.</p>
+<h4 id="-offsetparalleledges-boolean-">.offsetParallelEdges([boolean])</h4>
+<p>If there are multiple edges between the same two nodes, curve them so that they don&#39;t overlap.
+Default: true</p>
 <h4 id="-initlayoutonredraw-boolean-">.initLayoutOnRedraw([boolean])</h4>
 <p>Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
 overlaps between nodes may not be eliminated [if cola is not reinitialized]

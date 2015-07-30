@@ -298,6 +298,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
+     #### .offsetParallelEdges([boolean])
+     If there are multiple edges between the same two nodes, curve them so that they don't overlap.
+     Default: true
+     **/
+    _chart.offsetParallelEdges = property(true);
+
+    /**
      #### .initLayoutOnRedraw([boolean])
      Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
      overlaps between nodes may not be eliminated [if cola is not reinitialized]
@@ -396,6 +403,20 @@ dc_graph.diagram = function (parent, chartGroup) {
         var edges1 = edges.map(wrap_edge).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
+
+        if(_chart.offsetParallelEdges()) {
+            // mark parallel edges so we can draw them specially
+            var em = new Array(nodes1.length);
+            for(var i = 0; i < em.length; ++i) {
+                em[i] = new Array(em.length); // technically could be diagonal array
+                for(var j = 0; j < em.length; ++j)
+                    em[i][j] = 0;
+            }
+            edges1.forEach(function(e) {
+                var min = Math.min(e.source, e.target), max = Math.max(e.source, e.target);
+                e.parallel = em[min][max]++;
+            });
+        }
 
         // console.log("diagram.redraw " + nodes1.length + ',' + edges1.length);
 
