@@ -1,4 +1,4 @@
-dc_graph.PORT_DANG = 0.4;
+dc_graph.PORT_DIST = 5;
 
 /**
 ## Diagram
@@ -579,8 +579,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         else {
             var port = Math.floor((d.parallel+1)/2) * (1 - (d.parallel%2)*2),
                 srcang = Math.atan2(deltaY, deltaX),
-                sportang = srcang + port * dc_graph.PORT_DANG,
-                tportang = srcang - Math.PI - port * dc_graph.PORT_DANG,
+                sportang = srcang + port * dc_graph.PORT_DIST / sourcePadding,
+                tportang = srcang - Math.PI - port * dc_graph.PORT_DIST / targetPadding,
                 cos_sport = Math.cos(sportang),
                 sin_sport = Math.sin(sportang),
                 cos_tport = Math.cos(tportang),
