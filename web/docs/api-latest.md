@@ -102,6 +102,10 @@ Set or get the padding or minimum distance, in pixels, between nodes in the diag
 Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field `label` or `name` inside the `value` field.
 
+#### .nodeTitleAccessor([function])
+Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
+By default, uses the key of the node.
+
 #### .edgeStrokeAccessor([function])
 Set or get the function which will be used to retrieve the stroke color for the edges. Default: black
 
