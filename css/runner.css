@@ -7,7 +7,7 @@ body {
     margin-top: 100px;
     position: absolute;
     right: 0;
-    background-color: #ded;
+    background-color: rgba(221, 238, 221, 0.5);
     padding: 40px;
 }
 

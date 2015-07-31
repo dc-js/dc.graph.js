@@ -16,6 +16,8 @@
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
+
+  <script type="text/javascript" src="js/runner.js"></script>
 </head>
 
 <body>
@@ -41,85 +43,129 @@
   var diagram = dc_graph.diagram('#graph');
 
   var url = querystring.url, vertices_url = url + '/vertices', edges_url = url + '/edges';
+  var interval = url.interval || 1000;
 
-  queue()
-    .defer(d3.json, vertices_url)
-    .defer(d3.json, edges_url)
-    .await(function(error, vertices, edges) {
-        if(error) throw new Error(error);
+  var runner = make_runner(init, step, interval);
+  runner.start();
 
-        var edge_ndx = crossfilter(edges.results),
-            node_ndx = crossfilter(vertices.results);
+  function init() {
+      // basic diagram setup
+      diagram
+          .width($(window).width())
+          .height($(window).height())
+          .showLayoutSteps(true)
+          .sourceAccessor(function(e) { return e.value._inV; })
+          .targetAccessor(function(e) { return e.value._outV; });
 
-        // when there will be exactly one or zero items in a group, a reasonable reduction
-        // is just to use the row or null
-        function one_zero_reduce(group) {
-            group.reduce(
-                function(p, v) { return v; },
-                function() { return null; },
-                function() { return null; }
-            );
-        }
+      // aesthetics: look at kv.value for node/edge attributes and return appropriate values
+      diagram
+          .nodeStrokeWidthAccessor(0) // turn off outlines
+          .nodeRadiusAccessor(function(kv) {
+              switch(kv.value.node_type) {
+              case 'Router': return 20;
+              default: return 10;
+              }
+          })
+          .nodeFillAccessor(function(kv) {
+              // some arbitrarily-chosen colors from colorbrewer2.org
+              switch(kv.value.node_type) {
+              case 'Router': return '#377eb8';
+              case 'VirtualMachine': return '#e41a1c';
+              case 'Subnet': return '#ff7f00';
+              default: return 'grey';
+              }
+          })
+          .nodeLabelAccessor(function(kv) {
+              switch(kv.value.node_type) {
+              case 'Router': return kv.value.router_name;
+              case 'VirtualMachine': return kv.value.display_name;
+              case 'Subnet': return kv.value.subnet_name;
+              }
+          })
+          .edgeLabelAccessor(function(kv) {
+              if(kv.value._label === 'connects_to')
+                  return kv.value.ip_address;
+              else
+                  return null;
+          })
+          .edgeArrowheadAccessor(function(kv) {
+              return kv.value._label === 'path' ? 'vee' : null;
+          })
+          .on('end', function() {
+              runner.endStep();
+          });
+      diagram.legend(
+          dc_graph.legend().x(600).y(20).exemplars({
+              'Virtual Machine': {
+                  node_type: 'VirtualMachine'
+              },
+              Router: {
+                  node_type: 'Router'
+              },
+              Subnet: {
+                  node_type: 'Subnet'
+              }
+          }));
 
-        var nodeDimension = node_ndx.dimension(function(d) { return d._id; }),
-            edgeDimension = edge_ndx.dimension(function(d) { return d._id; }),
-            nodeGroup = nodeDimension.group(),
-            edgeGroup = edgeDimension.group();
 
-        one_zero_reduce(nodeGroup);
-        one_zero_reduce(edgeGroup);
+      // respond to browser resize (not necessary if width/height is static)
+      $(window).resize(function() {
+          diagram
+              .width($(window).width())
+              .height($(window).height())
+      });
+      load(function() {
+          diagram.render();
+      });
+  }
+  function step() {
+      load(function() {
+          diagram.redraw();
+      });
+  }
+  function load(k) {
+      queue()
+          .defer(d3.json, vertices_url)
+          .defer(d3.json, edges_url)
+          .await(function(error, vertices, edges) {
+              if(error) throw new Error(error);
 
-        function non_null(group) {
-            return {
-                all: function() {
-                    return group.all().filter(function(kv) {
-                        return kv.value !== null;
-                    });
-                }
-            };
-        }
-        var nodeGroup1 = non_null(nodeGroup),
-            edgeGroup1 = non_null(edgeGroup);
+              var edge_ndx = crossfilter(edges.results),
+                  node_ndx = crossfilter(vertices.results);
 
-        // basic diagram setup
-        diagram
-            .width($(window).width())
-            .height($(window).height())
-            .showLayoutSteps(true)
-            .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
-            .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
-            .sourceAccessor(function(e) { return e.value._inV; })
-            .targetAccessor(function(e) { return e.value._outV; });
+              // when there will be exactly one or zero items in a group, a reasonable reduction
+              // is just to use the row or null
+              function one_zero_reduce(group) {
+                  group.reduce(
+                      function(p, v) { return v; },
+                      function() { return null; },
+                      function() { return null; }
+                  );
+              }
 
-        // respond to browser resize (not necessary if width/height is static)
-        $(window).resize(function() {
-            diagram
-                .width($(window).width())
-                .height($(window).height())
-        });
+              var nodeDimension = node_ndx.dimension(function(d) { return d._id; }),
+                  edgeDimension = edge_ndx.dimension(function(d) { return d._id; }),
+                  nodeGroup = nodeDimension.group(),
+                  edgeGroup = edgeDimension.group();
 
-        // aesthetics: look at kv.value for node/edge attributes and return appropriate values
-        diagram
-            .nodeStrokeWidthAccessor(0) // turn off outlines
-            .nodeRadiusAccessor(function(kv) {
-                switch(kv.value.node_type) {
-                case 'Router': return 20;
-                default: return 10;
-                }
-            })
-            .nodeFillAccessor(function(kv) {
-                // some arbitrarily-chosen colors from colorbrewer2.org
-                switch(kv.value.node_type) {
-                case 'Router': return '#377eb8';
-                case 'VirtualMachine': return '#e41a1c';
-                case 'Subnet': return '#ff7f00';
-                default: return 'grey';
-                }
-            })
-            .edgeArrowheadAccessor(function(kv) {
-                return kv.value._label === 'on_path' ? 'vee' : null;
-            });
+              one_zero_reduce(nodeGroup);
+              one_zero_reduce(edgeGroup);
 
-        diagram.render();
-    });
+              function non_null(group) {
+                  return {
+                      all: function() {
+                          return group.all().filter(function(kv) {
+                              return kv.value !== null;
+                          });
+                      }
+                  };
+              }
+              var nodeGroup1 = non_null(nodeGroup),
+                  edgeGroup1 = non_null(edgeGroup);
+              diagram
+                  .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
+                  .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
+              k();
+          });
+  }
 </script>

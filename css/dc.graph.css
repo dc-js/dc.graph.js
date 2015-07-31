@@ -1,18 +1,24 @@
-div.chart {
+.dc-graph div.chart {
     float: left;
 }
-.edge {
+.dc-graph .edge {
     fill: none;
 }
 
-text.node-label {
+.dc-graph text.node-label {
     font: bold 14px verdana, san-serif;
     text-anchor: middle;
     alignment-baseline: middle;
     pointer-events: none;
 }
 
-text.edge-label {
+.dc-graph text.edge-label {
     font: 10px verdana, san-serif;
+    pointer-events: none;
+}
+
+.dc-graph-legend text.legend-label {
+    font: bold 14px verdana, san-serif;
+    alignment-baseline: middle;
     pointer-events: none;
 }

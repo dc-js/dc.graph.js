@@ -1,5 +1,6 @@
 # dc.graph.js API
   * [Diagram](#diagram)
+  * [Legend](#legend)
 
 ## Diagram
 
@@ -102,6 +103,10 @@ Set or get the padding or minimum distance, in pixels, between nodes in the diag
 Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field `label` or `name` inside the `value` field.
 
+#### .nodeTitleAccessor([function])
+Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
+By default, uses the key of the node.
+
 #### .edgeStrokeAccessor([function])
 Set or get the function which will be used to retrieve the stroke color for the edges. Default: black
 
@@ -150,6 +155,10 @@ layout constraints. By default, no constraints will be added beyond those for ed
 can be used to generate alignment (rank) or axis constraints. See
 [the cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/Constraints) for more details. The constraints
 are built from scratch on each redraw.
+
+#### .offsetParallelEdges([boolean])
+If there are multiple edges between the same two nodes, curve them so that they don't overlap.
+Default: true
 
 #### .initLayoutOnRedraw([boolean])
 Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
@@ -234,3 +243,27 @@ Creates an svg marker definition for drawing edge arrow tails or heads.
  (If further customization is required, it is possible to append other `svg:defs` to `chart.svg()`
  and use refer to them by `id`.)
  ```
+
+## Legend
+
+The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
+
+#### .x([value])
+Set or get x coordinate for legend widget. Default: 0.
+
+#### .y([value])
+Set or get y coordinate for legend widget. Default: 0.
+
+#### .gap([value])
+Set or get gap between legend items. Default: 5.
+
+#### .nodeHeight([value])
+Set or get legend node height. Default: 30.
+
+#### .nodeWidth([value])
+Set or get legend node width. Default: 30.
+
+#### .exemplars([object])
+Specifies an object where the keys are the names of items to add to the legend, and the values are
+objects which will be passed to the accessors of the attached diagram in order to determine the
+drawing attributes.

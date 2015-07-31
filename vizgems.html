@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vizgems co-viewer</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+
+  <script type="text/javascript" src="js/d3.js"></script>
+  <script type="text/javascript" src="js/crossfilter.js"></script>
+  <script type="text/javascript" src="js/dc.js"></script>
+
+  <script type="text/javascript" src="js/queue.js"></script>
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/lodash.js"></script>
+
+  <script type="text/javascript" src="js/cola.js"></script>
+  <script type="text/javascript" src="js/dc.graph.js"></script>
+</head>
+
+<body>
+
+
+<div id="graph" class="chart"></div>
+
+<script type="text/javascript">
+  var querystring = (function(a) {
+      if (a == "") return {};
+      var b = {};
+      for (var i = 0; i < a.length; ++i)
+      {
+          var p=a[i].split('=', 2);
+          if (p.length == 1)
+              b[p[0]] = "";
+          else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+      }
+      return b;
+  })(window.location.search.substr(1).split('&'));
+
+  var timeout = (+querystring.timeout || 30) * 1000;
+  var diagram = dc_graph.diagram('#graph');
+  var node_inv = {}, edge_inv = {};
+
+  function load(get_inv, callback) {
+      var url = querystring.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
+      var psv = d3.dsv("|", "text/plain");
+      var Q = queue()
+          .defer(psv, vertices_url)
+          .defer(psv, edges_url);
+      if(get_inv) {
+          var inv_nodes_url = url + '/inv-nodes.psv', inv_edges_url = url + '/inv-edges.psv';
+          Q.defer(psv, inv_nodes_url)
+              .defer(psv, inv_edges_url)
+      }
+      Q.await(function(error, vertices, edges, inv_vertices, inv_edges) {
+          if(error)
+              throw new Error(error);
+          if(inv_vertices) {
+              node_inv = {};
+              inv_vertices.forEach(function(n) {
+                  var nn = node_inv[n.id] = node_inv[n.id] || {};
+                  nn[n.key] = n.val;
+              });
+          }
+          if(inv_edges) {
+              edge_inv = {};
+              inv_edges.forEach(function(e) {
+                  var id = e.id1 + '-' + e.
+                  var ee = edge_inv[e.id] = node_inv[e.id] || {};
+                  ee[e.key] = e.val;
+              });
+          }
+
+          // is edges always a superset of vertices?
+          vertices = edges.filter(function(e) {
+              return !e.id2; // && e.id1 !== 'UNKNOWN' && e.id1 !== 'ab9f98cc-9ffe-4963-8df3-c46b34df9dfa';
+          });
+          callback(vertices, edges);
+      });
+  }
+
+  function crossfilters(nodes, edges) {
+      var edge_ndx = crossfilter(edges),
+          node_ndx = crossfilter(nodes);
+
+      // when there will be exactly one or zero items in a group, a reasonable reduction
+      // is just to use the row or null
+      function one_zero_reduce(group) {
+          group.reduce(
+              function(p, v) { return v; },
+              function() { return null; },
+              function() { return null; }
+          );
+      }
+
+      var nodeDimension = node_ndx.dimension(function(d) { return d.id1; }),
+          edgeDimension = edge_ndx.dimension(function(d) { return d.id1 + '-' + d.id2; }),
+          nodeGroup = nodeDimension.group(),
+          edgeGroup = edgeDimension.group();
+
+      one_zero_reduce(nodeGroup);
+      one_zero_reduce(edgeGroup);
+
+      function non_null(group) {
+          return {
+              all: function() {
+                  return group.all().filter(function(kv) {
+                      return kv.value !== null;
+                  });
+              }
+          };
+      }
+      var nodeGroup1 = non_null(nodeGroup),
+          edgeGroup1 = non_null(edgeGroup);
+      return {nodeDimension: nodeDimension, nodeGroup: nodeGroup1,
+              edgeDimension: edgeDimension, edgeGroup: edgeGroup1};
+  }
+
+  load(function(vertices, edges) {
+      var cfs = crossfilters(vertices, edges);
+      // basic diagram setup
+      diagram
+          .width($(window).width())
+          .height($(window).height())
+          .showLayoutSteps(true)
+          .lengthStrategy('jaccard')
+          .baseLength(20)
+          .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
+          .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup)
+          .sourceAccessor(function(e) { return e.value.id1; })
+          .targetAccessor(function(e) { return e.value.id2; })
+          .modLayout(function(cola) {
+              cola.flowLayout('y', 30);
+          });
+
+      // respond to browser resize (not necessary if width/height is static)
+      $(window).resize(function() {
+          diagram
+              .width($(window).width())
+              .height($(window).height())
+      });
+
+      // aesthetics: look at kv.value for node/edge attributes and return appropriate values
+      diagram
+          .nodeStrokeWidthAccessor(0) // turn off outlines
+          .nodeRadiusAccessor(function(kv) {
+              switch(kv.value.node_type) {
+              case 'Router': return 20;
+              default: return 10;
+              }
+          })
+          .nodeFillAccessor(function(kv) {
+              // some arbitrarily-chosen colors from colorbrewer2.org
+              switch(kv.value.node_type) {
+              case 'Router': return '#377eb8';
+              case 'VirtualMachine': return '#e41a1c';
+              case 'Subnet': return '#ff7f00';
+              default: return 'grey';
+              }
+          })
+          .edgeArrowheadAccessor(function(kv) {
+              return kv.value._label === 'on_path' ? 'vee' : null;
+          });
+
+      diagram.render();
+  });
+
+  setInterval(function() {
+      load(function(vertices, edges) {
+          var cfs = crossfilters(vertices, edges);
+          diagram
+          /*
+              .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
+              .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup) */
+              .redraw();
+      })
+  }, timeout);
+
+</script>
