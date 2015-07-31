@@ -1,6 +1,7 @@
 var make_runner = function(init, step, interval) {
     var timer;
     var stepped = false, timedOut = false, stopRequested = false;
+    interval = d3.functor(interval);
 
     function startTimer() {
         stepped = timedOut = false;
@@ -22,25 +23,26 @@ var make_runner = function(init, step, interval) {
     }
 
     return {
-        init: function() {
-        },
-        start: function(interval) {
-            interval = d3.functor(interval);
+        start: function() {
             init();
             startTimer();
+            return this;
         },
         stop: function() {
             stopRequested = true;
+            return this;
         },
         toggle: function() {
             if(timer)
                 this.stop();
             else
                 this.start();
+            return this;
         },
         endStep: function() {
             stepped = true;
             kontinue();
+            return this;
         }
     };
 };
