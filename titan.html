@@ -45,6 +45,10 @@
   var url = querystring.url, vertices_url = url + '/vertices', edges_url = url + '/edges';
   var interval = url.interval || 1000;
 
+  function nocache_query() {
+      return '?nocache=' + Date.now();
+  }
+
   var runner = make_runner(init, step, interval);
   runner.start();
 
@@ -94,8 +98,10 @@
           .on('end', function() {
               runner.endStep();
           });
+
+      // legend
       diagram.legend(
-          dc_graph.legend().x(600).y(20).exemplars({
+          dc_graph.legend().x(700).y(20).exemplars({
               'Virtual Machine': {
                   node_type: 'VirtualMachine'
               },
@@ -125,8 +131,8 @@
   }
   function load(k) {
       queue()
-          .defer(d3.json, vertices_url)
-          .defer(d3.json, edges_url)
+          .defer(d3.json, vertices_url + nocache_query())
+          .defer(d3.json, edges_url + nocache_query())
           .await(function(error, vertices, edges) {
               if(error) throw new Error(error);
 
