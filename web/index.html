@@ -20,6 +20,7 @@
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 
+  <script type="text/javascript" src="js/runner.js"></script>
   <script type="text/javascript" src="qfs_constraints.js"></script>
 </head>
 
@@ -147,28 +148,12 @@
       var nodeGroup1 = non_null(nodeGroup),
           edgeGroup1 = non_null(edgeGroup);
 
-      var done = false, timedout = false;
+      var runner = make_runner(step, step,
+                               function() {
+                                   return curr < end ? steptime : pause;
+                               });
 
-      function start() {
-          timedout = done = false;
-          if(++curr>end) curr = begin;
-          var t = curr < end ? steptime : pause;
-          timer = setTimeout(function() {
-              timedout = true;
-              kontinue();
-          }, t);
-          tick();
-      }
-      function kontinue() {
-          if(!done || !timedout)
-              return;
-          timer = null;
-          if(!doStop)
-              start();
-          doStop = false;
-      }
-
-      function tick() {
+      function run() {
           do_status();
           if(doReinit)
               diagram.initLayoutOnRedraw(hierarchical);
@@ -181,13 +166,12 @@
               dc.redrawAll();
           done = false;
       }
-      var doStop = false;
+      function step() {
+          if(++curr>end) curr = begin;
+          run();
+      }
       window.start_stop = function() {
-          if(timer) {
-              doStop = true;
-          } else {
-              start();
-          }
+          runner.toggle();
       };
 
       function constrain(nodes, edges) {
@@ -232,8 +216,7 @@
           .edgeOpacityAccessor(opacity)
           .edgeStrokeAccessor(edgeColor)
           .on('end', function() {
-              done = true;
-              kontinue();
+              runner.endStep();
           });
       if(linkLength)
           diagram.baseLength(linkLength)
@@ -276,7 +259,7 @@
       // do not brush too fast
       dc.constants.EVENT_DELAY = 100;
 
-      tick();
+      run();
   });
 
 </script>
