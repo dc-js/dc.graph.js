@@ -1,5 +1,3 @@
-dc_graph.PORT_DIST = 5;
-
 /**
 ## Diagram
 
@@ -300,11 +298,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
-     #### .offsetParallelEdges([boolean])
-     If there are multiple edges between the same two nodes, curve them so that they don't overlap.
+     #### .parallelEdgeOffset([number])
+     If there are multiple edges between the same two nodes, start them this many pixels away from the original
+     so they don't overlap.
      Default: true
      **/
-    _chart.offsetParallelEdges = property(true);
+    _chart.parallelEdgeOffset = property(5);
 
     /**
      #### .initLayoutOnRedraw([boolean])
@@ -424,7 +423,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             return e.source!==undefined && e.target!==undefined;
         });
 
-        if(_chart.offsetParallelEdges()) {
+        if(_chart.parallelEdgeOffset()) {
             // mark parallel edges so we can draw them specially
             var em = new Array(nodes1.length);
             for(var i = 0; i < em.length; ++i) {
@@ -577,10 +576,12 @@ dc_graph.diagram = function (parent, chartGroup) {
             return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
         }
         else {
-            var port = Math.floor((d.parallel+1)/2) * (1 - (d.parallel%2)*2),
+            // alternate parallel edges over, then under
+            var dir = (!!(d.parallel%2) === (d.source.x < d.target.x)) ? -1 : 1,
+                port = Math.floor((d.parallel+1)/2) * dir,
                 srcang = Math.atan2(deltaY, deltaX),
-                sportang = srcang + port * dc_graph.PORT_DIST / sourcePadding,
-                tportang = srcang - Math.PI - port * dc_graph.PORT_DIST / targetPadding,
+                sportang = srcang + port * _chart.parallelEdgeOffset() / sourcePadding,
+                tportang = srcang - Math.PI - port * _chart.parallelEdgeOffset() / targetPadding,
                 cos_sport = Math.cos(sportang),
                 sin_sport = Math.sin(sportang),
                 cos_tport = Math.cos(tportang),

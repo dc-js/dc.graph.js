@@ -357,11 +357,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
-     #### .offsetParallelEdges([boolean])
-     If there are multiple edges between the same two nodes, curve them so that they don't overlap.
+     #### .parallelEdgeOffset([number])
+     If there are multiple edges between the same two nodes, start them this many pixels away from the original
+     so they don't overlap.
      Default: true
      **/
-    _chart.offsetParallelEdges = property(true);
+    _chart.parallelEdgeOffset = property(5);
 
     /**
      #### .initLayoutOnRedraw([boolean])
@@ -481,7 +482,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             return e.source!==undefined && e.target!==undefined;
         });
 
-        if(_chart.offsetParallelEdges()) {
+        if(_chart.parallelEdgeOffset()) {
             // mark parallel edges so we can draw them specially
             var em = new Array(nodes1.length);
             for(var i = 0; i < em.length; ++i) {
@@ -616,19 +617,45 @@ dc_graph.diagram = function (parent, chartGroup) {
     function edge_path(d) {
         var deltaX = d.target.x - d.source.x,
             deltaY = d.target.y - d.source.y,
-            dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-            normX = deltaX / dist,
-            normY = deltaY / dist,
             sourcePadding = param(_chart.nodeRadiusAccessor())(d.source) +
                 param(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
             targetPadding = param(_chart.nodeRadiusAccessor())(d.target) +
-                param(_chart.nodeStrokeWidthAccessor())(d.target) / 2,
-            sourceX = d.source.x + (sourcePadding * normX),
-            sourceY = d.source.y + (sourcePadding * normY),
-            targetX = d.target.x - (targetPadding * normX),
+                param(_chart.nodeStrokeWidthAccessor())(d.target) / 2;
+
+        var sourceX, sourceY, targetX, targetY;
+        if(!d.parallel) {
+            var dist = Math.hypot(deltaX, deltaY),
+                normX = deltaX / dist,
+                normY = deltaY / dist;
+            sourceX = d.source.x + (sourcePadding * normX);
+            sourceY = d.source.y + (sourcePadding * normY);
+            targetX = d.target.x - (targetPadding * normX);
             targetY = d.target.y - (targetPadding * normY);
-        d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-        return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+            d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
+            return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+        }
+        else {
+            // alternate parallel edges over, then under
+            var dir = (!!(d.parallel%2) === (d.source.x < d.target.x)) ? -1 : 1,
+                port = Math.floor((d.parallel+1)/2) * dir,
+                srcang = Math.atan2(deltaY, deltaX),
+                sportang = srcang + port * _chart.parallelEdgeOffset() / sourcePadding,
+                tportang = srcang - Math.PI - port * _chart.parallelEdgeOffset() / targetPadding,
+                cos_sport = Math.cos(sportang),
+                sin_sport = Math.sin(sportang),
+                cos_tport = Math.cos(tportang),
+                sin_tport = Math.sin(tportang);
+            sourceX = d.source.x + sourcePadding * cos_sport;
+            sourceY = d.source.y + sourcePadding * sin_sport;
+            var c1X = d.source.x + 2 * sourcePadding * cos_sport,
+                c1Y = d.source.y + 2 * sourcePadding * sin_sport,
+                c2X = d.target.x + 2 * targetPadding * cos_tport,
+                c2Y = d.target.y + 2 * targetPadding * sin_tport;
+            targetX = d.target.x + targetPadding * cos_tport;
+            targetY = d.target.y + targetPadding * sin_tport;
+            d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
+            return 'M' + sourceX + ',' + sourceY + 'C' + c1X + ',' + c1Y + ' ' + c2X + ',' + c2Y + ' ' + targetX + ',' + targetY;
+        }
     }
     function draw(node, edge, edgeHover, edgeLabels) {
         node.attr("transform", function (d) {
