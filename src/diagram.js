@@ -328,6 +328,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.showLayoutSteps = property(true);
 
+    _chart.legend = property(null).react(function(l) {
+        l.parent(_chart);
+    });
+
     function initLayout() {
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
@@ -361,6 +365,20 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     var _nodes = {}, _edges = {};
 
+    _chart._buildNode = function(node, nodeEnter) {
+        nodeEnter.append('title').text(param(_chart.nodeTitleAccessor()));
+
+        nodeEnter.append('circle');
+        nodeEnter.append('text')
+            .attr('class', 'node-label');
+        node.select('circle')
+            .attr('r', param(_chart.nodeRadiusAccessor()))
+            .attr('stroke', param(_chart.nodeStrokeAccessor()))
+            .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
+            .attr('fill', param(_chart.nodeFillAccessor()));
+        node.select('text.node-label')
+            .text(param(_chart.nodeLabelAccessor()));
+    };
 
     /**
      #### .redraw()
@@ -481,19 +499,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .call(_d3cola.drag);
-        nodeEnter.append('title').text(param(_chart.nodeTitleAccessor()));
-
-        nodeEnter.append('circle');
-        nodeEnter.append('text')
-            .attr('class', 'nodelabel');
-        node.select('circle')
-            .attr('r', param(_chart.nodeRadiusAccessor()))
-            .attr('stroke', param(_chart.nodeStrokeAccessor()))
-            .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
-            .attr('fill', param(_chart.nodeFillAccessor()));
-        node.select('text')
-            .attr('class', 'node-label')
-            .text(param(_chart.nodeLabelAccessor()));
+        _chart._buildNode(node, nodeEnter);
         var nodeExit = node.exit();
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
@@ -602,9 +608,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_chart.initLayoutOnRedraw())
             initLayout();
         _chart.resetSvg();
-        _g = _svg.append('g');
+        _g = _svg.append('g').attr('class', 'dc-graph');
         _edgeLayer = _g.append('g');
         _nodeLayer = _g.append('g');
+
+        if(_chart.legend())
+            _chart.legend().render();
         return _chart.redraw();
     };
 

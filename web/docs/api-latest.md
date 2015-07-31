@@ -1,5 +1,6 @@
 # dc.graph.js API
   * [Diagram](#diagram)
+  * [Legend](#legend)
 
 ## Diagram
 
@@ -242,3 +243,27 @@ Creates an svg marker definition for drawing edge arrow tails or heads.
  (If further customization is required, it is possible to append other `svg:defs` to `chart.svg()`
  and use refer to them by `id`.)
  ```
+
+## Legend
+
+The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
+
+#### .x([value])
+Set or get x coordinate for legend widget. Default: 0.
+
+#### .y([value])
+Set or get y coordinate for legend widget. Default: 0.
+
+#### .gap([value])
+Set or get gap between legend items. Default: 5.
+
+#### .nodeHeight([value])
+Set or get legend node height. Default: 30.
+
+#### .nodeWidth([value])
+Set or get legend node width. Default: 30.
+
+#### .exemplars([object])
+Specifies an object where the keys are the names of items to add to the legend, and the values are
+objects which will be passed to the accessors of the attached diagram in order to determine the
+drawing attributes.

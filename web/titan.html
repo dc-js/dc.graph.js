@@ -94,6 +94,21 @@
           .on('end', function() {
               runner.endStep();
           });
+      diagram.legend(
+          dc_graph.legend().x(600).y(20).exemplars({
+              'Virtual Machine': {
+                  node_type: 'VirtualMachine',
+                  router_name: ''
+              },
+              Router: {
+                  node_type: 'Router',
+                  router_name: ''
+              },
+              Subnet: {
+                  node_type: 'Subnet',
+                  router_name: ''
+              }
+          }));
 
 
       // respond to browser resize (not necessary if width/height is static)

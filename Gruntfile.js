@@ -67,7 +67,7 @@ module.exports = function (grunt) {
         },
         watch: {
             scripts: {
-                files: ['<%= conf.src %>/**/*.js'],
+                files: ['<%= conf.src %>/**/*.js', 'dc.graph.css'],
                 tasks: ['docs']
             },
             jasmineRunner: {
@@ -342,6 +342,7 @@ module.exports.jsFiles = [
     'src/banner.js',   // NOTE: keep this first
     'src/core.js',
     'src/diagram.js',
+    'src/legend.js',
     'src/load_graph.js',
     'src/generate.js',
     'src/footer.js'  // NOTE: keep this last

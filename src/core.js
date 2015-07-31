@@ -10,7 +10,7 @@ var property = function (defaultValue) {
         }
         value = _;
         if(react)
-            react();
+            react(_);
         return this;
     };
     ret.react = function(_) {

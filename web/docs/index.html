@@ -115,6 +115,7 @@
     <h1 id="dc-graph-js-api">dc.graph.js API</h1>
 <ul>
 <li><a href="#diagram">Diagram</a></li>
+<li><a href="#legend">Legend</a></li>
 </ul>
 <h2 id="diagram">Diagram</h2>
 <p>The dc_graph.diagram is a dc.js-compatible network visualization component. It registers in
@@ -305,6 +306,22 @@ and use refer to them by `id`.)
 </code></pre>
 </li>
 </ul>
+<h2 id="legend">Legend</h2>
+<p>The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.</p>
+<h4 id="-x-value-">.x([value])</h4>
+<p>Set or get x coordinate for legend widget. Default: 0.</p>
+<h4 id="-y-value-">.y([value])</h4>
+<p>Set or get y coordinate for legend widget. Default: 0.</p>
+<h4 id="-gap-value-">.gap([value])</h4>
+<p>Set or get gap between legend items. Default: 5.</p>
+<h4 id="-nodeheight-value-">.nodeHeight([value])</h4>
+<p>Set or get legend node height. Default: 30.</p>
+<h4 id="-nodewidth-value-">.nodeWidth([value])</h4>
+<p>Set or get legend node width. Default: 30.</p>
+<h4 id="-exemplars-object-">.exemplars([object])</h4>
+<p>Specifies an object where the keys are the names of items to add to the legend, and the values are
+objects which will be passed to the accessors of the attached diagram in order to determine the
+drawing attributes.</p>
 
   </body>
 </html>
