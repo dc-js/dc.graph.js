@@ -116,8 +116,21 @@
                 default: return 'grey';
                 }
             })
+            .nodeLabelAccessor(function(kv) {
+                switch(kv.value.node_type) {
+                case 'Router': return kv.value.router_name;
+                case 'VirtualMachine': return kv.value.display_name;
+                case 'Subnet': return kv.value.subnet_name;
+                }
+            })
+            .edgeLabelAccessor(function(kv) {
+                if(kv.value._label === 'connects_to')
+                    return kv.value.ip_address;
+                else
+                    return null;
+            })
             .edgeArrowheadAccessor(function(kv) {
-                return kv.value._label === 'on_path' ? 'vee' : null;
+                return kv.value._label === 'path' ? 'vee' : null;
             });
 
         diagram.render();
