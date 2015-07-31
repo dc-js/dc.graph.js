@@ -98,8 +98,10 @@
           .on('end', function() {
               runner.endStep();
           });
+
+      // legend
       diagram.legend(
-          dc_graph.legend().x(600).y(20).exemplars({
+          dc_graph.legend().x(700).y(20).exemplars({
               'Virtual Machine': {
                   node_type: 'VirtualMachine'
               },
