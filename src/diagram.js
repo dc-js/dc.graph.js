@@ -1,3 +1,5 @@
+dc_graph.PORT_DANG = 0.4;
+
 /**
 ## Diagram
 
@@ -557,17 +559,31 @@ dc_graph.diagram = function (parent, chartGroup) {
     function edge_path(d) {
         var deltaX = d.target.x - d.source.x,
             deltaY = d.target.y - d.source.y,
-            dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-            normX = deltaX / dist,
-            normY = deltaY / dist,
             sourcePadding = param(_chart.nodeRadiusAccessor())(d.source) +
                 param(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
             targetPadding = param(_chart.nodeRadiusAccessor())(d.target) +
-                param(_chart.nodeStrokeWidthAccessor())(d.target) / 2,
-            sourceX = d.source.x + (sourcePadding * normX),
-            sourceY = d.source.y + (sourcePadding * normY),
-            targetX = d.target.x - (targetPadding * normX),
+                param(_chart.nodeStrokeWidthAccessor())(d.target) / 2;
+
+        var sourceX, sourceY, targetX, targetY;
+        if(!d.parallel) {
+            var dist = Math.hypot(deltaX, deltaY),
+                normX = deltaX / dist,
+                normY = deltaY / dist;
+            sourceX = d.source.x + (sourcePadding * normX);
+            sourceY = d.source.y + (sourcePadding * normY);
+            targetX = d.target.x - (targetPadding * normX);
             targetY = d.target.y - (targetPadding * normY);
+        }
+        else {
+            var port = Math.floor((d.parallel+1)/2) * (1 - (d.parallel%2)*2),
+                srcang = Math.atan2(deltaY, deltaX),
+                sportang = srcang + port * dc_graph.PORT_DANG,
+                dportang = srcang - Math.PI - port * dc_graph.PORT_DANG;
+            sourceX = d.source.x + sourcePadding * Math.cos(sportang);
+            sourceY = d.source.y + sourcePadding * Math.sin(sportang);
+            targetX = d.target.x + targetPadding * Math.cos(dportang);
+            targetY = d.target.y + targetPadding * Math.sin(dportang);
+        }
         d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
         return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
     }
