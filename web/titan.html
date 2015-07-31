@@ -43,8 +43,9 @@
   var diagram = dc_graph.diagram('#graph');
 
   var url = querystring.url, vertices_url = url + '/vertices', edges_url = url + '/edges';
+  var interval = url.interval || 1000;
 
-  var runner = make_runner(init, step, 1000);
+  var runner = make_runner(init, step, interval);
   runner.start();
 
   function init() {
