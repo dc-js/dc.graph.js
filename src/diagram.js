@@ -573,19 +573,29 @@ dc_graph.diagram = function (parent, chartGroup) {
             sourceY = d.source.y + (sourcePadding * normY);
             targetX = d.target.x - (targetPadding * normX);
             targetY = d.target.y - (targetPadding * normY);
+            d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
+            return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
         }
         else {
             var port = Math.floor((d.parallel+1)/2) * (1 - (d.parallel%2)*2),
                 srcang = Math.atan2(deltaY, deltaX),
                 sportang = srcang + port * dc_graph.PORT_DANG,
-                dportang = srcang - Math.PI - port * dc_graph.PORT_DANG;
-            sourceX = d.source.x + sourcePadding * Math.cos(sportang);
-            sourceY = d.source.y + sourcePadding * Math.sin(sportang);
-            targetX = d.target.x + targetPadding * Math.cos(dportang);
-            targetY = d.target.y + targetPadding * Math.sin(dportang);
+                tportang = srcang - Math.PI - port * dc_graph.PORT_DANG,
+                cos_sport = Math.cos(sportang),
+                sin_sport = Math.sin(sportang),
+                cos_tport = Math.cos(tportang),
+                sin_tport = Math.sin(tportang);
+            sourceX = d.source.x + sourcePadding * cos_sport;
+            sourceY = d.source.y + sourcePadding * sin_sport;
+            var c1X = d.source.x + 2 * sourcePadding * cos_sport,
+                c1Y = d.source.y + 2 * sourcePadding * sin_sport,
+                c2X = d.target.x + 2 * targetPadding * cos_tport,
+                c2Y = d.target.y + 2 * targetPadding * sin_tport;
+            targetX = d.target.x + targetPadding * cos_tport;
+            targetY = d.target.y + targetPadding * sin_tport;
+            d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
+            return 'M' + sourceX + ',' + sourceY + 'C' + c1X + ',' + c1Y + ' ' + c2X + ',' + c2Y + ' ' + targetX + ',' + targetY;
         }
-        d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-        return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
     }
     function draw(node, edge, edgeHover, edgeLabels) {
         node.attr("transform", function (d) {
