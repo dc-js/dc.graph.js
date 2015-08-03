@@ -16,6 +16,8 @@
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
+
+  <script type="text/javascript" src="js/runner.js"></script>
 </head>
 
 <body>
@@ -38,20 +40,25 @@
       return b;
   })(window.location.search.substr(1).split('&'));
 
-  var timeout = (+querystring.timeout || 30) * 1000;
+  var url = querystring.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
+  var interval = url.interval || 1000;
+
   var diagram = dc_graph.diagram('#graph');
   var node_inv = {}, edge_inv = {};
 
+  function nocache_query() {
+      return '?nocache=' + Date.now();
+  }
+
   function load(get_inv, callback) {
-      var url = querystring.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
       var psv = d3.dsv("|", "text/plain");
       var Q = queue()
           .defer(psv, vertices_url)
           .defer(psv, edges_url);
       if(get_inv) {
           var inv_nodes_url = url + '/inv-nodes.psv', inv_edges_url = url + '/inv-edges.psv';
-          Q.defer(psv, inv_nodes_url)
-              .defer(psv, inv_edges_url)
+          Q.defer(psv, inv_nodes_url + nocache_query())
+              .defer(psv, inv_edges_url + nocache_query())
       }
       Q.await(function(error, vertices, edges, inv_vertices, inv_edges) {
           if(error)
@@ -117,56 +124,60 @@
               edgeDimension: edgeDimension, edgeGroup: edgeGroup1};
   }
 
-  load(true, function(vertices, edges) {
-      var cfs = crossfilters(vertices, edges);
-      // basic diagram setup
-      diagram
-          .width($(window).width())
-          .height($(window).height())
-          .showLayoutSteps(true)
-          .lengthStrategy('jaccard')
-          .baseLength(20)
-          .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
-          .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup)
-          .sourceAccessor(function(e) { return e.value.id1; })
-          .targetAccessor(function(e) { return e.value.id2; })
-          .modLayout(function(cola) {
-              cola.flowLayout('x', 30);
-          });
-
-      // respond to browser resize (not necessary if width/height is static)
-      $(window).resize(function() {
+  function init() {
+      load(true, function(vertices, edges) {
+          var cfs = crossfilters(vertices, edges);
+          // basic diagram setup
           diagram
               .width($(window).width())
               .height($(window).height())
-      });
+              .showLayoutSteps(true)
+              .lengthStrategy('jaccard')
+              .baseLength(20)
+              .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
+              .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup)
+              .sourceAccessor(function(e) { return e.value.id1; })
+              .targetAccessor(function(e) { return e.value.id2; })
+              .modLayout(function(cola) {
+                  cola.flowLayout('x', 30);
+              })
+              .on('end', function() {
+                  runner.endStep();
+              });
 
-      // aesthetics: look at kv.value for node/edge attributes and return appropriate values
-      diagram
-          .nodeStrokeWidthAccessor(0) // turn off outlines
-          .nodeRadiusAccessor(function(kv) {
-              switch(kv.value.node_type) {
-              case 'Router': return 20;
-              default: return 10;
-              }
-          })
-          .nodeFillAccessor(function(kv) {
-              // some arbitrarily-chosen colors from colorbrewer2.org
-              switch(kv.value.node_type) {
-              case 'Router': return '#377eb8';
-              case 'VirtualMachine': return '#e41a1c';
-              case 'Subnet': return '#ff7f00';
-              default: return 'grey';
-              }
-          })
-          .edgeArrowheadAccessor(function(kv) {
-              return kv.value._label === 'on_path' ? 'vee' : null;
+          // respond to browser resize (not necessary if width/height is static)
+          $(window).resize(function() {
+              diagram
+                  .width($(window).width())
+                  .height($(window).height())
           });
 
-      diagram.render();
-  });
+          // aesthetics: look at kv.value for node/edge attributes and return appropriate values
+          diagram
+              .nodeStrokeWidthAccessor(0) // turn off outlines
+              .nodeRadiusAccessor(function(kv) {
+                  switch(kv.value.node_type) {
+                  case 'Router': return 20;
+                  default: return 10;
+                  }
+              })
+              .nodeFillAccessor(function(kv) {
+                  // some arbitrarily-chosen colors from colorbrewer2.org
+                  switch(kv.value.node_type) {
+                  case 'Router': return '#377eb8';
+                  case 'VirtualMachine': return '#e41a1c';
+                  case 'Subnet': return '#ff7f00';
+                  default: return 'grey';
+                  }
+              })
+              .edgeArrowheadAccessor(function(kv) {
+                  return kv.value._label === 'on_path' ? 'vee' : null;
+              });
 
-  setInterval(function() {
+          diagram.render();
+      });
+  }
+  function step() {
       load(false, function(vertices, edges) {
           var cfs = crossfilters(vertices, edges);
           diagram
@@ -175,6 +186,9 @@
               .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup) */
               .redraw();
       })
-  }, timeout);
+  }
+
+  var runner = make_runner(init, step, interval);
+  runner.start();
 
 </script>
