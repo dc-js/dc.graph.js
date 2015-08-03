@@ -479,8 +479,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
             var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
             v1.orig = v;
-            v1.width = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
-            v1.height = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
+            v1.width = param(_chart.nodeRadiusAccessor())(v)*2 + _chart.nodePadding();
+            v1.height = param(_chart.nodeRadiusAccessor())(v)*2 + _chart.nodePadding();
             return v1;
         }
         function wrap_edge(e) {
