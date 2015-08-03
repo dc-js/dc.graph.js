@@ -16,6 +16,7 @@
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
+  <script type="text/javascript" src="js/colorbrewer.js"></script>
 
   <script type="text/javascript" src="js/runner.js"></script>
 </head>
@@ -120,7 +121,8 @@
                       warnings.push('attr ' + a + ' of edge ' + id + ': ' + e[a] + ' is not ' + inve[a]);
               _.extend(e, inve);
           });
-          console.log('inventory/cache warnings', warnings);
+          if(warnings.length)
+              console.log('inventory/cache warnings', warnings);
           callback(vertices, edges);
       });
   }
@@ -193,13 +195,10 @@
           // aesthetics: look at kv.value for node/edge attributes and return appropriate values
           diagram
               .nodeStrokeWidthAccessor(0) // turn off outlines
-              .nodeRadiusAccessor(function(kv) {
-                  switch(kv.value.ostype) {
-                  case 'RTR': return 20;
-                  default: return 10;
-                  }
-              })
+              .nodeRadiusAccessor(20)
+              .nodeFillScale(d3.scale.ordinal().range(colorbrewer.Paired[12]))
               .nodeFillAccessor(function(kv) {
+                  return kv.value.ostype;
                   // some arbitrarily-chosen colors from colorbrewer2.org
                   switch(kv.value.ostype) {
                   case 'RTR': return '#377eb8';
@@ -219,9 +218,8 @@
       load(false, function(vertices, edges) {
           var cfs = crossfilters(vertices, edges);
           diagram
-          /*
               .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
-              .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup) */
+              .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup)
               .redraw();
       })
   }
