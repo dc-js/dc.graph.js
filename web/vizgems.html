@@ -41,7 +41,7 @@
   })(window.location.search.substr(1).split('&'));
 
   var url = querystring.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
-  var interval = url.interval || 1000;
+  var interval = querystring.interval || 1000;
 
   var diagram = dc_graph.diagram('#graph');
   var node_inv = {}, edge_inv = {};
@@ -53,8 +53,8 @@
   function load(get_inv, callback) {
       var psv = d3.dsv("|", "text/plain");
       var Q = queue()
-          .defer(psv, vertices_url)
-          .defer(psv, edges_url);
+          .defer(psv, vertices_url + nocache_query())
+          .defer(psv, edges_url + nocache_query());
       if(get_inv) {
           var inv_nodes_url = url + '/inv-nodes.psv', inv_edges_url = url + '/inv-edges.psv';
           Q.defer(psv, inv_nodes_url + nocache_query())
@@ -69,20 +69,58 @@
                   var nn = node_inv[n.id] = node_inv[n.id] || {};
                   nn[n.key] = n.val;
               });
+              for(var id in node_inv) {
+                  var n = node_inv[id];
+                  // rename attribute that will collide with cache
+                  n.itype = n.type;
+                  delete n.type;
+                  // remove ostype prefix from name
+                  n.name = n.name.replace(/^.*:/,'');
+              };
           }
           if(inv_edges) {
               edge_inv = {};
               inv_edges.forEach(function(e) {
-                  var id = e.id1 + '-' + e.id2;
+                  var id = e.id1 + '|' + e.id2;
                   var ee = edge_inv[e.id] = node_inv[e.id] || {};
                   ee[e.key] = e.val;
               });
           }
 
-          // is edges always a superset of vertices?
+          // in cache, edges seems to be a superset of vertices, use that instead
           vertices = edges.filter(function(e) {
-              return !e.id2; // && e.id1 !== 'UNKNOWN' && e.id1 !== 'ab9f98cc-9ffe-4963-8df3-c46b34df9dfa';
+              return !e.id2;
           });
+          edges = edges.filter(function(e) {
+              return !!e.id2;
+          });
+
+          // populate vertex/edge properties from inventory, but warn about any problems
+          var warnings = [];
+          vertices.forEach(function(n) {
+              var invn = node_inv[n.id1];
+              if(!invn) {
+                  warnings.push('node ' + n.id1 + ' not found in inventory');
+                  return;
+              }
+              for(var a in n)
+                  if(a in invn && n[a] !== invn[a])
+                      warnings.push('attr ' + a + ' of node ' + n.id1 + ': ' + n[a] + ' is not ' + invn[a]);
+              _.extend(n, invn);
+          });
+          edges.forEach(function(e) {
+              var id = e.id1 + '|' + e.id2;
+              var inve = edge_inv[id];
+              if(!inve) {
+                  warnings.push('edge ' + id + ' not found in inventory');
+                  return;
+              }
+              for(var a in e)
+                  if(a in inve && e[a] !== inve[a])
+                      warnings.push('attr ' + a + ' of edge ' + id + ': ' + e[a] + ' is not ' + inve[a]);
+              _.extend(e, inve);
+          });
+          console.log('inventory/cache warnings', warnings);
           callback(vertices, edges);
       });
   }
@@ -131,7 +169,7 @@
           diagram
               .width($(window).width())
               .height($(window).height())
-              .showLayoutSteps(true)
+              .showLayoutSteps(false)
               .lengthStrategy('jaccard')
               .baseLength(20)
               .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
@@ -156,17 +194,17 @@
           diagram
               .nodeStrokeWidthAccessor(0) // turn off outlines
               .nodeRadiusAccessor(function(kv) {
-                  switch(kv.value.node_type) {
-                  case 'Router': return 20;
+                  switch(kv.value.ostype) {
+                  case 'RTR': return 20;
                   default: return 10;
                   }
               })
               .nodeFillAccessor(function(kv) {
                   // some arbitrarily-chosen colors from colorbrewer2.org
-                  switch(kv.value.node_type) {
-                  case 'Router': return '#377eb8';
-                  case 'VirtualMachine': return '#e41a1c';
-                  case 'Subnet': return '#ff7f00';
+                  switch(kv.value.ostype) {
+                  case 'RTR': return '#377eb8';
+                  case 'VM': return '#e41a1c';
+                  case 'SUB': return '#ff7f00';
                   default: return 'grey';
                   }
               })
