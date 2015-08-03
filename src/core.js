@@ -23,6 +23,13 @@ var property = function (defaultValue) {
     return ret;
 };
 
+var identity = function(x) { return x; };
+function compose(f, g) {
+    return function() {
+        return f(g.apply(null, arguments));
+    };
+}
+
 // version of d3.functor that optionally wraps the function with another
 // one, if the parameter is a function
 dc_graph.functor_wrap = function (v, wrap) {

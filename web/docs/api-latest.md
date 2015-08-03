@@ -92,6 +92,10 @@ outside. Default: 1
 Set or get the function which will be used to retrieve the stroke color for the outline of each
 node. Default: black
 
+#### .nodeFillScale([d3.scale])
+If set, the value returned from `nodeFillAccessor` will be processed through this d3.scale
+to return the fill color. Default: identity function (no scale)
+
 #### .nodeFillAccessor([function])
 Set or get the function which will be used to retrieve the fill color for the body of each
 node. Default: white

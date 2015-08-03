@@ -43,6 +43,13 @@ var property = function (defaultValue) {
     return ret;
 };
 
+var identity = function(x) { return x; };
+function compose(f, g) {
+    return function() {
+        return f(g.apply(null, arguments));
+    };
+}
+
 // version of d3.functor that optionally wraps the function with another
 // one, if the parameter is a function
 dc_graph.functor_wrap = function (v, wrap) {
@@ -218,6 +225,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeStrokeAccessor = property(function() {
         return 'black';
     });
+
+    /**
+     #### .nodeFillScale([d3.scale])
+     If set, the value returned from `nodeFillAccessor` will be processed through this d3.scale
+     to return the fill color. Default: identity function (no scale)
+     **/
+    _chart.nodeFillScale = property(identity);
 
     /**
      #### .nodeFillAccessor([function])
@@ -435,7 +449,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('r', param(_chart.nodeRadiusAccessor()))
             .attr('stroke', param(_chart.nodeStrokeAccessor()))
             .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
-            .attr('fill', param(_chart.nodeFillAccessor()));
+            .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
         node.select('text.node-label')
             .text(param(_chart.nodeLabelAccessor()));
     };

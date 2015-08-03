@@ -161,6 +161,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
+     #### .nodeFillScale([d3.scale])
+     If set, the value returned from `nodeFillAccessor` will be processed through this d3.scale
+     to return the fill color. Default: identity function (no scale)
+     **/
+    _chart.nodeFillScale = property(identity);
+
+    /**
      #### .nodeFillAccessor([function])
      Set or get the function which will be used to retrieve the fill color for the body of each
      node. Default: white
@@ -376,7 +383,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('r', param(_chart.nodeRadiusAccessor()))
             .attr('stroke', param(_chart.nodeStrokeAccessor()))
             .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
-            .attr('fill', param(_chart.nodeFillAccessor()));
+            .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
         node.select('text.node-label')
             .text(param(_chart.nodeLabelAccessor()));
     };
