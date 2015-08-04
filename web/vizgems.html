@@ -217,6 +217,8 @@
   }
   function step() {
       load(false, function(vertices, edges) {
+          if(!vertices.length || !edges.length)
+              return; // cola sometimes dies on empty input; hope that next iteration will succeed
           var cfs = crossfilters(vertices, edges);
           diagram
               .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
