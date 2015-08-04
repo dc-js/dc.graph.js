@@ -323,6 +323,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.initLayoutOnRedraw = property(false);
 
     /**
+     #### .induceNodes([boolean])
+     By default, all nodes are included, and edges are only included if both end-nodes are visible.
+     If `.induceNodes` is set, then only nodes which have at least one edge will be shown.
+     **/
+     _chart.induceNodes = property(false);
+
+    /**
      #### .modLayout([function])
      If it is desired to modify the cola layout object after it is created, this function can be called to add
      a modifier function which takes the layout object.
@@ -404,6 +411,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             _d3cola.stop();
         if(_chart.initLayoutOnRedraw())
             initLayout();
+
+        if(_chart.induceNodes()) {
+            var keeps = {};
+            edges.forEach(function(e) {
+                keeps[_chart.sourceAccessor()(e)] = true;
+                keeps[_chart.targetAccessor()(e)] = true;
+            });
+            nodes = nodes.filter(function(n) { return keeps[_chart.nodeKeyAccessor()(n)]; });
+        }
 
         var key_index_map = nodes.reduce(function(result, value, index) {
             result[_chart.nodeKeyAccessor()(value)] = index;

@@ -172,6 +172,10 @@ overlaps between nodes may not be eliminated [if cola is not reinitialized]
 layout object on each redraw. However, layout seems to be more stable if this is set false, so hopefully
 this will be fixed soon.
 
+#### .induceNodes([boolean])
+By default, all nodes are included, and edges are only included if both end-nodes are visible.
+If `.induceNodes` is set, then only nodes which have at least one edge will be shown.
+
 #### .modLayout([function])
 If it is desired to modify the cola layout object after it is created, this function can be called to add
 a modifier function which takes the layout object.
