@@ -200,6 +200,11 @@ the first time, and `.redraw()` can be called after that.
 Attaches an event handler to the diagram. Currently the only diagram event is `end`, signalling
 that diagram layout has completed.
 
+#### .getStats()
+Returns an object with current statistics on graph layout.
+* `nnodes` - number of nodes displayed
+* `nedges` - number of edges displayed
+
 #### .select(selector)
 Execute a d3 single selection in the diagram's scope using the given selector and return the d3
 selection. Roughly the same as

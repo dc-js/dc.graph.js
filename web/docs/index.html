@@ -270,6 +270,12 @@ the first time, and <code>.redraw()</code> can be called after that.</p>
 <h4 id="-on-">.on()</h4>
 <p>Attaches an event handler to the diagram. Currently the only diagram event is <code>end</code>, signalling
 that diagram layout has completed.</p>
+<h4 id="-getstats-">.getStats()</h4>
+<p>Returns an object with current statistics on graph layout.</p>
+<ul>
+<li><code>nnodes</code> - number of nodes displayed</li>
+<li><code>nedges</code> - number of edges displayed</li>
+</ul>
 <h4 id="-select-selector-">.select(selector)</h4>
 <p>Execute a d3 single selection in the diagram&#39;s scope using the given selector and return the d3
 selection. Roughly the same as</p>
