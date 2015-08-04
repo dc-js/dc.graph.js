@@ -244,8 +244,7 @@
   }
 
   function show_stats(data_stats, layout_stats) {
-      $('#graph-stats').html('Showing ' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes; ' +
-                             layout_stats.nedges + '/' + data_stats.totedges + ' edges.');
+      $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
   }
 
   var runner = make_runner(init, step, interval);
