@@ -73,6 +73,9 @@
               });
               for(var id in node_inv) {
                   var n = node_inv[id];
+                  // if it has a host field, alias that key
+                  if('host' in n)
+                      node_inv[n.host] = n;
                   // rename attribute that will collide with cache
                   n.itype = n.type;
                   delete n.type;
@@ -180,7 +183,7 @@
               .sourceAccessor(function(e) { return e.value.id1; })
               .targetAccessor(function(e) { return e.value.id2; })
               .modLayout(function(cola) {
-                  cola.flowLayout('x', 30);
+                  cola.flowLayout('x', 80);
               })
               .on('end', function() {
                   runner.endStep();
@@ -196,7 +199,11 @@
           // aesthetics: look at kv.value for node/edge attributes and return appropriate values
           diagram
               .nodeStrokeWidthAccessor(0) // turn off outlines
-              .nodeRadiusAccessor(20)
+              .nodeRadiusAccessor(30)
+              .induceNodes(true) // drop zero-degree nodes for now
+              .nodeLabelAccessor(function(kv) {
+                  return kv.value.host || kv.value.name;
+              })
               .nodeFillScale(d3.scale.ordinal().range(colorbrewer.Paired[12]))
               .nodeFillAccessor(function(kv) {
                   return kv.value.ostype;
