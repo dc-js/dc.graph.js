@@ -26,6 +26,9 @@
 
 
 <div id="graph" class="chart"></div>
+<div id="controls" class="chart">
+  <div id="graph-stats"></div>
+</div>
 
 <script type="text/javascript">
   var querystring = (function(a) {
@@ -175,7 +178,7 @@
           diagram
               .width($(window).width())
               .height($(window).height())
-              .showLayoutSteps(false)
+              .showLayoutSteps(true)
               .lengthStrategy('jaccard')
               .baseLength(20)
               .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
@@ -196,13 +199,17 @@
                   .height($(window).height())
           });
 
+          function isUUID(s) {
+              return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
+          }
+
           // aesthetics: look at kv.value for node/edge attributes and return appropriate values
           diagram
               .nodeStrokeWidthAccessor(0) // turn off outlines
               .nodeRadiusAccessor(30)
               .induceNodes(true) // drop zero-degree nodes for now
               .nodeLabelAccessor(function(kv) {
-                  return kv.value.host || kv.value.name;
+                  return isUUID(kv.value.name) ? kv.key : kv.value.name;
               })
               .nodeFillScale(d3.scale.ordinal().range(colorbrewer.Paired[12]))
               .nodeFillAccessor(function(kv) {
@@ -220,6 +227,7 @@
               });
 
           diagram.render();
+          show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       });
   }
   function step() {
@@ -231,7 +239,13 @@
               .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
               .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup)
               .redraw();
+          show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       })
+  }
+
+  function show_stats(data_stats, layout_stats) {
+      $('#graph-stats').html('Showing ' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes; ' +
+                             layout_stats.nedges + '/' + data_stats.totedges + ' edges.');
   }
 
   var runner = make_runner(init, step, interval);
