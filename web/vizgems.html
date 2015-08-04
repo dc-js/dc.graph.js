@@ -83,7 +83,7 @@
                   n.itype = n.type;
                   delete n.type;
                   // remove ostype prefix from name
-                  n.name = n.name.replace(/^.*:/,'');
+                  n.name = n.name.replace(/^[^:]*:/,'');
               };
           }
           if(inv_edges) {
@@ -171,6 +171,19 @@
               edgeDimension: edgeDimension, edgeGroup: edgeGroup1};
   }
 
+  var ostypes = {
+      CUS: "CUS",
+      PRT: "PRT",
+      NET: "NET",
+      VM: "Virtual Machine",
+      FS: "File System",
+      IMG: "IMG",
+      RTR: "Router",
+      U: "User",
+      SUB: "Subnet",
+      undefined: 'Unknown'
+  };
+
   function init() {
       load(true, function(vertices, edges) {
           var cfs = crossfilters(vertices, edges);
@@ -178,7 +191,7 @@
           diagram
               .width($(window).width())
               .height($(window).height())
-              .showLayoutSteps(true)
+              .showLayoutSteps(false)
               .lengthStrategy('jaccard')
               .baseLength(20)
               .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
@@ -205,26 +218,26 @@
 
           // aesthetics: look at kv.value for node/edge attributes and return appropriate values
           diagram
+              .initLayoutOnRedraw(true)
               .nodeStrokeWidthAccessor(0) // turn off outlines
               .nodeRadiusAccessor(30)
               .induceNodes(true) // drop zero-degree nodes for now
               .nodeLabelAccessor(function(kv) {
                   return isUUID(kv.value.name) ? kv.key : kv.value.name;
               })
-              .nodeFillScale(d3.scale.ordinal().range(colorbrewer.Paired[12]))
+              .nodeFillScale(d3.scale.ordinal(_.keys(ostypes)).range(colorbrewer.Paired[12]))
               .nodeFillAccessor(function(kv) {
                   return kv.value.ostype;
-                  // some arbitrarily-chosen colors from colorbrewer2.org
-                  switch(kv.value.ostype) {
-                  case 'RTR': return '#377eb8';
-                  case 'VM': return '#e41a1c';
-                  case 'SUB': return '#ff7f00';
-                  default: return 'grey';
-                  }
               })
               .edgeArrowheadAccessor(function(kv) {
                   return kv.value._label === 'on_path' ? 'vee' : null;
               });
+
+          var exs = {};
+          for(var ost in ostypes)
+              exs[ostypes[ost]] = {ostype: ost};
+          diagram.legend(
+              dc_graph.legend().nodeWidth(70).nodeHeight(70).exemplars(exs));
 
           diagram.render();
           show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
