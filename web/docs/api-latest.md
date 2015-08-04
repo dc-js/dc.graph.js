@@ -271,11 +271,11 @@ Set or get y coordinate for legend widget. Default: 0.
 #### .gap([value])
 Set or get gap between legend items. Default: 5.
 
-#### .nodeHeight([value])
-Set or get legend node height. Default: 30.
-
 #### .nodeWidth([value])
 Set or get legend node width. Default: 30.
+
+#### .nodeHeight([value])
+Set or get legend node height. Default: 30.
 
 #### .exemplars([object])
 Specifies an object where the keys are the names of items to add to the legend, and the values are

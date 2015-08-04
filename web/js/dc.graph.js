@@ -916,16 +916,16 @@ dc_graph.legend = function() {
     _legend.gap = property(5);
 
     /**
-     #### .nodeHeight([value])
-     Set or get legend node height. Default: 30.
-     **/
-    _legend.nodeHeight = property(40);
-
-    /**
      #### .nodeWidth([value])
      Set or get legend node width. Default: 30.
      **/
     _legend.nodeWidth = property(40);
+
+    /**
+     #### .nodeHeight([value])
+     Set or get legend node height. Default: 30.
+     **/
+    _legend.nodeHeight = property(40);
 
 
     /**
