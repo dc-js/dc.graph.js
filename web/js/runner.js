@@ -39,6 +39,9 @@ var make_runner = function(init, step, interval) {
                 this.start();
             return this;
         },
+        isRunning: function() {
+            return !!timer;
+        },
         endStep: function() {
             stepped = true;
             kontinue();

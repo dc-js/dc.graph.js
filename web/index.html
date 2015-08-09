@@ -29,6 +29,9 @@
 
 <div id="graph" class="chart"></div>
 <div id="controls" class="chart">
+  <div id="run-indicator">
+    running
+  </div>
   <div id="time-range">
     <label id="now">&#x21e7;</label>
   </div>
@@ -71,7 +74,8 @@
       linkLength = querystring.linklength || 0,
       edgeColor = querystring.edgecolor || 'black',
       opacity = +querystring.opacity || 1,
-      hierarchical = true;
+      hierarchical = true,
+      timeLimit = querystring.limit || 0;
   if('hier' in querystring) {
       hierarchical = !!+querystring.hier;
       $('#hierarchical').prop('checked', hierarchical);
@@ -158,6 +162,7 @@
           if(doReinit)
               diagram.initLayoutOnRedraw(hierarchical);
           startDim.filterRange([0, curr]);
+          $('#run-indicator').show();
           if(doRender) {
               dc.renderAll();
               doRender = false;
@@ -200,6 +205,7 @@
       diagram
           .width($(window).width())
           .height($(window).height())
+          .timeLimit(timeLimit)
           .showLayoutSteps(showSteps)
           .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
           .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
@@ -216,6 +222,7 @@
           .edgeOpacityAccessor(opacity)
           .edgeStrokeAccessor(edgeColor)
           .on('end', function() {
+              $('#run-indicator').hide();
               runner.endStep();
           });
       if(linkLength)

@@ -24,3 +24,11 @@ body {
     margin-left: -10px;
     text-align: center;
 }
+
+#run-indicator {
+    position: absolute;
+    right: 1em;
+    top: 1em;
+    display: hidden;
+    color: darkred;
+}
