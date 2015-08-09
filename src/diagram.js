@@ -524,6 +524,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(nodes1, param(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
+                .attr('visibility', 'hidden') // don't show until has layout
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
         var nodeExit = node.exit();
@@ -624,9 +625,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
     function draw(node, edge, edgeHover, edgeLabels) {
-        node.attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
+        node.attr('visibility', 'visible')
+            .attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
 
         edge.attr("d", edge_path);
         edgeHover.attr('d', edge_path);
