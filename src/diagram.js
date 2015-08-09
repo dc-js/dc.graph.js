@@ -293,6 +293,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.transitionDuration = property(500);
 
+    /** .timeLimit([number])
+     Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for now limit.
+     Default: 0
+     **/
+    _chart.timeLimit = property(0);
+
     /**
      #### .constrain([function])
      This function will be called with the current nodes and edges on each redraw in order to derive new
@@ -531,9 +537,17 @@ dc_graph.diagram = function (parent, chartGroup) {
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
-        _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
-            draw(node, edge, edgeHover, edgeLabels);
-        } : null);
+        _d3cola.on('tick', function() {
+            var elapsed = Date.now() - startTime;
+            console.log('tick', elapsed);
+            if(_chart.showLayoutSteps())
+                draw(node, edge, edgeHover, edgeLabels);
+            if(_chart.timeLimit() && elapsed > _chart.timeLimit()) {
+                console.log('cancelled');
+                _d3cola.stop();
+                _dispatch.end();
+            }
+        });
 
         // pseudo-cola.js features
 
@@ -569,6 +583,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     });
             layout_edges = layout_edges.concat(wheel);
         });
+        var startTime = Date.now();
         _d3cola.nodes(nodes1)
             .links(layout_edges)
             .constraints(noncircle_constraints)
