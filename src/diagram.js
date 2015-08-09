@@ -15,6 +15,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _d3cola = null;
     var _dispatch = d3.dispatch('end');
     var _stats = {};
+    var _nodes_snapshot, _edges_snapshot;
 
     // we want to allow either values or functions to be passed to specify parameters.
     // if a function, the function needs a preprocessor to extract the original key/value
@@ -330,6 +331,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.initLayoutOnRedraw = property(false);
 
     /**
+     #### .layoutUnchanged([boolean])
+     Whether to perform layout when the data is unchanged from the last redraw. Default: false
+     **/
+    _chart.layoutUnchanged = property(false);
+
+    /**
      #### .induceNodes([boolean])
      By default, all nodes are included, and edges are only included if both end-nodes are visible.
      If `.induceNodes` is set, then only nodes which have at least one edge will be shown.
@@ -453,6 +460,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             return e.source!==undefined && e.target!==undefined;
         });
         _stats = {nnodes: nodes1.length, nedges: edges1.length};
+        if(!_chart.layoutUnchanged()) {
+            var nodes_snapshot = JSON.stringify(nodes1), edges_snapshot = JSON.stringify(edges1);
+            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot) {
+                _dispatch.end();
+                return;
+            }
+            _nodes_snapshot = nodes_snapshot;
+            _edges_snapshot = edges_snapshot;
+        }
 
         if(_chart.parallelEdgeOffset()) {
             // mark parallel edges so we can draw them specially
