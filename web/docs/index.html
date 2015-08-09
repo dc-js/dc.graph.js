@@ -233,6 +233,9 @@ By default, reads the <code>distance</code> field of the edge. If the distance i
 <h4 id="-baselength-number-">.baseLength([number])</h4>
 <p>Gets or sets the default edge length (in pixels) when the <code>.lengthStrategy</code> is &#39;individual&#39;, and the base
 value to be multiplied for &#39;symmetric&#39; and &#39;jaccard&#39; edge lengths.</p>
+<p> .timeLimit([number])
+Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for now limit.
+Default: 0</p>
 <h4 id="-constrain-function-">.constrain([function])</h4>
 <p>This function will be called with the current nodes and edges on each redraw in order to derive new
 layout constraints. By default, no constraints will be added beyond those for edge lengths, but this
@@ -249,6 +252,8 @@ overlaps between nodes may not be eliminated [if cola is not reinitialized]
 (<a href="https://github.com/tgdwyer/WebCola/issues/118">https://github.com/tgdwyer/WebCola/issues/118</a>)). This flag can be set true to construct a new cola
 layout object on each redraw. However, layout seems to be more stable if this is set false, so hopefully
 this will be fixed soon.</p>
+<h4 id="-layoutunchanged-boolean-">.layoutUnchanged([boolean])</h4>
+<p>Whether to perform layout when the data is unchanged from the last redraw. Default: false</p>
 <h4 id="-inducenodes-boolean-">.induceNodes([boolean])</h4>
 <p>By default, all nodes are included, and edges are only included if both end-nodes are visible.
 If <code>.induceNodes</code> is set, then only nodes which have at least one edge will be shown.</p>

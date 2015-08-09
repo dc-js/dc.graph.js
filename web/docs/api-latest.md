@@ -153,6 +153,10 @@ By default, reads the `distance` field of the edge. If the distance is falsy, us
 Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is 'individual', and the base
 value to be multiplied for 'symmetric' and 'jaccard' edge lengths.
 
+ .timeLimit([number])
+Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for now limit.
+Default: 0
+
 #### .constrain([function])
 This function will be called with the current nodes and edges on each redraw in order to derive new
 layout constraints. By default, no constraints will be added beyond those for edge lengths, but this
@@ -171,6 +175,9 @@ overlaps between nodes may not be eliminated [if cola is not reinitialized]
 (https://github.com/tgdwyer/WebCola/issues/118)). This flag can be set true to construct a new cola
 layout object on each redraw. However, layout seems to be more stable if this is set false, so hopefully
 this will be fixed soon.
+
+#### .layoutUnchanged([boolean])
+Whether to perform layout when the data is unchanged from the last redraw. Default: false
 
 #### .induceNodes([boolean])
 By default, all nodes are included, and edges are only included if both end-nodes are visible.

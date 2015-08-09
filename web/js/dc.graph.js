@@ -81,6 +81,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _d3cola = null;
     var _dispatch = d3.dispatch('end');
     var _stats = {};
+    var _nodes_snapshot, _edges_snapshot;
 
     // we want to allow either values or functions to be passed to specify parameters.
     // if a function, the function needs a preprocessor to extract the original key/value
@@ -359,6 +360,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.transitionDuration = property(500);
 
+    /** .timeLimit([number])
+     Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for now limit.
+     Default: 0
+     **/
+    _chart.timeLimit = property(0);
+
     /**
      #### .constrain([function])
      This function will be called with the current nodes and edges on each redraw in order to derive new
@@ -388,6 +395,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      this will be fixed soon.
      **/
     _chart.initLayoutOnRedraw = property(false);
+
+    /**
+     #### .layoutUnchanged([boolean])
+     Whether to perform layout when the data is unchanged from the last redraw. Default: false
+     **/
+    _chart.layoutUnchanged = property(false);
 
     /**
      #### .induceNodes([boolean])
@@ -513,6 +526,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             return e.source!==undefined && e.target!==undefined;
         });
         _stats = {nnodes: nodes1.length, nedges: edges1.length};
+        if(!_chart.layoutUnchanged()) {
+            var nodes_snapshot = JSON.stringify(nodes1), edges_snapshot = JSON.stringify(edges1);
+            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot) {
+                _dispatch.end();
+                return;
+            }
+            _nodes_snapshot = nodes_snapshot;
+            _edges_snapshot = edges_snapshot;
+        }
 
         if(_chart.parallelEdgeOffset()) {
             // mark parallel edges so we can draw them specially
@@ -590,15 +612,24 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(nodes1, param(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
+                .attr('visibility', 'hidden') // don't show until has layout
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
         var nodeExit = node.exit();
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
-        _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
-            draw(node, edge, edgeHover, edgeLabels);
-        } : null);
+        _d3cola.on('tick', function() {
+            var elapsed = Date.now() - startTime;
+            console.log('tick', elapsed);
+            if(_chart.showLayoutSteps())
+                draw(node, edge, edgeHover, edgeLabels);
+            if(_chart.timeLimit() && elapsed > _chart.timeLimit()) {
+                console.log('cancelled');
+                _d3cola.stop();
+                _dispatch.end();
+            }
+        });
 
         // pseudo-cola.js features
 
@@ -634,6 +665,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     });
             layout_edges = layout_edges.concat(wheel);
         });
+        var startTime = Date.now();
         _d3cola.nodes(nodes1)
             .links(layout_edges)
             .constraints(noncircle_constraints)
@@ -690,9 +722,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
     function draw(node, edge, edgeHover, edgeLabels) {
-        node.attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
+        node.attr('visibility', 'visible')
+            .attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
 
         edge.attr("d", edge_path);
         edgeHover.attr('d', edge_path);
