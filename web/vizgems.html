@@ -46,7 +46,7 @@
   })(window.location.search.substr(1).split('&'));
 
   var url = querystring.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
-  var interval = querystring.interval || 1000;
+  var interval = querystring.interval || 1000, timeLimit = querystring.limit || 750;
 
   var diagram = dc_graph.diagram('#graph');
   var node_inv = {}, edge_inv = {};
@@ -195,6 +195,7 @@
               .width($(window).width())
               .height($(window).height())
               .showLayoutSteps(false)
+              .timeLimit(timeLimit)
               .lengthStrategy('jaccard')
               .baseLength(20)
               .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
