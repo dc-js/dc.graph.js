@@ -151,7 +151,10 @@
       var nodeDimension = node_ndx.dimension(function(d) { return d.id1; }),
           edgeDimension = edge_ndx.dimension(function(d) { return d.id1 + '-' + d.id2; }),
           nodeGroup = nodeDimension.group(),
-          edgeGroup = edgeDimension.group();
+          edgeGroup = edgeDimension.group(),
+          badNodesFilter = node_ndx.dimension(function(d) { return d.id1; });
+
+      badNodesFilter.filter(function(kv) { return kv != 'UNKNOWN'; });
 
       one_zero_reduce(nodeGroup);
       one_zero_reduce(edgeGroup);
@@ -160,7 +163,7 @@
           return {
               all: function() {
                   return group.all().filter(function(kv) {
-                      return kv.value !== null;
+                      return kv.value !== null && kv.value.name != 'demosub';
                   });
               }
           };
