@@ -26,19 +26,21 @@ dc_graph.edge_object = function(namef, i, j, attrs) {
     }, attrs);
 };
 
-dc_graph.generate = function(name, args, callback) {
+dc_graph.generate = function(name, args, env, callback) {
     var nodes, edges, i, j;
+    var nodePrefix = env.nodePrefix || '';
     var namef = function(i) {
         return nodes[i].name;
     };
     var N = args[0];
+    var linkLength = env.linkLength || 30;
     switch(name) {
     case 'clique':
     case 'cliquestf':
         nodes = new Array(N);
         edges = [];
         for(i = 0; i<N; ++i) {
-            nodes[i] = dc_graph.node_object(i, {circle: "A"});
+            nodes[i] = dc_graph.node_object(i, {circle: "A", name: nodePrefix+dc_graph.node_name(i)});
             for(j=0; j<i; ++j)
                 edges.push(dc_graph.edge_object(namef, i, j, {notLayout: true, undirected: true}));
         }
@@ -53,8 +55,8 @@ dc_graph.generate = function(name, args, callback) {
     case 'wheel':
         nodes = new Array(N);
         for(i = 0; i < N; ++i)
-            nodes[i] = dc_graph.node_object(i);
-        edges = dc_graph.wheel_edges(namef, _.range(N), N*15);
+            nodes[i] = dc_graph.node_object(i, {name: nodePrefix+dc_graph.node_name(i)});
+        edges = dc_graph.wheel_edges(namef, _.range(N), N*linkLength/2);
         var rimLength = edges[0].distance;
         for(i = 0; i < args[1]; ++i)
             for(j = 0; j < N; ++j)

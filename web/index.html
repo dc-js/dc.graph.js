@@ -78,6 +78,7 @@
       edgeColor = querystring.edgecolor || 'black',
       opacity = +querystring.opacity || 1,
       hierarchical = true,
+      nodePrefix = querystring.prefix || '',
       timeLimit = querystring.limit || 0;
   if('hier' in querystring) {
       hierarchical = !!+querystring.hier;
@@ -119,7 +120,11 @@
           var parts = /^([a-zA-Z]+)([0-9]+(?:,[0-9])+)*/.exec(generate);
           if(!parts || !parts[0]) throw new Error("couldn't parse generator");
           var name = parts[1], args = parts[2].split(',').map(function(n) { return +n; });
-          dc_graph.generate(name, args, callback);
+          var env = {
+              linkLength: linkLength,
+              nodePrefix: nodePrefix
+          };
+          dc_graph.generate(name, args, env, callback);
       }
 
   source(function(error, data) {
