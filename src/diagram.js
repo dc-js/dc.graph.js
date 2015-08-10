@@ -417,7 +417,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                         var y_over_B = bbox.height/2/r;
                         var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
                         fitx = rx*2 + _chart.nodePadding();
+                        d.dcg_rx = Math.max(rx, r);
+                        d.dcg_ry = r;
                     }
+                    else d.dcg_rx = d.dcg_ry = r;
                     d.width = Math.max(fitx, rplus);
                     d.height = rplus;
                 }
@@ -637,23 +640,34 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
+    function point_on_ellipse(A, B, dx, dy) {
+        var tansq = Math.tan(Math.atan2(dy, dx));
+        tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
+        console.log(tansq);
+        var ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
+        if(dx<0)
+            ret.x = -ret.x;
+        if(dy<0)
+            ret.y = -ret.y;
+        return ret;
+    }
+
     function edge_path(d) {
         var deltaX = d.target.x - d.source.x,
             deltaY = d.target.y - d.source.y,
-            sourcePadding = param(_chart.nodeRadiusAccessor())(d.source) +
+            sourcePadding = d.source.dcg_ry +
                 param(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
-            targetPadding = param(_chart.nodeRadiusAccessor())(d.target) +
+            targetPadding = d.target.dcg_ry +
                 param(_chart.nodeStrokeWidthAccessor())(d.target) / 2;
 
         var sourceX, sourceY, targetX, targetY;
         if(!d.parallel) {
-            var dist = Math.hypot(deltaX, deltaY),
-                normX = deltaX / dist,
-                normY = deltaY / dist;
-            sourceX = d.source.x + (sourcePadding * normX);
-            sourceY = d.source.y + (sourcePadding * normY);
-            targetX = d.target.x - (targetPadding * normX);
-            targetY = d.target.y - (targetPadding * normY);
+            var sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, deltaX, deltaY),
+                tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, -deltaX, -deltaY);
+            sourceX = d.source.x + sp.x;
+            sourceY = d.source.y + sp.y;
+            targetX = d.target.x + tp.x;
+            targetY = d.target.y + tp.y;
             d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
             return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
         }
