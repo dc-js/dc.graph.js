@@ -321,7 +321,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      #### .parallelEdgeOffset([number])
      If there are multiple edges between the same two nodes, start them this many pixels away from the original
      so they don't overlap.
-     Default: true
+     Default: 5
      **/
     _chart.parallelEdgeOffset = property(5);
 
