@@ -192,6 +192,11 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeLabelAccessor = property(function(kv) {
         return kv.value.label || kv.value.name;
     });
+    /**
+     #### .nodeFitLabelAccessor([function])
+     Whether to fit the node shape around the label. Default: true
+     **/
+    _chart.nodeFitLabelAccessor = property(true);
 
     /**
      #### .nodeTitleAccessor([function])
@@ -396,17 +401,34 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart._buildNode = function(node, nodeEnter) {
         nodeEnter.append('title').text(param(_chart.nodeTitleAccessor()));
-
-        nodeEnter.append('circle');
+        nodeEnter.append('ellipse');
         nodeEnter.append('text')
             .attr('class', 'node-label');
-        node.select('circle')
-            .attr('r', param(_chart.nodeRadiusAccessor()))
+        node.select('text.node-label')
+            .text(param(_chart.nodeLabelAccessor()))
+            .each(function(d, i) {
+                var r = param(_chart.nodeRadiusAccessor())(d);
+                var rplus = r*2 + _chart.nodePadding();
+                if(param(_chart.nodeFitLabelAccessor())(d)) {
+                    var bbox = this.getBBox();
+                    var fitx = 0;
+                    if(bbox.width && bbox.height) {
+                        // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+                        var y_over_B = bbox.height/2/r;
+                        var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+                        fitx = rx*2 + _chart.nodePadding();
+                    }
+                    d.width = Math.max(fitx, rplus);
+                    d.height = rplus;
+                }
+                else d.width = d.height = rplus;
+            });
+        node.select('ellipse')
+            .attr('rx', function(d) { return (d.width - _chart.nodePadding())/2; })
+            .attr('ry', function(d) { return (d.height - _chart.nodePadding())/2; })
             .attr('stroke', param(_chart.nodeStrokeAccessor()))
             .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
             .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
-        node.select('text.node-label')
-            .text(param(_chart.nodeLabelAccessor()));
     };
 
     /**
