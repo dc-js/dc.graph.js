@@ -32,16 +32,19 @@
   <div id="run-indicator">
     running
   </div>
-  <div id="time-range">
-    <label id="now">&#x21e7;</label>
+  <div id="stepper" style="display: none">
+    <div id="time-range">
+      <label id="now">&#x21e7;</label>
+    </div>
+    <div style="margin-top: 25px">
+      <button onclick="start_stop()">stop/start</button>
+      <div id="status"></div>
+    </div>
   </div>
-  <div style="margin-top: 25px">
-    <button onclick="start_stop()">stop/start</button>
-    <div id="status"></div>
-  </div>
-  <div style="margin-top: 15px">
+  <div id="hierarchical-chooser" style="margin-top: 15px; display: none">
     <label><input type="checkbox" id="hierarchical" checked="true">Hierarchical</label>
   </div>
+  <div id="graph-stats"></div>
 </div>
 
 
@@ -92,6 +95,9 @@
       $('#now').css('left', (curr-min)/(max-min)*100 + '%');
       $('#status').text('[' + begin + '..' + end + '] : ' + curr);
   }
+  function show_stats(data_stats, layout_stats) {
+      $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
+  }
 
   do_status();
 
@@ -99,6 +105,11 @@
   if(!generate && !file)
       file = "qfs.json";
   isQFS = +querystring.qfs || file === 'qfs.json' && querystring.qfs !=="0";
+  if(isQFS) {
+      // not that it wouldn't be nice to have other animated examples...
+      $('#stepper,#hierarchical-chooser').show();
+      $('#controls').width(400);
+  }
   if(file)
       source = function(callback) {
           dc_graph.load_graph(file, callback);
@@ -170,6 +181,7 @@
           else
               dc.redrawAll();
           done = false;
+          show_stats({totnodes: data.nodes.length, totedges: data.links.length}, diagram.getStats());
       }
       function step() {
           if(++curr>end) curr = begin;
