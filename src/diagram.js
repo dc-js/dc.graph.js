@@ -483,10 +483,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         _stats = {nnodes: nodes1.length, nedges: edges1.length};
         if(!_chart.layoutUnchanged()) {
-            var nodes_snapshot = JSON.stringify(nodes1), edges_snapshot = JSON.stringify(edges1);
+            function original(x) {
+                return x.orig;
+            }
+            var nodes_snapshot = JSON.stringify(nodes1.map(original)), edges_snapshot = JSON.stringify(edges1.map(original));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot) {
                 _dispatch.end();
-                return;
+                return this;
             }
             _nodes_snapshot = nodes_snapshot;
             _edges_snapshot = edges_snapshot;
