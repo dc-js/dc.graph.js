@@ -26,11 +26,12 @@ dc_graph.edge_object = function(namef, i, j, attrs) {
     }, attrs);
 };
 
-dc_graph.generate = function(name, N, callback) {
+dc_graph.generate = function(name, args, callback) {
     var nodes, edges, i, j;
     var namef = function(i) {
         return nodes[i].name;
     };
+    var N = args[0];
     switch(name) {
     case 'clique':
     case 'cliquestf':
@@ -54,6 +55,10 @@ dc_graph.generate = function(name, N, callback) {
         for(i = 0; i < N; ++i)
             nodes[i] = dc_graph.node_object(i);
         edges = dc_graph.wheel_edges(namef, _.range(N), N*15);
+        var rimLength = edges[0].distance;
+        for(i = 0; i < args[1]; ++i)
+            for(j = 0; j < N; ++j)
+                edges.push(dc_graph.edge_object(namef, j, (j+1)%N, {distance: rimLength, par: i+2}));
         break;
     default:
         throw new Error("unknown generation type "+name);

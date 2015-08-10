@@ -105,10 +105,10 @@
       }
   else if(generate)
       source = function(callback) {
-          var parts = /^([a-zA-Z]+)([0-9]*)/.exec(generate);
+          var parts = /^([a-zA-Z]+)([0-9]+(?:,[0-9])+)*/.exec(generate);
           if(!parts || !parts[0]) throw new Error("couldn't parse generator");
-          var name = parts[1], N = +parts[2];
-          dc_graph.generate(name, N, callback);
+          var name = parts[1], args = parts[2].split(',').map(function(n) { return +n; });
+          dc_graph.generate(name, args, callback);
       }
 
   source(function(error, data) {
@@ -133,7 +133,7 @@
           );
       }
       var nodeDimension = node_ndx.dimension(function(d) { return d.name; }),
-          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '-' + d.targetname; }),
+          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : ''); }),
           nodeGroup = nodeDimension.group(),
           edgeGroup = edgeDimension.group();
 
