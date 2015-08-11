@@ -640,18 +640,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    function point_on_ellipse(A, B, dx, dy) {
-        var tansq = Math.tan(Math.atan2(dy, dx));
-        tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
-        console.log(tansq);
-        var ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
-        if(dx<0)
-            ret.x = -ret.x;
-        if(dy<0)
-            ret.y = -ret.y;
-        return ret;
-    }
-
     function edge_path(d) {
         var deltaX = d.target.x - d.source.x,
             deltaY = d.target.y - d.source.y,
@@ -660,16 +648,16 @@ dc_graph.diagram = function (parent, chartGroup) {
             targetPadding = d.target.dcg_ry +
                 param(_chart.nodeStrokeWidthAccessor())(d.target) / 2;
 
-        var sourceX, sourceY, targetX, targetY;
+        var sourceX, sourceY, targetX, targetY, sp, tp;
         if(!d.parallel) {
-            var sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, deltaX, deltaY),
-                tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, -deltaX, -deltaY);
+            sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, deltaX, deltaY);
+            tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, -deltaX, -deltaY);
             sourceX = d.source.x + sp.x;
             sourceY = d.source.y + sp.y;
             targetX = d.target.x + tp.x;
             targetY = d.target.y + tp.y;
             d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-            return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+            return generate_path([sourceX, sourceY, targetX, targetY], 1);
         }
         else {
             // alternate parallel edges over, then under
@@ -682,19 +670,23 @@ dc_graph.diagram = function (parent, chartGroup) {
                 sin_sport = Math.sin(sportang),
                 cos_tport = Math.cos(tportang),
                 sin_tport = Math.sin(tportang),
-                dist = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y),
-                c1dist = Math.min(2 * sourcePadding, dist/2),
-                c2dist = Math.min(2 * targetPadding, dist/2);
-            sourceX = d.source.x + sourcePadding * cos_sport;
-            sourceY = d.source.y + sourcePadding * sin_sport;
+                dist = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);
+            sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, cos_sport, sin_sport);
+            tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, cos_tport, sin_tport);
+            var sdist = Math.hypot(sp.x, sp.y),
+                tdist = Math.hypot(tp.x, tp.y),
+                c1dist = Math.max(sdist+sourcePadding/4, Math.min(sdist*2, dist/2)),
+                c2dist = Math.min(tdist+targetPadding/4, Math.min(tdist*2, dist/2));
+            sourceX = d.source.x + sp.x;
+            sourceY = d.source.y + sp.y;
             var c1X = d.source.x + c1dist * cos_sport,
                 c1Y = d.source.y + c1dist * sin_sport,
                 c2X = d.target.x + c2dist * cos_tport,
                 c2Y = d.target.y + c2dist * sin_tport;
-            targetX = d.target.x + targetPadding * cos_tport;
-            targetY = d.target.y + targetPadding * sin_tport;
+            targetX = d.target.x + tp.x;
+            targetY = d.target.y + tp.y;
             d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-            return 'M' + sourceX + ',' + sourceY + 'C' + c1X + ',' + c1Y + ' ' + c2X + ',' + c2Y + ' ' + targetX + ',' + targetY;
+            return generate_path([sourceX, sourceY, c1X, c1Y, c2X, c2Y, targetX, targetY], 3);
         }
     }
     function draw(node, edge, edgeHover, edgeLabels) {
