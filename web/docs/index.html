@@ -196,6 +196,8 @@ node. Default: white</p>
 <h4 id="-nodelabelaccessor-function-">.nodeLabelAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field <code>label</code> or <code>name</code> inside the <code>value</code> field.</p>
+<h4 id="-nodefitlabelaccessor-function-">.nodeFitLabelAccessor([function])</h4>
+<p>Whether to fit the node shape around the label. Default: true</p>
 <h4 id="-nodetitleaccessor-function-">.nodeTitleAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
 By default, uses the key of the node.</p>
@@ -245,7 +247,7 @@ are built from scratch on each redraw.</p>
 <h4 id="-paralleledgeoffset-number-">.parallelEdgeOffset([number])</h4>
 <p>If there are multiple edges between the same two nodes, start them this many pixels away from the original
 so they don&#39;t overlap.
-Default: true</p>
+Default: 5</p>
 <h4 id="-initlayoutonredraw-boolean-">.initLayoutOnRedraw([boolean])</h4>
 <p>Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
 overlaps between nodes may not be eliminated [if cola is not reinitialized]

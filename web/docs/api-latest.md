@@ -107,6 +107,9 @@ Set or get the padding or minimum distance, in pixels, between nodes in the diag
 Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field `label` or `name` inside the `value` field.
 
+#### .nodeFitLabelAccessor([function])
+Whether to fit the node shape around the label. Default: true
+
 #### .nodeTitleAccessor([function])
 Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
 By default, uses the key of the node.
@@ -167,7 +170,7 @@ are built from scratch on each redraw.
 #### .parallelEdgeOffset([number])
 If there are multiple edges between the same two nodes, start them this many pixels away from the original
 so they don't overlap.
-Default: true
+Default: 5
 
 #### .initLayoutOnRedraw([boolean])
 Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
