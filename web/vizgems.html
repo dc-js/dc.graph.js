@@ -20,34 +20,43 @@
   <script type="text/javascript" src="js/colorbrewer.js"></script>
 
   <script type="text/javascript" src="js/runner.js"></script>
+  <script type="text/javascript" src="js/querystring.js"></script>
 </head>
 
 <body>
 
 
 <div id="graph" class="chart"></div>
-<div id="controls" class="chart">
+<div id="overlay">
   <div id="graph-stats"></div>
+  <div id="options">
+    <label><input type="checkbox" id="hide-unknown" checked="true">Hide Unknown</label>
+  </div>
 </div>
 
 <script type="text/javascript">
-  var querystring = (function(a) {
-      if (a == "") return {};
-      var b = {};
-      for (var i = 0; i < a.length; ++i)
-      {
-          var p=a[i].split('=', 2);
-          if (p.length == 1)
-              b[p[0]] = "";
-          else
-              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+  var qs = querystring.parse();
+  var url = qs.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
+  var interval = qs.interval || 1000, timeLimit = qs.limit || 750,
+      hide_unknown = true;
+
+  if('hideUnknown' in qs) {
+      hide_unknown = qs.hideUnknown==='true';
+      $('#hide-unknown').prop('checked', hide_unknown);
+  }
+  $('#hide-unknown').change(function(val) {
+      hide_unknown = $(this).is(':checked');
+      qs.hideUnknown = '' + hide_unknown;
+      querystring.update(qs);
+      if(filters.filterIds) {
+          filters.filterIds.filter(hide_unknown ?
+                                   function(kv) { return kv != 'UNKNOWN'; } :
+                                   null);
+          diagram.redraw();
       }
-      return b;
-  })(window.location.search.substr(1).split('&'));
+  });
 
-  var url = querystring.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
-  var interval = querystring.interval || 1000, timeLimit = querystring.limit || 750;
-
+  var filters = {};
   var diagram = dc_graph.diagram('#graph');
   var node_inv = {}, edge_inv = {};
 
@@ -152,9 +161,11 @@
           edgeDimension = edge_ndx.dimension(function(d) { return d.id1 + '-' + d.id2; }),
           nodeGroup = nodeDimension.group(),
           edgeGroup = edgeDimension.group(),
-          badNodesFilter = node_ndx.dimension(function(d) { return d.id1; });
+          filterIds = node_ndx.dimension(function(d) { return d.id1; }),
+          filterNames = node_ndx.dimension(function(d) { return d.name; });
 
-      badNodesFilter.filter(function(kv) { return kv != 'UNKNOWN'; });
+      if(hide_unknown)
+          filterIds.filter(function(kv) { return kv != 'UNKNOWN'; });
 
       one_zero_reduce(nodeGroup);
       one_zero_reduce(edgeGroup);
@@ -163,7 +174,7 @@
           return {
               all: function() {
                   return group.all().filter(function(kv) {
-                      return kv.value !== null && kv.value.name != 'demosub';
+                      return kv.value !== null;
                   });
               }
           };
@@ -171,7 +182,8 @@
       var nodeGroup1 = non_null(nodeGroup),
           edgeGroup1 = non_null(edgeGroup);
       return {nodeDimension: nodeDimension, nodeGroup: nodeGroup1,
-              edgeDimension: edgeDimension, edgeGroup: edgeGroup1};
+              edgeDimension: edgeDimension, edgeGroup: edgeGroup1,
+              filterIds: filterIds, filterNames: filterNames};
   }
 
   var ostypes = {
@@ -189,7 +201,7 @@
 
   function init() {
       load(true, function(vertices, edges) {
-          var cfs = crossfilters(vertices, edges);
+          filters = crossfilters(vertices, edges);
           // basic diagram setup
           diagram
               .width($(window).width())
@@ -198,8 +210,8 @@
               .timeLimit(timeLimit)
               .lengthStrategy('jaccard')
               .baseLength(20)
-              .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
-              .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup)
+              .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
+              .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
               .sourceAccessor(function(e) { return e.value.id1; })
               .targetAccessor(function(e) { return e.value.id2; })
               .modLayout(function(cola) {
@@ -222,7 +234,7 @@
 
           // aesthetics: look at kv.value for node/edge attributes and return appropriate values
           diagram
-              .initLayoutOnRedraw(false)
+              .initLayoutOnRedraw(true)
               .nodeStrokeWidthAccessor(0) // turn off outlines
               .nodeRadiusAccessor(30)
               .induceNodes(true) // drop zero-degree nodes for now
@@ -249,12 +261,14 @@
   }
   function step() {
       load(false, function(vertices, edges) {
-          if(!vertices.length || !edges.length)
+          if(!vertices.length || !edges.length) {
+              runner.endStep();
               return; // cola sometimes dies on empty input; hope that next iteration will succeed
-          var cfs = crossfilters(vertices, edges);
+          }
+          filters = crossfilters(vertices, edges);
           diagram
-              .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
-              .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup)
+              .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
+              .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
               .redraw();
           show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       })
