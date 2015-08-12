@@ -30,7 +30,8 @@
 <div id="overlay">
   <div id="graph-stats"></div>
   <div id="options">
-    <label><input type="checkbox" id="hide-unknown" checked="true">Hide Unknown</label>
+    <label><input type="checkbox" id="hide-unknown">Hide Unknown</label><br />
+    <label><input type="checkbox" id="hide-subnets">Hide Subnets</label>
   </div>
 </div>
 
@@ -38,20 +39,36 @@
   var qs = querystring.parse();
   var url = qs.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
   var interval = qs.interval || 1000, timeLimit = qs.limit || 750,
-      hide_unknown = true;
+      hide_unknown = false, hide_subnets = false;
 
   if('hideUnknown' in qs) {
       hide_unknown = qs.hideUnknown==='true';
-      $('#hide-unknown').prop('checked', hide_unknown);
   }
+  $('#hide-unknown').prop('checked', hide_unknown);
+  if('hideSubnets' in qs) {
+      hide_subnets = qs.hideSubnets==='true';
+  }
+  $('#hide-subnets').prop('checked', hide_subnets);
+
   $('#hide-unknown').change(function(val) {
       hide_unknown = $(this).is(':checked');
       qs.hideUnknown = '' + hide_unknown;
       querystring.update(qs);
       if(filters.filterIds) {
           filters.filterIds.filter(hide_unknown ?
-                                   function(kv) { return kv != 'UNKNOWN'; } :
+                                   function(k) { return k != 'UNKNOWN'; } :
                                    null);
+          diagram.redraw();
+      }
+  });
+  $('#hide-subnets').change(function(val) {
+      hide_subnets = $(this).is(':checked');
+      qs.hideSubnets = '' + hide_subnets;
+      querystring.update(qs);
+      if(filters.filterOSTypes) {
+          filters.filterOSTypes.filter(hide_subnets ?
+                                       function(k) { return k != 'SUB'; } :
+                                       null);
           diagram.redraw();
       }
   });
@@ -162,10 +179,12 @@
           nodeGroup = nodeDimension.group(),
           edgeGroup = edgeDimension.group(),
           filterIds = node_ndx.dimension(function(d) { return d.id1; }),
-          filterNames = node_ndx.dimension(function(d) { return d.name; });
+          filterOSTypes = node_ndx.dimension(function(d) { return d.ostype; });
 
       if(hide_unknown)
-          filterIds.filter(function(kv) { return kv != 'UNKNOWN'; });
+          filterIds.filter(function(k) { return k != 'UNKNOWN'; });
+      if(hide_subnets)
+          filterOSTypes.filter(function(k) { return k != 'SUB'; });
 
       one_zero_reduce(nodeGroup);
       one_zero_reduce(edgeGroup);
@@ -183,7 +202,7 @@
           edgeGroup1 = non_null(edgeGroup);
       return {nodeDimension: nodeDimension, nodeGroup: nodeGroup1,
               edgeDimension: edgeDimension, edgeGroup: edgeGroup1,
-              filterIds: filterIds, filterNames: filterNames};
+              filterIds: filterIds, filterOSTypes: filterOSTypes};
   }
 
   var ostypes = {
