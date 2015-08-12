@@ -409,22 +409,21 @@ dc_graph.diagram = function (parent, chartGroup) {
             .each(function(d, i) {
                 var r = param(_chart.nodeRadiusAccessor())(d);
                 var rplus = r*2 + _chart.nodePadding();
-                if(param(_chart.nodeFitLabelAccessor())(d)) {
-                    var bbox = this.getBBox();
-                    var fitx = 0;
-                    if(bbox.width && bbox.height) {
-                        // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-                        var y_over_B = bbox.height/2/r;
-                        var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
-                        fitx = rx*2 + _chart.nodePadding();
-                        d.dcg_rx = Math.max(rx, r);
-                        d.dcg_ry = r;
-                    }
-                    else d.dcg_rx = d.dcg_ry = r;
-                    d.width = Math.max(fitx, rplus);
-                    d.height = rplus;
+                var bbox;
+                if(param(_chart.nodeFitLabelAccessor())(d))
+                    bbox = this.getBBox();
+                var fitx = 0;
+                if(bbox && bbox.width && bbox.height) {
+                    // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+                    var y_over_B = bbox.height/2/r;
+                    var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+                    fitx = rx*2 + _chart.nodePadding();
+                    d.dcg_rx = Math.max(rx, r);
+                    d.dcg_ry = r;
                 }
-                else d.width = d.height = rplus;
+                else d.dcg_rx = d.dcg_ry = r;
+                d.width = Math.max(fitx, rplus);
+                d.height = rplus;
             });
         node.select('ellipse')
             .attr('rx', function(d) { return (d.width - _chart.nodePadding())/2; })
