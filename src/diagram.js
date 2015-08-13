@@ -426,8 +426,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 d.height = rplus;
             });
         node.select('ellipse')
-            .attr('rx', function(d) { return (d.width - _chart.nodePadding())/2; })
-            .attr('ry', function(d) { return (d.height - _chart.nodePadding())/2; })
+            .attr('rx', function(d) { return d.dcg_rx; })
+            .attr('ry', function(d) { return d.dcg_ry; })
             .attr('stroke', param(_chart.nodeStrokeAccessor()))
             .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
             .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
@@ -467,8 +467,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
             var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
             v1.orig = v;
-            v1.width = param(_chart.nodeRadiusAccessor())(v)*2 + _chart.nodePadding();
-            v1.height = param(_chart.nodeRadiusAccessor())(v)*2 + _chart.nodePadding();
             return v1;
         }
         function wrap_edge(e) {
