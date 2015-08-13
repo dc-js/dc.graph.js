@@ -48,6 +48,10 @@
   function show_stats(data_stats, layout_stats) {
       $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
   }
+  function next_tick(f) {
+      // when there is heavy computation, 0 is not enough?
+      window.setTimeout(f, 20);
+  }
   function show_start() {
       $('#run-indicator').show();
       //console.log('start layout');
@@ -60,8 +64,10 @@
       if(!$('#run-indicator').is(':hidden'))
           return;
       show_start();
-      diagram.redraw();
-      show_stats(data_stats, diagram.getStats());
+      next_tick(function() {
+          diagram.redraw();
+          show_stats(data_stats, diagram.getStats());
+      });
   }
   var options = {
       server: {
@@ -176,10 +182,6 @@
               return options[k].query || k;
           });
       querystring.update(_.pick(qs, interesting));
-  }
-
-  function next_tick(f) {
-      window.setTimeout(f, 0);
   }
 
   var settings = {};
