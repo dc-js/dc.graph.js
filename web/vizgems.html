@@ -58,12 +58,12 @@
           default: false,
           query: 'hideUnknown',
           selector: '#hide-unknown',
-          change: function(val) {
+          needs_redraw: true,
+          apply: function(val, diagram, filters) {
               if(filters.filterIds) {
                   filters.filterIds.filter(val ?
                                            function(k) { return k != 'UNKNOWN'; } :
                                            null);
-                  do_redraw();
               }
           }
       },
@@ -71,16 +71,22 @@
           default: false,
           query: 'hideSubnets',
           selector: '#hide-subnets',
-          change: function(val) {
+          needs_redraw: true,
+          apply: function(val, diagram, filters) {
               if(filters.filterOSTypes) {
                   filters.filterOSTypes.filter(val ?
                                                function(k) { return k != 'SUB'; } :
                                                null);
-                  do_redraw();
               }
           }
       }
   };
+
+  function apply_options() {
+      for(var key in options)
+          if(options[key].apply)
+              options[key].apply(settings[key], diagram, filters);
+  }
 
   var settings = {};
   function do_option(key, opt) {
@@ -104,12 +110,15 @@
                   .prop('checked', settings[key])
                   .change(function() {
                       var val = $(this).is(':checked');
+                      settings[key] = val;
                       if(opt.query) {
                           qs[opt.query] = '' + val;
                           querystring.update(qs);
                       }
-                      if(opt.change)
-                          opt.change(val);
+                      if(opt.apply)
+                          opt.apply(val, diagram, filters);
+                      if(opt.needs_redraw)
+                          do_redraw();
                   });
               break;
           default: throw new Error('unsupported selector type ' + typeof opt.default);
@@ -227,11 +236,6 @@
           filterIds = node_ndx.dimension(function(d) { return d.id1; }),
           filterOSTypes = node_ndx.dimension(function(d) { return d.ostype; });
 
-      if(settings.hide_unknown)
-          filterIds.filter(function(k) { return k != 'UNKNOWN'; });
-      if(settings.hide_subnets)
-          filterOSTypes.filter(function(k) { return k != 'SUB'; });
-
       one_zero_reduce(nodeGroup);
       one_zero_reduce(edgeGroup);
 
@@ -267,6 +271,7 @@
   function init() {
       load(true, function(vertices, edges) {
           filters = crossfilters(vertices, edges);
+          apply_options();
           // basic diagram setup
           diagram
               .width($(window).width())
@@ -334,6 +339,7 @@
               return; // cola sometimes dies on empty input; hope that next iteration will succeed
           }
           filters = crossfilters(vertices, edges);
+          apply_options();
           diagram
               .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
               .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
