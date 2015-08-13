@@ -66,7 +66,6 @@ dc_graph.functor_wrap = function (v, wrap) {
 function point_on_ellipse(A, B, dx, dy) {
     var tansq = Math.tan(Math.atan2(dy, dx));
     tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
-    console.log(tansq);
     var ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
     if(dx<0)
         ret.x = -ret.x;
@@ -82,7 +81,10 @@ var bez_cmds = {
 
 function generate_path(pts, bezness) {
     var cats = ['M', pts[0], ',', pts[1]], remain = bezness;
+    var hasNaN = false;
     for(var i = 2; i < pts.length; i += 2) {
+        if(isNaN(pts[i]) || isNaN(pts[i+1]))
+            hasNaN = true;
         cats.push(remain===bezness ? bez_cmds[bezness] : ' ', pts[i], ',', pts[i+1]);
         if(--remain===0)
             remain = bezness;
@@ -436,6 +438,16 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.layoutUnchanged = property(false);
 
     /**
+     #### .relayout()
+     When `layoutUnchanged` is false, call this when changing a parameter in order to force layout
+     to happen again. (Yes, probably should not be necessary.)
+     **/
+    _chart.relayout = function() {
+        _nodes_snapshot = _edges_snapshot = null;
+        return this;
+    };
+
+    /**
      #### .induceNodes([boolean])
      By default, all nodes are included, and edges are only included if both end-nodes are visible.
      If `.induceNodes` is set, then only nodes which have at least one edge will be shown.
@@ -494,35 +506,36 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes = {}, _edges = {};
 
     _chart._buildNode = function(node, nodeEnter) {
-        nodeEnter.append('title').text(param(_chart.nodeTitleAccessor()));
+        nodeEnter.append('title');
         nodeEnter.append('ellipse');
         nodeEnter.append('text')
             .attr('class', 'node-label');
+        node.select('title')
+            .text(param(_chart.nodeTitleAccessor()));
         node.select('text.node-label')
             .text(param(_chart.nodeLabelAccessor()))
             .each(function(d, i) {
                 var r = param(_chart.nodeRadiusAccessor())(d);
                 var rplus = r*2 + _chart.nodePadding();
-                if(param(_chart.nodeFitLabelAccessor())(d)) {
-                    var bbox = this.getBBox();
-                    var fitx = 0;
-                    if(bbox.width && bbox.height) {
-                        // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-                        var y_over_B = bbox.height/2/r;
-                        var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
-                        fitx = rx*2 + _chart.nodePadding();
-                        d.dcg_rx = Math.max(rx, r);
-                        d.dcg_ry = r;
-                    }
-                    else d.dcg_rx = d.dcg_ry = r;
-                    d.width = Math.max(fitx, rplus);
-                    d.height = rplus;
+                var bbox;
+                if(param(_chart.nodeFitLabelAccessor())(d))
+                    bbox = this.getBBox();
+                var fitx = 0;
+                if(bbox && bbox.width && bbox.height) {
+                    // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+                    var y_over_B = bbox.height/2/r;
+                    var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+                    fitx = rx*2 + _chart.nodePadding();
+                    d.dcg_rx = Math.max(rx, r);
+                    d.dcg_ry = r;
                 }
-                else d.width = d.height = rplus;
+                else d.dcg_rx = d.dcg_ry = r;
+                d.width = Math.max(fitx, rplus);
+                d.height = rplus;
             });
         node.select('ellipse')
-            .attr('rx', function(d) { return (d.width - _chart.nodePadding())/2; })
-            .attr('ry', function(d) { return (d.height - _chart.nodePadding())/2; })
+            .attr('rx', function(d) { return d.dcg_rx; })
+            .attr('ry', function(d) { return d.dcg_ry; })
             .attr('stroke', param(_chart.nodeStrokeAccessor()))
             .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
             .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
@@ -562,8 +575,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
             var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
             v1.orig = v;
-            v1.width = param(_chart.nodeRadiusAccessor())(v)*2 + _chart.nodePadding();
-            v1.height = param(_chart.nodeRadiusAccessor())(v)*2 + _chart.nodePadding();
             return v1;
         }
         function wrap_edge(e) {
@@ -579,15 +590,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             return e.source!==undefined && e.target!==undefined;
         });
         _stats = {nnodes: nodes1.length, nedges: edges1.length};
+        var skip_layout = false;
         if(!_chart.layoutUnchanged()) {
             function original(x) {
                 return x.orig;
             }
             var nodes_snapshot = JSON.stringify(nodes1.map(original)), edges_snapshot = JSON.stringify(edges1.map(original));
-            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot) {
-                _dispatch.end();
-                return this;
-            }
+            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
+                skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
             _edges_snapshot = edges_snapshot;
         }
@@ -612,7 +622,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(edges1, param(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
-                .attr('id', edge_id)
+                .attr('id', edge_id);
+        edge
                 .attr('stroke', param(_chart.edgeStrokeAccessor()))
                 .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
                 .attr('opacity', param(_chart.edgeOpacityAccessor()))
@@ -677,7 +688,6 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _d3cola.on('tick', function() {
             var elapsed = Date.now() - startTime;
-            console.log('tick', elapsed);
             if(_chart.showLayoutSteps())
                 draw(node, edge, edgeHover, edgeLabels);
             if(_chart.timeLimit() && elapsed > _chart.timeLimit()) {
@@ -721,6 +731,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     });
             layout_edges = layout_edges.concat(wheel);
         });
+        if(skip_layout) {
+            _dispatch.end();
+            return this;
+        }
         var startTime = Date.now();
         _d3cola.nodes(nodes1)
             .links(layout_edges)

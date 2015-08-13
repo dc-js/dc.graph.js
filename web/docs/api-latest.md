@@ -182,6 +182,10 @@ this will be fixed soon.
 #### .layoutUnchanged([boolean])
 Whether to perform layout when the data is unchanged from the last redraw. Default: false
 
+#### .relayout()
+When `layoutUnchanged` is false, call this when changing a parameter in order to force layout
+to happen again. (Yes, probably should not be necessary.)
+
 #### .induceNodes([boolean])
 By default, all nodes are included, and edges are only included if both end-nodes are visible.
 If `.induceNodes` is set, then only nodes which have at least one edge will be shown.

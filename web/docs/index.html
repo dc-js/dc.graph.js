@@ -256,6 +256,9 @@ layout object on each redraw. However, layout seems to be more stable if this is
 this will be fixed soon.</p>
 <h4 id="-layoutunchanged-boolean-">.layoutUnchanged([boolean])</h4>
 <p>Whether to perform layout when the data is unchanged from the last redraw. Default: false</p>
+<h4 id="-relayout-">.relayout()</h4>
+<p>When <code>layoutUnchanged</code> is false, call this when changing a parameter in order to force layout
+to happen again. (Yes, probably should not be necessary.)</p>
 <h4 id="-inducenodes-boolean-">.induceNodes([boolean])</h4>
 <p>By default, all nodes are included, and edges are only included if both end-nodes are visible.
 If <code>.induceNodes</code> is set, then only nodes which have at least one edge will be shown.</p>
