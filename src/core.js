@@ -61,7 +61,10 @@ var bez_cmds = {
 
 function generate_path(pts, bezness) {
     var cats = ['M', pts[0], ',', pts[1]], remain = bezness;
+    var hasNaN = false;
     for(var i = 2; i < pts.length; i += 2) {
+        if(isNaN(pts[i]) || isNaN(pts[i+1]))
+            hasNaN = true;
         cats.push(remain===bezness ? bez_cmds[bezness] : ' ', pts[i], ',', pts[i+1]);
         if(--remain===0)
             remain = bezness;
