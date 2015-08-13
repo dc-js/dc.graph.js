@@ -43,6 +43,13 @@ var property = function (defaultValue) {
     return ret;
 };
 
+var identity = function(x) { return x; };
+function compose(f, g) {
+    return function() {
+        return f(g.apply(null, arguments));
+    };
+}
+
 // version of d3.functor that optionally wraps the function with another
 // one, if the parameter is a function
 dc_graph.functor_wrap = function (v, wrap) {
@@ -56,6 +63,36 @@ dc_graph.functor_wrap = function (v, wrap) {
     };
 };
 
+function point_on_ellipse(A, B, dx, dy) {
+    var tansq = Math.tan(Math.atan2(dy, dx));
+    tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
+    var ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
+    if(dx<0)
+        ret.x = -ret.x;
+    if(dy<0)
+        ret.y = -ret.y;
+    return ret;
+}
+
+// because i don't think we need to bind edge point data (yet!)
+var bez_cmds = {
+    1: 'L', 2: 'Q', 3: 'C'
+};
+
+function generate_path(pts, bezness) {
+    var cats = ['M', pts[0], ',', pts[1]], remain = bezness;
+    var hasNaN = false;
+    for(var i = 2; i < pts.length; i += 2) {
+        if(isNaN(pts[i]) || isNaN(pts[i+1]))
+            hasNaN = true;
+        cats.push(remain===bezness ? bez_cmds[bezness] : ' ', pts[i], ',', pts[i+1]);
+        if(--remain===0)
+            remain = bezness;
+    }
+    if(remain!=bezness)
+        console.log("warning: pts.length didn't match bezness", pts, bezness);
+    return cats.join('');
+}
 
 /**
 ## Diagram
@@ -73,6 +110,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
     var _dispatch = d3.dispatch('end');
+    var _stats = {};
+    var _nodes_snapshot, _edges_snapshot;
 
     // we want to allow either values or functions to be passed to specify parameters.
     // if a function, the function needs a preprocessor to extract the original key/value
@@ -220,6 +259,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
+     #### .nodeFillScale([d3.scale])
+     If set, the value returned from `nodeFillAccessor` will be processed through this d3.scale
+     to return the fill color. Default: identity function (no scale)
+     **/
+    _chart.nodeFillScale = property(identity);
+
+    /**
      #### .nodeFillAccessor([function])
      Set or get the function which will be used to retrieve the fill color for the body of each
      node. Default: white
@@ -242,6 +288,11 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeLabelAccessor = property(function(kv) {
         return kv.value.label || kv.value.name;
     });
+    /**
+     #### .nodeFitLabelAccessor([function])
+     Whether to fit the node shape around the label. Default: true
+     **/
+    _chart.nodeFitLabelAccessor = property(true);
 
     /**
      #### .nodeTitleAccessor([function])
@@ -344,6 +395,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.transitionDuration = property(500);
 
+    /** .timeLimit([number])
+     Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for now limit.
+     Default: 0
+     **/
+    _chart.timeLimit = property(0);
+
     /**
      #### .constrain([function])
      This function will be called with the current nodes and edges on each redraw in order to derive new
@@ -360,7 +417,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      #### .parallelEdgeOffset([number])
      If there are multiple edges between the same two nodes, start them this many pixels away from the original
      so they don't overlap.
-     Default: true
+     Default: 5
      **/
     _chart.parallelEdgeOffset = property(5);
 
@@ -373,6 +430,29 @@ dc_graph.diagram = function (parent, chartGroup) {
      this will be fixed soon.
      **/
     _chart.initLayoutOnRedraw = property(false);
+
+    /**
+     #### .layoutUnchanged([boolean])
+     Whether to perform layout when the data is unchanged from the last redraw. Default: false
+     **/
+    _chart.layoutUnchanged = property(false);
+
+    /**
+     #### .relayout()
+     When `layoutUnchanged` is false, call this when changing a parameter in order to force layout
+     to happen again. (Yes, probably should not be necessary.)
+     **/
+    _chart.relayout = function() {
+        _nodes_snapshot = _edges_snapshot = null;
+        return this;
+    };
+
+    /**
+     #### .induceNodes([boolean])
+     By default, all nodes are included, and edges are only included if both end-nodes are visible.
+     If `.induceNodes` is set, then only nodes which have at least one edge will be shown.
+     **/
+     _chart.induceNodes = property(false);
 
     /**
      #### .modLayout([function])
@@ -426,18 +506,39 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes = {}, _edges = {};
 
     _chart._buildNode = function(node, nodeEnter) {
-        nodeEnter.append('title').text(param(_chart.nodeTitleAccessor()));
-
-        nodeEnter.append('circle');
+        nodeEnter.append('title');
+        nodeEnter.append('ellipse');
         nodeEnter.append('text')
             .attr('class', 'node-label');
-        node.select('circle')
-            .attr('r', param(_chart.nodeRadiusAccessor()))
+        node.select('title')
+            .text(param(_chart.nodeTitleAccessor()));
+        node.select('text.node-label')
+            .text(param(_chart.nodeLabelAccessor()))
+            .each(function(d, i) {
+                var r = param(_chart.nodeRadiusAccessor())(d);
+                var rplus = r*2 + _chart.nodePadding();
+                var bbox;
+                if(param(_chart.nodeFitLabelAccessor())(d))
+                    bbox = this.getBBox();
+                var fitx = 0;
+                if(bbox && bbox.width && bbox.height) {
+                    // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+                    var y_over_B = bbox.height/2/r;
+                    var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+                    fitx = rx*2 + _chart.nodePadding();
+                    d.dcg_rx = Math.max(rx, r);
+                    d.dcg_ry = r;
+                }
+                else d.dcg_rx = d.dcg_ry = r;
+                d.width = Math.max(fitx, rplus);
+                d.height = rplus;
+            });
+        node.select('ellipse')
+            .attr('rx', function(d) { return d.dcg_rx; })
+            .attr('ry', function(d) { return d.dcg_ry; })
             .attr('stroke', param(_chart.nodeStrokeAccessor()))
             .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
-            .attr('fill', param(_chart.nodeFillAccessor()));
-        node.select('text.node-label')
-            .text(param(_chart.nodeLabelAccessor()));
+            .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
     };
 
     /**
@@ -457,6 +558,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.initLayoutOnRedraw())
             initLayout();
 
+        if(_chart.induceNodes()) {
+            var keeps = {};
+            edges.forEach(function(e) {
+                keeps[_chart.sourceAccessor()(e)] = true;
+                keeps[_chart.targetAccessor()(e)] = true;
+            });
+            nodes = nodes.filter(function(n) { return keeps[_chart.nodeKeyAccessor()(n)]; });
+        }
+
         var key_index_map = nodes.reduce(function(result, value, index) {
             result[_chart.nodeKeyAccessor()(value)] = index;
             return result;
@@ -465,8 +575,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
             var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
             v1.orig = v;
-            v1.width = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
-            v1.height = _chart.nodeRadiusAccessor()(v)*2 + _chart.nodePadding();
             return v1;
         }
         function wrap_edge(e) {
@@ -481,6 +589,18 @@ dc_graph.diagram = function (parent, chartGroup) {
         var edges1 = edges.map(wrap_edge).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
+        _stats = {nnodes: nodes1.length, nedges: edges1.length};
+        var skip_layout = false;
+        if(!_chart.layoutUnchanged()) {
+            function original(x) {
+                return x.orig;
+            }
+            var nodes_snapshot = JSON.stringify(nodes1.map(original)), edges_snapshot = JSON.stringify(edges1.map(original));
+            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
+                skip_layout = true;
+            _nodes_snapshot = nodes_snapshot;
+            _edges_snapshot = edges_snapshot;
+        }
 
         if(_chart.parallelEdgeOffset()) {
             // mark parallel edges so we can draw them specially
@@ -502,7 +622,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(edges1, param(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
-                .attr('id', edge_id)
+                .attr('id', edge_id);
+        edge
                 .attr('stroke', param(_chart.edgeStrokeAccessor()))
                 .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
                 .attr('opacity', param(_chart.edgeOpacityAccessor()))
@@ -558,15 +679,23 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(nodes1, param(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
+                .attr('visibility', 'hidden') // don't show until has layout
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
         var nodeExit = node.exit();
         var constraints = _chart.constrain()(nodes1, edges1);
         nodeExit.remove();
 
-        _d3cola.on('tick', _chart.showLayoutSteps() ? function() {
-            draw(node, edge, edgeHover, edgeLabels);
-        } : null);
+        _d3cola.on('tick', function() {
+            var elapsed = Date.now() - startTime;
+            if(_chart.showLayoutSteps())
+                draw(node, edge, edgeHover, edgeLabels);
+            if(_chart.timeLimit() && elapsed > _chart.timeLimit()) {
+                console.log('cancelled');
+                _d3cola.stop();
+                _dispatch.end();
+            }
+        });
 
         // pseudo-cola.js features
 
@@ -602,6 +731,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                     });
             layout_edges = layout_edges.concat(wheel);
         });
+        if(skip_layout) {
+            _dispatch.end();
+            return this;
+        }
+        var startTime = Date.now();
         _d3cola.nodes(nodes1)
             .links(layout_edges)
             .constraints(noncircle_constraints)
@@ -617,22 +751,21 @@ dc_graph.diagram = function (parent, chartGroup) {
     function edge_path(d) {
         var deltaX = d.target.x - d.source.x,
             deltaY = d.target.y - d.source.y,
-            sourcePadding = param(_chart.nodeRadiusAccessor())(d.source) +
+            sourcePadding = d.source.dcg_ry +
                 param(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
-            targetPadding = param(_chart.nodeRadiusAccessor())(d.target) +
+            targetPadding = d.target.dcg_ry +
                 param(_chart.nodeStrokeWidthAccessor())(d.target) / 2;
 
-        var sourceX, sourceY, targetX, targetY;
+        var sourceX, sourceY, targetX, targetY, sp, tp;
         if(!d.parallel) {
-            var dist = Math.hypot(deltaX, deltaY),
-                normX = deltaX / dist,
-                normY = deltaY / dist;
-            sourceX = d.source.x + (sourcePadding * normX);
-            sourceY = d.source.y + (sourcePadding * normY);
-            targetX = d.target.x - (targetPadding * normX);
-            targetY = d.target.y - (targetPadding * normY);
+            sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, deltaX, deltaY);
+            tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, -deltaX, -deltaY);
+            sourceX = d.source.x + sp.x;
+            sourceY = d.source.y + sp.y;
+            targetX = d.target.x + tp.x;
+            targetY = d.target.y + tp.y;
             d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-            return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+            return generate_path([sourceX, sourceY, targetX, targetY], 1);
         }
         else {
             // alternate parallel edges over, then under
@@ -644,23 +777,31 @@ dc_graph.diagram = function (parent, chartGroup) {
                 cos_sport = Math.cos(sportang),
                 sin_sport = Math.sin(sportang),
                 cos_tport = Math.cos(tportang),
-                sin_tport = Math.sin(tportang);
-            sourceX = d.source.x + sourcePadding * cos_sport;
-            sourceY = d.source.y + sourcePadding * sin_sport;
-            var c1X = d.source.x + 2 * sourcePadding * cos_sport,
-                c1Y = d.source.y + 2 * sourcePadding * sin_sport,
-                c2X = d.target.x + 2 * targetPadding * cos_tport,
-                c2Y = d.target.y + 2 * targetPadding * sin_tport;
-            targetX = d.target.x + targetPadding * cos_tport;
-            targetY = d.target.y + targetPadding * sin_tport;
+                sin_tport = Math.sin(tportang),
+                dist = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);
+            sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, cos_sport, sin_sport);
+            tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, cos_tport, sin_tport);
+            var sdist = Math.hypot(sp.x, sp.y),
+                tdist = Math.hypot(tp.x, tp.y),
+                c1dist = Math.max(sdist+sourcePadding/4, Math.min(sdist*2, dist/2)),
+                c2dist = Math.min(tdist+targetPadding/4, Math.min(tdist*2, dist/2));
+            sourceX = d.source.x + sp.x;
+            sourceY = d.source.y + sp.y;
+            var c1X = d.source.x + c1dist * cos_sport,
+                c1Y = d.source.y + c1dist * sin_sport,
+                c2X = d.target.x + c2dist * cos_tport,
+                c2Y = d.target.y + c2dist * sin_tport;
+            targetX = d.target.x + tp.x;
+            targetY = d.target.y + tp.y;
             d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-            return 'M' + sourceX + ',' + sourceY + 'C' + c1X + ',' + c1Y + ' ' + c2X + ',' + c2Y + ' ' + targetX + ',' + targetY;
+            return generate_path([sourceX, sourceY, c1X, c1Y, c2X, c2Y, targetX, targetY], 3);
         }
     }
     function draw(node, edge, edgeHover, edgeLabels) {
-        node.attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
+        node.attr('visibility', 'visible')
+            .attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
 
         edge.attr("d", edge_path);
         edgeHover.attr('d', edge_path);
@@ -711,6 +852,16 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.on = function(event, f) {
         _dispatch.on(event, f);
         return this;
+    };
+
+    /**
+     #### .getStats()
+     Returns an object with current statistics on graph layout.
+     * `nnodes` - number of nodes displayed
+     * `nedges` - number of edges displayed
+     **/
+    _chart.getStats = function() {
+        return _stats;
     };
 
 
@@ -874,16 +1025,16 @@ dc_graph.legend = function() {
     _legend.gap = property(5);
 
     /**
-     #### .nodeHeight([value])
-     Set or get legend node height. Default: 30.
-     **/
-    _legend.nodeHeight = property(40);
-
-    /**
      #### .nodeWidth([value])
      Set or get legend node width. Default: 30.
      **/
     _legend.nodeWidth = property(40);
+
+    /**
+     #### .nodeHeight([value])
+     Set or get legend node height. Default: 30.
+     **/
+    _legend.nodeHeight = property(40);
 
 
     /**
@@ -992,18 +1143,21 @@ dc_graph.edge_object = function(namef, i, j, attrs) {
     }, attrs);
 };
 
-dc_graph.generate = function(name, N, callback) {
+dc_graph.generate = function(name, args, env, callback) {
     var nodes, edges, i, j;
+    var nodePrefix = env.nodePrefix || '';
     var namef = function(i) {
         return nodes[i].name;
     };
+    var N = args[0];
+    var linkLength = env.linkLength || 30;
     switch(name) {
     case 'clique':
     case 'cliquestf':
         nodes = new Array(N);
         edges = [];
         for(i = 0; i<N; ++i) {
-            nodes[i] = dc_graph.node_object(i, {circle: "A"});
+            nodes[i] = dc_graph.node_object(i, {circle: "A", name: nodePrefix+dc_graph.node_name(i)});
             for(j=0; j<i; ++j)
                 edges.push(dc_graph.edge_object(namef, i, j, {notLayout: true, undirected: true}));
         }
@@ -1018,8 +1172,12 @@ dc_graph.generate = function(name, N, callback) {
     case 'wheel':
         nodes = new Array(N);
         for(i = 0; i < N; ++i)
-            nodes[i] = dc_graph.node_object(i);
-        edges = dc_graph.wheel_edges(namef, _.range(N), N*15);
+            nodes[i] = dc_graph.node_object(i, {name: nodePrefix+dc_graph.node_name(i)});
+        edges = dc_graph.wheel_edges(namef, _.range(N), N*linkLength/2);
+        var rimLength = edges[0].distance;
+        for(i = 0; i < args[1]; ++i)
+            for(j = 0; j < N; ++j)
+                edges.push(dc_graph.edge_object(namef, j, (j+1)%N, {distance: rimLength, par: i+2}));
         break;
     default:
         throw new Error("unknown generation type "+name);

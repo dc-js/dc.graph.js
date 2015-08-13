@@ -185,6 +185,9 @@ outside. Default: 1</p>
 <h4 id="-nodestrokeaccessor-function-">.nodeStrokeAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the stroke color for the outline of each
 node. Default: black</p>
+<h4 id="-nodefillscale-d3-scale-">.nodeFillScale([d3.scale])</h4>
+<p>If set, the value returned from <code>nodeFillAccessor</code> will be processed through this d3.scale
+to return the fill color. Default: identity function (no scale)</p>
 <h4 id="-nodefillaccessor-function-">.nodeFillAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the fill color for the body of each
 node. Default: white</p>
@@ -193,6 +196,8 @@ node. Default: white</p>
 <h4 id="-nodelabelaccessor-function-">.nodeLabelAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field <code>label</code> or <code>name</code> inside the <code>value</code> field.</p>
+<h4 id="-nodefitlabelaccessor-function-">.nodeFitLabelAccessor([function])</h4>
+<p>Whether to fit the node shape around the label. Default: true</p>
 <h4 id="-nodetitleaccessor-function-">.nodeTitleAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
 By default, uses the key of the node.</p>
@@ -230,6 +235,9 @@ By default, reads the <code>distance</code> field of the edge. If the distance i
 <h4 id="-baselength-number-">.baseLength([number])</h4>
 <p>Gets or sets the default edge length (in pixels) when the <code>.lengthStrategy</code> is &#39;individual&#39;, and the base
 value to be multiplied for &#39;symmetric&#39; and &#39;jaccard&#39; edge lengths.</p>
+<p> .timeLimit([number])
+Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for now limit.
+Default: 0</p>
 <h4 id="-constrain-function-">.constrain([function])</h4>
 <p>This function will be called with the current nodes and edges on each redraw in order to derive new
 layout constraints. By default, no constraints will be added beyond those for edge lengths, but this
@@ -239,13 +247,21 @@ are built from scratch on each redraw.</p>
 <h4 id="-paralleledgeoffset-number-">.parallelEdgeOffset([number])</h4>
 <p>If there are multiple edges between the same two nodes, start them this many pixels away from the original
 so they don&#39;t overlap.
-Default: true</p>
+Default: 5</p>
 <h4 id="-initlayoutonredraw-boolean-">.initLayoutOnRedraw([boolean])</h4>
 <p>Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
 overlaps between nodes may not be eliminated [if cola is not reinitialized]
 (<a href="https://github.com/tgdwyer/WebCola/issues/118">https://github.com/tgdwyer/WebCola/issues/118</a>)). This flag can be set true to construct a new cola
 layout object on each redraw. However, layout seems to be more stable if this is set false, so hopefully
 this will be fixed soon.</p>
+<h4 id="-layoutunchanged-boolean-">.layoutUnchanged([boolean])</h4>
+<p>Whether to perform layout when the data is unchanged from the last redraw. Default: false</p>
+<h4 id="-relayout-">.relayout()</h4>
+<p>When <code>layoutUnchanged</code> is false, call this when changing a parameter in order to force layout
+to happen again. (Yes, probably should not be necessary.)</p>
+<h4 id="-inducenodes-boolean-">.induceNodes([boolean])</h4>
+<p>By default, all nodes are included, and edges are only included if both end-nodes are visible.
+If <code>.induceNodes</code> is set, then only nodes which have at least one edge will be shown.</p>
 <h4 id="-modlayout-function-">.modLayout([function])</h4>
 <p>If it is desired to modify the cola layout object after it is created, this function can be called to add
 a modifier function which takes the layout object.</p>
@@ -264,6 +280,12 @@ the first time, and <code>.redraw()</code> can be called after that.</p>
 <h4 id="-on-">.on()</h4>
 <p>Attaches an event handler to the diagram. Currently the only diagram event is <code>end</code>, signalling
 that diagram layout has completed.</p>
+<h4 id="-getstats-">.getStats()</h4>
+<p>Returns an object with current statistics on graph layout.</p>
+<ul>
+<li><code>nnodes</code> - number of nodes displayed</li>
+<li><code>nedges</code> - number of edges displayed</li>
+</ul>
 <h4 id="-select-selector-">.select(selector)</h4>
 <p>Execute a d3 single selection in the diagram&#39;s scope using the given selector and return the d3
 selection. Roughly the same as</p>
@@ -315,10 +337,10 @@ and use refer to them by `id`.)
 <p>Set or get y coordinate for legend widget. Default: 0.</p>
 <h4 id="-gap-value-">.gap([value])</h4>
 <p>Set or get gap between legend items. Default: 5.</p>
-<h4 id="-nodeheight-value-">.nodeHeight([value])</h4>
-<p>Set or get legend node height. Default: 30.</p>
 <h4 id="-nodewidth-value-">.nodeWidth([value])</h4>
 <p>Set or get legend node width. Default: 30.</p>
+<h4 id="-nodeheight-value-">.nodeHeight([value])</h4>
+<p>Set or get legend node height. Default: 30.</p>
 <h4 id="-exemplars-object-">.exemplars([object])</h4>
 <p>Specifies an object where the keys are the names of items to add to the legend, and the values are
 objects which will be passed to the accessors of the attached diagram in order to determine the

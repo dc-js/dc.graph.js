@@ -1,0 +1,26 @@
+#overlay {
+    width: 180px;
+    position: absolute;
+    top: 200px;
+    right: 0;
+    background-color: rgba(221, 238, 221, 0.75);
+    padding: 40px;
+    font: 14px verdana, sans-serif
+}
+
+#run-indicator {
+    position: absolute;
+    right: 1em;
+    top: 1em;
+    display: hidden;
+    color: darkred;
+}
+
+.dc-graph text.node-label {
+    font: 12px verdana, san-serif;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+}

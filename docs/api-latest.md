@@ -92,6 +92,10 @@ outside. Default: 1
 Set or get the function which will be used to retrieve the stroke color for the outline of each
 node. Default: black
 
+#### .nodeFillScale([d3.scale])
+If set, the value returned from `nodeFillAccessor` will be processed through this d3.scale
+to return the fill color. Default: identity function (no scale)
+
 #### .nodeFillAccessor([function])
 Set or get the function which will be used to retrieve the fill color for the body of each
 node. Default: white
@@ -102,6 +106,9 @@ Set or get the padding or minimum distance, in pixels, between nodes in the diag
 #### .nodeLabelAccessor([function])
 Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field `label` or `name` inside the `value` field.
+
+#### .nodeFitLabelAccessor([function])
+Whether to fit the node shape around the label. Default: true
 
 #### .nodeTitleAccessor([function])
 Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
@@ -149,6 +156,10 @@ By default, reads the `distance` field of the edge. If the distance is falsy, us
 Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is 'individual', and the base
 value to be multiplied for 'symmetric' and 'jaccard' edge lengths.
 
+ .timeLimit([number])
+Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for now limit.
+Default: 0
+
 #### .constrain([function])
 This function will be called with the current nodes and edges on each redraw in order to derive new
 layout constraints. By default, no constraints will be added beyond those for edge lengths, but this
@@ -159,7 +170,7 @@ are built from scratch on each redraw.
 #### .parallelEdgeOffset([number])
 If there are multiple edges between the same two nodes, start them this many pixels away from the original
 so they don't overlap.
-Default: true
+Default: 5
 
 #### .initLayoutOnRedraw([boolean])
 Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
@@ -167,6 +178,17 @@ overlaps between nodes may not be eliminated [if cola is not reinitialized]
 (https://github.com/tgdwyer/WebCola/issues/118)). This flag can be set true to construct a new cola
 layout object on each redraw. However, layout seems to be more stable if this is set false, so hopefully
 this will be fixed soon.
+
+#### .layoutUnchanged([boolean])
+Whether to perform layout when the data is unchanged from the last redraw. Default: false
+
+#### .relayout()
+When `layoutUnchanged` is false, call this when changing a parameter in order to force layout
+to happen again. (Yes, probably should not be necessary.)
+
+#### .induceNodes([boolean])
+By default, all nodes are included, and edges are only included if both end-nodes are visible.
+If `.induceNodes` is set, then only nodes which have at least one edge will be shown.
 
 #### .modLayout([function])
 If it is desired to modify the cola layout object after it is created, this function can be called to add
@@ -191,6 +213,11 @@ the first time, and `.redraw()` can be called after that.
 #### .on()
 Attaches an event handler to the diagram. Currently the only diagram event is `end`, signalling
 that diagram layout has completed.
+
+#### .getStats()
+Returns an object with current statistics on graph layout.
+* `nnodes` - number of nodes displayed
+* `nedges` - number of edges displayed
 
 #### .select(selector)
 Execute a d3 single selection in the diagram's scope using the given selector and return the d3
@@ -258,11 +285,11 @@ Set or get y coordinate for legend widget. Default: 0.
 #### .gap([value])
 Set or get gap between legend items. Default: 5.
 
-#### .nodeHeight([value])
-Set or get legend node height. Default: 30.
-
 #### .nodeWidth([value])
 Set or get legend node width. Default: 30.
+
+#### .nodeHeight([value])
+Set or get legend node height. Default: 30.
 
 #### .exemplars([object])
 Specifies an object where the keys are the names of items to add to the legend, and the values are

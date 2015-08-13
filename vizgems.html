@@ -4,6 +4,7 @@
   <title>Vizgems co-viewer</title>
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="css/vizgems.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
@@ -16,42 +17,241 @@
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
+  <script type="text/javascript" src="js/colorbrewer.js"></script>
+
+  <script type="text/javascript" src="js/runner.js"></script>
+  <script type="text/javascript" src="js/querystring.js"></script>
 </head>
 
 <body>
 
 
 <div id="graph" class="chart"></div>
+<div id="overlay">
+  <div id="run-indicator">
+    running
+  </div>
+  <div id="graph-stats"></div>
+  <div id="options" style="display: hidden">
+    <div><label><input type="checkbox" id="hide-unknown">Hide Unknown</label></div>
+    <div><label><input type="checkbox" id="hide-subnets">Hide Subnets</label></div>
+    <div><label><input type="checkbox" id="show-arrows">Show Arrows</label></div>
+    <div><label><input type="checkbox" id="layout-unchanged">Redraw when unchanged</label></div>
+    <div><label>Flow: <select id="flow-direction"><option value="x">X</option><option value="y">Y</option><option value="none">None</option></select></label></div>
+  </div>
+</div>
 
 <script type="text/javascript">
-  var querystring = (function(a) {
-      if (a == "") return {};
-      var b = {};
-      for (var i = 0; i < a.length; ++i)
-      {
-          var p=a[i].split('=', 2);
-          if (p.length == 1)
-              b[p[0]] = "";
-          else
-              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
-      }
-      return b;
-  })(window.location.search.substr(1).split('&'));
+  var qs = querystring.parse();
+  var url = qs.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 
-  var timeout = (+querystring.timeout || 30) * 1000;
+  function show_stats(data_stats, layout_stats) {
+      $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
+  }
+  function next_tick(f) {
+      // when there is heavy computation, 0 is not enough?
+      window.setTimeout(f, 20);
+  }
+  function show_start() {
+      $('#run-indicator').show();
+      //console.log('start layout');
+  }
+  function show_stop() {
+      $('#run-indicator').hide();
+      //console.log('stop layout');
+  }
+  function do_redraw() {
+      if(!$('#run-indicator').is(':hidden'))
+          return;
+      show_start();
+      next_tick(function() {
+          diagram.redraw();
+          show_stats(data_stats, diagram.getStats());
+      });
+  }
+  var options = {
+      server: {
+          default: ''
+      },
+      interval: {
+          default: 5000
+      },
+      timeLimit: {
+          default: 750,
+          query: 'limit',
+          apply: function(val, diagram, filters) {
+              diagram.timeLimit(val);
+          }
+      },
+      hide_unknown: {
+          default: false,
+          query: 'hideUnknown',
+          selector: '#hide-unknown',
+          needs_redraw: true,
+          apply: function(val, diagram, filters) {
+              if(filters.filterIds) {
+                  filters.filterIds.filter(val ?
+                                           function(k) { return k != 'UNKNOWN'; } :
+                                           null);
+              }
+          }
+      },
+      hide_subnets: {
+          default: false,
+          query: 'hideSubnets',
+          selector: '#hide-subnets',
+          needs_redraw: true,
+          apply: function(val, diagram, filters) {
+              if(filters.filterOSTypes) {
+                  filters.filterOSTypes.filter(val ?
+                                               function(k) { return k != 'SUB'; } :
+                                               null);
+              }
+          }
+      },
+      show_arrows: {
+          default: false,
+          query: 'arrows',
+          selector: '#show-arrows',
+          needs_redraw: true,
+          apply: function(val, diagram, filters) {
+              diagram.edgeArrowheadAccessor(val ? 'vee' : null);
+          }
+      },
+      layout_unchanged: {
+          default: false,
+          query: 'unchanged',
+          selector: '#layout-unchanged',
+          needs_redraw: false,
+          apply: function(val, diagram, filters) {
+              diagram.layoutUnchanged(val);
+          }
+      },
+      flow_direction: {
+          default: "x",
+          query: 'flow',
+          selector: '#flow-direction',
+          needs_redraw: true,
+          needs_relayout: true,
+          apply: function(val, diagram, filters) {
+              var modf;
+              switch(val) {
+              case 'x':
+                  modf = function(cola) { cola.flowLayout('x', 120); };
+                  break;
+              case 'y':
+                  modf = function(cola) { cola.flowLayout('y', 120); };
+                  break;
+              case 'none':
+                  modf = null;
+                  break;
+              default:
+                  throw new Error('unknown flow direction ' + val);
+              }
+              diagram.modLayout(modf);
+          }
+      }
+  };
+
+  /* this general options stuff will be moved into querystring.js
+     just needs a little more refactoring */
+
+  function apply_options() {
+      for(var key in options)
+          if(options[key].apply)
+              options[key].apply(settings[key], diagram, filters);
+  }
+
+  function convert_query(type, val) {
+      switch(type) {
+      case 'boolean':
+          return val === 'true';
+      case 'number':
+          return +val;
+      case 'string':
+           return val;
+      default: throw new Error('unsupported query type ' + typeof opt.default);
+      }
+  }
+
+  function update_interesting() {
+      var interesting = _.keys(options)
+          .filter(function(k) {
+              return settings[k] !== options[k].default;
+          }).map(function(k) {
+              return options[k].query || k;
+          });
+      querystring.update(_.pick(qs, interesting));
+  }
+
+  var settings = {};
+  function do_option(key, opt) {
+      settings[key] = opt.default;
+      var query = opt.query || key;
+      if(query in qs)
+          settings[key] = convert_query(typeof opt.default, qs[query]);
+
+      function update_setting(opt, val) {
+          settings[key] = val;
+          if(opt.query) {
+              qs[opt.query] = '' + val;
+              update_interesting();
+          }
+          if(opt.apply)
+              opt.apply(val, diagram, filters);
+          if(opt.needs_relayout)
+              diagram.relayout();
+          if(opt.needs_redraw)
+              do_redraw();
+      }
+      if(opt.selector) {
+          switch(typeof opt.default) {
+          case 'boolean':
+              $(opt.selector)
+                  .prop('checked', settings[key])
+                  .change(function() {
+                      var val = $(this).is(':checked');
+                      next_tick(function() {
+                          update_setting(opt, val);
+                      });
+                  });
+              break;
+          case 'string':
+              $(opt.selector)
+                  .val(settings[key])
+                  .change(function() {
+                      var val = $(this).val();
+                      next_tick(function() {
+                          update_setting(opt, val);
+                      });
+                  });
+              break;
+          default: throw new Error('unsupported selector type ' + typeof opt.default);
+          }
+      }
+  }
+  for(var key in options)
+      do_option(key, options[key]);
+
+  /* end general options stuff */
+
+  var filters = {};
   var diagram = dc_graph.diagram('#graph');
   var node_inv = {}, edge_inv = {};
 
+  function nocache_query() {
+      return '?nocache=' + Date.now();
+  }
+
   function load(get_inv, callback) {
-      var url = querystring.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
       var psv = d3.dsv("|", "text/plain");
       var Q = queue()
-          .defer(psv, vertices_url)
-          .defer(psv, edges_url);
+          .defer(psv, vertices_url + nocache_query())
+          .defer(psv, edges_url + nocache_query());
       if(get_inv) {
           var inv_nodes_url = url + '/inv-nodes.psv', inv_edges_url = url + '/inv-edges.psv';
-          Q.defer(psv, inv_nodes_url)
-              .defer(psv, inv_edges_url)
+          Q.defer(psv, inv_nodes_url + nocache_query())
+              .defer(psv, inv_edges_url + nocache_query())
       }
       Q.await(function(error, vertices, edges, inv_vertices, inv_edges) {
           if(error)
@@ -62,20 +262,62 @@
                   var nn = node_inv[n.id] = node_inv[n.id] || {};
                   nn[n.key] = n.val;
               });
+              for(var id in node_inv) {
+                  var n = node_inv[id];
+                  // if it has a host field, alias that key
+                  if('host' in n)
+                      node_inv[n.host] = n;
+                  // rename attribute that will collide with cache
+                  n.itype = n.type;
+                  delete n.type;
+                  // remove ostype prefix from name
+                  n.name = n.name.replace(/^[^:]*:/,'');
+              };
           }
           if(inv_edges) {
               edge_inv = {};
               inv_edges.forEach(function(e) {
-                  var id = e.id1 + '-' + e.
+                  var id = e.id1 + '|' + e.id2;
                   var ee = edge_inv[e.id] = node_inv[e.id] || {};
                   ee[e.key] = e.val;
               });
           }
 
-          // is edges always a superset of vertices?
+          // in cache, edges seems to be a superset of vertices, use that instead
           vertices = edges.filter(function(e) {
-              return !e.id2; // && e.id1 !== 'UNKNOWN' && e.id1 !== 'ab9f98cc-9ffe-4963-8df3-c46b34df9dfa';
+              return !e.id2;
           });
+          edges = edges.filter(function(e) {
+              return !!e.id2;
+          });
+
+          // populate vertex/edge properties from inventory, but warn about any problems
+          var warnings = [];
+          vertices.forEach(function(n) {
+              var invn = node_inv[n.id1];
+              if(!invn) {
+                  warnings.push('node ' + n.id1 + ' not found in inventory');
+                  return;
+              }
+              for(var a in n)
+                  if(a in invn && n[a] !== invn[a])
+                      warnings.push('attr ' + a + ' of node ' + n.id1 + ': ' + n[a] + ' is not ' + invn[a]);
+              _.extend(n, invn);
+          });
+          edges.forEach(function(e) {
+              var id = e.id1 + '|' + e.id2;
+              var inve = edge_inv[id];
+              if(!inve) {
+                  warnings.push('edge ' + id + ' not found in inventory');
+                  return;
+              }
+              for(var a in e)
+                  if(a in inve && e[a] !== inve[a])
+                      warnings.push('attr ' + a + ' of edge ' + id + ': ' + e[a] + ' is not ' + inve[a]);
+              _.extend(e, inve);
+          });
+          if(warnings.length)
+              console.log('inventory/cache warnings', warnings);
           callback(vertices, edges);
       });
   }
@@ -97,7 +339,9 @@
       var nodeDimension = node_ndx.dimension(function(d) { return d.id1; }),
           edgeDimension = edge_ndx.dimension(function(d) { return d.id1 + '-' + d.id2; }),
           nodeGroup = nodeDimension.group(),
-          edgeGroup = edgeDimension.group();
+          edgeGroup = edgeDimension.group(),
+          filterIds = node_ndx.dimension(function(d) { return d.id1; }),
+          filterOSTypes = node_ndx.dimension(function(d) { return d.ostype; });
 
       one_zero_reduce(nodeGroup);
       one_zero_reduce(edgeGroup);
@@ -114,67 +358,98 @@
       var nodeGroup1 = non_null(nodeGroup),
           edgeGroup1 = non_null(edgeGroup);
       return {nodeDimension: nodeDimension, nodeGroup: nodeGroup1,
-              edgeDimension: edgeDimension, edgeGroup: edgeGroup1};
+              edgeDimension: edgeDimension, edgeGroup: edgeGroup1,
+              filterIds: filterIds, filterOSTypes: filterOSTypes};
   }
 
-  load(function(vertices, edges) {
-      var cfs = crossfilters(vertices, edges);
-      // basic diagram setup
-      diagram
-          .width($(window).width())
-          .height($(window).height())
-          .showLayoutSteps(true)
-          .lengthStrategy('jaccard')
-          .baseLength(20)
-          .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
-          .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup)
-          .sourceAccessor(function(e) { return e.value.id1; })
-          .targetAccessor(function(e) { return e.value.id2; })
-          .modLayout(function(cola) {
-              cola.flowLayout('y', 30);
-          });
+  var ostypes = {
+      CUS: "Customer",
+      PRT: "Port",
+      NET: "Network",
+      VM: "Virtual Machine",
+      FS: "File System",
+      IMG: "Image",
+      RTR: "Router",
+      U: "User",
+      SUB: "Subnet",
+      undefined: 'Other'
+  };
 
-      // respond to browser resize (not necessary if width/height is static)
-      $(window).resize(function() {
+  function init() {
+      load(true, function(vertices, edges) {
+          data_stats = {totnodes: vertices.length, totedges: edges.length};
+          filters = crossfilters(vertices, edges);
+          // basic diagram setup
           diagram
               .width($(window).width())
               .height($(window).height())
-      });
+              .showLayoutSteps(false)
+              .lengthStrategy('jaccard')
+              .baseLength(20)
+              //.nodeFitLabelAccessor(false)
+              .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
+              .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
+              .sourceAccessor(function(e) { return e.value.id1; })
+              .targetAccessor(function(e) { return e.value.id2; })
+              .on('end', function() {
+                  show_stop();
+                  runner.endStep();
+              });
+          apply_options();
 
-      // aesthetics: look at kv.value for node/edge attributes and return appropriate values
-      diagram
-          .nodeStrokeWidthAccessor(0) // turn off outlines
-          .nodeRadiusAccessor(function(kv) {
-              switch(kv.value.node_type) {
-              case 'Router': return 20;
-              default: return 10;
-              }
-          })
-          .nodeFillAccessor(function(kv) {
-              // some arbitrarily-chosen colors from colorbrewer2.org
-              switch(kv.value.node_type) {
-              case 'Router': return '#377eb8';
-              case 'VirtualMachine': return '#e41a1c';
-              case 'Subnet': return '#ff7f00';
-              default: return 'grey';
-              }
-          })
-          .edgeArrowheadAccessor(function(kv) {
-              return kv.value._label === 'on_path' ? 'vee' : null;
+          // respond to browser resize (not necessary if width/height is static)
+          $(window).resize(function() {
+              diagram
+                  .width($(window).width())
+                  .height($(window).height())
           });
 
-      diagram.render();
-  });
+          function isUUID(s) {
+              return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
+          }
 
-  setInterval(function() {
-      load(function(vertices, edges) {
-          var cfs = crossfilters(vertices, edges);
+          // aesthetics: look at kv.value for node/edge attributes and return appropriate values
           diagram
-          /*
-              .nodeDimension(cfs.nodeDimension).nodeGroup(cfs.nodeGroup)
-              .edgeDimension(cfs.edgeDimension).edgeGroup(cfs.edgeGroup) */
-              .redraw();
+              .initLayoutOnRedraw(true)
+              .nodeStrokeWidthAccessor(0) // turn off outlines
+              .nodeRadiusAccessor(30)
+              .induceNodes(true) // drop zero-degree nodes for now
+              .nodeLabelAccessor(function(kv) {
+                  return isUUID(kv.value.name) ? kv.key : kv.value.name;
+              })
+              .nodeFillScale(d3.scale.ordinal(_.keys(ostypes)).range(colorbrewer.Paired[12]))
+              .nodeFillAccessor(function(kv) {
+                  return kv.value.ostype;
+              });
+
+          var exs = {};
+          for(var ost in ostypes)
+              exs[ostypes[ost]] = {ostype: ost};
+          diagram.legend(
+              dc_graph.legend().nodeWidth(70).nodeHeight(70).exemplars(exs));
+
+          show_start();
+          diagram.render();
+          show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
+      });
+  }
+  function step() {
+      load(false, function(vertices, edges) {
+          if(!vertices.length || !edges.length) {
+              runner.endStep();
+              return; // cola sometimes dies on empty input; hope that next iteration will succeed
+          }
+          data_stats = {totnodes: vertices.length, totedges: edges.length};
+          filters = crossfilters(vertices, edges);
+          apply_options();
+          diagram
+              .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
+              .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
+          do_redraw();
       })
-  }, timeout);
+  }
+
+  var runner = make_runner(init, step, settings.interval);
+  runner.start();
 
 </script>
