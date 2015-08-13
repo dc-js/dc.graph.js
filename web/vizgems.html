@@ -28,6 +28,9 @@
 
 <div id="graph" class="chart"></div>
 <div id="overlay">
+  <div id="run-indicator">
+    running
+  </div>
   <div id="graph-stats"></div>
   <div id="options">
     <label><input type="checkbox" id="hide-unknown">Hide Unknown</label><br />
@@ -39,6 +42,10 @@
   var qs = querystring.parse();
   var url = qs.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 
+  function do_redraw() {
+      $('#run-indicator').show();
+      diagram.redraw();
+  }
   var options = {
       interval: {
           default: 1000
@@ -56,7 +63,7 @@
                   filters.filterIds.filter(val ?
                                            function(k) { return k != 'UNKNOWN'; } :
                                            null);
-                  diagram.redraw();
+                  do_redraw();
               }
           }
       },
@@ -69,7 +76,7 @@
                   filters.filterOSTypes.filter(val ?
                                                function(k) { return k != 'SUB'; } :
                                                null);
-                  diagram.redraw();
+                  do_redraw();
               }
           }
       }
@@ -277,6 +284,7 @@
                   cola.flowLayout('y', 80);
               })
               .on('end', function() {
+                  $('#run-indicator').hide();
                   runner.endStep();
               });
 
@@ -314,6 +322,7 @@
           diagram.legend(
               dc_graph.legend().nodeWidth(70).nodeHeight(70).exemplars(exs));
 
+          $('#run-indicator').show();
           diagram.render();
           show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       });
@@ -327,8 +336,8 @@
           filters = crossfilters(vertices, edges);
           diagram
               .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
-              .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
-              .redraw();
+              .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
+          do_redraw();
           show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       })
   }
