@@ -515,7 +515,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(edges1, param(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
-                .attr('id', edge_id)
+                .attr('id', edge_id);
+        edge
                 .attr('stroke', param(_chart.edgeStrokeAccessor()))
                 .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
                 .attr('opacity', param(_chart.edgeOpacityAccessor()))
