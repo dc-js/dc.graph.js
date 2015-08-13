@@ -38,40 +38,79 @@
 <script type="text/javascript">
   var qs = querystring.parse();
   var url = qs.url, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
-  var interval = qs.interval || 1000, timeLimit = qs.limit || 750,
-      hide_unknown = false, hide_subnets = false;
 
-  if('hideUnknown' in qs) {
-      hide_unknown = qs.hideUnknown==='true';
-  }
-  $('#hide-unknown').prop('checked', hide_unknown);
-  if('hideSubnets' in qs) {
-      hide_subnets = qs.hideSubnets==='true';
-  }
-  $('#hide-subnets').prop('checked', hide_subnets);
+  var options = {
+      interval: {
+          default: 1000
+      },
+      timeLimit: {
+          default: 750,
+          query: 'limit'
+      },
+      hide_unknown: {
+          default: false,
+          query: 'hideUnknown',
+          selector: '#hide-unknown',
+          change: function(val) {
+              if(filters.filterIds) {
+                  filters.filterIds.filter(val ?
+                                           function(k) { return k != 'UNKNOWN'; } :
+                                           null);
+                  diagram.redraw();
+              }
+          }
+      },
+      hide_subnets: {
+          default: false,
+          query: 'hideSubnets',
+          selector: '#hide-subnets',
+          change: function(val) {
+              if(filters.filterOSTypes) {
+                  filters.filterOSTypes.filter(val ?
+                                               function(k) { return k != 'SUB'; } :
+                                               null);
+                  diagram.redraw();
+              }
+          }
+      }
+  };
 
-  $('#hide-unknown').change(function(val) {
-      hide_unknown = $(this).is(':checked');
-      qs.hideUnknown = '' + hide_unknown;
-      querystring.update(qs);
-      if(filters.filterIds) {
-          filters.filterIds.filter(hide_unknown ?
-                                   function(k) { return k != 'UNKNOWN'; } :
-                                   null);
-          diagram.redraw();
+  var settings = {};
+  function do_option(key, opt) {
+      settings[key] = opt.default;
+      var query = opt.query || key;
+      if(query in qs) {
+          switch(typeof opt.default) {
+          case 'boolean':
+              settings[key] = qs[query] === 'true';
+              break;
+          case 'number':
+              settings[key] = +qs[query];
+              break;
+          default: throw new Error('unsupported query type ' + typeof opt.default);
+          }
       }
-  });
-  $('#hide-subnets').change(function(val) {
-      hide_subnets = $(this).is(':checked');
-      qs.hideSubnets = '' + hide_subnets;
-      querystring.update(qs);
-      if(filters.filterOSTypes) {
-          filters.filterOSTypes.filter(hide_subnets ?
-                                       function(k) { return k != 'SUB'; } :
-                                       null);
-          diagram.redraw();
+      if(opt.selector) {
+          switch(typeof opt.default) {
+          case 'boolean':
+              $(opt.selector)
+                  .prop('checked', settings[key])
+                  .change(function() {
+                      var val = $(this).is(':checked');
+                      if(opt.query) {
+                          qs[opt.query] = '' + val;
+                          querystring.update(qs);
+                      }
+                      if(opt.change)
+                          opt.change(val);
+                  });
+              break;
+          default: throw new Error('unsupported selector type ' + typeof opt.default);
+          }
       }
-  });
+  }
+  for(var key in options)
+      do_option(key, options[key]);
 
   var filters = {};
   var diagram = dc_graph.diagram('#graph');
@@ -181,9 +220,9 @@
           filterIds = node_ndx.dimension(function(d) { return d.id1; }),
           filterOSTypes = node_ndx.dimension(function(d) { return d.ostype; });
 
-      if(hide_unknown)
+      if(settings.hide_unknown)
           filterIds.filter(function(k) { return k != 'UNKNOWN'; });
-      if(hide_subnets)
+      if(settings.hide_subnets)
           filterOSTypes.filter(function(k) { return k != 'SUB'; });
 
       one_zero_reduce(nodeGroup);
@@ -215,7 +254,7 @@
       RTR: "Router",
       U: "User",
       SUB: "Subnet",
-      undefined: 'Unknown'
+      undefined: 'Other'
   };
 
   function init() {
@@ -226,9 +265,10 @@
               .width($(window).width())
               .height($(window).height())
               .showLayoutSteps(false)
-              .timeLimit(timeLimit)
+              .timeLimit(settings.timeLimit)
               .lengthStrategy('jaccard')
               .baseLength(20)
+              //.nodeFitLabelAccessor(false)
               .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
               .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
               .sourceAccessor(function(e) { return e.value.id1; })
@@ -297,7 +337,7 @@
       $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
   }
 
-  var runner = make_runner(init, step, interval);
+  var runner = make_runner(init, step, settings.interval);
   runner.start();
 
 </script>
