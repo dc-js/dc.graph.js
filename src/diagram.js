@@ -582,7 +582,6 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _d3cola.on('tick', function() {
             var elapsed = Date.now() - startTime;
-            console.log('tick', elapsed);
             if(_chart.showLayoutSteps())
                 draw(node, edge, edgeHover, edgeLabels);
             if(_chart.timeLimit() && elapsed > _chart.timeLimit()) {

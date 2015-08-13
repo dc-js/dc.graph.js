@@ -46,7 +46,6 @@ dc_graph.functor_wrap = function (v, wrap) {
 function point_on_ellipse(A, B, dx, dy) {
     var tansq = Math.tan(Math.atan2(dy, dx));
     tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
-    console.log(tansq);
     var ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
     if(dx<0)
         ret.x = -ret.x;
