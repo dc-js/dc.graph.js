@@ -178,6 +178,10 @@
       querystring.update(_.pick(qs, interesting));
   }
 
+  function next_tick(f) {
+      window.setTimeout(f, 0);
+  }
+
   var settings = {};
   function do_option(key, opt) {
       settings[key] = opt.default;
@@ -205,7 +209,9 @@
                   .prop('checked', settings[key])
                   .change(function() {
                       var val = $(this).is(':checked');
-                      update_setting(opt, val);
+                      next_tick(function() {
+                          update_setting(opt, val);
+                      });
                   });
               break;
           case 'string':
@@ -213,7 +219,9 @@
                   .val(settings[key])
                   .change(function() {
                       var val = $(this).val();
-                      update_setting(opt, val);
+                      next_tick(function() {
+                          update_setting(opt, val);
+                      });
                   });
               break;
           default: throw new Error('unsupported selector type ' + typeof opt.default);
