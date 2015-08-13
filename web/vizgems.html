@@ -43,9 +43,13 @@
   var qs = querystring.parse();
   var url = qs.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 
+  function show_stats(data_stats, layout_stats) {
+      $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
+  }
   function do_redraw() {
       $('#run-indicator').show();
       diagram.redraw();
+      show_stats(data_stats, diagram.getStats());
   }
   var options = {
       server: {
@@ -97,6 +101,9 @@
           }
       }
   };
+
+  /* this general options stuff will be moved into querystring.js
+     just needs a little more refactoring */
 
   function apply_options() {
       for(var key in options)
@@ -157,6 +164,8 @@
   }
   for(var key in options)
       do_option(key, options[key]);
+
+  /* end general options stuff */
 
   var filters = {};
   var diagram = dc_graph.diagram('#graph');
@@ -300,6 +309,7 @@
 
   function init() {
       load(true, function(vertices, edges) {
+          data_stats = {totnodes: vertices.length, totedges: edges.length};
           filters = crossfilters(vertices, edges);
           // basic diagram setup
           diagram
@@ -367,18 +377,14 @@
               runner.endStep();
               return; // cola sometimes dies on empty input; hope that next iteration will succeed
           }
+          data_stats = {totnodes: vertices.length, totedges: edges.length};
           filters = crossfilters(vertices, edges);
           apply_options();
           diagram
               .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
               .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
           do_redraw();
-          show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       })
-  }
-
-  function show_stats(data_stats, layout_stats) {
-      $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
   }
 
   var runner = make_runner(init, step, settings.interval);
