@@ -46,8 +46,18 @@
   function show_stats(data_stats, layout_stats) {
       $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
   }
-  function do_redraw() {
+  function show_start() {
       $('#run-indicator').show();
+      //console.log('start layout');
+  }
+  function show_stop() {
+      $('#run-indicator').hide();
+      //console.log('stop layout');
+  }
+  function do_redraw() {
+      if(!$('#run-indicator').is(':hidden'))
+          return;
+      show_start();
       diagram.redraw();
       show_stats(data_stats, diagram.getStats());
   }
@@ -327,7 +337,7 @@
                   cola.flowLayout('y', 80);
               })
               .on('end', function() {
-                  $('#run-indicator').hide();
+                  show_stop();
                   runner.endStep();
               });
           apply_options();
@@ -366,7 +376,7 @@
           diagram.legend(
               dc_graph.legend().nodeWidth(70).nodeHeight(70).exemplars(exs));
 
-          $('#run-indicator').show();
+          show_start();
           diagram.render();
           show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       });
