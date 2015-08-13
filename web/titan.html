@@ -70,6 +70,7 @@
               default: return 10;
               }
           })
+          .nodeFitLabelAccessor(false)
           .nodeFillAccessor(function(kv) {
               // some arbitrarily-chosen colors from colorbrewer2.org
               switch(kv.value.node_type) {
