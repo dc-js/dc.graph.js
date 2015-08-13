@@ -33,9 +33,11 @@
   </div>
   <div id="graph-stats"></div>
   <div id="options" style="display: hidden">
-    <label><input type="checkbox" id="hide-unknown">Hide Unknown</label><br />
-    <label><input type="checkbox" id="hide-subnets">Hide Subnets</label><br />
-    <label><input type="checkbox" id="layout-unchanged">Redraw when unchanged</label>
+    <div><label><input type="checkbox" id="hide-unknown">Hide Unknown</label></div>
+    <div><label><input type="checkbox" id="hide-subnets">Hide Subnets</label></div>
+    <div><label><input type="checkbox" id="show-arrows">Show Arrows</label></div>
+    <div><label><input type="checkbox" id="layout-unchanged">Redraw when unchanged</label></div>
+    <div><label>Flow: <select id="flow-direction"><option value="x">X</option><option value="y">Y</option><option value="none">None</option></select></label></div>
   </div>
 </div>
 
@@ -101,6 +103,15 @@
               }
           }
       },
+      show_arrows: {
+          default: false,
+          query: 'arrows',
+          selector: '#show-arrows',
+          needs_redraw: true,
+          apply: function(val, diagram, filters) {
+              diagram.edgeArrowheadAccessor(val ? 'vee' : null);
+          }
+      },
       layout_unchanged: {
           default: false,
           query: 'unchanged',
@@ -108,6 +119,29 @@
           needs_redraw: false,
           apply: function(val, diagram, filters) {
               diagram.layoutUnchanged(val);
+          }
+      },
+      flow_direction: {
+          default: "x",
+          query: 'flow',
+          selector: '#flow-direction',
+          needs_redraw: true,
+          apply: function(val, diagram, filters) {
+              var modf;
+              switch(val) {
+              case 'x':
+                  modf = function(cola) { cola.flowLayout('x', 120); };
+                  break;
+              case 'y':
+                  modf = function(cola) { cola.flowLayout('y', 120); };
+                  break;
+              case 'none':
+                  modf = null;
+                  break;
+              default:
+                  throw new Error('unknown flow direction ' + val);
+              }
+              diagram.modLayout(modf);
           }
       }
   };
@@ -150,6 +184,17 @@
       if(query in qs)
           settings[key] = convert_query(typeof opt.default, qs[query]);
 
+      function update_setting(opt, val) {
+          settings[key] = val;
+          if(opt.query) {
+              qs[opt.query] = '' + val;
+              update_interesting();
+          }
+          if(opt.apply)
+              opt.apply(val, diagram, filters);
+          if(opt.needs_redraw)
+              do_redraw();
+      }
       if(opt.selector) {
           switch(typeof opt.default) {
           case 'boolean':
@@ -157,15 +202,15 @@
                   .prop('checked', settings[key])
                   .change(function() {
                       var val = $(this).is(':checked');
-                      settings[key] = val;
-                      if(opt.query) {
-                          qs[opt.query] = '' + val;
-                          update_interesting();
-                      }
-                      if(opt.apply)
-                          opt.apply(val, diagram, filters);
-                      if(opt.needs_redraw)
-                          do_redraw();
+                      update_setting(opt, val);
+                  });
+              break;
+          case 'string':
+              $(opt.selector)
+                  .val(settings[key])
+                  .change(function() {
+                      var val = $(this).val();
+                      update_setting(opt, val);
                   });
               break;
           default: throw new Error('unsupported selector type ' + typeof opt.default);
@@ -333,9 +378,6 @@
               .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
               .sourceAccessor(function(e) { return e.value.id1; })
               .targetAccessor(function(e) { return e.value.id2; })
-              .modLayout(function(cola) {
-                  cola.flowLayout('y', 80);
-              })
               .on('end', function() {
                   show_stop();
                   runner.endStep();
@@ -365,9 +407,6 @@
               .nodeFillScale(d3.scale.ordinal(_.keys(ostypes)).range(colorbrewer.Paired[12]))
               .nodeFillAccessor(function(kv) {
                   return kv.value.ostype;
-              })
-              .edgeArrowheadAccessor(function(kv) {
-                  return kv.value._label === 'on_path' ? 'vee' : null;
               });
 
           var exs = {};
