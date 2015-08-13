@@ -126,6 +126,7 @@
           query: 'flow',
           selector: '#flow-direction',
           needs_redraw: true,
+          needs_relayout: true,
           apply: function(val, diagram, filters) {
               var modf;
               switch(val) {
@@ -192,6 +193,8 @@
           }
           if(opt.apply)
               opt.apply(val, diagram, filters);
+          if(opt.needs_relayout)
+              diagram.relayout();
           if(opt.needs_redraw)
               do_redraw();
       }

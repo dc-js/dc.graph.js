@@ -342,6 +342,16 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.layoutUnchanged = property(false);
 
     /**
+     #### .relayout()
+     When `layoutUnchanged` is false, call this when changing a parameter in order to force layout
+     to happen again. (Yes, probably should not be necessary.)
+     **/
+    _chart.relayout = function() {
+        _nodes_snapshot = _edges_snapshot = null;
+        return this;
+    };
+
+    /**
      #### .induceNodes([boolean])
      By default, all nodes are included, and edges are only included if both end-nodes are visible.
      If `.induceNodes` is set, then only nodes which have at least one edge will be shown.
@@ -400,10 +410,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes = {}, _edges = {};
 
     _chart._buildNode = function(node, nodeEnter) {
-        nodeEnter.append('title').text(param(_chart.nodeTitleAccessor()));
+        nodeEnter.append('title');
         nodeEnter.append('ellipse');
         nodeEnter.append('text')
             .attr('class', 'node-label');
+        node.select('title')
+            .text(param(_chart.nodeTitleAccessor()));
         node.select('text.node-label')
             .text(param(_chart.nodeLabelAccessor()))
             .each(function(d, i) {
@@ -482,15 +494,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             return e.source!==undefined && e.target!==undefined;
         });
         _stats = {nnodes: nodes1.length, nedges: edges1.length};
+        var skip_layout = false;
         if(!_chart.layoutUnchanged()) {
             function original(x) {
                 return x.orig;
             }
             var nodes_snapshot = JSON.stringify(nodes1.map(original)), edges_snapshot = JSON.stringify(edges1.map(original));
-            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot) {
-                _dispatch.end();
-                return this;
-            }
+            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
+                skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
             _edges_snapshot = edges_snapshot;
         }
@@ -624,6 +635,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     });
             layout_edges = layout_edges.concat(wheel);
         });
+        if(skip_layout) {
+            _dispatch.end();
+            return this;
+        }
         var startTime = Date.now();
         _d3cola.nodes(nodes1)
             .links(layout_edges)
