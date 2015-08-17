@@ -46,7 +46,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      Get or set the root element, which is usually the parent div. Normally the root is set when the
      diagram is constructed; setting it later may have unexpected consequences.
      **/
-    _chart.root = property(null);
+    _chart.root = property(null).react(function(e) {
+        if(e.empty())
+            console.log('Warning: parent selector ' + parent + " doesn't seem to exist");
+    });
 
     /**
      #### .mouseZoomable([boolean])
