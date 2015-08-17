@@ -951,6 +951,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('viewBox', '0 -5 10 10')
             .attr('refX', refX)
             .attr('refY', refY)
+            .attr('markerUnits', 'userSpaceOnUse')
             .attr('markerWidth', width)
             .attr('markerHeight', height)
             .attr('orient', 'auto')
