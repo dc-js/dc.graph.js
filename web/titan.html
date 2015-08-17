@@ -87,6 +87,9 @@
               case 'Subnet': return kv.value.subnet_name;
               }
           })
+          .edgeStrokeWidthAccessor(function(kv) {
+              return kv.value._label === 'path' ? 2 : 1
+          })
           .edgeLabelAccessor(function(kv) {
               if(kv.value._label === 'connects_to')
                   return kv.value.ip_address;
