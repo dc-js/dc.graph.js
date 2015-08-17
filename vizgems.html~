@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Titan viewer</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+
+  <script type="text/javascript" src="js/d3.js"></script>
+  <script type="text/javascript" src="js/crossfilter.js"></script>
+  <script type="text/javascript" src="js/dc.js"></script>
+
+  <script type="text/javascript" src="js/queue.js"></script>
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/lodash.js"></script>
+
+  <script type="text/javascript" src="js/cola.js"></script>
+  <script type="text/javascript" src="js/dc.graph.js"></script>
+</head>
+
+<body>
+
+
+<div id="graph" class="chart"></div>
+
+<script type="text/javascript">
+  var querystring = (function(a) {
+      if (a == "") return {};
+      var b = {};
+      for (var i = 0; i < a.length; ++i)
+      {
+          var p=a[i].split('=', 2);
+          if (p.length == 1)
+              b[p[0]] = "";
+          else
+              b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+      }
+      return b;
+  })(window.location.search.substr(1).split('&'));
+
+  var diagram = dc_graph.diagram('#graph');
+
+  var url = querystring.url, vertices_url = url + '/vertices', edges_url = url + '/edges';
+
+  queue()
+    .defer(d3.json, vertices_url)
+    .defer(d3.json, edges_url)
+    .await(function(error, vertices, edges) {
+        if(error) throw new Error(error);
+
+        var edge_ndx = crossfilter(edges.results),
+            node_ndx = crossfilter(vertices.results);
+
+        // when there will be exactly one or zero items in a group, a reasonable reduction
+        // is just to use the row or null
+        function one_zero_reduce(group) {
+            group.reduce(
+                function(p, v) { return v; },
+                function() { return null; },
+                function() { return null; }
+            );
+        }
+
+        var nodeDimension = node_ndx.dimension(function(d) { return d._id; }),
+            edgeDimension = edge_ndx.dimension(function(d) { return d._id; }),
+            nodeGroup = nodeDimension.group(),
+            edgeGroup = edgeDimension.group();
+
+        one_zero_reduce(nodeGroup);
+        one_zero_reduce(edgeGroup);
+
+        function non_null(group) {
+            return {
+                all: function() {
+                    return group.all().filter(function(kv) {
+                        return kv.value !== null;
+                    });
+                }
+            };
+        }
+        var nodeGroup1 = non_null(nodeGroup),
+            edgeGroup1 = non_null(edgeGroup);
+
+        // basic diagram setup
+        diagram
+            .width($(window).width())
+            .height($(window).height())
+            .showLayoutSteps(true)
+            .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
+            .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
+            .sourceAccessor(function(e) { return e.value._inV; })
+            .targetAccessor(function(e) { return e.value._outV; });
+
+        // respond to browser resize (not necessary if width/height is static)
+        $(window).resize(function() {
+            diagram
+                .width($(window).width())
+                .height($(window).height())
+        });
+
+        // aesthetics: look at kv.value for node/edge attributes and return appropriate values
+        diagram
+            .nodeStrokeWidthAccessor(0) // turn off outlines
+            .nodeRadiusAccessor(function(kv) {
+                switch(kv.value.node_type) {
+                case 'Router': return 20;
+                default: return 10;
+                }
+            })
+            .nodeFillAccessor(function(kv) {
+                // some arbitrarily-chosen colors from colorbrewer2.org
+                switch(kv.value.node_type) {
+                case 'Router': return '#377eb8';
+                case 'VirtualMachine': return '#e41a1c';
+                case 'Subnet': return '#ff7f00';
+                default: return 'grey';
+                }
+            })
+            .edgeArrowheadAccessor(function(kv) {
+                return kv.value._label === 'on_path' ? 'vee' : null;
+            });
+
+        diagram.render();
+    });
+</script>
