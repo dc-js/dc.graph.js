@@ -528,15 +528,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('class', 'edge')
                 .attr('id', edge_id);
         edge
-                .attr('stroke', param(_chart.edgeStrokeAccessor()))
-                .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
-                .attr('opacity', param(_chart.edgeOpacityAccessor()))
-                .attr('marker-end', function(d) {
-                    return 'url(#' + param(_chart.edgeArrowheadAccessor())(d) + ')';
-                })
-                .attr('marker-start', function(d) {
-                    return 'url(#' + param(_chart.edgeArrowtailAccessor())(d) + ')';
-                });
+            .attr('stroke', param(_chart.edgeStrokeAccessor()))
+            .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
+            .attr('opacity', param(_chart.edgeOpacityAccessor()))
+            .attr('marker-end', function(d) {
+                var id = param(_chart.edgeArrowheadAccessor())(d);
+                return id ? 'url(#' + id + ')' : null;
+            })
+            .attr('marker-start', function(d) {
+                var id = param(_chart.edgeArrowtailAccessor())(d);
+                return id ? 'url(#' + id + ')' : null;
+            });
         var edgeExit = edge.exit();
         edgeExit.remove();
 
