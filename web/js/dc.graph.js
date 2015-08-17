@@ -142,7 +142,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      Get or set the root element, which is usually the parent div. Normally the root is set when the
      diagram is constructed; setting it later may have unexpected consequences.
      **/
-    _chart.root = property(null);
+    _chart.root = property(null).react(function(e) {
+        if(e.empty())
+            console.log('Warning: parent selector ' + parent + " doesn't seem to exist");
+    });
 
     /**
      #### .mouseZoomable([boolean])
@@ -624,15 +627,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('class', 'edge')
                 .attr('id', edge_id);
         edge
-                .attr('stroke', param(_chart.edgeStrokeAccessor()))
-                .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
-                .attr('opacity', param(_chart.edgeOpacityAccessor()))
-                .attr('marker-end', function(d) {
-                    return 'url(#' + param(_chart.edgeArrowheadAccessor())(d) + ')';
-                })
-                .attr('marker-start', function(d) {
-                    return 'url(#' + param(_chart.edgeArrowtailAccessor())(d) + ')';
-                });
+            .attr('stroke', param(_chart.edgeStrokeAccessor()))
+            .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
+            .attr('opacity', param(_chart.edgeOpacityAccessor()))
+            .attr('marker-end', function(d) {
+                var id = param(_chart.edgeArrowheadAccessor())(d);
+                return id ? 'url(#' + id + ')' : null;
+            })
+            .attr('marker-start', function(d) {
+                var id = param(_chart.edgeArrowtailAccessor())(d);
+                return id ? 'url(#' + id + ')' : null;
+            });
         var edgeExit = edge.exit();
         edgeExit.remove();
 
