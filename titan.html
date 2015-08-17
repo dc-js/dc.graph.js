@@ -66,7 +66,9 @@
           .nodeStrokeWidthAccessor(0) // turn off outlines
           .nodeRadiusAccessor(function(kv) {
               switch(kv.value.node_type) {
-              case 'Router': return 20;
+              case 'Router': return 15;
+              case 'Subnet': return 20;
+              case 'VirtualMachine': return 10;
               default: return 10;
               }
           })
@@ -75,8 +77,8 @@
               // some arbitrarily-chosen colors from colorbrewer2.org
               switch(kv.value.node_type) {
               case 'Router': return '#377eb8';
-              case 'VirtualMachine': return '#e41a1c';
-              case 'Subnet': return '#ff7f00';
+              case 'VirtualMachine': return '#4daf4a';
+              case 'Subnet': return '#e41a1c';
               default: return 'grey';
               }
           })
@@ -109,11 +111,11 @@
               'Virtual Machine': {
                   node_type: 'VirtualMachine'
               },
-              Router: {
-                  node_type: 'Router'
-              },
               Subnet: {
                   node_type: 'Subnet'
+              },
+              Router: {
+                  node_type: 'Router'
               }
           }));
 
