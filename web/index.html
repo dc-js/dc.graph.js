@@ -70,6 +70,7 @@
       showSteps = +querystring.showsteps !== 0,
       file = querystring.file || null,
       generate = querystring.gen || null,
+      randomize = +querystring.randomize || false,
       doReinit = querystring.reinit==="0" ? false : true,
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
@@ -132,6 +133,10 @@
       if(error) {
           console.log(error);
           return;
+      }
+      if(randomize) {
+          data.links.forEach(function(e) { e.order = Math.random()*1000; });
+          data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
       }
       var edge_ndx = crossfilter(data.links),
           node_ndx = crossfilter(data.nodes);
@@ -245,6 +250,10 @@
           });
       if(linkLength)
           diagram.baseLength(linkLength)
+      if(randomize) {
+          diagram.nodeOrdering(function(kv) { return kv.value.order; })
+              .edgeOrdering(function(kv) { return kv.value.order; });
+      }
 
       // respond to browser resize (not necessary if width/height is static)
       $(window).resize(function() {

@@ -210,6 +210,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart.nodeKeyAccessor()(kv);
     });
 
+    /**
+     #### .nodeOrdering([function])
+     By default, nodes are added to the layout in the order that `.nodeGroup().all()` returns them. If
+     specified, `.nodeOrdering` provides an accessor that returns a key to sort the nodes on.
+     It would be better not to rely on ordering to affect layout, but it does matter.
+     **/
+    _chart.nodeOrdering = property(null);
 
 
     /**
@@ -327,6 +334,15 @@ dc_graph.diagram = function (parent, chartGroup) {
      Default: 5
      **/
     _chart.parallelEdgeOffset = property(5);
+
+    /**
+     #### .edgeOrdering([function])
+     By default, edges are added to the layout in the order that `.edgeGroup().all()` returns them. If
+     specified, `.edgeOrdering` provides an accessor that returns a key to sort the edges on.
+     It would be better not to rely on ordering to affect layout, but it does matter. (Probably less
+     than node ordering, but it does affect which parallel edge is which.)
+     **/
+    _chart.edgeOrdering = property(null);
 
     /**
      #### .initLayoutOnRedraw([boolean])
@@ -460,18 +476,26 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.redraw = function () {
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
+
         if(_d3cola)
             _d3cola.stop();
         if(_chart.initLayoutOnRedraw())
             initLayout();
 
         if(_chart.induceNodes()) {
-            var keeps = {};
+            var keeps = {};a
             edges.forEach(function(e) {
                 keeps[_chart.sourceAccessor()(e)] = true;
                 keeps[_chart.targetAccessor()(e)] = true;
             });
             nodes = nodes.filter(function(n) { return keeps[_chart.nodeKeyAccessor()(n)]; });
+        }
+
+        if(_chart.nodeOrdering()) {
+            nodes = crossfilter.quicksort.by(_chart.nodeOrdering())(nodes.slice(0), 0, nodes.length);
+        }
+        if(_chart.edgeOrdering()) {
+            edges = crossfilter.quicksort.by(_chart.edgeOrdering())(edges.slice(0), 0, edges.length);
         }
 
         function wrap_node(v, i) {
