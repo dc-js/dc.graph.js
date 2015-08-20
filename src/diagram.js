@@ -499,21 +499,33 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
 
         function wrap_node(v, i) {
-            if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
-            var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
+            var key = _chart.nodeKeyAccessor()(v);
+            if(!_nodes[key]) _nodes[key] = {};
+            var v1 = _nodes[key];
             v1.orig = v;
             v1.id = i;
+            keep_node[key] = true;
             return v1;
         }
         function wrap_edge(e) {
-            if(!_edges[e.key]) _edges[_chart.edgeKeyAccessor()(e)] = {};
-            var e1 = _edges[_chart.edgeKeyAccessor()(e)];
+            var key = _chart.edgeKeyAccessor()(e);
+            if(!_edges[key]) _edges[key] = {};
+            var e1 = _edges[key];
             e1.orig =  e;
             e1.source = _nodes[_chart.sourceAccessor()(e)];
             e1.target = _nodes[_chart.targetAccessor()(e)];
+            keep_edge[key] = true;
             return e1;
         }
+        var keep_node = {}, keep_edge = {};
         var nodes1 = nodes.map(wrap_node);
+        // delete any objects from last round that are no longer used
+        for(var vk in _nodes)
+            if(!keep_node[vk])
+                delete _nodes[vk];
+        for(var ek in _edges)
+            if(!keep_edge[ek])
+                delete _edges[ek];
         var edges1 = edges.map(wrap_edge).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
