@@ -63,6 +63,8 @@
 
       // aesthetics: look at kv.value for node/edge attributes and return appropriate values
       diagram
+          .lengthStrategy('individual')
+          .edgeDistanceAccessor(100)
           .nodeStrokeWidthAccessor(0) // turn off outlines
           .nodeRadiusAccessor(function(kv) {
               switch(kv.value.node_type) {
