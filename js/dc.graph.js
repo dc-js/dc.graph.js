@@ -306,6 +306,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart.nodeKeyAccessor()(kv);
     });
 
+    /**
+     #### .nodeOrdering([function])
+     By default, nodes are added to the layout in the order that `.nodeGroup().all()` returns them. If
+     specified, `.nodeOrdering` provides an accessor that returns a key to sort the nodes on.
+     It would be better not to rely on ordering to affect layout, but it does matter.
+     **/
+    _chart.nodeOrdering = property(null);
 
 
     /**
@@ -423,6 +430,15 @@ dc_graph.diagram = function (parent, chartGroup) {
      Default: 5
      **/
     _chart.parallelEdgeOffset = property(5);
+
+    /**
+     #### .edgeOrdering([function])
+     By default, edges are added to the layout in the order that `.edgeGroup().all()` returns them. If
+     specified, `.edgeOrdering` provides an accessor that returns a key to sort the edges on.
+     It would be better not to rely on ordering to affect layout, but it does matter. (Probably less
+     than node ordering, but it does affect which parallel edge is which.)
+     **/
+    _chart.edgeOrdering = property(null);
 
     /**
      #### .initLayoutOnRedraw([boolean])
@@ -556,13 +572,14 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.redraw = function () {
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
+
         if(_d3cola)
             _d3cola.stop();
         if(_chart.initLayoutOnRedraw())
             initLayout();
 
         if(_chart.induceNodes()) {
-            var keeps = {};
+            var keeps = {};a
             edges.forEach(function(e) {
                 keeps[_chart.sourceAccessor()(e)] = true;
                 keeps[_chart.targetAccessor()(e)] = true;
@@ -570,25 +587,41 @@ dc_graph.diagram = function (parent, chartGroup) {
             nodes = nodes.filter(function(n) { return keeps[_chart.nodeKeyAccessor()(n)]; });
         }
 
-        var key_index_map = nodes.reduce(function(result, value, index) {
-            result[_chart.nodeKeyAccessor()(value)] = index;
-            return result;
-        }, {});
-        function wrap_node(v) {
-            if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
-            var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
+        if(_chart.nodeOrdering()) {
+            nodes = crossfilter.quicksort.by(_chart.nodeOrdering())(nodes.slice(0), 0, nodes.length);
+        }
+        if(_chart.edgeOrdering()) {
+            edges = crossfilter.quicksort.by(_chart.edgeOrdering())(edges.slice(0), 0, edges.length);
+        }
+
+        function wrap_node(v, i) {
+            var key = _chart.nodeKeyAccessor()(v);
+            if(!_nodes[key]) _nodes[key] = {};
+            var v1 = _nodes[key];
             v1.orig = v;
+            v1.id = i;
+            keep_node[key] = true;
             return v1;
         }
         function wrap_edge(e) {
-            if(!_edges[e.key]) _edges[_chart.edgeKeyAccessor()(e)] = {};
-            var e1 = _edges[_chart.edgeKeyAccessor()(e)];
+            var key = _chart.edgeKeyAccessor()(e);
+            if(!_edges[key]) _edges[key] = {};
+            var e1 = _edges[key];
             e1.orig =  e;
-            e1.source = key_index_map[_chart.sourceAccessor()(e)];
-            e1.target = key_index_map[_chart.targetAccessor()(e)];
+            e1.source = _nodes[_chart.sourceAccessor()(e)];
+            e1.target = _nodes[_chart.targetAccessor()(e)];
+            keep_edge[key] = true;
             return e1;
         }
+        var keep_node = {}, keep_edge = {};
         var nodes1 = nodes.map(wrap_node);
+        // delete any objects from last round that are no longer used
+        for(var vk in _nodes)
+            if(!keep_node[vk])
+                delete _nodes[vk];
+        for(var ek in _edges)
+            if(!keep_edge[ek])
+                delete _edges[ek];
         var edges1 = edges.map(wrap_edge).filter(function(e) {
             return e.source!==undefined && e.target!==undefined;
         });
@@ -614,7 +647,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     em[i][j] = 0;
             }
             edges1.forEach(function(e) {
-                var min = Math.min(e.source, e.target), max = Math.max(e.source, e.target);
+                var min = Math.min(e.source.id, e.target.id), max = Math.max(e.source.id, e.target.id);
                 e.parallel = em[min][max]++;
             });
         }
@@ -709,10 +742,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nonlayout_edges = edges1.filter(function(x) {
             return !param(_chart.edgeIsLayoutAccessor())(x);
         });
-        nonlayout_edges.forEach(function(e) {
-            e.source = nodes1[e.source];
-            e.target = nodes1[e.target];
-        });
 
         // 2. type=circle constraints
         var circle_constraints = constraints.filter(function(c) {
@@ -730,8 +759,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             var wheel = dc_graph.wheel_edges(namef, nindices, R)
                     .map(function(e) {
                         var e1 = {internal: e};
-                        e1.source = key_index_map[e.sourcename];
-                        e1.target = key_index_map[e.targetname];
+                        e1.source = _nodes[e.sourcename];
+                        e1.target = _nodes[e.targetname];
                         return e1;
                     });
             layout_edges = layout_edges.concat(wheel);

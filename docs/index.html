@@ -201,6 +201,10 @@ default, looks for a field <code>label</code> or <code>name</code> inside the <c
 <h4 id="-nodetitleaccessor-function-">.nodeTitleAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
 By default, uses the key of the node.</p>
+<h4 id="-nodeordering-function-">.nodeOrdering([function])</h4>
+<p>By default, nodes are added to the layout in the order that <code>.nodeGroup().all()</code> returns them. If
+specified, <code>.nodeOrdering</code> provides an accessor that returns a key to sort the nodes on.
+It would be better not to rely on ordering to affect layout, but it does matter.</p>
 <h4 id="-edgestrokeaccessor-function-">.edgeStrokeAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the stroke color for the edges. Default: black</p>
 <h4 id="-edgestrokewidthaccessor-function-">.edgeStrokeWidthAccessor([function])</h4>
@@ -248,6 +252,11 @@ are built from scratch on each redraw.</p>
 <p>If there are multiple edges between the same two nodes, start them this many pixels away from the original
 so they don&#39;t overlap.
 Default: 5</p>
+<h4 id="-edgeordering-function-">.edgeOrdering([function])</h4>
+<p>By default, edges are added to the layout in the order that <code>.edgeGroup().all()</code> returns them. If
+specified, <code>.edgeOrdering</code> provides an accessor that returns a key to sort the edges on.
+It would be better not to rely on ordering to affect layout, but it does matter. (Probably less
+than node ordering, but it does affect which parallel edge is which.)</p>
 <h4 id="-initlayoutonredraw-boolean-">.initLayoutOnRedraw([boolean])</h4>
 <p>Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,
 overlaps between nodes may not be eliminated [if cola is not reinitialized]

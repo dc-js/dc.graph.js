@@ -114,6 +114,11 @@ Whether to fit the node shape around the label. Default: true
 Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
 By default, uses the key of the node.
 
+#### .nodeOrdering([function])
+By default, nodes are added to the layout in the order that `.nodeGroup().all()` returns them. If
+specified, `.nodeOrdering` provides an accessor that returns a key to sort the nodes on.
+It would be better not to rely on ordering to affect layout, but it does matter.
+
 #### .edgeStrokeAccessor([function])
 Set or get the function which will be used to retrieve the stroke color for the edges. Default: black
 
@@ -171,6 +176,12 @@ are built from scratch on each redraw.
 If there are multiple edges between the same two nodes, start them this many pixels away from the original
 so they don't overlap.
 Default: 5
+
+#### .edgeOrdering([function])
+By default, edges are added to the layout in the order that `.edgeGroup().all()` returns them. If
+specified, `.edgeOrdering` provides an accessor that returns a key to sort the edges on.
+It would be better not to rely on ordering to affect layout, but it does matter. (Probably less
+than node ordering, but it does affect which parallel edge is which.)
 
 #### .initLayoutOnRedraw([boolean])
 Currently there are some bugs when the same instance of cola.js is used multiple times. (In particular,

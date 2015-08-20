@@ -35,6 +35,7 @@
   <div id="options" style="display: hidden">
     <div><label><input type="checkbox" id="hide-unknown">Hide Unknown</label></div>
     <div><label><input type="checkbox" id="hide-subnets">Hide Subnets</label></div>
+    <div><label><input type="checkbox" id="show-steps">Show Layout Steps</label></div>
     <div><label><input type="checkbox" id="show-arrows">Show Arrows</label></div>
     <div><label><input type="checkbox" id="layout-unchanged">Redraw when unchanged</label></div>
     <div><label>Flow: <select id="flow-direction"><option value="x">X</option><option value="y">Y</option><option value="none">None</option></select></label></div>
@@ -107,6 +108,15 @@
                                                function(k) { return k != 'SUB'; } :
                                                null);
               }
+          }
+      },
+      show_steps: {
+          default: false,
+          query: 'steps',
+          selector: '#show-steps',
+          needs_redraw: false,
+          apply: function(val, diagram, filters) {
+              diagram.showLayoutSteps(val);
           }
       },
       show_arrows: {
