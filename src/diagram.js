@@ -474,22 +474,19 @@ dc_graph.diagram = function (parent, chartGroup) {
             nodes = nodes.filter(function(n) { return keeps[_chart.nodeKeyAccessor()(n)]; });
         }
 
-        var key_index_map = nodes.reduce(function(result, value, index) {
-            result[_chart.nodeKeyAccessor()(value)] = index;
-            return result;
-        }, {});
-        function wrap_node(v) {
+        function wrap_node(v, i) {
             if(!_nodes[v.key]) _nodes[_chart.nodeKeyAccessor()(v)] = {};
             var v1 = _nodes[_chart.nodeKeyAccessor()(v)];
             v1.orig = v;
+            v1.id = i;
             return v1;
         }
         function wrap_edge(e) {
             if(!_edges[e.key]) _edges[_chart.edgeKeyAccessor()(e)] = {};
             var e1 = _edges[_chart.edgeKeyAccessor()(e)];
             e1.orig =  e;
-            e1.source = key_index_map[_chart.sourceAccessor()(e)];
-            e1.target = key_index_map[_chart.targetAccessor()(e)];
+            e1.source = _nodes[_chart.sourceAccessor()(e)];
+            e1.target = _nodes[_chart.targetAccessor()(e)];
             return e1;
         }
         var nodes1 = nodes.map(wrap_node);
@@ -518,7 +515,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     em[i][j] = 0;
             }
             edges1.forEach(function(e) {
-                var min = Math.min(e.source, e.target), max = Math.max(e.source, e.target);
+                var min = Math.min(e.source.id, e.target.id), max = Math.max(e.source.id, e.target.id);
                 e.parallel = em[min][max]++;
             });
         }
@@ -613,10 +610,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nonlayout_edges = edges1.filter(function(x) {
             return !param(_chart.edgeIsLayoutAccessor())(x);
         });
-        nonlayout_edges.forEach(function(e) {
-            e.source = nodes1[e.source];
-            e.target = nodes1[e.target];
-        });
 
         // 2. type=circle constraints
         var circle_constraints = constraints.filter(function(c) {
@@ -634,8 +627,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             var wheel = dc_graph.wheel_edges(namef, nindices, R)
                     .map(function(e) {
                         var e1 = {internal: e};
-                        e1.source = key_index_map[e.sourcename];
-                        e1.target = key_index_map[e.targetname];
+                        e1.source = _nodes[e.sourcename];
+                        e1.target = _nodes[e.targetname];
                         return e1;
                     });
             layout_edges = layout_edges.concat(wheel);
