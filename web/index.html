@@ -117,7 +117,8 @@
       }
   else if(generate)
       source = function(callback) {
-          var parts = /^([a-zA-Z]+)([0-9]+(?:,[0-9])+)*/.exec(generate);
+          // name plus at least one number, separated by commas
+          var parts = /^([a-zA-Z]+)([0-9]+(?:,[0-9]+)*)$/.exec(generate);
           if(!parts || !parts[0]) throw new Error("couldn't parse generator");
           var name = parts[1], args = parts[2].split(',').map(function(n) { return +n; });
           var env = {
