@@ -1,26 +1,26 @@
 function qfs_edges(nodes, edges, constraints) {
     edges.forEach(function(e) {
-        var s = nodes[e.source], t = nodes[e.target];
+        var s = e.source, t = e.target;
         if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
             // vertical displacement for Client/Metaserver
             constraints.push({
-                left: e.source,
-                right: e.target,
+                left: e.source.id,
+                right: e.target.id,
                 axis: 'y',
                 gap: 50
             });
             // this one is just to untangle the diagram by putting metaserver left, client right
             constraints.push({
-                left: e.target,
-                right: e.source,
+                left: e.target.id,
+                right: e.source.id,
                 axis: 'x',
                 gap: 200
             });
         }
         else if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
             constraints.push({
-                left: e.source,
-                right: e.target,
+                left: e.source.id,
+                right: e.target.id,
                 axis: 'y',
                 gap: 50
             });
@@ -28,16 +28,16 @@ function qfs_edges(nodes, edges, constraints) {
         else if(s.orig.value.class === 'Metaserver' &&
                 (t.orig.value.class === 'Attached Volume' || t.orig.value.class === 'ChunkServer')) {
             constraints.push({
-                left: e.source,
-                right: e.target,
+                left: e.source.id,
+                right: e.target.id,
                 axis: 'y',
                 gap: 100
             });
         }
         else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume') {
             constraints.push({
-                left: e.source,
-                right: e.target,
+                left: e.source.id,
+                right: e.target.id,
                 axis: 'y',
                 gap: 100
             });
