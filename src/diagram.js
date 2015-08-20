@@ -483,7 +483,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             initLayout();
 
         if(_chart.induceNodes()) {
-            var keeps = {};a
+            var keeps = {};
             edges.forEach(function(e) {
                 keeps[_chart.sourceAccessor()(e)] = true;
                 keeps[_chart.targetAccessor()(e)] = true;
