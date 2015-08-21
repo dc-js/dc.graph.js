@@ -501,7 +501,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
             break;
         case 'jaccard':
-            _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
+            _d3cola.jaccardLinkLengths(_chart.baseLength());
             break;
         case 'individual':
             _d3cola.linkDistance(function(e) {
@@ -599,7 +599,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_nodes[key]) _nodes[key] = {};
             var v1 = _nodes[key];
             v1.orig = v;
-            v1.id = i;
+            v1.index = i;
             keep_node[key] = true;
             return v1;
         }
@@ -647,7 +647,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     em[i][j] = 0;
             }
             edges1.forEach(function(e) {
-                var min = Math.min(e.source.id, e.target.id), max = Math.max(e.source.id, e.target.id);
+                var min = Math.min(e.source.index, e.target.index), max = Math.max(e.source.index, e.target.index);
                 e.parallel = em[min][max]++;
             });
         }
@@ -721,7 +721,29 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
         var nodeExit = node.exit();
+        // i am not satisfied with this constraint generation api...
+        // https://github.com/dc-js/dc.graph.js/issues/10
         var constraints = _chart.constrain()(nodes1, edges1);
+        // translate references from names to indices (ugly)
+        constraints.forEach(function(c) {
+            if(c.type) {
+                switch(c.type) {
+                case 'alignment':
+                    c.offsets.forEach(function(o) {
+                        o.node = _nodes[o.node].index;
+                    });
+                    break;
+                case 'circle':
+                    c.nodes.forEach(function(n) {
+                        n.node = _nodes[n.node].index;
+                    });
+                    break;
+                }
+            } else if(c.axis) {
+                c.left = _nodes[c.left].index;
+                c.right = _nodes[c.right].index;
+            }
+        });
         nodeExit.remove();
 
         _d3cola.on('tick', function() {
