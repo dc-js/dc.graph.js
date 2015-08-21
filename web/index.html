@@ -214,7 +214,7 @@
               if(n.orig.value.circle) {
                   var circ = n.orig.value.circle;
                   if(!circles[circ]) circles[circ] = [];
-                  circles[circ].push({node: i});
+                  circles[circ].push({node: n.orig.key});
               }
           });
           for(var circ in circles)

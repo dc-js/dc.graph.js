@@ -4,23 +4,23 @@ function qfs_edges(nodes, edges, constraints) {
         if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
             // vertical displacement for Client/Metaserver
             constraints.push({
-                left: e.source.id,
-                right: e.target.id,
+                left: e.source.orig.key,
+                right: e.target.orig.key,
                 axis: 'y',
                 gap: 50
             });
             // this one is just to untangle the diagram by putting metaserver left, client right
             constraints.push({
-                left: e.target.id,
-                right: e.source.id,
+                left: e.target.orig.key,
+                right: e.source.orig.key,
                 axis: 'x',
                 gap: 200
             });
         }
         else if(s.orig.value.class === 'Client' && t.orig.value.class === 'ChunkServer') {
             constraints.push({
-                left: e.source.id,
-                right: e.target.id,
+                left: e.source.orig.key,
+                right: e.target.orig.key,
                 axis: 'y',
                 gap: 50
             });
@@ -28,16 +28,16 @@ function qfs_edges(nodes, edges, constraints) {
         else if(s.orig.value.class === 'Metaserver' &&
                 (t.orig.value.class === 'Attached Volume' || t.orig.value.class === 'ChunkServer')) {
             constraints.push({
-                left: e.source.id,
-                right: e.target.id,
+                left: e.source.orig.key,
+                right: e.target.orig.key,
                 axis: 'y',
                 gap: 100
             });
         }
         else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume') {
             constraints.push({
-                left: e.source.id,
-                right: e.target.id,
+                left: e.source.orig.key,
+                right: e.target.orig.key,
                 axis: 'y',
                 gap: 100
             });
@@ -60,10 +60,10 @@ function qfs_alignment(nodes, edges, constraints) {
     nodes.forEach(function(n, i) {
         switch(n.orig.value.class) {
         case 'ChunkServer':
-            CSLevel.offsets.push({node: i, offset: 0});
+            CSLevel.offsets.push({node: n.orig.key, offset: 0});
             break;
         case 'Attached Volume':
-            VolLevel.offsets.push({node: i, offset: 0});
+            VolLevel.offsets.push({node: n.orig.key, offset: 0});
         }
     });
     if(CSLevel.offsets.length)

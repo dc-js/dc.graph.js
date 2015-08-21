@@ -625,7 +625,29 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
         var nodeExit = node.exit();
+        // i am not satisfied with this constraint generation api...
+        // https://github.com/dc-js/dc.graph.js/issues/10
         var constraints = _chart.constrain()(nodes1, edges1);
+        // translate references from names to indices (ugly)
+        constraints.forEach(function(c) {
+            if(c.type) {
+                switch(c.type) {
+                case 'alignment':
+                    c.offsets.forEach(function(o) {
+                        o.node = _nodes[o.node].index;
+                    });
+                    break;
+                case 'circle':
+                    c.nodes.forEach(function(n) {
+                        n.node = _nodes[n.node].index;
+                    });
+                    break;
+                }
+            } else if(c.axis) {
+                c.left = _nodes[c.left].index;
+                c.right = _nodes[c.right].index;
+            }
+        });
         nodeExit.remove();
 
         _d3cola.on('tick', function() {
