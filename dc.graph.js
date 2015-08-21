@@ -501,7 +501,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
             break;
         case 'jaccard':
-            _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
+            _d3cola.jaccardLinkLengths(_chart.baseLength());
             break;
         case 'individual':
             _d3cola.linkDistance(function(e) {
@@ -599,7 +599,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_nodes[key]) _nodes[key] = {};
             var v1 = _nodes[key];
             v1.orig = v;
-            v1.id = i;
+            v1.index = i;
             keep_node[key] = true;
             return v1;
         }
@@ -647,7 +647,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     em[i][j] = 0;
             }
             edges1.forEach(function(e) {
-                var min = Math.min(e.source.id, e.target.id), max = Math.max(e.source.id, e.target.id);
+                var min = Math.min(e.source.index, e.target.index), max = Math.max(e.source.index, e.target.index);
                 e.parallel = em[min][max]++;
             });
         }
