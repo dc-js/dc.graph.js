@@ -373,16 +373,16 @@
   }
 
   var ostypes = {
-      CUS: "Customer",
-      PRT: "Port",
-      NET: "Network",
-      VM: "Virtual Machine",
-      FS: "File System",
-      IMG: "Image",
       RTR: "Router",
+      PRT: "Port",
       U: "User",
+      CUS: "Tenant", // Customer
+      undefined: 'Other', // perhaps grey
+      VM: "Virtual Machine",
+      FS: "Volume", // File System
+      IMG: "Image",
       SUB: "Subnet",
-      undefined: 'Other'
+      NET: "Network"
   };
 
   function init() {
