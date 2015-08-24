@@ -218,6 +218,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.nodeOrdering = property(null);
 
+    /**
+     #### .nodeFixedAccessor([function])
+     Specify an accessor that returns an {x,y} coordinate for a node that should be
+     [fixed in place](https://github.com/tgdwyer/WebCola/wiki/Fixed-Node-Positions), and returns
+     falsy for other nodes.
+     **/
+    _chart.nodeFixedAccessor = property(null);
+
 
     /**
      #### .edgeStrokeAccessor([function])
@@ -504,6 +512,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             var v1 = _nodes[key];
             v1.orig = v;
             v1.index = i;
+            var fixed = _chart.nodeFixedAccessor()(v);
+            if(fixed) {
+                v1.x = v.x;
+                v1.y = v.y;
+                v1.fixed = true;
+            }
+            else
+                v1.fixed = false;
             keep_node[key] = true;
             return v1;
         }
