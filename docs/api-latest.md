@@ -119,6 +119,11 @@ By default, nodes are added to the layout in the order that `.nodeGroup().all()`
 specified, `.nodeOrdering` provides an accessor that returns a key to sort the nodes on.
 It would be better not to rely on ordering to affect layout, but it does matter.
 
+#### .nodeFixedAccessor([function])
+Specify an accessor that returns an {x,y} coordinate for a node that should be
+[fixed in place](https://github.com/tgdwyer/WebCola/wiki/Fixed-Node-Positions), and returns
+falsy for other nodes.
+
 #### .edgeStrokeAccessor([function])
 Set or get the function which will be used to retrieve the stroke color for the edges. Default: black
 
