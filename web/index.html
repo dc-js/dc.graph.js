@@ -239,7 +239,7 @@
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
           .nodeFillAccessor(isQFS ? qfs_color : 'white')
-          .nodeFixedAccessor(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 200, y: -200} : null; } : null)
+          .nodeFixedAccessor(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
           .constrain(constrain)
           .lengthStrategy(generate ? 'individual' :
                           hierarchical ? 'none' :
