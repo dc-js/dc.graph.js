@@ -6,6 +6,7 @@ function qfs_edges(nodes, edges, constraints) {
         MCS: 0,
         CSAV: 0
     };
+    var num_chunks = nodes.filter(function(n) { return n.orig.value.class === 'ChunkServer'; }).length;
     edges.forEach(function(e) {
         var s = e.source, t = e.target;
         if(s.orig.value.class === 'Client' && t.orig.value.class === 'Metaserver') {
@@ -22,7 +23,7 @@ function qfs_edges(nodes, edges, constraints) {
                 left: e.target.orig.key,
                 right: e.source.orig.key,
                 axis: 'x',
-                gap: 700
+                gap: (num_chunks+1)*60
             });
         }
         else if(s.orig.value.class === 'Client') {
@@ -71,51 +72,6 @@ function qfs_edges(nodes, edges, constraints) {
             });
         }
     });
-    var chunks = nodes.filter(function(n) { return n.orig.value.class === 'ChunkServer'; });
-    chunks.sort(function(a, b) {
-        return +a.orig.value.label.slice(2) - +b.orig.value.label.slice(2);
-    });
-    chunks.forEach(function(ch, i) {
-        if(i>0)
-            constraints.push({
-                left: chunks[i-1].orig.key,
-                right: chunks[i].orig.key,
-                axis: 'x',
-                gap: 60
-            });
-    });
-    var idex = /^Vol([0-9]+)_([A-Za-z]+)([0-9]+)$/;
-    var chunkvols = nodes.filter(function(n) { return n.orig.value.class === 'Attached Volume'; });
-    chunkvols.sort(function(a, b) {
-        var ma = idex.exec(a.orig.value.name), mb = idex.exec(b.orig.value.name);
-        switch(ma[2]) {
-        case 'Cl':
-            ma[1] = 100;
-            break;
-        case 'MS':
-            ma[1] = -100;
-            break;
-        };
-        switch(mb[2]) {
-        case 'Cl':
-            mb[1] = 100;
-            break;
-        case 'MS':
-            mb[1] = -100;
-            break;
-        };
-        var A = +ma[1]*1000 + +ma[3], B = mb[1]*1000 + +mb[3];
-        return A - B;
-    });
-    chunkvols.forEach(function(ch, i) {
-        if(i>0)
-            constraints.push({
-                left: chunkvols[i-1].orig.key,
-                right: chunkvols[i].orig.key,
-                axis: 'x',
-                gap: 60
-            });
-    });
     return constraints;
 }
 
@@ -144,6 +100,40 @@ function qfs_alignment(nodes, edges, constraints) {
         constraints.push(CSLevel);
     if(VolLevel.offsets.length)
         constraints.push(VolLevel);
+    if(1) {
+        if(CSLevel.offsets.length) {
+            constraints.push({
+                type: 'ordering',
+                nodes: CSLevel.offsets.map(function(ni) { return ni.node; }),
+                axis: 'x',
+                gap: 60,
+                ordering: function(kv) {
+                    return +kv.value.label.slice(2);
+                }
+            });
+        }
+        var idex = /^Vol([0-9]+)_([A-Za-z]+)([0-9]+)$/;
+        if(VolLevel.offsets.length) {
+            constraints.push({
+                type: 'ordering',
+                nodes: VolLevel.offsets.map(function(ni) { return ni.node; }),
+                axis: 'x',
+                gap: 60,
+                ordering: function(kv) {
+                    var match = idex.exec(kv.value.name);
+                    switch(match[2]) {
+                    case 'Cl':
+                        match[1] = 100;
+                        break;
+                    case 'MS':
+                        match[1] = -100;
+                        break;
+                    };
+                    return +match[1]*1000 + +match[3];
+                }
+            });
+        }
+    }
     return constraints;
 }
 

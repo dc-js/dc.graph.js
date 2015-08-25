@@ -689,7 +689,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var circle_constraints = constraints.filter(function(c) {
             return c.type === 'circle';
         });
-        var noncircle_constraints = constraints.filter(function(c) {
+        constraints = constraints.filter(function(c) {
             return c.type !== 'circle';
         });
         circle_constraints.forEach(function(c) {
@@ -707,6 +707,31 @@ dc_graph.diagram = function (parent, chartGroup) {
                     });
             layout_edges = layout_edges.concat(wheel);
         });
+
+        // 3. ordered alignment
+        var ordered_constraints = constraints.filter(function(c) {
+            return c.type === 'ordering';
+        });
+        constraints = constraints.filter(function(c) {
+            return c.type !== 'ordering';
+        });
+        ordered_constraints.forEach(function(c) {
+            var sorted = crossfilter.quicksort.by(param(c.ordering))(
+                c.nodes.map(function(n) { return _nodes[n]; }), 0, c.nodes.length);
+            var left;
+            sorted.forEach(function(n, i) {
+                if(i===0)
+                    left = n;
+                else {
+                    constraints.push({
+                        left: left.index,
+                        right: (left = n).index,
+                        axis: c.axis,
+                        gap: c.gap
+                    });
+                }
+            });
+        });
         if(skip_layout) {
             _dispatch.end();
             return this;
@@ -714,7 +739,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var startTime = Date.now();
         _d3cola.nodes(nodes1)
             .links(layout_edges)
-            .constraints(noncircle_constraints)
+            .constraints(constraints)
             .start(10,20,20)
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
