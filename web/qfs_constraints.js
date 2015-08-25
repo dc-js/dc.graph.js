@@ -2,10 +2,13 @@ function qfs_edges(nodes, edges, constraints) {
     var dids = {
         CCS: 0,
         CAV: 0,
-        MAV: 0,
+        MAV: 1,
         MCS: 0,
-        CSAV: 0
+        CSAV: 1
     };
+    function do_disp(key) {
+        return !dids[key]++;
+    }
     var num_chunks = nodes.filter(function(n) { return n.orig.value.class === 'ChunkServer'; }).length;
     edges.forEach(function(e) {
         var s = e.source, t = e.target;
@@ -27,7 +30,7 @@ function qfs_edges(nodes, edges, constraints) {
             });
         }
         else if(s.orig.value.class === 'Client') {
-            if(t.orig.value.class === 'ChunkServer' && !dids.CCS++)
+            if(t.orig.value.class === 'ChunkServer' && do_disp('CCS'))
                 constraints.push({
                     left: e.source.orig.key,
                     right: e.target.orig.key,
@@ -35,7 +38,7 @@ function qfs_edges(nodes, edges, constraints) {
                     gap: 200,
                     equality: true
                 });
-            if(t.orig.value.class === 'Attached Volume' && !dids.CAV++)
+            if(t.orig.value.class === 'Attached Volume' && do_disp('CAV'))
                 constraints.push({
                     left: e.source.orig.key,
                     right: e.target.orig.key,
@@ -45,7 +48,7 @@ function qfs_edges(nodes, edges, constraints) {
                 });
         }
         else if(s.orig.value.class === 'Metaserver') {
-            if(t.orig.value.class === 'Attached Volume' && !dids.MAV++)
+            if(t.orig.value.class === 'Attached Volume' && do_disp('MAV'))
                 constraints.push({
                     left: e.source.orig.key,
                     right: e.target.orig.key,
@@ -53,7 +56,7 @@ function qfs_edges(nodes, edges, constraints) {
                     gap: 200,
                     equality: true
                 });
-            if(t.orig.value.class === 'ChunkServer' && !dids.MCS++)
+            if(t.orig.value.class === 'ChunkServer' && do_disp('MCS'))
                 constraints.push({
                     left: e.source.orig.key,
                     right: e.target.orig.key,
@@ -62,7 +65,7 @@ function qfs_edges(nodes, edges, constraints) {
                     equality: true
                 });
         }
-        else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume' && !dids.CSAV++) {
+        else if(s.orig.value.class === 'ChunkServer' && t.orig.value.class === 'Attached Volume' && do_disp('CSAV')) {
             constraints.push({
                 left: e.source.orig.key,
                 right: e.target.orig.key,
