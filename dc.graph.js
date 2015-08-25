@@ -608,7 +608,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             var v1 = _nodes[key];
             v1.orig = v;
             v1.index = i;
-            var fixed = _chart.nodeFixedAccessor()(v);
+            var fixed;
+            if(_chart.nodeFixedAccessor())
+                fixed = _chart.nodeFixedAccessor()(v);
             if(fixed) {
                 v1.x = v.x;
                 v1.y = v.y;
