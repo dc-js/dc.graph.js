@@ -16,6 +16,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _dispatch = d3.dispatch('end');
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
+    var _brush;
 
     // we want to allow either values or functions to be passed to specify parameters.
     // if a function, the function needs a preprocessor to extract the original key/value
@@ -334,6 +335,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.constrain = property(function(nodes, edges) {
         return [];
     });
+
+    /**
+     #### .brushOn([boolean])
+     Whether to show a brush for selection of nodes.
+     **/
+    _chart.brushOn = property(false);
 
     /**
      #### .parallelEdgeOffset([number])
