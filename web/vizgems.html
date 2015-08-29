@@ -54,6 +54,14 @@
   </div>
 </div>
 
+<!-- an area, which is a "table", containing a bottom-aligned "cell", of variable height -->
+<div id="charts-area">
+  <div id="charts-positioner">
+    <div id="charts-container">
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
   var qs = querystring.parse();
   var url = qs.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
@@ -85,6 +93,9 @@
   }
   var options = {
       server: {
+          default: ''
+      },
+      statserv: {
           default: ''
       },
       interval: {
@@ -357,6 +368,7 @@
   }
 
   var selected_node = null;
+  var node_stats = null;
   function clickiness() {
       diagram.selectAll('g.node')
           .on('click.vizgems', function(d) {
@@ -364,6 +376,60 @@
               runner.then(function() {
                   do_redraw();
               });
+              if(qs.statserv) {
+                  var req = qs.statserv + "/rest/dataquery/stat/json/level_o=" + d.orig.key;
+                  //not valid jsond3.json(req, function(error, data) {
+                  d3.xhr(req, function(error, response) {
+                      if(error) {
+                          console.log(error);
+                          return;
+                      }
+                      try {
+                          var data = JSON.parse('{' + response.responseText + '}');
+                      }
+                      catch(xep) {
+                          console.log(xep);
+                          return;
+                      }
+                      if(!node_stats) {
+                          node_stats = dc.lineChart('#chart1');
+                      }
+                      var charts_area = $('#charts-area'), charts_container = $('#charts-container');
+                      charts_container.empty();
+                      if(data.response.stats.length) {
+                          var N = data.response.stats[0].vars.length;
+                          var ndx = crossfilter(data.response.stats);
+                          // index on time-of-day
+                          data.response.stats.forEach(function(d) {
+                              d.time = new Date(d.ti);
+                          });
+                          var dim = ndx.dimension(function(r) { return new Date(r.time); });
+                          var w = charts_area.width(), h = Math.min(charts_area.height()/N - 15, 150);
+                          var charts = [];
+                          var tickFormat = formatValue = d3.format(".2s");
+                          data.response.stats[0].vars.forEach(function(v, i) {
+                              charts_container.append($('<p></p>').append($('<b></b>').append(v.l)));
+                              var group = dim.group().reduceSum(function(r) {
+                                  return r.vars[i].n;
+                              });
+                              var id = 'chart' + (i+1);
+                              charts_container.append($('<div></div>', {id: id}));
+                              var chart = dc.lineChart('#' + id, d.orig.key)
+                                  .width(w).height(h)
+                                  .margins({left: 40, top:0, right: 0, bottom:20})
+                                  .dimension(dim)
+                                  .group(group)
+                                  .elasticX(true)
+                                  .elasticY(true)
+                                  .xUnits(d3.time.minutes)
+                                  .x(d3.time.scale())
+                                  .yAxisLabel(v.k)
+                              chart.yAxis().tickFormat(tickFormat);
+                          });
+                          dc.renderAll(d.orig.key);
+                      }
+                  });
+              }
               $('#chart1').show();
           });
   }
