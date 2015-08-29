@@ -70,9 +70,9 @@
 
         diagram.render();
 
-        // initialize d3-tip (nicer-looking tooltips)
+        // in this asynchronous tooltips example, we load the graph and
+        // count the number of nodes for the tooltip
         var tip = d3.tip().attr('class', 'd3-tip').html(function(N) {
-            // demonstrating html tooltips
             return "There are <em>" + N + "</em> nodes.";
         });
         diagram.svg().call(tip)
@@ -81,9 +81,9 @@
             .on('mouseover', function(d) {
                 // store the current event
                 var e = d3.event;
-                // any asynchronous call here
+                // this would typically be an ajax call
                 d3.json(file, function(error, data) {
-                    // restore the current event so d3-tip know the target
+                    // restore the current event so d3-tip knows the target
                     d3.event = e;
                     tip.show(data.nodes.length);
                 })
