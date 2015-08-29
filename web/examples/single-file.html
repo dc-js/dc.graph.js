@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Single file viewer</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="../css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="../css/dc.css"/>
+
+  <script type="text/javascript" src="../js/d3.js"></script>
+  <script type="text/javascript" src="../js/crossfilter.js"></script>
+  <script type="text/javascript" src="../js/dc.js"></script>
+
+  <script type="text/javascript" src="../js/jquery.js"></script>
+  <script type="text/javascript" src="../js/lodash.js"></script>
+
+  <script type="text/javascript" src="../js/cola.js"></script>
+  <script type="text/javascript" src="../js/dc.graph.js"></script>
+
+  <script type="text/javascript" src="../js/flat-group.js"></script>
+  <script type="text/javascript" src="../js/querystring.js"></script>
+
+  <style type="text/css">
+    body {
+      overflow: hidden;
+    }
+  </style>
+
+</head>
+
+
+<body>
+
+  <div id="graph" class="chart"></div>
+
+  <script type="text/javascript">
+
+    var file = "process.json";
+    var diagram = dc_graph.diagram('#graph');
+
+    var qs = querystring.parse();
+    var draw_arrows = qs.arrows==='true'; // example of using query string parameter
+
+    dc_graph.load_graph(file, function(error, data) {
+        if(error) {
+            console.log(error);
+            return;
+        }
+
+        var edges = flat_group.make(data.links, function(d) {
+            return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : '');
+        }),
+            nodes = flat_group.make(data.nodes, function(d) { return d.name; });
+
+        diagram
+            .width($(window).width())
+            .height($(window).height())
+            .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
+            .edgeDimension(edges.dimension).edgeGroup(edges.group)
+            .edgeArrowheadAccessor(draw_arrows ? 'vee' : null);
+
+        diagram.render();
+
+        $(window).resize(function() {
+            diagram
+                .width($(window).width())
+                .height($(window).height());
+        });
+    });
+
+</script>
+</body>
+
