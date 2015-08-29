@@ -20,6 +20,7 @@
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 
+  <script type="text/javascript" src="js/flat-group.js"></script>
   <script type="text/javascript" src="js/runner.js"></script>
   <script type="text/javascript" src="qfs_constraints.js"></script>
 </head>
@@ -143,41 +144,11 @@
           data.links.forEach(function(e) { e.order = Math.random()*1000; });
           data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
       }
-      var edge_ndx = crossfilter(data.links),
-          node_ndx = crossfilter(data.nodes);
 
-      // for this example we use simple identity dimension/groups, with unique keys
-      // more complex node/edge generation is possible, but it is more likely that
-      // grouping will happen in other kinds of charts
-
-      // when there will be exactly one or zero items in a group, a reasonable reduction
-      // is just to use the row or null
-      function one_zero_reduce(group) {
-          group.reduce(
-              function(p, v) { return v; },
-              function() { return null; },
-              function() { return null; }
-          );
-      }
-      var nodeDimension = node_ndx.dimension(function(d) { return d.name; }),
-          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : ''); }),
-          nodeGroup = nodeDimension.group(),
-          edgeGroup = edgeDimension.group();
-
-      one_zero_reduce(nodeGroup);
-      one_zero_reduce(edgeGroup);
-
-      function non_null(group) {
-          return {
-              all: function() {
-                  return group.all().filter(function(kv) {
-                      return kv.value !== null;
-                  });
-              }
-          };
-      }
-      var nodeGroup1 = non_null(nodeGroup),
-          edgeGroup1 = non_null(edgeGroup);
+      var edges = flat_group.make(data.links, function(d) {
+          return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : '');
+      }),
+          nodes = flat_group.make(data.nodes, function(d) { return d.name; });
 
       runner = make_runner(step, step,
                            function() {
@@ -234,8 +205,8 @@
           .height($(window).height())
           .timeLimit(timeLimit)
           .showLayoutSteps(showSteps)
-          .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
-          .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
+          .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
+          .edgeDimension(edges.dimension).edgeGroup(edges.group)
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
           .nodeFillAccessor(isQFS ? qfs_color : 'white')
@@ -273,7 +244,7 @@
       // this is kind of a brain-dead way to test transitions
       // i mean, you can cram the concept of adding and deleting stuff over time
       // into crossfilter data, but do you really want to do that?
-      var startDim = node_ndx.dimension(function(d) { return d.start || 0; }),
+      var startDim = nodes.crossfilter.dimension(function(d) { return d.start || 0; }),
           startGroup = startDim.group();
 
 
