@@ -58,9 +58,12 @@
             .height($(window).height())
             .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
             .edgeDimension(edges.dimension).edgeGroup(edges.group)
-        // aesthetics (could be functions)
+        // aesthetics
             .nodeStrokeWidthAccessor(0) // turn off outlines
-            .nodeFillAccessor('#2E54A2')
+            .nodeFillAccessor(function(kv) {
+                // calculate colors from kv.value somehow
+                return kv.value.name.length%2 ? '#2E54A2' : '#ED3F00';
+            })
             .nodeLabelFillAccessor('white')
             .nodeTitleAccessor(null) // deactivate basic tooltips
             .edgeArrowheadAccessor(draw_arrows ? 'vee' : null);
