@@ -71,14 +71,23 @@
         diagram.render();
 
         // initialize d3-tip (nicer-looking tooltips)
-        var tip = d3.tip().attr('class', 'd3-tip').html(function(d) {
+        var tip = d3.tip().attr('class', 'd3-tip').html(function(N) {
             // demonstrating html tooltips
-            return "This is <em>" + d.orig.value.name + "</em>";
+            return "There are <em>" + N + "</em> nodes.";
         });
         diagram.svg().call(tip)
 
         diagram.selectAll('g.node')
-            .on('mouseover', tip.show)
+            .on('mouseover', function(d) {
+                // store the current event
+                var e = d3.event;
+                // any asynchronous call here
+                d3.json(file, function(error, data) {
+                    // restore the current event so d3-tip know the target
+                    d3.event = e;
+                    tip.show(data.nodes.length);
+                })
+            })
             .on('mouseout', tip.hide);
 
         $(window).resize(function() {
