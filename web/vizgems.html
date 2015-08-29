@@ -28,10 +28,21 @@
 
 <div id="graph" class="chart"></div>
 <div id="overlay">
-  <div id="run-indicator">
+  <div id="run-indicator" style="display: none">
     running
   </div>
-  <div id="graph-stats"></div>
+  <div id="graph-stats">
+    <table>
+      <tr>
+        <td>Showing</td>
+        <td id="shown-nodes">0/0 nodes</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td id="shown-edges">0/0 edges</td>
+      </tr>
+    </table>
+  </div>
   <div id="options" style="display: hidden">
     <div><label><input type="checkbox" id="hide-unknown">Hide Unknown</label></div>
     <div><label><input type="checkbox" id="hide-subnets">Hide Subnets</label></div>
@@ -47,7 +58,8 @@
   var url = qs.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 
   function show_stats(data_stats, layout_stats) {
-      $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
+      $('#shown-nodes').html('' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes');
+      $('#shown-edges').html('' + layout_stats.nedges + '/' + data_stats.totedges + ' edges');
   }
   function next_tick(f) {
       // when there is heavy computation, 0 is not enough?
