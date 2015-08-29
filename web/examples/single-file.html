@@ -85,7 +85,7 @@
                 d3.json(file, function(error, data) {
                     // restore the current event so d3-tip knows the target
                     d3.event = e;
-                    tip.show(data.nodes.length);
+                    tip.show(data.nodes.length); // extract some data, here just length
                 })
             })
             .on('mouseout', tip.hide);
