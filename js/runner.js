@@ -1,6 +1,6 @@
 var make_runner = function(init, step, interval) {
     var timer;
-    var stepped = false, timedOut = false, stopRequested = false;
+    var stepped = false, timedOut = false, run_mode = false;
     var times = [], last_start;
     interval = d3.functor(interval);
 
@@ -17,21 +17,26 @@ var make_runner = function(init, step, interval) {
         if(!stepped || !timedOut)
             return;
         timer = null;
-        if(!stopRequested) {
+        if(run_mode) {
             step();
             startTimer();
         }
-        stopRequested = false;
     }
 
     return {
-        start: function() {
+        init: function() { // run once but don't continue
+            last_start = window.performance.now();
             init();
-            startTimer();
             return this;
         },
-        stop: function() {
-            stopRequested = true;
+        start: function() { // start loop
+            run_mode = true;
+            startTimer();
+            init();
+            return this;
+        },
+        stop: function() { // stop loop
+            run_mode = false;
             return this;
         },
         toggle: function() {

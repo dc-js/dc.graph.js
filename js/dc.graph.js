@@ -218,20 +218,26 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
-     #### .sourceAccessor([function]) - **mandatory**
+     #### .sourceAccessor([function])
      Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
      The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
-     if the node is currently filtered out, the edge will not be displayed.
+     if the node is currently filtered out, the edge will not be displayed. By default, looks for
+     `.value.sourcename`.
      **/
-    _chart.sourceAccessor = property();
+    _chart.sourceAccessor = property(function(kv) {
+        return kv.value.sourcename;
+    });
 
     /**
-     #### .targetAccessor([function]) - **mandatory**
+     #### .targetAccessor([function])
      Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
      The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
-     if the node is currently filtered out, the edge will not be displayed.
+     if the node is currently filtered out, the edge will not be displayed. By default, looks for
+     `.value.targetname`.
      **/
-    _chart.targetAccessor = property();
+    _chart.targetAccessor = property(function(kv) {
+        return kv.value.targetname;
+    });
 
     /**
      #### .nodeRadiusAccessor([function])
@@ -291,6 +297,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeLabelAccessor = property(function(kv) {
         return kv.value.label || kv.value.name;
     });
+
+    /**
+     #### .nodeLabelFillAccessor([function])
+     Set or get the function which will be used to retrieve the label fill color. Default: null
+     **/
+    _chart.nodeLabelFillAccessor = property(null);
+
     /**
      #### .nodeFitLabelAccessor([function])
      Whether to fit the node shape around the label. Default: true
@@ -533,10 +546,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes = {}, _edges = {};
 
     _chart._buildNode = function(node, nodeEnter) {
-        nodeEnter.append('title');
+        if(_chart.nodeTitleAccessor())
+            nodeEnter.append('title');
         nodeEnter.append('ellipse');
         nodeEnter.append('text')
-            .attr('class', 'node-label');
+            .attr('class', 'node-label')
+            .attr('fill', param(_chart.nodeLabelFillAccessor()));
         node.select('title')
             .text(param(_chart.nodeTitleAccessor()));
         node.select('text.node-label')
@@ -608,7 +623,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             var v1 = _nodes[key];
             v1.orig = v;
             v1.index = i;
-            var fixed = _chart.nodeFixedAccessor()(v);
+            var fixed;
+            if(_chart.nodeFixedAccessor())
+                fixed = _chart.nodeFixedAccessor()(v);
             if(fixed) {
                 v1.x = v.x;
                 v1.y = v.y;

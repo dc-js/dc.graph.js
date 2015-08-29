@@ -69,15 +69,17 @@ accesses the `key` field of the object passed to it. The keys should match the k
 Set or get the function which will be used to retrieve the unique key for each edge. By default, this
 accesses the `key` field of the object passed to it.
 
-#### .sourceAccessor([function]) - **mandatory**
+#### .sourceAccessor([function])
 Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
 The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
-if the node is currently filtered out, the edge will not be displayed.
+if the node is currently filtered out, the edge will not be displayed. By default, looks for
+`.value.sourcename`.
 
-#### .targetAccessor([function]) - **mandatory**
+#### .targetAccessor([function])
 Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
 The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
-if the node is currently filtered out, the edge will not be displayed.
+if the node is currently filtered out, the edge will not be displayed. By default, looks for
+`.value.targetname`.
 
 #### .nodeRadiusAccessor([function])
 Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
@@ -106,6 +108,9 @@ Set or get the padding or minimum distance, in pixels, between nodes in the diag
 #### .nodeLabelAccessor([function])
 Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field `label` or `name` inside the `value` field.
+
+#### .nodeLabelFillAccessor([function])
+Set or get the function which will be used to retrieve the label fill color. Default: null
 
 #### .nodeFitLabelAccessor([function])
 Whether to fit the node shape around the label. Default: true
