@@ -19,6 +19,7 @@
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/colorbrewer.js"></script>
 
+  <script type="text/javascript" src="js/flat-group.js"></script>
   <script type="text/javascript" src="js/runner.js"></script>
   <script type="text/javascript" src="js/querystring.js"></script>
 </head>
@@ -355,6 +356,18 @@
               filterIds: filterIds, filterOSTypes: filterOSTypes};
   }
 
+  var selected_node = null;
+  function clickiness() {
+      diagram.selectAll('g.node')
+          .on('click.vizgems', function(d) {
+              selected_node = d.orig.key;
+              runner.then(function() {
+                  do_redraw();
+              });
+              $('#chart1').show();
+          });
+  }
+
   var ostypes = {
       RTR: "Router",
       PRT: "Port",
@@ -404,7 +417,9 @@
           // aesthetics: look at kv.value for node/edge attributes and return appropriate values
           diagram
               .initLayoutOnRedraw(true)
-              .nodeStrokeWidthAccessor(0) // turn off outlines
+              .nodeStrokeWidthAccessor(function(kv) {
+                  return kv.key === selected_node ? 5 : 0;
+              })
               .nodeRadiusAccessor(30)
               .induceNodes(true) // drop zero-degree nodes for now
               .nodeLabelAccessor(function(kv) {
@@ -423,6 +438,7 @@
 
           show_start();
           diagram.render();
+          clickiness();
           show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       });
   }
@@ -439,6 +455,7 @@
               .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
               .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
           do_redraw();
+          clickiness();
       })
   }
 
