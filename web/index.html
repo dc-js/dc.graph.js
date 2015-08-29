@@ -261,6 +261,8 @@
       });
       $('#qfs-constraints').change(function(val) {
           do_qfs = $(this).is(':checked');
+          if(do_qfs)
+              diagram.lengthStrategy('none');
           if(timer) // flag to do on timer
               doRender = true;
           else
