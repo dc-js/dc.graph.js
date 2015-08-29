@@ -218,20 +218,26 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
-     #### .sourceAccessor([function]) - **mandatory**
+     #### .sourceAccessor([function])
      Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
      The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
-     if the node is currently filtered out, the edge will not be displayed.
+     if the node is currently filtered out, the edge will not be displayed. By default, looks for
+     `.value.sourcename`.
      **/
-    _chart.sourceAccessor = property();
+    _chart.sourceAccessor = property(function(kv) {
+        return kv.value.sourcename;
+    });
 
     /**
-     #### .targetAccessor([function]) - **mandatory**
+     #### .targetAccessor([function])
      Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
      The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
-     if the node is currently filtered out, the edge will not be displayed.
+     if the node is currently filtered out, the edge will not be displayed. By default, looks for
+     `.value.targetname`.
      **/
-    _chart.targetAccessor = property();
+    _chart.targetAccessor = property(function(kv) {
+        return kv.value.targetname;
+    });
 
     /**
      #### .nodeRadiusAccessor([function])
