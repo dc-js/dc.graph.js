@@ -109,6 +109,9 @@ Set or get the padding or minimum distance, in pixels, between nodes in the diag
 Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field `label` or `name` inside the `value` field.
 
+#### .nodeLabelFillAccessor([function])
+Set or get the function which will be used to retrieve the label fill color. Default: null
+
 #### .nodeFitLabelAccessor([function])
 Whether to fit the node shape around the label. Default: true
 
