@@ -76,21 +76,17 @@
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
       isQFS = false,
-      linkLength = +querystring.linklength || 0,
+      linkLength = +querystring.linklength || 30,
       edgeColor = querystring.edgecolor || 'black',
       opacity = +querystring.opacity || 1,
-      do_qfs = true,
+      do_qfs = false,
       nodePrefix = querystring.prefix || '',
-      timeLimit = querystring.limit || 0;
-  if('qfscon' in querystring) {
-      do_qfs = !!+querystring.qfs;
-      $('#qfs-constraints').prop('checked', do_qfs);
-  }
+      timeLimit = querystring.limit || 10000;
   if(edgeColor && /[0-9A-Fa-f]{6}/.test(edgeColor) || /[0-9A-Fa-f]{3}/.test(edgeColor))
       edgeColor = '#' + edgeColor;
   var min = 2, max = 12;
   var begin = 2, end = 12, curr = begin;
-  var timer = null, doRender = true;
+  var doRender = true;
 
   var diagram = dc_graph.diagram('#graph'), runner;
 
@@ -114,6 +110,11 @@
       file = "qfs.json";
   isQFS = +querystring.qfs || file === 'qfs.json' && querystring.qfs !=="0";
   if(isQFS) {
+      do_qfs = true;
+      if('qfscon' in querystring) {
+          do_qfs = !!+querystring.qfscon;
+          $('#qfs-constraints').prop('checked', do_qfs);
+      }
       // not that it wouldn't be nice to have other animated examples...
       $('#stepper,#qfs-options').show();
       $('#controls').width(400);
@@ -150,7 +151,7 @@
       }),
           nodes = flat_group.make(data.nodes, function(d) { return d.name; });
 
-      runner = make_runner(step, step,
+      runner = make_runner(run, step,
                            function() {
                                return curr < end ? steptime : pause;
                            });
@@ -261,18 +262,17 @@
       });
       $('#qfs-constraints').change(function(val) {
           do_qfs = $(this).is(':checked');
-          if(do_qfs)
-              diagram.lengthStrategy('none');
-          if(timer) // flag to do on timer
-              doRender = true;
-          else
-              dc.renderAll();
+          diagram.lengthStrategy(do_qfs ? 'none' : 'symmetric')
+              .relayout();
+          doRender = true;
+          if(!runner.isRunning())
+              run();
       });
 
       // do not brush too fast
       dc.constants.EVENT_DELAY = 100;
 
-      run();
+      runner.init();
   });
 
 </script>
