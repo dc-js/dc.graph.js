@@ -29,6 +29,7 @@
     "d3": "3.x"
   },
   "devDependencies": {
+    "d3-tip": "~0.6.7",
     "emu": "~0.0.2",
     "grunt": "~0.4.5",
     "grunt-browserify": "~3.3.0",

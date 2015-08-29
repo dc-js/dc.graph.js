@@ -225,6 +225,18 @@ module.exports = function (grunt) {
                             'test/env-data.js'
                         ],
                         dest: '<%= conf.web %>/js/'
+                    },
+                    {
+                        expand: true,
+                        flatten: true,
+                        src: 'node_modules/d3-tip/index.js',
+                        dest: '<%= conf.web %>/js/d3-tip/'
+                    },
+                    {
+                        expand: true,
+                        flatten: true,
+                        src: 'node_modules/d3-tip/examples/example-styles.css',
+                        dest: '<%= conf.web %>/css/d3-tip/'
                     }
                 ]
             }
