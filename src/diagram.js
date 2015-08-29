@@ -201,6 +201,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeLabelAccessor = property(function(kv) {
         return kv.value.label || kv.value.name;
     });
+
+    /**
+     #### .nodeLabelFillAccessor([function])
+     Set or get the function which will be used to retrieve the label fill color. Default: null
+     **/
+    _chart.nodeLabelFillAccessor = property(null);
+
     /**
      #### .nodeFitLabelAccessor([function])
      Whether to fit the node shape around the label. Default: true
@@ -443,10 +450,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes = {}, _edges = {};
 
     _chart._buildNode = function(node, nodeEnter) {
-        nodeEnter.append('title');
+        if(_chart.nodeTitleAccessor())
+            nodeEnter.append('title');
         nodeEnter.append('ellipse');
         nodeEnter.append('text')
-            .attr('class', 'node-label');
+            .attr('class', 'node-label')
+            .attr('fill', param(_chart.nodeLabelFillAccessor()));
         node.select('title')
             .text(param(_chart.nodeTitleAccessor()));
         node.select('text.node-label')
