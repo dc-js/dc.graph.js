@@ -333,42 +333,13 @@
   }
 
   function crossfilters(nodes, edges) {
-      var edge_ndx = crossfilter(edges),
-          node_ndx = crossfilter(nodes);
+      var node_stuff = flat_group.make(nodes, function(d) { return d.id1; }),
+          edge_stuff = flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; });
+          filterIds = node_stuff.crossfilter.dimension(function(d) { return d.id1; }),
+          filterOSTypes = node_stuff.crossfilter.dimension(function(d) { return d.ostype; });
 
-      // when there will be exactly one or zero items in a group, a reasonable reduction
-      // is just to use the row or null
-      function one_zero_reduce(group) {
-          group.reduce(
-              function(p, v) { return v; },
-              function() { return null; },
-              function() { return null; }
-          );
-      }
-
-      var nodeDimension = node_ndx.dimension(function(d) { return d.id1; }),
-          edgeDimension = edge_ndx.dimension(function(d) { return d.id1 + '-' + d.id2; }),
-          nodeGroup = nodeDimension.group(),
-          edgeGroup = edgeDimension.group(),
-          filterIds = node_ndx.dimension(function(d) { return d.id1; }),
-          filterOSTypes = node_ndx.dimension(function(d) { return d.ostype; });
-
-      one_zero_reduce(nodeGroup);
-      one_zero_reduce(edgeGroup);
-
-      function non_null(group) {
-          return {
-              all: function() {
-                  return group.all().filter(function(kv) {
-                      return kv.value !== null;
-                  });
-              }
-          };
-      }
-      var nodeGroup1 = non_null(nodeGroup),
-          edgeGroup1 = non_null(edgeGroup);
-      return {nodeDimension: nodeDimension, nodeGroup: nodeGroup1,
-              edgeDimension: edgeDimension, edgeGroup: edgeGroup1,
+      return {nodeDimension: node_stuff.Dimension, nodeGroup: node_stuff.group,
+              edgeDimension: edge_stuff.Dimension, edgeGroup: edge_stuff.group,
               filterIds: filterIds, filterOSTypes: filterOSTypes};
   }
 
