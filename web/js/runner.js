@@ -1,10 +1,12 @@
 var make_runner = function(init, step, interval) {
     var timer;
     var stepped = false, timedOut = false, stopRequested = false;
+    var times = [], last_start;
     interval = d3.functor(interval);
 
     function startTimer() {
         stepped = timedOut = false;
+        last_start = window.performance.now();
         timer = window.setTimeout(function() {
             timedOut = true;
             kontinue();
@@ -42,8 +44,15 @@ var make_runner = function(init, step, interval) {
         isRunning: function() {
             return !!timer;
         },
+        lastTime: function() {
+            return times[times.length-1];
+        },
+        avgTime: function() {
+            return d3.sum(times)/times.length;
+        },
         endStep: function() {
             stepped = true;
+            times.push(window.performance.now() - last_start);
             kontinue();
             return this;
         }

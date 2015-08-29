@@ -88,17 +88,22 @@
   if(edgeColor && /[0-9A-Fa-f]{6}/.test(edgeColor) || /[0-9A-Fa-f]{3}/.test(edgeColor))
       edgeColor = '#' + edgeColor;
   var min = 2, max = 12;
-  var begin = min, end = 7, curr = begin;
+  var begin = 2, end = 12, curr = begin;
   var timer = null, doRender = true;
 
-  var diagram = dc_graph.diagram('#graph');
+  var diagram = dc_graph.diagram('#graph'), runner;
 
   function do_status() {
       $('#now').css('left', (curr-min)/(max-min)*100 + '%');
       $('#status').text('[' + begin + '..' + end + '] : ' + curr);
   }
   function show_stats(data_stats, layout_stats) {
-      $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
+      $('#graph-stats').html(['<table>',
+                              '<tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr>',
+                              '<tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr>',
+                              '<tr><td>Last time</td><td>' + (runner.lastTime()/1000).toFixed(3) + 's</td></tr>',
+                              '<tr><td>Avg time</td><td>' + (runner.avgTime()/1000).toFixed(3) + 's</td></tr>',
+                              '</table>'].join(''));
   }
 
   do_status();
@@ -174,10 +179,10 @@
       var nodeGroup1 = non_null(nodeGroup),
           edgeGroup1 = non_null(edgeGroup);
 
-      var runner = make_runner(step, step,
-                               function() {
-                                   return curr < end ? steptime : pause;
-                               });
+      runner = make_runner(step, step,
+                           function() {
+                               return curr < end ? steptime : pause;
+                           });
 
       function run() {
           do_status();
@@ -192,7 +197,6 @@
           else
               dc.redrawAll();
           done = false;
-          show_stats({totnodes: data.nodes.length, totedges: data.links.length}, diagram.getStats());
       }
       function step() {
           if(++curr>end) curr = begin;
@@ -235,6 +239,7 @@
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
           .nodeFillAccessor(isQFS ? qfs_color : 'white')
+          .nodeFixedAccessor(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 200, y: -200} : null; } : null)
           .constrain(constrain)
           .lengthStrategy(generate ? 'individual' :
                           hierarchical ? 'none' :
@@ -247,6 +252,7 @@
           .on('end', function() {
               $('#run-indicator').hide();
               runner.endStep();
+              show_stats({totnodes: data.nodes.length, totedges: data.links.length}, diagram.getStats());
           });
       if(linkLength)
           diagram.baseLength(linkLength)

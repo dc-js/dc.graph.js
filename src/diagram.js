@@ -218,6 +218,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.nodeOrdering = property(null);
 
+    /**
+     #### .nodeFixedAccessor([function])
+     Specify an accessor that returns an {x,y} coordinate for a node that should be
+     [fixed in place](https://github.com/tgdwyer/WebCola/wiki/Fixed-Node-Positions), and returns
+     falsy for other nodes.
+     **/
+    _chart.nodeFixedAccessor = property(null);
+
 
     /**
      #### .edgeStrokeAccessor([function])
@@ -504,6 +512,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             var v1 = _nodes[key];
             v1.orig = v;
             v1.index = i;
+            var fixed = _chart.nodeFixedAccessor()(v);
+            if(fixed) {
+                v1.x = v.x;
+                v1.y = v.y;
+                v1.fixed = true;
+            }
+            else
+                v1.fixed = false;
             keep_node[key] = true;
             return v1;
         }
@@ -673,7 +689,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var circle_constraints = constraints.filter(function(c) {
             return c.type === 'circle';
         });
-        var noncircle_constraints = constraints.filter(function(c) {
+        constraints = constraints.filter(function(c) {
             return c.type !== 'circle';
         });
         circle_constraints.forEach(function(c) {
@@ -691,6 +707,31 @@ dc_graph.diagram = function (parent, chartGroup) {
                     });
             layout_edges = layout_edges.concat(wheel);
         });
+
+        // 3. ordered alignment
+        var ordered_constraints = constraints.filter(function(c) {
+            return c.type === 'ordering';
+        });
+        constraints = constraints.filter(function(c) {
+            return c.type !== 'ordering';
+        });
+        ordered_constraints.forEach(function(c) {
+            var sorted = crossfilter.quicksort.by(param(c.ordering))(
+                c.nodes.map(function(n) { return _nodes[n]; }), 0, c.nodes.length);
+            var left;
+            sorted.forEach(function(n, i) {
+                if(i===0)
+                    left = n;
+                else {
+                    constraints.push({
+                        left: left.index,
+                        right: (left = n).index,
+                        axis: c.axis,
+                        gap: c.gap
+                    });
+                }
+            });
+        });
         if(skip_layout) {
             _dispatch.end();
             return this;
@@ -698,7 +739,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var startTime = Date.now();
         _d3cola.nodes(nodes1)
             .links(layout_edges)
-            .constraints(noncircle_constraints)
+            .constraints(constraints)
             .start(10,20,20)
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
