@@ -397,7 +397,13 @@
                       var charts_area = $('#charts-area'), charts_container = $('#charts-container');
                       charts_container.empty();
                       if(data.response.stats.length) {
-                          var N = data.response.stats[0].vars.length;
+                          var vars = {};
+                          data.response.stats.forEach(function(stat) {
+                              vars[stat.vars[0].k] = stat.vars[0];
+                          });
+                          vars = _.values(vars);
+                          var N = Math.min(vars.length, 4);
+                          vars = vars.slice(0,4);
                           var ndx = crossfilter(data.response.stats);
                           // index on time-of-day
                           data.response.stats.forEach(function(d) {
@@ -407,10 +413,10 @@
                           var w = charts_area.width(), h = Math.min(charts_area.height()/N - 15, 150);
                           var charts = [];
                           var tickFormat = formatValue = d3.format(".2s");
-                          data.response.stats[0].vars.forEach(function(v, i) {
+                          vars.forEach(function(v,i) {
                               charts_container.append($('<p></p>').append($('<b></b>').append(v.l)));
                               var group = dim.group().reduceSum(function(r) {
-                                  return r.vars[i].n;
+                                  return r.vars[0].k === v.k ? r.vars[0].n : 0;
                               });
                               var id = 'chart' + (i+1);
                               charts_container.append($('<div></div>', {id: id}));

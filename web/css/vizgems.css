@@ -1,7 +1,7 @@
 #overlay {
-    width: 180px;
+    width: 200px;
     position: absolute;
-    top: 100px;
+    top: 90px;
     right: 0;
     background-color: rgba(221, 238, 221, 0.75);
     padding: 40px;
@@ -20,6 +20,7 @@
 #charts-positioner {
     display:table-cell;
     vertical-align:bottom;
+    overflow-y: scroll;
 }
 
 #charts-container {
