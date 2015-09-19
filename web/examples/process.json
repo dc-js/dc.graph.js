@@ -1,0 +1,99 @@
+{
+  "__comment": "This graph was created from a hand-made figure in an operating system paper (from graphviz.org)",
+  "nodes": [
+    {
+      "id": 0,
+      "name": "run"
+    },
+    {
+      "id": 1,
+      "name": "intr"
+    },
+    {
+      "id": 2,
+      "name": "runbl"
+    },
+    {
+      "id": 3,
+      "name": "kernel"
+    },
+    {
+      "id": 4,
+      "name": "zombie"
+    },
+    {
+      "id": 5,
+      "name": "sleep"
+    },
+    {
+      "id": 6,
+      "name": "runmem"
+    },
+    {
+      "id": 7,
+      "name": "swap"
+    },
+    {
+      "id": 8,
+      "name": "runswap"
+    },
+    {
+      "id": 9,
+      "name": "new"
+    }
+  ],
+  "links": [
+    {
+      "sourcename": "run",
+      "targetname": "intr"
+    },
+    {
+      "sourcename": "intr",
+      "targetname": "runbl"
+    },
+    {
+      "sourcename": "runbl",
+      "targetname": "run"
+    },
+    {
+      "sourcename": "run",
+      "targetname": "kernel"
+    },
+    {
+      "sourcename": "kernel",
+      "targetname": "zombie"
+    },
+    {
+      "sourcename": "kernel",
+      "targetname": "sleep"
+    },
+    {
+      "sourcename": "kernel",
+      "targetname": "runmem"
+    },
+    {
+      "sourcename": "sleep",
+      "targetname": "swap"
+    },
+    {
+      "sourcename": "swap",
+      "targetname": "runswap"
+    },
+    {
+      "sourcename": "runswap",
+      "targetname": "new"
+    },
+    {
+      "sourcename": "runswap",
+      "targetname": "runmem"
+    },
+    {
+      "sourcename": "new",
+      "targetname": "runmem"
+    },
+    {
+      "sourcename": "sleep",
+      "targetname": "runmem"
+    }
+  ]
+}

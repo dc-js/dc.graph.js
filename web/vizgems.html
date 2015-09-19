@@ -19,6 +19,7 @@
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/colorbrewer.js"></script>
 
+  <script type="text/javascript" src="js/flat-group.js"></script>
   <script type="text/javascript" src="js/runner.js"></script>
   <script type="text/javascript" src="js/querystring.js"></script>
 </head>
@@ -28,10 +29,21 @@
 
 <div id="graph" class="chart"></div>
 <div id="overlay">
-  <div id="run-indicator">
+  <div id="run-indicator" style="display: none">
     running
   </div>
-  <div id="graph-stats"></div>
+  <div id="graph-stats">
+    <table>
+      <tr>
+        <td>Showing</td>
+        <td id="shown-nodes">0/0 nodes</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td id="shown-edges">0/0 edges</td>
+      </tr>
+    </table>
+  </div>
   <div id="options" style="display: hidden">
     <div><label><input type="checkbox" id="hide-unknown">Hide Unknown</label></div>
     <div><label><input type="checkbox" id="hide-subnets">Hide Subnets</label></div>
@@ -42,12 +54,21 @@
   </div>
 </div>
 
+<!-- an area, which is a "table", containing a bottom-aligned "cell", of variable height -->
+<div id="charts-area">
+  <div id="charts-positioner">
+    <div id="charts-container">
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
   var qs = querystring.parse();
   var url = qs.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 
   function show_stats(data_stats, layout_stats) {
-      $('#graph-stats').html('<table><tr><td>Showing</td><td>' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes</td></tr><tr><td></td><td>' + layout_stats.nedges + '/' + data_stats.totedges + ' edges</td></tr></table>');
+      $('#shown-nodes').html('' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes');
+      $('#shown-edges').html('' + layout_stats.nedges + '/' + data_stats.totedges + ' edges');
   }
   function next_tick(f) {
       // when there is heavy computation, 0 is not enough?
@@ -72,6 +93,9 @@
   }
   var options = {
       server: {
+          default: ''
+      },
+      statserv: {
           default: ''
       },
       interval: {
@@ -333,56 +357,100 @@
   }
 
   function crossfilters(nodes, edges) {
-      var edge_ndx = crossfilter(edges),
-          node_ndx = crossfilter(nodes);
+      var node_stuff = flat_group.make(nodes, function(d) { return d.id1; }),
+          edge_stuff = flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; });
+          filterIds = node_stuff.crossfilter.dimension(function(d) { return d.id1; }),
+          filterOSTypes = node_stuff.crossfilter.dimension(function(d) { return d.ostype; });
 
-      // when there will be exactly one or zero items in a group, a reasonable reduction
-      // is just to use the row or null
-      function one_zero_reduce(group) {
-          group.reduce(
-              function(p, v) { return v; },
-              function() { return null; },
-              function() { return null; }
-          );
-      }
-
-      var nodeDimension = node_ndx.dimension(function(d) { return d.id1; }),
-          edgeDimension = edge_ndx.dimension(function(d) { return d.id1 + '-' + d.id2; }),
-          nodeGroup = nodeDimension.group(),
-          edgeGroup = edgeDimension.group(),
-          filterIds = node_ndx.dimension(function(d) { return d.id1; }),
-          filterOSTypes = node_ndx.dimension(function(d) { return d.ostype; });
-
-      one_zero_reduce(nodeGroup);
-      one_zero_reduce(edgeGroup);
-
-      function non_null(group) {
-          return {
-              all: function() {
-                  return group.all().filter(function(kv) {
-                      return kv.value !== null;
-                  });
-              }
-          };
-      }
-      var nodeGroup1 = non_null(nodeGroup),
-          edgeGroup1 = non_null(edgeGroup);
-      return {nodeDimension: nodeDimension, nodeGroup: nodeGroup1,
-              edgeDimension: edgeDimension, edgeGroup: edgeGroup1,
+      return {nodeDimension: node_stuff.Dimension, nodeGroup: node_stuff.group,
+              edgeDimension: edge_stuff.Dimension, edgeGroup: edge_stuff.group,
               filterIds: filterIds, filterOSTypes: filterOSTypes};
   }
 
+  var selected_node = null;
+  var node_stats = null;
+  function clickiness() {
+      diagram.selectAll('g.node')
+          .on('click.vizgems', function(d) {
+              selected_node = d.orig.key;
+              runner.then(function() {
+                  do_redraw();
+              });
+              if(qs.statserv) {
+                  var req = qs.statserv + "/rest/dataquery/stat/json/level_o=" + d.orig.key;
+                  //not valid jsond3.json(req, function(error, data) {
+                  d3.xhr(req, function(error, response) {
+                      if(error) {
+                          console.log(error);
+                          return;
+                      }
+                      try {
+                          var data = JSON.parse('{' + response.responseText + '}');
+                      }
+                      catch(xep) {
+                          console.log(xep);
+                          return;
+                      }
+                      if(!node_stats) {
+                          node_stats = dc.lineChart('#chart1');
+                      }
+                      var charts_area = $('#charts-area'), charts_container = $('#charts-container');
+                      charts_container.empty();
+                      if(data.response.stats.length) {
+                          var vars = {};
+                          data.response.stats.forEach(function(stat) {
+                              vars[stat.vars[0].k] = stat.vars[0];
+                          });
+                          vars = _.values(vars);
+                          var N = Math.min(vars.length, 4);
+                          vars = vars.slice(0,4);
+                          var ndx = crossfilter(data.response.stats);
+                          // index on time-of-day
+                          data.response.stats.forEach(function(d) {
+                              d.time = new Date(d.ti);
+                          });
+                          var dim = ndx.dimension(function(r) { return new Date(r.time); });
+                          var w = charts_area.width(), h = Math.min(charts_area.height()/N - 15, 150);
+                          var charts = [];
+                          var tickFormat = formatValue = d3.format(".2s");
+                          vars.forEach(function(v,i) {
+                              charts_container.append($('<p></p>').append($('<b></b>').append(v.l)));
+                              var group = dim.group().reduceSum(function(r) {
+                                  return r.vars[0].k === v.k ? r.vars[0].n : 0;
+                              });
+                              var id = 'chart' + (i+1);
+                              charts_container.append($('<div></div>', {id: id}));
+                              var chart = dc.lineChart('#' + id, d.orig.key)
+                                  .width(w).height(h)
+                                  .margins({left: 40, top:0, right: 0, bottom:20})
+                                  .dimension(dim)
+                                  .group(group)
+                                  .elasticX(true)
+                                  .elasticY(true)
+                                  .xUnits(d3.time.minutes)
+                                  .x(d3.time.scale())
+                                  .yAxisLabel(v.k)
+                              chart.yAxis().tickFormat(tickFormat);
+                          });
+                          dc.renderAll(d.orig.key);
+                      }
+                  });
+              }
+              $('#chart1').show();
+          });
+  }
+
   var ostypes = {
-      CUS: "Customer",
-      PRT: "Port",
-      NET: "Network",
-      VM: "Virtual Machine",
-      FS: "File System",
-      IMG: "Image",
       RTR: "Router",
+      PRT: "Port",
       U: "User",
+      CUS: "Tenant", // Customer
+      undefined: 'Other', // perhaps grey
+      VM: "Virtual Machine",
+      FS: "Volume", // File System
+      IMG: "Image",
       SUB: "Subnet",
-      undefined: 'Other'
+      NET: "Network"
   };
 
   function init() {
@@ -421,7 +489,9 @@
           // aesthetics: look at kv.value for node/edge attributes and return appropriate values
           diagram
               .initLayoutOnRedraw(true)
-              .nodeStrokeWidthAccessor(0) // turn off outlines
+              .nodeStrokeWidthAccessor(function(kv) {
+                  return kv.key === selected_node ? 5 : 0;
+              })
               .nodeRadiusAccessor(30)
               .induceNodes(true) // drop zero-degree nodes for now
               .nodeLabelAccessor(function(kv) {
@@ -440,6 +510,7 @@
 
           show_start();
           diagram.render();
+          clickiness();
           show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       });
   }
@@ -456,6 +527,7 @@
               .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
               .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
           do_redraw();
+          clickiness();
       })
   }
 

@@ -20,6 +20,7 @@
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 
+  <script type="text/javascript" src="js/flat-group.js"></script>
   <script type="text/javascript" src="js/runner.js"></script>
   <script type="text/javascript" src="qfs_constraints.js"></script>
 </head>
@@ -41,8 +42,8 @@
       <div id="status"></div>
     </div>
   </div>
-  <div id="hierarchical-chooser" style="margin-top: 15px; display: none">
-    <label><input type="checkbox" id="hierarchical" checked="true">Hierarchical</label>
+  <div id="qfs-options" style="margin-top: 15px; display: none">
+    <label><input type="checkbox" id="qfs-constraints" checked="true">Do QFS constraints</label>
   </div>
   <div id="graph-stats"></div>
 </div>
@@ -75,21 +76,17 @@
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
       isQFS = false,
-      linkLength = querystring.linklength || 0,
+      linkLength = +querystring.linklength || 30,
       edgeColor = querystring.edgecolor || 'black',
       opacity = +querystring.opacity || 1,
-      hierarchical = true,
+      do_qfs = false,
       nodePrefix = querystring.prefix || '',
-      timeLimit = querystring.limit || 0;
-  if('hier' in querystring) {
-      hierarchical = !!+querystring.hier;
-      $('#hierarchical').prop('checked', hierarchical);
-  }
+      timeLimit = querystring.limit || 10000;
   if(edgeColor && /[0-9A-Fa-f]{6}/.test(edgeColor) || /[0-9A-Fa-f]{3}/.test(edgeColor))
       edgeColor = '#' + edgeColor;
   var min = 2, max = 12;
   var begin = 2, end = 12, curr = begin;
-  var timer = null, doRender = true;
+  var doRender = true;
 
   var diagram = dc_graph.diagram('#graph'), runner;
 
@@ -113,8 +110,13 @@
       file = "qfs.json";
   isQFS = +querystring.qfs || file === 'qfs.json' && querystring.qfs !=="0";
   if(isQFS) {
+      do_qfs = true;
+      if('qfscon' in querystring) {
+          do_qfs = !!+querystring.qfscon;
+          $('#qfs-constraints').prop('checked', do_qfs);
+      }
       // not that it wouldn't be nice to have other animated examples...
-      $('#stepper,#hierarchical-chooser').show();
+      $('#stepper,#qfs-options').show();
       $('#controls').width(400);
   }
   if(file)
@@ -143,43 +145,13 @@
           data.links.forEach(function(e) { e.order = Math.random()*1000; });
           data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
       }
-      var edge_ndx = crossfilter(data.links),
-          node_ndx = crossfilter(data.nodes);
 
-      // for this example we use simple identity dimension/groups, with unique keys
-      // more complex node/edge generation is possible, but it is more likely that
-      // grouping will happen in other kinds of charts
+      var edges = flat_group.make(data.links, function(d) {
+          return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : '');
+      }),
+          nodes = flat_group.make(data.nodes, function(d) { return d.name; });
 
-      // when there will be exactly one or zero items in a group, a reasonable reduction
-      // is just to use the row or null
-      function one_zero_reduce(group) {
-          group.reduce(
-              function(p, v) { return v; },
-              function() { return null; },
-              function() { return null; }
-          );
-      }
-      var nodeDimension = node_ndx.dimension(function(d) { return d.name; }),
-          edgeDimension = edge_ndx.dimension(function(d) { return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : ''); }),
-          nodeGroup = nodeDimension.group(),
-          edgeGroup = edgeDimension.group();
-
-      one_zero_reduce(nodeGroup);
-      one_zero_reduce(edgeGroup);
-
-      function non_null(group) {
-          return {
-              all: function() {
-                  return group.all().filter(function(kv) {
-                      return kv.value !== null;
-                  });
-              }
-          };
-      }
-      var nodeGroup1 = non_null(nodeGroup),
-          edgeGroup1 = non_null(edgeGroup);
-
-      runner = make_runner(step, step,
+      runner = make_runner(run, step,
                            function() {
                                return curr < end ? steptime : pause;
                            });
@@ -187,7 +159,7 @@
       function run() {
           do_status();
           if(doReinit)
-              diagram.initLayoutOnRedraw(hierarchical);
+              diagram.initLayoutOnRedraw(do_qfs);
           startDim.filterRange([0, curr]);
           $('#run-indicator').show();
           if(doRender) {
@@ -208,9 +180,9 @@
 
       function constrain(nodes, edges) {
           var constraints = [];
-          if(doDisplacement && isQFS && hierarchical)
+          if(doDisplacement && isQFS && do_qfs)
               constraints = qfs_edges(nodes, edges, constraints);
-          if(doAlignment && isQFS && hierarchical)
+          if(doAlignment && isQFS && do_qfs)
               constraints = qfs_alignment(nodes, edges, constraints);
 
           var circles = {};
@@ -234,15 +206,15 @@
           .height($(window).height())
           .timeLimit(timeLimit)
           .showLayoutSteps(showSteps)
-          .nodeDimension(nodeDimension).nodeGroup(nodeGroup1)
-          .edgeDimension(edgeDimension).edgeGroup(edgeGroup1)
+          .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
+          .edgeDimension(edges.dimension).edgeGroup(edges.group)
           .sourceAccessor(function(e) { return e.value.sourcename; })
           .targetAccessor(function(e) { return e.value.targetname; })
           .nodeFillAccessor(isQFS ? qfs_color : 'white')
           .nodeFixedAccessor(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
           .constrain(constrain)
           .lengthStrategy(generate ? 'individual' :
-                          hierarchical ? 'none' :
+                          do_qfs ? 'none' :
                           'symmetric')
           .edgeArrowheadAccessor(function(kv) {
               return !kv.value.undirected;
@@ -265,7 +237,7 @@
       $(window).resize(function() {
           diagram
               .width($(window).width())
-              .height($(window).height())
+              .height($(window).height());
       });
 
 
@@ -273,7 +245,7 @@
       // this is kind of a brain-dead way to test transitions
       // i mean, you can cram the concept of adding and deleting stuff over time
       // into crossfilter data, but do you really want to do that?
-      var startDim = node_ndx.dimension(function(d) { return d.start || 0; }),
+      var startDim = nodes.crossfilter.dimension(function(d) { return d.start || 0; }),
           startGroup = startDim.group();
 
 
@@ -288,18 +260,19 @@
               do_status();
           }
       });
-      $('#hierarchical').change(function(val) {
-          hierarchical = $(this).is(':checked');
-          if(timer) // flag to do on timer
-              doRender = true;
-          else
-              dc.renderAll();
+      $('#qfs-constraints').change(function(val) {
+          do_qfs = $(this).is(':checked');
+          diagram.lengthStrategy(do_qfs ? 'none' : 'symmetric')
+              .relayout();
+          doRender = true;
+          if(!runner.isRunning())
+              run();
       });
 
       // do not brush too fast
       dc.constants.EVENT_DELAY = 100;
 
-      run();
+      runner.init();
   });
 
 </script>

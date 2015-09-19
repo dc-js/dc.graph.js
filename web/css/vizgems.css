@@ -1,11 +1,36 @@
 #overlay {
-    width: 180px;
+    width: 200px;
     position: absolute;
-    top: 200px;
+    top: 90px;
     right: 0;
     background-color: rgba(221, 238, 221, 0.75);
     padding: 40px;
     font: 14px verdana, sans-serif
+}
+
+#charts-area {
+    width: 250px;
+    height: 400px;
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    display: table;
+}
+
+#charts-positioner {
+    display:table-cell;
+    vertical-align:bottom;
+    overflow-y: scroll;
+}
+
+#charts-container {
+    background-color: white;
+    display: inline-block;
+}
+
+#charts-container p {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 #run-indicator {

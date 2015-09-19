@@ -167,14 +167,16 @@ accesses the <code>key</code> field of the object passed to it. The keys should 
 <h4 id="-edgekeyaccessor-function-">.edgeKeyAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the unique key for each edge. By default, this
 accesses the <code>key</code> field of the object passed to it.</p>
-<h4 id="-sourceaccessor-function-mandatory-">.sourceAccessor([function]) - <strong>mandatory</strong></h4>
+<h4 id="-sourceaccessor-function-">.sourceAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
 The key must equal the key returned by the <code>.nodeKeyAccessor</code> for one of the nodes; if it does not, or
-if the node is currently filtered out, the edge will not be displayed.</p>
-<h4 id="-targetaccessor-function-mandatory-">.targetAccessor([function]) - <strong>mandatory</strong></h4>
+if the node is currently filtered out, the edge will not be displayed. By default, looks for
+<code>.value.sourcename</code>.</p>
+<h4 id="-targetaccessor-function-">.targetAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
 The key must equal the key returned by the <code>.nodeKeyAccessor</code> for one of the nodes; if it does not, or
-if the node is currently filtered out, the edge will not be displayed.</p>
+if the node is currently filtered out, the edge will not be displayed. By default, looks for
+<code>.value.targetname</code>.</p>
 <h4 id="-noderadiusaccessor-function-">.nodeRadiusAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
 currently all displayed as circles. Default: 25</p>
@@ -196,6 +198,8 @@ node. Default: white</p>
 <h4 id="-nodelabelaccessor-function-">.nodeLabelAccessor([function])</h4>
 <p>Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field <code>label</code> or <code>name</code> inside the <code>value</code> field.</p>
+<h4 id="-nodelabelfillaccessor-function-">.nodeLabelFillAccessor([function])</h4>
+<p>Set or get the function which will be used to retrieve the label fill color. Default: null</p>
 <h4 id="-nodefitlabelaccessor-function-">.nodeFitLabelAccessor([function])</h4>
 <p>Whether to fit the node shape around the label. Default: true</p>
 <h4 id="-nodetitleaccessor-function-">.nodeTitleAccessor([function])</h4>
