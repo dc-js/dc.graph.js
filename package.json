@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "crossfilter": "1.x",
-    "dc": "~2.0.0-beta",
+    "dc": "dc-js/dc.js#develop",
     "d3": "3.x"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 /*!
- *  dc 2.0.0-beta.19
+ *  dc 2.1.0-dev
  *  http://dc-js.github.io/dc.js/
  *  Copyright 2012-2015 Nick Zhu & the dc.js Developers
  *  https://github.com/dc-js/dc.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * chaining because they necessarily return values that are not the chart.  Although some,
  * such as `.svg` and `.xAxis`, return values that are chainable d3 objects.
  * @namespace dc
- * @version 2.0.0-beta.19
+ * @version 2.1.0-dev
  * @example
  * // Example chaining
  * chart.width(300)
@@ -37,7 +37,7 @@
  */
 /*jshint -W079*/
 var dc = {
-    version: '2.0.0-beta.19',
+    version: '2.1.0-dev',
     constants: {
         CHART_CLASS: 'dc-chart',
         DEBUG_GROUP_CLASS: 'debug',
@@ -765,6 +765,7 @@ dc.baseMixin = function (_chart) {
         return _chart.keyAccessor()(d) + ': ' + _chart.valueAccessor()(d);
     };
     var _renderTitle = true;
+    var _controlsUseVisibility = true;
 
     var _transitionDuration = 750;
 
@@ -1237,6 +1238,24 @@ dc.baseMixin = function (_chart) {
     };
 
     /**
+     * If set, use the `visibility` attribute instead of the `display` attribute for showing/hiding
+     * chart reset and filter controls, for less disruption to the layout.
+     * @name controlsUseVisibility
+     * @memberof dc.baseMixin
+     * @instance
+     * @param {Boolean} useVisibility
+     * @return {Boolean}
+     * @return {dc.baseMixin}
+     **/
+    _chart.controlsUseVisibility = function (useVisibility) {
+        if (!arguments.length) {
+            return _controlsUseVisibility;
+        }
+        _controlsUseVisibility = useVisibility;
+        return _chart;
+    };
+
+    /**
      * Turn on optional control elements within the root element. dc currently supports the
      * following html control elements.
      * * root.selectAll('.reset') - elements are turned on if the chart has an active filter. This type
@@ -1252,8 +1271,9 @@ dc.baseMixin = function (_chart) {
      */
     _chart.turnOnControls = function () {
         if (_root) {
-            _chart.selectAll('.reset').style('display', null);
-            _chart.selectAll('.filter').text(_filterPrinter(_chart.filters())).style('display', null);
+            var attribute = _chart.controlsUseVisibility() ? 'visibility' : 'display';
+            _chart.selectAll('.reset').style(attribute, null);
+            _chart.selectAll('.filter').text(_filterPrinter(_chart.filters())).style(attribute, null);
         }
         return _chart;
     };
@@ -1268,8 +1288,10 @@ dc.baseMixin = function (_chart) {
      */
     _chart.turnOffControls = function () {
         if (_root) {
-            _chart.selectAll('.reset').style('display', 'none');
-            _chart.selectAll('.filter').style('display', 'none').text(_chart.filter());
+            var attribute = _chart.controlsUseVisibility() ? 'visibility' : 'display';
+            var value = _chart.controlsUseVisibility() ? 'hidden' : 'none';
+            _chart.selectAll('.reset').style(attribute, value);
+            _chart.selectAll('.filter').style(attribute, value).text(_chart.filter());
         }
         return _chart;
     };
@@ -8585,6 +8607,11 @@ dc.heatMap = function (parent, chartGroup) {
 
     var _cols;
     var _rows;
+    var _colOrdering = d3.ascending;
+    var _rowOrdering = d3.ascending;
+    var _colScale = d3.scale.ordinal();
+    var _rowScale = d3.scale.ordinal();
+
     var _xBorderRadius = DEFAULT_BORDER_RADIUS;
     var _yBorderRadius = DEFAULT_BORDER_RADIUS;
 
@@ -8678,37 +8705,39 @@ dc.heatMap = function (parent, chartGroup) {
         return _chart._filter(dc.filters.TwoDimensionalFilter(filter));
     });
 
-    function uniq (d, i, a) {
-        return !i || a[i - 1] !== d;
-    }
-
     /**
      * Gets or sets the values used to create the rows of the heatmap, as an array. By default, all
-     * the values will be fetched from the data using the value accessor, and they will be sorted in
-     * ascending order.
+     * the values will be fetched from the data using the value accessor.
      * @name rows
      * @memberof dc.heatMap
      * @instance
      * @param  {Array<String|Number>} [rows]
      * @returns {Chart}
      */
+
     _chart.rows = function (rows) {
-        if (arguments.length) {
-            _rows = rows;
-            return _chart;
-        }
-        if (_rows) {
+        if (!arguments.length) {
             return _rows;
         }
-        var rowValues = _chart.data().map(_chart.valueAccessor());
-        rowValues.sort(d3.ascending);
-        return d3.scale.ordinal().domain(rowValues.filter(uniq));
+        _rows = rows;
+        return _chart;
+    };
+
+    /**
+     #### .rowOrdering([orderFunction])
+     Get or set an accessor to order the rows.  Default is d3.ascending.
+     */
+    _chart.rowOrdering = function (_) {
+        if (!arguments.length) {
+            return _rowOrdering;
+        }
+        _rowOrdering = _;
+        return _chart;
     };
 
     /**
      * Gets or sets the keys used to create the columns of the heatmap, as an array. By default, all
-     * the values will be fetched from the data using the key accessor, and they will be sorted in
-     * ascending order.
+     * the values will be fetched from the data using the key accessor.
      * @name cols
      * @memberof dc.heatMap
      * @instance
@@ -8716,16 +8745,23 @@ dc.heatMap = function (parent, chartGroup) {
      * @returns {Chart}
      */
     _chart.cols = function (cols) {
-        if (arguments.length) {
-            _cols = cols;
-            return _chart;
-        }
-        if (_cols) {
+        if (!arguments.length) {
             return _cols;
         }
-        var colValues = _chart.data().map(_chart.keyAccessor());
-        colValues.sort(d3.ascending);
-        return d3.scale.ordinal().domain(colValues.filter(uniq));
+        _cols = cols;
+        return _chart;
+    };
+
+    /**
+     #### .colOrdering([orderFunction])
+     Get or set an accessor to order the cols.  Default is ascending.
+     */
+    _chart.colOrdering = function (_) {
+        if (!arguments.length) {
+            return _colOrdering;
+        }
+        _colOrdering = _;
+        return _chart;
     };
 
     _chart._doRender = function () {
@@ -8740,9 +8776,19 @@ dc.heatMap = function (parent, chartGroup) {
     };
 
     _chart._doRedraw = function () {
-        var rows = _chart.rows(),
-            cols = _chart.cols(),
-            rowCount = rows.domain().length,
+        var data = _chart.data(),
+            rows = _chart.rows() || data.map(_chart.valueAccessor()),
+            cols = _chart.cols() || data.map(_chart.keyAccessor());
+        if (_rowOrdering) {
+            rows = rows.sort(_rowOrdering);
+        }
+        if (_colOrdering) {
+            cols = cols.sort(_colOrdering);
+        }
+        rows = _rowScale.domain(rows);
+        cols = _colScale.domain(cols);
+
+        var rowCount = rows.domain().length,
             colCount = cols.domain().length,
             boxWidth = Math.floor(_chart.effectiveWidth() / colCount),
             boxHeight = Math.floor(_chart.effectiveHeight() / rowCount);
@@ -9466,6 +9512,254 @@ dc.boxPlot = function (parent, chartGroup) {
             return _tickFormat;
         }
         _tickFormat = tickFormat;
+        return _chart;
+    };
+
+    return _chart.anchor(parent, chartGroup);
+};
+
+/**
+ * The select menu is a simple widget designed to filter a dimension by selecting an option from
+ * an HTML `<select/>` menu. The menu can be optionally turned into a multiselect.
+ * @name selectMenu
+ * @memberof dc
+ * @mixes dc.baseMixin
+ * @example
+ * // create a select menu under #select-container using the default global chart group
+ * var select = dc.selectMenu('#select-container')
+ *                .dimension(states)
+ *                .group(stateGroup);
+ * // the option text can be set via the title() function
+ * // by default the option text is '`key`: `value`'
+ * select.title(function (d){
+ *     return 'STATE: ' + d.key;
+ * })
+ * @param {String|node|d3.selection|dc.compositeChart} parent - Any valid
+ * [d3 single selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying
+ * a dom block element such as a div; or a dom element or d3 selection.
+ * @param {String} [chartGroup] - The name of the chart group this widget should be placed in.
+ * Interaction with the widget will only trigger events and redraws within its group.
+ * @returns {selectMenu}
+ **/
+dc.selectMenu = function (parent, chartGroup) {
+    var SELECT_CSS_CLASS = 'dc-select-menu';
+    var OPTION_CSS_CLASS = 'dc-select-option';
+
+    var _chart = dc.baseMixin({});
+
+    var _select;
+    var _promptText = 'Select all';
+    var _multiple = false;
+    var _size = null;
+    var _order = function (a, b) {
+        return _chart.keyAccessor()(a) > _chart.keyAccessor()(b) ?
+             1 : _chart.keyAccessor()(b) > _chart.keyAccessor()(a) ?
+            -1 : 0;
+    };
+
+    var _filterDisplayed = function (d) {
+        return _chart.valueAccessor()(d) > 0;
+    };
+
+    _chart.data(function (group) {
+        return group.all().filter(_filterDisplayed);
+    });
+
+    _chart._doRender = function () {
+        _chart.select('select').remove();
+        _select = _chart.root().append('select')
+                        .classed(SELECT_CSS_CLASS, true);
+
+        setAttributes();
+
+        _select.append('option').text(_promptText).attr('value', '');
+        renderOptions();
+        return _chart;
+    };
+
+    _chart._doRedraw = function () {
+        setAttributes();
+        renderOptions();
+        // select the option(s) corresponding to current filter(s)
+        if (_chart.hasFilter() && _multiple) {
+            _select.selectAll('option')
+                .filter(function (d) {
+                    return d && _chart.filters().indexOf(String(_chart.keyAccessor()(d))) >= 0;
+                })
+                .property('selected', true);
+        } else if (_chart.hasFilter()) {
+            _select.property('value', _chart.filter());
+        } else {
+            _select.property('value', '');
+        }
+        return _chart;
+    };
+
+    function renderOptions () {
+        var options = _select.selectAll('option.' + OPTION_CSS_CLASS)
+          .data(_chart.data(), function (d) { return _chart.keyAccessor()(d); });
+
+        options.enter()
+              .append('option')
+              .classed(OPTION_CSS_CLASS, true)
+              .attr('value', function (d) { return _chart.keyAccessor()(d); });
+
+        options.text(_chart.title());
+        options.exit().remove();
+        _select.selectAll('option.' + OPTION_CSS_CLASS).sort(_order);
+
+        _select.on('change', onChange);
+        return options;
+    }
+
+    function onChange (d, i) {
+        var values;
+        var target = d3.event.target;
+        if (target.selectedOptions) {
+            var selectedOptions = Array.prototype.slice.call(target.selectedOptions);
+            values = selectedOptions.map(function (d) {
+                return d.value;
+            });
+        } else { // IE and other browsers do not support selectedOptions
+            // adapted from this polyfill: https://gist.github.com/brettz9/4212217
+            var options = [].slice.call(d3.event.target.options);
+            values = options.filter(function (option) {
+                return option.selected;
+            }).map(function (option) {
+                return option.value;
+            });
+        }
+        // console.log(values);
+        // check if only prompt option is selected
+        if (values.length === 1 && values[0] === '') {
+            values = null;
+        } else if (values.length === 1) {
+            values = values[0];
+        }
+        _chart.onChange(values);
+    }
+
+    _chart.onChange = function (val) {
+        if (val && _multiple) {
+            _chart.replaceFilter([val]);
+        } else if (val) {
+            _chart.replaceFilter(val);
+        } else {
+            _chart.filterAll();
+        }
+        dc.events.trigger(function () {
+            _chart.redrawGroup();
+        });
+    };
+
+    function setAttributes () {
+        if (_multiple) {
+            _select.attr('multiple', true);
+        } else {
+            _select.attr('multiple', null);
+        }
+        if (_size !== null) {
+            _select.attr('size', _size);
+        } else {
+            _select.attr('size', null);
+        }
+    }
+
+    /**
+     * Get or set the function that controls the ordering of option tags in the
+     * select menu. By default options are ordered by the group key in ascending
+     * order.
+     * @name order
+     * @memberof dc.selectMenu
+     * @instance
+     * @param {Function} [order]
+     * @example
+     * // order by the group's value
+     * chart.order(function (a,b) {
+     *     return a.value > b.value ? 1 : b.value > a.value ? -1 : 0;
+     * });
+     **/
+    _chart.order = function (order) {
+        if (!arguments.length) {
+            return _order;
+        }
+        _order = order;
+        return _chart;
+    };
+
+    /**
+     * Get or set the text displayed in the options used to prompt selection.
+     * @name promptText
+     * @memberof dc.selectMenu
+     * @instance
+     * @param {String} [promptText='Select all']
+     * @example
+     * chart.promptText('All states');
+     **/
+    _chart.promptText = function (_) {
+        if (!arguments.length) {
+            return _promptText;
+        }
+        _promptText = _;
+        return _chart;
+    };
+
+    /**
+     * Get or set the function that filters option tags prior to display. By default options
+     * with a value of < 1 are not displayed.
+     * @name filterDisplayed
+     * @memberof dc.selectMenu
+     * @instance
+     * @param {function} [filterDisplayed]
+     * @example
+     * // display all options override the `filterDisplayed` function:
+     * chart.filterDisplayed(function () {
+     *     return true;
+     * });
+     **/
+    _chart.filterDisplayed = function (filterDisplayed) {
+        if (!arguments.length) {
+            return _filterDisplayed;
+        }
+        _filterDisplayed = filterDisplayed;
+        return _chart;
+    };
+
+    /**
+     * Controls the type of select menu. Setting it to true converts the underlying
+     * HTML tag into a multiple select.
+     * @name multiple
+     * @memberof dc.selectMenu
+     * @instance
+     * @param {boolean} [multiple=false]
+     * @example
+     * chart.multiple(true);
+     **/
+    _chart.multiple = function (multiple) {
+        if (!arguments.length) {
+            return _multiple;
+        }
+        _multiple = multiple;
+
+        return _chart;
+    };
+
+    /**
+     * Controls the height, in lines, of the select menu, when `.multiple()` is true. If `null` (the default),
+     * uses the browser's default height.
+     * @name size
+     * @memberof dc.selectMenu
+     * @instance
+     * @param {?number} [size
+     * @example
+     * chart.size(10);
+     **/
+    _chart.size = function (size) {
+        if (!arguments.length) {
+            return _size;
+        }
+        _size = size;
+
         return _chart;
     };
 
