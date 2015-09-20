@@ -52,16 +52,19 @@ var options = {
         },
         watch: function(k) {
             osTypeSelect.on('filtered', function() {
-                k(osTypeSelect.filters());
+                var filters = osTypeSelect.filters();
+                k(filters);
             });
         },
+        dont_apply_after_watch: true,
         needs_redraw: true,
         apply: function(val, diagram, filters) {
             if(filters.filterOSTypes) {
+                console.log('replace', val);
                 osTypeSelect
                     .dimension(filters.filterOSTypes)
                     .group(filters.filterOSTypes.group())
-                    .filter([val]);
+                    .replaceFilter([val]);
             }
         }
     },
@@ -181,7 +184,7 @@ function do_option(key, opt) {
             qs[opt.query] = write_query(type, val);
             update_interesting();
         }
-        if(opt.apply)
+        if(opt.apply && !opt.dont_apply_after_watch)
             opt.apply(val, diagram, filters);
         if(opt.needs_relayout)
             diagram.relayout();
@@ -223,6 +226,7 @@ function do_option(key, opt) {
         opt.set(settings[key]);
     if(opt.watch)
         opt.watch(function(val) {
+            console.log('watch', val);
             next_tick(function() {
                 update_setting(opt, val);
             });
@@ -252,7 +256,7 @@ function load(get_inv, callback) {
     if(get_inv) {
         var inv_nodes_url = url + '/inv-nodes.psv', inv_edges_url = url + '/inv-edges.psv';
         Q.defer(psv, inv_nodes_url + nocache_query())
-            .defer(psv, inv_edges_url + nocache_query())
+            .defer(psv, inv_edges_url + nocache_query());
     }
     Q.await(function(error, vertices, edges, inv_vertices, inv_edges) {
         if(error)
@@ -317,8 +321,10 @@ function load(get_inv, callback) {
                     warnings.push('attr ' + a + ' of edge ' + id + ': ' + e[a] + ' is not ' + inve[a]);
             _.extend(e, inve);
         });
+        /*
         if(warnings.length)
             console.log('inventory/cache warnings', warnings);
+         */
         callback(vertices, edges);
     });
 }
@@ -396,7 +402,7 @@ function clickiness() {
                                     .elasticY(true)
                                     .xUnits(d3.time.minutes)
                                     .x(d3.time.scale())
-                                    .yAxisLabel(v.k)
+                                    .yAxisLabel(v.k);
                             chart.yAxis().tickFormat(tickFormat);
                         });
                         dc.renderAll(d.orig.key);
