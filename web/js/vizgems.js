@@ -60,7 +60,6 @@ var options = {
         needs_redraw: true,
         apply: function(val, diagram, filters) {
             if(filters.filterOSTypes) {
-                console.log('replace', val);
                 osTypeSelect
                     .dimension(filters.filterOSTypes)
                     .group(filters.filterOSTypes.group())
@@ -226,7 +225,6 @@ function do_option(key, opt) {
         opt.set(settings[key]);
     if(opt.watch)
         opt.watch(function(val) {
-            console.log('watch', val);
             next_tick(function() {
                 update_setting(opt, val);
             });
