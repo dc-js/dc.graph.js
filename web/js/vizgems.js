@@ -434,7 +434,7 @@ function init() {
             .height($(window).height())
             .showLayoutSteps(false)
             .lengthStrategy('jaccard')
-            .baseLength(20)
+            .baseLength(40)
         //.nodeFitLabelAccessor(false)
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
