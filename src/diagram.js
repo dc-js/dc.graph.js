@@ -505,15 +505,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.initLayoutOnRedraw())
             initLayout();
 
-        if(_chart.induceNodes()) {
-            var keeps = {};
-            edges.forEach(function(e) {
-                keeps[_chart.sourceAccessor()(e)] = true;
-                keeps[_chart.targetAccessor()(e)] = true;
-            });
-            nodes = nodes.filter(function(n) { return keeps[_chart.nodeKeyAccessor()(n)]; });
-        }
-
+        // ordering shouldn't matter, but we support ordering in case it does
         if(_chart.nodeOrdering()) {
             nodes = crossfilter.quicksort.by(_chart.nodeOrdering())(nodes.slice(0), 0, nodes.length);
         }
@@ -521,12 +513,12 @@ dc_graph.diagram = function (parent, chartGroup) {
             edges = crossfilter.quicksort.by(_chart.edgeOrdering())(edges.slice(0), 0, edges.length);
         }
 
+        // create or re-use the objects cola.js will manipulate
         function wrap_node(v, i) {
             var key = _chart.nodeKeyAccessor()(v);
             if(!_nodes[key]) _nodes[key] = {};
             var v1 = _nodes[key];
             v1.orig = v;
-            v1.index = i;
             var fixed;
             if(_chart.nodeFixedAccessor())
                 fixed = _chart.nodeFixedAccessor()(v);
@@ -545,54 +537,76 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_edges[key]) _edges[key] = {};
             var e1 = _edges[key];
             e1.orig =  e;
+            // cola edges can work with indices or with object references
+            // but it will replace indices with object references
             e1.source = _nodes[_chart.sourceAccessor()(e)];
             e1.target = _nodes[_chart.targetAccessor()(e)];
             keep_edge[key] = true;
             return e1;
         }
-        var keep_node = {}, keep_edge = {};
-        var nodes1 = nodes.map(wrap_node);
         // delete any objects from last round that are no longer used
+        // this is mostly so cola.js won't get confused by old attributes
+        var keep_node = {}, keep_edge = {};
+        var wnodes = nodes.map(wrap_node);
         for(var vk in _nodes)
             if(!keep_node[vk])
                 delete _nodes[vk];
+        var wedges = edges.map(wrap_edge);
         for(var ek in _edges)
             if(!keep_edge[ek])
                 delete _edges[ek];
-        var edges1 = edges.map(wrap_edge).filter(function(e) {
-            return e.source!==undefined && e.target!==undefined;
+
+        // remove edges that don't have both end nodes
+        wedges = wedges.filter(function(e) {
+            return e.source && e.target;
         });
-        _stats = {nnodes: nodes1.length, nedges: edges1.length};
+        // and optionally, nodes that have no edges
+        if(_chart.induceNodes()) {
+            var keeps = {};
+            wedges.forEach(function(e) {
+                keeps[param(_chart.sourceAccessor())(e)] = true;
+                keeps[param(_chart.targetAccessor())(e)] = true;
+            });
+            wnodes = wnodes.filter(function(n) { return keeps[param(_chart.nodeKeyAccessor())(n)]; });
+        }
+
+        // cola needs each node object to have an index property
+        wnodes.forEach(function(v, i) {
+            v.index = i;
+        });
+
+        _stats = {nnodes: wnodes.length, nedges: wedges.length};
+
+        // optionally do nothing if the topology hasn't changed
         var skip_layout = false;
         if(!_chart.layoutUnchanged()) {
             function original(x) {
                 return x.orig;
             }
-            var nodes_snapshot = JSON.stringify(nodes1.map(original)), edges_snapshot = JSON.stringify(edges1.map(original));
+            var nodes_snapshot = JSON.stringify(wnodes.map(original)), edges_snapshot = JSON.stringify(wedges.map(original));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
             _edges_snapshot = edges_snapshot;
         }
 
+        // annotate parallel edges so we can draw them specially
         if(_chart.parallelEdgeOffset()) {
-            // mark parallel edges so we can draw them specially
-            var em = new Array(nodes1.length);
+            var em = new Array(wnodes.length);
             for(var i = 0; i < em.length; ++i) {
                 em[i] = new Array(em.length); // technically could be diagonal array
                 for(var j = 0; j < em.length; ++j)
                     em[i][j] = 0;
             }
-            edges1.forEach(function(e) {
+            wedges.forEach(function(e) {
                 var min = Math.min(e.source.index, e.target.index), max = Math.max(e.source.index, e.target.index);
                 e.parallel = em[min][max]++;
             });
         }
 
-        // console.log("diagram.redraw " + nodes1.length + ',' + edges1.length);
-
+        // create edge SVG elements
         var edge = _edgeLayer.selectAll('.edge')
-                .data(edges1, param(_chart.edgeKeyAccessor()));
+                .data(wedges, param(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
                 .attr('id', edge_id);
@@ -613,7 +627,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // another wider copy of the edge just for hover events
         var edgeHover = _edgeLayer.selectAll('.edge-hover')
-                .data(edges1, param(_chart.edgeKeyAccessor()));
+                .data(wedges, param(_chart.edgeKeyAccessor()));
         edgeHover.enter().append('svg:path')
             .attr('class', 'edge-hover')
             .attr('opacity', 0)
@@ -630,7 +644,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edgeHover.exit().remove();
 
         var edgeLabels = _edgeLayer.selectAll(".edge-label")
-                .data(edges1, param(_chart.edgeKeyAccessor()));
+                .data(wedges, param(_chart.edgeKeyAccessor()));
         var edgeLabelsEnter = edgeLabels.enter()
               .append('text')
                 .attr('id', function(d) {
@@ -650,17 +664,22 @@ dc_graph.diagram = function (parent, chartGroup) {
                 });
         edgeLabels.exit().remove();
 
+        // create node SVG elements
         var node = _nodeLayer.selectAll('.node')
-                .data(nodes1, param(_chart.nodeKeyAccessor()));
+                .data(wnodes, param(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr('visibility', 'hidden') // don't show until has layout
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
-        var nodeExit = node.exit();
+        node.exit().remove();
+
+        // cola constraints always use indices, but node references
+        // are more friendly, so translate those
+
         // i am not satisfied with this constraint generation api...
         // https://github.com/dc-js/dc.graph.js/issues/10
-        var constraints = _chart.constrain()(nodes1, edges1);
+        var constraints = _chart.constrain()(wnodes, wedges);
         // translate references from names to indices (ugly)
         constraints.forEach(function(c) {
             if(c.type) {
@@ -681,7 +700,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                 c.right = _nodes[c.right].index;
             }
         });
-        nodeExit.remove();
 
         _d3cola.on('tick', function() {
             var elapsed = Date.now() - startTime;
@@ -697,8 +715,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         // pseudo-cola.js features
 
         // 1. non-layout edges are drawn but not told to cola.js
-        var layout_edges = edges1.filter(param(_chart.edgeIsLayoutAccessor()));
-        var nonlayout_edges = edges1.filter(function(x) {
+        var layout_edges = wedges.filter(param(_chart.edgeIsLayoutAccessor()));
+        var nonlayout_edges = wedges.filter(function(x) {
             return !param(_chart.edgeIsLayoutAccessor())(x);
         });
 
@@ -713,7 +731,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             var R = (c.distance || _chart.baseLength()*4) / (2*Math.sin(Math.PI/c.nodes.length));
             var nindices = c.nodes.map(function(x) { return x.node; });
             var namef = function(i) {
-                return param(_chart.nodeKeyAccessor())(nodes1[i]);
+                return param(_chart.nodeKeyAccessor())(wnodes[i]);
             };
             var wheel = dc_graph.wheel_edges(namef, nindices, R)
                     .map(function(e) {
@@ -754,7 +772,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             return this;
         }
         var startTime = Date.now();
-        _d3cola.nodes(nodes1)
+        _d3cola.nodes(wnodes)
             .links(layout_edges)
             .constraints(constraints)
             .start(10,20,20)
