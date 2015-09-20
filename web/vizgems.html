@@ -45,8 +45,7 @@
     </table>
   </div>
   <div id="options" style="display: hidden">
-    <div><label><input type="checkbox" id="hide-unknown">Hide Unknown</label></div>
-    <div><label><input type="checkbox" id="hide-subnets">Hide Subnets</label></div>
+    <div id="ostype-select"></div>
     <div><label><input type="checkbox" id="show-steps">Show Layout Steps</label></div>
     <div><label><input type="checkbox" id="show-arrows">Show Arrows</label></div>
     <div><label><input type="checkbox" id="layout-unchanged">Redraw when unchanged</label></div>
@@ -88,6 +87,7 @@
       show_start();
       next_tick(function() {
           diagram.redraw();
+          osTypeSelect.redraw();
           show_stats(data_stats, diagram.getStats());
       });
   }
@@ -108,29 +108,24 @@
               diagram.timeLimit(val);
           }
       },
-      hide_unknown: {
-          default: false,
-          query: 'hideUnknown',
-          selector: '#hide-unknown',
-          needs_redraw: true,
-          apply: function(val, diagram, filters) {
-              if(filters.filterIds) {
-                  filters.filterIds.filter(val ?
-                                           function(k) { return k != 'UNKNOWN'; } :
-                                           null);
-              }
-          }
-      },
-      hide_subnets: {
-          default: false,
-          query: 'hideSubnets',
-          selector: '#hide-subnets',
+      ostype_select: {
+          default: [],
+          query: 'ostype',
+          set: function(val) {
+              osTypeSelect.filter(val);
+          },
+          watch: function(k) {
+              osTypeSelect.on('filtered', function() {
+                  k(osTypeSelect.filters());
+              });
+          },
           needs_redraw: true,
           apply: function(val, diagram, filters) {
               if(filters.filterOSTypes) {
-                  filters.filterOSTypes.filter(val ?
-                                               function(k) { return k != 'SUB'; } :
-                                               null);
+                  osTypeSelect
+                      .dimension(filters.filterOSTypes)
+                      .group(filters.filterOSTypes.group())
+                      .filter([val]);
               }
           }
       },
@@ -196,15 +191,29 @@
               options[key].apply(settings[key], diagram, filters);
   }
 
-  function convert_query(type, val) {
+  function read_query(type, val) {
       switch(type) {
       case 'boolean':
           return val === 'true';
       case 'number':
           return +val;
       case 'string':
-           return val;
-      default: throw new Error('unsupported query type ' + typeof opt.default);
+          return val;
+      case 'array':
+          return val.split('|');
+      default: throw new Error('unsupported query type ' + type);
+      }
+  }
+
+  function write_query(type, val) {
+      switch(type) {
+      case 'array':
+          return val.join('|');
+      case 'boolean':
+      case 'number':
+      case 'string':
+          return '' + val;
+      default: throw new Error('unsupported query type ' + type);
       }
   }
 
@@ -218,17 +227,22 @@
       querystring.update(_.pick(qs, interesting));
   }
 
+  function query_type(val) {
+      return _.isArray(val) ? 'array' : typeof val;
+  }
+
   var settings = {};
   function do_option(key, opt) {
       settings[key] = opt.default;
       var query = opt.query || key;
+      var type = query_type(opt.default);
       if(query in qs)
-          settings[key] = convert_query(typeof opt.default, qs[query]);
+          settings[key] = read_query(type, qs[query]);
 
       function update_setting(opt, val) {
           settings[key] = val;
           if(opt.query) {
-              qs[opt.query] = '' + val;
+              qs[opt.query] = write_query(type, val);
               update_interesting();
           }
           if(opt.apply)
@@ -239,31 +253,48 @@
               do_redraw();
       }
       if(opt.selector) {
-          switch(typeof opt.default) {
+          switch(type) {
           case 'boolean':
-              $(opt.selector)
-                  .prop('checked', settings[key])
-                  .change(function() {
-                      var val = $(this).is(':checked');
-                      next_tick(function() {
-                          update_setting(opt, val);
+              opt.set = function(val) {
+                  $(opt.selector)
+                      .prop('checked', val);
+              };
+              opt.watch = function(k) {
+                  $(opt.selector)
+                      .change(function() {
+                          var val = $(this).is(':checked');
+                          k(val);
                       });
-                  });
+              };
               break;
           case 'string':
-              $(opt.selector)
-                  .val(settings[key])
-                  .change(function() {
-                      var val = $(this).val();
-                      next_tick(function() {
-                          update_setting(opt, val);
+              opt.set = function(val) {
+                  $(opt.selector)
+                      .val(val);
+              };
+              opt.watch = function(k) {
+                  $(opt.selector)
+                      .change(function() {
+                          var val = $(this).val();
+                          k(val);
                       });
-                  });
+              };
               break;
-          default: throw new Error('unsupported selector type ' + typeof opt.default);
+          default: throw new Error('unsupported selector type ' + type);
           }
       }
+      if(opt.set)
+          opt.set(settings[key]);
+      if(opt.watch)
+          opt.watch(function(val) {
+              next_tick(function() {
+                  update_setting(opt, val);
+              });
+          });
   }
+
+  var osTypeSelect = dc.selectMenu('#ostype-select');
+
   for(var key in options)
       do_option(key, options[key]);
 
@@ -473,6 +504,10 @@
                   show_stop();
                   runner.endStep();
               });
+          osTypeSelect
+              .promptText('Show all types')
+              .multiple(true)
+              .size(11);
           apply_options();
 
           // respond to browser resize (not necessary if width/height is static)
@@ -510,6 +545,7 @@
 
           show_start();
           diagram.render();
+          osTypeSelect.render();
           clickiness();
           show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
       });
