@@ -470,7 +470,8 @@ function init() {
             .nodeRadiusAccessor(30)
             .induceNodes(true) // drop zero-degree nodes for now
             .nodeLabelAccessor(function(kv) {
-                return isUUID(kv.value.name) ? kv.key : kv.value.name;
+                return isUUID(kv.value.name) ? isUUID(kv.key) ? '' :
+                    kv.key : kv.value.name;
             })
             .nodeFillScale(d3.scale.ordinal(_.keys(ostypes)).range(colorbrewer.Paired[12]))
             .nodeFillAccessor(function(kv) {
