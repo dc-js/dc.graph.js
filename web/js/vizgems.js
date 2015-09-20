@@ -156,18 +156,18 @@ function write_query(type, val) {
     }
 }
 
+function query_type(val) {
+    return _.isArray(val) ? 'array' : typeof val;
+}
+
 function update_interesting() {
     var interesting = _.keys(options)
             .filter(function(k) {
-                return settings[k] !== options[k].default;
+                return qs[options[k].query] !== write_query(query_type(options[k].default), options[k].default);
             }).map(function(k) {
                 return options[k].query || k;
             });
     querystring.update(_.pick(qs, interesting));
-}
-
-function query_type(val) {
-    return _.isArray(val) ? 'array' : typeof val;
 }
 
 var settings = {};
