@@ -463,6 +463,9 @@ function init() {
             .title(function(d) {
                 return ostypes[d.key] + ': ' + d.value;
             })
+            .order(function(a,b) {
+                return d3.ascending(ostypes[a.key], ostypes[b.key]);
+            })
             .multiple(true)
             .size(11);
         apply_options();
@@ -494,7 +497,7 @@ function init() {
                 return bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
                     kv.key : kv.value.name;
             })
-            .nodeFillScale(d3.scale.ordinal(_.keys(ostypes)).range(colorbrewer.Paired[12]))
+            .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(colorbrewer.Paired[12]))
             .nodeFillAccessor(function(kv) {
                 return kv.value.ostype;
             });
