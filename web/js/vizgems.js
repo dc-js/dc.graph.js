@@ -492,9 +492,9 @@ function init() {
                 return kv.value.ostype;
             });
 
-        var exs = {};
+        var exs = [];
         for(var ost in ostypes)
-            exs[ostypes[ost]] = {ostype: ost};
+            exs.push({key: '', name: ostypes[ost], value: {ostype: ost}});
         diagram.legend(
             dc_graph.legend().nodeWidth(70).nodeHeight(70).exemplars(exs));
 

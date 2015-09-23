@@ -42,7 +42,8 @@ dc_graph.legend = function() {
      #### .exemplars([object])
      Specifies an object where the keys are the names of items to add to the legend, and the values are
      objects which will be passed to the accessors of the attached diagram in order to determine the
-     drawing attributes.
+     drawing attributes. Alternately, if the key needs to be specified separately from the name, the
+     function can take an array of {name, key, value} objects.
      **/
     _legend.exemplars = property({});
 
@@ -56,12 +57,18 @@ dc_graph.legend = function() {
             .attr('class', 'dc-graph-legend')
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
-        var items = [], exemplars = _legend.exemplars();
-        for(var item in exemplars)
-            items.push({orig: {key: item, value: exemplars[item]}});
+        var exemplars = _legend.exemplars(), items;
+        if(exemplars instanceof Array) {
+            items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}}; });
+        }
+        else {
+            items = [];
+            for(var item in exemplars)
+                items.push({name: item, orig: {key: item, value: exemplars[item]}});
+        }
 
         var node = _g.selectAll('.node')
-                .data(items, function(d) { return d.orig.key; });
+                .data(items, function(d) { return d.name; });
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr('transform', function(d, i) {
@@ -72,7 +79,7 @@ dc_graph.legend = function() {
             .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
             //.attr('dominant-baseline', 'middle')
             .text(function(d) {
-                return d.orig.key;
+                return d.name;
             });
         _legend.parent()._buildNode(node, nodeEnter);
     };
