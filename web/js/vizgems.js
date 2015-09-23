@@ -1,5 +1,4 @@
 var qs = querystring.parse();
-var url = qs.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 
 function show_stats(data_stats, layout_stats) {
     $('#shown-nodes').html('' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes');
@@ -121,6 +120,10 @@ var options = {
     node_limit: {
         default: 0,
         query: 'nlimit'
+    },
+    fit_labels: {
+        default: true,
+        query: 'fit'
     }
 };
 
@@ -242,6 +245,7 @@ for(var key in options)
 
 /* end general options stuff */
 
+var url = settings.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 var filters = {};
 var diagram = dc_graph.diagram('#graph');
 var node_inv = {}, edge_inv = {};
@@ -473,6 +477,7 @@ function init() {
             .nodeStrokeWidthAccessor(function(kv) {
                 return kv.key === selected_node ? 5 : 0;
             })
+            .nodeFitLabelAccessor(settings.fit_labels)
             .nodeRadiusAccessor(30)
             .induceNodes(true) // drop zero-degree nodes for now
             .nodeLabelAccessor(function(kv) {
