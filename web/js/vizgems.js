@@ -117,6 +117,10 @@ var options = {
             }
             diagram.modLayout(modf);
         }
+    },
+    node_limit: {
+        default: 0,
+        query: 'nlimit'
     }
 };
 
@@ -328,6 +332,8 @@ function load(get_inv, callback) {
 }
 
 function crossfilters(nodes, edges) {
+    if(settings.node_limit)
+        nodes = nodes.slice(0, settings.node_limit);
     var node_stuff = flat_group.make(nodes, function(d) { return d.id1; }),
         edge_stuff = flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; });
     filterIds = node_stuff.crossfilter.dimension(function(d) { return d.id1; }),
