@@ -443,7 +443,7 @@ function init() {
             .height($(window).height())
             .showLayoutSteps(false)
             .lengthStrategy('jaccard')
-            .baseLength(40)
+            .baseLength(100)
         //.nodeFitLabelAccessor(false)
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
