@@ -475,7 +475,10 @@ function init() {
         });
 
         function isUUID(s) {
-            return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
+            return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/.test(s);
+        }
+        function bad_name(s) {
+            return !s || isUUID(s);
         }
 
         // aesthetics: look at kv.value for node/edge attributes and return appropriate values
@@ -488,7 +491,7 @@ function init() {
             .nodeRadiusAccessor(30)
             .induceNodes(true) // drop zero-degree nodes for now
             .nodeLabelAccessor(function(kv) {
-                return isUUID(kv.value.name) ? isUUID(kv.key) ? '' :
+                return bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
                     kv.key : kv.value.name;
             })
             .nodeFillScale(d3.scale.ordinal(_.keys(ostypes)).range(colorbrewer.Paired[12]))
