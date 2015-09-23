@@ -456,6 +456,9 @@ function init() {
             });
         osTypeSelect
             .promptText('Show all types')
+            .title(function(d) {
+                return ostypes[d.key] + ': ' + d.value;
+            })
             .multiple(true)
             .size(11);
         apply_options();
