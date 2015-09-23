@@ -565,6 +565,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var fitx = 0;
                 if(bbox && bbox.width && bbox.height) {
                     // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+                    // http://stackoverflow.com/a/433438/676195
                     var y_over_B = bbox.height/2/r;
                     var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
                     fitx = rx*2 + _chart.nodePadding();
@@ -1052,6 +1053,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         return generateSvg();
     };
 
+    _chart.redrawGroup = function () {
+        dc.redrawAll(chartGroup);
+    };
+
+    _chart.renderGroup = function () {
+        dc.renderAll(chartGroup);
+    };
+
     /**
     #### .defineArrow(name, width, height, refX, refY, drawf)
     Creates an svg marker definition for drawing edge arrow tails or heads.
@@ -1174,7 +1183,8 @@ dc_graph.legend = function() {
      #### .exemplars([object])
      Specifies an object where the keys are the names of items to add to the legend, and the values are
      objects which will be passed to the accessors of the attached diagram in order to determine the
-     drawing attributes.
+     drawing attributes. Alternately, if the key needs to be specified separately from the name, the
+     function can take an array of {name, key, value} objects.
      **/
     _legend.exemplars = property({});
 
@@ -1188,12 +1198,18 @@ dc_graph.legend = function() {
             .attr('class', 'dc-graph-legend')
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
-        var items = [], exemplars = _legend.exemplars();
-        for(var item in exemplars)
-            items.push({orig: {key: item, value: exemplars[item]}});
+        var exemplars = _legend.exemplars(), items;
+        if(exemplars instanceof Array) {
+            items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}}; });
+        }
+        else {
+            items = [];
+            for(var item in exemplars)
+                items.push({name: item, orig: {key: item, value: exemplars[item]}});
+        }
 
         var node = _g.selectAll('.node')
-                .data(items, function(d) { return d.orig.key; });
+                .data(items, function(d) { return d.name; });
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr('transform', function(d, i) {
@@ -1204,7 +1220,7 @@ dc_graph.legend = function() {
             .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
             //.attr('dominant-baseline', 'middle')
             .text(function(d) {
-                return d.orig.key;
+                return d.name;
             });
         _legend.parent()._buildNode(node, nodeEnter);
     };

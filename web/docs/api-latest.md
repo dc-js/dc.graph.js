@@ -315,4 +315,5 @@ Set or get legend node height. Default: 30.
 #### .exemplars([object])
 Specifies an object where the keys are the names of items to add to the legend, and the values are
 objects which will be passed to the accessors of the attached diagram in order to determine the
-drawing attributes.
+drawing attributes. Alternately, if the key needs to be specified separately from the name, the
+function can take an array of {name, key, value} objects.
