@@ -103,10 +103,10 @@ var options = {
             var modf;
             switch(val) {
             case 'x':
-                modf = function(cola) { cola.flowLayout('x', 120); };
+                modf = function(cola) { cola.flowLayout('x', 200); };
                 break;
             case 'y':
-                modf = function(cola) { cola.flowLayout('y', 120); };
+                modf = function(cola) { cola.flowLayout('y', 200); };
                 break;
             case 'none':
                 modf = null;
