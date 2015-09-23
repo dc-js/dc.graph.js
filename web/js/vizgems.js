@@ -21,8 +21,7 @@ function do_redraw() {
         return;
     show_start();
     next_tick(function() {
-        diagram.redraw();
-        osTypeSelect.redraw();
+        diagram.redrawGroup();
         show_stats(data_stats, diagram.getStats());
     });
 }
@@ -238,7 +237,7 @@ function do_option(key, opt) {
         });
 }
 
-var osTypeSelect = dc.selectMenu('#ostype-select');
+var osTypeSelect = dc.selectMenu('#ostype-select', 'network');
 
 for(var key in options)
     do_option(key, options[key]);
@@ -247,7 +246,7 @@ for(var key in options)
 
 var url = settings.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 var filters = {};
-var diagram = dc_graph.diagram('#graph');
+var diagram = dc_graph.diagram('#graph', 'network');
 var node_inv = {}, edge_inv = {};
 
 function nocache_query() {
@@ -353,7 +352,6 @@ function crossfilters(nodes, edges) {
 }
 
 var selected_node = null;
-var node_stats = null;
 function clickiness() {
     diagram.selectAll('g.node')
         .on('click.vizgems', function(d) {
@@ -375,9 +373,6 @@ function clickiness() {
                     catch(xep) {
                         console.log(xep);
                         return;
-                    }
-                    if(!node_stats) {
-                        node_stats = dc.lineChart('#chart1');
                     }
                     var charts_area = $('#charts-area'), charts_container = $('#charts-container');
                     charts_container.empty();
