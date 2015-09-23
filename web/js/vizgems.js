@@ -315,6 +315,10 @@ function load(get_inv, callback) {
                     warnings.push('attr ' + a + ' of node ' + n.id1 + ': ' + n[a] + ' is not ' + invn[a]);
             _.extend(n, invn);
         });
+        // make sure all vertices have ostype
+        vertices.forEach(function(n) {
+            n.ostype = n.ostype || 'OTHER';
+        });
         edges.forEach(function(e) {
             var id = e.id1 + '|' + e.id2;
             var inve = edge_inv[id];
@@ -426,7 +430,7 @@ var ostypes = {
     PRT: "Port",
     U: "User",
     CUS: "Tenant", // Customer
-    undefined: 'Other', // perhaps grey
+    OTHER: 'Other', // perhaps grey
     VM: "Virtual Machine",
     FS: "Volume", // File System
     IMG: "Image",
