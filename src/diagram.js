@@ -957,6 +957,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         return generateSvg();
     };
 
+    _chart.redrawGroup = function () {
+        dc.redrawAll(chartGroup);
+    };
+
+    _chart.renderGroup = function () {
+        dc.renderAll(chartGroup);
+    };
+
     /**
     #### .defineArrow(name, width, height, refX, refY, drawf)
     Creates an svg marker definition for drawing edge arrow tails or heads.
