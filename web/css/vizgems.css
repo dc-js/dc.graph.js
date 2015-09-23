@@ -1,10 +1,11 @@
 #overlay {
-    width: 200px;
+    width: 270px;
     position: absolute;
     top: 90px;
     right: 0;
     background-color: rgba(221, 238, 221, 0.75);
-    padding: 40px;
+    padding: 30px;
+    padding-right: 10px;
     font: 14px verdana, sans-serif
 }
 
