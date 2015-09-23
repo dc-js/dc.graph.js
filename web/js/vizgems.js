@@ -122,6 +122,8 @@ var options = {
     },
     fit_labels: {
         default: true,
+        selector: '#fit-labels',
+        needs_redraw: true,
         query: 'fit'
     }
 };
