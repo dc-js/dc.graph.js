@@ -141,13 +141,40 @@
           console.log(error);
           return;
       }
+      // infer some common structures for the json data
+      if(!data.links && data.edges)
+          data.links = data.edges;
+      var sourceattr = "sourcename", targetattr = "targetname";
+      if(!data.links[0][sourceattr]) {
+          var sourceattrs = ["node1", "source", "tail"], targetattrs = ["node2", "target", "head"];
+          if(data.links[0].node0 && data.links[0].node1) {
+              sourceattr = 'node0';
+              targetattr = 'node1';
+          }
+          else {
+              var candidates = sourceattrs.filter(function(n) { return !!data.links[0][n]; });
+              if(!candidates.length) {
+                  console.log("didn't find any source attr", sourceattrs);
+                  return;
+              }
+              if(candidates.length > 1)
+                  console.warn('found more than one possible source attr', candidates);
+              sourceattr = candidates[0];
+              var candidates = targetattrs.filter(function(n) { return !!data.links[0][n]; });
+              if(!candidates.length)
+                  console.log("didn't find any target attr", targetattrs);
+              if(candidates.length > 1)
+                  console.warn('found more than one possible target attr', candidates);
+              targetattr = candidates[0];
+          }
+      }
       if(randomize) {
           data.links.forEach(function(e) { e.order = Math.random()*1000; });
           data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
       }
 
       var edges = flat_group.make(data.links, function(d) {
-          return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : '');
+          return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
       }),
           nodes = flat_group.make(data.nodes, function(d) { return d.name; });
 
@@ -208,8 +235,8 @@
           .showLayoutSteps(showSteps)
           .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
           .edgeDimension(edges.dimension).edgeGroup(edges.group)
-          .sourceAccessor(function(e) { return e.value.sourcename; })
-          .targetAccessor(function(e) { return e.value.targetname; })
+          .sourceAccessor(function(e) { return e.value[sourceattr]; })
+          .targetAccessor(function(e) { return e.value[targetattr]; })
           .nodeFillAccessor(isQFS ? qfs_color : 'white')
           .nodeFixedAccessor(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
           .constrain(constrain)
