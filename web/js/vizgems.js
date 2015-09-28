@@ -1,4 +1,5 @@
 var qs = querystring.parse();
+var data_stats;
 
 function show_stats(data_stats, layout_stats) {
     $('#shown-nodes').html('' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes');
@@ -30,6 +31,9 @@ var options = {
         default: ''
     },
     statserv: {
+        default: ''
+    },
+    histserv: {
         default: ''
     },
     interval: {
@@ -247,7 +251,6 @@ for(var key in options)
 
 /* end general options stuff */
 
-var url = settings.server, vertices_url = url + '/nodes.psv', edges_url = url + '/edges.psv';
 var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
 var node_inv = {}, edge_inv = {};
@@ -255,99 +258,138 @@ var node_inv = {}, edge_inv = {};
 function nocache_query() {
     return '?nocache=' + Date.now();
 }
+function read_data(vertices, edges, inv_vertices, inv_edges, callback) {
+    if(inv_vertices) {
+        node_inv = {};
+        inv_vertices.forEach(function(n) {
+            var nn = node_inv[n.id] = node_inv[n.id] || {};
+            nn[n.key] = n.val;
+        });
+        for(var id in node_inv) {
+            var n = node_inv[id];
+            // if it has a host field, alias that key
+            if('host' in n)
+                node_inv[n.host] = n;
+            // rename attribute that will collide with cache
+            n.itype = n.type;
+            delete n.type;
+            // remove ostype prefix from name
+            n.name = n.name.replace(/^[^:]*:/,'');
+        };
+    }
+    if(inv_edges) {
+        edge_inv = {};
+        inv_edges.forEach(function(e) {
+            var id = e.id1 + '|' + e.id2;
+            var ee = edge_inv[e.id] = node_inv[e.id] || {};
+            ee[e.key] = e.val;
+        });
+    }
 
-function load(get_inv, callback) {
-    var psv = d3.dsv("|", "text/plain");
+    vertices = vertices.filter(function(e) {
+        return !e.id2;
+    });
+    edges = edges.filter(function(e) {
+        return !!e.id2;
+    });
+
+    // populate vertex/edge properties from inventory, but warn about any problems
+    var warnings = [];
+    vertices.forEach(function(n) {
+        var invn = node_inv[n.id1];
+        if(!invn) {
+            warnings.push('node ' + n.id1 + ' not found in inventory');
+            return;
+        }
+        for(var a in n)
+            if(a in invn && n[a] !== invn[a])
+                warnings.push('attr ' + a + ' of node ' + n.id1 + ': ' + n[a] + ' is not ' + invn[a]);
+        _.extend(n, invn);
+    });
+    // make sure all vertices have ostype
+    vertices.forEach(function(n) {
+        n.ostype = n.ostype || 'OTHER';
+    });
+    edges.forEach(function(e) {
+        var id = e.id1 + '|' + e.id2;
+        var inve = edge_inv[id];
+        if(!inve) {
+            warnings.push('edge ' + id + ' not found in inventory');
+            return;
+        }
+        for(var a in e)
+            if(a in inve && e[a] !== inve[a])
+                warnings.push('attr ' + a + ' of edge ' + id + ': ' + e[a] + ' is not ' + inve[a]);
+        _.extend(e, inve);
+    });
+    /*
+     if(warnings.length)
+     console.log('inventory/cache warnings', warnings);
+     */
+    callback(vertices, edges);
+}
+var psv = d3.dsv("|", "text/plain");
+
+function queue_inv(Q) {
+    var inv_nodes_url = settings.server + '/inv-nodes.psv', inv_edges_url = settings.server + '/inv-edges.psv';
+    Q.defer(psv, inv_nodes_url + nocache_query())
+        .defer(psv, inv_edges_url + nocache_query());
+}
+
+function load_live(get_inv, callback) {
+    var vertices_url = settings.server + '/nodes.psv', edges_url = settings.server + '/edges.psv';
+
     var Q = queue()
             .defer(psv, vertices_url + nocache_query())
             .defer(psv, edges_url + nocache_query());
-    if(get_inv) {
-        var inv_nodes_url = url + '/inv-nodes.psv', inv_edges_url = url + '/inv-edges.psv';
-        Q.defer(psv, inv_nodes_url + nocache_query())
-            .defer(psv, inv_edges_url + nocache_query());
-    }
+    if(get_inv)
+        queue_inv(Q);
     Q.await(function(error, vertices, edges, inv_vertices, inv_edges) {
         if(error)
             throw new Error(error);
-        if(inv_vertices) {
-            node_inv = {};
-            inv_vertices.forEach(function(n) {
-                var nn = node_inv[n.id] = node_inv[n.id] || {};
-                nn[n.key] = n.val;
-            });
-            for(var id in node_inv) {
-                var n = node_inv[id];
-                // if it has a host field, alias that key
-                if('host' in n)
-                    node_inv[n.host] = n;
-                // rename attribute that will collide with cache
-                n.itype = n.type;
-                delete n.type;
-                // remove ostype prefix from name
-                n.name = n.name.replace(/^[^:]*:/,'');
-            };
-        }
-        if(inv_edges) {
-            edge_inv = {};
-            inv_edges.forEach(function(e) {
-                var id = e.id1 + '|' + e.id2;
-                var ee = edge_inv[e.id] = node_inv[e.id] || {};
-                ee[e.key] = e.val;
-            });
-        }
-
         // in cache, edges seems to be a superset of vertices, use that instead
-        vertices = edges.filter(function(e) {
-            return !e.id2;
-        });
-        edges = edges.filter(function(e) {
-            return !!e.id2;
-        });
-
-        // populate vertex/edge properties from inventory, but warn about any problems
-        var warnings = [];
-        vertices.forEach(function(n) {
-            var invn = node_inv[n.id1];
-            if(!invn) {
-                warnings.push('node ' + n.id1 + ' not found in inventory');
-                return;
-            }
-            for(var a in n)
-                if(a in invn && n[a] !== invn[a])
-                    warnings.push('attr ' + a + ' of node ' + n.id1 + ': ' + n[a] + ' is not ' + invn[a]);
-            _.extend(n, invn);
-        });
-        // make sure all vertices have ostype
-        vertices.forEach(function(n) {
-            n.ostype = n.ostype || 'OTHER';
-        });
-        edges.forEach(function(e) {
-            var id = e.id1 + '|' + e.id2;
-            var inve = edge_inv[id];
-            if(!inve) {
-                warnings.push('edge ' + id + ' not found in inventory');
-                return;
-            }
-            for(var a in e)
-                if(a in inve && e[a] !== inve[a])
-                    warnings.push('attr ' + a + ' of edge ' + id + ': ' + e[a] + ' is not ' + inve[a]);
-            _.extend(e, inve);
-        });
-        /*
-        if(warnings.length)
-            console.log('inventory/cache warnings', warnings);
-         */
-        callback(vertices, edges);
+        read_data(edges, edges, inv_vertices, inv_edges, callback);
     });
+}
+
+var edge_header = "object|level1|id1|level2|id2|metatype|type|extra",
+    node_header = "object|level1|id1|metatype|type|extra";
+function load_hist(file, get_inv, callback) {
+    var Q = queue()
+            .defer(d3.text, settings.histserv + '/' + file);
+    if(get_inv)
+        queue_inv(Q);
+    Q.await(function(error, hist, inv_vertices, inv_edges) {
+        if(error)
+            throw new Error(error);
+        var pdata = hist.split('\n').slice(3,-2);
+        var ntext = pdata.filter(function(r) { return /^node/.test(r); }),
+            etext = pdata.filter(function(r) { return /^edge/.test(r); });
+        ntext.unshift(node_header);
+        etext.unshift(edge_header);
+        var nodes = psv.parse(ntext.join('\n')),
+            edges = psv.parse(etext.join('\n'));
+        read_data(nodes, edges, inv_vertices, inv_edges, callback);
+    });
+}
+
+function load(get_inv, callback) {
+    if(hist_files) {
+        var file = hist_files[curr_hist];
+        curr_hist = (curr_hist+1)%hist_files.length;
+        load_hist(file, get_inv, callback);
+    }
+    else
+        load_live(get_inv, callback);
 }
 
 function crossfilters(nodes, edges) {
     if(settings.node_limit)
         nodes = nodes.slice(0, settings.node_limit);
     var node_stuff = flat_group.make(nodes, function(d) { return d.id1; }),
-        edge_stuff = flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; });
-    filterIds = node_stuff.crossfilter.dimension(function(d) { return d.id1; }),
-    filterOSTypes = node_stuff.crossfilter.dimension(function(d) { return d.ostype; });
+        edge_stuff = flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; }),
+        filterIds = node_stuff.crossfilter.dimension(function(d) { return d.id1; }),
+        filterOSTypes = node_stuff.crossfilter.dimension(function(d) { return d.ostype; });
 
     return {nodeDimension: node_stuff.Dimension, nodeGroup: node_stuff.group,
             edgeDimension: edge_stuff.Dimension, edgeGroup: edge_stuff.group,
@@ -530,6 +572,26 @@ function step() {
     });
 }
 
-var runner = make_runner(init, step, settings.interval);
-runner.start();
+var preload, hist_files, curr_hist, runner;
+if(settings.histserv) {
+    preload = function(k) {
+        var Q = queue()
+            .defer(d3.text, settings.histserv + '/list.txt' + nocache_query())
+            .defer(d3.text, settings.histserv + '/customer.txt' + nocache_query());
+        Q.await(function(error, list, customers) {
+            list = list.split('\n'); customers = customers.split('\n');
+            var customer1 = customers[0].split('|')[0];
+            hist_files = list.filter(function(r) { return new RegExp("auto-shagrat-" + customer1).test(r); });
+            curr_hist = 0;
+            k();
+        });
+    };
+}
+else preload = function(k) { k(); };
+
+preload(function() {
+    runner = make_runner(init, step, settings.interval);
+    runner.start();
+});
+
 
