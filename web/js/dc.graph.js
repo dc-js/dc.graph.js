@@ -1230,9 +1230,11 @@ dc_graph.legend = function() {
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
 dc_graph.load_graph = function(file, callback) {
-    if(/\.json$/.test(file))
+    // ignore any query parameters for checking extension
+    var file2 = file.replace(/\?.*/, '');
+    if(/\.json$/.test(file2))
         d3.json(file, callback);
-    else if(/\.gv|\.dot$/.test(file))
+    else if(/\.gv|\.dot$/.test(file2))
         d3.text(file, function (error, f) {
             if(error) {
                 callback(error, null);
