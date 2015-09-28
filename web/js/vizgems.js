@@ -292,9 +292,21 @@ function read_data(vertices, edges, inv_vertices, inv_edges, callback) {
     edges = edges.filter(function(e) {
         return !!e.id2;
     });
+    var warnings = [];
+    var sttype = {};
+    edges.forEach(function(e) {
+        if(e.metatype==='ostype' && e.type) {
+            var types = e.type.toUpperCase().split('2');
+            if(sttype[e.id1] && sttype[e.id1] != types[0])
+                warnings.push('inferred source type ' + types[0] + ' of node ' + e.id1 + ' is not ' + sttype[e.id1]);
+            if(sttype[e.id2] && sttype[e.id2] != types[1])
+                warnings.push('inferred target type ' + types[1] + ' of node ' + e.id2 + ' is not ' + sttype[e.id2]);
+            sttype[e.id1] = types[0];
+            sttype[e.id2] = types[1];
+        }
+    });
 
     // populate vertex/edge properties from inventory, but warn about any problems
-    var warnings = [];
     vertices.forEach(function(n) {
         var invn = node_inv[n.id1];
         if(!invn) {
@@ -305,6 +317,12 @@ function read_data(vertices, edges, inv_vertices, inv_edges, callback) {
             if(a in invn && n[a] !== invn[a])
                 warnings.push('attr ' + a + ' of node ' + n.id1 + ': ' + n[a] + ' is not ' + invn[a]);
         _.extend(n, invn);
+        if(!n.ostype)
+            n.ostype = sttype[n.id1];
+    });
+    vertices.forEach(function(n) {
+        if(!n.ostype)
+            n.ostype = sttype[n.id1];
     });
     // make sure all vertices have ostype
     vertices.forEach(function(n) {
@@ -357,7 +375,7 @@ var edge_header = "object|level1|id1|level2|id2|metatype|type|extra",
 function load_hist(file, get_inv, callback) {
     var Q = queue()
             .defer(d3.text, settings.histserv + '/' + file);
-    if(get_inv)
+    if(get_inv && settings.server)
         queue_inv(Q);
     Q.await(function(error, hist, inv_vertices, inv_edges) {
         if(error)
