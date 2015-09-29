@@ -112,6 +112,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _dispatch = d3.dispatch('end');
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
+    var _running = false; // for detecting concurrency issues
 
     // we want to allow either values or functions to be passed to specify parameters.
     // if a function, the function needs a preprocessor to extract the original key/value
@@ -590,6 +591,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return !!e.source && !!e.target;
     }
 
+    _chart.isRunning = function() {
+        return _running;
+    };
+
     /**
      #### .redraw()
      Computes a new layout based on the nodes and edges in the edge groups, and displays the diagram.
@@ -599,9 +604,25 @@ dc_graph.diagram = function (parent, chartGroup) {
      `.redraw()` will be triggered by changes to the filters in any other charts in the same dc.js
      chart group.
      **/
+    var _needsRedraw = false;
     _chart.redraw = function () {
+        // since dc.js can receive UI events and trigger redraws whenever it wants,
+        // and cola absolutely will not tolerate being poked while it's doing layout,
+        // we need to guard the startLayout call.
+        if(_running) {
+            _needsRedraw = true;
+        } else window.setTimeout(function() {
+            _chart.startLayout();
+        }, 10);
+    };
+
+    _chart.startLayout = function () {
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
+        if(_running) {
+            throw new Error('dc_graph.diagram.redraw already running!');
+        }
+        _running = true;
 
         if(_d3cola)
             _d3cola.stop();
@@ -807,10 +828,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             var elapsed = Date.now() - startTime;
             if(_chart.showLayoutSteps())
                 draw(node, edge, edgeHover, edgeLabels);
-            if(_chart.timeLimit() && elapsed > _chart.timeLimit()) {
+            if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                 console.log('cancelled');
                 _d3cola.stop();
-                _dispatch.end();
             }
         });
 
@@ -870,6 +890,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         });
         if(skip_layout) {
+            _running = false;
             _dispatch.end();
             return this;
         }
@@ -881,7 +902,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
                     draw(node, edge, edgeHover, edgeLabels);
+                _running = false;
                 _dispatch.end();
+                if(_needsRedraw) {
+                    _needsRedraw = false;
+                    window.setTimeout(function() {
+                        _chart.startLayout();
+                    }, 0);
+                }
             });
         return this;
     };
@@ -936,6 +964,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
     function draw(node, edge, edgeHover, edgeLabels) {
+        console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
         node.attr('visibility', 'visible')
             .attr("transform", function (d) {
