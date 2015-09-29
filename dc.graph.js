@@ -683,6 +683,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         // remove edges that don't have both end nodes
         wedges = wedges.filter(has_source_and_target);
 
+        // remove self-edges (since we can't draw them - will be option later)
+        wedges = wedges.filter(function(e) { return e.source !== e.target; });
+
         // and optionally, nodes that have no edges
         if(_chart.induceNodes()) {
             var keeps = {};
