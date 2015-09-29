@@ -2,8 +2,10 @@ var qs = querystring.parse();
 var data_stats;
 
 function show_stats(data_stats, layout_stats) {
-    $('#shown-nodes').html('' + layout_stats.nnodes + '/' + data_stats.totnodes + ' nodes');
-    $('#shown-edges').html('' + layout_stats.nedges + '/' + data_stats.totedges + ' edges');
+    $('#shown-nodes').html('' + layout_stats.nnodes + '/' + data_stats.totnodes);
+    $('#shown-edges').html('' + layout_stats.nedges + '/' + data_stats.totedges);
+    $('#time-last').html('' + (runner.lastTime()/1000).toFixed(3));
+    $('#time-avg').html('' + (runner.avgTime()/1000).toFixed(3));
 }
 function next_tick(f) {
     // when there is heavy computation, 0 is not enough?
@@ -201,7 +203,9 @@ function do_option(key, opt) {
         if(opt.needs_relayout)
             diagram.relayout();
         if(opt.needs_redraw)
-            do_redraw();
+            runner.then(function() {
+                do_redraw();
+            });
     }
     if(opt.selector) {
         switch(type) {
