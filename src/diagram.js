@@ -508,7 +508,19 @@ dc_graph.diagram = function (parent, chartGroup) {
      `.redraw()` will be triggered by changes to the filters in any other charts in the same dc.js
      chart group.
      **/
+    var _needsRedraw = false;
     _chart.redraw = function () {
+        // since dc.js can receive UI events and trigger redraws whenever it wants,
+        // and cola absolutely will not tolerate being poked while it's doing layout,
+        // we need to guard the startLayout call.
+        if(_running) {
+            _needsRedraw = true;
+        } else window.setTimeout(function() {
+            _chart.startLayout();
+        }, 10);
+    };
+
+    _chart.startLayout = function () {
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
         if(_running) {
@@ -720,7 +732,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             var elapsed = Date.now() - startTime;
             if(_chart.showLayoutSteps())
                 draw(node, edge, edgeHover, edgeLabels);
-            if(_chart.timeLimit() && elapsed > _chart.timeLimit()) {
+            if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                 console.log('cancelled');
                 _d3cola.stop();
             }
@@ -796,6 +808,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                     draw(node, edge, edgeHover, edgeLabels);
                 _running = false;
                 _dispatch.end();
+                if(_needsRedraw) {
+                    _needsRedraw = false;
+                    window.setTimeout(function() {
+                        _chart.startLayout();
+                    }, 0);
+                }
             });
         return this;
     };
