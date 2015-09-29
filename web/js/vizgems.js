@@ -2,10 +2,10 @@ var qs = querystring.parse();
 var data_stats;
 
 function show_stats(data_stats, layout_stats) {
-    $('#shown-nodes').html('' + layout_stats.nnodes + '/' + data_stats.totnodes);
-    $('#shown-edges').html('' + layout_stats.nedges + '/' + data_stats.totedges);
-    $('#time-last').html('' + (runner.lastTime()/1000).toFixed(3));
-    $('#time-avg').html('' + (runner.avgTime()/1000).toFixed(3));
+    $('#shown-nodes').html('' + (layout_stats.nnodes || 0) + '/' + (data_stats.totnodes || 0));
+    $('#shown-edges').html('' + (layout_stats.nedges || 0) + '/' + (data_stats.totedges || 0));
+    $('#time-last').html('' + ((runner.lastTime() || 0)/1000).toFixed(3));
+    $('#time-avg').html('' + ((runner.avgTime() || 0)/1000).toFixed(3));
 }
 function next_tick(f) {
     // when there is heavy computation, 0 is not enough?

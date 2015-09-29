@@ -50,10 +50,10 @@ var make_runner = function(init, step, interval) {
             return !!timer;
         },
         lastTime: function() {
-            return times[times.length-1];
+            return times.length ? times[times.length-1] : 0;
         },
         avgTime: function() {
-            return d3.sum(times)/times.length;
+            return times.length ? d3.sum(times)/times.length : 0;
         },
         endStep: function() {
             stepped = true;
