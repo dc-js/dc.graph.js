@@ -61,7 +61,6 @@ var options = {
             });
         },
         dont_apply_after_watch: true,
-        needs_redraw: true,
         apply: function(val, diagram, filters) {
             if(filters.filterOSTypes) {
                 osTypeSelect
@@ -203,9 +202,7 @@ function do_option(key, opt) {
         if(opt.needs_relayout)
             diagram.relayout();
         if(opt.needs_redraw)
-            runner.then(function() {
-                do_redraw();
-            });
+            do_redraw();
     }
     if(opt.selector) {
         switch(type) {
@@ -423,9 +420,7 @@ function clickiness() {
     diagram.selectAll('g.node')
         .on('click.vizgems', function(d) {
             selected_node = d.orig.key;
-            runner.then(function() {
-                do_redraw();
-            });
+            do_redraw();
             if(qs.statserv) {
                 var req = qs.statserv + "/rest/dataquery/stat/json/level_o=" + d.orig.key;
                 //not valid jsond3.json(req, function(error, data) {
