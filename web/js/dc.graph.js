@@ -543,6 +543,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return 'edge-' + param(_chart.edgeKeyAccessor())(d).replace(/[^\w-_]/g, '-');
     }
 
+    // node and edge objects shared with cola.js, preserved from one iteration
+    // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
 
     _chart._buildNode = function(node, nodeEnter) {
@@ -583,6 +585,10 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
             .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
     };
+
+    function has_source_and_target(e) {
+        return !!e.source && !!e.target;
+    }
 
     /**
      #### .redraw()
@@ -654,9 +660,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 delete _edges[ek];
 
         // remove edges that don't have both end nodes
-        wedges = wedges.filter(function(e) {
-            return e.source && e.target;
-        });
+        wedges = wedges.filter(has_source_and_target);
+
         // and optionally, nodes that have no edges
         if(_chart.induceNodes()) {
             var keeps = {};
@@ -931,6 +936,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
     function draw(node, edge, edgeHover, edgeLabels) {
+        console.assert(edge.data().every(has_source_and_target));
         node.attr('visibility', 'visible')
             .attr("transform", function (d) {
                 return "translate(" + d.x + "," + d.y + ")";
