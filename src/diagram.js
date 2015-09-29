@@ -714,7 +714,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(_chart.timeLimit() && elapsed > _chart.timeLimit()) {
                 console.log('cancelled');
                 _d3cola.stop();
-                _dispatch.end();
             }
         });
 
