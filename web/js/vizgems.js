@@ -374,6 +374,7 @@ function load_live(get_inv, callback) {
 
 var edge_header = "object|level1|id1|level2|id2|metatype|type|extra",
     node_header = "object|level1|id1|metatype|type|extra";
+var ndicts = [], edicts = [];
 function load_hist(file, get_inv, callback) {
     var Q = queue()
             .defer(d3.text, settings.histserv + '/' + file);
@@ -389,15 +390,26 @@ function load_hist(file, get_inv, callback) {
         etext.unshift(edge_header);
         var nodes = psv.parse(ntext.join('\n')),
             edges = psv.parse(etext.join('\n'));
+        if(!ndicts[curr_hist]) {
+            ndicts[curr_hist] = nodes.map(function(n) { return n.id1; });
+            edicts[curr_hist] = edges.map(function(e) { return e.id1 + '-' + e.id2; });
+            if(curr_hist>0) {
+                var adds = _.difference(ndicts[curr_hist], ndicts[curr_hist-1]).length +
+                        _.difference(edicts[curr_hist], edicts[curr_hist-1]).length;
+                var dels = _.difference(ndicts[curr_hist-1], ndicts[curr_hist]).length +
+                        _.difference(edicts[curr_hist-1], edicts[curr_hist]).length;
+                hist_events[curr_hist].value = {adds: adds, dels: dels};
+            }
+        }
+        timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
         read_data(nodes, edges, inv_vertices, inv_edges, callback);
+        curr_hist = (curr_hist+1)%hist_files.length;
     });
 }
 
 function load(get_inv, callback) {
     if(hist_files) {
         var file = hist_files[curr_hist];
-        timeline.current(hist_events[curr_hist].key).redraw();
-        curr_hist = (curr_hist+1)%hist_files.length;
         load_hist(file, get_inv, callback);
     }
     else

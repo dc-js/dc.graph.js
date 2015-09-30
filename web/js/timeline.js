@@ -8,6 +8,7 @@ function timeline(parent) {
     var _x = null, _y = null;
     var _width, _height;
     var _root = null, _svg = null, _g = null;
+    var _tickwidth = 0.5;
     // input data is just an array of {key: Date, value: {} or {adds: number, dels: number}}
     var _events = null;
     // play head
@@ -67,26 +68,36 @@ function timeline(parent) {
                 .data(_events, function(e) { return e.key; });
         ticks.enter().append('g').attr('class', 'timetick');
         ticks.attr('transform', function(d) {
-            return 'translate(' + _x(d.key) + ',0)';
+            return 'translate(' + Math.floor(_x(d.key)) + ',0)';
         });
-        var tickwidth = 2;
         ticks.each(function(d) {
             var g = d3.select(this);
-            g.selectAll('rect').remove();
-            if(d.value.adds) {
-                g.append('rect').attr({
-                    width: tickwidth, height: _y(0) - _y(d.value.adds),
+            if(d.value.adds !== undefined) {
+                g.selectAll('rect.place').remove();
+                var ar = g.selectAll('rect.adds').data([0]);
+                ar.enter().append('rect');
+                ar.attr({
+                    class: 'adds',
+                    width: _tickwidth, height: _y(0) - _y(d.value.adds),
                     x: 0, y: _y(d.value.adds),
                     fill: 'green'
                 });
-                g.append('rect').attr({
-                    width: tickwidth, height: _y(0) - _y(d.value.dels),
-                    x: tickwidth, y: _y(d.value.dels),
+                var dr = g.selectAll('rect.dels').data([0]);
+                dr.enter().append('rect');
+                dr.attr({
+                    class: 'dels',
+                    width: _tickwidth, height: _y(0) - _y(d.value.dels),
+                    x: _tickwidth, y: _y(d.value.dels),
                     fill: 'red'
                 });
             } else {
-                g.append('rect').attr({
-                    width: tickwidth, height: 2,
+                g.selectAll('rect.adds').remove();
+                g.selectAll('rect.dels').remove();
+                var pr = g.selectAll('rect.place').data([0]);
+                pr.enter().append('rect');
+                pr.attr({
+                    class: 'place',
+                    width: _tickwidth, height: 2,
                     x: 0, y: bl-2,
                     fill: 'grey'
                 });
@@ -109,9 +120,10 @@ function timeline(parent) {
                     .data([0]);
             line.enter().append('rect');
             line.attr({
-                width: 1, height: _height,
-                x: _x(_current), y: 0,
-                fill: 'black'
+                width: 3, height: _height,
+                x: Math.floor(_x(_current))-1, y: 0,
+                fill: 'blue',
+                opacity: 0.5
             });
         }
         return _chart;
