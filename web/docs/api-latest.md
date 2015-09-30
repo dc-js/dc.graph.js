@@ -171,6 +171,9 @@ By default, reads the `distance` field of the edge. If the distance is falsy, us
 Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is 'individual', and the base
 value to be multiplied for 'symmetric' and 'jaccard' edge lengths.
 
+#### .transitionDuration([number])
+Gets or sets the transition duration, the length of time each change to the diagram will be animated
+
  .timeLimit([number])
 Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for now limit.
 Default: 0
