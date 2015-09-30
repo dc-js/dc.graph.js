@@ -12,6 +12,9 @@ function timeline(parent) {
     var _events = null;
     // play head
     var _current = null;
+    // time display
+    var _timewid = 65, _timefmt = d3.time.format('%-m/%-d %H:%M:%S');
+
     _chart.x = function(scale) {
         if(!arguments.length)
             return _x;
@@ -49,15 +52,15 @@ function timeline(parent) {
         if(!_x) _x = d3.time.scale();
         if(!_y) _y = d3.scale.linear();
         _x.domain(d3.extent(_events, function(e) { return e.key; }))
-            .range([0, _width]);
+            .range([_timewid, _width]);
         var max = Math.max(20, d3.max(_events, function(e) {
             return e.value.adds ? Math.max(e.value.adds, e.value.dels) : 0;
         }));
         _y.domain([max, 0]).range([0, bl]);
         var axis = _g.selectAll('rect.timeline').data([0]);
         axis.enter().append('rect').attr('class', 'timeline');
-        axis.attr({width: _width, height: 1,
-                       x: 0, y: bl,
+        axis.attr({width: _width-_timewid, height: 1,
+                       x: _timewid, y: bl,
                        fill: '#ccc'
                       });
         var ticks = _g.selectAll('g.timetick')
@@ -90,9 +93,18 @@ function timeline(parent) {
             }
         });
         if(_current) {
-            var head = _g.selectAll('g.currtime')
+            var text = _g.selectAll('text.currtime')
                     .data([0]);
-            head.enter().append('g').attr('class', 'currtime');
+            text.enter().append('text').attr('class', 'currtime');
+            text.text(_timefmt(_current)).attr({
+                'font-family': 'sans-serif',
+                'font-size': '10px',
+                x: 0,
+                y: bl
+            });
+            var head = _g.selectAll('g.playhead')
+                    .data([0]);
+            head.enter().append('g').attr('class', 'playhead');
             var line = head.selectAll('rect')
                     .data([0]);
             line.enter().append('rect');
