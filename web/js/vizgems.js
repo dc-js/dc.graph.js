@@ -626,6 +626,14 @@ if(settings.histserv) {
             }).filter(function(dt) { return !!dt; });
             hist_events = hist_times.map(function(dt) { return {key: dt, value: {}}; });
             timeline.width(280).height(20).events(hist_events).render();
+            timeline.on('jump', function(t) {
+                var i = hist_events.findIndex(function(e) { return e.key > t; });
+                if(i === 0)
+                    curr_hist = 0;
+                else if(i === -1)
+                    curr_hist = hist_events.length-1;
+                else curr_hist = i;
+            });
             curr_hist = 0;
             k();
         });

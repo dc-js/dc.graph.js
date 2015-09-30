@@ -9,6 +9,7 @@ function timeline(parent) {
     var _width, _height;
     var _root = null, _svg = null, _g = null;
     var _tickwidth = 1;
+    var _dispatch = d3.dispatch('jump');
     // input data is just an array of {key: Date, value: {} or {adds: number, dels: number}}
     var _events = null;
     // play head
@@ -127,7 +128,16 @@ function timeline(parent) {
         _g = _svg
             .append('g');
 
+        _svg.on('click', function() {
+            if(_x)
+                _dispatch.jump(_x.invert(d3.mouse(this)[0]));
+        });
         _chart.redraw();
+        return _chart;
+    };
+
+    _chart.on = function(event, callback) {
+        _dispatch.on(event, callback);
         return _chart;
     };
 
