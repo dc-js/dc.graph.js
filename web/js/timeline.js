@@ -114,8 +114,9 @@ function timeline(parent) {
                 width: 4, height: _height,
                 x: Math.floor(_x(_current))-1, y: 0,
                 fill: 'none',
-                stroke: 'blue',
-                'stroke-width': 1
+                stroke: 'darkblue',
+                'stroke-width': 1,
+                opacity: 0.5
             });
         }
         return _chart;
