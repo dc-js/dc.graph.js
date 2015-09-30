@@ -329,6 +329,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.baseLength = property(30);
 
+    /**
+     #### .transitionDuration([number])
+     Gets or sets the transition duration, the length of time each change to the diagram will be animated
+     **/
     _chart.transitionDuration = property(500);
 
     /** .timeLimit([number])
@@ -638,12 +642,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         var edge = _edgeLayer.selectAll('.edge')
                 .data(wedges, param(_chart.edgeKeyAccessor()));
         var edgeEnter = edge.enter().append('svg:path')
-                .attr('class', 'edge')
-                .attr('id', edge_id);
+                .attr({
+                    class: 'edge',
+                    id: edge_id,
+                    opacity: 0
+                });
         edge
             .attr('stroke', param(_chart.edgeStrokeAccessor()))
             .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
-            .attr('opacity', param(_chart.edgeOpacityAccessor()))
             .attr('marker-end', function(d) {
                 var id = param(_chart.edgeArrowheadAccessor())(d);
                 return id ? 'url(#' + id + ')' : null;
@@ -653,12 +659,14 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return id ? 'url(#' + id + ')' : null;
             });
         var edgeExit = edge.exit();
-        edgeExit.remove();
+        edgeExit.transition(_chart.transitionDuration())
+            .attr('opacity', 0)
+            .remove();
 
         // another wider copy of the edge just for hover events
         var edgeHover = _edgeLayer.selectAll('.edge-hover')
                 .data(wedges, param(_chart.edgeKeyAccessor()));
-        edgeHover.enter().append('svg:path')
+        var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'edge-hover')
             .attr('opacity', 0)
             .attr('stroke', 'green')
@@ -699,10 +707,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(wnodes, param(_chart.nodeKeyAccessor()));
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
-                .attr('visibility', 'hidden') // don't show until has layout
+                .attr('opacity', '0') // don't show until has layout
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
-        node.exit().remove();
+        node.exit().transition(_chart.transitionDuration())
+            .attr('opacity', 0)
+            .remove();
 
         // cola constraints always use indices, but node references
         // are more friendly, so translate those
@@ -734,7 +744,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _d3cola.on('tick', function() {
             var elapsed = Date.now() - startTime;
             if(_chart.showLayoutSteps())
-                draw(node, edge, edgeHover, edgeLabels);
+                draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
             if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                 console.log('cancelled');
                 _d3cola.stop();
@@ -808,7 +818,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .start(10,20,20)
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
-                    draw(node, edge, edgeHover, edgeLabels);
+                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
                 _running = false;
                 _dispatch.end();
                 if(_needsRedraw) {
@@ -870,15 +880,26 @@ dc_graph.diagram = function (parent, chartGroup) {
             return generate_path([sourceX, sourceY, c1X, c1Y, c2X, c2Y, targetX, targetY], 3);
         }
     }
-    function draw(node, edge, edgeHover, edgeLabels) {
+    function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
-        node.attr('visibility', 'visible')
+
+        // start new nodes and edges at their final position
+        nodeEnter.attr("transform", function (d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        });
+        node.transition()
+            .duration(_chart.transitionDuration())
+            .attr('opacity', '1')
             .attr("transform", function (d) {
                 return "translate(" + d.x + "," + d.y + ")";
             });
 
-        edge.attr("d", edge_path);
+        edgeEnter.attr('d', edge_path);
+        edge.transition()
+            .duration(_chart.transitionDuration())
+            .attr('opacity', param(_chart.edgeOpacityAccessor()))
+            .attr("d", edge_path);
         edgeHover.attr('d', edge_path);
 
         edgeLabels
