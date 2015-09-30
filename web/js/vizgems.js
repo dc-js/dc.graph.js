@@ -520,7 +520,7 @@ function init() {
             .transitionDuration(2000)
             .showLayoutSteps(false)
             .lengthStrategy('jaccard')
-            .baseLength(200)
+            .baseLength(250)
         //.nodeFitLabelAccessor(false)
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
@@ -604,38 +604,61 @@ function step() {
     });
 }
 
-var preload, hist_files, hist_events, curr_hist, runner;
+var preload, snapshots, hist_files, hist_events, curr_hist, runner;
+
+function load_history(customer, k) {
+    hist_files = snapshots.filter(function(r) { return new RegExp("auto-shagrat-" + customer).test(r); });
+    var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
+    var datef = d3.time.format('%Y%m%d-%H%M%S');
+    var hist_times = hist_files.map(function(f) {
+        var match = dtreg.exec(f);
+        if(!match) {
+            console.log('filename ' + f + " didn't match datetime regex");
+            return null;
+        }
+        return datef.parse(match[1]);
+    }).filter(function(dt) { return !!dt; });
+    hist_events = hist_times.map(function(dt) { return {key: dt, value: {}}; });
+    timeline.width(280).height(20).events(hist_events).render();
+    timeline.on('jump', function(t) {
+        var i = hist_events.findIndex(function(e) { return e.key > t; });
+        if(i === 0)
+            curr_hist = 0;
+        else if(i === -1)
+            curr_hist = hist_events.length-1;
+        else curr_hist = i;
+    });
+    curr_hist = 0;
+    k();
+}
+function populate_customer_select(customers) {
+    var sel = d3.select('#customer-select')
+            .style('display', 'block');
+    sel.selectAll('option')
+        .data(customers)
+        .enter().append('option')
+        .attr({
+            name: function(d) { return d[0]; },
+            selected: function(_,i) { return i===0; }
+        })
+        .text(function(d) { return d[1]; });
+    sel.on('change', function() {
+        runner.stop();
+        load_history(this.selectedOptions[0].value, function() {});
+        runner.start();
+    });
+}
 if(settings.histserv) {
     preload = function(k) {
         var Q = queue()
             .defer(d3.text, settings.histserv + '/list.txt' + nocache_query())
             .defer(d3.text, settings.histserv + '/customer.txt' + nocache_query());
         Q.await(function(error, list, customers) {
-            list = list.split('\n'); customers = customers.split('\n');
-            var customer1 = customers[0].split('|')[0];
-            hist_files = list.filter(function(r) { return new RegExp("auto-shagrat-" + customer1).test(r); });
-            var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
-            var datef = d3.time.format('%Y%m%d-%H%M%S');
-            var hist_times = hist_files.map(function(f) {
-                var match = dtreg.exec(f);
-                if(!match) {
-                    console.log('filename ' + f + " didn't match datetime regex");
-                    return null;
-                }
-                return datef.parse(match[1]);
-            }).filter(function(dt) { return !!dt; });
-            hist_events = hist_times.map(function(dt) { return {key: dt, value: {}}; });
-            timeline.width(280).height(20).events(hist_events).render();
-            timeline.on('jump', function(t) {
-                var i = hist_events.findIndex(function(e) { return e.key > t; });
-                if(i === 0)
-                    curr_hist = 0;
-                else if(i === -1)
-                    curr_hist = hist_events.length-1;
-                else curr_hist = i;
-            });
-            curr_hist = 0;
-            k();
+            snapshots = list.split('\n'); customers = customers.split('\n');
+            customers = customers.map(function(c) { return c.split('|'); });
+            populate_customer_select(customers);
+            var customer1 = customers[0][0];
+            load_history(customer1, k);
         });
     };
 }
