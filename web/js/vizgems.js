@@ -517,6 +517,7 @@ function init() {
         diagram
             .width($(window).width())
             .height($(window).height())
+            .transitionDuration(2000)
             .showLayoutSteps(false)
             .lengthStrategy('jaccard')
             .baseLength(200)
