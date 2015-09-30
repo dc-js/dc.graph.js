@@ -254,6 +254,7 @@ for(var key in options)
 
 var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
+var timeline = timeline('#timeline');
 var node_inv = {}, edge_inv = {};
 
 function nocache_query() {
@@ -395,6 +396,7 @@ function load_hist(file, get_inv, callback) {
 function load(get_inv, callback) {
     if(hist_files) {
         var file = hist_files[curr_hist];
+        timeline.current(hist_events[curr_hist].key).redraw();
         curr_hist = (curr_hist+1)%hist_files.length;
         load_hist(file, get_inv, callback);
     }
@@ -589,7 +591,7 @@ function step() {
     });
 }
 
-var preload, hist_files, curr_hist, runner;
+var preload, hist_files, hist_events, curr_hist, runner;
 if(settings.histserv) {
     preload = function(k) {
         var Q = queue()
@@ -599,6 +601,18 @@ if(settings.histserv) {
             list = list.split('\n'); customers = customers.split('\n');
             var customer1 = customers[0].split('|')[0];
             hist_files = list.filter(function(r) { return new RegExp("auto-shagrat-" + customer1).test(r); });
+            var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
+            var datef = d3.time.format('%Y%m%d-%H%M%S');
+            var hist_times = hist_files.map(function(f) {
+                var match = dtreg.exec(f);
+                if(!match) {
+                    console.log('filename ' + f + " didn't match datetime regex");
+                    return null;
+                }
+                return datef.parse(match[1]);
+            }).filter(function(dt) { return !!dt; });
+            hist_events = hist_times.map(function(dt) { return {key: dt, value: {}}; });
+            timeline.width(280).height(20).events(hist_events).render();
             curr_hist = 0;
             k();
         });
