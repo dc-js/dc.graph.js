@@ -638,7 +638,7 @@ function populate_customer_select(customers) {
         .data(customers)
         .enter().append('option')
         .attr({
-            name: function(d) { return d[0]; },
+            value: function(d) { return d[0]; },
             selected: function(_,i) { return i===0; }
         })
         .text(function(d) { return d[1]; });
