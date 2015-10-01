@@ -38,6 +38,10 @@ var options = {
     histserv: {
         default: ''
     },
+    tenant: {
+        default: '',
+        selector: '#tenant-select'
+    },
     interval: {
         default: 5000
     },
@@ -207,30 +211,34 @@ function do_option(key, opt) {
     if(opt.selector) {
         switch(type) {
         case 'boolean':
-            opt.set = function(val) {
-                $(opt.selector)
-                    .prop('checked', val);
+            if(!opt.set && opt.selector)
+                opt.set = function(val) {
+                    $(opt.selector)
+                        .prop('checked', val);
             };
-            opt.watch = function(k) {
-                $(opt.selector)
-                    .change(function() {
-                        var val = $(this).is(':checked');
-                        k(val);
-                    });
-            };
+            if(!opt.watch && opt.selector)
+                opt.watch = function(k) {
+                    $(opt.selector)
+                        .change(function() {
+                            var val = $(this).is(':checked');
+                            k(val);
+                        });
+                };
             break;
         case 'string':
-            opt.set = function(val) {
-                $(opt.selector)
-                    .val(val);
-            };
-            opt.watch = function(k) {
-                $(opt.selector)
-                    .change(function() {
-                        var val = $(this).val();
-                        k(val);
-                    });
-            };
+            if(!opt.set && opt.selector)
+                opt.set = function(val) {
+                    $(opt.selector)
+                        .val(val);
+                };
+            if(!opt.watch && opt.selector)
+                opt.watch = function(k) {
+                    $(opt.selector)
+                        .change(function() {
+                            var val = $(this).val();
+                            k(val);
+                        });
+                };
             break;
         default: throw new Error('unsupported selector type ' + type);
         }
@@ -631,9 +639,9 @@ function load_history(tenant, k) {
     curr_hist = 0;
     k();
 }
-function populate_tenant_select(tenants) {
-    var sel = d3.select('#tenant-select')
-            .style('display', 'block');
+function populate_tenant_select(tenants, curr) {
+    $('#tenant-option').show();
+    var sel = d3.select('#tenant-select');
     sel.selectAll('option')
         .data(tenants)
         .enter().append('option')
@@ -642,6 +650,7 @@ function populate_tenant_select(tenants) {
             selected: function(_,i) { return i===0; }
         })
         .text(function(d) { return d[1]; });
+    $('#tenant-select').val(curr);
     sel.on('change', function() {
         runner.stop();
         load_history(this.selectedOptions[0].value, function() {});
@@ -655,10 +664,11 @@ if(settings.histserv) {
             .defer(d3.text, settings.histserv + '/customer.txt' + nocache_query());
         Q.await(function(error, list, tenants) {
             snapshots = list.split('\n'); tenants = tenants.split('\n');
-            tenants = tenants.map(function(c) { return c.split('|'); });
-            populate_tenant_select(tenants);
-            var tenant1 = tenants[0][0];
-            load_history(tenant1, k);
+            tenants = tenants.filter(function(t) { return !!t; })
+                .map(function(c) { return c.split('|'); });
+            var tenant = settings.tenant || tenants[0][0];
+            populate_tenant_select(tenants, tenant);
+            load_history(tenant, k);
         });
     };
 }
