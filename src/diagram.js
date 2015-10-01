@@ -938,7 +938,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_chart.showLayoutSteps())
             endall([ntrans, etrans], function() { _dispatch.end(); });
 
-        edgeHover.attr('d', edge_path);
+        edgeHover.attr('d', new_edge_path);
         edgeLabels.transition()
             .duration(_chart.transitionDuration())
             .attr('transform', function(d,i) {
