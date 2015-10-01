@@ -35,6 +35,10 @@
     running
   </div>
   <label id="tenant-option" style="display:none">Tenant: <select id="tenant-select"></select></label>
+  <div id="timeline" style="margin: 5px 0px"></div>
+  <div class="heading">
+    stats (<a id="show-stats" href="javascript:toggle_stats()"></a>)
+  </div>
   <div id="graph-stats">
     <table>
       <tr>
@@ -55,7 +59,9 @@
       </tr>
     </table>
   </div>
-  <div id="timeline"></div>
+  <div class="heading">
+    options (<a id="show-options" href="javascript:toggle_options()"></a>)
+  </div>
   <div id="options" style="display: hidden">
     <div id="ostype-select"></div>
     <div style="float: left; margin-left: 2px">

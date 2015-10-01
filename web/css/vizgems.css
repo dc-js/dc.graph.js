@@ -46,6 +46,12 @@
     font: 12px verdana, san-serif;
 }
 
+div.heading {
+    display: block;
+    font: 10px verdana, san-serif;
+    margin-left: -1em;
+}
+
 body {
     margin: 0;
     overflow: hidden;

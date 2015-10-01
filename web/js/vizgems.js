@@ -28,6 +28,20 @@ function do_redraw() {
         show_stats(data_stats, diagram.getStats());
     });
 }
+function toggle_stats() {
+    var val = !settings.stats;
+    toggle_stats.callback(val);
+}
+function toggle_options() {
+    var val = !settings.options;
+    toggle_options.callback(val);
+}
+function apply_heading(link, section) {
+    return function(val) {
+        $(link).text(val ? 'hide' : 'show');
+        $(section).toggle(val);
+    };
+}
 var options = {
     server: {
         default: ''
@@ -47,6 +61,20 @@ var options = {
     },
     transition: {
         default: 2000
+    },
+    stats: {
+        default: false,
+        watch: function(k) {
+            toggle_stats.callback = k;
+        },
+        apply: apply_heading('#show-stats', '#graph-stats')
+    },
+    options: {
+        default: false,
+        watch: function(k) {
+            toggle_options.callback = k;
+        },
+        apply: apply_heading('#show-options', '#options')
     },
     timeLimit: {
         default: 750,
