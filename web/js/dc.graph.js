@@ -427,9 +427,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      #### .highlightNeighbors([boolean])
-     Whether to highlight neighboring edges when hovering over a node. Default: true.
+     Whether to highlight neighboring edges when hovering over a node. Not completely working yet.
+     Default: false.
      **/
-    _chart.highlightNeighbors = property(true);
+    _chart.highlightNeighbors = property(false);
 
     /**
      #### .transitionDuration([number])
@@ -814,7 +815,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('class', 'node')
                 .attr('opacity', '0') // don't show until has layout
                 .call(_d3cola.drag);
-        if(_chart.highlightNeighbors) {
+        if(_chart.highlightNeighbors()) {
             nodeEnter
                 .on('mouseover', function(d) {
                     edge.attr('stroke-width', function(e) {

@@ -719,7 +719,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('class', 'node')
                 .attr('opacity', '0') // don't show until has layout
                 .call(_d3cola.drag);
-        if(_chart.highlightNeighbors) {
+        if(_chart.highlightNeighbors()) {
             nodeEnter
                 .on('mouseover', function(d) {
                     edge.attr('stroke-width', function(e) {

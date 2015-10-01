@@ -172,7 +172,8 @@ Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is '
 value to be multiplied for 'symmetric' and 'jaccard' edge lengths.
 
 #### .highlightNeighbors([boolean])
-Whether to highlight neighboring edges when hovering over a node. Default: true.
+Whether to highlight neighboring edges when hovering over a node. Not completely working yet.
+Default: false.
 
 #### .transitionDuration([number])
 Gets or sets the transition duration, the length of time each change to the diagram will be animated
