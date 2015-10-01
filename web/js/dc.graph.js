@@ -933,7 +933,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         var startTime = Date.now();
         _d3cola.nodes(wnodes)
             .links(layout_edges)
-            .constraints(constraints)
+            .constraints(constraints);
+        _d3cola
             .start(10,20,20)
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
