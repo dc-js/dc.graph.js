@@ -606,8 +606,8 @@ function step() {
 
 var preload, snapshots, hist_files, hist_events, curr_hist, runner;
 
-function load_history(customer, k) {
-    hist_files = snapshots.filter(function(r) { return new RegExp("auto-shagrat-" + customer).test(r); });
+function load_history(tenant, k) {
+    hist_files = snapshots.filter(function(r) { return new RegExp("auto-shagrat-" + tenant).test(r); });
     var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
     var datef = d3.time.format('%Y%m%d-%H%M%S');
     var hist_times = hist_files.map(function(f) {
@@ -631,11 +631,11 @@ function load_history(customer, k) {
     curr_hist = 0;
     k();
 }
-function populate_customer_select(customers) {
-    var sel = d3.select('#customer-select')
+function populate_tenant_select(tenants) {
+    var sel = d3.select('#tenant-select')
             .style('display', 'block');
     sel.selectAll('option')
-        .data(customers)
+        .data(tenants)
         .enter().append('option')
         .attr({
             value: function(d) { return d[0]; },
@@ -653,12 +653,12 @@ if(settings.histserv) {
         var Q = queue()
             .defer(d3.text, settings.histserv + '/list.txt' + nocache_query())
             .defer(d3.text, settings.histserv + '/customer.txt' + nocache_query());
-        Q.await(function(error, list, customers) {
-            snapshots = list.split('\n'); customers = customers.split('\n');
-            customers = customers.map(function(c) { return c.split('|'); });
-            populate_customer_select(customers);
-            var customer1 = customers[0][0];
-            load_history(customer1, k);
+        Q.await(function(error, list, tenants) {
+            snapshots = list.split('\n'); tenants = tenants.split('\n');
+            tenants = tenants.map(function(c) { return c.split('|'); });
+            populate_tenant_select(tenants);
+            var tenant1 = tenants[0][0];
+            load_history(tenant1, k);
         });
     };
 }
