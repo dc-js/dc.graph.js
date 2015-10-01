@@ -413,9 +413,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      #### .showLayoutSteps([boolean])
      If this flag is true, the positions of nodes and will be updated while layout is iterating. If false,
-     the positions will only be updated once layout has stabilized. Default: true
+     the positions will only be updated once layout has stabilized. Note: this may not be
+     compatible with transitionDuration. Default: false
      **/
-    _chart.showLayoutSteps = property(true);
+    _chart.showLayoutSteps = property(false);
 
     _chart.legend = property(null).react(function(l) {
         l.parent(_chart);
@@ -819,8 +820,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
+                else
+                    _dispatch.end();
                 _running = false;
-                _dispatch.end();
                 if(_needsRedraw) {
                     _needsRedraw = false;
                     window.setTimeout(function() {
@@ -880,6 +882,18 @@ dc_graph.diagram = function (parent, chartGroup) {
             return generate_path([sourceX, sourceY, c1X, c1Y, c2X, c2Y, targetX, targetY], 3);
         }
     }
+    // wait on multiple transitions, adapted from
+    // http://stackoverflow.com/questions/10692100/invoke-a-callback-at-the-end-of-a-transition
+    function endall(transitions, callback) {
+        if (transitions.every(function(transition) { return transition.size() === 0; }))
+            callback();
+        var n = 0;
+        transitions.forEach(function(transition) {
+            transition
+                .each(function() { ++n; })
+                .each("end", function() { if (!--n) callback.apply(this, arguments); });
+        });
+    }
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
@@ -888,20 +902,26 @@ dc_graph.diagram = function (parent, chartGroup) {
         nodeEnter.attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
-        node.transition()
-            .duration(_chart.transitionDuration())
-            .attr('opacity', '1')
-            .attr("transform", function (d) {
-                return "translate(" + d.x + "," + d.y + ")";
-            });
+        var ntrans = node.transition()
+                .duration(_chart.transitionDuration())
+                .attr('opacity', '1')
+                .attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                });
 
         edgeEnter.attr('d', edge_path);
-        edge.transition()
-            .duration(_chart.transitionDuration())
-            .attr('opacity', param(_chart.edgeOpacityAccessor()))
-            .attr("d", edge_path);
-        edgeHover.attr('d', edge_path);
+        var etrans = edge.transition()
+                .duration(_chart.transitionDuration())
+                .attr('opacity', param(_chart.edgeOpacityAccessor()))
+                .attr("d", edge_path);
 
+        // signal layout done when all transitions complete
+        // because otherwise client might start another layout and lock the processor
+        if(!_chart.showLayoutSteps())
+            endall([ntrans, etrans], function() { _dispatch.end(); });
+
+        // not transitioning these - but we could.
+        edgeHover.attr('d', edge_path);
         edgeLabels
             .attr('transform', function(d,i) {
             if (d.target.x < d.source.x) {
@@ -1100,4 +1120,3 @@ dc_graph.diagram = function (parent, chartGroup) {
     dc.registerChart(_chart, chartGroup);
     return _chart;
 };
-
