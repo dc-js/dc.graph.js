@@ -920,9 +920,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_chart.showLayoutSteps())
             endall([ntrans, etrans], function() { _dispatch.end(); });
 
-        // not transitioning these - but we could.
         edgeHover.attr('d', edge_path);
-        edgeLabels
+        edgeLabels.transition()
+            .duration(_chart.transitionDuration())
             .attr('transform', function(d,i) {
             if (d.target.x < d.source.x) {
                 var bbox = this.getBBox(),
