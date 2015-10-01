@@ -509,9 +509,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      #### .showLayoutSteps([boolean])
      If this flag is true, the positions of nodes and will be updated while layout is iterating. If false,
-     the positions will only be updated once layout has stabilized. Default: true
+     the positions will only be updated once layout has stabilized. Note: this may not be
+     compatible with transitionDuration. Default: false
      **/
-    _chart.showLayoutSteps = property(true);
+    _chart.showLayoutSteps = property(false);
 
     _chart.legend = property(null).react(function(l) {
         l.parent(_chart);
@@ -754,8 +755,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var id = param(_chart.edgeArrowtailAccessor())(d);
                 return id ? 'url(#' + id + ')' : null;
             });
-        var edgeExit = edge.exit();
-        edgeExit.transition(_chart.transitionDuration())
+        edge.exit().transition()
+            .duration(_chart.transitionDuration())
             .attr('opacity', 0)
             .remove();
 
@@ -796,7 +797,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .text(function(d){
                     return param(_chart.edgeLabelAccessor())(d);
                 });
-        edgeLabels.exit().remove();
+        edgeLabels.exit().transition()
+            .duration(_chart.transitionDuration())
+            .attr('opacity', 0).remove();
 
         // create node SVG elements
         var node = _nodeLayer.selectAll('.node')
@@ -806,7 +809,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('opacity', '0') // don't show until has layout
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
-        node.exit().transition(_chart.transitionDuration())
+        node.exit().transition()
+            .duration(_chart.transitionDuration())
             .attr('opacity', 0)
             .remove();
 
@@ -915,8 +919,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .on('end', function() {
                 if(!_chart.showLayoutSteps())
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
+                else
+                    _dispatch.end();
                 _running = false;
-                _dispatch.end();
                 if(_needsRedraw) {
                     _needsRedraw = false;
                     window.setTimeout(function() {
@@ -927,9 +932,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    function edge_path(d) {
-        var deltaX = d.target.x - d.source.x,
-            deltaY = d.target.y - d.source.y,
+    function edge_path(d, sx, sy, tx, ty) {
+        var deltaX = tx - sx,
+            deltaY = ty - sy,
             sourcePadding = d.source.dcg_ry +
                 param(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
             targetPadding = d.target.dcg_ry +
@@ -939,16 +944,16 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!d.parallel) {
             sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, deltaX, deltaY);
             tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, -deltaX, -deltaY);
-            sourceX = d.source.x + sp.x;
-            sourceY = d.source.y + sp.y;
-            targetX = d.target.x + tp.x;
-            targetY = d.target.y + tp.y;
+            sourceX = sx + sp.x;
+            sourceY = sy + sp.y;
+            targetX = tx + tp.x;
+            targetY = ty + tp.y;
             d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
             return generate_path([sourceX, sourceY, targetX, targetY], 1);
         }
         else {
             // alternate parallel edges over, then under
-            var dir = (!!(d.parallel%2) === (d.source.x < d.target.x)) ? -1 : 1,
+            var dir = (!!(d.parallel%2) === (sx < tx)) ? -1 : 1,
                 port = Math.floor((d.parallel+1)/2) * dir,
                 srcang = Math.atan2(deltaY, deltaX),
                 sportang = srcang + port * _chart.parallelEdgeOffset() / sourcePadding,
@@ -957,48 +962,81 @@ dc_graph.diagram = function (parent, chartGroup) {
                 sin_sport = Math.sin(sportang),
                 cos_tport = Math.cos(tportang),
                 sin_tport = Math.sin(tportang),
-                dist = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);
+                dist = Math.hypot(tx - sx, ty - sy);
             sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, cos_sport, sin_sport);
             tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, cos_tport, sin_tport);
             var sdist = Math.hypot(sp.x, sp.y),
                 tdist = Math.hypot(tp.x, tp.y),
                 c1dist = Math.max(sdist+sourcePadding/4, Math.min(sdist*2, dist/2)),
                 c2dist = Math.min(tdist+targetPadding/4, Math.min(tdist*2, dist/2));
-            sourceX = d.source.x + sp.x;
-            sourceY = d.source.y + sp.y;
-            var c1X = d.source.x + c1dist * cos_sport,
-                c1Y = d.source.y + c1dist * sin_sport,
-                c2X = d.target.x + c2dist * cos_tport,
-                c2Y = d.target.y + c2dist * sin_tport;
-            targetX = d.target.x + tp.x;
-            targetY = d.target.y + tp.y;
+            sourceX = sx + sp.x;
+            sourceY = sy + sp.y;
+            var c1X = sx + c1dist * cos_sport,
+                c1Y = sy + c1dist * sin_sport,
+                c2X = tx + c2dist * cos_tport,
+                c2Y = ty + c2dist * sin_tport;
+            targetX = tx + tp.x;
+            targetY = ty + tp.y;
             d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
             return generate_path([sourceX, sourceY, c1X, c1Y, c2X, c2Y, targetX, targetY], 3);
         }
+    }
+
+    function old_edge_path(d) {
+        return edge_path(d, d.source.prevX || d.source.x, d.source.prevY || d.source.y,
+                         d.target.prevX || d.target.x, d.target.prevY || d.target.y);
+    }
+
+    function new_edge_path(d) {
+        return edge_path(d, d.source.x, d.source.y, d.target.x, d.target.y);
+    }
+
+    // wait on multiple transitions, adapted from
+    // http://stackoverflow.com/questions/10692100/invoke-a-callback-at-the-end-of-a-transition
+    function endall(transitions, callback) {
+        if (transitions.every(function(transition) { return transition.size() === 0; }))
+            callback();
+        var n = 0;
+        transitions.forEach(function(transition) {
+            transition
+                .each(function() { ++n; })
+                .each("end.all", function() { if (!--n) callback.apply(this, arguments); });
+        });
     }
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
-        // start new nodes and edges at their final position
+        // start new nodes at their final position
         nodeEnter.attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
-        node.transition()
-            .duration(_chart.transitionDuration())
-            .attr('opacity', '1')
-            .attr("transform", function (d) {
-                return "translate(" + d.x + "," + d.y + ")";
-            });
+        var ntrans = node.transition()
+                .duration(_chart.transitionDuration())
+                .attr('opacity', '1')
+                .attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                });
+        ntrans.each("end.record", function(d) {
+            d.prevX = d.x;
+            d.prevY = d.y;
+        });
 
-        edgeEnter.attr('d', edge_path);
-        edge.transition()
-            .duration(_chart.transitionDuration())
-            .attr('opacity', param(_chart.edgeOpacityAccessor()))
-            .attr("d", edge_path);
+        // start new edges at old positions of nodes, if any, else new positions
+        edgeEnter.attr('d', old_edge_path);
+        var etrans = edge.transition()
+                .duration(_chart.transitionDuration())
+                .attr('opacity', param(_chart.edgeOpacityAccessor()))
+                .attr("d", new_edge_path);
+
+        // signal layout done when all transitions complete
+        // because otherwise client might start another layout and lock the processor
+        if(!_chart.showLayoutSteps())
+            endall([ntrans, etrans], function() { _dispatch.end(); });
+
         edgeHover.attr('d', edge_path);
-
-        edgeLabels
+        edgeLabels.transition()
+            .duration(_chart.transitionDuration())
             .attr('transform', function(d,i) {
             if (d.target.x < d.source.x) {
                 var bbox = this.getBBox(),
@@ -1196,7 +1234,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     dc.registerChart(_chart, chartGroup);
     return _chart;
 };
-
 
 /**
 ## Legend

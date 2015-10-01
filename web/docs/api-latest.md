@@ -220,7 +220,8 @@ a modifier function which takes the layout object.
 
 #### .showLayoutSteps([boolean])
 If this flag is true, the positions of nodes and will be updated while layout is iterating. If false,
-the positions will only be updated once layout has stabilized. Default: true
+the positions will only be updated once layout has stabilized. Note: this may not be
+compatible with transitionDuration. Default: false
 
 #### .redraw()
 Computes a new layout based on the nodes and edges in the edge groups, and displays the diagram.
