@@ -659,8 +659,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var id = param(_chart.edgeArrowtailAccessor())(d);
                 return id ? 'url(#' + id + ')' : null;
             });
-        var edgeExit = edge.exit();
-        edgeExit.transition(_chart.transitionDuration())
+        edge.exit().transition()
+            .duration(_chart.transitionDuration())
             .attr('opacity', 0)
             .remove();
 
@@ -701,7 +701,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .text(function(d){
                     return param(_chart.edgeLabelAccessor())(d);
                 });
-        edgeLabels.exit().remove();
+        edgeLabels.exit().transition()
+            .duration(_chart.transitionDuration())
+            .attr('opacity', 0).remove();
 
         // create node SVG elements
         var node = _nodeLayer.selectAll('.node')
@@ -711,7 +713,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('opacity', '0') // don't show until has layout
                 .call(_d3cola.drag);
         _chart._buildNode(node, nodeEnter);
-        node.exit().transition(_chart.transitionDuration())
+        node.exit().transition()
+            .duration(_chart.transitionDuration())
             .attr('opacity', 0)
             .remove();
 
