@@ -190,7 +190,7 @@ function update_interesting() {
 var settings = {};
 function do_option(key, opt) {
     settings[key] = opt.default;
-    var query = opt.query || key;
+    var query = opt.query = opt.query || key;
     var type = query_type(opt.default);
     if(query in qs)
         settings[key] = read_query(type, qs[query]);
