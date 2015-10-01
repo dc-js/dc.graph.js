@@ -45,6 +45,9 @@ var options = {
     interval: {
         default: 5000
     },
+    transition: {
+        default: 2000
+    },
     timeLimit: {
         default: 750,
         query: 'limit',
@@ -525,7 +528,7 @@ function init() {
         diagram
             .width($(window).width())
             .height($(window).height())
-            .transitionDuration(2000)
+            .transitionDuration(settings.transition)
             .showLayoutSteps(false)
             .lengthStrategy('jaccard')
             .baseLength(250)
