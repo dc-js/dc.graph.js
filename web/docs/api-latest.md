@@ -171,6 +171,9 @@ By default, reads the `distance` field of the edge. If the distance is falsy, us
 Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is 'individual', and the base
 value to be multiplied for 'symmetric' and 'jaccard' edge lengths.
 
+#### .highlightNeighbors([boolean])
+Whether to highlight neighboring edges when hovering over a node. Default: true.
+
 #### .transitionDuration([number])
 Gets or sets the transition duration, the length of time each change to the diagram will be animated
 
