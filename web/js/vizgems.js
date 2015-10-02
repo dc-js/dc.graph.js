@@ -43,14 +43,17 @@ function apply_heading(link, section) {
 function choose_view(view) {
     var types;
     switch(view) {
+    case 'all':
+        types = null;
+        break;
     case 'user':
-        types = ['HYP','NET','OTHER','PRT','RTR','U','VM'];
+        types = [['HYP','NET','OTHER','PRT','RTR','U','VM']];
         break;
     case 'image':
-        types = ['HYP','IMG','NET','OTHER','PRT','RTR','VM'];
+        types = [['HYP','IMG','NET','OTHER','PRT','RTR','VM']];
         break;
     }
-    osTypeSelect.replaceFilter([types]);
+    osTypeSelect.replaceFilter(types);
     osTypeSelect.redrawGroup();
 }
 var options = {
