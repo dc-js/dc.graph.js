@@ -306,10 +306,11 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
             var nn = node_inv[n.id] = node_inv[n.id] || {};
             nn[n.key] = n.val;
         });
-        for(var id in node_inv) {
-            var n = node_inv[id];
+        for(id in node_inv) {
+            n = node_inv[id];
             // if it has a host field, alias that key
             if('host' in n)
+    var n, id;
                 node_inv[n.host] = n;
             // rename attribute that will collide with cache
             n.itype = n.type;
@@ -334,7 +335,7 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
     edges = edges.filter(function(e) {
         return !!e.id2;
     });
-    var warnings = [];
+    var warnings = {};
     var sttype = {};
     var vert_map = {};
     // historical nodes come in multiple key/value rows
@@ -350,7 +351,7 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
     }
     function add_v(id) {
         if(!vert_map[id]) {
-            console.log('adding node ' + id);
+            added_nodes.push(id);
             vert_map[id] = {id1: id};
         }
     }
@@ -360,29 +361,37 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
         if(e.metatype==='ostype' && e.type) {
             var types = e.type.toUpperCase().split('2');
             if(sttype[e.id1] && sttype[e.id1] != types[0])
-                warnings.push('inferred source type ' + types[0] + ' of node ' + e.id1 + ' is not ' + sttype[e.id1]);
+                conflicting_source_warnings.push({curr_type: types[0], node: e.id1, prior_type: sttype[e.id1]});
             if(sttype[e.id2] && sttype[e.id2] != types[1])
-                warnings.push('inferred target type ' + types[1] + ' of node ' + e.id2 + ' is not ' + sttype[e.id2]);
+                conflicting_target_warnings.push({curr_type: types[1], node: e.id2, prior_type: sttype[e.id2]});
             sttype[e.id1] = types[0];
             sttype[e.id2] = types[1];
         }
     });
     vertices = _.values(vert_map);
 
+    var node_not_found_warnings = [], node_attr_mismatch_warnings = [];
     // populate vertex/edge properties from inventory, but warn about any problems
     vertices.forEach(function(n) {
         var invn = node_inv[n.id1];
         if(!invn) {
-            warnings.push('node ' + n.id1 + ' not found in inventory');
+            node_not_found_warnings.push(n.id1);
             return;
         }
         for(var a in n)
             if(a in invn && n[a] !== invn[a])
-                warnings.push('attr ' + a + ' of node ' + n.id1 + ': ' + n[a] + ' is not ' + invn[a]);
+                node_attr_mismatch_warnings.push({attr: a, node: n.id1, prior_value: n[a], inv_value: invn[a]});
+
         _.extend(n, invn);
         if(!n.ostype)
             n.ostype = sttype[n.id1];
     });
+    if(conflicting_source_warnings.length)
+        warnings['conflicting source types'] = conflicting_source_warnings;
+    if(conflicting_target_warnings.length)
+        warnings['conflicting target types'] = conflicting_target_warnings;
+    if(added_nodes.length)
+        warnings['added unknown nodes from edges'] = added_nodes;
     vertices.forEach(function(n) {
         console.assert(!n.ostype || !sttype[n.id1] || n.ostype === sttype[n.id1]);
         if(sttype[n.id1])
@@ -396,18 +405,21 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
         var id = e.id1 + '|' + e.id2;
         var inve = edge_inv[id];
         if(!inve) {
-            warnings.push('edge ' + id + ' not found in inventory');
+            edge_not_found_warnings.push(id);
             return;
         }
         for(var a in e)
             if(a in inve && e[a] !== inve[a])
-                warnings.push('attr ' + a + ' of edge ' + id + ': ' + e[a] + ' is not ' + inve[a]);
+                edge_attr_mismatch_warnings.push({attr: a, edge: id, prior_value: e[a], inv_value: inve[a]});
         _.extend(e, inve);
     });
-    /*
-     if(warnings.length)
-     console.log('inventory/cache warnings', warnings);
-     */
+    if(edge_not_found_warnings.length)
+        warnings['edges not found in inventory'] = edge_not_found_warnings;
+    if(edge_attr_mismatch_warnings.length)
+        warnings['edge attributes mismatched'] = edge_attr_mismatch_warnings;
+
+    if(Object.keys(warnings).length)
+        console.log('graph read warnings', warnings);
     callback(vertices, edges);
 }
 var psv = d3.dsv("|", "text/plain");
