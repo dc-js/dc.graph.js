@@ -308,7 +308,7 @@ for(var key in options)
 var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
 var timeline = timeline('#timeline');
-var node_inv = {}, edge_inv = {};
+var node_inv = null, edge_inv = null;
 
 function nocache_query() {
     return '?nocache=' + Date.now();
@@ -398,53 +398,55 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
         warnings['added unknown nodes from edges'] = added_nodes;
     vertices = _.values(vert_map);
 
-    var node_not_found_warnings = [], node_attr_mismatch_warnings = [];
-    // populate vertex/edge properties from inventory, but warn about any problems
-    vertices.forEach(function(n) {
-        var invn = node_inv[n.id1];
-        if(!invn) {
-            node_not_found_warnings.push(n.id1);
-            return;
-        }
-        for(var a in n)
-            if(a in invn && n[a] !== invn[a])
-                node_attr_mismatch_warnings.push({attr: a, node: n.id1, prior_value: n[a], inv_value: invn[a]});
+    if(node_inv) {
+        var node_not_found_warnings = [], node_attr_mismatch_warnings = [];
+        // populate vertex/edge properties from inventory, but warn about any problems
+        vertices.forEach(function(n) {
+            var invn = node_inv[n.id1];
+            if(!invn) {
+                node_not_found_warnings.push(n.id1);
+                return;
+            }
+            for(var a in n)
+                if(a in invn && n[a] !== invn[a])
+                    node_attr_mismatch_warnings.push({attr: a, node: n.id1, prior_value: n[a], inv_value: invn[a]});
 
-        _.extend(n, invn);
-        if(!n.ostype)
-            n.ostype = sttype[n.id1];
-    });
-    if(node_not_found_warnings.length)
-        warnings['nodes not found in inventory'] = node_not_found_warnings;
-    if(node_attr_mismatch_warnings.length)
-        warnings['node attributes mismatched'] = node_attr_mismatch_warnings;
+            _.extend(n, invn);
+            if(!n.ostype)
+                n.ostype = sttype[n.id1];
+        });
+        if(node_not_found_warnings.length)
+            warnings['nodes not found in inventory'] = node_not_found_warnings;
+        if(node_attr_mismatch_warnings.length)
+            warnings['node attributes mismatched'] = node_attr_mismatch_warnings;
+    }
+    if(edge_inv) {
+        var edge_not_found_warnings = [], edge_attr_mismatch_warnings = [];
+        edges.forEach(function(e) {
+            var id = e.id1 + '|' + e.id2;
+            var inve = edge_inv[id];
+            if(!inve) {
+                edge_not_found_warnings.push(id);
+                return;
+            }
+            for(var a in e)
+                if(a in inve && e[a] !== inve[a])
+                    edge_attr_mismatch_warnings.push({attr: a, edge: id, prior_value: e[a], inv_value: inve[a]});
+            _.extend(e, inve);
+        });
+        if(edge_not_found_warnings.length)
+            warnings['edges not found in inventory'] = edge_not_found_warnings;
+        if(edge_attr_mismatch_warnings.length)
+            warnings['edge attributes mismatched'] = edge_attr_mismatch_warnings;
+    }
+    // infer node ostype from edge, if consistent
     vertices.forEach(function(n) {
         console.assert(!n.ostype || !sttype[n.id1] || n.ostype === sttype[n.id1]);
         if(sttype[n.id1])
             n.ostype = sttype[n.id1];
-    });
-    // make sure all vertices have ostype
-    vertices.forEach(function(n) {
+        // regardless, make sure all vertices have some ostype
         n.ostype = n.ostype || 'OTHER';
     });
-
-    var edge_not_found_warnings = [], edge_attr_mismatch_warnings = [];
-    edges.forEach(function(e) {
-        var id = e.id1 + '|' + e.id2;
-        var inve = edge_inv[id];
-        if(!inve) {
-            edge_not_found_warnings.push(id);
-            return;
-        }
-        for(var a in e)
-            if(a in inve && e[a] !== inve[a])
-                edge_attr_mismatch_warnings.push({attr: a, edge: id, prior_value: e[a], inv_value: inve[a]});
-        _.extend(e, inve);
-    });
-    if(edge_not_found_warnings.length)
-        warnings['edges not found in inventory'] = edge_not_found_warnings;
-    if(edge_attr_mismatch_warnings.length)
-        warnings['edge attributes mismatched'] = edge_attr_mismatch_warnings;
 
     if(Object.keys(warnings).length)
         console.log('graph read warnings', warnings);
