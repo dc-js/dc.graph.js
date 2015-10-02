@@ -474,6 +474,18 @@ function load_live(get_inv, callback) {
     });
 }
 
+// from http://stackoverflow.com/questions/4833651/javascript-array-sort-and-unique
+function sort_unique(arr) {
+    arr = arr.sort(function (a, b) { return a*1 - b*1; });
+    var ret = [arr[0]];
+    for (var i = 1; i < arr.length; i++) { // start loop at 1 as element 0 can never be a duplicate
+        if (arr[i-1] !== arr[i]) {
+            ret.push(arr[i]);
+        }
+    }
+    return ret;
+}
+
 var edge_header = "object|level1|id1|level2|id2|metatype|type|extra",
     node_header = "object|level1|id1|key|value|extra";
 var ndicts = [], edicts = [];
@@ -493,8 +505,8 @@ function load_hist(file, get_inv, callback) {
         var nodes = psv.parse(ntext.join('\n')),
             edges = psv.parse(etext.join('\n'));
         if(!ndicts[curr_hist]) {
-            ndicts[curr_hist] = nodes.map(function(n) { return n.id1; });
-            edicts[curr_hist] = edges.map(function(e) { return e.id1 + '-' + e.id2; });
+            ndicts[curr_hist] = sort_unique(nodes.map(function(n) { return n.id1; }));
+            edicts[curr_hist] = sort_unique(edges.map(function(e) { return e.id1 + '-' + e.id2; }));
             if(curr_hist>0) {
                 var adds = _.difference(ndicts[curr_hist], ndicts[curr_hist-1]).length +
                         _.difference(edicts[curr_hist], edicts[curr_hist-1]).length;
