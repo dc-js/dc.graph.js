@@ -602,7 +602,9 @@ function init() {
             .showLayoutSteps(false)
             .lengthStrategy('jaccard')
             .baseLength(200)
-        //.nodeFitLabelAccessor(false)
+            .nodeTitleAccessor(function(kv) {
+                return kv.value.ostype==='PRT' ? kv.value.name : kv.key;
+            })
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
             .sourceAccessor(function(e) { return e.value.id1; })
@@ -647,7 +649,8 @@ function init() {
             .nodeRadiusAccessor(30)
             .induceNodes(true) // drop zero-degree nodes for now
             .nodeLabelAccessor(function(kv) {
-                return bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
+                return kv.value.ostype==='PRT' ? '' :
+                    bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
                     kv.key : kv.value.name;
             })
             .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(colorbrewer.Paired[12]))
