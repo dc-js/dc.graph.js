@@ -299,7 +299,7 @@ var node_inv = {}, edge_inv = {};
 function nocache_query() {
     return '?nocache=' + Date.now();
 }
-function read_data(vertices, edges, inv_vertices, inv_edges, callback) {
+function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) {
     if(inv_vertices) {
         node_inv = {};
         inv_vertices.forEach(function(n) {
@@ -327,6 +327,7 @@ function read_data(vertices, edges, inv_vertices, inv_edges, callback) {
         });
     }
 
+    // we pass in edges as vertices for live case, seems more complete
     vertices = vertices.filter(function(e) {
         return !e.id2;
     });
@@ -335,7 +336,27 @@ function read_data(vertices, edges, inv_vertices, inv_edges, callback) {
     });
     var warnings = [];
     var sttype = {};
+    var vert_map = {};
+    // historical nodes come in multiple key/value rows
+    if(is_hist) {
+        vertices.forEach(function(n) {
+            var v = vert_map[n.id1] = vert_map[n.id1] || {id1: n.id1};
+            v[n.key] = n.value;
+        });
+    } else {
+        vertices.forEach(function(n) {
+            vert_map[n.id1] = n;
+        });
+    }
+    function add_v(id) {
+        if(!vert_map[id]) {
+            console.log('adding node ' + id);
+            vert_map[id] = {id1: id};
+        }
+    }
     edges.forEach(function(e) {
+        add_v(e.id1);
+        add_v(e.id2);
         if(e.metatype==='ostype' && e.type) {
             var types = e.type.toUpperCase().split('2');
             if(sttype[e.id1] && sttype[e.id1] != types[0])
@@ -346,6 +367,7 @@ function read_data(vertices, edges, inv_vertices, inv_edges, callback) {
             sttype[e.id2] = types[1];
         }
     });
+    vertices = _.values(vert_map);
 
     // populate vertex/edge properties from inventory, but warn about any problems
     vertices.forEach(function(n) {
@@ -362,7 +384,8 @@ function read_data(vertices, edges, inv_vertices, inv_edges, callback) {
             n.ostype = sttype[n.id1];
     });
     vertices.forEach(function(n) {
-        if(!n.ostype)
+        console.assert(!n.ostype || !sttype[n.id1] || n.ostype === sttype[n.id1]);
+        if(sttype[n.id1])
             n.ostype = sttype[n.id1];
     });
     // make sure all vertices have ostype
@@ -407,12 +430,12 @@ function load_live(get_inv, callback) {
         if(error)
             throw new Error(error);
         // in cache, edges seems to be a superset of vertices, use that instead
-        read_data(edges, edges, inv_vertices, inv_edges, callback);
+        read_data(edges, edges, inv_vertices, inv_edges, false, callback);
     });
 }
 
 var edge_header = "object|level1|id1|level2|id2|metatype|type|extra",
-    node_header = "object|level1|id1|metatype|type|extra";
+    node_header = "object|level1|id1|key|value|extra";
 var ndicts = [], edicts = [];
 function load_hist(file, get_inv, callback) {
     var Q = queue()
@@ -441,7 +464,7 @@ function load_hist(file, get_inv, callback) {
             }
         }
         timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
-        read_data(nodes, edges, inv_vertices, inv_edges, callback);
+        read_data(nodes, edges, inv_vertices, inv_edges, true, callback);
         curr_hist = (curr_hist+1)%hist_files.length;
     });
 }
@@ -544,6 +567,7 @@ var ostypes = {
     VM: "Virtual Machine",
     FS: "Volume", // File System
     IMG: "Image",
+    HYP: "Host",
     SUB: "Subnet",
     NET: "Network"
 };
@@ -617,7 +641,7 @@ function init() {
         for(var ost in ostypes)
             exs.push({key: '', name: ostypes[ost], value: {ostype: ost}});
         diagram.legend(
-            dc_graph.legend().nodeWidth(70).nodeHeight(70).exemplars(exs));
+            dc_graph.legend().nodeWidth(70).nodeHeight(60).exemplars(exs));
 
         show_start();
         diagram.render();
