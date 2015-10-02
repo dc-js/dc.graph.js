@@ -13,11 +13,9 @@ function next_tick(f) {
 }
 function show_start() {
     $('#run-indicator').show();
-    //console.log('start layout');
 }
 function show_stop() {
     $('#run-indicator').hide();
-    //console.log('stop layout');
 }
 function do_redraw() {
     if(!$('#run-indicator').is(':hidden'))
@@ -41,6 +39,19 @@ function apply_heading(link, section) {
         $(link).text(val ? 'hide' : 'show');
         $(section).toggle(val);
     };
+}
+function choose_view(view) {
+    var types;
+    switch(view) {
+    case 'user':
+        types = ['HYP','NET','OTHER','PRT','RTR','U','VM'];
+        break;
+    case 'image':
+        types = ['HYP','IMG','NET','OTHER','PRT','RTR','VM'];
+        break;
+    }
+    osTypeSelect.replaceFilter([types]);
+    osTypeSelect.redrawGroup();
 }
 var options = {
     server: {
@@ -300,6 +311,7 @@ function nocache_query() {
     return '?nocache=' + Date.now();
 }
 function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) {
+    var n, id;
     if(inv_vertices) {
         node_inv = {};
         inv_vertices.forEach(function(n) {
@@ -310,7 +322,6 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
             n = node_inv[id];
             // if it has a host field, alias that key
             if('host' in n)
-    var n, id;
                 node_inv[n.host] = n;
             // rename attribute that will collide with cache
             n.itype = n.type;
@@ -344,23 +355,25 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
             var v = vert_map[n.id1] = vert_map[n.id1] || {id1: n.id1};
             v[n.key] = n.value;
         });
-    } else {
-        vertices.forEach(function(n) {
-            vert_map[n.id1] = n;
-        });
-    }
-    function add_v(id) {
-        if(!vert_map[id]) {
-            added_nodes.push(id);
-            vert_map[id] = {id1: id};
-        }
         for(id in vert_map) {
             n = vert_map[id];
             // remove ostype prefix from name
             if(n.name)
                 n.name = n.name.replace(/^[^:]*:/,'');
         }
+    } else {
+        vertices.forEach(function(n) {
+            vert_map[n.id1] = n;
+        });
     }
+    var added_nodes = [];
+    function add_v(id) {
+        if(!vert_map[id]) {
+            added_nodes.push(id);
+            vert_map[id] = {id1: id};
+        }
+    }
+    var conflicting_source_warnings = [], conflicting_target_warnings = [];
     edges.forEach(function(e) {
         add_v(e.id1);
         add_v(e.id2);
@@ -374,6 +387,12 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
             sttype[e.id2] = types[1];
         }
     });
+    if(conflicting_source_warnings.length)
+        warnings['conflicting source types'] = conflicting_source_warnings;
+    if(conflicting_target_warnings.length)
+        warnings['conflicting target types'] = conflicting_target_warnings;
+    if(added_nodes.length)
+        warnings['added unknown nodes from edges'] = added_nodes;
     vertices = _.values(vert_map);
 
     var node_not_found_warnings = [], node_attr_mismatch_warnings = [];
@@ -392,12 +411,10 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
         if(!n.ostype)
             n.ostype = sttype[n.id1];
     });
-    if(conflicting_source_warnings.length)
-        warnings['conflicting source types'] = conflicting_source_warnings;
-    if(conflicting_target_warnings.length)
-        warnings['conflicting target types'] = conflicting_target_warnings;
-    if(added_nodes.length)
-        warnings['added unknown nodes from edges'] = added_nodes;
+    if(node_not_found_warnings.length)
+        warnings['nodes not found in inventory'] = node_not_found_warnings;
+    if(node_attr_mismatch_warnings.length)
+        warnings['node attributes mismatched'] = node_attr_mismatch_warnings;
     vertices.forEach(function(n) {
         console.assert(!n.ostype || !sttype[n.id1] || n.ostype === sttype[n.id1]);
         if(sttype[n.id1])
@@ -407,6 +424,8 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
     vertices.forEach(function(n) {
         n.ostype = n.ostype || 'OTHER';
     });
+
+    var edge_not_found_warnings = [], edge_attr_mismatch_warnings = [];
     edges.forEach(function(e) {
         var id = e.id1 + '|' + e.id2;
         var inve = edge_inv[id];

@@ -52,6 +52,10 @@ div.heading {
     margin-left: -1em;
 }
 
+#type-views a {
+    font: 12px verdana, san-serif;
+}
+
 body {
     margin: 0;
     overflow: hidden;
