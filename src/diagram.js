@@ -527,9 +527,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         // we need to guard the startLayout call.
         if(_running) {
             _needsRedraw = true;
-        } else window.setTimeout(function() {
-            _chart.startLayout();
-        }, 10);
+        }
+        else _chart.startLayout();
     };
 
     _chart.startLayout = function () {
