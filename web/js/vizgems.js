@@ -583,7 +583,7 @@ function init() {
             .transitionDuration(settings.transition)
             .showLayoutSteps(false)
             .lengthStrategy('jaccard')
-            .baseLength(250)
+            .baseLength(200)
         //.nodeFitLabelAccessor(false)
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
