@@ -354,6 +354,12 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
             added_nodes.push(id);
             vert_map[id] = {id1: id};
         }
+        for(id in vert_map) {
+            n = vert_map[id];
+            // remove ostype prefix from name
+            if(n.name)
+                n.name = n.name.replace(/^[^:]*:/,'');
+        }
     }
     edges.forEach(function(e) {
         add_v(e.id1);
