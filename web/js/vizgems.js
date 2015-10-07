@@ -39,10 +39,10 @@ function choose_view(view) {
         types = null;
         break;
     case 'user':
-        types = [['HYP','NET','OTHER','PRT','RTR','U','VM']];
+        types = [['FS', 'HYP', 'NET', 'OTHER', 'PRT', 'RTR', 'U', 'VM']];
         break;
     case 'image':
-        types = [['HYP','IMG','NET','OTHER','PRT','RTR','VM']];
+        types = [['FS', 'HYP', 'IMG', 'NET', 'OTHER', 'PRT', 'RTR', 'VM']];
         break;
     }
     osTypeSelect.replaceFilter(types);
@@ -650,7 +650,7 @@ function init() {
                 return d3.ascending(ostypes[a.key], ostypes[b.key]);
             })
             .multiple(true)
-            .size(11);
+            .size(12);
         apply_options();
 
         // respond to browser resize (not necessary if width/height is static)
