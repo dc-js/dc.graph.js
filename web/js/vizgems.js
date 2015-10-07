@@ -7,10 +7,6 @@ function show_stats(data_stats, layout_stats) {
     $('#time-last').html('' + ((runner.lastTime() || 0)/1000).toFixed(3));
     $('#time-avg').html('' + ((runner.avgTime() || 0)/1000).toFixed(3));
 }
-function next_tick(f) {
-    // when there is heavy computation, 0 is not enough?
-    window.setTimeout(f, 20);
-}
 function show_start() {
     $('#run-indicator').show();
 }
@@ -20,11 +16,7 @@ function show_stop() {
 function do_redraw() {
     if(!$('#run-indicator').is(':hidden'))
         return;
-    show_start();
-    next_tick(function() {
-        diagram.redrawGroup();
-        show_stats(data_stats, diagram.getStats());
-    });
+    diagram.redrawGroup();
 }
 function toggle_stats() {
     var val = !settings.stats;
@@ -292,9 +284,7 @@ function do_option(key, opt) {
         opt.set(settings[key]);
     if(opt.watch)
         opt.watch(function(val) {
-            next_tick(function() {
-                update_setting(opt, val);
-            });
+            update_setting(opt, val);
         });
 }
 
@@ -645,8 +635,10 @@ function init() {
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
             .sourceAccessor(function(e) { return e.value.id1; })
             .targetAccessor(function(e) { return e.value.id2; })
+            .on('start', show_start)
             .on('end', function() {
                 show_stop();
+                show_stats(data_stats, diagram.getStats());
                 runner.endStep();
             });
         osTypeSelect
@@ -700,11 +692,10 @@ function init() {
         diagram.legend(
             dc_graph.legend().nodeWidth(70).nodeHeight(60).exemplars(exs));
 
-        show_start();
-        diagram.render();
         osTypeSelect.render();
+        diagram.render();
         clickiness();
-        show_stats({totnodes: vertices.length, totedges: edges.length}, diagram.getStats());
+        data_stats = {totnodes: vertices.length, totedges: edges.length};
     });
 }
 function step() {
@@ -713,7 +704,6 @@ function step() {
             runner.endStep();
             return; // cola sometimes dies on empty input; hope that next iteration will succeed
         }
-        data_stats = {totnodes: vertices.length, totedges: edges.length};
         filters = crossfilters(vertices, edges);
         apply_options();
         diagram

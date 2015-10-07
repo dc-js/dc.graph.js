@@ -13,7 +13,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _chart = {};
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
-    var _dispatch = d3.dispatch('end');
+    var _dispatch = d3.dispatch('end', 'start');
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
     var _running = false; // for detecting concurrency issues
@@ -838,23 +838,33 @@ dc_graph.diagram = function (parent, chartGroup) {
         _d3cola.nodes(wnodes)
             .links(layout_edges)
             .constraints(constraints);
-        _d3cola
-            .start(10,20,20)
-            .on('end', function() {
-                if(!_chart.showLayoutSteps())
-                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
-                else
-                    _dispatch.end();
-                _running = false;
-                if(_needsRedraw) {
-                    _needsRedraw = false;
-                    window.setTimeout(function() {
-                        _chart.startLayout();
-                    }, 0);
-                }
-            });
+        _dispatch.start(); // cola doesn't seem to fire this itself?
+        window.setTimeout(function() {
+            _d3cola
+                .start(10,20,20)
+                .on('end', function() {
+                    if(!_chart.showLayoutSteps())
+                        draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
+                    else layout_done();
+                })
+                .on('start', function() {
+                    console.log('COLA START'); // doesn't seem to fire
+                    _dispatch.start();
+                });
+        });
         return this;
     };
+
+    function layout_done() {
+        _dispatch.end();
+        _running = false;
+        if(_needsRedraw) {
+            _needsRedraw = false;
+            window.setTimeout(function() {
+                _chart.startLayout();
+            }, 0);
+        }
+    }
 
     function edge_path(d, sx, sy, tx, ty) {
         var deltaX = tx - sx,
@@ -956,7 +966,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         // signal layout done when all transitions complete
         // because otherwise client might start another layout and lock the processor
         if(!_chart.showLayoutSteps())
-            endall([ntrans, etrans], function() { _dispatch.end(); });
+            endall([ntrans, etrans], layout_done);
 
         edgeHover.attr('d', new_edge_path);
         edgeLabels.transition()
