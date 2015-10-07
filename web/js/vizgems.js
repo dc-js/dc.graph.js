@@ -677,9 +677,19 @@ function init() {
             .nodeRadiusAccessor(30)
             .induceNodes(true) // drop zero-degree nodes for now
             .nodeLabelAccessor(function(kv) {
-                return kv.value.ostype==='PRT' ? '' :
-                    bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
-                    kv.key : kv.value.name;
+                switch(kv.value.ostype) {
+                case 'PRT': return '';
+                case 'FS':
+                    if(!bad_name(kv.value.name)) {
+                        var parts = kv.value.name.split('-');
+                        if(parts.length===10 && parts[0]==='ceph')
+                            return [parts[0], parts[3], parts[4], parts[9]].join('-');
+                    }
+                    // fall thru
+                default:
+                    return bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
+                        kv.key : kv.value.name;
+                }
             })
             .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(colorbrewer.Paired[12]))
             .nodeFillAccessor(function(kv) {
