@@ -361,7 +361,7 @@ dc.errors.InvalidStateException = function () {
 dc.errors.InvalidStateException.prototype = Object.create(dc.errors.Exception.prototype);
 dc.errors.InvalidStateException.prototype.constructor = dc.errors.InvalidStateException;
 
-dc.errors.BadArgumentException = function() {
+dc.errors.BadArgumentException = function () {
     dc.errors.Exception.apply(this, arguments);
 };
 
@@ -794,7 +794,7 @@ dc.baseMixin = function (_chart) {
         } else if (filters.length === 1 && !filters[0].isFiltered) {
             // single value and not a function-based filter
             dimension.filterExact(filters[0]);
-        } else if (filters.length === 1 && filters[0].filterType==='RangedFilter') {
+        } else if (filters.length === 1 && filters[0].filterType === 'RangedFilter') {
             // single range-based filter
             dimension.filterRange(filters[0]);
         } else {
@@ -1113,8 +1113,8 @@ dc.baseMixin = function (_chart) {
             _anchor = parent.anchor();
             _root = parent.root();
             _isChild = true;
-        } else if(parent) {
-            if(parent.select && parent.classed) { // detect d3 selection
+        } else if (parent) {
+            if (parent.select && parent.classed) { // detect d3 selection
                 _anchor = parent.node();
             } else {
                 _anchor = parent;
@@ -1123,8 +1123,7 @@ dc.baseMixin = function (_chart) {
             _root.classed(dc.constants.CHART_CLASS, true);
             dc.registerChart(_chart, chartGroup);
             _isChild = false;
-        }
-        else {
+        } else {
             throw new dc.errors.BadArgumentException('parent must be defined');
         }
         _chartGroup = chartGroup;
@@ -6137,7 +6136,7 @@ dc.dataGrid = function (parent, chartGroup) {
     };
 
     /**
-     * Get or set the index of the beginning slice which determines which entries get displayed by the widget
+     * Get or set the index of the beginning slice which determines which entries get displayed by the widget.
      * Useful when implementing pagination.
      * @name beginSlice
      * @memberof dc.dataGrid
@@ -9569,11 +9568,9 @@ dc.selectMenu = function (parent, chartGroup) {
         _chart.select('select').remove();
         _select = _chart.root().append('select')
                         .classed(SELECT_CSS_CLASS, true);
-
-        setAttributes();
-
         _select.append('option').text(_promptText).attr('value', '');
-        renderOptions();
+
+        _chart._doRedraw();
         return _chart;
     };
 
@@ -9583,10 +9580,9 @@ dc.selectMenu = function (parent, chartGroup) {
         // select the option(s) corresponding to current filter(s)
         if (_chart.hasFilter() && _multiple) {
             _select.selectAll('option')
-                .filter(function (d) {
+                .property('selected', function (d) {
                     return d && _chart.filters().indexOf(String(_chart.keyAccessor()(d))) >= 0;
-                })
-                .property('selected', true);
+                });
         } else if (_chart.hasFilter()) {
             _select.property('value', _chart.filter());
         } else {
