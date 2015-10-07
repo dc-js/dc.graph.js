@@ -972,21 +972,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         edgeLabels.transition()
             .duration(_chart.transitionDuration())
             .attr('transform', function(d,i) {
-            if (d.target.x < d.source.x) {
-                var bbox = this.getBBox(),
-                    rx = bbox.x + bbox.width/2,
-                    ry = bbox.y + bbox.height/2;
-                return 'rotate(180 ' + rx + ' ' + ry + ')';
-            }
-            else {
-                return 'rotate(0)';
-            }
-        })
-            .attr('dy', function(d, i) {
-                if (d.target.x < d.source.x)
-                    return 11;
-                else
-                    return -2;
+                if (d.target.x < d.source.x) {
+                    var bbox = this.getBBox(),
+                        rx = bbox.x + bbox.width/2,
+                        ry = bbox.y + bbox.height/2;
+                    return 'rotate(180 ' + rx + ' ' + ry + ')';
+                }
+                else {
+                    return 'rotate(0)';
+                }
             });
     }
 
