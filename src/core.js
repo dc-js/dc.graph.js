@@ -54,6 +54,11 @@ function point_on_ellipse(A, B, dx, dy) {
     return ret;
 }
 
+var eps = 0.0000001;
+function between(a, b, c) {
+    return a-eps <= b && b <= c+eps;
+}
+
 // Adapted from http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect/1968345#1968345
 function segment_intersection(x1,y1,x2,y2, x3,y3,x4,y4) {
     var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)) /
@@ -64,24 +69,24 @@ function segment_intersection(x1,y1,x2,y2, x3,y3,x4,y4) {
         return false;
     } else {
         if (x1>=x2) {
-            if (!(x2<=x&&x<=x1)) {return false;}
+            if (!between(x2, x, x1)) {return false;}
         } else {
-            if (!(x1<=x&&x<=x2)) {return false;}
+            if (!between(x1, x, x2)) {return false;}
         }
         if (y1>=y2) {
-            if (!(y2<=y&&y<=y1)) {return false;}
+            if (!between(y2, y, y1)) {return false;}
         } else {
-            if (!(y1<=y&&y<=y2)) {return false;}
+            if (!between(y1, y, y2)) {return false;}
         }
         if (x3>=x4) {
-            if (!(x4<=x&&x<=x3)) {return false;}
+            if (!between(x4, x, x3)) {return false;}
         } else {
-            if (!(x3<=x&&x<=x4)) {return false;}
+            if (!between(x3, x, x4)) {return false;}
         }
         if (y3>=y4) {
-            if (!(y4<=y&&y<=y3)) {return false;}
+            if (!between(y4, y, y3)) {return false;}
         } else {
-            if (!(y3<=y&&y<=y4)) {return false;}
+            if (!between(y3, y, y4)) {return false;}
         }
     }
     return {x: x, y: y};
