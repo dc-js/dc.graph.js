@@ -149,9 +149,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
      currently all displayed as ellipses. Default: 25
      **/
-    _chart.nodeRadiusAccessor = property(function() {
-        return 25;
-    });
+    _chart.nodeRadiusAccessor = property(25);
 
     /**
      #### .nodeStrokeWidthAccessor([function])
@@ -159,18 +157,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      node. According to the SVG specification, the outline will be drawn half on top of the fill, and half
      outside. Default: 1
      **/
-    _chart.nodeStrokeWidthAccessor = property(function() {
-        return '1';
-    });
+    _chart.nodeStrokeWidthAccessor = property(1);
 
     /**
      #### .nodeStrokeAccessor([function])
      Set or get the function which will be used to retrieve the stroke color for the outline of each
      node. Default: black
      **/
-    _chart.nodeStrokeAccessor = property(function() {
-        return 'black';
-    });
+    _chart.nodeStrokeAccessor = property('black');
 
     /**
      #### .nodeFillScale([d3.scale])
@@ -184,9 +178,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      Set or get the function which will be used to retrieve the fill color for the body of each
      node. Default: white
      **/
-    _chart.nodeFillAccessor = property(function() {
-        return 'white';
-    });
+    _chart.nodeFillAccessor = property('white');
 
     /**
      #### .nodePadding([number])
@@ -248,25 +240,19 @@ dc_graph.diagram = function (parent, chartGroup) {
      #### .edgeStrokeAccessor([function])
      Set or get the function which will be used to retrieve the stroke color for the edges. Default: black
      **/
-    _chart.edgeStrokeAccessor = property(function() {
-        return 'black';
-    });
+    _chart.edgeStrokeAccessor = property('black');
 
     /**
      #### .edgeStrokeWidthAccessor([function])
      Set or get the function which will be used to retrieve the stroke width for the edges. Default: 1
      **/
-    _chart.edgeStrokeWidthAccessor = property(function() {
-        return '1';
-    });
+    _chart.edgeStrokeWidthAccessor = property(1);
 
     /**
      #### .edgeOpacityAccessor([function])
      Set or get the function which will be used to retrieve the edge opacity, a number from 0 to 1. Default: 1
      **/
-    _chart.edgeOpacityAccessor = property(function() {
-        return '1';
-    });
+    _chart.edgeOpacityAccessor = property(1);
 
     /**
      #### .edgeLabelAccessor([function])
@@ -283,9 +269,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      head/destination of the edge. Arrow symbols can be specified with `.defineArrow()`. Return null to
      display no arrowhead. Default: 'vee'
      **/
-    _chart.edgeArrowheadAccessor = property(function() {
-        return 'vee';
-    });
+    _chart.edgeArrowheadAccessor = property('vee');
 
     /**
      #### .edgeArrowtailAccessor([function])
@@ -293,9 +277,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      tail/source of the edge. Arrow symbols can be specified with `.defineArrow()`. Return null to
      display no arrowhead. Default: null
      **/
-    _chart.edgeArrowtailAccessor = property(function() {
-        return null;
-    });
+    _chart.edgeArrowtailAccessor = property(null);
 
     /**
      #### .edgeIsLayoutAccessor([function])
@@ -592,7 +574,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.orig = v;
             var fixed;
             if(_chart.nodeFixedAccessor())
-                fixed = _chart.nodeFixedAccessor()(v);
+                fixed = param(_chart.nodeFixedAccessor())(v);
             if(fixed) {
                 v1.x = v.x;
                 v1.y = v.y;
