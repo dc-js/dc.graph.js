@@ -261,7 +261,7 @@
                           do_qfs ? 'none' :
                           'symmetric')
           .edgeArrowhead(function(kv) {
-              return !kv.value.undirected;
+              return kv.value.undirected ? null : 'vee';
           })
           .edgeOpacity(opacity)
           .edgeStroke(edgeColor)
