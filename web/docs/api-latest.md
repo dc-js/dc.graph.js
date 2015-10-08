@@ -58,64 +58,71 @@ Set or get the crossfilter group which is the data source for the edges in the d
 above for the way data is loaded from a crossfilter group.
 
 The values in the key/value pairs returned by `diagram.edgeGroup().all()` need to support, at a minimum,
-the `sourceAccessor` and `targetAccessor`, which should return the same keys as the `nodeKeyAccessor`
+the `nodeSource` and `nodeTarget`, which should return the same keys as the `nodeKey`
 
-#### .nodeKeyAccessor([function])
+#### .nodeKey([function])
 Set or get the function which will be used to retrieve the unique key for each node. By default, this
 accesses the `key` field of the object passed to it. The keys should match the keys returned by the
-`.sourceAccessor` and `.targetAccessor` of the edges.
+`.edgeSource` and `.edgeTarget`.
 
-#### .edgeKeyAccessor([function])
+#### .edgeKey([function])
 Set or get the function which will be used to retrieve the unique key for each edge. By default, this
 accesses the `key` field of the object passed to it.
 
-#### .sourceAccessor([function])
+#### .edgeSource([function])
 Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
-The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
+The key must equal the key returned by the `.nodeKey` for one of the nodes; if it does not, or
 if the node is currently filtered out, the edge will not be displayed. By default, looks for
 `.value.sourcename`.
 
-#### .targetAccessor([function])
+#### .edgeTarget([function])
 Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
-The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
+The key must equal the key returned by the `.nodeKey` for one of the nodes; if it does not, or
 if the node is currently filtered out, the edge will not be displayed. By default, looks for
 `.value.targetname`.
 
-#### .nodeRadiusAccessor([function])
+#### .nodeRadius([function])
 Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
 currently all displayed as ellipses. Default: 25
 
-#### .nodeStrokeWidthAccessor([function])
+#### .nodeStrokeWidth([function])
 Set or get the function which will be used to retrieve the stroke width, in pixels, for drawing the outline of each
 node. According to the SVG specification, the outline will be drawn half on top of the fill, and half
 outside. Default: 1
 
-#### .nodeStrokeAccessor([function])
+#### .nodeStroke([function])
 Set or get the function which will be used to retrieve the stroke color for the outline of each
 node. Default: black
 
 #### .nodeFillScale([d3.scale])
-If set, the value returned from `nodeFillAccessor` will be processed through this d3.scale
+If set, the value returned from `nodeFill` will be processed through this d3.scale
 to return the fill color. Default: identity function (no scale)
 
-#### .nodeFillAccessor([function])
+#### .nodeFill([function])
 Set or get the function which will be used to retrieve the fill color for the body of each
 node. Default: white
 
 #### .nodePadding([number])
 Set or get the padding or minimum distance, in pixels, between nodes in the diagram. Default: 6
 
-#### .nodeLabelAccessor([function])
+#### .nodeLabel([function])
 Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field `label` or `name` inside the `value` field.
 
-#### .nodeLabelFillAccessor([function])
+#### .nodeLabelFill([function])
 Set or get the function which will be used to retrieve the label fill color. Default: null
 
-#### .nodeFitLabelAccessor([function])
+#### .nodeFitLabel([function])
 Whether to fit the node shape around the label. Default: true
 
-#### .nodeTitleAccessor([function])
+#### .nodeShape([object]
+The shape to use for drawing each node, specified as an object with at least the field
+`shape`: ellipse, polygon
+
+If `shape = polygon`:
+* `sides`: number of sides for a polygon
+
+#### .nodeTitle([function])
 Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
 By default, uses the key of the node.
 
@@ -124,46 +131,46 @@ By default, nodes are added to the layout in the order that `.nodeGroup().all()`
 specified, `.nodeOrdering` provides an accessor that returns a key to sort the nodes on.
 It would be better not to rely on ordering to affect layout, but it does matter.
 
-#### .nodeFixedAccessor([function])
+#### .nodeFixed([function])
 Specify an accessor that returns an {x,y} coordinate for a node that should be
 [fixed in place](https://github.com/tgdwyer/WebCola/wiki/Fixed-Node-Positions), and returns
 falsy for other nodes.
 
-#### .edgeStrokeAccessor([function])
+#### .edgeStroke([function])
 Set or get the function which will be used to retrieve the stroke color for the edges. Default: black
 
-#### .edgeStrokeWidthAccessor([function])
+#### .edgeStrokeWidth([function])
 Set or get the function which will be used to retrieve the stroke width for the edges. Default: 1
 
-#### .edgeOpacityAccessor([function])
+#### .edgeOpacity([function])
 Set or get the function which will be used to retrieve the edge opacity, a number from 0 to 1. Default: 1
 
-#### .edgeLabelAccessor([function])
+#### .edgeLabel([function])
 Set or get the function which will be used to retrieve the edge label text. The label is displayed when
-an edge is hovered over. By default, uses the `edgeKeyAccessor`.
+an edge is hovered over. By default, uses the `edgeKey`.
 
-#### .edgeArrowheadAccessor([function])
+#### .edgeArrowhead([function])
 Set or get the function which will be used to retrieve the name of the arrowhead to use for the target/
 head/destination of the edge. Arrow symbols can be specified with `.defineArrow()`. Return null to
 display no arrowhead. Default: 'vee'
 
-#### .edgeArrowtailAccessor([function])
+#### .edgeArrowtail([function])
 Set or get the function which will be used to retrieve the name of the arrow tail to use for the source/
 tail/source of the edge. Arrow symbols can be specified with `.defineArrow()`. Return null to
 display no arrowhead. Default: null
 
-#### .edgeIsLayoutAccessor([function])
+#### .edgeIsLayout([function])
 To draw an edge but not have it affect the layout, specify a function which returns false for that edge.
 By default, will return false if the `notLayout` field of the edge is truthy, true otherwise.
 
 #### .lengthStrategy([string])
 Currently, three strategies are supported for specifying the lengths of edges:
-* 'individual' - uses the `edgeDistanceAccessor` for each edge. If it returns falsy, uses the `baseLength`
+* 'individual' - uses the `edgeLength` for each edge. If it returns falsy, uses the `baseLength`
 * 'symmetric', 'jaccard' - compute the edge length based on the graph structure around the edge. See [the
 cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/link-lengths) for more details.
 * 'none' - no edge lengths will be specified
 
-#### .edgeDistanceAccessor([function])
+#### .edgeLength([function])
 When the `.lengthStrategy` is 'individual', this accessor will be used to read the length of each edge.
 By default, reads the `distance` field of the edge. If the distance is falsy, uses the `baseLength`.
 
@@ -279,8 +286,8 @@ Remove the diagram's SVG elements from the dom and recreate the container SVG el
 
 #### .defineArrow(name, width, height, refX, refY, drawf)
 Creates an svg marker definition for drawing edge arrow tails or heads.
- * **name** - the `id` to give the marker. When this identifier is returned by `.edgeArrowheadAccessor`
- or `.edgeArrowtailAccessor`, that edge will be drawn with the specified marker for its source or target.
+ * **name** - the `id` to give the marker. When this identifier is returned by `.edgeArrowhead`
+ or `.edgeArrowtail`, that edge will be drawn with the specified marker for its source or target.
  * **width** - the width, in pixels, to draw the marker
  * **height** - the height, in pixels, to draw the marker
  * **refX**, **refY** - the reference position, in marker coordinates, which will be aligned to the
