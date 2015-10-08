@@ -83,7 +83,7 @@ if the node is currently filtered out, the edge will not be displayed. By defaul
 
 #### .nodeRadiusAccessor([function])
 Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
-currently all displayed as circles. Default: 25
+currently all displayed as ellipses. Default: 25
 
 #### .nodeStrokeWidthAccessor([function])
 Set or get the function which will be used to retrieve the stroke width, in pixels, for drawing the outline of each

@@ -74,12 +74,63 @@ function point_on_ellipse(A, B, dx, dy) {
     return ret;
 }
 
+var eps = 0.0000001;
+function between(a, b, c) {
+    return a-eps <= b && b <= c+eps;
+}
+
+// Adapted from http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect/1968345#1968345
+function segment_intersection(x1,y1,x2,y2, x3,y3,x4,y4) {
+    var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)) /
+            ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+    var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)) /
+            ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+    if (isNaN(x)||isNaN(y)) {
+        return false;
+    } else {
+        if (x1>=x2) {
+            if (!between(x2, x, x1)) {return false;}
+        } else {
+            if (!between(x1, x, x2)) {return false;}
+        }
+        if (y1>=y2) {
+            if (!between(y2, y, y1)) {return false;}
+        } else {
+            if (!between(y1, y, y2)) {return false;}
+        }
+        if (x3>=x4) {
+            if (!between(x4, x, x3)) {return false;}
+        } else {
+            if (!between(x3, x, x4)) {return false;}
+        }
+        if (y3>=y4) {
+            if (!between(y4, y, y3)) {return false;}
+        } else {
+            if (!between(y3, y, y4)) {return false;}
+        }
+    }
+    return {x: x, y: y};
+}
+
+
+function point_on_polygon(points, x0, y0, x1, y1) {
+    for(var i = 0; i < points.length; i+=2) {
+        var next = i===points.length-2 ? 0 : i+2;
+        var isect = segment_intersection(points[i], points[i+1], points[next], points[next+1],
+                                         x0, y0, x1, y1);
+        if(isect)
+            return isect;
+    }
+    return null;
+}
+
+
 // because i don't think we need to bind edge point data (yet!)
 var bez_cmds = {
     1: 'L', 2: 'Q', 3: 'C'
 };
 
-function generate_path(pts, bezness) {
+function generate_path(pts, bezness, close) {
     var cats = ['M', pts[0], ',', pts[1]], remain = bezness;
     var hasNaN = false;
     for(var i = 2; i < pts.length; i += 2) {
@@ -91,6 +142,8 @@ function generate_path(pts, bezness) {
     }
     if(remain!=bezness)
         console.log("warning: pts.length didn't match bezness", pts, bezness);
+    if(close)
+        cats.push('Z');
     return cats.join('');
 }
 
@@ -243,7 +296,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      #### .nodeRadiusAccessor([function])
      Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
-     currently all displayed as circles. Default: 25
+     currently all displayed as ellipses. Default: 25
      **/
     _chart.nodeRadiusAccessor = property(function() {
         return 25;
@@ -310,6 +363,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      Whether to fit the node shape around the label. Default: true
      **/
     _chart.nodeFitLabelAccessor = property(true);
+
+    // shape = ellipse/polygon, sides, ...
+    _chart.nodeShape = property({shape: 'ellipse'});
 
     /**
      #### .nodeTitleAccessor([function])
@@ -563,7 +619,21 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart._buildNode = function(node, nodeEnter) {
         if(_chart.nodeTitleAccessor())
             nodeEnter.append('title');
-        nodeEnter.append('ellipse');
+        nodeEnter.append(function(d) {
+            var shape = param(_chart.nodeShape())(d).shape,
+                elem;
+            switch(shape) {
+            case 'ellipse':
+                elem = 'ellipse';
+                break;
+            case 'polygon':
+                elem = 'path';
+                break;
+            default:
+                throw new Error('unknown shape ' + shape);
+            }
+            return document.createElementNS("http://www.w3.org/2000/svg", elem);
+        }).attr('class', 'node-shape');
         nodeEnter.append('text')
             .attr('class', 'node-label')
             .attr('fill', param(_chart.nodeLabelFillAccessor()));
@@ -578,7 +648,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(param(_chart.nodeFitLabelAccessor())(d))
                     bbox = this.getBBox();
                 var fitx = 0;
-                if(bbox && bbox.width && bbox.height) {
+                if(bbox && bbox.width && bbox.height && param(_chart.nodeShape())(d).shape==='ellipse') {
                     // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
                     // http://stackoverflow.com/a/433438/676195
                     var y_over_B = bbox.height/2/r;
@@ -591,9 +661,23 @@ dc_graph.diagram = function (parent, chartGroup) {
                 d.width = Math.max(fitx, rplus);
                 d.height = rplus;
             });
-        node.select('ellipse')
+        node.select('ellipse.node-shape')
             .attr('rx', function(d) { return d.dcg_rx; })
-            .attr('ry', function(d) { return d.dcg_ry; })
+            .attr('ry', function(d) { return d.dcg_ry; });
+        node.select('path.node-shape')
+            .attr('d', function(d) {
+                var r = param(_chart.nodeRadiusAccessor())(d),
+                    sides = param(_chart.nodeShape())(d).sides || 4,
+                    rot = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
+                    pts = [];
+                for(var i = 0; i<sides; ++i) {
+                    var theta = -((i+rot)/sides + 0.25)*Math.PI*2;
+                    pts.push(r*Math.cos(theta), r*Math.sin(theta));
+                }
+                d.dcg_points = pts;
+                return generate_path(pts, 1, true);
+            });
+        node.select('.node-shape')
             .attr('stroke', param(_chart.nodeStrokeAccessor()))
             .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
             .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
@@ -972,8 +1056,18 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         var sourceX, sourceY, targetX, targetY, sp, tp;
         if(!d.parallel) {
-            sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, deltaX, deltaY);
-            tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, -deltaX, -deltaY);
+            switch(param(_chart.nodeShape())(d).shape) {
+            case 'ellipse':
+                sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, deltaX, deltaY);
+                tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, -deltaX, -deltaY);
+                break;
+            case 'polygon':
+                sp = point_on_polygon(d.source.dcg_points, 0,0, deltaX, deltaY);
+                tp = point_on_polygon(d.target.dcg_points, 0,0, -deltaX, -deltaY);
+                console.assert(sp);
+                console.assert(tp);
+                break;
+            }
             sourceX = sx + sp.x;
             sourceY = sy + sp.y;
             targetX = tx + tp.x;
