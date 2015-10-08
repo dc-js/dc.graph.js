@@ -99,86 +99,86 @@ dc_graph.diagram = function (parent, chartGroup) {
      above for the way data is loaded from a crossfilter group.
 
      The values in the key/value pairs returned by `diagram.edgeGroup().all()` need to support, at a minimum,
-     the `sourceAccessor` and `targetAccessor`, which should return the same keys as the `nodeKeyAccessor`
+     the `nodeSource` and `nodeTarget`, which should return the same keys as the `nodeKey`
      **/
     _chart.edgeGroup = property();
 
     /**
-     #### .nodeKeyAccessor([function])
+     #### .nodeKey([function])
      Set or get the function which will be used to retrieve the unique key for each node. By default, this
      accesses the `key` field of the object passed to it. The keys should match the keys returned by the
-     `.sourceAccessor` and `.targetAccessor` of the edges.
+     `.edgeSource` and `.edgeTarget`.
      **/
-    _chart.nodeKeyAccessor = property(function(kv) {
+    _chart.nodeKey = _chart.nodeKeyAccessor = property(function(kv) {
         return kv.key;
     });
 
     /**
-     #### .edgeKeyAccessor([function])
+     #### .edgeKey([function])
      Set or get the function which will be used to retrieve the unique key for each edge. By default, this
      accesses the `key` field of the object passed to it.
      **/
-    _chart.edgeKeyAccessor = property(function(kv) {
+    _chart.edgeKey = _chart.edgeKeyAccessor = property(function(kv) {
         return kv.key;
     });
 
     /**
-     #### .sourceAccessor([function])
+     #### .edgeSource([function])
      Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
-     The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
+     The key must equal the key returned by the `.nodeKey` for one of the nodes; if it does not, or
      if the node is currently filtered out, the edge will not be displayed. By default, looks for
      `.value.sourcename`.
      **/
-    _chart.sourceAccessor = property(function(kv) {
+    _chart.edgeSource = _chart.sourceAccessor = property(function(kv) {
         return kv.value.sourcename;
     });
 
     /**
-     #### .targetAccessor([function])
+     #### .edgeTarget([function])
      Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
-     The key must equal the key returned by the `.nodeKeyAccessor` for one of the nodes; if it does not, or
+     The key must equal the key returned by the `.nodeKey` for one of the nodes; if it does not, or
      if the node is currently filtered out, the edge will not be displayed. By default, looks for
      `.value.targetname`.
      **/
-    _chart.targetAccessor = property(function(kv) {
+    _chart.edgeTarget = _chart.targetAccessor = property(function(kv) {
         return kv.value.targetname;
     });
 
     /**
-     #### .nodeRadiusAccessor([function])
+     #### .nodeRadius([function])
      Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
      currently all displayed as ellipses. Default: 25
      **/
-    _chart.nodeRadiusAccessor = property(25);
+    _chart.nodeRadius = _chart.nodeRadiusAccessor = property(25);
 
     /**
-     #### .nodeStrokeWidthAccessor([function])
+     #### .nodeStrokeWidth([function])
      Set or get the function which will be used to retrieve the stroke width, in pixels, for drawing the outline of each
      node. According to the SVG specification, the outline will be drawn half on top of the fill, and half
      outside. Default: 1
      **/
-    _chart.nodeStrokeWidthAccessor = property(1);
+    _chart.nodeStrokeWidth = _chart.nodeStrokeWidthAccessor = property(1);
 
     /**
-     #### .nodeStrokeAccessor([function])
+     #### .nodeStroke([function])
      Set or get the function which will be used to retrieve the stroke color for the outline of each
      node. Default: black
      **/
-    _chart.nodeStrokeAccessor = property('black');
+    _chart.nodeStroke = _chart.nodeStrokeAccessor = property('black');
 
     /**
      #### .nodeFillScale([d3.scale])
-     If set, the value returned from `nodeFillAccessor` will be processed through this d3.scale
+     If set, the value returned from `nodeFill` will be processed through this d3.scale
      to return the fill color. Default: identity function (no scale)
      **/
     _chart.nodeFillScale = property(identity);
 
     /**
-     #### .nodeFillAccessor([function])
+     #### .nodeFill([function])
      Set or get the function which will be used to retrieve the fill color for the body of each
      node. Default: white
      **/
-    _chart.nodeFillAccessor = property('white');
+    _chart.nodeFill = _chart.nodeFillAccessor = property('white');
 
     /**
      #### .nodePadding([number])
@@ -187,35 +187,42 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodePadding = property(6);
 
     /**
-     #### .nodeLabelAccessor([function])
+     #### .nodeLabel([function])
      Set or get the function which will be used to retrieve the label text to display in each node. By
      default, looks for a field `label` or `name` inside the `value` field.
      **/
-    _chart.nodeLabelAccessor = property(function(kv) {
+    _chart.nodeLabel = _chart.nodeLabelAccessor = property(function(kv) {
         return kv.value.label || kv.value.name;
     });
 
     /**
-     #### .nodeLabelFillAccessor([function])
+     #### .nodeLabelFill([function])
      Set or get the function which will be used to retrieve the label fill color. Default: null
      **/
-    _chart.nodeLabelFillAccessor = property(null);
+    _chart.nodeLabelFill = _chart.nodeLabelFillAccessor = property(null);
 
     /**
-     #### .nodeFitLabelAccessor([function])
+     #### .nodeFitLabel([function])
      Whether to fit the node shape around the label. Default: true
      **/
-    _chart.nodeFitLabelAccessor = property(true);
+    _chart.nodeFitLabel = _chart.nodeFitLabelAccessor = property(true);
 
-    // shape = ellipse/polygon, sides, ...
+    /**
+     #### .nodeShape([object]
+     The shape to use for drawing each node, specified as an object with at least the field
+     `shape`: ellipse, polygon
+
+     If `shape = polygon`:
+     * `sides`: number of sides for a polygon
+     **/
     _chart.nodeShape = property({shape: 'ellipse'});
 
     /**
-     #### .nodeTitleAccessor([function])
+     #### .nodeTitle([function])
      Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
      By default, uses the key of the node.
      **/
-    _chart.nodeTitleAccessor = property(function(kv) {
+    _chart.nodeTitle = _chart.nodeTitleAccessor = property(function(kv) {
         return _chart.nodeKeyAccessor()(kv);
     });
 
@@ -228,70 +235,70 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeOrdering = property(null);
 
     /**
-     #### .nodeFixedAccessor([function])
+     #### .nodeFixed([function])
      Specify an accessor that returns an {x,y} coordinate for a node that should be
      [fixed in place](https://github.com/tgdwyer/WebCola/wiki/Fixed-Node-Positions), and returns
      falsy for other nodes.
      **/
-    _chart.nodeFixedAccessor = property(null);
+    _chart.nodeFixed = _chart.nodeFixedAccessor = property(null);
 
 
     /**
-     #### .edgeStrokeAccessor([function])
+     #### .edgeStroke([function])
      Set or get the function which will be used to retrieve the stroke color for the edges. Default: black
      **/
-    _chart.edgeStrokeAccessor = property('black');
+    _chart.edgeStroke = _chart.edgeStrokeAccessor = property('black');
 
     /**
-     #### .edgeStrokeWidthAccessor([function])
+     #### .edgeStrokeWidth([function])
      Set or get the function which will be used to retrieve the stroke width for the edges. Default: 1
      **/
-    _chart.edgeStrokeWidthAccessor = property(1);
+    _chart.edgeStrokeWidth = _chart.edgeStrokeWidthAccessor = property(1);
 
     /**
-     #### .edgeOpacityAccessor([function])
+     #### .edgeOpacity([function])
      Set or get the function which will be used to retrieve the edge opacity, a number from 0 to 1. Default: 1
      **/
-    _chart.edgeOpacityAccessor = property(1);
+    _chart.edgeOpacity = _chart.edgeOpacityAccessor = property(1);
 
     /**
-     #### .edgeLabelAccessor([function])
+     #### .edgeLabel([function])
      Set or get the function which will be used to retrieve the edge label text. The label is displayed when
-     an edge is hovered over. By default, uses the `edgeKeyAccessor`.
+     an edge is hovered over. By default, uses the `edgeKey`.
      **/
-    _chart.edgeLabelAccessor = property(function(d) {
-        return _chart.edgeKeyAccessor()(d);
+    _chart.edgeLabel = _chart.edgeLabelAccessor = property(function(d) {
+        return _chart.edgeKey()(d);
     });
 
     /**
-     #### .edgeArrowheadAccessor([function])
+     #### .edgeArrowhead([function])
      Set or get the function which will be used to retrieve the name of the arrowhead to use for the target/
      head/destination of the edge. Arrow symbols can be specified with `.defineArrow()`. Return null to
      display no arrowhead. Default: 'vee'
      **/
-    _chart.edgeArrowheadAccessor = property('vee');
+    _chart.edgeArrowhead = _chart.edgeArrowheadAccessor = property('vee');
 
     /**
-     #### .edgeArrowtailAccessor([function])
+     #### .edgeArrowtail([function])
      Set or get the function which will be used to retrieve the name of the arrow tail to use for the source/
      tail/source of the edge. Arrow symbols can be specified with `.defineArrow()`. Return null to
      display no arrowhead. Default: null
      **/
-    _chart.edgeArrowtailAccessor = property(null);
+    _chart.edgeArrowtail = _chart.edgeArrowtailAccessor = property(null);
 
     /**
-     #### .edgeIsLayoutAccessor([function])
+     #### .edgeIsLayout([function])
      To draw an edge but not have it affect the layout, specify a function which returns false for that edge.
      By default, will return false if the `notLayout` field of the edge is truthy, true otherwise.
      **/
-    _chart.edgeIsLayoutAccessor = property(function(kv) {
+    _chart.edgeIsLayout = _chart.edgeIsLayoutAccessor = property(function(kv) {
         return !kv.value.notLayout;
     });
 
     /**
      #### .lengthStrategy([string])
      Currently, three strategies are supported for specifying the lengths of edges:
-     * 'individual' - uses the `edgeDistanceAccessor` for each edge. If it returns falsy, uses the `baseLength`
+     * 'individual' - uses the `edgeLength` for each edge. If it returns falsy, uses the `baseLength`
      * 'symmetric', 'jaccard' - compute the edge length based on the graph structure around the edge. See [the
      cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/link-lengths) for more details.
      * 'none' - no edge lengths will be specified
@@ -299,11 +306,11 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.lengthStrategy = property('symmetric');
 
     /**
-     #### .edgeDistanceAccessor([function])
+     #### .edgeLength([function])
      When the `.lengthStrategy` is 'individual', this accessor will be used to read the length of each edge.
      By default, reads the `distance` field of the edge. If the distance is falsy, uses the `baseLength`.
      **/
-    _chart.edgeDistanceAccessor = property(function(kv) {
+    _chart.edgeLength = _chart.edgeDistanceAccessor = property(function(kv) {
         return kv.value.distance;
     });
 
@@ -428,7 +435,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             break;
         case 'individual':
             _d3cola.linkDistance(function(e) {
-                var d = e.orig ? param(_chart.edgeDistanceAccessor())(e) :
+                var d = e.orig ? param(_chart.edgeLength())(e) :
                         e.internal && e.internal.distance;
                 return d || _chart.baseLength();
             });
@@ -442,7 +449,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function edge_id(d) {
-        return 'edge-' + param(_chart.edgeKeyAccessor())(d).replace(/[^\w-_]/g, '-');
+        return 'edge-' + param(_chart.edgeKey())(d).replace(/[^\w-_]/g, '-');
     }
 
     // node and edge objects shared with cola.js, preserved from one iteration
@@ -450,7 +457,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes = {}, _edges = {};
 
     _chart._buildNode = function(node, nodeEnter) {
-        if(_chart.nodeTitleAccessor())
+        if(_chart.nodeTitle())
             nodeEnter.append('title');
         nodeEnter.append(function(d) {
             var shape = param(_chart.nodeShape())(d).shape,
@@ -469,16 +476,16 @@ dc_graph.diagram = function (parent, chartGroup) {
         }).attr('class', 'node-shape');
         nodeEnter.append('text')
             .attr('class', 'node-label')
-            .attr('fill', param(_chart.nodeLabelFillAccessor()));
+            .attr('fill', param(_chart.nodeLabelFill()));
         node.select('title')
-            .text(param(_chart.nodeTitleAccessor()));
+            .text(param(_chart.nodeTitle()));
         node.select('text.node-label')
-            .text(param(_chart.nodeLabelAccessor()))
+            .text(param(_chart.nodeLabel()))
             .each(function(d, i) {
-                var r = param(_chart.nodeRadiusAccessor())(d);
+                var r = param(_chart.nodeRadius())(d);
                 var rplus = r*2 + _chart.nodePadding();
                 var bbox;
-                if(param(_chart.nodeFitLabelAccessor())(d))
+                if(param(_chart.nodeFitLabel())(d))
                     bbox = this.getBBox();
                 var fitx = 0;
                 if(bbox && bbox.width && bbox.height && param(_chart.nodeShape())(d).shape==='ellipse') {
@@ -499,7 +506,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('ry', function(d) { return d.dcg_ry; });
         node.select('path.node-shape')
             .attr('d', function(d) {
-                var r = param(_chart.nodeRadiusAccessor())(d),
+                var r = param(_chart.nodeRadius())(d),
                     sides = param(_chart.nodeShape())(d).sides || 4,
                     rot = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
                     pts = [];
@@ -511,9 +518,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return generate_path(pts, 1, true);
             });
         node.select('.node-shape')
-            .attr('stroke', param(_chart.nodeStrokeAccessor()))
-            .attr('stroke-width', param(_chart.nodeStrokeWidthAccessor()))
-            .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFillAccessor())));
+            .attr('stroke', param(_chart.nodeStroke()))
+            .attr('stroke-width', param(_chart.nodeStrokeWidth()))
+            .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFill())));
     };
 
     function has_source_and_target(e) {
@@ -568,13 +575,13 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // create or re-use the objects cola.js will manipulate
         function wrap_node(v, i) {
-            var key = _chart.nodeKeyAccessor()(v);
+            var key = _chart.nodeKey()(v);
             if(!_nodes[key]) _nodes[key] = {};
             var v1 = _nodes[key];
             v1.orig = v;
             var fixed;
-            if(_chart.nodeFixedAccessor())
-                fixed = param(_chart.nodeFixedAccessor())(v);
+            if(_chart.nodeFixed())
+                fixed = param(_chart.nodeFixed())(v);
             if(fixed) {
                 v1.x = v.x;
                 v1.y = v.y;
@@ -586,14 +593,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             return v1;
         }
         function wrap_edge(e) {
-            var key = _chart.edgeKeyAccessor()(e);
+            var key = _chart.edgeKey()(e);
             if(!_edges[key]) _edges[key] = {};
             var e1 = _edges[key];
             e1.orig =  e;
             // cola edges can work with indices or with object references
             // but it will replace indices with object references
-            e1.source = _nodes[_chart.sourceAccessor()(e)];
-            e1.target = _nodes[_chart.targetAccessor()(e)];
+            e1.source = _nodes[_chart.edgeSource()(e)];
+            e1.target = _nodes[_chart.edgeTarget()(e)];
             keep_edge[key] = true;
             return e1;
         }
@@ -619,10 +626,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.induceNodes()) {
             var keeps = {};
             wedges.forEach(function(e) {
-                keeps[param(_chart.sourceAccessor())(e)] = true;
-                keeps[param(_chart.targetAccessor())(e)] = true;
+                keeps[param(_chart.edgeSource())(e)] = true;
+                keeps[param(_chart.edgeTarget())(e)] = true;
             });
-            wnodes = wnodes.filter(function(n) { return keeps[param(_chart.nodeKeyAccessor())(n)]; });
+            wnodes = wnodes.filter(function(n) { return keeps[param(_chart.nodeKey())(n)]; });
         }
 
         // cola needs each node object to have an index property
@@ -661,7 +668,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // create edge SVG elements
         var edge = _edgeLayer.selectAll('.edge')
-                .data(wedges, param(_chart.edgeKeyAccessor()));
+                .data(wedges, param(_chart.edgeKey()));
         var edgeEnter = edge.enter().append('svg:path')
                 .attr({
                     class: 'edge',
@@ -669,14 +676,14 @@ dc_graph.diagram = function (parent, chartGroup) {
                     opacity: 0
                 });
         edge
-            .attr('stroke', param(_chart.edgeStrokeAccessor()))
-            .attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()))
+            .attr('stroke', param(_chart.edgeStroke()))
+            .attr('stroke-width', param(_chart.edgeStrokeWidth()))
             .attr('marker-end', function(d) {
-                var id = param(_chart.edgeArrowheadAccessor())(d);
+                var id = param(_chart.edgeArrowhead())(d);
                 return id ? 'url(#' + id + ')' : null;
             })
             .attr('marker-start', function(d) {
-                var id = param(_chart.edgeArrowtailAccessor())(d);
+                var id = param(_chart.edgeArrowtail())(d);
                 return id ? 'url(#' + id + ')' : null;
             });
         edge.exit().transition()
@@ -686,7 +693,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // another wider copy of the edge just for hover events
         var edgeHover = _edgeLayer.selectAll('.edge-hover')
-                .data(wedges, param(_chart.edgeKeyAccessor()));
+                .data(wedges, param(_chart.edgeKey()));
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'edge-hover')
             .attr('opacity', 0)
@@ -703,7 +710,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edgeHover.exit().remove();
 
         var edgeLabels = _edgeLayer.selectAll(".edge-label")
-                .data(wedges, param(_chart.edgeKeyAccessor()));
+                .data(wedges, param(_chart.edgeKey()));
         var edgeLabelsEnter = edgeLabels.enter()
               .append('text')
                 .attr('id', function(d) {
@@ -719,7 +726,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return '#' + edge_id(d);
                 })
                 .text(function(d){
-                    return param(_chart.edgeLabelAccessor())(d);
+                    return param(_chart.edgeLabel())(d);
                 });
         edgeLabels.exit().transition()
             .duration(_chart.transitionDuration())
@@ -727,7 +734,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // create node SVG elements
         var node = _nodeLayer.selectAll('.node')
-                .data(wnodes, param(_chart.nodeKeyAccessor()));
+                .data(wnodes, param(_chart.nodeKey()));
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr('opacity', '0') // don't show until has layout
@@ -736,11 +743,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             nodeEnter
                 .on('mouseover', function(d) {
                     edge.attr('stroke-width', function(e) {
-                        return (e.source === d || e.target === d ? 2 : 1) * param(_chart.edgeStrokeWidthAccessor())(e);
+                        return (e.source === d || e.target === d ? 2 : 1) * param(_chart.edgeStrokeWidth())(e);
                     });
                 })
                 .on('mouseout', function(d) {
-                    edge.attr('stroke-width', param(_chart.edgeStrokeWidthAccessor()));
+                    edge.attr('stroke-width', param(_chart.edgeStrokeWidth()));
                 });
         }
 
@@ -790,9 +797,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         // pseudo-cola.js features
 
         // 1. non-layout edges are drawn but not told to cola.js
-        var layout_edges = wedges.filter(param(_chart.edgeIsLayoutAccessor()));
+        var layout_edges = wedges.filter(param(_chart.edgeIsLayout()));
         var nonlayout_edges = wedges.filter(function(x) {
-            return !param(_chart.edgeIsLayoutAccessor())(x);
+            return !param(_chart.edgeIsLayout())(x);
         });
 
         // 2. type=circle constraints
@@ -806,7 +813,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             var R = (c.distance || _chart.baseLength()*4) / (2*Math.sin(Math.PI/c.nodes.length));
             var nindices = c.nodes.map(function(x) { return x.node; });
             var namef = function(i) {
-                return param(_chart.nodeKeyAccessor())(wnodes[i]);
+                return param(_chart.nodeKey())(wnodes[i]);
             };
             var wheel = dc_graph.wheel_edges(namef, nindices, R)
                     .map(function(e) {
@@ -883,9 +890,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         var deltaX = tx - sx,
             deltaY = ty - sy,
             sourcePadding = d.source.dcg_ry +
-                param(_chart.nodeStrokeWidthAccessor())(d.source) / 2,
+                param(_chart.nodeStrokeWidth())(d.source) / 2,
             targetPadding = d.target.dcg_ry +
-                param(_chart.nodeStrokeWidthAccessor())(d.target) / 2;
+                param(_chart.nodeStrokeWidth())(d.target) / 2;
 
         var sourceX, sourceY, targetX, targetY, sp, tp;
         if(!d.parallel) {
@@ -983,7 +990,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edgeEnter.attr('d', old_edge_path);
         var etrans = edge.transition()
                 .duration(_chart.transitionDuration())
-                .attr('opacity', param(_chart.edgeOpacityAccessor()))
+                .attr('opacity', param(_chart.edgeOpacity()))
                 .attr("d", new_edge_path);
 
         // signal layout done when all transitions complete
@@ -1118,8 +1125,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
     #### .defineArrow(name, width, height, refX, refY, drawf)
     Creates an svg marker definition for drawing edge arrow tails or heads.
-     * **name** - the `id` to give the marker. When this identifier is returned by `.edgeArrowheadAccessor`
-     or `.edgeArrowtailAccessor`, that edge will be drawn with the specified marker for its source or target.
+     * **name** - the `id` to give the marker. When this identifier is returned by `.edgeArrowhead`
+     or `.edgeArrowtail`, that edge will be drawn with the specified marker for its source or target.
      * **width** - the width, in pixels, to draw the marker
      * **height** - the height, in pixels, to draw the marker
      * **refX**, **refY** - the reference position, in marker coordinates, which will be aligned to the

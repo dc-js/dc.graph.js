@@ -250,21 +250,21 @@
           .showLayoutSteps(showSteps)
           .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
           .edgeDimension(edges.dimension).edgeGroup(edges.group)
-          .sourceAccessor(function(e) { return e.value[sourceattr]; })
-          .targetAccessor(function(e) { return e.value[targetattr]; })
+          .edgeSource(function(e) { return e.value[sourceattr]; })
+          .edgeTarget(function(e) { return e.value[targetattr]; })
           .nodeShape(shape)
-          .nodeRadiusAccessor(radius)
-          .nodeFillAccessor(isQFS ? qfs_color : fill)
-          .nodeFixedAccessor(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
+          .nodeRadius(radius)
+          .nodeFill(isQFS ? qfs_color : fill)
+          .nodeFixed(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
           .constrain(constrain)
           .lengthStrategy(generate ? 'individual' :
                           do_qfs ? 'none' :
                           'symmetric')
-          .edgeArrowheadAccessor(function(kv) {
+          .edgeArrowhead(function(kv) {
               return !kv.value.undirected;
           })
-          .edgeOpacityAccessor(opacity)
-          .edgeStrokeAccessor(edgeColor)
+          .edgeOpacity(opacity)
+          .edgeStroke(edgeColor)
           .on('end', function() {
               $('#run-indicator').hide();
               runner.endStep();
