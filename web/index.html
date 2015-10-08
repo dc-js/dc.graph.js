@@ -84,7 +84,7 @@
       opacity = +querystring.opacity || 1,
       do_qfs = false,
       nodePrefix = querystring.prefix || '',
-      timeLimit = querystring.limit || 10000;
+      timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000;
   if(edgeColor && /[0-9A-Fa-f]{6}/.test(edgeColor) || /[0-9A-Fa-f]{3}/.test(edgeColor))
       edgeColor = '#' + edgeColor;
   var min = 2, max = 12;
