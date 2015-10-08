@@ -71,6 +71,9 @@
       showSteps = +querystring.showsteps !== 0,
       file = querystring.file || null,
       generate = querystring.gen || null,
+      shape = querystring.shape || null,
+      radius = +querystring.radius || 25,
+      fill = querystring.fill || 'white',
       randomize = +querystring.randomize || false,
       doReinit = querystring.reinit==="0" ? false : true,
       doDisplacement = querystring.displace==="0" ? false : true,
@@ -135,6 +138,18 @@
           };
           dc_graph.generate(name, args, env, callback);
       }
+  if(shape) {
+      shape = shape.split(',');
+      switch(shape[0]) {
+      case 'ellipse':
+          shape = {shape: shape[0]};
+          break;
+      case 'polygon':
+          shape = {shape: shape[0], sides: shape[1]};
+          break;
+      }
+  }
+  else shape = {shape: 'ellipse'};
 
   source(function(error, data) {
       if(error) {
@@ -237,7 +252,9 @@
           .edgeDimension(edges.dimension).edgeGroup(edges.group)
           .sourceAccessor(function(e) { return e.value[sourceattr]; })
           .targetAccessor(function(e) { return e.value[targetattr]; })
-          .nodeFillAccessor(isQFS ? qfs_color : 'white')
+          .nodeShape(shape)
+          .nodeRadiusAccessor(radius)
+          .nodeFillAccessor(isQFS ? qfs_color : fill)
           .nodeFixedAccessor(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
           .constrain(constrain)
           .lengthStrategy(generate ? 'individual' :
