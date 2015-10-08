@@ -74,19 +74,22 @@
       shape = querystring.shape || null,
       radius = +querystring.radius || 25,
       fill = querystring.fill || 'white',
+      nodeStroke = querystring.nodestroke || 'black',
+      nodeStrokeWidth = querystring.nodestrokewidth || 1,
       randomize = +querystring.randomize || false,
       doReinit = querystring.reinit==="0" ? false : true,
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
       isQFS = false,
       linkLength = +querystring.linklength || 30,
-      edgeColor = querystring.edgecolor || 'black',
+      edgeStroke = querystring.edgestroke || 'black',
+      edgeStrokeWidth = querystring.edgestrokewidth || 1,
       opacity = +querystring.opacity || 1,
       do_qfs = false,
       nodePrefix = querystring.prefix || '',
       timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000;
-  if(edgeColor && /[0-9A-Fa-f]{6}/.test(edgeColor) || /[0-9A-Fa-f]{3}/.test(edgeColor))
-      edgeColor = '#' + edgeColor;
+  if(edgeStroke && /[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke))
+      edgeStroke = '#' + edgeStroke;
   var min = 2, max = 12;
   var begin = 2, end = 12, curr = begin;
   var doRender = true;
@@ -255,6 +258,8 @@
           .nodeShape(shape)
           .nodeRadius(radius)
           .nodeFill(isQFS ? qfs_color : fill)
+          .nodeStroke(nodeStroke)
+          .nodeStrokeWidth(nodeStrokeWidth)
           .nodeFixed(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
           .constrain(constrain)
           .lengthStrategy(generate ? 'individual' :
@@ -264,7 +269,8 @@
               return kv.value.undirected ? null : 'vee';
           })
           .edgeOpacity(opacity)
-          .edgeStroke(edgeColor)
+          .edgeStroke(edgeStroke)
+          .edgeStrokeWidth(edgeStrokeWidth)
           .on('end', function() {
               $('#run-indicator').hide();
               runner.endStep();
