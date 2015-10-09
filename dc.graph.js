@@ -63,6 +63,37 @@ dc_graph.functor_wrap = function (v, wrap) {
     };
 };
 
+// we want to allow either values or functions to be passed to specify parameters.
+// if a function, the function needs a preprocessor to extract the original key/value
+// pair from the wrapper object we put it in.
+function param(v) {
+    return dc_graph.functor_wrap(v, function(x) {
+        return x.orig;
+    });
+}
+
+// because i don't think we need to bind edge point data (yet!)
+var bez_cmds = {
+    1: 'L', 2: 'Q', 3: 'C'
+};
+
+function generate_path(pts, bezness, close) {
+    var cats = ['M', pts[0], ',', pts[1]], remain = bezness;
+    var hasNaN = false;
+    for(var i = 2; i < pts.length; i += 2) {
+        if(isNaN(pts[i]) || isNaN(pts[i+1]))
+            hasNaN = true;
+        cats.push(remain===bezness ? bez_cmds[bezness] : ' ', pts[i], ',', pts[i+1]);
+        if(--remain===0)
+            remain = bezness;
+    }
+    if(remain!=bezness)
+        console.log("warning: pts.length didn't match bezness", pts, bezness);
+    if(close)
+        cats.push('Z');
+    return cats.join('');
+}
+
 function point_on_ellipse(A, B, dx, dy) {
     var tansq = Math.tan(Math.atan2(dy, dx));
     tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
@@ -124,28 +155,139 @@ function point_on_polygon(points, x0, y0, x1, y1) {
     return null;
 }
 
-
-// because i don't think we need to bind edge point data (yet!)
-var bez_cmds = {
-    1: 'L', 2: 'Q', 3: 'C'
-};
-
-function generate_path(pts, bezness, close) {
-    var cats = ['M', pts[0], ',', pts[1]], remain = bezness;
-    var hasNaN = false;
-    for(var i = 2; i < pts.length; i += 2) {
-        if(isNaN(pts[i]) || isNaN(pts[i+1]))
-            hasNaN = true;
-        cats.push(remain===bezness ? bez_cmds[bezness] : ' ', pts[i], ',', pts[i+1]);
-        if(--remain===0)
-            remain = bezness;
-    }
-    if(remain!=bezness)
-        console.log("warning: pts.length didn't match bezness", pts, bezness);
-    if(close)
-        cats.push('Z');
-    return cats.join('');
+function infer_shape(chart) {
+    return function(d) {
+        var def = param(chart.nodeShape())(d);
+        // as many as we can get from
+        // http://www.graphviz.org/doc/info/shapes.html
+        switch(def.shape) {
+        case 'ellipse':
+            d.dcg_shape = {shape: 'ellipse'};
+            break;
+        case 'egg':
+            d.dcg_shape = {shape: 'polygon', sides: 100, distortion: -0.25};
+            break;
+        case 'triangle':
+            d.dcg_shape = {shape: 'polygon', sides: 3};
+            break;
+        case 'diamond':
+            d.dcg_shape = {shape: 'polygon', sides: 4, rotation: 45};
+            break;
+        case 'trapezium':
+            d.dcg_shape = {shape: 'polygon', sides: 4, distortion: -0.5};
+            break;
+        case 'parallelogram':
+            d.dcg_shape = {shape: 'polygon', sides: 4, skew: 0.5};
+            break;
+        case 'pentagon':
+            d.dcg_shape = {shape: 'polygon', sides: 5};
+            break;
+        case 'hexagon':
+            d.dcg_shape = {shape: 'polygon', sides: 6};
+            break;
+        case 'septagon':
+            d.dcg_shape = {shape: 'polygon', sides: 7};
+            break;
+        case 'octagon':
+            d.dcg_shape = {shape: 'polygon', sides: 8};
+            break;
+        case 'invtriangle':
+            d.dcg_shape = {shape: 'polygon', sides: 3, rotation: 180};
+            break;
+        case 'invtrapezium':
+            d.dcg_shape = {shape: 'polygon', sides: 4, distortion: 0.5};
+            break;
+        case 'square':
+            d.dcg_shape = {shape: 'polygon', sides: 4};
+            break;
+        case 'polygon':
+            d.dcg_shape = {
+                shape: 'polygon',
+                sides: def.sides,
+                skew: def.skew,
+                distortion: def.distortion,
+                rotation: def.rotation
+            };
+            break;
+        default: throw new Error('unknown shape ' + def.shape);
+        }
+    };
 }
+
+function shape_element(chart) {
+    return function(d) {
+        var shape = d.dcg_shape.shape, elem;
+        switch(shape) {
+        case 'ellipse':
+            elem = 'ellipse';
+            break;
+        case 'polygon':
+            elem = 'path';
+            break;
+        default:
+            throw new Error('unknown shape ' + shape);
+        }
+        return document.createElementNS("http://www.w3.org/2000/svg", elem);
+    };
+}
+
+function ellipse_attrs(chart, d) {
+    return {
+        rx: function(d) { return d.dcg_rx; },
+        ry: function(d) { return d.dcg_ry; }
+    };
+}
+
+function polygon_attrs(chart, d) {
+    return {
+        d: function(d) {
+            var r = param(chart.nodeRadius())(d),
+                def = d.dcg_shape,
+                sides = def.sides || 4,
+                skew = def.skew || 0,
+                distortion = def.distortion || 0,
+                rotation = def.rotation || 0,
+                align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
+                pts = [];
+            rotation = rotation/360 + 0.25; // start at y axis not x
+            for(var i = 0; i<sides; ++i) {
+                var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
+                var x = r*Math.cos(theta),
+                    y = r*Math.sin(theta);
+                x *= 1 + distortion*((r-y)/r - 1);
+                x -= skew*y/2;
+                pts.push(x, y);
+            }
+            d.dcg_points = pts;
+            return generate_path(pts, 1, true);
+        }
+    };
+}
+
+function shape_attrs(chart) {
+    return function(d) {
+        var sel = d3.select(this);
+        switch(d.dcg_shape.shape) {
+        case 'ellipse':
+            sel.attr(ellipse_attrs(chart, d));
+            break;
+        case 'polygon':
+            sel.attr(polygon_attrs(chart, d));
+            break;
+        default: throw new Error('unknown shape ' + d.dcg_shape.shape);
+        }
+    };
+}
+
+function point_on_shape(chart, d, deltaX, deltaY) {
+    switch(d.dcg_shape.shape) {
+    case 'ellipse':
+        return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
+    case 'polygon':
+        return point_on_polygon(d.dcg_points, 0,0, deltaX, deltaY);
+    }
+}
+
 
 /**
 ## Diagram
@@ -166,15 +308,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
     var _running = false; // for detecting concurrency issues
-
-    // we want to allow either values or functions to be passed to specify parameters.
-    // if a function, the function needs a preprocessor to extract the original key/value
-    // pair from the wrapper object we put it in.
-    function param(v) {
-        return dc_graph.functor_wrap(v, function(x) {
-            return x.orig;
-        });
-    }
 
     /**
      #### .width([value])
@@ -295,8 +428,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      #### .nodeRadius([function])
-     Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
-     currently all displayed as ellipses. Default: 25
+     Set or get the function which will be used to retrieve the radius, in pixels, for each node. This
+     determines the height of nodes, and the width, if `nodeFitLabel` is false. Default: 25
      **/
     _chart.nodeRadius = _chart.nodeRadiusAccessor = property(25);
 
@@ -608,21 +741,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart._buildNode = function(node, nodeEnter) {
         if(_chart.nodeTitle())
             nodeEnter.append('title');
-        nodeEnter.append(function(d) {
-            var shape = param(_chart.nodeShape())(d).shape,
-                elem;
-            switch(shape) {
-            case 'ellipse':
-                elem = 'ellipse';
-                break;
-            case 'polygon':
-                elem = 'path';
-                break;
-            default:
-                throw new Error('unknown shape ' + shape);
-            }
-            return document.createElementNS("http://www.w3.org/2000/svg", elem);
-        }).attr('class', 'node-shape');
+        nodeEnter.each(infer_shape(_chart));
+        nodeEnter.append(shape_element(_chart))
+            .attr('class', 'node-shape');
         nodeEnter.append('text')
             .attr('class', 'node-label')
             .attr('fill', param(_chart.nodeLabelFill()));
@@ -650,26 +771,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                 d.width = Math.max(fitx, rplus);
                 d.height = rplus;
             });
-        node.select('ellipse.node-shape')
-            .attr('rx', function(d) { return d.dcg_rx; })
-            .attr('ry', function(d) { return d.dcg_ry; });
-        node.select('path.node-shape')
-            .attr('d', function(d) {
-                var r = param(_chart.nodeRadius())(d),
-                    sides = param(_chart.nodeShape())(d).sides || 4,
-                    rot = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
-                    pts = [];
-                for(var i = 0; i<sides; ++i) {
-                    var theta = -((i+rot)/sides + 0.25)*Math.PI*2;
-                    pts.push(r*Math.cos(theta), r*Math.sin(theta));
-                }
-                d.dcg_points = pts;
-                return generate_path(pts, 1, true);
-            });
         node.select('.node-shape')
-            .attr('stroke', param(_chart.nodeStroke()))
-            .attr('stroke-width', param(_chart.nodeStrokeWidth()))
-            .attr('fill', compose(_chart.nodeFillScale(), param(_chart.nodeFill())));
+            .each(shape_attrs(_chart))
+            .attr({
+                stroke: param(_chart.nodeStroke()),
+                'stroke-width': param(_chart.nodeStrokeWidth()),
+                fill: compose(_chart.nodeFillScale(), param(_chart.nodeFill()))
+            });
     };
 
     function has_source_and_target(e) {
@@ -1045,18 +1153,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         var sourceX, sourceY, targetX, targetY, sp, tp;
         if(!d.parallel) {
-            switch(param(_chart.nodeShape())(d).shape) {
-            case 'ellipse':
-                sp = point_on_ellipse(d.source.dcg_rx, d.source.dcg_ry, deltaX, deltaY);
-                tp = point_on_ellipse(d.target.dcg_rx, d.target.dcg_ry, -deltaX, -deltaY);
-                break;
-            case 'polygon':
-                sp = point_on_polygon(d.source.dcg_points, 0,0, deltaX, deltaY);
-                tp = point_on_polygon(d.target.dcg_points, 0,0, -deltaX, -deltaY);
-                console.assert(sp);
-                console.assert(tp);
-                break;
-            }
+            sp = point_on_shape(_chart, d.source, deltaX, deltaY);
+            tp = point_on_shape(_chart, d.target, -deltaX, -deltaY);
             sourceX = sx + sp.x;
             sourceY = sy + sp.y;
             targetX = tx + tp.x;

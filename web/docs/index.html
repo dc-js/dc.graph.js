@@ -178,8 +178,8 @@ The key must equal the key returned by the <code>.nodeKey</code> for one of the 
 if the node is currently filtered out, the edge will not be displayed. By default, looks for
 <code>.value.targetname</code>.</p>
 <h4 id="-noderadius-function-">.nodeRadius([function])</h4>
-<p>Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
-currently all displayed as ellipses. Default: 25</p>
+<p>Set or get the function which will be used to retrieve the radius, in pixels, for each node. This
+determines the height of nodes, and the width, if <code>nodeFitLabel</code> is false. Default: 25</p>
 <h4 id="-nodestrokewidth-function-">.nodeStrokeWidth([function])</h4>
 <p>Set or get the function which will be used to retrieve the stroke width, in pixels, for drawing the outline of each
 node. According to the SVG specification, the outline will be drawn half on top of the fill, and half

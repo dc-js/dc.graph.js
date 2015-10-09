@@ -82,8 +82,8 @@ if the node is currently filtered out, the edge will not be displayed. By defaul
 `.value.targetname`.
 
 #### .nodeRadius([function])
-Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
-currently all displayed as ellipses. Default: 25
+Set or get the function which will be used to retrieve the radius, in pixels, for each node. This
+determines the height of nodes, and the width, if `nodeFitLabel` is false. Default: 25
 
 #### .nodeStrokeWidth([function])
 Set or get the function which will be used to retrieve the stroke width, in pixels, for drawing the outline of each
