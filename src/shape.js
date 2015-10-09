@@ -58,3 +58,79 @@ function point_on_polygon(points, x0, y0, x1, y1) {
     }
     return null;
 }
+
+function shape_element(chart) {
+    return function(d) {
+        var shape = param(chart.nodeShape())(d).shape, elem;
+        switch(shape) {
+        case 'ellipse':
+            elem = 'ellipse';
+            break;
+        case 'diamond':
+        case 'polygon':
+            elem = 'path';
+            break;
+        default:
+            throw new Error('unknown shape ' + shape);
+        }
+        return document.createElementNS("http://www.w3.org/2000/svg", elem);
+    };
+}
+
+function ellipse_attrs(chart, d) {
+    return {
+        rx: function(d) { return d.dcg_rx; },
+        ry: function(d) { return d.dcg_ry; }
+    };
+}
+
+function polygon_attrs(chart, d) {
+    return {
+        d: function(d) {
+            var r = param(chart.nodeRadius())(d),
+                def = d.dcg_shape,
+                sides = def.sides || 4,
+                rot = def.rotation || 0,
+                align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
+                pts = [];
+            rot = rot/360 + 0.25; // start at y axis not x
+            for(var i = 0; i<sides; ++i) {
+                var theta = -((i+align)/sides + rot)*Math.PI*2; // svg is up-negative
+                pts.push(r*Math.cos(theta), r*Math.sin(theta));
+            }
+            d.dcg_points = pts;
+            return generate_path(pts, 1, true);
+        }
+    };
+}
+
+function shape_attrs(chart) {
+    return function(d) {
+        d.dcg_shape = param(chart.nodeShape())(d);
+        var shape = d.dcg_shape.shape,
+            sel = d3.select(this);
+        switch(shape) {
+        case 'ellipse':
+            sel.attr(ellipse_attrs(chart, d));
+            break;
+        case 'diamond':
+            d.dcg_shape = {shape: 'polygon', sides: 4, rotation: 45};
+            break;
+        case 'polygon':
+            break;
+        default: throw new Error('unknown shape ' + shape);
+        }
+        if(d.dcg_shape.shape === 'polygon')
+            sel.attr(polygon_attrs(chart, d));
+    };
+}
+
+function point_on_shape(chart, d, deltaX, deltaY) {
+    switch(d.dcg_shape.shape) {
+    case 'ellipse':
+        return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
+    case 'polygon':
+        return point_on_polygon(d.dcg_points, 0,0, deltaX, deltaY);
+    }
+}
+

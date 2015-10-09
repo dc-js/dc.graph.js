@@ -142,14 +142,17 @@
           dc_graph.generate(name, args, env, callback);
       }
   if(shape) {
-      shape = shape.split(',');
-      switch(shape[0]) {
+      var parts = shape.split(',');
+      shape = {shape: parts[0]};
+      switch(parts[0]) {
       case 'ellipse':
-          shape = {shape: shape[0]};
+      case 'diamond':
           break;
       case 'polygon':
-          shape = {shape: shape[0], sides: shape[1]};
+          shape.sides = parts[1];
           break;
+      default:
+          console.warn("front end doesn't know shape " + parts[0]);
       }
   }
   else shape = {shape: 'ellipse'};

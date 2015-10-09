@@ -43,6 +43,15 @@ dc_graph.functor_wrap = function (v, wrap) {
     };
 };
 
+// we want to allow either values or functions to be passed to specify parameters.
+// if a function, the function needs a preprocessor to extract the original key/value
+// pair from the wrapper object we put it in.
+function param(v) {
+    return dc_graph.functor_wrap(v, function(x) {
+        return x.orig;
+    });
+}
+
 // because i don't think we need to bind edge point data (yet!)
 var bez_cmds = {
     1: 'L', 2: 'Q', 3: 'C'
