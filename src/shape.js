@@ -59,14 +59,67 @@ function point_on_polygon(points, x0, y0, x1, y1) {
     return null;
 }
 
+function infer_shape(chart) {
+    return function(d) {
+        var def = param(chart.nodeShape())(d);
+        switch(def.shape) {
+        case 'ellipse':
+            d.dcg_shape = {shape: 'ellipse'};
+            break;
+        case 'triangle':
+            d.dcg_shape = {shape: 'polygon', sides: 3};
+            break;
+        case 'diamond':
+            d.dcg_shape = {shape: 'polygon', sides: 4, rotation: 45};
+            break;
+        case 'trapezium':
+            d.dcg_shape = {shape: 'polygon', sides: 4, distortion: -0.5};
+            break;
+        case 'parallelogram':
+            d.dcg_shape = {shape: 'polygon', sides: 4, skew: 0.5};
+            break;
+        case 'pentagon':
+            d.dcg_shape = {shape: 'polygon', sides: 5};
+            break;
+        case 'hexagon':
+            d.dcg_shape = {shape: 'polygon', sides: 6};
+            break;
+        case 'septagon':
+            d.dcg_shape = {shape: 'polygon', sides: 7};
+            break;
+        case 'octagon':
+            d.dcg_shape = {shape: 'polygon', sides: 8};
+            break;
+        case 'invtriangle':
+            d.dcg_shape = {shape: 'polygon', sides: 3, rotation: 180};
+            break;
+        case 'invtrapezium':
+            d.dcg_shape = {shape: 'polygon', sides: 4, distortion: 0.5};
+            break;
+        case 'square':
+            d.dcg_shape = {shape: 'polygon', sides: 4};
+            break;
+        case 'polygon':
+            d.dcg_shape = {
+                shape: 'polygon',
+                sides: def.sides,
+                skew: def.skew,
+                distortion: def.distortion,
+                rotation: def.rotation
+            };
+            break;
+        default: throw new Error('unknown shape ' + def.shape);
+        }
+    };
+}
+
 function shape_element(chart) {
     return function(d) {
-        var shape = param(chart.nodeShape())(d).shape, elem;
+        var shape = d.dcg_shape.shape, elem;
         switch(shape) {
         case 'ellipse':
             elem = 'ellipse';
             break;
-        case 'diamond':
         case 'polygon':
             elem = 'path';
             break;
@@ -90,13 +143,19 @@ function polygon_attrs(chart, d) {
             var r = param(chart.nodeRadius())(d),
                 def = d.dcg_shape,
                 sides = def.sides || 4,
-                rot = def.rotation || 0,
+                skew = def.skew || 0,
+                distortion = def.distortion || 0,
+                rotation = def.rotation || 0,
                 align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
                 pts = [];
-            rot = rot/360 + 0.25; // start at y axis not x
+            rotation = rotation/360 + 0.25; // start at y axis not x
             for(var i = 0; i<sides; ++i) {
-                var theta = -((i+align)/sides + rot)*Math.PI*2; // svg is up-negative
-                pts.push(r*Math.cos(theta), r*Math.sin(theta));
+                var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
+                var x = r*Math.cos(theta),
+                    y = r*Math.sin(theta);
+                x *= 1 + distortion*((r-y)/r - 1);
+                x -= skew*y/2;
+                pts.push(x, y);
             }
             d.dcg_points = pts;
             return generate_path(pts, 1, true);
@@ -106,22 +165,16 @@ function polygon_attrs(chart, d) {
 
 function shape_attrs(chart) {
     return function(d) {
-        d.dcg_shape = param(chart.nodeShape())(d);
-        var shape = d.dcg_shape.shape,
-            sel = d3.select(this);
-        switch(shape) {
+        var sel = d3.select(this);
+        switch(d.dcg_shape.shape) {
         case 'ellipse':
             sel.attr(ellipse_attrs(chart, d));
             break;
-        case 'diamond':
-            d.dcg_shape = {shape: 'polygon', sides: 4, rotation: 45};
-            break;
         case 'polygon':
-            break;
-        default: throw new Error('unknown shape ' + shape);
-        }
-        if(d.dcg_shape.shape === 'polygon')
             sel.attr(polygon_attrs(chart, d));
+            break;
+        default: throw new Error('unknown shape ' + d.dcg_shape.shape);
+        }
     };
 }
 

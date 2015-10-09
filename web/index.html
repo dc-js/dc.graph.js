@@ -145,14 +145,12 @@
       var parts = shape.split(',');
       shape = {shape: parts[0]};
       switch(parts[0]) {
-      case 'ellipse':
-      case 'diamond':
-          break;
       case 'polygon':
-          shape.sides = parts[1];
+          shape.sides = +parts[1];
+          shape.skew = +parts[2] || 0;
+          shape.distortion = +parts[3] || 0;
+          shape.rotation = +parts[4] || 0;
           break;
-      default:
-          console.warn("front end doesn't know shape " + parts[0]);
       }
   }
   else shape = {shape: 'ellipse'};
