@@ -353,6 +353,7 @@ module.exports = function (grunt) {
 module.exports.jsFiles = [
     'src/banner.js',   // NOTE: keep this first
     'src/core.js',
+    'src/shape.js',
     'src/diagram.js',
     'src/legend.js',
     'src/load_graph.js',
