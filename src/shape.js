@@ -62,9 +62,14 @@ function point_on_polygon(points, x0, y0, x1, y1) {
 function infer_shape(chart) {
     return function(d) {
         var def = param(chart.nodeShape())(d);
+        // as many as we can get from
+        // http://www.graphviz.org/doc/info/shapes.html
         switch(def.shape) {
         case 'ellipse':
             d.dcg_shape = {shape: 'ellipse'};
+            break;
+        case 'egg':
+            d.dcg_shape = {shape: 'polygon', sides: 100, distortion: -0.25};
             break;
         case 'triangle':
             d.dcg_shape = {shape: 'polygon', sides: 3};
