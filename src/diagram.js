@@ -160,9 +160,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      #### .nodeFillScale([d3.scale])
      If set, the value returned from `nodeFill` will be processed through this d3.scale
-     to return the fill color. Default: identity function (no scale)
+     to return the fill color. If falsy, uses the identity function (no scale). Default: null.
      **/
-    _chart.nodeFillScale = property(identity);
+    _chart.nodeFillScale = property(null);
 
     /**
      #### .nodeFill([function])
@@ -485,7 +485,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr({
                 stroke: param(_chart.nodeStroke()),
                 'stroke-width': param(_chart.nodeStrokeWidth()),
-                fill: compose(_chart.nodeFillScale(), param(_chart.nodeFill()))
+                fill: compose(_chart.nodeFillScale() || identity, param(_chart.nodeFill()))
             });
     };
 

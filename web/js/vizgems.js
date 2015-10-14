@@ -129,6 +129,29 @@ var options = {
             diagram.edgeArrowheadAccessor(val ? 'vee' : null);
         }
     },
+    use_colors: {
+        default: true,
+        query: 'color',
+        selector: '#use-colors',
+        needs_redraw: true,
+        apply: function(val, diagram, filters) {
+            if(val) {
+                diagram
+                    .nodeStrokeWidthAccessor(function(kv) {
+                        return kv.key === selected_node ? 5 : 0;
+                    })
+                    .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(colorbrewer.Paired[12]))
+                    .nodeFillAccessor(function(kv) {
+                        return kv.value.ostype;
+                    });
+            } else {
+                diagram
+                    .nodeStrokeWidthAccessor(1)
+                    .nodeFillScale(null)
+                    .nodeFillAccessor('white');
+            }
+        }
+    },
     layout_unchanged: {
         default: false,
         query: 'unchanged',
@@ -672,9 +695,6 @@ function init() {
         // aesthetics: look at kv.value for node/edge attributes and return appropriate values
         diagram
             .initLayoutOnRedraw(true)
-            .nodeStrokeWidthAccessor(function(kv) {
-                return kv.key === selected_node ? 5 : 0;
-            })
             .nodeFitLabelAccessor(settings.fit_labels)
             .nodeRadiusAccessor(30)
             .induceNodes(true) // drop zero-degree nodes for now
@@ -692,10 +712,6 @@ function init() {
                     return bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
                         kv.key : kv.value.name;
                 }
-            })
-            .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(colorbrewer.Paired[12]))
-            .nodeFillAccessor(function(kv) {
-                return kv.value.ostype;
             });
 
         var exs = [];
