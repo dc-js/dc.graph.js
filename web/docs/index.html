@@ -159,89 +159,96 @@ other charts on the same crossfilter instance based on the edges selected.</em><
 <p>Set or get the crossfilter group which is the data source for the edges in the diagram. See <code>.nodeGroup</code>
 above for the way data is loaded from a crossfilter group.</p>
 <p>The values in the key/value pairs returned by <code>diagram.edgeGroup().all()</code> need to support, at a minimum,
-the <code>sourceAccessor</code> and <code>targetAccessor</code>, which should return the same keys as the <code>nodeKeyAccessor</code></p>
-<h4 id="-nodekeyaccessor-function-">.nodeKeyAccessor([function])</h4>
+the <code>nodeSource</code> and <code>nodeTarget</code>, which should return the same keys as the <code>nodeKey</code></p>
+<h4 id="-nodekey-function-">.nodeKey([function])</h4>
 <p>Set or get the function which will be used to retrieve the unique key for each node. By default, this
 accesses the <code>key</code> field of the object passed to it. The keys should match the keys returned by the
-<code>.sourceAccessor</code> and <code>.targetAccessor</code> of the edges.</p>
-<h4 id="-edgekeyaccessor-function-">.edgeKeyAccessor([function])</h4>
+<code>.edgeSource</code> and <code>.edgeTarget</code>.</p>
+<h4 id="-edgekey-function-">.edgeKey([function])</h4>
 <p>Set or get the function which will be used to retrieve the unique key for each edge. By default, this
 accesses the <code>key</code> field of the object passed to it.</p>
-<h4 id="-sourceaccessor-function-">.sourceAccessor([function])</h4>
+<h4 id="-edgesource-function-">.edgeSource([function])</h4>
 <p>Set or get the function which will be used to retrieve the source (origin/tail) key of the edge objects.
-The key must equal the key returned by the <code>.nodeKeyAccessor</code> for one of the nodes; if it does not, or
+The key must equal the key returned by the <code>.nodeKey</code> for one of the nodes; if it does not, or
 if the node is currently filtered out, the edge will not be displayed. By default, looks for
 <code>.value.sourcename</code>.</p>
-<h4 id="-targetaccessor-function-">.targetAccessor([function])</h4>
+<h4 id="-edgetarget-function-">.edgeTarget([function])</h4>
 <p>Set or get the function which will be used to retrieve the target (destination/head) key of the edge objects.
-The key must equal the key returned by the <code>.nodeKeyAccessor</code> for one of the nodes; if it does not, or
+The key must equal the key returned by the <code>.nodeKey</code> for one of the nodes; if it does not, or
 if the node is currently filtered out, the edge will not be displayed. By default, looks for
 <code>.value.targetname</code>.</p>
-<h4 id="-noderadiusaccessor-function-">.nodeRadiusAccessor([function])</h4>
-<p>Set or get the function which will be used to retrieve the radius, in pixels, for each node. Nodes are
-currently all displayed as circles. Default: 25</p>
-<h4 id="-nodestrokewidthaccessor-function-">.nodeStrokeWidthAccessor([function])</h4>
+<h4 id="-noderadius-function-">.nodeRadius([function])</h4>
+<p>Set or get the function which will be used to retrieve the radius, in pixels, for each node. This
+determines the height of nodes, and the width, if <code>nodeFitLabel</code> is false. Default: 25</p>
+<h4 id="-nodestrokewidth-function-">.nodeStrokeWidth([function])</h4>
 <p>Set or get the function which will be used to retrieve the stroke width, in pixels, for drawing the outline of each
 node. According to the SVG specification, the outline will be drawn half on top of the fill, and half
 outside. Default: 1</p>
-<h4 id="-nodestrokeaccessor-function-">.nodeStrokeAccessor([function])</h4>
+<h4 id="-nodestroke-function-">.nodeStroke([function])</h4>
 <p>Set or get the function which will be used to retrieve the stroke color for the outline of each
 node. Default: black</p>
 <h4 id="-nodefillscale-d3-scale-">.nodeFillScale([d3.scale])</h4>
-<p>If set, the value returned from <code>nodeFillAccessor</code> will be processed through this d3.scale
+<p>If set, the value returned from <code>nodeFill</code> will be processed through this d3.scale
 to return the fill color. Default: identity function (no scale)</p>
-<h4 id="-nodefillaccessor-function-">.nodeFillAccessor([function])</h4>
+<h4 id="-nodefill-function-">.nodeFill([function])</h4>
 <p>Set or get the function which will be used to retrieve the fill color for the body of each
 node. Default: white</p>
 <h4 id="-nodepadding-number-">.nodePadding([number])</h4>
 <p>Set or get the padding or minimum distance, in pixels, between nodes in the diagram. Default: 6</p>
-<h4 id="-nodelabelaccessor-function-">.nodeLabelAccessor([function])</h4>
+<h4 id="-nodelabel-function-">.nodeLabel([function])</h4>
 <p>Set or get the function which will be used to retrieve the label text to display in each node. By
 default, looks for a field <code>label</code> or <code>name</code> inside the <code>value</code> field.</p>
-<h4 id="-nodelabelfillaccessor-function-">.nodeLabelFillAccessor([function])</h4>
+<h4 id="-nodelabelfill-function-">.nodeLabelFill([function])</h4>
 <p>Set or get the function which will be used to retrieve the label fill color. Default: null</p>
-<h4 id="-nodefitlabelaccessor-function-">.nodeFitLabelAccessor([function])</h4>
+<h4 id="-nodefitlabel-function-">.nodeFitLabel([function])</h4>
 <p>Whether to fit the node shape around the label. Default: true</p>
-<h4 id="-nodetitleaccessor-function-">.nodeTitleAccessor([function])</h4>
+<h4 id="-nodeshape-object-">.nodeShape([object]</h4>
+<p>The shape to use for drawing each node, specified as an object with at least the field
+<code>shape</code>: ellipse, polygon</p>
+<p>If <code>shape = polygon</code>:</p>
+<ul>
+<li><code>sides</code>: number of sides for a polygon</li>
+</ul>
+<h4 id="-nodetitle-function-">.nodeTitle([function])</h4>
 <p>Set or get the function which will be used to retrieve the node title, usually rendered as a tooltip.
 By default, uses the key of the node.</p>
 <h4 id="-nodeordering-function-">.nodeOrdering([function])</h4>
 <p>By default, nodes are added to the layout in the order that <code>.nodeGroup().all()</code> returns them. If
 specified, <code>.nodeOrdering</code> provides an accessor that returns a key to sort the nodes on.
 It would be better not to rely on ordering to affect layout, but it does matter.</p>
-<h4 id="-nodefixedaccessor-function-">.nodeFixedAccessor([function])</h4>
+<h4 id="-nodefixed-function-">.nodeFixed([function])</h4>
 <p>Specify an accessor that returns an {x,y} coordinate for a node that should be
 <a href="https://github.com/tgdwyer/WebCola/wiki/Fixed-Node-Positions">fixed in place</a>, and returns
 falsy for other nodes.</p>
-<h4 id="-edgestrokeaccessor-function-">.edgeStrokeAccessor([function])</h4>
+<h4 id="-edgestroke-function-">.edgeStroke([function])</h4>
 <p>Set or get the function which will be used to retrieve the stroke color for the edges. Default: black</p>
-<h4 id="-edgestrokewidthaccessor-function-">.edgeStrokeWidthAccessor([function])</h4>
+<h4 id="-edgestrokewidth-function-">.edgeStrokeWidth([function])</h4>
 <p>Set or get the function which will be used to retrieve the stroke width for the edges. Default: 1</p>
-<h4 id="-edgeopacityaccessor-function-">.edgeOpacityAccessor([function])</h4>
+<h4 id="-edgeopacity-function-">.edgeOpacity([function])</h4>
 <p>Set or get the function which will be used to retrieve the edge opacity, a number from 0 to 1. Default: 1</p>
-<h4 id="-edgelabelaccessor-function-">.edgeLabelAccessor([function])</h4>
+<h4 id="-edgelabel-function-">.edgeLabel([function])</h4>
 <p>Set or get the function which will be used to retrieve the edge label text. The label is displayed when
-an edge is hovered over. By default, uses the <code>edgeKeyAccessor</code>.</p>
-<h4 id="-edgearrowheadaccessor-function-">.edgeArrowheadAccessor([function])</h4>
+an edge is hovered over. By default, uses the <code>edgeKey</code>.</p>
+<h4 id="-edgearrowhead-function-">.edgeArrowhead([function])</h4>
 <p>Set or get the function which will be used to retrieve the name of the arrowhead to use for the target/
 head/destination of the edge. Arrow symbols can be specified with <code>.defineArrow()</code>. Return null to
 display no arrowhead. Default: &#39;vee&#39;</p>
-<h4 id="-edgearrowtailaccessor-function-">.edgeArrowtailAccessor([function])</h4>
+<h4 id="-edgearrowtail-function-">.edgeArrowtail([function])</h4>
 <p>Set or get the function which will be used to retrieve the name of the arrow tail to use for the source/
 tail/source of the edge. Arrow symbols can be specified with <code>.defineArrow()</code>. Return null to
 display no arrowhead. Default: null</p>
-<h4 id="-edgeislayoutaccessor-function-">.edgeIsLayoutAccessor([function])</h4>
+<h4 id="-edgeislayout-function-">.edgeIsLayout([function])</h4>
 <p>To draw an edge but not have it affect the layout, specify a function which returns false for that edge.
 By default, will return false if the <code>notLayout</code> field of the edge is truthy, true otherwise.</p>
 <h4 id="-lengthstrategy-string-">.lengthStrategy([string])</h4>
 <p>Currently, three strategies are supported for specifying the lengths of edges:</p>
 <ul>
-<li>&#39;individual&#39; - uses the <code>edgeDistanceAccessor</code> for each edge. If it returns falsy, uses the <code>baseLength</code></li>
+<li>&#39;individual&#39; - uses the <code>edgeLength</code> for each edge. If it returns falsy, uses the <code>baseLength</code></li>
 <li>&#39;symmetric&#39;, &#39;jaccard&#39; - compute the edge length based on the graph structure around the edge. See <a href="https://github.com/tgdwyer/WebCola/wiki/link-lengths">the
 cola.js wiki</a> for more details.</li>
 <li>&#39;none&#39; - no edge lengths will be specified</li>
 </ul>
-<h4 id="-edgedistanceaccessor-function-">.edgeDistanceAccessor([function])</h4>
+<h4 id="-edgelength-function-">.edgeLength([function])</h4>
 <p>When the <code>.lengthStrategy</code> is &#39;individual&#39;, this accessor will be used to read the length of each edge.
 By default, reads the <code>distance</code> field of the edge. If the distance is falsy, uses the <code>baseLength</code>.</p>
 <h4 id="-baselength-number-">.baseLength([number])</h4>
@@ -331,8 +338,8 @@ setting the svg element on a diagram may have unexpected consequences.</p>
 <h4 id="-definearrow-name-width-height-refx-refy-drawf-">.defineArrow(name, width, height, refX, refY, drawf)</h4>
 <p>Creates an svg marker definition for drawing edge arrow tails or heads.</p>
 <ul>
-<li><strong>name</strong> - the <code>id</code> to give the marker. When this identifier is returned by <code>.edgeArrowheadAccessor</code>
-or <code>.edgeArrowtailAccessor</code>, that edge will be drawn with the specified marker for its source or target.</li>
+<li><strong>name</strong> - the <code>id</code> to give the marker. When this identifier is returned by <code>.edgeArrowhead</code>
+or <code>.edgeArrowtail</code>, that edge will be drawn with the specified marker for its source or target.</li>
 <li><strong>width</strong> - the width, in pixels, to draw the marker</li>
 <li><strong>height</strong> - the height, in pixels, to draw the marker</li>
 <li><strong>refX</strong>, <strong>refY</strong> - the reference position, in marker coordinates, which will be aligned to the

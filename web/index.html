@@ -71,19 +71,25 @@
       showSteps = +querystring.showsteps !== 0,
       file = querystring.file || null,
       generate = querystring.gen || null,
+      shape = querystring.shape || null,
+      radius = +querystring.radius || 25,
+      fill = querystring.fill || 'white',
+      nodeStroke = querystring.nodestroke || 'black',
+      nodeStrokeWidth = querystring.nodestrokewidth || 1,
       randomize = +querystring.randomize || false,
       doReinit = querystring.reinit==="0" ? false : true,
       doDisplacement = querystring.displace==="0" ? false : true,
       doAlignment = querystring.align==="0" ? false : true,
       isQFS = false,
       linkLength = +querystring.linklength || 30,
-      edgeColor = querystring.edgecolor || 'black',
+      edgeStroke = querystring.edgestroke || 'black',
+      edgeStrokeWidth = querystring.edgestrokewidth || 1,
       opacity = +querystring.opacity || 1,
       do_qfs = false,
       nodePrefix = querystring.prefix || '',
-      timeLimit = querystring.limit || 10000;
-  if(edgeColor && /[0-9A-Fa-f]{6}/.test(edgeColor) || /[0-9A-Fa-f]{3}/.test(edgeColor))
-      edgeColor = '#' + edgeColor;
+      timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000;
+  if(edgeStroke && /[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke))
+      edgeStroke = '#' + edgeStroke;
   var min = 2, max = 12;
   var begin = 2, end = 12, curr = begin;
   var doRender = true;
@@ -135,6 +141,19 @@
           };
           dc_graph.generate(name, args, env, callback);
       }
+  if(shape) {
+      var parts = shape.split(',');
+      shape = {shape: parts[0]};
+      switch(parts[0]) {
+      case 'polygon':
+          shape.sides = +parts[1];
+          shape.skew = +parts[2] || 0;
+          shape.distortion = +parts[3] || 0;
+          shape.rotation = +parts[4] || 0;
+          break;
+      }
+  }
+  else shape = {shape: 'ellipse'};
 
   source(function(error, data) {
       if(error) {
@@ -235,19 +254,24 @@
           .showLayoutSteps(showSteps)
           .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
           .edgeDimension(edges.dimension).edgeGroup(edges.group)
-          .sourceAccessor(function(e) { return e.value[sourceattr]; })
-          .targetAccessor(function(e) { return e.value[targetattr]; })
-          .nodeFillAccessor(isQFS ? qfs_color : 'white')
-          .nodeFixedAccessor(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
+          .edgeSource(function(e) { return e.value[sourceattr]; })
+          .edgeTarget(function(e) { return e.value[targetattr]; })
+          .nodeShape(shape)
+          .nodeRadius(radius)
+          .nodeFill(isQFS ? qfs_color : fill)
+          .nodeStroke(nodeStroke)
+          .nodeStrokeWidth(nodeStrokeWidth)
+          .nodeFixed(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
           .constrain(constrain)
           .lengthStrategy(generate ? 'individual' :
                           do_qfs ? 'none' :
                           'symmetric')
-          .edgeArrowheadAccessor(function(kv) {
-              return !kv.value.undirected;
+          .edgeArrowhead(function(kv) {
+              return kv.value.undirected ? null : 'vee';
           })
-          .edgeOpacityAccessor(opacity)
-          .edgeStrokeAccessor(edgeColor)
+          .edgeOpacity(opacity)
+          .edgeStroke(edgeStroke)
+          .edgeStrokeWidth(edgeStrokeWidth)
           .on('end', function() {
               $('#run-indicator').hide();
               runner.endStep();

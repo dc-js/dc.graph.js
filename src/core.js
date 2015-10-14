@@ -43,15 +43,13 @@ dc_graph.functor_wrap = function (v, wrap) {
     };
 };
 
-function point_on_ellipse(A, B, dx, dy) {
-    var tansq = Math.tan(Math.atan2(dy, dx));
-    tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
-    var ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
-    if(dx<0)
-        ret.x = -ret.x;
-    if(dy<0)
-        ret.y = -ret.y;
-    return ret;
+// we want to allow either values or functions to be passed to specify parameters.
+// if a function, the function needs a preprocessor to extract the original key/value
+// pair from the wrapper object we put it in.
+function param(v) {
+    return dc_graph.functor_wrap(v, function(x) {
+        return x.orig;
+    });
 }
 
 // because i don't think we need to bind edge point data (yet!)
@@ -59,7 +57,7 @@ var bez_cmds = {
     1: 'L', 2: 'Q', 3: 'C'
 };
 
-function generate_path(pts, bezness) {
+function generate_path(pts, bezness, close) {
     var cats = ['M', pts[0], ',', pts[1]], remain = bezness;
     var hasNaN = false;
     for(var i = 2; i < pts.length; i += 2) {
@@ -71,5 +69,7 @@ function generate_path(pts, bezness) {
     }
     if(remain!=bezness)
         console.log("warning: pts.length didn't match bezness", pts, bezness);
+    if(close)
+        cats.push('Z');
     return cats.join('');
 }
