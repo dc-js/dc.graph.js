@@ -96,7 +96,7 @@ node. Default: black
 
 #### .nodeFillScale([d3.scale])
 If set, the value returned from `nodeFill` will be processed through this d3.scale
-to return the fill color. Default: identity function (no scale)
+to return the fill color. If falsy, uses the identity function (no scale). Default: null.
 
 #### .nodeFill([function])
 Set or get the function which will be used to retrieve the fill color for the body of each

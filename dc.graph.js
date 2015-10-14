@@ -451,9 +451,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      #### .nodeFillScale([d3.scale])
      If set, the value returned from `nodeFill` will be processed through this d3.scale
-     to return the fill color. Default: identity function (no scale)
+     to return the fill color. If falsy, uses the identity function (no scale). Default: null.
      **/
-    _chart.nodeFillScale = property(identity);
+    _chart.nodeFillScale = property(null);
 
     /**
      #### .nodeFill([function])
@@ -776,7 +776,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr({
                 stroke: param(_chart.nodeStroke()),
                 'stroke-width': param(_chart.nodeStrokeWidth()),
-                fill: compose(_chart.nodeFillScale(), param(_chart.nodeFill()))
+                fill: compose(_chart.nodeFillScale() || identity, param(_chart.nodeFill()))
             });
     };
 
@@ -1108,7 +1108,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         if(skip_layout) {
             _running = false;
-            _dispatch.end();
+            _dispatch.end(false);
             return this;
         }
         var startTime = Date.now();
@@ -1122,7 +1122,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .on('end', function() {
                     if(!_chart.showLayoutSteps())
                         draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
-                    else layout_done();
+                    else layout_done(true);
                 })
                 .on('start', function() {
                     console.log('COLA START'); // doesn't seem to fire
@@ -1132,8 +1132,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    function layout_done() {
-        _dispatch.end();
+    function layout_done(happens) {
+        _dispatch.end(happens);
         _running = false;
         if(_needsRedraw) {
             _needsRedraw = false;
@@ -1211,7 +1211,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         transitions.forEach(function(transition) {
             transition
                 .each(function() { ++n; })
-                .each("end.all", function() { if (!--n) callback.apply(this, arguments); });
+                .each("end.all", function() { if (!--n) callback(); });
         });
     }
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
@@ -1243,27 +1243,21 @@ dc_graph.diagram = function (parent, chartGroup) {
         // signal layout done when all transitions complete
         // because otherwise client might start another layout and lock the processor
         if(!_chart.showLayoutSteps())
-            endall([ntrans, etrans], layout_done);
+            endall([ntrans, etrans], function() { layout_done(true); });
 
         edgeHover.attr('d', new_edge_path);
         edgeLabels.transition()
             .duration(_chart.transitionDuration())
             .attr('transform', function(d,i) {
-            if (d.target.x < d.source.x) {
-                var bbox = this.getBBox(),
-                    rx = bbox.x + bbox.width/2,
-                    ry = bbox.y + bbox.height/2;
-                return 'rotate(180 ' + rx + ' ' + ry + ')';
-            }
-            else {
-                return 'rotate(0)';
-            }
-        })
-            .attr('dy', function(d, i) {
-                if (d.target.x < d.source.x)
-                    return 11;
-                else
-                    return -2;
+                if (d.target.x < d.source.x) {
+                    var bbox = this.getBBox(),
+                        rx = bbox.x + bbox.width/2,
+                        ry = bbox.y + bbox.height/2;
+                    return 'rotate(180 ' + rx + ' ' + ry + ')';
+                }
+                else {
+                    return 'rotate(0)';
+                }
             });
     }
 

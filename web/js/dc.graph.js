@@ -451,9 +451,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      #### .nodeFillScale([d3.scale])
      If set, the value returned from `nodeFill` will be processed through this d3.scale
-     to return the fill color. Default: identity function (no scale)
+     to return the fill color. If falsy, uses the identity function (no scale). Default: null.
      **/
-    _chart.nodeFillScale = property(identity);
+    _chart.nodeFillScale = property(null);
 
     /**
      #### .nodeFill([function])
@@ -776,7 +776,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr({
                 stroke: param(_chart.nodeStroke()),
                 'stroke-width': param(_chart.nodeStrokeWidth()),
-                fill: compose(_chart.nodeFillScale(), param(_chart.nodeFill()))
+                fill: compose(_chart.nodeFillScale() || identity, param(_chart.nodeFill()))
             });
     };
 
@@ -1106,9 +1106,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
             });
         });
+        if(_chart.legend())
+            _chart.legend().redraw();
         if(skip_layout) {
             _running = false;
-            _dispatch.end();
+            _dispatch.end(false);
             return this;
         }
         var startTime = Date.now();
@@ -1122,7 +1124,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .on('end', function() {
                     if(!_chart.showLayoutSteps())
                         draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
-                    else layout_done();
+                    else layout_done(true);
                 })
                 .on('start', function() {
                     console.log('COLA START'); // doesn't seem to fire
@@ -1132,8 +1134,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    function layout_done() {
-        _dispatch.end();
+    function layout_done(happens) {
+        _dispatch.end(happens);
         _running = false;
         if(_needsRedraw) {
             _needsRedraw = false;
@@ -1211,7 +1213,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         transitions.forEach(function(transition) {
             transition
                 .each(function() { ++n; })
-                .each("end.all", function() { if (!--n) callback.apply(this, arguments); });
+                .each("end.all", function() { if (!--n) callback(); });
         });
     }
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
@@ -1243,27 +1245,21 @@ dc_graph.diagram = function (parent, chartGroup) {
         // signal layout done when all transitions complete
         // because otherwise client might start another layout and lock the processor
         if(!_chart.showLayoutSteps())
-            endall([ntrans, etrans], layout_done);
+            endall([ntrans, etrans], function() { layout_done(true); });
 
         edgeHover.attr('d', new_edge_path);
         edgeLabels.transition()
             .duration(_chart.transitionDuration())
             .attr('transform', function(d,i) {
-            if (d.target.x < d.source.x) {
-                var bbox = this.getBBox(),
-                    rx = bbox.x + bbox.width/2,
-                    ry = bbox.y + bbox.height/2;
-                return 'rotate(180 ' + rx + ' ' + ry + ')';
-            }
-            else {
-                return 'rotate(0)';
-            }
-        })
-            .attr('dy', function(d, i) {
-                if (d.target.x < d.source.x)
-                    return 11;
-                else
-                    return -2;
+                if (d.target.x < d.source.x) {
+                    var bbox = this.getBBox(),
+                        rx = bbox.x + bbox.width/2,
+                        ry = bbox.y + bbox.height/2;
+                    return 'rotate(180 ' + rx + ' ' + ry + ')';
+                }
+                else {
+                    return 'rotate(0)';
+                }
             });
     }
 
@@ -1453,7 +1449,6 @@ The dc_graph.legend will show labeled examples of nodes (and someday edges), wit
 **/
 dc_graph.legend = function() {
     var _legend = {};
-    var _g = null;
 
     /**
      #### .x([value])
@@ -1497,11 +1492,11 @@ dc_graph.legend = function() {
 
     _legend.parent = property(null);
 
-    _legend.render = function() {
-        var enter = _legend.parent().svg()
+    _legend.redraw = function() {
+        var legend = _legend.parent().svg()
                 .selectAll('g.dc-graph-legend')
-                .data([0]).enter();
-        _g = enter.append('g')
+                .data([0]);
+        legend.enter().append('g')
             .attr('class', 'dc-graph-legend')
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
@@ -1515,22 +1510,25 @@ dc_graph.legend = function() {
                 items.push({name: item, orig: {key: item, value: exemplars[item]}});
         }
 
-        var node = _g.selectAll('.node')
+        var node = legend.selectAll('.node')
                 .data(items, function(d) { return d.name; });
         var nodeEnter = node.enter().append('g')
-                .attr('class', 'node')
-                .attr('transform', function(d, i) {
-                    return 'translate(' + _legend.nodeWidth()/2 + ',' + (_legend.nodeHeight() + _legend.gap())*(i+0.5) + ')';
-                });
+                .attr('class', 'node');
         nodeEnter.append('text')
-            .attr('class', 'legend-label')
+            .attr('class', 'legend-label');
+        node
+            .attr('transform', function(d, i) {
+                return 'translate(' + _legend.nodeWidth()/2 + ',' + (_legend.nodeHeight() + _legend.gap())*(i+0.5) + ')';
+            });
+        node.select('text.legend-label')
             .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
-            //.attr('dominant-baseline', 'middle')
             .text(function(d) {
                 return d.name;
             });
         _legend.parent()._buildNode(node, nodeEnter);
     };
+
+    _legend.render = _legend.redraw;
 
     return _legend;
 };
