@@ -636,10 +636,12 @@ function init() {
             .sourceAccessor(function(e) { return e.value.id1; })
             .targetAccessor(function(e) { return e.value.id2; })
             .on('start', show_start)
-            .on('end', function() {
+            .on('end', function(happens) {
                 show_stop();
+                if(happens)
+                    runner.endStep();
+                else runner.skip();
                 show_stats(data_stats, diagram.getStats());
-                runner.endStep();
             });
         osTypeSelect
             .promptText('Show all types')

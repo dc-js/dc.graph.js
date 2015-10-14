@@ -55,6 +55,13 @@ var make_runner = function(init, step, interval) {
         avgTime: function() {
             return times.length ? d3.sum(times)/times.length : 0;
         },
+        skip: function() { // skip this step, reset timer
+            times.push(window.performance.now() - last_start);
+            if(run_mode) {
+                step();
+                startTimer();
+            }
+        },
         endStep: function() {
             stepped = true;
             times.push(window.performance.now() - last_start);

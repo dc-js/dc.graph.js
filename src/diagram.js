@@ -817,7 +817,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         if(skip_layout) {
             _running = false;
-            _dispatch.end();
+            _dispatch.end(false);
             return this;
         }
         var startTime = Date.now();
@@ -831,7 +831,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .on('end', function() {
                     if(!_chart.showLayoutSteps())
                         draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
-                    else layout_done();
+                    else layout_done(true);
                 })
                 .on('start', function() {
                     console.log('COLA START'); // doesn't seem to fire
@@ -841,8 +841,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    function layout_done() {
-        _dispatch.end();
+    function layout_done(happens) {
+        _dispatch.end(happens);
         _running = false;
         if(_needsRedraw) {
             _needsRedraw = false;
@@ -920,7 +920,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         transitions.forEach(function(transition) {
             transition
                 .each(function() { ++n; })
-                .each("end.all", function() { if (!--n) callback.apply(this, arguments); });
+                .each("end.all", function() { if (!--n) callback(); });
         });
     }
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
@@ -952,7 +952,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         // signal layout done when all transitions complete
         // because otherwise client might start another layout and lock the processor
         if(!_chart.showLayoutSteps())
-            endall([ntrans, etrans], layout_done);
+            endall([ntrans, etrans], function() { layout_done(true); });
 
         edgeHover.attr('d', new_edge_path);
         edgeLabels.transition()
