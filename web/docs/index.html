@@ -189,7 +189,7 @@ outside. Default: 1</p>
 node. Default: black</p>
 <h4 id="-nodefillscale-d3-scale-">.nodeFillScale([d3.scale])</h4>
 <p>If set, the value returned from <code>nodeFill</code> will be processed through this d3.scale
-to return the fill color. Default: identity function (no scale)</p>
+to return the fill color. If falsy, uses the identity function (no scale). Default: null.</p>
 <h4 id="-nodefill-function-">.nodeFill([function])</h4>
 <p>Set or get the function which will be used to retrieve the fill color for the body of each
 node. Default: white</p>

@@ -4,7 +4,7 @@
 The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
 **/
 dc_graph.legend = function() {
-    var _legend = {};
+    var _legend = {}, _items;
 
     /**
      #### .x([value])
@@ -56,18 +56,8 @@ dc_graph.legend = function() {
             .attr('class', 'dc-graph-legend')
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
-        var exemplars = _legend.exemplars(), items;
-        if(exemplars instanceof Array) {
-            items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}}; });
-        }
-        else {
-            items = [];
-            for(var item in exemplars)
-                items.push({name: item, orig: {key: item, value: exemplars[item]}});
-        }
-
         var node = legend.selectAll('.node')
-                .data(items, function(d) { return d.name; });
+                .data(_items, function(d) { return d.name; });
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node');
         nodeEnter.append('text')
@@ -84,7 +74,18 @@ dc_graph.legend = function() {
         _legend.parent()._buildNode(node, nodeEnter);
     };
 
-    _legend.render = _legend.redraw;
+    _legend.render = function() {
+        var exemplars = _legend.exemplars();
+        if(exemplars instanceof Array) {
+            _items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}}; });
+        }
+        else {
+            _items = [];
+            for(var item in exemplars)
+                _items.push({name: item, orig: {key: item, value: exemplars[item]}});
+        }
+        _legend.redraw();
+    };
 
     return _legend;
 };
