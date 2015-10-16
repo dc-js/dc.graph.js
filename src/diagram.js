@@ -451,6 +451,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.nodeTitle())
             nodeEnter.append('title');
         nodeEnter.each(infer_shape(_chart));
+        var changedShape = node.filter(shape_changed(_chart));
+        changedShape.select('.node-shape').remove();
+        changedShape.each(infer_shape(_chart));
+        changedShape.insert(shape_element(_chart), ':first-child')
+            .attr('class', 'node-shape');
         nodeEnter.append(shape_element(_chart))
             .attr('class', 'node-shape');
         nodeEnter.append('text')

@@ -134,7 +134,7 @@ var options = {
     },
     use_colors: {
         default: true,
-        query: 'color',
+        query: 'usecolor',
         selector: '#use-colors',
         needs_redraw: true,
         apply: function(val, diagram, filters) {
@@ -152,6 +152,21 @@ var options = {
                     .nodeStrokeWidthAccessor(1)
                     .nodeFillScale(null)
                     .nodeFillAccessor('white');
+            }
+        }
+    },
+    use_shapes: {
+        default: true,
+        query: 'useshape',
+        selector: '#use-shapes',
+        needs_redraw: true,
+        apply: function(val, diagram, filters) {
+            if(val) {
+                diagram
+                    .nodeShape({shape: 'square'});
+            } else {
+                diagram
+                    .nodeShape({shape: 'ellipse'});
             }
         }
     },
