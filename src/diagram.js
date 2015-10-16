@@ -815,6 +815,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
             });
         });
+        if(_chart.legend())
+            _chart.legend().redraw();
         if(skip_layout) {
             _running = false;
             _dispatch.end(false);

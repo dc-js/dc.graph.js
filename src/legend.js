@@ -4,8 +4,7 @@
 The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
 **/
 dc_graph.legend = function() {
-    var _legend = {};
-    var _g = null;
+    var _legend = {}, _items;
 
     /**
      #### .x([value])
@@ -49,39 +48,43 @@ dc_graph.legend = function() {
 
     _legend.parent = property(null);
 
-    _legend.render = function() {
-        var enter = _legend.parent().svg()
+    _legend.redraw = function() {
+        var legend = _legend.parent().svg()
                 .selectAll('g.dc-graph-legend')
-                .data([0]).enter();
-        _g = enter.append('g')
+                .data([0]);
+        legend.enter().append('g')
             .attr('class', 'dc-graph-legend')
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
-        var exemplars = _legend.exemplars(), items;
-        if(exemplars instanceof Array) {
-            items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}}; });
-        }
-        else {
-            items = [];
-            for(var item in exemplars)
-                items.push({name: item, orig: {key: item, value: exemplars[item]}});
-        }
-
-        var node = _g.selectAll('.node')
-                .data(items, function(d) { return d.name; });
+        var node = legend.selectAll('.node')
+                .data(_items, function(d) { return d.name; });
         var nodeEnter = node.enter().append('g')
-                .attr('class', 'node')
-                .attr('transform', function(d, i) {
-                    return 'translate(' + _legend.nodeWidth()/2 + ',' + (_legend.nodeHeight() + _legend.gap())*(i+0.5) + ')';
-                });
+                .attr('class', 'node');
         nodeEnter.append('text')
-            .attr('class', 'legend-label')
+            .attr('class', 'legend-label');
+        node
+            .attr('transform', function(d, i) {
+                return 'translate(' + _legend.nodeWidth()/2 + ',' + (_legend.nodeHeight() + _legend.gap())*(i+0.5) + ')';
+            });
+        node.select('text.legend-label')
             .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
-            //.attr('dominant-baseline', 'middle')
             .text(function(d) {
                 return d.name;
             });
         _legend.parent()._buildNode(node, nodeEnter);
+    };
+
+    _legend.render = function() {
+        var exemplars = _legend.exemplars();
+        if(exemplars instanceof Array) {
+            _items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}}; });
+        }
+        else {
+            _items = [];
+            for(var item in exemplars)
+                _items.push({name: item, orig: {key: item, value: exemplars[item]}});
+        }
+        _legend.redraw();
     };
 
     return _legend;
