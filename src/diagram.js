@@ -460,26 +460,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .text(param(_chart.nodeTitle()));
         node.select('text.node-label')
             .text(param(_chart.nodeLabel()))
-            .each(function(d, i) {
-                var r = param(_chart.nodeRadius())(d);
-                var rplus = r*2 + _chart.nodePadding();
-                var bbox;
-                if(param(_chart.nodeFitLabel())(d))
-                    bbox = this.getBBox();
-                var fitx = 0;
-                if(bbox && bbox.width && bbox.height && param(_chart.nodeShape())(d).shape==='ellipse') {
-                    // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-                    // http://stackoverflow.com/a/433438/676195
-                    var y_over_B = bbox.height/2/r;
-                    var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
-                    fitx = rx*2 + _chart.nodePadding();
-                    d.dcg_rx = Math.max(rx, r);
-                    d.dcg_ry = r;
-                }
-                else d.dcg_rx = d.dcg_ry = r;
-                d.width = Math.max(fitx, rplus);
-                d.height = rplus;
-            });
+            .each(fit_shape(_chart));
         node.select('.node-shape')
             .each(shape_attrs(_chart))
             .attr({

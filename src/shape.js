@@ -135,6 +135,29 @@ function shape_element(chart) {
     };
 }
 
+function fit_shape(chart) {
+    return function(d) {
+        var r = param(chart.nodeRadius())(d);
+        var rplus = r*2 + chart.nodePadding();
+        var bbox;
+        if(param(chart.nodeFitLabel())(d))
+            bbox = this.getBBox();
+        var fitx = 0;
+        if(bbox && bbox.width && bbox.height && param(chart.nodeShape())(d).shape==='ellipse') {
+            // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+            // http://stackoverflow.com/a/433438/676195
+            var y_over_B = bbox.height/2/r;
+            var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+            fitx = rx*2 + chart.nodePadding();
+            d.dcg_rx = Math.max(rx, r);
+            d.dcg_ry = r;
+        }
+        else d.dcg_rx = d.dcg_ry = r;
+        d.width = Math.max(fitx, rplus);
+        d.height = rplus;
+    };
+}
+
 function ellipse_attrs(chart, d) {
     return {
         rx: function(d) { return d.dcg_rx; },
