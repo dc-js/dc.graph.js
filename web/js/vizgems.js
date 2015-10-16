@@ -407,6 +407,9 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
             if(n.name)
                 n.name = n.name.replace(/^[^:]*:/,'');
         }
+        edges.forEach(function(e) {
+            e.id2 = e.id2.replace(/lvm$/, '');
+        });
     } else {
         vertices.forEach(function(n) {
             vert_map[n.id1] = n;
