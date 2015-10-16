@@ -852,6 +852,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!d.parallel) {
             sp = point_on_shape(_chart, d.source, deltaX, deltaY);
             tp = point_on_shape(_chart, d.target, -deltaX, -deltaY);
+            if(!sp) sp = {x: 0, y: 0};
+            if(!tp) tp = {x: 0, y: 0};
             sourceX = sx + sp.x;
             sourceY = sy + sp.y;
             targetX = tx + tp.x;

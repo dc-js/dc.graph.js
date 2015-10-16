@@ -59,6 +59,15 @@ function point_on_polygon(points, x0, y0, x1, y1) {
     return null;
 }
 
+function point_on_shape(chart, d, deltaX, deltaY) {
+    switch(d.dcg_shape.shape) {
+    case 'ellipse':
+        return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
+    case 'polygon':
+        return point_on_polygon(d.dcg_points, 0,0, deltaX, deltaY);
+    }
+}
+
 function elaborate_shape(def) {
     // as many as we can get from
     // http://www.graphviz.org/doc/info/shapes.html
@@ -207,13 +216,3 @@ function shape_attrs(chart) {
         }
     };
 }
-
-function point_on_shape(chart, d, deltaX, deltaY) {
-    switch(d.dcg_shape.shape) {
-    case 'ellipse':
-        return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
-    case 'polygon':
-        return point_on_polygon(d.dcg_points, 0,0, deltaX, deltaY);
-    }
-}
-
