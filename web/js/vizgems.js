@@ -4,6 +4,11 @@ var data_stats;
 var cb_colors = colorbrewer.Paired[12];
 cb_colors[5] = cb_colors[11];
 
+// arbitrary assigning of shapes as POC
+var shapes = ['square', 'ellipse', 'diamond', 'trapezium', 'pentagon', 'hexagon', 'egg',
+              'parallelogram', 'septagon', 'invtrapezium', 'triangle', 'invtriangle'],
+    curr_shape = 0, shape_map = {};
+
 function show_stats(data_stats, layout_stats) {
     $('#shown-nodes').html('' + (layout_stats.nnodes || 0) + '/' + (data_stats.totnodes || 0));
     $('#shown-edges').html('' + (layout_stats.nedges || 0) + '/' + (data_stats.totedges || 0));
@@ -163,7 +168,14 @@ var options = {
         apply: function(val, diagram, filters) {
             if(val) {
                 diagram
-                    .nodeShape({shape: 'square'});
+                    .nodeShape(function(kv) {
+                        var t = kv.value.ostype;
+                        if(!shape_map[t]) {
+                            shape_map[t] = shapes[curr_shape];
+                            curr_shape = (curr_shape+1)%shapes.length;
+                        }
+                        return {shape: shape_map[t]};
+                    });
             } else {
                 diagram
                     .nodeShape({shape: 'ellipse'});
