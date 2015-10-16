@@ -155,62 +155,74 @@ function point_on_polygon(points, x0, y0, x1, y1) {
     return null;
 }
 
+function point_on_shape(chart, d, deltaX, deltaY) {
+    switch(d.dcg_shape.shape) {
+    case 'ellipse':
+        return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
+    case 'polygon':
+        return point_on_polygon(d.dcg_points, 0,0, deltaX, deltaY);
+    }
+}
+
+function elaborate_shape(def) {
+    // as many as we can get from
+    // http://www.graphviz.org/doc/info/shapes.html
+    switch(def.shape) {
+    case 'ellipse':
+        return {shape: 'ellipse'};
+    case 'egg':
+        return {shape: 'polygon', sides: 100, distortion: -0.25};
+    case 'triangle':
+        return {shape: 'polygon', sides: 3};
+    case 'diamond':
+        return {shape: 'polygon', sides: 4, rotation: 45};
+    case 'trapezium':
+        return {shape: 'polygon', sides: 4, distortion: -0.5};
+    case 'parallelogram':
+        return {shape: 'polygon', sides: 4, skew: 0.5};
+    case 'pentagon':
+        return {shape: 'polygon', sides: 5};
+    case 'hexagon':
+        return {shape: 'polygon', sides: 6};
+    case 'septagon':
+        return {shape: 'polygon', sides: 7};
+    case 'octagon':
+        return {shape: 'polygon', sides: 8};
+    case 'invtriangle':
+        return {shape: 'polygon', sides: 3, rotation: 180};
+    case 'invtrapezium':
+        return {shape: 'polygon', sides: 4, distortion: 0.5};
+    case 'square':
+        return {shape: 'polygon', sides: 4};
+    case 'polygon':
+        return {
+            shape: 'polygon',
+            sides: def.sides,
+            skew: def.skew,
+            distortion: def.distortion,
+            rotation: def.rotation
+        };
+    default: throw new Error('unknown shape ' + def.shape);
+    }
+}
 function infer_shape(chart) {
     return function(d) {
         var def = param(chart.nodeShape())(d);
-        // as many as we can get from
-        // http://www.graphviz.org/doc/info/shapes.html
-        switch(def.shape) {
-        case 'ellipse':
-            d.dcg_shape = {shape: 'ellipse'};
-            break;
-        case 'egg':
-            d.dcg_shape = {shape: 'polygon', sides: 100, distortion: -0.25};
-            break;
-        case 'triangle':
-            d.dcg_shape = {shape: 'polygon', sides: 3};
-            break;
-        case 'diamond':
-            d.dcg_shape = {shape: 'polygon', sides: 4, rotation: 45};
-            break;
-        case 'trapezium':
-            d.dcg_shape = {shape: 'polygon', sides: 4, distortion: -0.5};
-            break;
-        case 'parallelogram':
-            d.dcg_shape = {shape: 'polygon', sides: 4, skew: 0.5};
-            break;
-        case 'pentagon':
-            d.dcg_shape = {shape: 'polygon', sides: 5};
-            break;
-        case 'hexagon':
-            d.dcg_shape = {shape: 'polygon', sides: 6};
-            break;
-        case 'septagon':
-            d.dcg_shape = {shape: 'polygon', sides: 7};
-            break;
-        case 'octagon':
-            d.dcg_shape = {shape: 'polygon', sides: 8};
-            break;
-        case 'invtriangle':
-            d.dcg_shape = {shape: 'polygon', sides: 3, rotation: 180};
-            break;
-        case 'invtrapezium':
-            d.dcg_shape = {shape: 'polygon', sides: 4, distortion: 0.5};
-            break;
-        case 'square':
-            d.dcg_shape = {shape: 'polygon', sides: 4};
-            break;
-        case 'polygon':
-            d.dcg_shape = {
-                shape: 'polygon',
-                sides: def.sides,
-                skew: def.skew,
-                distortion: def.distortion,
-                rotation: def.rotation
-            };
-            break;
-        default: throw new Error('unknown shape ' + def.shape);
+        d.dcg_shape = elaborate_shape(def);
+        d.dcg_shape.abstract = def;
+    };
+}
+function shape_changed(chart) {
+    return function(d) {
+        var def = param(chart.nodeShape())(d);
+        var old = d.dcg_shape.abstract;
+        if(def.shape !== old.shape)
+            return true;
+        else if(def.shape === 'polygon') {
+            return def.shape.sides !== old.sides || def.shape.skew !== old.skew ||
+                def.shape.distortion !== old.distortion || def.shape.rotation !== old.rotation;
         }
+        else return false;
     };
 }
 
@@ -231,6 +243,34 @@ function shape_element(chart) {
     };
 }
 
+function fit_shape(chart) {
+    return function(d) {
+        var r = param(chart.nodeRadius())(d);
+        var rplus = r*2 + chart.nodePadding();
+        var bbox;
+        if(param(chart.nodeFitLabel())(d))
+            bbox = this.getBBox();
+        var fitx = 0;
+        if(bbox && bbox.width && bbox.height) {
+            // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+            // http://stackoverflow.com/a/433438/676195
+            var y_over_B = bbox.height/2/r;
+            var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+            fitx = rx*2 + chart.nodePadding();
+            d.dcg_rx = Math.max(rx, r);
+            d.dcg_ry = r;
+            // needs extra width for polygons since they cut in a bit
+            // not sure why something so simple works, i looked in graphviz:
+            // https://github.com/ellson/graphviz/blob/master/lib/common/shapes.c#L1989
+            if(d.dcg_shape.shape==='polygon')
+                d.dcg_rx /= Math.cos(Math.PI/d.dcg_shape.sides);
+        }
+        else d.dcg_rx = d.dcg_ry = r;
+        d.width = Math.max(fitx, rplus);
+        d.height = rplus;
+    };
+}
+
 function ellipse_attrs(chart, d) {
     return {
         rx: function(d) { return d.dcg_rx; },
@@ -241,8 +281,7 @@ function ellipse_attrs(chart, d) {
 function polygon_attrs(chart, d) {
     return {
         d: function(d) {
-            var r = param(chart.nodeRadius())(d),
-                def = d.dcg_shape,
+            var def = d.dcg_shape,
                 sides = def.sides || 4,
                 skew = def.skew || 0,
                 distortion = def.distortion || 0,
@@ -252,9 +291,9 @@ function polygon_attrs(chart, d) {
             rotation = rotation/360 + 0.25; // start at y axis not x
             for(var i = 0; i<sides; ++i) {
                 var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
-                var x = r*Math.cos(theta),
-                    y = r*Math.sin(theta);
-                x *= 1 + distortion*((r-y)/r - 1);
+                var x = d.dcg_rx*Math.cos(theta),
+                    y = d.dcg_ry*Math.sin(theta);
+                x *= 1 + distortion*((d.dcg_ry-y)/d.dcg_ry - 1);
                 x -= skew*y/2;
                 pts.push(x, y);
             }
@@ -278,16 +317,6 @@ function shape_attrs(chart) {
         }
     };
 }
-
-function point_on_shape(chart, d, deltaX, deltaY) {
-    switch(d.dcg_shape.shape) {
-    case 'ellipse':
-        return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
-    case 'polygon':
-        return point_on_polygon(d.dcg_points, 0,0, deltaX, deltaY);
-    }
-}
-
 
 /**
 ## Diagram
@@ -742,6 +771,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.nodeTitle())
             nodeEnter.append('title');
         nodeEnter.each(infer_shape(_chart));
+        var changedShape = node.filter(shape_changed(_chart));
+        changedShape.select('.node-shape').remove();
+        changedShape.each(infer_shape(_chart));
+        changedShape.insert(shape_element(_chart), ':first-child')
+            .attr('class', 'node-shape');
         nodeEnter.append(shape_element(_chart))
             .attr('class', 'node-shape');
         nodeEnter.append('text')
@@ -751,26 +785,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .text(param(_chart.nodeTitle()));
         node.select('text.node-label')
             .text(param(_chart.nodeLabel()))
-            .each(function(d, i) {
-                var r = param(_chart.nodeRadius())(d);
-                var rplus = r*2 + _chart.nodePadding();
-                var bbox;
-                if(param(_chart.nodeFitLabel())(d))
-                    bbox = this.getBBox();
-                var fitx = 0;
-                if(bbox && bbox.width && bbox.height && param(_chart.nodeShape())(d).shape==='ellipse') {
-                    // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-                    // http://stackoverflow.com/a/433438/676195
-                    var y_over_B = bbox.height/2/r;
-                    var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
-                    fitx = rx*2 + _chart.nodePadding();
-                    d.dcg_rx = Math.max(rx, r);
-                    d.dcg_ry = r;
-                }
-                else d.dcg_rx = d.dcg_ry = r;
-                d.width = Math.max(fitx, rplus);
-                d.height = rplus;
-            });
+            .each(fit_shape(_chart));
         node.select('.node-shape')
             .each(shape_attrs(_chart))
             .attr({
@@ -1157,6 +1172,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!d.parallel) {
             sp = point_on_shape(_chart, d.source, deltaX, deltaY);
             tp = point_on_shape(_chart, d.target, -deltaX, -deltaY);
+            if(!sp) sp = {x: 0, y: 0};
+            if(!tp) tp = {x: 0, y: 0};
             sourceX = sx + sp.x;
             sourceY = sy + sp.y;
             targetX = tx + tp.x;
