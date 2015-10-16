@@ -1,6 +1,9 @@
 var qs = querystring.parse();
 var data_stats;
 
+var cb_colors = colorbrewer.Paired[12];
+cb_colors[5] = cb_colors[11];
+
 function show_stats(data_stats, layout_stats) {
     $('#shown-nodes').html('' + (layout_stats.nnodes || 0) + '/' + (data_stats.totnodes || 0));
     $('#shown-edges').html('' + (layout_stats.nedges || 0) + '/' + (data_stats.totedges || 0));
@@ -140,7 +143,7 @@ var options = {
                     .nodeStrokeWidthAccessor(function(kv) {
                         return kv.key === selected_node ? 5 : 0;
                     })
-                    .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(colorbrewer.Paired[12]))
+                    .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(cb_colors))
                     .nodeFillAccessor(function(kv) {
                         return kv.value.ostype;
                     });
