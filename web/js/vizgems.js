@@ -134,7 +134,7 @@ var options = {
         selector: '#show-arrows',
         needs_redraw: true,
         apply: function(val, diagram, filters) {
-            diagram.edgeArrowheadAccessor(val ? 'vee' : null);
+            diagram.edgeArrowhead(val ? 'vee' : null);
         }
     },
     use_colors: {
@@ -145,18 +145,18 @@ var options = {
         apply: function(val, diagram, filters) {
             if(val) {
                 diagram
-                    .nodeStrokeWidthAccessor(function(kv) {
+                    .nodeStrokeWidth(function(kv) {
                         return kv.key === selected_node ? 5 : 0;
                     })
                     .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(cb_colors))
-                    .nodeFillAccessor(function(kv) {
+                    .nodeFill(function(kv) {
                         return kv.value.ostype;
                     });
             } else {
                 diagram
-                    .nodeStrokeWidthAccessor(1)
+                    .nodeStrokeWidth(1)
                     .nodeFillScale(null)
-                    .nodeFillAccessor('white');
+                    .nodeFill('white');
             }
         }
     },
@@ -681,13 +681,13 @@ function init() {
             .showLayoutSteps(false)
             .lengthStrategy('jaccard')
             .baseLength(200)
-            .nodeTitleAccessor(function(kv) {
+            .nodeTitle(function(kv) {
                 return kv.value.ostype==='PRT' ? kv.value.name : kv.key;
             })
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup)
-            .sourceAccessor(function(e) { return e.value.id1; })
-            .targetAccessor(function(e) { return e.value.id2; })
+            .edgeSource(function(e) { return e.value.id1; })
+            .edgeTarget(function(e) { return e.value.id2; })
             .on('start', show_start)
             .on('end', function(happens) {
                 show_stop();
@@ -725,10 +725,10 @@ function init() {
         // aesthetics: look at kv.value for node/edge attributes and return appropriate values
         diagram
             .initLayoutOnRedraw(true)
-            .nodeFitLabelAccessor(settings.fit_labels)
-            .nodeRadiusAccessor(30)
+            .nodeFitLabel(settings.fit_labels)
+            .nodeRadius(30)
             .induceNodes(true) // drop zero-degree nodes for now
-            .nodeLabelAccessor(function(kv) {
+            .nodeLabel(function(kv) {
                 switch(kv.value.ostype) {
                 case 'PRT': return '';
                 case 'FS':
