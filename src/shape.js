@@ -163,6 +163,11 @@ function fit_shape(chart) {
             fitx = rx*2 + chart.nodePadding();
             d.dcg_rx = Math.max(rx, r);
             d.dcg_ry = r;
+            // needs extra width for polygons since they cut in a bit
+            // not sure why something so simple works, i looked in graphviz:
+            // https://github.com/ellson/graphviz/blob/master/lib/common/shapes.c#L1989
+            if(d.dcg_shape.shape==='polygon')
+                d.dcg_rx /= Math.cos(Math.PI/d.dcg_shape.sides);
         }
         else d.dcg_rx = d.dcg_ry = r;
         d.width = Math.max(fitx, rplus);
