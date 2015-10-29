@@ -533,7 +533,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.orig = v;
             var fixed;
             if(_chart.nodeFixed())
-                fixed = param(_chart.nodeFixed())(v);
+                fixed = param(_chart.nodeFixed())(v1);
             if(fixed) {
                 v1.x = v.x;
                 v1.y = v.y;
