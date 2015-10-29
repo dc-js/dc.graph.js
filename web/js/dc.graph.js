@@ -732,10 +732,17 @@ dc_graph.diagram = function (parent, chartGroup) {
         l.parent(_chart);
     });
 
+    /**
+     #### .handleDisconnected([boolean])
+     Instructs cola.js to fit the connected components. Default: false
+     **/
+    _chart.handleDisconnected = property(true);
+
     function initLayout() {
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
-            .size([_chart.width(), _chart.height()]);
+            .size([_chart.width(), _chart.height()])
+            .handleDisconnected(_chart.handleDisconnected());
 
         switch(_chart.lengthStrategy()) {
         case 'symmetric':
@@ -853,7 +860,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.orig = v;
             var fixed;
             if(_chart.nodeFixed())
-                fixed = param(_chart.nodeFixed())(v);
+                fixed = param(_chart.nodeFixed())(v1);
             if(fixed) {
                 v1.x = v.x;
                 v1.y = v.y;
