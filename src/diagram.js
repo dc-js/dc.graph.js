@@ -412,10 +412,17 @@ dc_graph.diagram = function (parent, chartGroup) {
         l.parent(_chart);
     });
 
+    /**
+     #### .handleDisconnected([boolean])
+     Instructs cola.js to fit the connected components. Default: false
+     **/
+    _chart.handleDisconnected = property(true);
+
     function initLayout() {
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
-            .size([_chart.width(), _chart.height()]);
+            .size([_chart.width(), _chart.height()])
+            .handleDisconnected(_chart.handleDisconnected());
 
         switch(_chart.lengthStrategy()) {
         case 'symmetric':
