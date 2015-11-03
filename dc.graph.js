@@ -28,9 +28,9 @@ var property = function (defaultValue) {
         if (!arguments.length) {
             return value;
         }
-        value = _;
         if(react)
             react(_);
+        value = _;
         return this;
     };
     ret.react = function(_) {
@@ -333,9 +333,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _chart = {};
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
-    var _dispatch = d3.dispatch('end', 'start');
+    var _dispatch = d3.dispatch('end', 'start', 'drawn');
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
+    var _children = {};
     var _running = false; // for detecting concurrency issues
 
     /**
@@ -728,9 +729,26 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.showLayoutSteps = property(false);
 
+    /**
+     #### .legend([object])
+     Assigns a legend object which will be displayed within the same SVG element and according
+     to the visual encoding of this diagram.
+     **/
     _chart.legend = property(null).react(function(l) {
         l.parent(_chart);
     });
+
+    /**
+     #### .child([string], [object])
+     Specifies another kind of child, e.g. tooltip control.
+     **/
+    _chart.child = function(id, object) {
+        if(_children[id])
+            _children[id].parent(null);
+        _children[id] = object;
+        object.parent(_chart);
+        return _chart;
+    };
 
     /**
      #### .handleDisconnected([boolean])
@@ -1035,6 +1053,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             .duration(_chart.transitionDuration())
             .attr('opacity', 0)
             .remove();
+
+        _dispatch.drawn(node, edge);
 
         // cola constraints always use indices, but node references
         // are more friendly, so translate those
@@ -1556,6 +1576,57 @@ dc_graph.legend = function() {
     };
 
     return _legend;
+};
+
+/* asynchronous d3.tip support for dc.graph.js (optional) */
+dc_graph.tip = function() {
+    var _tip = {}, _d3tip = null;
+
+    /**
+     #### .parent([object])
+     Assigns this tip object to a diagram. It will show tips for nodes in that diagram.
+     **/
+    _tip.parent = property(null)
+        .react(function(p) {
+            if(p)
+                p.on('drawn.tip', function(node, edge) {
+                    annotate(node);
+                });
+            else if(_tip.parent())
+                _tip.parent().on('drawn.tip', null);
+        });
+
+    function annotate(node) {
+        if(!_d3tip) {
+            _d3tip = d3.tip()
+                .attr('class', 'd3-tip')
+                .html(function(d) { return "<span>" + d + "</span>"; });
+            _tip.parent().svg().call(_d3tip);
+        }
+        node
+            .on('mouseover.tip', function(d) {
+                var target = d3.event.target;
+                _tip.content()(d, function(content) {
+                    _d3tip.show(content, target);
+                });
+            })
+	    .on('mouseout.foo', function(d) {
+		_d3tip.hide();
+	    });
+    }
+
+    /**
+     #### .content([function])
+     Specifies the function to generate content for the tooltip. This function has
+     the signature `function(d, k)`, where `d` is the datum of the node being hovered over,
+     and `k` is a continuation. The function should fetch the content, asynchronously
+     if needed, and then pass it forward to `k`.
+     **/
+    _tip.content = property(function(d, k) {
+        k(_tip.parent() ? param(_tip.parent().nodeTitle())(d) : '');
+    });
+
+    return _tip;
 };
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
