@@ -8,9 +8,9 @@ var property = function (defaultValue) {
         if (!arguments.length) {
             return value;
         }
-        value = _;
         if(react)
             react(_);
+        value = _;
         return this;
     };
     ret.react = function(_) {

@@ -137,6 +137,9 @@ var options = {
             diagram.edgeArrowhead(val ? 'vee' : null);
         }
     },
+    disconnected: {
+        default: true
+    },
     use_colors: {
         default: true,
         query: 'usecolor',
@@ -682,6 +685,7 @@ function init() {
             .height($(window).height())
             .transitionDuration(settings.transition)
             .showLayoutSteps(false)
+            .handleDisconnected(settings.disconnected)
             .lengthStrategy('jaccard')
             .baseLength(200)
             .nodeTitle(function(kv) {

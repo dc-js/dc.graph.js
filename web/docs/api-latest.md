@@ -234,6 +234,16 @@ If this flag is true, the positions of nodes and will be updated while layout is
 the positions will only be updated once layout has stabilized. Note: this may not be
 compatible with transitionDuration. Default: false
 
+#### .legend([object])
+Assigns a legend object which will be displayed within the same SVG element and according
+to the visual encoding of this diagram.
+
+#### .child([string], [object])
+Specifies another kind of child, e.g. tooltip control.
+
+#### .handleDisconnected([boolean])
+Instructs cola.js to fit the connected components. Default: false
+
 #### .redraw()
 Computes a new layout based on the nodes and edges in the edge groups, and displays the diagram.
 To the extent possible, the diagram will minimize changes in positions from the previous layout.
@@ -332,3 +342,12 @@ Specifies an object where the keys are the names of items to add to the legend, 
 objects which will be passed to the accessors of the attached diagram in order to determine the
 drawing attributes. Alternately, if the key needs to be specified separately from the name, the
 function can take an array of {name, key, value} objects.
+
+#### .parent([object])
+Assigns this tip object to a diagram. It will show tips for nodes in that diagram.
+
+#### .content([function])
+Specifies the function to generate content for the tooltip. This function has
+the signature `function(d, k)`, where `d` is the datum of the node being hovered over,
+and `k` is a continuation. The function should fetch the content, asynchronously
+if needed, and then pass it forward to `k`.

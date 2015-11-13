@@ -13,9 +13,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _chart = {};
     var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
-    var _dispatch = d3.dispatch('end', 'start');
+    var _dispatch = d3.dispatch('end', 'start', 'drawn');
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
+    var _children = {};
     var _running = false; // for detecting concurrency issues
 
     /**
@@ -408,14 +409,38 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.showLayoutSteps = property(false);
 
+    /**
+     #### .legend([object])
+     Assigns a legend object which will be displayed within the same SVG element and according
+     to the visual encoding of this diagram.
+     **/
     _chart.legend = property(null).react(function(l) {
         l.parent(_chart);
     });
 
+    /**
+     #### .child([string], [object])
+     Specifies another kind of child, e.g. tooltip control.
+     **/
+    _chart.child = function(id, object) {
+        if(_children[id])
+            _children[id].parent(null);
+        _children[id] = object;
+        object.parent(_chart);
+        return _chart;
+    };
+
+    /**
+     #### .handleDisconnected([boolean])
+     Instructs cola.js to fit the connected components. Default: false
+     **/
+    _chart.handleDisconnected = property(true);
+
     function initLayout() {
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
-            .size([_chart.width(), _chart.height()]);
+            .size([_chart.width(), _chart.height()])
+            .handleDisconnected(_chart.handleDisconnected());
 
         switch(_chart.lengthStrategy()) {
         case 'symmetric':
@@ -533,7 +558,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.orig = v;
             var fixed;
             if(_chart.nodeFixed())
-                fixed = param(_chart.nodeFixed())(v);
+                fixed = param(_chart.nodeFixed())(v1);
             if(fixed) {
                 v1.x = v.x;
                 v1.y = v.y;
@@ -708,6 +733,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             .duration(_chart.transitionDuration())
             .attr('opacity', 0)
             .remove();
+
+        _dispatch.drawn(node, edge);
 
         // cola constraints always use indices, but node references
         // are more friendly, so translate those

@@ -123,7 +123,7 @@
       }
       // not that it wouldn't be nice to have other animated examples...
       $('#stepper,#qfs-options').show();
-      $('#controls').width(400);
+      $('#controls').width(300);
   }
   if(file)
       source = function(callback) {
@@ -251,6 +251,7 @@
           .width($(window).width())
           .height($(window).height())
           .timeLimit(timeLimit)
+          .transitionDuration(0)
           .showLayoutSteps(showSteps)
           .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
           .edgeDimension(edges.dimension).edgeGroup(edges.group)
