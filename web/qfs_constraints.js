@@ -1,3 +1,30 @@
+var qfs_constraint_rules = {
+    nodes: [
+        {id: 'Client', partition: 'class'},
+        {id: 'Metaserver', partition: 'class'},
+        {id: 'ChunkServer', partition: 'class'},
+        {id: 'Attached Volume', partition: 'class'}
+    ],
+    edges: [
+        {source: 'Client', target: 'Metaserver', produce: {axis: 'y', gap: 100, equality: true}},
+        {source: 'Client', target: 'Metaserver', reverse: true,
+         produce: {axis: 'x', gap: 300, equality: true}}, // needs to be dynamic
+        {source: 'Client', target: 'ChunkServer', produce: {axis: 'y', gap: 200, equality: true}},
+        {source: 'Client', target: 'Attached Volume', produce: {axis: 'y', gap: 300, equality: true}},
+        {source: 'Metaserver', target: 'Attached Volume', produce: {axis: 'y', gap: 200, equality: true}},
+        {source: 'Metaserver', target: 'ChunkServer', produce: {axis: 'y', gap: 100, equality: true}},
+        {source: 'ChunkServer', target: 'Attached Volume', produce: {axis: 'y', gap: 100, equality: true}},
+
+        {source: 'ChunkServer', target: 'ChunkServer',
+         produce: {type: 'alignment', axis: 'y'}, listname: 'offsets',
+         wrap: function(x) { return {node: x, offset: 0}; }},
+
+        {source: 'Attached Volume', target: 'Attached Volume',
+         produce: {type: 'alignment', axis: 'y'}, listname: 'offsets',
+         wrap: function(x) { return {node: x, offset: 0}; }}
+    ]
+};
+
 function qfs_edges(nodes, edges, constraints) {
     var dids = {
         CCS: 0,

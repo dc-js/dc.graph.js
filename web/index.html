@@ -224,12 +224,18 @@
           runner.toggle();
       };
 
+      var qfs_constraints = dc_graph.constraint_pattern(diagram, qfs_constraint_rules);
+
       function constrain(nodes, edges) {
           var constraints = [];
+          /*
           if(doDisplacement && isQFS && do_qfs)
               constraints = qfs_edges(nodes, edges, constraints);
           if(doAlignment && isQFS && do_qfs)
               constraints = qfs_alignment(nodes, edges, constraints);
+          */
+          if(isQFS && do_qfs)
+              constraints = qfs_constraints(nodes, edges, constraints);
 
           var circles = {};
           nodes.forEach(function(n, i) {

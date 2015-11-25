@@ -356,6 +356,7 @@ module.exports.jsFiles = [
     'src/shape.js',
     'src/diagram.js',
     'src/legend.js',
+    'src/constraint_pattern.js',
     'src/tip.js',
     'src/load_graph.js',
     'src/generate.js',
