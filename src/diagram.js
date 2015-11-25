@@ -812,8 +812,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             return c.type !== 'ordering';
         });
         ordered_constraints.forEach(function(c) {
-            var sorted = crossfilter.quicksort.by(param(c.ordering))(
-                c.nodes.map(function(n) { return _nodes[n]; }), 0, c.nodes.length);
+            var sorted = c.nodes.map(function(n) { return _nodes[n]; });
+            if(c.ordering) {
+                var sort = crossfilter.quicksort.by(param(c.ordering));
+                sorted = sort(sorted, 0, sorted.length);
+            }
             var left;
             sorted.forEach(function(n, i) {
                 if(i===0)
