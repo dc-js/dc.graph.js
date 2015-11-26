@@ -22,8 +22,8 @@ var qfs_constraint_rules = {
         {source: 'Metaserver', target: 'ChunkServer', produce: dc_graph.gap_y(100, true)},
         {source: 'ChunkServer', target: 'Attached Volume', produce: dc_graph.gap_y(100, true)},
 
-        {source: 'ChunkServer', target: 'ChunkServer', produce: dc_graph.align_y},
-        {source: 'Attached Volume', target: 'Attached Volume', produce: dc_graph.align_y},
+        {source: 'ChunkServer', target: 'ChunkServer', produce: dc_graph.align_y()},
+        {source: 'Attached Volume', target: 'Attached Volume', produce: dc_graph.align_y()},
 
         {source: 'ChunkServer', target: 'ChunkServer',
          produce: dc_graph.order_x(60, function(kv) {

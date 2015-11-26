@@ -103,20 +103,24 @@ dc_graph.gap_x = function(gap, equality) {
     };
 };
 
-dc_graph.align_y = function() {
-    return {
-        type: 'alignment',
-        axis: 'y'
+function align_f(axis) {
+    var ret = function() {
+        return {
+            type: 'alignment',
+            axis: axis
+        };
     };
+    ret.listname = 'offsets';
+    ret.wrap = function(x) { return {node: x, offset: 0}; };
+    return ret;
+}
+
+dc_graph.align_y = function() {
+    return align_f('y');
 };
 dc_graph.align_x = function() {
-    return {
-        type: 'alignment',
-        axis: 'x'
-    };
+    return align_f('x');
 };
-dc_graph.align_x.listname = dc_graph.align_y.listname = 'offsets';
-dc_graph.align_x.wrap = dc_graph.align_y.wrap = function(x) { return {node: x, offset: 0}; };
 
 dc_graph.order_x = function(gap, ordering) {
     return {
