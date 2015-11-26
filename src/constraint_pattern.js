@@ -78,8 +78,8 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
         });
         type_rules.forEach(function(r) {
             var constraint = r.produce(),
-                listname = r.listname || 'nodes',
-                wrap = r.wrap || function(x) { return x; };
+                listname = r.listname || r.produce.listname || 'nodes',
+                wrap = r.wrap || r.produce.wrap || function(x) { return x; };
             constraint[listname] = members[r.source].nodes.map(wrap);
             constraints.push(constraint);
         });
@@ -115,6 +115,8 @@ dc_graph.align_x = function() {
         axis: 'x'
     };
 };
+dc_graph.align_x.listname = dc_graph.align_y.listname = 'offsets';
+dc_graph.align_x.wrap = dc_graph.align_y.wrap = function(x) { return {node: x, offset: 0}; };
 
 dc_graph.order_x = function(gap, ordering) {
     return {
