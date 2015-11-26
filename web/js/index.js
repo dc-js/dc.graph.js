@@ -239,7 +239,7 @@ source(function(error, data) {
             show_stats({totnodes: data.nodes.length, totedges: data.links.length}, diagram.getStats());
         });
     if(linkLength)
-        diagram.baseLength(linkLength)
+        diagram.baseLength(linkLength);
     if(randomize) {
         diagram.nodeOrdering(function(kv) { return kv.value.order; })
             .edgeOrdering(function(kv) { return kv.value.order; });
