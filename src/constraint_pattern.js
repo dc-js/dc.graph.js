@@ -22,6 +22,8 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
         else throw new Error("couldn't determine matcher for type " + JSON.stringify(n));
     });
     pattern.edges.forEach(function(e) {
+        if(e.disable)
+            return;
         var rule = {source: e.source, target: e.target};
         rule.produce = typeof e.produce === 'function' ? e.produce : function() {
             return Object.create(e.produce);

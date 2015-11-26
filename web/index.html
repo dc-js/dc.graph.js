@@ -77,9 +77,10 @@
       nodeStroke = querystring.nodestroke || 'black',
       nodeStrokeWidth = querystring.nodestrokewidth || 1,
       randomize = +querystring.randomize || false,
-      doReinit = querystring.reinit==="0" ? false : true,
-      doDisplacement = querystring.displace==="0" ? false : true,
-      doAlignment = querystring.align==="0" ? false : true,
+      doReinit = querystring.reinit==="false" ? false : true,
+      doDisplacement = querystring.displace==="false" ? false : true,
+      doAlignment = querystring.align==="false" ? false : true,
+      doOrdering = querystring.order==="false" ? false : true,
       isQFS = false,
       linkLength = +querystring.linklength || 30,
       edgeStroke = querystring.edgestroke || 'black',
@@ -114,7 +115,7 @@
   var source;
   if(!generate && !file)
       file = "qfs.json";
-  isQFS = +querystring.qfs || file === 'qfs.json' && querystring.qfs !=="0";
+  isQFS = +querystring.qfs || file === 'qfs.json' && querystring.qfs !=="false";
   if(isQFS) {
       do_qfs = true;
       if('qfscon' in querystring) {
@@ -224,17 +225,22 @@
           runner.toggle();
       };
 
-      var qfs_constraints = dc_graph.constraint_pattern(diagram, qfs_constraint_rules);
+      var qfs_constraints;
+      if(isQFS) {
+          qfs_constraint_rules.edges.forEach(function(c) {
+              if(!doDisplacement && c.produce && !c.produce.type)
+                  c.disable = true;
+              if(!doAlignment && c.produce && c.produce.type === 'alignment')
+                  c.disable = true;
+              if(!doOrdering && c.produce && c.produce.type === 'ordering')
+                  c.disable = true;
+          });
+          qfs_constraints = dc_graph.constraint_pattern(diagram, qfs_constraint_rules);
+      }
 
       function constrain(nodes, edges) {
           var constraints = [];
-          /*
-          if(doDisplacement && isQFS && do_qfs)
-              constraints = qfs_edges(nodes, edges, constraints);
-          if(doAlignment && isQFS && do_qfs)
-              constraints = qfs_alignment(nodes, edges, constraints);
-          */
-          if(isQFS && do_qfs)
+          if(qfs_constraints && do_qfs)
               constraints = qfs_constraints(nodes, edges, constraints);
 
           var circles = {};
