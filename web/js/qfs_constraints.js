@@ -1,9 +1,6 @@
 var qfs_constraint_rules = {
     nodes: [
-        {id: 'Client', partition: 'class'},
-        {id: 'Metaserver', partition: 'class'},
-        {id: 'ChunkServer', partition: 'class'},
-        {id: 'Attached Volume', partition: 'class'}
+        {id: 'class', partition: 'class', typename: function(id, value) { return value; }}
     ],
     edges: [
         {source: 'Client', target: 'Metaserver', produce: dc_graph.gap_y(100, true)},
