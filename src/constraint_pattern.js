@@ -15,7 +15,7 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
         if(n.partition) {
             var partition = n.partition;
             var value = n.value || n.id;
-            type.match = function(n) { return n.orig.value[partition] === value; }; // generalize orig.value?
+            type.match = function(n) { return n.value[partition] === value; }; // generalize orig.value?
         }
         else if(n.match)
             type.match = n.match;
@@ -45,7 +45,7 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             var key = param(diagram.nodeKey())(n);
             for(var t in types) {
                 var type = types[t];
-                if(type.match(n)) {
+                if(type.match(n.orig)) {
                     members[t].nodes.push(key);
                     members[t].whether[key] = true;
                 }
