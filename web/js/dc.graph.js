@@ -1650,8 +1650,8 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
         });
         type_rules.forEach(function(r) {
             var constraint = r.produce(),
-                listname = r.listname || 'nodes',
-                wrap = r.wrap || function(x) { return x; };
+                listname = r.listname || r.produce.listname || 'nodes',
+                wrap = r.wrap || r.produce.wrap || function(x) { return x; };
             constraint[listname] = members[r.source].nodes.map(wrap);
             constraints.push(constraint);
         });
@@ -1659,6 +1659,57 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
     };
 };
 
+// constraint generation convenience functions
+dc_graph.gap_y = function(gap, equality) {
+    return {
+        axis: 'y',
+        gap: gap,
+        equality: !!equality
+    };
+};
+dc_graph.gap_x = function(gap, equality) {
+    return {
+        axis: 'x',
+        gap: gap,
+        equality: !!equality
+    };
+};
+
+function align_f(axis) {
+    var ret = function() {
+        return {
+            type: 'alignment',
+            axis: axis
+        };
+    };
+    ret.listname = 'offsets';
+    ret.wrap = function(x) { return {node: x, offset: 0}; };
+    return ret;
+}
+
+dc_graph.align_y = function() {
+    return align_f('y');
+};
+dc_graph.align_x = function() {
+    return align_f('x');
+};
+
+dc_graph.order_x = function(gap, ordering) {
+    return {
+        type: 'ordering',
+        axis: 'x',
+        gap: 60,
+        ordering: ordering
+    };
+};
+dc_graph.order_y = function(gap, ordering) {
+    return {
+        type: 'ordering',
+        axis: 'y',
+        gap: 60,
+        ordering: ordering
+    };
+};
 
 /* asynchronous d3.tip support for dc.graph.js (optional) */
 dc_graph.tip = function() {
