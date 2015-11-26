@@ -8,7 +8,9 @@ var qfs_constraint_rules = {
     edges: [
         {source: 'Client', target: 'Metaserver', produce: {axis: 'y', gap: 100, equality: true}},
         {source: 'Client', target: 'Metaserver', reverse: true,
-         produce: {axis: 'x', gap: 300, equality: true}}, // needs to be dynamic
+         produce: function(members) {
+             return {axis: 'x', gap: (members.ChunkServer.nodes.length+1)*60, equality: true};
+         }},
         {source: 'Client', target: 'ChunkServer', produce: {axis: 'y', gap: 200, equality: true}},
         {source: 'Client', target: 'Attached Volume', produce: {axis: 'y', gap: 300, equality: true}},
         {source: 'Metaserver', target: 'Attached Volume', produce: {axis: 'y', gap: 200, equality: true}},

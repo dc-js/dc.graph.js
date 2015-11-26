@@ -37,13 +37,18 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
     return function(nodes, edges, constraints) {
         var members = {};
         for(var id in types)
-            members[id] = {};
+            members[id] = {
+                nodes: [], // original ordering
+                whether: {} // boolean
+            };
         nodes.forEach(function(n) {
             var key = param(diagram.nodeKey())(n);
             for(var t in types) {
                 var type = types[t];
-                if(type.match(n))
-                    members[t][key] = true;
+                if(type.match(n)) {
+                    members[t].nodes.push(key);
+                    members[t].whether[key] = true;
+                }
             }
         });
         // traversal of rules could be more efficient, again POC
@@ -57,8 +62,8 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             var source = param(diagram.edgeSource())(e),
                 target = param(diagram.edgeTarget())(e);
             edge_rules.forEach(function(r) {
-                if(members[r.source][source] && members[r.target][target]) {
-                    var constraint = r.produce();
+                if(members[r.source].whether[source] && members[r.target].whether[target]) {
+                    var constraint = r.produce(members, nodes, edges);
                     if(r.reverse) {
                         constraint.left = target;
                         constraint.right = source;
@@ -75,7 +80,7 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             var constraint = r.produce(),
                 listname = r.listname || 'nodes',
                 wrap = r.wrap || function(x) { return x; };
-            constraint[listname] = Object.keys(members[r.source]).map(wrap);
+            constraint[listname] = members[r.source].nodes.map(wrap);
             constraints.push(constraint);
         });
         return constraints;
