@@ -87,3 +87,48 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
     };
 };
 
+// constraint generation convenience functions
+dc_graph.gap_y = function(gap, equality) {
+    return {
+        axis: 'y',
+        gap: gap,
+        equality: !!equality
+    };
+};
+dc_graph.gap_x = function(gap, equality) {
+    return {
+        axis: 'x',
+        gap: gap,
+        equality: !!equality
+    };
+};
+
+dc_graph.align_y = function() {
+    return {
+        type: 'alignment',
+        axis: 'y'
+    };
+};
+dc_graph.align_x = function() {
+    return {
+        type: 'alignment',
+        axis: 'x'
+    };
+};
+
+dc_graph.order_x = function(gap, ordering) {
+    return {
+        type: 'ordering',
+        axis: 'x',
+        gap: 60,
+        ordering: ordering
+    };
+};
+dc_graph.order_y = function(gap, ordering) {
+    return {
+        type: 'ordering',
+        axis: 'y',
+        gap: 60,
+        ordering: ordering
+    };
+};
