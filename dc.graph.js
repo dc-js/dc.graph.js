@@ -1587,7 +1587,12 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
         if(n.partition) {
             var partition = n.partition;
             var value = n.value || n.id;
-            type.match = function(n) { return n.orig.value[partition] === value; }; // generalize orig.value?
+            if(n.all || n.typename) {
+                type.match = function(n2) { return n2.value[partition]; };
+                type.typename = n.typename || function(n2) { return partition + '=' + n2.value[partition]; };
+            }
+            else
+                type.match = function(n2) { return n2.value[partition] === value; };
         }
         else if(n.match)
             type.match = n.match;
@@ -1608,18 +1613,19 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
 
     return function(nodes, edges, constraints) {
         var members = {};
-        for(var id in types)
-            members[id] = {
-                nodes: [], // original ordering
-                whether: {} // boolean
-            };
         nodes.forEach(function(n) {
             var key = param(diagram.nodeKey())(n);
             for(var t in types) {
-                var type = types[t];
-                if(type.match(n)) {
-                    members[t].nodes.push(key);
-                    members[t].whether[key] = true;
+                var type = types[t], value = type.match(n.orig);
+                if(value) {
+                    var tname = type.typename ? type.typename(t, value) : t;
+                    if(!members[tname])
+                        members[tname] = {
+                            nodes: [], // original ordering
+                            whether: {} // boolean
+                        };
+                    members[tname].nodes.push(key);
+                    members[tname].whether[key] = true;
                 }
             }
         });
@@ -1634,7 +1640,8 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             var source = param(diagram.edgeSource())(e),
                 target = param(diagram.edgeTarget())(e);
             edge_rules.forEach(function(r) {
-                if(members[r.source].whether[source] && members[r.target].whether[target]) {
+                if(members[r.source] && members[r.source].whether[source] &&
+                   members[r.target] && members[r.target].whether[target]) {
                     var constraint = r.produce(members, nodes, edges);
                     if(r.reverse) {
                         constraint.left = target;
@@ -1649,6 +1656,8 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             });
         });
         type_rules.forEach(function(r) {
+            if(!members[r.source])
+                return;
             var constraint = r.produce(),
                 listname = r.listname || r.produce.listname || 'nodes',
                 wrap = r.wrap || r.produce.wrap || function(x) { return x; };
