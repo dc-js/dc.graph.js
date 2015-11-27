@@ -1,3 +1,20 @@
+/**
+ * The entire dc.graph.js library is scoped under the **dc_graph** name space. It does not introduce
+ * anything else into the global name space.
+ *
+ * Like in dc.js and most libraries built on d3, most `dc_graph` functions are designed to allow function chaining, meaning they return the current chart
+ * instance whenever it is appropriate.  The getter forms of functions do not participate in function
+ * chaining because they return values that are not the chart.
+ * @namespace dc_graph
+ * @version <%= conf.pkg.version %>
+ * @example
+ * // Example chaining
+ * chart.width(600)
+ *      .height(400)
+ *      .nodeDimension(nodeDim)
+ *      .nodeGroup(nodeGroup);
+ */
+
 var dc_graph = {
     version: '<%= conf.pkg.version %>'
 };

@@ -1,3 +1,26 @@
+/**
+ * The bubble overlay chart is quite different from the typical bubble chart. With the bubble overlay
+ * chart you can arbitrarily place bubbles on an existing svg or bitmap image, thus changing the
+ * typical x and y positioning while retaining the capability to visualize data using bubble radius
+ * and coloring.
+ * Examples:
+ * - {@link http://dc-js.github.com/dc.js/crime/index.html Canadian City Crime Stats}
+ * @name bubbleOverlay
+ * @memberof dc
+ * @mixes dc.bubbleMixin
+ * @mixes dc.baseMixin
+ * @example
+ * // create a bubble overlay chart on top of the '#chart-container1 svg' element using the default global chart group
+ * var bubbleChart1 = dc.bubbleOverlayChart('#chart-container1').svg(d3.select('#chart-container1 svg'));
+ * // create a bubble overlay chart on top of the '#chart-container2 svg' element using chart group A
+ * var bubbleChart2 = dc.compositeChart('#chart-container2', 'chartGroupA').svg(d3.select('#chart-container2 svg'));
+ * @param {String|node|d3.selection} parent - Any valid
+ * {@link https://github.com/mbostock/d3/wiki/Selections#selecting-elements d3 single selector} specifying
+ * a dom block element such as a div; or a dom element or d3 selection.
+ * @param {String} [chartGroup] - The name of the chart group this chart instance should be placed in.
+ * Interaction with a chart will only trigger events and redraws within the chart's group.
+ * @return {dc.bubbleOverlay}
+ */
 // terminology: the nodes and edges of a constraint pattern are "types" and "rules"
 // nodes in the layout are matched against the types; constraints are generated from the rules
 // there are two general kinds of rules:
