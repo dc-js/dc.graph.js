@@ -80,6 +80,7 @@ chart.width(600)
     * [.redrawGroup](#dc_graph.diagram+redrawGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.renderGroup](#dc_graph.diagram+renderGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.defineArrow](#dc_graph.diagram+defineArrow) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+  * [.constraint_pattern](#dc_graph.constraint_pattern) ⇒ <code>function</code>
 
 <a name="dc_graph.diagram"></a>
 ### dc_graph.diagram ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -950,3 +951,26 @@ _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
     .attr('stroke-width', '0px');
 });
 ```
+<a name="dc_graph.constraint_pattern"></a>
+### dc_graph.constraint_pattern ⇒ <code>function</code>
+It can be tedious to write functions for
+[diagram.constrain](#dc_graph.diagram+constrain) to apply constraints to the current
+view of the graph. This utility creates a constraint generator function from a *pattern*,
+a graph where
+ 1. the nodes represent *types* of layout nodes, specifying how to match nodes on which
+constraints should be applied
+ 2. the edges represent *rules* to generate constraints.
+
+There are two kinds of rules:
+ 1. rules between two types apply to any edges in the layout which match the source and
+target types and generate simple left/right constraints
+ 2. rules from a type to itself (self edges) generate a single constraint on all the nodes
+which match the type
+
+**Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| diagram | <code>[diagram](#dc_graph.diagram)</code> | the diagram to pull attributes from, mostly to determine the keys of nodes and edge sources and targets |
+| pattern | <code>Object</code> | a graph which defines the constraints to be generated |
+
