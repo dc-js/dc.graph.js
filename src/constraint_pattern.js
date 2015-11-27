@@ -1,33 +1,24 @@
 /**
- * The bubble overlay chart is quite different from the typical bubble chart. With the bubble overlay
- * chart you can arbitrarily place bubbles on an existing svg or bitmap image, thus changing the
- * typical x and y positioning while retaining the capability to visualize data using bubble radius
- * and coloring.
- * Examples:
- * - {@link http://dc-js.github.com/dc.js/crime/index.html Canadian City Crime Stats}
- * @name bubbleOverlay
- * @memberof dc
- * @mixes dc.bubbleMixin
- * @mixes dc.baseMixin
- * @example
- * // create a bubble overlay chart on top of the '#chart-container1 svg' element using the default global chart group
- * var bubbleChart1 = dc.bubbleOverlayChart('#chart-container1').svg(d3.select('#chart-container1 svg'));
- * // create a bubble overlay chart on top of the '#chart-container2 svg' element using chart group A
- * var bubbleChart2 = dc.compositeChart('#chart-container2', 'chartGroupA').svg(d3.select('#chart-container2 svg'));
- * @param {String|node|d3.selection} parent - Any valid
- * {@link https://github.com/mbostock/d3/wiki/Selections#selecting-elements d3 single selector} specifying
- * a dom block element such as a div; or a dom element or d3 selection.
- * @param {String} [chartGroup] - The name of the chart group this chart instance should be placed in.
- * Interaction with a chart will only trigger events and redraws within the chart's group.
- * @return {dc.bubbleOverlay}
+ * It can be tedious to write functions for
+ * {@link #dc_graph.diagram+constrain diagram.constrain} to apply constraints to the current
+ * view of the graph. This utility creates a constraint generator function from a *pattern*,
+ * a graph where
+ *  1. the nodes represent *types* of layout nodes, specifying how to match nodes on which
+ * constraints should be applied
+ *  2. the edges represent *rules* to generate constraints.
+ *
+ * There are two kinds of rules:
+ *  1. rules between two types apply to any edges in the layout which match the source and
+ * target types and generate simple left/right constraints
+ *  2. rules from a type to itself (self edges) generate a single constraint on all the nodes
+ * which match the type
+ * @name constraint_pattern
+ * @memberof dc_graph
+ * @param {dc_graph.diagram} diagram - the diagram to pull attributes from, mostly to determine
+ * the keys of nodes and edge sources and targets
+ * @param {Object} pattern - a graph which defines the constraints to be generated
+ * @return {Function}
  */
-// terminology: the nodes and edges of a constraint pattern are "types" and "rules"
-// nodes in the layout are matched against the types; constraints are generated from the rules
-// there are two general kinds of rules:
-//  - rules between two types apply to any edges in the layout which match the source and target types
-// and generate simple left/right constraints
-//  - rules from a type to itself (self edges) generate a single constraint on all the nodes which
-// match the type
 dc_graph.constraint_pattern = function(diagram, pattern) {
     var types = {}, rules = [];
 
