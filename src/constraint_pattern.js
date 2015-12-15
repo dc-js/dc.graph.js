@@ -1,17 +1,41 @@
 /**
- * It can be tedious to write functions for
- * {@link #dc_graph.diagram+constrain diagram.constrain} to apply constraints to the current
- * view of the graph. This utility creates a constraint generator function from a *pattern*,
- * a graph where
- *  1. the nodes represent *types* of layout nodes, specifying how to match nodes on which
- * constraints should be applied
- *  2. the edges represent *rules* to generate constraints.
+ * {@link https://github.com/tgdwyer/WebCola/wiki/Constraints Constraints} are additional
+ * restrictions on the nodes of a graph besides the length, (optional) flow direction, and
+ * overlap avoidance rules which are built. (Actually, these are constraints too, but they
+ * are generated automatically by cola.js for simplicity's sake and in order to give them
+ * priority.)
  *
- * There are two kinds of rules:
- *  1. rules between two types apply to any edges in the layout which match the source and
- * target types and generate simple left/right constraints
- *  2. rules from a type to itself (self edges) generate a single constraint on all the nodes
- * which match the type
+ * dc.graph.js allows generation of custom constraints using
+ * {@link #dc_graph.diagram+constrain diagram.constrain} but it can be tedious to write these
+ * functions because it usually means looping over the nodes and edges multiple times to
+ * determine what classes or types of nodes to apply constraints to, and which edges should
+ * take additional constraints.
+ *
+ * This utility creates a constraint generator function from a *pattern*, a graph where:
+ *  1. Nodes represent *types* or classes of layout nodes, annotated with a specification
+ * of how to match the nodes belonging each type.
+ *  2. Edges represent *rules* to generate constraints. There are two kinds of rules:
+ * <ol type='a'>
+ *    <li>To generate additional constraints on edges besides the built-in ones, create a rules
+ * between two different types. The rule will apply to any edges in the layout which match the
+ * source and target types, and generate simple "left/right" constraints. (Note that "left" and
+ * "right" in this context refer to sides of an inequality constraint `left + gap <= right`)
+ *    <li>To generate constraints on a set of nodes, such as alignment, ordering, or circle
+ * constraints, create a rule from a type to itself, a self edge.
+ * </ol>
+ * (It is also conceivable to want constraints between individual nodes which don't
+ * have edges between them. This is not directly supported at this time; right now the workaround
+ * is to create the edge but not draw it, e.g. by setting its {@link #dc_graph.diagram+edgeOpacity}
+ * to zero. If you have a use-case for this, please
+ * {@link https://github.com/dc-js/dc.graph.js/issues/new file an issue}.
+ *
+ * The pattern syntax is an embedded domain specific language designed to be terse without
+ * restricting its power. As such, there are complicated rules for defaulting and inferring
+ * parameters from other parameters. Since most users will want the simplest form, this document
+ * will start from the highest level and then show how to use more complicated forms in order to
+ * gain more control.
+ *
+ * Then we'll build back up from the ground up and show how inference works.
  * @name constraint_pattern
  * @memberof dc_graph
  * @param {dc_graph.diagram} diagram - the diagram to pull attributes from, mostly to determine
