@@ -658,7 +658,7 @@ redraw in order to derive new layout constraints. The constraints are built from
 on each redraw.
 This can be used to generate alignment (rank) or axis constraints. By default, no
 constraints will be added, although cola.js uses constraints internally to implement
-edge length, flow, and overlap prevention. See
+flow and overlap prevention. See
 [the cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/Constraints)
 for more details.
 For convenience, dc.graph.js implements a other constraints on top of those implemented
@@ -953,19 +953,50 @@ _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
 ```
 <a name="dc_graph.constraint_pattern"></a>
 ### dc_graph.constraint_pattern ⇒ <code>function</code>
-It can be tedious to write functions for
-[diagram.constrain](#dc_graph.diagram+constrain) to apply constraints to the current
-view of the graph. This utility creates a constraint generator function from a *pattern*,
-a graph where
- 1. the nodes represent *types* of layout nodes, specifying how to match nodes on which
-constraints should be applied
- 2. the edges represent *rules* to generate constraints.
+In cola.js there are three factors which influence the positions of nodes:
+* *edge length* suggestions, controlled by the
+[lengthStrategy](#dc_graph.diagram+lengthStrategy),
+[baseLength](#dc_graph.diagram+baseLength), and
+[edgeLength](#dc_graph.diagram+edgeLength) parameters in dc.graph.js
+* *automatic constraints* based on the global edge flow direction (`cola.flowLayout`) and overlap
+avoidance parameters (`cola.avoidOverlaps`)
+* *manual constraints* such as alignment, inequality and equality constraints in a dimension/axis.
 
-There are two kinds of rules:
- 1. rules between two types apply to any edges in the layout which match the source and
-target types and generate simple left/right constraints
- 2. rules from a type to itself (self edges) generate a single constraint on all the nodes
-which match the type
+Generally when the
+[cola.js documentation mentions constraints](https://github.com/tgdwyer/WebCola/wiki/Constraints),
+it means the manual constraints.
+
+dc.graph.js allows generation of manual constraints using
+[diagram.constrain](#dc_graph.diagram+constrain) but it can be tedious to write these
+functions because it usually means looping over the nodes and edges multiple times to
+determine what classes or types of nodes to apply constraints to, and which edges should
+take additional constraints.
+
+This utility creates a constraint generator function from a *pattern*, a graph where:
+ 1. Nodes represent *types* or classes of layout nodes, annotated with a specification
+of how to match the nodes belonging each type.
+ 2. Edges represent *rules* to generate constraints. There are two kinds of rules:
+<ol type='a'>
+   <li>To generate additional constraints on edges besides the built-in ones, create a rules
+between two different types. The rule will apply to any edges in the layout which match the
+source and target types, and generate simple "left/right" constraints. (Note that "left" and
+"right" in this context refer to sides of an inequality constraint `left + gap <= right`)
+   <li>To generate constraints on a set of nodes, such as alignment, ordering, or circle
+constraints, create a rule from a type to itself, a self edge.
+</ol>
+(It is also conceivable to want constraints between individual nodes which don't
+have edges between them. This is not directly supported at this time; right now the workaround
+is to create the edge but not draw it, e.g. by setting its [#dc_graph.diagram+edgeOpacity](#dc_graph.diagram+edgeOpacity)
+to zero. If you have a use-case for this, please
+[file an issue](https://github.com/dc-js/dc.graph.js/issues/new).
+
+The pattern syntax is an embedded domain specific language designed to be terse without
+restricting its power. As such, there are complicated rules for defaulting and inferring
+parameters from other parameters. Since most users will want the simplest form, this document
+will start from the highest level and then show how to use more complicated forms in order to
+gain more control.
+
+Then we'll build back up from the ground up and show how inference works.
 
 **Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
 
