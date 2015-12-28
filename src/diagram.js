@@ -584,7 +584,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
      * This can be used to generate alignment (rank) or axis constraints. By default, no
      * constraints will be added, although cola.js uses constraints internally to implement
-     * edge length, flow, and overlap prevention. See
+     * flow and overlap prevention. See
      * {@link https://github.com/tgdwyer/WebCola/wiki/Constraints the cola.js wiki}
      * for more details.
 

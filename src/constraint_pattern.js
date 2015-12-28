@@ -1,11 +1,18 @@
 /**
- * {@link https://github.com/tgdwyer/WebCola/wiki/Constraints Constraints} are additional
- * restrictions on the nodes of a graph besides the length, (optional) flow direction, and
- * overlap avoidance rules which are built. (Actually, these are constraints too, but they
- * are generated automatically by cola.js for simplicity's sake and in order to give them
- * priority.)
+ * In cola.js there are three factors which influence the positions of nodes:
+ * * *edge length* suggestions, controlled by the
+ * {@link #dc_graph.diagram+lengthStrategy lengthStrategy},
+ * {@link #dc_graph.diagram+baseLength baseLength}, and
+ * {@link #dc_graph.diagram+edgeLength edgeLength} parameters in dc.graph.js
+ * * *automatic constraints* based on the global edge flow direction (`cola.flowLayout`) and overlap
+ * avoidance parameters (`cola.avoidOverlaps`)
+ * * *manual constraints* such as alignment, inequality and equality constraints in a dimension/axis.
  *
- * dc.graph.js allows generation of custom constraints using
+ * Generally when the
+ * {@link https://github.com/tgdwyer/WebCola/wiki/Constraints cola.js documentation mentions constraints},
+ * it means the manual constraints.
+ *
+ * dc.graph.js allows generation of manual constraints using
  * {@link #dc_graph.diagram+constrain diagram.constrain} but it can be tedious to write these
  * functions because it usually means looping over the nodes and edges multiple times to
  * determine what classes or types of nodes to apply constraints to, and which edges should
