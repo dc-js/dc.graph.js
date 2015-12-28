@@ -1,0 +1,139 @@
+{
+  "__comment": "This graph was created from a hand-made figure in an operating system paper (from graphviz.org)",
+  "nodes": [
+    {
+      "id": 0,
+      "name": "Backbone Routers"
+    },
+    {
+      "id": 1,
+      "name": "CVM-NY"
+    },
+    {
+      "id": 2,
+      "name": "PVM-NY-UPS"
+    },
+    {
+      "id": 3,
+      "name": "PVM-NY-FEDEX"
+    },
+    {
+      "id": 4,
+      "name": "CVM-LA"
+    },
+    {
+      "id": 5,
+      "name": "PVM-LA-UPS"
+    },
+    {
+      "id": 6,
+      "name": "PVM-LA-FEDEX"
+    },
+    {
+      "id": 7,
+      "name": "CVM-DC"
+    },
+    {
+      "id": 8,
+      "name": "PVM-DC-UPS"
+    },
+    {
+      "id": 9,
+      "name": "PVM-DC-FEDEX"
+    },
+    {
+      "id": 10,
+      "name": "CE-NY-FEDEX"
+    },
+    {
+      "id": 11,
+      "name": "CE-NY-UPS"
+    },
+    {
+      "id": 12,
+      "name": "CE-LA-FEDEX"
+    },
+    {
+      "id": 13,
+      "name": "CE-LA-UPS"
+    },
+    {
+      "id": 14,
+      "name": "CE-DC-FEDEX"
+    },
+    {
+      "id": 15,
+      "name": "CE-DC-UPS"
+    },
+    {
+      "id": 16,
+      "name": "froggy"
+    }
+  ],
+  "links": [
+    {
+      "sourcename": "Backbone Routers",
+      "targetname": "CVM-NY"
+    },
+    {
+      "sourcename": "Backbone Routers",
+      "targetname": "CVM-LA"
+    },
+    {
+      "sourcename": "Backbone Routers",
+      "targetname": "CVM-DC"
+    },
+    {
+      "sourcename": "CVM-NY",
+      "targetname": "PVM-NY-UPS"
+    },
+    {
+      "sourcename": "CVM-NY",
+      "targetname": "PVM-NY-FEDEX"
+    },
+    {
+      "sourcename": "PVM-NY-UPS",
+      "targetname": "CE-NY-UPS"
+    },
+    {
+      "sourcename": "PVM-NY-FEDEX",
+      "targetname": "CE-NY-FEDEX"
+    },
+    {
+      "sourcename": "CVM-LA",
+      "targetname": "PVM-LA-UPS"
+    },
+    {
+      "sourcename": "CVM-LA",
+      "targetname": "PVM-LA-FEDEX"
+    },
+    {
+      "sourcename": "PVM-LA-UPS",
+      "targetname": "CE-LA-UPS"
+    },
+    {
+      "sourcename": "PVM-LA-FEDEX",
+      "targetname": "CE-LA-FEDEX"
+    },
+    {
+      "sourcename": "CVM-DC",
+      "targetname": "PVM-DC-UPS"
+    },
+    {
+      "sourcename": "CVM-DC",
+      "targetname": "PVM-DC-FEDEX"
+    },
+    {
+      "sourcename": "PVM-DC-UPS",
+      "targetname": "CE-DC-UPS"
+    },
+    {
+      "sourcename": "PVM-DC-FEDEX",
+      "targetname": "CE-DC-FEDEX"
+    },
+    {
+      "sourcename": "CE-DC-FEDEX",
+      "targetname": "froggy"
+    }
+  ]
+}

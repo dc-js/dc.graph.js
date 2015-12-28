@@ -1,10 +1,11 @@
 #overlay {
-    width: 200px;
+    width: 280px;
     position: absolute;
     top: 90px;
     right: 0;
     background-color: rgba(221, 238, 221, 0.75);
-    padding: 40px;
+    padding: 30px;
+    padding-right: 10px;
     font: 14px verdana, sans-serif
 }
 
@@ -42,6 +43,16 @@
 }
 
 .dc-graph text.node-label {
+    font: 12px verdana, san-serif;
+}
+
+div.heading {
+    display: block;
+    font: 10px verdana, san-serif;
+    margin-left: -1em;
+}
+
+#type-views a {
     font: 12px verdana, san-serif;
 }
 

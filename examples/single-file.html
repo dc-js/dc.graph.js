@@ -68,18 +68,17 @@
             .nodeTitleAccessor(null) // deactivate basic tooltips
             .edgeArrowheadAccessor(draw_arrows ? 'vee' : null);
 
-        diagram.render();
 
-        // initialize d3-tip (nicer-looking tooltips)
-        var tip = d3.tip().attr('class', 'd3-tip').html(function(d) {
-            // demonstrating html tooltips
-            return "This is <em>" + d.orig.value.name + "</em>";
+        // add tooltips using d3-tip
+        var tip = dc_graph.tip()
+        tip.content(function(d, k) {
+            // you can do an asynchronous call here, e.g. d3.json, if you need
+            // to fetch data to show the tooltip - just call k() with the content
+            k("This is <em>" + d.orig.value.name + "</em>");
         });
-        diagram.svg().call(tip)
+        diagram.child('tip', tip);
 
-        diagram.selectAll('g.node')
-            .on('mouseover', tip.show)
-            .on('mouseout', tip.hide);
+        diagram.render();
 
         $(window).resize(function() {
             diagram

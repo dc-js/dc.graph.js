@@ -83,11 +83,11 @@ var cola;
                 center.y /= g.array.length;
                 // calculate current top left corner:
                 var corner = { x: center.x - g.width / 2, y: center.y - g.height / 2 };
-                var offset = { x: g.x - corner.x, y: g.y - corner.y };
+                var offset = { x: g.x - corner.x + svg_width / 2 - real_width / 2, y: g.y - corner.y + svg_height / 2 - real_height / 2 };
                 // put nodes:
                 g.array.forEach(function (node) {
-                    node.x = node.x + offset.x + svg_width / 2 - real_width / 2;
-                    node.y = node.y + offset.y + svg_height / 2 - real_height / 2;
+                    node.x += offset.x;
+                    node.y += offset.y;
                 });
             });
         }
@@ -715,8 +715,7 @@ var cola;
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var cola;
 (function (cola) {
@@ -1280,17 +1279,13 @@ var cola;
             return Rectangle;
         })();
         vpsc.Rectangle = Rectangle;
-        function makeEdgeBetween(link, source, target, ah) {
-            var si = source.rayIntersection(target.cx(), target.cy());
-            if (!si)
-                si = { x: source.cx(), y: source.cy() };
-            var ti = target.rayIntersection(source.cx(), source.cy());
-            if (!ti)
-                ti = { x: target.cx(), y: target.cy() };
-            var dx = ti.x - si.x, dy = ti.y - si.y, l = Math.sqrt(dx * dx + dy * dy), al = l - ah;
-            link.sourceIntersection = si;
-            link.targetIntersection = ti;
-            link.arrowStart = { x: si.x + al * dx / l, y: si.y + al * dy / l };
+        function makeEdgeBetween(source, target, ah) {
+            var si = source.rayIntersection(target.cx(), target.cy()) || { x: source.cx(), y: source.cy() }, ti = target.rayIntersection(source.cx(), source.cy()) || { x: target.cx(), y: target.cy() }, dx = ti.x - si.x, dy = ti.y - si.y, l = Math.sqrt(dx * dx + dy * dy), al = l - ah;
+            return {
+                sourceIntersection: si,
+                targetIntersection: ti,
+                arrowStart: { x: si.x + al * dx / l, y: si.y + al * dy / l }
+            };
         }
         vpsc.makeEdgeBetween = makeEdgeBetween;
         function makeEdgeTo(s, target, ah) {
@@ -1329,6 +1324,10 @@ var cola;
             if (a.isOpen) {
                 // open must come before close
                 return -1;
+            }
+            if (b.isOpen) {
+                // open must come before close
+                return 1;
             }
             return 0;
         }
@@ -1475,9 +1474,7 @@ var cola;
             var solver = new vpsc.Solver(vs, cs);
             solver.solve();
             vs.forEach(function (v, i) { return rs[i].setXCentre(v.position()); });
-            vs = rs.map(function (r) {
-                return new vpsc.Variable(r.cy());
-            });
+            vs = rs.map(function (r) { return new vpsc.Variable(r.cy()); });
             cs = vpsc.generateYConstraints(rs, vs);
             solver = new vpsc.Solver(vs, cs);
             solver.solve();
@@ -1570,7 +1567,7 @@ var cola;
             Projection.prototype.setupVariablesAndBounds = function (x0, y0, desired, getDesired) {
                 this.nodes.forEach(function (v, i) {
                     if (v.fixed) {
-                        v.variable.weight = 1000;
+                        v.variable.weight = v.fixedWeight ? v.fixedWeight : 1000;
                         desired[i] = getDesired(v);
                     }
                     else {
@@ -1621,6 +1618,7 @@ var cola;
                 this.nodes.forEach(updateNodeBounds);
                 if (this.rootGroup && this.avoidOverlaps) {
                     this.groups.forEach(updateGroupBounds);
+                    computeGroupBounds(this.rootGroup);
                 }
             };
             Projection.prototype.solve = function (vs, cs, starting, desired) {
@@ -2408,7 +2406,6 @@ var cola;
         // d: unconstrained descent vector
         // stepSize: amount to step along d
         Descent.prototype.stepAndProject = function (x0, r, d, stepSize) {
-            var _this = this;
             Descent.copy(x0, r);
             this.takeDescentStep(r[0], d[0], stepSize);
             if (this.project)
@@ -2419,13 +2416,14 @@ var cola;
             // todo: allow projection against constraints in higher dimensions
             for (var i = 2; i < this.k; i++)
                 this.takeDescentStep(r[i], d[i], stepSize);
-            if (!this.locks.isEmpty()) {
-                this.locks.apply(function (u, p) {
-                    for (var i = 0; i < _this.k; i++) {
-                        r[i][u] = p[i];
-                    }
-                });
-            }
+            // the following makes locks extra sticky... but hides the result of the projection from the consumer
+            //if (!this.locks.isEmpty()) {
+            //    this.locks.apply((u, p) => {
+            //        for (var i = 0; i < this.k; i++) {
+            //            r[i][u] = p[i];
+            //        }
+            //    });
+            //}
         };
         Descent.mApply = function (m, n, f) {
             var i = m;
@@ -3385,6 +3383,9 @@ var cola;
     })(cola.EventType || (cola.EventType = {}));
     var EventType = cola.EventType;
     ;
+    function isGroup(g) {
+        return typeof g.leaves !== 'undefined' || typeof g.groups !== 'undefined';
+    }
     /**
      * Main interface to cola layout.
      * @class Layout
@@ -3402,7 +3403,6 @@ var cola;
             this._running = false;
             this._nodes = [];
             this._groups = [];
-            this._variables = [];
             this._rootGroup = null;
             this._links = [];
             this._constraints = [];
@@ -3415,7 +3415,9 @@ var cola;
             // sub-class and override this property to replace with a more sophisticated eventing mechanism
             this.event = null;
             this.linkAccessor = {
-                getSourceIndex: Layout.getSourceIndex, getTargetIndex: Layout.getTargetIndex, setLength: Layout.setLinkLength,
+                getSourceIndex: Layout.getSourceIndex,
+                getTargetIndex: Layout.getTargetIndex,
+                setLength: Layout.setLinkLength,
                 getType: function (l) { return typeof _this._linkType === "function" ? _this._linkType(l) : 0; }
             };
         }
@@ -3479,19 +3481,25 @@ var cola;
                 this._alpha = s1; //Math.abs(Math.abs(this._lastStress / s1) - 1);
             }
             this._lastStress = s1;
+            this.updateNodePositions();
+            this.trigger({ type: EventType.tick, alpha: this._alpha, stress: this._lastStress });
+            return false;
+        };
+        // copy positions out of descent instance into each of the nodes' center coords
+        Layout.prototype.updateNodePositions = function () {
             var x = this._descent.x[0], y = this._descent.x[1];
-            for (i = 0; i < n; ++i) {
+            var o, i = this._nodes.length;
+            while (i--) {
                 o = this._nodes[i];
                 o.x = x[i];
                 o.y = y[i];
             }
-            this.trigger({ type: EventType.tick, alpha: this._alpha, stress: this._lastStress });
-            return false;
         };
         Layout.prototype.nodes = function (v) {
             if (!v) {
                 if (this._nodes.length === 0 && this._links.length > 0) {
                     // if we have links but no nodes, create the nodes array now with empty objects for the links to point at.
+                    // in this case the links are expected to be numeric indices for nodes in the range 0..n-1 where n is the number of nodes
                     var n = 0;
                     this._links.forEach(function (l) {
                         n = Math.max(n, l.source, l.target);
@@ -3692,11 +3700,7 @@ var cola;
             if (gridSnapIterations === void 0) { gridSnapIterations = 0; }
             if (keepRunning === void 0) { keepRunning = true; }
             var i, j, n = this.nodes().length, N = n + 2 * this._groups.length, m = this._links.length, w = this._canvasSize[0], h = this._canvasSize[1];
-            if (this._linkLengthCalculator)
-                this._linkLengthCalculator();
             var x = new Array(N), y = new Array(N);
-            this._variables = new Array(N);
-            var makeVariable = function (i, w) { return _this._variables[i] = new cola.vpsc.IndexedVariable(i, w); };
             var G = null;
             var ao = this._avoidOverlaps;
             this._nodes.forEach(function (v, i) {
@@ -3706,6 +3710,8 @@ var cola;
                 }
                 x[i] = v.x, y[i] = v.y;
             });
+            if (this._linkLengthCalculator)
+                this._linkLengthCalculator();
             //should we do this to clearly label groups?
             //this._groups.forEach((g, i) => g.groupIndex = i);
             var distances;
@@ -3719,9 +3725,15 @@ var cola;
                 // G is a square matrix with G[i][j] = 1 iff there exists an edge between node i and node j
                 // otherwise 2. (
                 G = cola.Descent.createSquareMatrix(N, function () { return 2; });
+                this._links.forEach(function (l) {
+                    if (typeof l.source == "number")
+                        l.source = _this._nodes[l.source];
+                    if (typeof l.target == "number")
+                        l.target = _this._nodes[l.target];
+                });
                 this._links.forEach(function (e) {
                     var u = Layout.getSourceIndex(e), v = Layout.getTargetIndex(e);
-                    G[u][v] = G[v][u] = 1;
+                    G[u][v] = G[v][u] = e.weight || 1;
                 });
             }
             var D = cola.Descent.createSquareMatrix(N, function (i, j) {
@@ -3774,11 +3786,14 @@ var cola;
             }
             this._descent.threshold = this._threshold;
             // apply initialIterations without user constraints or nonoverlap constraints
-            this._descent.run(initialUnconstrainedIterations);
+            // if groups are specified, dummy nodes and edges will be added to untangle
+            // with respect to group connectivity
+            this.initialLayout(initialUnconstrainedIterations, x, y);
             // apply initialIterations with user constraints but no nonoverlap constraints
             if (curConstraints.length > 0)
                 this._descent.project = new cola.vpsc.Projection(this._nodes, this._groups, this._rootGroup, curConstraints).projectFunctions();
             this._descent.run(initialUserConstraintIterations);
+            this.separateOverlappingComponents(w, h);
             // subsequent iterations will apply all constraints
             this.avoidOverlaps(ao);
             if (ao) {
@@ -3802,24 +3817,62 @@ var cola;
                 this._descent.G = G0;
                 this._descent.run(gridSnapIterations);
             }
-            this._links.forEach(function (l) {
-                if (typeof l.source == "number")
-                    l.source = _this._nodes[l.source];
-                if (typeof l.target == "number")
-                    l.target = _this._nodes[l.target];
-            });
-            this._nodes.forEach(function (v, i) {
-                v.x = x[i], v.y = y[i];
-            });
-            // recalculate nodes position for disconnected graphs
-            if (!this._distanceMatrix && this._handleDisconnected) {
-                var graphs = cola.separateGraphs(this._nodes, this._links);
-                cola.applyPacking(graphs, w, h, this._defaultNodeSize);
-                this._nodes.forEach(function (v, i) {
-                    _this._descent.x[0][i] = v.x, _this._descent.x[1][i] = v.y;
+            this.updateNodePositions();
+            this.separateOverlappingComponents(w, h);
+            return keepRunning ? this.resume() : this;
+        };
+        Layout.prototype.initialLayout = function (iterations, x, y) {
+            if (this._groups.length > 0 && iterations > 0) {
+                // construct a flat graph with dummy nodes for the groups and edges connecting group dummy nodes to their children
+                // todo: edges attached to groups are replaced with edges connected to the corresponding group dummy node
+                var n = this._nodes.length;
+                var edges = this._links.map(function (e) { return { source: e.source.index, target: e.target.index }; });
+                var vs = this._nodes.map(function (v) { return { index: v.index }; });
+                this._groups.forEach(function (g, i) {
+                    vs.push({ index: g.index = n + i });
+                });
+                this._groups.forEach(function (g, i) {
+                    if (typeof g.leaves !== 'undefined')
+                        g.leaves.forEach(function (v) { return edges.push({ source: g.index, target: v.index }); });
+                    if (typeof g.groups !== 'undefined')
+                        g.groups.forEach(function (gg) { return edges.push({ source: g.index, target: gg.index }); });
+                });
+                // layout the flat graph with dummy nodes and edges
+                new cola.Layout()
+                    .size(this.size())
+                    .nodes(vs)
+                    .links(edges)
+                    .avoidOverlaps(false)
+                    .linkDistance(this.linkDistance())
+                    .symmetricDiffLinkLengths(5)
+                    .convergenceThreshold(1e-4)
+                    .start(iterations, 0, 0, 0, false);
+                this._nodes.forEach(function (v) {
+                    x[v.index] = vs[v.index].x;
+                    y[v.index] = vs[v.index].y;
                 });
             }
-            return keepRunning ? this.resume() : this;
+            else {
+                this._descent.run(iterations);
+            }
+        };
+        // recalculate nodes position for disconnected graphs
+        Layout.prototype.separateOverlappingComponents = function (width, height) {
+            var _this = this;
+            // recalculate nodes position for disconnected graphs
+            if (!this._distanceMatrix && this._handleDisconnected) {
+                var x = this._descent.x[0], y = this._descent.x[1];
+                this._nodes.forEach(function (v, i) { v.x = x[i], v.y = y[i]; });
+                var graphs = cola.separateGraphs(this._nodes, this._links);
+                cola.applyPacking(graphs, width, height, this._defaultNodeSize);
+                this._nodes.forEach(function (v, i) {
+                    _this._descent.x[0][i] = v.x, _this._descent.x[1][i] = v.y;
+                    if (v.bounds) {
+                        v.bounds.setXCentre(v.x);
+                        v.bounds.setYCentre(v.y);
+                    }
+                });
+            }
         };
         Layout.prototype.resume = function () {
             return this.alpha(0.1);
@@ -3849,10 +3902,10 @@ var cola;
             if (typeof draw !== 'undefined') {
                 draw(vg2);
             }
-            var sourceInd = function (e) { return e.source.index; }, targetInd = function (e) { return e.target.index; }, length = function (e) { return e.length(); }, spCalc = new cola.shortestpaths.Calculator(vg2.V.length, vg2.E, sourceInd, targetInd, length), shortestPath = spCalc.PathFromNodeToNode(start.id, end.id);
+            var sourceInd = function (e) { return e.source.id; }, targetInd = function (e) { return e.target.id; }, length = function (e) { return e.length(); }, spCalc = new cola.shortestpaths.Calculator(vg2.V.length, vg2.E, sourceInd, targetInd, length), shortestPath = spCalc.PathFromNodeToNode(start.id, end.id);
             if (shortestPath.length === 1 || shortestPath.length === vg2.V.length) {
-                cola.vpsc.makeEdgeBetween(edge, edge.source.innerBounds, edge.target.innerBounds, 5);
-                lineData = [{ x: edge.sourceIntersection.x, y: edge.sourceIntersection.y }, { x: edge.arrowStart.x, y: edge.arrowStart.y }];
+                var route = cola.vpsc.makeEdgeBetween(edge.source.innerBounds, edge.target.innerBounds, 5);
+                lineData = [route.sourceIntersection, route.arrowStart];
             }
             else {
                 var n = shortestPath.length - 2, p = vg2.V[shortestPath[n]].p, q = vg2.V[shortestPath[0]].p, lineData = [edge.source.innerBounds.rayIntersection(p.x, p.y)];
@@ -3890,19 +3943,94 @@ var cola;
         // Bit 1 can be set externally (e.g., d.fixed = true) and show persist.
         // Bit 2 stores the dragging state, from mousedown to mouseup.
         // Bit 3 stores the hover state, from mouseover to mouseout.
-        // Dragend is a special case: it also clears the hover state.
         Layout.dragStart = function (d) {
-            d.fixed |= 2; // set bit 2
-            d.px = d.x, d.py = d.y; // set velocity to zero
+            if (isGroup(d)) {
+                Layout.storeOffset(d, Layout.dragOrigin(d));
+            }
+            else {
+                Layout.stopNode(d);
+                d.fixed |= 2; // set bit 2
+            }
         };
+        // we clobber any existing desired positions for nodes
+        // in case another tick event occurs before the drag
+        Layout.stopNode = function (v) {
+            v.px = v.x;
+            v.py = v.y;
+        };
+        // we store offsets for each node relative to the centre of the ancestor group 
+        // being dragged in a pair of properties on the node
+        Layout.storeOffset = function (d, origin) {
+            if (typeof d.leaves !== 'undefined') {
+                d.leaves.forEach(function (v) {
+                    v.fixed |= 2;
+                    Layout.stopNode(v);
+                    v._dragGroupOffsetX = v.x - origin.x;
+                    v._dragGroupOffsetY = v.y - origin.y;
+                });
+            }
+            if (typeof d.groups !== 'undefined') {
+                d.groups.forEach(function (g) { return Layout.storeOffset(g, origin); });
+            }
+        };
+        // the drag origin is taken as the centre of the node or group
+        Layout.dragOrigin = function (d) {
+            if (isGroup(d)) {
+                return {
+                    x: d.bounds.cx(),
+                    y: d.bounds.cy()
+                };
+            }
+            else {
+                return d;
+            }
+        };
+        // for groups, the drag translation is propagated down to all of the children of
+        // the group.
+        Layout.drag = function (d, position) {
+            if (isGroup(d)) {
+                if (typeof d.leaves !== 'undefined') {
+                    d.leaves.forEach(function (v) {
+                        d.bounds.setXCentre(position.x);
+                        d.bounds.setYCentre(position.y);
+                        v.px = v._dragGroupOffsetX + position.x;
+                        v.py = v._dragGroupOffsetY + position.y;
+                    });
+                }
+                if (typeof d.groups !== 'undefined') {
+                    d.groups.forEach(function (g) { return Layout.drag(g, position); });
+                }
+            }
+            else {
+                d.px = position.x;
+                d.py = position.y;
+            }
+        };
+        // we unset only bits 2 and 3 so that the user can fix nodes with another a different
+        // bit such that the lock persists between drags 
         Layout.dragEnd = function (d) {
-            d.fixed &= ~6; // unset bits 2 and 3
-            //d.fixed = 0;
+            if (isGroup(d)) {
+                if (typeof d.leaves !== 'undefined') {
+                    d.leaves.forEach(function (v) {
+                        Layout.dragEnd(v);
+                        delete v._dragGroupOffsetX;
+                        delete v._dragGroupOffsetY;
+                    });
+                }
+                if (typeof d.groups !== 'undefined') {
+                    d.groups.forEach(Layout.dragEnd);
+                }
+            }
+            else {
+                d.fixed &= ~6; // unset bits 2 and 3
+            }
         };
+        // in d3 hover temporarily locks nodes, currently not used in cola
         Layout.mouseOver = function (d) {
             d.fixed |= 4; // set bit 3
             d.px = d.x, d.py = d.y; // set velocity to zero
         };
+        // in d3 hover temporarily locks nodes, currently not used in cola
         Layout.mouseOut = function (d) {
             d.fixed &= ~4; // unset bit 3
         };
@@ -4064,10 +4192,10 @@ var cola;
             this.drag = function () {
                 if (!drag) {
                     var drag = d3.behavior.drag()
-                        .origin(function (d) { return d; })
+                        .origin(cola.Layout.dragOrigin)
                         .on("dragstart.d3adaptor", cola.Layout.dragStart)
                         .on("drag.d3adaptor", function (d) {
-                        d.px = d3.event.x, d.py = d3.event.y;
+                        cola.Layout.drag(d, d3.event);
                         d3layout.resume(); // restart annealing
                     })
                         .on("dragend.d3adaptor", cola.Layout.dragEnd);
