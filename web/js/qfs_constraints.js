@@ -1,4 +1,4 @@
-var qfs_constraint_rules = {
+app_constraint_rules['qfs'] = {
     nodes: [
         {id: 'class', partition: 'class', typename: function(id, value) { return value; }}
     ],
@@ -46,7 +46,7 @@ var qfs_constraint_rules = {
     ]
 };
 
-function qfs_color(n) {
+app_colors['qfs'] = function(n) {
     var colors = {
         ChunkServer: d3.rgb(152,251,152),
         Metaserver: d3.rgb(135,255,255),
@@ -54,4 +54,8 @@ function qfs_color(n) {
         Client: d3.rgb(150,184,255)
     };
     return colors[n.value.class];
-}
+};
+
+app_node_fixed['qfs'] = function(n) {
+    return n.value.class === 'Client' ? {x: 0, y: 0} : null;
+};
