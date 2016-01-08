@@ -57,6 +57,10 @@ function show_stats(data_stats, layout_stats) {
                             '<tr><td>Avg time</td><td>' + (runner.avgTime()/1000).toFixed(3) + 's</td></tr>',
                             '</table>'].join(''));
 }
+function show_stepper() {
+    $('#stepper').show();
+    $('#controls').width(300);
+}
 
 do_status();
 
@@ -64,7 +68,7 @@ var source;
 if(!generate && !file)
     file = "qfs.json";
 appLayout = querystring.applayout || file === 'qfs.json' && 'qfs';
-if(appLayout === 'none')
+if(appLayout === 'none' || !app_layouts[appLayout])
     appLayout = null;
 if(appLayout) {
     useAppLayout = true;
@@ -72,11 +76,8 @@ if(appLayout) {
         useAppLayout = !!+querystring.useapplayout;
         $('#use-app-layout').prop('checked', useAppLayout);
     }
-    if(appLayout === 'qfs') {
-        // not that it wouldn't be nice to have other animated examples...
-        $('#stepper,#app-options').show();
-        $('#controls').width(300);
-    }
+    $('#app-options').show();
+    app_layouts[appLayout].init && app_layouts[appLayout].init();
 }
 if(file)
     source = function(callback) {
@@ -179,7 +180,7 @@ source(function(error, data) {
 
     var app_constraints = null;
     if(appLayout) {
-        var rules = app_layouts[appLayout] && app_layouts[appLayout].rules;
+        var rules = appLayout && app_layouts[appLayout].rules;
         if(rules) {
             rules.edges.forEach(function(c) {
                 if(!doDisplacement && c.produce && !c.produce.type)
@@ -226,10 +227,10 @@ source(function(error, data) {
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .nodeShape(shape)
         .nodeRadius(radius)
-        .nodeFill(app_layouts[appLayout] && app_layouts[appLayout].colors || 'white')
+        .nodeFill(appLayout && app_layouts[appLayout].colors || 'white')
         .nodeStroke(nodeStroke)
         .nodeStrokeWidth(nodeStrokeWidth)
-        .nodeFixed(app_layouts[appLayout] && app_layouts[appLayout].node_fixed)
+        .nodeFixed(appLayout && app_layouts[appLayout].node_fixed)
         .constrain(constrain)
         .lengthStrategy(generate ? 'individual' :
                         useAppLayout ? 'none' :
