@@ -177,9 +177,9 @@ source(function(error, data) {
         runner.toggle();
     };
 
-    var app_constraints;
+    var app_constraints = null;
     if(appLayout) {
-        var rules = app_constraint_rules[appLayout];
+        var rules = app_layouts[appLayout] && app_layouts[appLayout].rules;
         if(rules) {
             rules.edges.forEach(function(c) {
                 if(!doDisplacement && c.produce && !c.produce.type)
@@ -191,7 +191,6 @@ source(function(error, data) {
             });
             app_constraints = dc_graph.constraint_pattern(diagram, rules);
         }
-        else app_constraints = null;
     }
 
     function constrain(nodes, edges) {
@@ -227,10 +226,10 @@ source(function(error, data) {
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .nodeShape(shape)
         .nodeRadius(radius)
-        .nodeFill(app_colors[appLayout] || 'white')
+        .nodeFill(app_layouts[appLayout] && app_layouts[appLayout].colors || 'white')
         .nodeStroke(nodeStroke)
         .nodeStrokeWidth(nodeStrokeWidth)
-        .nodeFixed(app_node_fixed[appLayout])
+        .nodeFixed(app_layouts[appLayout] && app_layouts[appLayout].node_fixed)
         .constrain(constrain)
         .lengthStrategy(generate ? 'individual' :
                         useAppLayout ? 'none' :
