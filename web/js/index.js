@@ -16,7 +16,7 @@ var querystring = (function(a) {
 
 var steptime = +querystring.interval || 1000, // ms per step
     pause = +querystring.pause || 2500, // pause at end of loop
-    showSteps = +querystring.showsteps !== 0,
+    showSteps = !(querystring.showsteps === 'false'),
     file = querystring.file || null,
     generate = querystring.gen || null,
     shape = querystring.shape || null,
@@ -24,15 +24,15 @@ var steptime = +querystring.interval || 1000, // ms per step
     fill = querystring.fill || 'white',
     nodeStroke = querystring.nodestroke || 'black',
     nodeStrokeWidth = querystring.nodestrokewidth || 1,
-    randomize = +querystring.randomize || false,
-    doReinit = querystring.reinit==="false" ? false : true,
-    doDisplacement = querystring.displace==="false" ? false : true,
-    doAlignment = querystring.align==="false" ? false : true,
-    doOrdering = querystring.order==="false" ? false : true,
+    randomize = querystring.randomize === 'true',
+    doReinit = !(querystring.reinit==="false"),
+    doDisplacement = !(querystring.displace==="false"),
+    doAlignment = !(querystring.align==="false"),
+    doOrdering = !(querystring.order==="false"),
     linkLength = +querystring.linklength || 30,
     edgeStroke = querystring.edgestroke || 'black',
     edgeStrokeWidth = querystring.edgestrokewidth || 1,
-    opacity = +querystring.opacity || 1,
+    edgeOpacity = +querystring.opacity || 1,
     appLayout = null,
     useAppLayout = false,
     nodePrefix = querystring.prefix || '',
@@ -238,7 +238,7 @@ source(function(error, data) {
         .edgeArrowhead(function(kv) {
             return kv.value.undirected ? null : 'vee';
         })
-        .edgeOpacity(opacity)
+        .edgeOpacity(edgeOpacity)
         .edgeStroke(edgeStroke)
         .edgeStrokeWidth(edgeStrokeWidth)
         .on('end', function() {
