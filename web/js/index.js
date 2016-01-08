@@ -133,7 +133,7 @@ source(function(error, data) {
             if(candidates.length > 1)
                 console.warn('found more than one possible source attr', candidates);
             sourceattr = candidates[0];
-            var candidates = targetattrs.filter(function(n) { return !!data.links[0][n]; });
+            candidates = targetattrs.filter(function(n) { return !!data.links[0][n]; });
             if(!candidates.length)
                 console.log("didn't find any target attr", targetattrs);
             if(candidates.length > 1)
