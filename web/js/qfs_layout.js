@@ -1,4 +1,4 @@
-app_layouts['qfs'] = {
+app_layouts.qfs = {
     rules: {
         nodes: [
             {id: 'class', partition: 'class', typename: function(id, value) { return value; }}

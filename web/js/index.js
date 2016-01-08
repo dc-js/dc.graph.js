@@ -151,6 +151,8 @@ source(function(error, data) {
     }),
         nodes = flat_group.make(data.nodes, function(d) { return d.name; });
 
+    appLayout && app_layouts[appLayout].data && app_layouts[appLayout].data(nodes, edges);
+
     runner = make_runner(run, step,
                          function() {
                              return curr < end ? steptime : pause;
@@ -233,7 +235,7 @@ source(function(error, data) {
         .nodeFixed(appLayout && app_layouts[appLayout].node_fixed)
         .constrain(constrain)
         .lengthStrategy(generate ? 'individual' :
-                        useAppLayout ? 'none' :
+                        useAppLayout ? app_layouts[appLayout].lengthStrategy || 'none' :
                         'symmetric')
         .edgeArrowhead(function(kv) {
             return kv.value.undirected ? null : 'vee';
@@ -246,6 +248,7 @@ source(function(error, data) {
             runner.endStep();
             show_stats({totnodes: data.nodes.length, totedges: data.links.length}, diagram.getStats());
         });
+    appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
     if(linkLength)
         diagram.baseLength(linkLength);
     if(randomize) {
