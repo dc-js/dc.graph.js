@@ -594,11 +594,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      * returned by the `ordering` function, by creating separation constraints using the
      * specified `gap`.
      * * 'circle' - (experimental) the nodes will be placed in a circle using "wheel"
-     * constraints as described in
+     * edge lengths similar to those described in
      * {@link http://www.csse.monash.edu.au/~tdwyer/Dwyer2009FastConstraints.pdf Scalable, Versatile, and Simple Constrained Graph Layout}
      * *Although this is not as performant or stable as might be desired, it may work for
-     * simple cases.*
-
+     * simple cases. In particular, it should use edge length *constraints*, which don't yet
+     * exist in cola.js.*
+     *
      * Because it is tedious to write code to generate constraints for a graph, **dc.graph.js**
      * also includes a {@link #dc_graph+constraint_pattern constraint generator} to produce
      * this constrain function, specifying the constraints themselves in a graph.
