@@ -69,13 +69,15 @@ dc_graph.functor_wrap = function (v, wrap) {
     };
 };
 
+function get_original(x) {
+    return x.orig;
+}
+
 // we want to allow either values or functions to be passed to specify parameters.
 // if a function, the function needs a preprocessor to extract the original key/value
 // pair from the wrapper object we put it in.
 function param(v) {
-    return dc_graph.functor_wrap(v, function(x) {
-        return x.orig;
-    });
+    return dc_graph.functor_wrap(v, get_original);
 }
 
 // because i don't think we need to bind edge point data (yet!)
@@ -920,11 +922,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      * returned by the `ordering` function, by creating separation constraints using the
      * specified `gap`.
      * * 'circle' - (experimental) the nodes will be placed in a circle using "wheel"
-     * constraints as described in
+     * edge lengths similar to those described in
      * {@link http://www.csse.monash.edu.au/~tdwyer/Dwyer2009FastConstraints.pdf Scalable, Versatile, and Simple Constrained Graph Layout}
      * *Although this is not as performant or stable as might be desired, it may work for
-     * simple cases.*
-
+     * simple cases. In particular, it should use edge length *constraints*, which don't yet
+     * exist in cola.js.*
+     *
      * Because it is tedious to write code to generate constraints for a graph, **dc.graph.js**
      * also includes a {@link #dc_graph+constraint_pattern constraint generator} to produce
      * this constrain function, specifying the constraints themselves in a graph.
@@ -1292,10 +1295,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         // optionally do nothing if the topology hasn't changed
         var skip_layout = false;
         if(!_chart.layoutUnchanged()) {
-            function original(x) {
-                return x.orig;
-            }
-            var nodes_snapshot = JSON.stringify(wnodes.map(original)), edges_snapshot = JSON.stringify(wedges.map(original));
+            var nodes_snapshot = JSON.stringify(wnodes.map(get_original)),
+                edges_snapshot = JSON.stringify(wedges.map(get_original));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
