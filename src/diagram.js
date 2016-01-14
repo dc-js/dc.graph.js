@@ -967,10 +967,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         // optionally do nothing if the topology hasn't changed
         var skip_layout = false;
         if(!_chart.layoutUnchanged()) {
-            function original(x) {
-                return x.orig;
-            }
-            var nodes_snapshot = JSON.stringify(wnodes.map(original)), edges_snapshot = JSON.stringify(wedges.map(original));
+            var nodes_snapshot = JSON.stringify(wnodes.map(get_original)),
+                edges_snapshot = JSON.stringify(wedges.map(get_original));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
