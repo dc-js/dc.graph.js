@@ -61,6 +61,7 @@ dc_graph.legend = function() {
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node');
         nodeEnter.append('text')
+            .attr('dy', '0.3em')
             .attr('class', 'legend-label');
         node
             .attr('transform', function(d, i) {

@@ -825,6 +825,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('class', 'node-shape');
         nodeEnter.append('text')
             .attr('class', 'node-label')
+            .attr('dy', '0.3em')
             .attr('fill', param(_chart.nodeLabelFill()));
         node.select('title')
             .text(param(_chart.nodeTitle()));
