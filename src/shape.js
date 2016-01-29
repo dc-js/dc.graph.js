@@ -222,6 +222,20 @@ function shape_attrs(chart) {
     };
 }
 
+function binary_search(f, a, b) {
+    while(true) {
+        var c = (a+b)/2,
+            f_c = f(c), fv = f_c.val;
+        if(Math.abs(fv) < 0.5)
+            return f_c;
+        if(fv > 0)
+            b = c;
+        else
+            a = c;
+    }
+}
+
+
 function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
                              parallel,  parallel_offset, source_padding, target_padding) {
     var deltaX = tx - sx,
@@ -244,29 +258,47 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
     else {
         // alternate parallel edges over, then under
         var dir = (!!(parallel%2) === (sx < tx)) ? -1 : 1,
-            port = Math.floor((parallel+1)/2) * dir,
+            port = Math.floor((parallel+1)/2),
             srcang = Math.atan2(deltaY, deltaX),
-            sportang = srcang + port * parallel_offset / source_padding,
-            tportang = srcang - Math.PI - port * parallel_offset / target_padding,
-            cos_sport = Math.cos(sportang),
-            sin_sport = Math.sin(sportang),
-            cos_tport = Math.cos(tportang),
-            sin_tport = Math.sin(tportang),
+            tarang = srcang - Math.PI,
             dist = Math.hypot(tx - sx, ty - sy);
-        sp = point_on_shape(chart, source, cos_sport*dist, sin_sport*dist);
-        tp = point_on_shape(chart, target, cos_tport*dist, sin_tport*dist);
-        if(!sp) sp = {x: 0, y: 0};
-        if(!tp) tp = {x: 0, y: 0};
+        function p_on_s(node, ang) {
+            return point_on_shape(chart, node, Math.cos(ang)*dist, Math.sin(ang)*dist);
+        }
+        var port0s = p_on_s(source, srcang),
+            port0t = p_on_s(target, tarang);
+        function compare_dist(node, port0, goal) {
+            return function(ang) {
+                var port = p_on_s(node, ang);
+                if(!port)
+                    return {
+                        port: {x: 0, y: 0},
+                        val: 0,
+                        ang: ang
+                    };
+                else
+                    return {
+                        port: port,
+                        val: Math.hypot(port.x - port0.x, port.y - port0.y) - goal,
+                        ang: ang
+                    };
+            };
+        };
+        var bss = binary_search(compare_dist(source, port0s, port*parallel_offset), srcang, srcang + port * dir * 2 * parallel_offset / source_padding),
+            bst = binary_search(compare_dist(target, port0t, port*parallel_offset), tarang, tarang - port * dir * 2 * parallel_offset / source_padding);
+
+        sp = bss.port;
+        tp = bst.port;
         var sdist = Math.hypot(sp.x, sp.y),
             tdist = Math.hypot(tp.x, tp.y),
             c1dist = Math.max(sdist+source_padding/4, Math.min(sdist*2, dist/2)),
             c2dist = Math.min(tdist+target_padding/4, Math.min(tdist*2, dist/2));
         sourceX = sx + sp.x;
         sourceY = sy + sp.y;
-        var c1X = sx + c1dist * cos_sport,
-            c1Y = sy + c1dist * sin_sport,
-            c2X = tx + c2dist * cos_tport,
-            c2Y = ty + c2dist * sin_tport;
+        var c1X = sx + c1dist * Math.cos(bss.ang),
+            c1Y = sy + c1dist * Math.sin(bss.ang),
+            c2X = tx + c2dist * Math.cos(bst.ang),
+            c2Y = ty + c2dist * Math.sin(bst.ang);
         targetX = tx + tp.x;
         targetY = ty + tp.y;
         return {
