@@ -229,7 +229,7 @@ source(function(error, data) {
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .nodeShape(shape)
         .nodeRadius(radius)
-        .nodeFill(appLayout && app_layouts[appLayout].colors || 'white')
+        .nodeFill(appLayout && app_layouts[appLayout].colors || fill)
         .nodeStroke(nodeStroke)
         .nodeStrokeWidth(nodeStrokeWidth)
         .nodeFixed(appLayout && app_layouts[appLayout].node_fixed)
