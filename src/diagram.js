@@ -620,11 +620,11 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @name parallelEdgeOffset
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Number} [parallelEdgeOffset=5]
+     * @param {Number} [parallelEdgeOffset=10]
      * @return {Number}
      * @return {dc_graph.diagram}
      **/
-    _chart.parallelEdgeOffset = property(5);
+    _chart.parallelEdgeOffset = property(10);
 
     /**
      * By default, edges are added to the layout in the order that `.edgeGroup().all()` returns
@@ -982,12 +982,21 @@ dc_graph.diagram = function (parent, chartGroup) {
             for(var i = 0; i < em.length; ++i) {
                 em[i] = new Array(em.length); // technically could be diagonal array
                 for(var j = 0; j < em.length; ++j)
-                    em[i][j] = 0;
+                    em[i][j] = {
+                        n: 0,
+                        ports: {}
+                    };
             }
             wedges.forEach(function(e) {
-                var min = Math.min(e.source.index, e.target.index), max = Math.max(e.source.index, e.target.index);
-                e.parallel = em[min][max]++;
+                var min = Math.min(e.source.index, e.target.index),
+                    max = Math.max(e.source.index, e.target.index);
+                e.parallel = em[min][max].n++;
+                e.ports = em[min][max].ports;
             });
+            for(i = 0; i < em.length; ++i)
+                for(j = 0; j < em.length; ++j)
+                    if(em[i][j].n)
+                        em[i][j].ports.n = em[i][j].n;
         }
 
         // create edge SVG elements
@@ -1218,25 +1227,35 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
-    function edge_path(d, sx, sy, tx, ty) {
-        var source_padding = d.source.dcg_ry +
-                param(_chart.nodeStrokeWidth())(d.source) / 2,
-            target_padding = d.target.dcg_ry +
-                param(_chart.nodeStrokeWidth())(d.target) / 2;
-        var res = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
-                                      d.parallel, _chart.parallelEdgeOffset(), source_padding, target_padding
-                                     );
-        d.length = res.length;
-        return res.path;
+    function edge_path(d, which, sx, sy, tx, ty) {
+        if(!d.ports[which]) {
+            var source_padding = d.source.dcg_ry +
+                    param(_chart.nodeStrokeWidth())(d.source) / 2,
+                target_padding = d.target.dcg_ry +
+                    param(_chart.nodeStrokeWidth())(d.target) / 2;
+            d.ports[which] = new Array(d.ports.n);
+            for(var p = 0; p < d.ports.n; ++p) {
+                // alternate parallel edges over, then under
+                var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
+                    port = Math.floor((p+1)/2),
+                    last = d.ports[which][port > 2 ? port - 2 : 0];
+                d.ports[which][p] = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
+                                                        last, dir * _chart.parallelEdgeOffset(),
+                                                        source_padding, target_padding
+                                                       );
+            }
+        }
+        d.length = d.ports[which][d.parallel].length;
+        return d.path = d.port[which][d.parallel].path;
     }
 
     function old_edge_path(d) {
-        return edge_path(d, d.source.prevX || d.source.x, d.source.prevY || d.source.y,
+        return edge_path(d, 'old', d.source.prevX || d.source.x, d.source.prevY || d.source.y,
                          d.target.prevX || d.target.x, d.target.prevY || d.target.y);
     }
 
     function new_edge_path(d) {
-        return edge_path(d, d.source.x, d.source.y, d.target.x, d.target.y);
+        return edge_path(d, 'pos', d.ports, d.source.x, d.source.y, d.target.x, d.target.y);
     }
 
     // wait on multiple transitions, adapted from
@@ -1268,6 +1287,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         ntrans.each("end.record", function(d) {
             d.prevX = d.x;
             d.prevY = d.y;
+        });
+
+        // reset edge ports
+        edge.each(function(d) {
+            d.ports.pos = null;
+            d.ports.old = null;
         });
 
         // start new edges at old positions of nodes, if any, else new positions

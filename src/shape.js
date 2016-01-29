@@ -223,6 +223,8 @@ function shape_attrs(chart) {
 }
 
 function binary_search(f, a, b) {
+    if(f(a) >= 0) throw new Error("f(a)<0");
+    if(f(b) <= 0) throw new Error("f(b)>0");
     while(true) {
         var c = (a+b)/2,
             f_c = f(c), fv = f_c.val;
@@ -237,30 +239,30 @@ function binary_search(f, a, b) {
 
 
 function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
-                             parallel,  parallel_offset, source_padding, target_padding) {
-    var deltaX = tx - sx,
-        deltaY = ty - sy,
-        sourceX, sourceY, targetX, targetY, sp, tp;
-    if(!parallel) {
+                             neighbor, offset, source_padding, target_padding) {
+    var deltaX, deltaY,
+        sourcePos, targetPos, sp, tp,
+        retPath = {};
+    if(!neighbor) {
+        deltaX = tx - sx;
+        deltaY = ty - sy;
         sp = point_on_shape(chart, source, deltaX, deltaY);
         tp = point_on_shape(chart, target, -deltaX, -deltaY);
         if(!sp) sp = {x: 0, y: 0};
         if(!tp) tp = {x: 0, y: 0};
-        sourceX = sx + sp.x;
-        sourceY = sy + sp.y;
-        targetX = tx + tp.x;
-        targetY = ty + tp.y;
-        return {
-            length: Math.hypot(targetX-sourceX, targetY-sourceY),
-            path: generate_path([sourceX, sourceY, targetX, targetY], 1)
+        sourcePos = {
+            x: sx + sp.x,
+            y: sy + sp.y
         };
+        targetPos = {
+            x: tx + tp.x,
+            y: ty + tp.y
+        };
+        retPath = generate_path([sourcePos.x, sourcePos.y, targetPos.x, targetPos.y], 1);
     }
     else {
-        // alternate parallel edges over, then under
-        var dir = (!!(parallel%2) === (sx < tx)) ? -1 : 1,
-            port = Math.floor((parallel+1)/2),
-            srcang = Math.atan2(deltaY, deltaX),
-            tarang = srcang - Math.PI,
+        var srcang = Math.atan2(neighbor.sourcePos.x, neighbor.sourcePos.y),
+            tarang = Math.atan2(neighbor.targetPos.x, neighbor.targetPos.y),
             dist = Math.hypot(tx - sx, ty - sy);
         function p_on_s(node, ang) {
             return point_on_shape(chart, node, Math.cos(ang)*dist, Math.sin(ang)*dist);
@@ -284,8 +286,10 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
                     };
             };
         };
-        var bss = binary_search(compare_dist(source, port0s, port*parallel_offset), srcang, srcang + port * dir * 2 * parallel_offset / source_padding),
-            bst = binary_search(compare_dist(target, port0t, port*parallel_offset), tarang, tarang - port * dir * 2 * parallel_offset / source_padding);
+        var bss = binary_search(compare_dist(source, port0s, offset),
+                                srcang, srcang + 2 * offset / source_padding),
+            bst = binary_search(compare_dist(target, port0t, offset),
+                                tarang, tarang - 2 * offset / source_padding);
 
         sp = bss.port;
         tp = bst.port;
@@ -293,18 +297,25 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
             tdist = Math.hypot(tp.x, tp.y),
             c1dist = Math.max(sdist+source_padding/4, Math.min(sdist*2, dist/2)),
             c2dist = Math.min(tdist+target_padding/4, Math.min(tdist*2, dist/2));
-        sourceX = sx + sp.x;
-        sourceY = sy + sp.y;
+        sourcePos = {
+            x: sx + sp.x,
+            y: sy + sp.y
+        };
         var c1X = sx + c1dist * Math.cos(bss.ang),
             c1Y = sy + c1dist * Math.sin(bss.ang),
             c2X = tx + c2dist * Math.cos(bst.ang),
             c2Y = ty + c2dist * Math.sin(bst.ang);
-        targetX = tx + tp.x;
-        targetY = ty + tp.y;
-        return {
-            length: Math.hypot(targetX-sourceX, targetY-sourceY),
-            path: generate_path([sourceX, sourceY, c1X, c1Y, c2X, c2Y, targetX, targetY], 3)
+        targetPos = {
+            x: tx + tp.x,
+            y: ty + tp.y
         };
+        retPath = generate_path([sourcePos.x, sourcePos.y, c1X, c1Y, c2X, c2Y, targetPos.x, targetPos.y], 3);
     }
+    return {
+        sourcePos: sourcePos,
+        targetPos: targetPos,
+        length: Math.hypot(targetPos.x-sourcePos.x, targetPos.y-sourcePos.y),
+        path: retPath
+    };
 }
 
