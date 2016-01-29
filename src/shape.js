@@ -298,8 +298,8 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
         tp = bst.port;
         var sdist = Math.hypot(sp.x, sp.y),
             tdist = Math.hypot(tp.x, tp.y),
-            c1dist = Math.max(sdist+source_padding/4, Math.min(sdist*2, dist/2)),
-            c2dist = Math.min(tdist+target_padding/4, Math.min(tdist*2, dist/2));
+            c1dist = sdist+source_padding/2,
+            c2dist = tdist+target_padding/2;
         sourcePos = {
             x: sx + sp.x,
             y: sy + sp.y
