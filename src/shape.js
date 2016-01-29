@@ -244,7 +244,7 @@ function binary_search(f, a, b) {
 
 
 function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
-                             neighbor, offset, source_padding, target_padding) {
+                             neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
         sourcePos, targetPos, sp, tp,
         retPath = {};
@@ -266,14 +266,12 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
         retPath = generate_path([sourcePos.x, sourcePos.y, targetPos.x, targetPos.y], 1);
     }
     else {
-        var srcang = Math.atan2(neighbor.sourcePos.x, neighbor.sourcePos.y),
-            tarang = Math.atan2(neighbor.targetPos.x, neighbor.targetPos.y),
+        var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
+            tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x),
             dist = Math.hypot(tx - sx, ty - sy);
         function p_on_s(node, ang) {
             return point_on_shape(chart, node, Math.cos(ang)*dist, Math.sin(ang)*dist);
         }
-        var port0s = p_on_s(source, srcang),
-            port0t = p_on_s(target, tarang);
         function compare_dist(node, port0, goal) {
             return function(ang) {
                 var port = p_on_s(node, ang);
@@ -291,10 +289,10 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
                     };
             };
         };
-        var bss = binary_search(compare_dist(source, port0s, offset),
-                                srcang, srcang + 2 * offset / source_padding),
-            bst = binary_search(compare_dist(target, port0t, offset),
-                                tarang, tarang - 2 * offset / source_padding);
+        var bss = binary_search(compare_dist(source, neighbor.sourcePort, offset),
+                                srcang, srcang + 2 * dir * offset / source_padding),
+            bst = binary_search(compare_dist(target, neighbor.targetPort, offset),
+                                tarang, tarang - 2 * dir * offset / source_padding);
 
         sp = bss.port;
         tp = bst.port;
@@ -317,8 +315,8 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
         retPath = generate_path([sourcePos.x, sourcePos.y, c1X, c1Y, c2X, c2Y, targetPos.x, targetPos.y], 3);
     }
     return {
-        sourcePos: sourcePos,
-        targetPos: targetPos,
+        sourcePort: sp,
+        targetPort: tp,
         length: Math.hypot(targetPos.x-sourcePos.x, targetPos.y-sourcePos.y),
         path: retPath
     };

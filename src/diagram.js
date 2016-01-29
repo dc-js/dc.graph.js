@@ -1238,9 +1238,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 // alternate parallel edges over, then under
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
-                    last = d.ports[which][port > 2 ? port - 2 : 0];
+                    last = port ? d.ports[which][p > 2 ? p - 2 : 0] : null;
                 d.ports[which][p] = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
-                                                        last, dir * _chart.parallelEdgeOffset(),
+                                                        last, dir, _chart.parallelEdgeOffset(),
                                                         source_padding, target_padding
                                                        );
             }
