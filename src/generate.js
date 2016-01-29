@@ -26,7 +26,7 @@ dc_graph.edge_object = function(namef, i, j, attrs) {
     }, attrs);
 };
 
-dc_graph.generate = function(name, args, env, callback) {
+dc_graph.generate = function(type, args, env, callback) {
     var nodes, edges, i, j;
     var nodePrefix = env.nodePrefix || '';
     var namef = function(i) {
@@ -34,7 +34,7 @@ dc_graph.generate = function(name, args, env, callback) {
     };
     var N = args[0];
     var linkLength = env.linkLength || 30;
-    switch(name) {
+    switch(type) {
     case 'clique':
     case 'cliquestf':
         nodes = new Array(N);
@@ -44,7 +44,7 @@ dc_graph.generate = function(name, args, env, callback) {
             for(j=0; j<i; ++j)
                 edges.push(dc_graph.edge_object(namef, i, j, {notLayout: true, undirected: true}));
         }
-        if(name==='cliquestf')
+        if(type==='cliquestf')
             for(i = 0; i<N; ++i) {
                 nodes[i+N] = dc_graph.node_object(i+N);
                 nodes[i+2*N] = dc_graph.node_object(i+2*N);
@@ -63,7 +63,7 @@ dc_graph.generate = function(name, args, env, callback) {
                 edges.push(dc_graph.edge_object(namef, j, (j+1)%N, {distance: rimLength, par: i+2}));
         break;
     default:
-        throw new Error("unknown generation type "+name);
+        throw new Error("unknown generation type "+type);
     }
     var graph = {nodes: nodes, links: edges};
     callback(null, graph);
