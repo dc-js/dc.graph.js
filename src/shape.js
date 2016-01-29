@@ -223,9 +223,14 @@ function shape_attrs(chart) {
 }
 
 function binary_search(f, a, b) {
-    if(f(a) >= 0) throw new Error("f(a)<0");
-    if(f(b) <= 0) throw new Error("f(b)>0");
+    var patience = 100;
+    if(f(a).val >= 0)
+        throw new Error("f(a) must be less than 0");
+    if(f(b).val <= 0)
+        throw new Error("f(b) must be greater than 0");
     while(true) {
+        if(!--patience)
+            throw new Error("patience ran out");
         var c = (a+b)/2,
             f_c = f(c), fv = f_c.val;
         if(Math.abs(fv) < 0.5)
