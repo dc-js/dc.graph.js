@@ -267,10 +267,9 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
     }
     else {
         var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
-            tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x),
-            dist = Math.hypot(tx - sx, ty - sy);
+            tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x);
         function p_on_s(node, ang) {
-            return point_on_shape(chart, node, Math.cos(ang)*dist, Math.sin(ang)*dist);
+            return point_on_shape(chart, node, Math.cos(ang)*1000, Math.sin(ang)*1000);
         }
         function compare_dist(node, port0, goal) {
             return function(ang) {
