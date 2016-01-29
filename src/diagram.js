@@ -1246,7 +1246,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             }
         }
         d.length = d.ports[which][d.parallel].length;
-        return d.path = d.port[which][d.parallel].path;
+        return d.path = d.ports[which][d.parallel].path;
     }
 
     function old_edge_path(d) {
@@ -1255,7 +1255,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function new_edge_path(d) {
-        return edge_path(d, 'pos', d.ports, d.source.x, d.source.y, d.target.x, d.target.y);
+        return edge_path(d, 'pos', d.source.x, d.source.y, d.target.x, d.target.y);
     }
 
     // wait on multiple transitions, adapted from
