@@ -221,3 +221,58 @@ function shape_attrs(chart) {
         }
     };
 }
+
+function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
+                             parallel,  parallel_offset, source_padding, target_padding) {
+    var deltaX = tx - sx,
+        deltaY = ty - sy,
+        sourceX, sourceY, targetX, targetY, sp, tp;
+    if(!parallel) {
+        sp = point_on_shape(chart, source, deltaX, deltaY);
+        tp = point_on_shape(chart, target, -deltaX, -deltaY);
+        if(!sp) sp = {x: 0, y: 0};
+        if(!tp) tp = {x: 0, y: 0};
+        sourceX = sx + sp.x;
+        sourceY = sy + sp.y;
+        targetX = tx + tp.x;
+        targetY = ty + tp.y;
+        return {
+            length: Math.hypot(targetX-sourceX, targetY-sourceY),
+            path: generate_path([sourceX, sourceY, targetX, targetY], 1)
+        };
+    }
+    else {
+        // alternate parallel edges over, then under
+        var dir = (!!(parallel%2) === (sx < tx)) ? -1 : 1,
+            port = Math.floor((parallel+1)/2) * dir,
+            srcang = Math.atan2(deltaY, deltaX),
+            sportang = srcang + port * parallel_offset / source_padding,
+            tportang = srcang - Math.PI - port * parallel_offset / target_padding,
+            cos_sport = Math.cos(sportang),
+            sin_sport = Math.sin(sportang),
+            cos_tport = Math.cos(tportang),
+            sin_tport = Math.sin(tportang),
+            dist = Math.hypot(tx - sx, ty - sy);
+        sp = point_on_shape(chart, source, cos_sport*dist, sin_sport*dist);
+        tp = point_on_shape(chart, target, cos_tport*dist, sin_tport*dist);
+        if(!sp) sp = {x: 0, y: 0};
+        if(!tp) tp = {x: 0, y: 0};
+        var sdist = Math.hypot(sp.x, sp.y),
+            tdist = Math.hypot(tp.x, tp.y),
+            c1dist = Math.max(sdist+source_padding/4, Math.min(sdist*2, dist/2)),
+            c2dist = Math.min(tdist+target_padding/4, Math.min(tdist*2, dist/2));
+        sourceX = sx + sp.x;
+        sourceY = sy + sp.y;
+        var c1X = sx + c1dist * cos_sport,
+            c1Y = sy + c1dist * sin_sport,
+            c2X = tx + c2dist * cos_tport,
+            c2Y = ty + c2dist * sin_tport;
+        targetX = tx + tp.x;
+        targetY = ty + tp.y;
+        return {
+            length: Math.hypot(targetX-sourceX, targetY-sourceY),
+            path: generate_path([sourceX, sourceY, c1X, c1Y, c2X, c2Y, targetX, targetY], 3)
+        };
+    }
+}
+

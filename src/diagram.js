@@ -781,7 +781,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .avoidOverlaps(true)
             .size([_chart.width(), _chart.height()])
             .handleDisconnected(_chart.handleDisconnected());
-
+        
         switch(_chart.lengthStrategy()) {
         case 'symmetric':
             _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
@@ -1206,6 +1206,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
+
     function layout_done(happens) {
         _dispatch.end(happens);
         _running = false;
@@ -1218,57 +1219,15 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function edge_path(d, sx, sy, tx, ty) {
-        var deltaX = tx - sx,
-            deltaY = ty - sy,
-            sourcePadding = d.source.dcg_ry +
+        var source_padding = d.source.dcg_ry +
                 param(_chart.nodeStrokeWidth())(d.source) / 2,
-            targetPadding = d.target.dcg_ry +
+            target_padding = d.target.dcg_ry +
                 param(_chart.nodeStrokeWidth())(d.target) / 2;
-
-        var sourceX, sourceY, targetX, targetY, sp, tp;
-        if(!d.parallel) {
-            sp = point_on_shape(_chart, d.source, deltaX, deltaY);
-            tp = point_on_shape(_chart, d.target, -deltaX, -deltaY);
-            if(!sp) sp = {x: 0, y: 0};
-            if(!tp) tp = {x: 0, y: 0};
-            sourceX = sx + sp.x;
-            sourceY = sy + sp.y;
-            targetX = tx + tp.x;
-            targetY = ty + tp.y;
-            d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-            return generate_path([sourceX, sourceY, targetX, targetY], 1);
-        }
-        else {
-            // alternate parallel edges over, then under
-            var dir = (!!(d.parallel%2) === (sx < tx)) ? -1 : 1,
-                port = Math.floor((d.parallel+1)/2) * dir,
-                srcang = Math.atan2(deltaY, deltaX),
-                sportang = srcang + port * _chart.parallelEdgeOffset() / sourcePadding,
-                tportang = srcang - Math.PI - port * _chart.parallelEdgeOffset() / targetPadding,
-                cos_sport = Math.cos(sportang),
-                sin_sport = Math.sin(sportang),
-                cos_tport = Math.cos(tportang),
-                sin_tport = Math.sin(tportang),
-                dist = Math.hypot(tx - sx, ty - sy);
-            sp = point_on_shape(_chart, d.source, cos_sport*dist, sin_sport*dist);
-            tp = point_on_shape(_chart, d.target, cos_tport*dist, sin_tport*dist);
-            if(!sp) sp = {x: 0, y: 0};
-            if(!tp) tp = {x: 0, y: 0};
-            var sdist = Math.hypot(sp.x, sp.y),
-                tdist = Math.hypot(tp.x, tp.y),
-                c1dist = Math.max(sdist+sourcePadding/4, Math.min(sdist*2, dist/2)),
-                c2dist = Math.min(tdist+targetPadding/4, Math.min(tdist*2, dist/2));
-            sourceX = sx + sp.x;
-            sourceY = sy + sp.y;
-            var c1X = sx + c1dist * cos_sport,
-                c1Y = sy + c1dist * sin_sport,
-                c2X = tx + c2dist * cos_tport,
-                c2Y = ty + c2dist * sin_tport;
-            targetX = tx + tp.x;
-            targetY = ty + tp.y;
-            d.length = Math.hypot(targetX-sourceX, targetY-sourceY);
-            return generate_path([sourceX, sourceY, c1X, c1Y, c2X, c2Y, targetX, targetY], 3);
-        }
+        var res = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
+                                      d.parallel, _chart.parallelEdgeOffset(), source_padding, target_padding
+                                     );
+        d.length = res.length;
+        return res.path;
     }
 
     function old_edge_path(d) {
