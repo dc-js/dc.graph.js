@@ -1250,7 +1250,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var portInfo = d.ports[which][d.parallel];
         if(param(_chart.edgeArrowhead())(d)) {
             d3.select('#' + arrowId(edge_id(d), 'head'))
-                .attr('orient', portInfo.headAng);
+                .attr('orient', portInfo.headAng + 'rad');
         }
         d.length = portInfo.length;
         return d.path = portInfo.path;
@@ -1557,7 +1557,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('markerUnits', 'userSpaceOnUse')
                 .attr('markerWidth', _arrows[name].width)
                 .attr('markerHeight', _arrows[name].height)
-                .attr('orient', 'auto')
                 .attr('stroke', param(_chart.edgeStroke())(d))
                 .attr('fill', param(_chart.edgeStroke())(d))
                 .call(_arrows[name].drawFunction);
