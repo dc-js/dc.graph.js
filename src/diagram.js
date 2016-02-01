@@ -14,7 +14,7 @@
  * in. Filter interaction with a chart will only trigger events and redraws within the
  * chart's group.
  * @return {dc_graph.diagram}
-**/
+ **/
 dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
     var _chart = {};
@@ -694,7 +694,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Boolean}
      * @return {dc_graph.diagram}
      **/
-     _chart.induceNodes = property(false);
+    _chart.induceNodes = property(false);
 
     /**
      * If it is necessary to modify the cola layout object after it is created, this function
@@ -1437,7 +1437,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {d3.selection}
      * @return {dc_graph.diagram}
 
-    **/
+     **/
     _chart.svg = function (_) {
         if (!arguments.length) {
             return _svg;
@@ -1447,7 +1447,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
-    * Standard dc.js
+     * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Remove the diagram's SVG elements from the dom and recreate the container SVG
      * element.
@@ -1455,7 +1455,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
-    **/
+     **/
     _chart.resetSvg = function () {
         _chart.select('svg').remove();
         return generateSvg();
@@ -1516,7 +1516,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      *     .attr('stroke-width', '0px');
      * });
      * @return {dc_graph.diagram}
-    **/
+     **/
     _chart.defineArrow = function(name, width, height, refX, refY, drawf) {
         _svg.append('svg:defs').append('svg:marker')
             .attr('id', name)
