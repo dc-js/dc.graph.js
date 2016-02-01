@@ -246,6 +246,7 @@ function binary_search(f, a, b) {
 function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
+        points, near,
         sourcePos, targetPos, sp, tp,
         headAng = 0, retPath = {};
     if(!neighbor) {
@@ -263,6 +264,9 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
             x: tx + tp.x,
             y: ty + tp.y
         };
+        points = [sourcePos, targetPos];
+        near = bezier_point(points, 0.75);
+        headAng = Math.atan2(targetPos.y - near.y, targetPos.x - near.x);
         retPath = generate_path([sourcePos.x, sourcePos.y, targetPos.x, targetPos.y], 1);
     }
     else {
@@ -311,13 +315,13 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
             x: tx + tp.x,
             y: ty + tp.y
         };
-        var points = [
+        points = [
             {x: sourcePos.x, y: sourcePos.y},
             {x: c1X, y: c1Y},
             {x: c2X, y: c2Y},
             {x: targetPos.x, y: targetPos.y}
         ];
-        var near = pointAtT(points, 0.75);
+        near = bezier_point(points, 0.75);
         headAng = Math.atan2(targetPos.y - near.y, targetPos.x - near.x);
         retPath = generate_path([sourcePos.x, sourcePos.y, c1X, c1Y, c2X, c2Y, targetPos.x, targetPos.y], 3);
     }
@@ -347,7 +351,7 @@ function getLevels(points, t_) {
     return x;
 }
 
-function pointAtT(points, t_) {
+function bezier_point(points, t_) {
     var q = getLevels(points, t_);
     return q[q.length-1][0];
 }
