@@ -18,12 +18,12 @@
 dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
     var _chart = {};
-    var _svg = null, _g = null, _nodeLayer = null, _edgeLayer = null;
+    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _d3cola = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn');
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
-    var _children = {};
+    var _children = {}, _arrows = {};
     var _running = false; // for detecting concurrency issues
 
     /**
@@ -1012,12 +1012,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke', param(_chart.edgeStroke()))
             .attr('stroke-width', param(_chart.edgeStrokeWidth()))
             .attr('marker-end', function(d) {
-                var id = param(_chart.edgeArrowhead())(d);
-                return id ? 'url(#' + id + ')' : null;
+                var name = param(_chart.edgeArrowhead())(d),
+                    arrow_id = edgeArrow(d, 'head', name);
+                return arrow_id ? 'url(#' + arrow_id + ')' : null;
             })
             .attr('marker-start', function(d) {
-                var id = param(_chart.edgeArrowtail())(d);
-                return id ? 'url(#' + id + ')' : null;
+                var name = param(_chart.edgeArrowtail())(d),
+                    arrow_id = edgeArrow(d, 'tail', name);
+                return name ? 'url(#' + arrow_id + ')' : null;
             });
         edge.exit().transition()
             .duration(_chart.transitionDuration())
@@ -1245,8 +1247,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                                                        );
             }
         }
-        d.length = d.ports[which][d.parallel].length;
-        return d.path = d.ports[which][d.parallel].path;
+        var portInfo = d.ports[which][d.parallel];
+        if(param(_chart.edgeArrowhead())(d)) {
+            d3.select('#' + arrowId(edge_id(d), 'head'))
+                .attr('orient', portInfo.headAng);
+        }
+        d.length = portInfo.length;
+        return d.path = portInfo.path;
     }
 
     function old_edge_path(d) {
@@ -1518,18 +1525,46 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _chart.defineArrow = function(name, width, height, refX, refY, drawf) {
-        _svg.append('svg:defs').append('svg:marker')
-            .attr('id', name)
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', refX)
-            .attr('refY', refY)
-            .attr('markerUnits', 'userSpaceOnUse')
-            .attr('markerWidth', width)
-            .attr('markerHeight', height)
-            .attr('orient', 'auto')
-            .call(drawf);
+        _arrows[name] = {
+            name: name,
+            width: width,
+            height: height,
+            refX: refX,
+            refY: refY,
+            drawFunction: drawf
+        };
         return _chart;
     };
+
+    function arrowId(id, kind) {
+        return 'arrow-' + kind + '-' + id;
+    }
+
+    function edgeArrow(d, kind, name) {
+        var arrow_id = arrowId(edge_id(d), kind);
+        var data = name ? [0] : [];
+        var marker = _defs.selectAll('#' + arrow_id).data(data);
+
+        var markerEnter = marker
+            .enter().append('svg:marker')
+                .attr('id', arrow_id);
+
+        if(name) {
+            markerEnter
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', _arrows[name].refX)
+                .attr('refY', _arrows[name].refY)
+                .attr('markerUnits', 'userSpaceOnUse')
+                .attr('markerWidth', _arrows[name].width)
+                .attr('markerHeight', _arrows[name].height)
+                .attr('orient', 'auto')
+                .attr('stroke', param(_chart.edgeStroke())(d))
+                .attr('fill', param(_chart.edgeStroke())(d))
+                .call(_arrows[name].drawFunction);
+        }
+        marker.exit().remove();
+        return name ? arrow_id : null;
+    }
 
     function doZoom() {
         _g.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
@@ -1546,23 +1581,26 @@ dc_graph.diagram = function (parent, chartGroup) {
         _svg = _chart.root().append('svg');
         resizeSvg();
 
-        _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-            marker.append('svg:path')
-                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-                .attr('stroke-width', '0px');
-        });
-        _chart.defineArrow('dot', 7, 7, 0, 0, function(marker) {
-            marker.append('svg:circle')
-                .attr('r', 5)
-                .attr('cx', 5)
-                .attr('cy', 0)
-                .attr('stroke-width', '0px');
-        });
+        _defs = _svg.append('svg:defs');
+
         if(_chart.mouseZoomable())
             _svg.call(d3.behavior.zoom().on("zoom", doZoom));
 
         return _svg;
     }
+
+    _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+        marker.append('svg:path')
+            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+            .attr('stroke-width', '0px');
+    });
+    _chart.defineArrow('dot', 7, 7, 0, 0, function(marker) {
+        marker.append('svg:circle')
+            .attr('r', 5)
+            .attr('cx', 5)
+            .attr('cy', 0)
+            .attr('stroke-width', '0px');
+    });
 
     _chart.root(d3.select(parent));
 
