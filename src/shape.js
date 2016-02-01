@@ -334,6 +334,7 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
     };
 }
 
+// from https://www.jasondavies.com/animated-bezier/
 function interpolate(d, p) {
     var r = [];
     for (var i=1; i<d.length; i++) {
