@@ -8,7 +8,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.1.0  
+**Version**: 0.1.1  
 **Example**  
 ```js
 // Example chaining
@@ -692,7 +692,7 @@ from the original so they don't overlap.
 
 | Param | Type | Default |
 | --- | --- | --- |
-| [parallelEdgeOffset] | <code>Number</code> | <code>5</code> | 
+| [parallelEdgeOffset] | <code>Number</code> | <code>10</code> | 
 
 <a name="dc_graph.diagram+edgeOrdering"></a>
 #### diagram.edgeOrdering ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
