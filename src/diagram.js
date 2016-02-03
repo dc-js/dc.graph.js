@@ -1549,14 +1549,20 @@ dc_graph.diagram = function (parent, chartGroup) {
         return 'arrow-' + kind + '-' + id;
     }
 
-    function edgeArrow(d, kind, name) {
-        var arrow_id = arrowId(edge_id(d), kind);
-        var data = name ? [0] : [];
-        var marker = _defs.selectAll('#' + arrow_id).data(data);
+    function add_remove_def(id, whether, tag) {
+        var data = whether ? [0] : [];
+        var sel = _defs.selectAll('#' + id).data(data);
 
-        var markerEnter = marker
-            .enter().append('svg:marker')
-                .attr('id', arrow_id);
+        var selEnter = sel
+            .enter().append(tag)
+                .attr('id', id);
+        sel.exit().remove();
+        return selEnter;
+    }
+
+    function edgeArrow(d, kind, name) {
+        var id = arrow_id(d, kind),
+            markerEnter = add_remove_def(id, !!name, 'svg:marker');
 
         if(name) {
             markerEnter
@@ -1570,8 +1576,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('fill', param(_chart.edgeStroke())(d))
                 .call(_arrows[name].drawFunction);
         }
-        marker.exit().remove();
-        return name ? arrow_id : null;
+        return name ? id : null;
     }
 
     function doZoom() {
