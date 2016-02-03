@@ -77,12 +77,12 @@ var bez_cmds = {
 };
 
 function generate_path(pts, bezness, close) {
-    var cats = ['M', pts[0], ',', pts[1]], remain = bezness;
+    var cats = ['M', pts[0].x, ',', pts[0].y], remain = bezness;
     var hasNaN = false;
-    for(var i = 2; i < pts.length; i += 2) {
-        if(isNaN(pts[i]) || isNaN(pts[i+1]))
+    for(var i = 1; i < pts.length; ++i) {
+        if(isNaN(pts[i].x) || isNaN(pts[i].y))
             hasNaN = true;
-        cats.push(remain===bezness ? bez_cmds[bezness] : ' ', pts[i], ',', pts[i+1]);
+        cats.push(remain===bezness ? bez_cmds[bezness] : ' ', pts[i].x, ',', pts[i].y);
         if(--remain===0)
             remain = bezness;
     }

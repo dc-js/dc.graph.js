@@ -49,9 +49,9 @@ function segment_intersection(x1,y1,x2,y2, x3,y3,x4,y4) {
 
 
 function point_on_polygon(points, x0, y0, x1, y1) {
-    for(var i = 0; i < points.length; i+=2) {
-        var next = i===points.length-2 ? 0 : i+2;
-        var isect = segment_intersection(points[i], points[i+1], points[next], points[next+1],
+    for(var i = 0; i < points.length; ++i) {
+        var next = i===points.length-1 ? 0 : i+1;
+        var isect = segment_intersection(points[i].x, points[i].y, points[next].x, points[next].y,
                                          x0, y0, x1, y1);
         if(isect)
             return isect;
@@ -64,7 +64,7 @@ function point_on_shape(chart, d, deltaX, deltaY) {
     case 'ellipse':
         return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
     case 'polygon':
-        return point_on_polygon(d.dcg_points, 0,0, deltaX, deltaY);
+        return point_on_polygon(d.dcg_points, 0, 0, deltaX, deltaY);
     }
 }
 
@@ -199,7 +199,7 @@ function polygon_attrs(chart, d) {
                     y = d.dcg_ry*Math.sin(theta);
                 x *= 1 + distortion*((d.dcg_ry-y)/d.dcg_ry - 1);
                 x -= skew*y/2;
-                pts.push(x, y);
+                pts.push({x: x, y: y});
             }
             d.dcg_points = pts;
             return generate_path(pts, 1, true);
@@ -267,7 +267,7 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
         points = [sourcePos, targetPos];
         near = bezier_point(points, 0.75);
         headAng = Math.atan2(targetPos.y - near.y, targetPos.x - near.x);
-        retPath = generate_path([sourcePos.x, sourcePos.y, targetPos.x, targetPos.y], 1);
+        retPath = generate_path(points, 1);
     }
     else {
         var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
@@ -323,7 +323,7 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
         ];
         near = bezier_point(points, 0.75);
         headAng = Math.atan2(targetPos.y - near.y, targetPos.x - near.x);
-        retPath = generate_path([sourcePos.x, sourcePos.y, c1X, c1Y, c2X, c2Y, targetPos.x, targetPos.y], 3);
+        retPath = generate_path(points, 3);
     }
     return {
         sourcePort: sp,
@@ -352,6 +352,7 @@ function getLevels(points, t_) {
     return x;
 }
 
+// get a point on a bezier segment, where 0 <= t <= 1
 function bezier_point(points, t_) {
     var q = getLevels(points, t_);
     return q[q.length-1][0];
