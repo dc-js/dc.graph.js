@@ -807,6 +807,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     function edge_id(d) {
         return 'edge-' + param(_chart.edgeKey())(d).replace(/[^\w-_]/g, '-');
     }
+    function textpath_id(d) {
+        return 'textpath-' + edge_id(d);
+    }
+
 
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
@@ -1062,7 +1066,9 @@ dc_graph.diagram = function (parent, chartGroup) {
               .append('textPath')
                 .attr('startOffset', '50%')
                 .attr('xlink:href', function(d) {
-                    return '#' + edge_id(d);
+                    var id = textpath_id(d);
+                    add_remove_def(id, true, 'svg:path');
+                    return '#' + id;
                 });
         edgeLabels.each(function(d) {
             d.dcg_bbox = null;
@@ -1237,25 +1243,34 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
-    function edge_path(d, which, sx, sy, tx, ty) {
-        if(!d.ports[which]) {
+    function calc_edge_path(d, age, sx, sy, tx, ty) {
+        if(!d.ports[age]) {
             var source_padding = d.source.dcg_ry +
                     param(_chart.nodeStrokeWidth())(d.source) / 2,
                 target_padding = d.target.dcg_ry +
                     param(_chart.nodeStrokeWidth())(d.target) / 2;
-            d.ports[which] = new Array(d.ports.n);
+            d.ports[age] = new Array(d.ports.n);
             for(var p = 0; p < d.ports.n; ++p) {
                 // alternate parallel edges over, then under
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
-                    last = port ? d.ports[which][p > 2 ? p - 2 : 0] : null;
-                d.ports[which][p] = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
+                    last = port ? d.ports[age][p > 2 ? p - 2 : 0] : null;
+                d.ports[age][p] = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
                                                         last, dir, _chart.parallelEdgeOffset(),
                                                         source_padding, target_padding
                                                        );
             }
         }
-        var path = d.ports[which][d.parallel];
+        return d.ports[age][d.parallel];
+    }
+
+    function calc_old_edge_path(d) {
+        calc_edge_path(d, 'old', d.source.prevX || d.source.x, d.source.prevY || d.source.y,
+                         d.target.prevX || d.target.x, d.target.prevY || d.target.y);
+    }
+
+    function calc_new_edge_path(d) {
+        var path = calc_edge_path(d, 'new', d.source.x, d.source.y, d.target.x, d.target.y);
         var spos = path.points[0], tpos = path.points[path.points.length-1];
         if(param(_chart.edgeArrowhead())(d))
             d3.select('#' + arrow_id(d, 'head'))
@@ -1264,16 +1279,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
                 });
         d.length =  Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
-        return d.path = generate_path(path.points, path.bezDegree);
     }
 
-    function old_edge_path(d) {
-        return edge_path(d, 'old', d.source.prevX || d.source.x, d.source.prevY || d.source.y,
-                         d.target.prevX || d.target.x, d.target.prevY || d.target.y);
-    }
-
-    function new_edge_path(d) {
-        return edge_path(d, 'pos', d.source.x, d.source.y, d.target.x, d.target.y);
+    function render_edge_path(age) {
+        return function(d) {
+            var path = d.ports[age][d.parallel];
+            return generate_path(path.points, path.bezDegree);
+        };
     }
 
     // wait on multiple transitions, adapted from
@@ -1309,38 +1321,36 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // reset edge ports
         edge.each(function(d) {
-            d.ports.pos = null;
+            d.ports.new = null;
             d.ports.old = null;
         });
 
         // start new edges at old positions of nodes, if any, else new positions
-        edgeEnter.attr('d', old_edge_path);
-        var etrans = edge.transition()
+        edgeEnter.each(calc_old_edge_path)
+            .attr('d', render_edge_path('old'));
+
+        var etrans = edge.each(calc_new_edge_path)
+              .transition()
                 .duration(_chart.transitionDuration())
                 .attr('opacity', param(_chart.edgeOpacity()))
-                .attr("d", new_edge_path);
+                .attr("d", render_edge_path('new'));
 
+        edge.each(function(d) {
+            var id = textpath_id(d);
+            var path = d.ports.new[d.parallel];
+            var points = d.target.x < d.source.x ?
+                    path.points.slice(0).reverse() : path.points;
+            d3.select('#' + id)
+                .attr('d', function(d) {
+                    return generate_path(points, path.bezDegree);
+                });
+        });
         // signal layout done when all transitions complete
         // because otherwise client might start another layout and lock the processor
         if(!_chart.showLayoutSteps())
             endall([ntrans, etrans], function() { layout_done(true); });
 
-        edgeHover.attr('d', new_edge_path);
-        edgeLabels.transition()
-            .duration(_chart.transitionDuration())
-            .attr('transform', function(d,i) {
-                if (d.target.x < d.source.x) {
-                    if(!d.dcg_bbox)
-                        d.dcg_bbox = this.getBBox();
-                    var bbox = d.dcg_bbox,
-                        rx = bbox.x + bbox.width/2,
-                        ry = bbox.y + bbox.height/2;
-                    return 'rotate(180 ' + rx + ' ' + ry + ')';
-                }
-                else {
-                    return 'rotate(0)';
-                }
-            });
+        edgeHover.attr('d', render_edge_path('new'));
     }
 
     /**
