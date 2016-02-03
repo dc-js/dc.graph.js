@@ -76,18 +76,18 @@ var bez_cmds = {
     1: 'L', 2: 'Q', 3: 'C'
 };
 
-function generate_path(pts, bezness, close) {
-    var cats = ['M', pts[0].x, ',', pts[0].y], remain = bezness;
+function generate_path(pts, bezDegree, close) {
+    var cats = ['M', pts[0].x, ',', pts[0].y], remain = bezDegree;
     var hasNaN = false;
     for(var i = 1; i < pts.length; ++i) {
         if(isNaN(pts[i].x) || isNaN(pts[i].y))
             hasNaN = true;
-        cats.push(remain===bezness ? bez_cmds[bezness] : ' ', pts[i].x, ',', pts[i].y);
+        cats.push(remain===bezDegree ? bez_cmds[bezDegree] : ' ', pts[i].x, ',', pts[i].y);
         if(--remain===0)
-            remain = bezness;
+            remain = bezDegree;
     }
-    if(remain!=bezness)
-        console.log("warning: pts.length didn't match bezness", pts, bezness);
+    if(remain!=bezDegree)
+        console.log("warning: pts.length didn't match bezian degree", pts, bezDegree);
     if(close)
         cats.push('Z');
     return cats.join('');
