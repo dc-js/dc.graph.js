@@ -781,7 +781,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .avoidOverlaps(true)
             .size([_chart.width(), _chart.height()])
             .handleDisconnected(_chart.handleDisconnected());
-        
+
         switch(_chart.lengthStrategy()) {
         case 'symmetric':
             _d3cola.symmetricDiffLinkLengths(_chart.baseLength());
@@ -1059,10 +1059,14 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('startOffset', '50%')
                 .attr('xlink:href', function(d) {
                     return '#' + edge_id(d);
-                })
-                .text(function(d){
-                    return param(_chart.edgeLabel())(d);
                 });
+        edgeLabels.each(function(d) {
+            d.dcg_bbox = null;
+        })
+          .selectAll('textPath')
+            .text(function(d){
+                return param(_chart.edgeLabel())(d);
+            });
         edgeLabels.exit().transition()
             .duration(_chart.transitionDuration())
             .attr('opacity', 0).remove();
@@ -1319,7 +1323,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .duration(_chart.transitionDuration())
             .attr('transform', function(d,i) {
                 if (d.target.x < d.source.x) {
-                    var bbox = this.getBBox(),
+                    if(!d.dcg_bbox)
+                        d.dcg_bbox = this.getBBox();
+                    var bbox = d.dcg_bbox,
                         rx = bbox.x + bbox.width/2,
                         ry = bbox.y + bbox.height/2;
                     return 'rotate(180 ' + rx + ' ' + ry + ')';
