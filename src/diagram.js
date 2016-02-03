@@ -1251,13 +1251,16 @@ dc_graph.diagram = function (parent, chartGroup) {
                                                        );
             }
         }
-        var portInfo = d.ports[which][d.parallel];
-        if(param(_chart.edgeArrowhead())(d)) {
+        var path = d.ports[which][d.parallel];
+        var spos = path.points[0], tpos = path.points[path.points.length-1];
+        if(param(_chart.edgeArrowhead())(d))
             d3.select('#' + arrowId(edge_id(d), 'head'))
-                .attr('orient', portInfo.headAng + 'rad');
-        }
-        d.length = portInfo.length;
-        return d.path = portInfo.path;
+                .attr('orient', function(d) {
+                    var near = bezier_point(path.points, 0.75);
+                    return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
+                });
+        d.length =  Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
+        return d.path = generate_path(path.points, path.bezDegree);
     }
 
     function old_edge_path(d) {

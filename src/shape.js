@@ -268,7 +268,7 @@ function binary_search(f, a, b) {
 function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
-        sp, tp, points,
+        sp, tp, points, bezDegree,
         headAng, retPath;
     if(!neighbor) {
         deltaX = tx - sx;
@@ -284,7 +284,7 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
             x: tx + tp.x,
             y: ty + tp.y
         }];
-        retPath = generate_path(points, 1);
+        bezDegree = 1;
     }
     else {
         var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
@@ -330,18 +330,16 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
             {x: c2X, y: c2Y},
             {x: tx + tp.x, y: ty + tp.y}
         ];
-        retPath = generate_path(points, 3);
+        bezDegree = 3;
     }
-    var near = bezier_point(points, 0.75),
-        spos = points[0], tpos = points[points.length-1];
     return {
         sourcePort: sp,
         targetPort: tp,
-        length: Math.hypot(tpos.x-spos.x, tpos.y-spos.y),
-        path: retPath,
-        headAng: Math.atan2(tpos.y - near.y, tpos.x - near.x)
+        points: points,
+        bezDegree: bezDegree
     };
 }
+
 
 // from https://www.jasondavies.com/animated-bezier/
 function interpolate(d, p) {
