@@ -1024,6 +1024,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         edge.exit().transition()
             .duration(_chart.transitionDuration())
             .attr('opacity', 0)
+            .each(function(d) {
+                edgeArrow(d, 'head', null);
+                edgeArrow(d, 'head', null);
+            })
             .remove();
 
         // another wider copy of the edge just for hover events
