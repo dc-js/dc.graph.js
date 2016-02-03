@@ -246,9 +246,8 @@ function binary_search(f, a, b) {
 function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
-        points, near,
-        sourcePos, targetPos, sp, tp,
-        headAng = 0, retPath = {};
+        sourcePos, targetPos, sp, tp, points,
+        headAng, retPath;
     if(!neighbor) {
         deltaX = tx - sx;
         deltaY = ty - sy;
@@ -265,8 +264,6 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
             y: ty + tp.y
         };
         points = [sourcePos, targetPos];
-        near = bezier_point(points, 0.75);
-        headAng = Math.atan2(targetPos.y - near.y, targetPos.x - near.x);
         retPath = generate_path(points, 1);
     }
     else {
@@ -321,16 +318,15 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
             {x: c2X, y: c2Y},
             {x: targetPos.x, y: targetPos.y}
         ];
-        near = bezier_point(points, 0.75);
-        headAng = Math.atan2(targetPos.y - near.y, targetPos.x - near.x);
         retPath = generate_path(points, 3);
     }
+    var near = bezier_point(points, 0.75);
     return {
         sourcePort: sp,
         targetPort: tp,
         length: Math.hypot(targetPos.x-sourcePos.x, targetPos.y-sourcePos.y),
         path: retPath,
-        headAng: headAng
+        headAng: Math.atan2(targetPos.y - near.y, targetPos.x - near.x)
     };
 }
 
