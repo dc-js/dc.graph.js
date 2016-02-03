@@ -8,7 +8,6 @@
 .dc-graph text.node-label {
     font: bold 14px verdana, san-serif;
     text-anchor: middle;
-    alignment-baseline: middle;
     pointer-events: none;
 }
 
@@ -19,6 +18,5 @@
 
 .dc-graph-legend text.legend-label {
     font: bold 14px verdana, san-serif;
-    alignment-baseline: middle;
     pointer-events: none;
 }

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 <head>
   <title>Single file viewer</title>
@@ -29,39 +30,106 @@
   </style>
 
 </head>
-
-
 <body>
 
   <div id="graph" class="chart"></div>
-
   <script type="text/javascript">
 
     var file = "router-farm1.json";
     var tables_file = "temp.json";
     var diagram = dc_graph.diagram('#graph');
+    var pagestatus = 0;
 
     diagram
         .width($(window).width())
         .height($(window).height())
+
         // aesthetics
         .nodeStrokeWidthAccessor(0) // turn off outlines
-        .nodeFillAccessor(function(kv) {
+
+	.nodeFillAccessor(function(kv) {
             // calculate colors from kv.value somehow
-            return kv.value.name.length%2 ? '#2E54A2' : '#ED3F00';
+            //return kv.value.name.length%2 ? '#2E54A2' : '#ED3F00';
+             switch(kv.value.status) {
+             	case 'offline': return 'grey'
+              	default: return '#2E9AFE';
+              }
         })
         .nodeLabelFillAccessor('white')
         .nodeTitleAccessor(null) // deactivate basic tooltips
         .edgeArrowheadAccessor(draw_arrows ? 'vee' : null)
         .timeLimit(5000)
-        .on('end', function() {
+        .showLayoutSteps(false)
+        .transitionDuration(0)
+        .lengthStrategy('individual')
+        .edgeDistanceAccessor(function(kv) {
+            if(/Backbone/.test(kv.value.sourcename) || /Backbone/.test(kv.value.targetname))
+                return 150;
+            else
+                return 100;
+        })
+	.on('end', function() {
             runner.endStep();
         });
+
+    var tip = dc_graph.tip();
+/*
+    tip.content(function(d, k) {
+        d3.json("http://135.197.224.250:28017/router_farm/posts/", function(error, respjson) {
+            if(error)
+                k('(error)');
+            var node_name = d.orig.value.name;
+            var N = node_name + "#" +respjson["rows"][0][node_name];
+            //parse the string
+            var res = N.split("#");
+            var node_name = res[0];
+            var DispString = ""
+            switch (node_name){
+            case "Backbone Routers":
+                DispString = "Routers in the backbone network";
+                break;
+            case "CVM-NY":
+            case "CVM-LA":
+            case "CVM-DC":
+                DispString = "<pre> RD    PREFIX    NEXTHOP</pre>";
+                for (i=1; i < res.length-1; i++){
+                    DispString += res[i] + "<br>";
+                    DispString += res[res.length-1];
+                }
+                break;
+            case "PVM-LA-FEDEX":
+            case "PVM-LA-UPS":
+            case "PVM-NY-FEDEX":
+            case "PVM-NY-UPS":
+            case "PVM-DC-FEDEX":
+            case "PVM-DC-UPS":
+                DispString = "<pre>PREFIX    NEXTHOP</pre>";
+                for (i=1; i < res.length-1; i++){
+                    DispString += res[i] + "<br>";
+                    DispString += res[res.length-1];
+                }
+                break;
+            case "CE-LA-FEDEX":
+            case "CE-LA-UPS":
+            case "CE-NY-FEDEX":
+            case "CE-NY-UPS":
+            case "CE-DC-FEDEX":
+            case "CE-DC-UPS":
+                DispString = "<pre>PREFIX    NEXTHOP</pre>";
+                DispString += "<pre>  *     192.168.0.22";
+                break;
+            default:
+                DispString = "Node not found";
+            }
+            k("<em>" + DispString + "</em>");
+        });
+    });
+*/
+    diagram.child('tip', tip);
 
     function nocache_query() {
         return '?nocache=' + Date.now();
     }
-
 
     var qs = querystring.parse();
     var draw_arrows = qs.arrows==='true'; // example of using query string parameter
@@ -72,7 +140,6 @@
                 console.log(error);
                 return;
             }
-
             var edges = flat_group.make(data.links, function(d) {
                 return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : '');
             }),
@@ -82,27 +149,6 @@
                 .edgeDimension(edges.dimension).edgeGroup(edges.group);
 
             k();
-
-            // initialize d3-tip (nicer-looking tooltips)
-            var tip = d3.tip().attr('class', 'd3-tip').html(function(N) {
-                // demonstrating html tooltips
-                return "<em>" + N + "</em>";
-            });
-            diagram.svg().call(tip)
-
-            diagram.selectAll('g.node')
-                .on('mouseover', function(d){
-                    //store the current event
-                    var e = d3.event;
-                    // this would be an ajax call
-                    d3.json("http://135.197.224.250:28017/router_farm/posts/", function(error, data){
-                        //restore the current event so d3-tip knows the target
-                        d3.event = e;
-                        var node_name = d.orig.value.name;
-                        tip.show(data.rows[0].node_name);
-                    })
-                })
-                .on('mouseout', tip.hide);
             $(window).resize(function() {
                 diagram
                     .width($(window).width())
@@ -110,17 +156,27 @@
             });
         });
     }
+
     function init() {
-        do_load(function() {
+        console.log("In init");
+	do_load(function() {
             diagram.render();
         })
     }
+
     function step() {
-        do_load(function() {
-            diagram.redraw();
-        })
+	console.log("In Step");
+		do_load(function() {
+            		if (pagestatus == 0){
+				console.log("Redrawing!")
+				diagram.redraw();
+			}
+        	})
     }
-    var runner = make_runner(init, step, 1000);
+
+    var runner = make_runner(init, step, 5000);
     runner.start();
+
     </script>
+
 </body>

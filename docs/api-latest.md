@@ -8,7 +8,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.1.0  
+**Version**: 0.1.1  
 **Example**  
 ```js
 // Example chaining
@@ -667,10 +667,12 @@ by cola.js:
 returned by the `ordering` function, by creating separation constraints using the
 specified `gap`.
 * 'circle' - (experimental) the nodes will be placed in a circle using "wheel"
-constraints as described in
+edge lengths similar to those described in
 [Scalable, Versatile, and Simple Constrained Graph Layout](http://www.csse.monash.edu.au/~tdwyer/Dwyer2009FastConstraints.pdf)
 *Although this is not as performant or stable as might be desired, it may work for
-simple cases.*
+simple cases. In particular, it should use edge length *constraints*, which don't yet
+exist in cola.js.*
+
 Because it is tedious to write code to generate constraints for a graph, **dc.graph.js**
 also includes a [constraint generator](#dc_graph+constraint_pattern) to produce
 this constrain function, specifying the constraints themselves in a graph.
@@ -690,7 +692,7 @@ from the original so they don't overlap.
 
 | Param | Type | Default |
 | --- | --- | --- |
-| [parallelEdgeOffset] | <code>Number</code> | <code>5</code> | 
+| [parallelEdgeOffset] | <code>Number</code> | <code>10</code> | 
 
 <a name="dc_graph.diagram+edgeOrdering"></a>
 #### diagram.edgeOrdering ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>

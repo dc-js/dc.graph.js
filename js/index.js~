@@ -16,7 +16,7 @@ var querystring = (function(a) {
 
 var steptime = +querystring.interval || 1000, // ms per step
     pause = +querystring.pause || 2500, // pause at end of loop
-    showSteps = !(querystring.showsteps === 'false'),
+    showSteps = +querystring.showsteps !== 0,
     file = querystring.file || null,
     generate = querystring.gen || null,
     shape = querystring.shape || null,
@@ -24,17 +24,17 @@ var steptime = +querystring.interval || 1000, // ms per step
     fill = querystring.fill || 'white',
     nodeStroke = querystring.nodestroke || 'black',
     nodeStrokeWidth = querystring.nodestrokewidth || 1,
-    randomize = querystring.randomize === 'true',
-    doReinit = !(querystring.reinit==="false"),
-    doDisplacement = !(querystring.displace==="false"),
-    doAlignment = !(querystring.align==="false"),
-    doOrdering = !(querystring.order==="false"),
+    randomize = +querystring.randomize || false,
+    doReinit = querystring.reinit==="false" ? false : true,
+    doDisplacement = querystring.displace==="false" ? false : true,
+    doAlignment = querystring.align==="false" ? false : true,
+    doOrdering = querystring.order==="false" ? false : true,
+    isQFS = false,
     linkLength = +querystring.linklength || 30,
     edgeStroke = querystring.edgestroke || 'black',
     edgeStrokeWidth = querystring.edgestrokewidth || 1,
-    edgeOpacity = +querystring.opacity || 1,
-    appLayout = null,
-    useAppLayout = false,
+    opacity = +querystring.opacity || 1,
+    do_qfs = false,
     nodePrefix = querystring.prefix || '',
     timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000;
 if(edgeStroke && /[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke))
@@ -57,32 +57,27 @@ function show_stats(data_stats, layout_stats) {
                             '<tr><td>Avg time</td><td>' + (runner.avgTime()/1000).toFixed(3) + 's</td></tr>',
                             '</table>'].join(''));
 }
-function show_stepper() {
-    $('#stepper').show();
-    $('#controls').width(300);
-}
 
 do_status();
 
 var source;
 if(!generate && !file)
     file = "qfs.json";
-appLayout = querystring.applayout || file === 'qfs.json' && 'qfs';
-if(appLayout === 'none' || !app_layouts[appLayout])
-    appLayout = null;
-if(appLayout) {
-    useAppLayout = true;
-    if('useapplayout' in querystring) {
-        useAppLayout = !!+querystring.useapplayout;
-        $('#use-app-layout').prop('checked', useAppLayout);
+isQFS = +querystring.qfs || file === 'qfs.json' && querystring.qfs !=="false";
+if(isQFS) {
+    do_qfs = true;
+    if('qfscon' in querystring) {
+        do_qfs = !!+querystring.qfscon;
+        $('#qfs-constraints').prop('checked', do_qfs);
     }
-    $('#app-options').show();
-    app_layouts[appLayout].init && app_layouts[appLayout].init();
+    // not that it wouldn't be nice to have other animated examples...
+    $('#stepper,#qfs-options').show();
+    $('#controls').width(300);
 }
 if(file)
     source = function(callback) {
         dc_graph.load_graph(file, callback);
-    };
+    }
 else if(generate)
     source = function(callback) {
         // name plus at least one number, separated by commas
@@ -94,7 +89,7 @@ else if(generate)
             nodePrefix: nodePrefix
         };
         dc_graph.generate(name, args, env, callback);
-    };
+    }
 if(shape) {
     var parts = shape.split(',');
     shape = {shape: parts[0]};
@@ -133,7 +128,7 @@ source(function(error, data) {
             if(candidates.length > 1)
                 console.warn('found more than one possible source attr', candidates);
             sourceattr = candidates[0];
-            candidates = targetattrs.filter(function(n) { return !!data.links[0][n]; });
+            var candidates = targetattrs.filter(function(n) { return !!data.links[0][n]; });
             if(!candidates.length)
                 console.log("didn't find any target attr", targetattrs);
             if(candidates.length > 1)
@@ -151,8 +146,6 @@ source(function(error, data) {
     }),
         nodes = flat_group.make(data.nodes, function(d) { return d.name; });
 
-    appLayout && app_layouts[appLayout].data && app_layouts[appLayout].data(nodes, edges);
-
     runner = make_runner(run, step,
                          function() {
                              return curr < end ? steptime : pause;
@@ -161,7 +154,7 @@ source(function(error, data) {
     function run() {
         do_status();
         if(doReinit)
-            diagram.initLayoutOnRedraw(appLayout && useAppLayout);
+            diagram.initLayoutOnRedraw(do_qfs);
         startDim.filterRange([0, curr]);
         $('#run-indicator').show();
         if(doRender) {
@@ -180,26 +173,23 @@ source(function(error, data) {
         runner.toggle();
     };
 
-    var app_constraints = null;
-    if(appLayout) {
-        var rules = appLayout && app_layouts[appLayout].rules;
-        if(rules) {
-            rules.edges.forEach(function(c) {
-                if(!doDisplacement && c.produce && !c.produce.type)
-                    c.disable = true;
-                if(!doAlignment && c.produce && c.produce.type === 'alignment')
-                    c.disable = true;
-                if(!doOrdering && c.produce && c.produce.type === 'ordering')
-                    c.disable = true;
-            });
-            app_constraints = dc_graph.constraint_pattern(diagram, rules);
-        }
+    var qfs_constraints;
+    if(isQFS) {
+        qfs_constraint_rules.edges.forEach(function(c) {
+            if(!doDisplacement && c.produce && !c.produce.type)
+                c.disable = true;
+            if(!doAlignment && c.produce && c.produce.type === 'alignment')
+                c.disable = true;
+            if(!doOrdering && c.produce && c.produce.type === 'ordering')
+                c.disable = true;
+        });
+        qfs_constraints = dc_graph.constraint_pattern(diagram, qfs_constraint_rules);
     }
 
     function constrain(nodes, edges) {
         var constraints = [];
-        if(appLayout && useAppLayout && app_constraints)
-            constraints = app_constraints(nodes, edges, constraints);
+        if(qfs_constraints && do_qfs)
+            constraints = qfs_constraints(nodes, edges, constraints);
 
         var circles = {};
         nodes.forEach(function(n, i) {
@@ -229,18 +219,18 @@ source(function(error, data) {
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .nodeShape(shape)
         .nodeRadius(radius)
-        .nodeFill(appLayout && app_layouts[appLayout].colors || fill)
+        .nodeFill(isQFS ? qfs_color : fill)
         .nodeStroke(nodeStroke)
         .nodeStrokeWidth(nodeStrokeWidth)
-        .nodeFixed(appLayout && app_layouts[appLayout].node_fixed)
+        .nodeFixed(isQFS ? function(n) { return n.value.class === 'Client' ? {x: 0, y: 0} : null; } : null)
         .constrain(constrain)
         .lengthStrategy(generate ? 'individual' :
-                        useAppLayout ? app_layouts[appLayout].lengthStrategy || 'none' :
+                        do_qfs ? 'none' :
                         'symmetric')
         .edgeArrowhead(function(kv) {
             return kv.value.undirected ? null : 'vee';
         })
-        .edgeOpacity(edgeOpacity)
+        .edgeOpacity(opacity)
         .edgeStroke(edgeStroke)
         .edgeStrokeWidth(edgeStrokeWidth)
         .on('end', function() {
@@ -248,9 +238,8 @@ source(function(error, data) {
             runner.endStep();
             show_stats({totnodes: data.nodes.length, totedges: data.links.length}, diagram.getStats());
         });
-    appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
     if(linkLength)
-        diagram.baseLength(linkLength);
+        diagram.baseLength(linkLength)
     if(randomize) {
         diagram.nodeOrdering(function(kv) { return kv.value.order; })
             .edgeOrdering(function(kv) { return kv.value.order; });
@@ -283,9 +272,9 @@ source(function(error, data) {
             do_status();
         }
     });
-    $('#use-app-layout').change(function(val) {
-        useAppLayout = $(this).is(':checked');
-        diagram.lengthStrategy(useAppLayout ? 'none' : 'symmetric')
+    $('#qfs-constraints').change(function(val) {
+        do_qfs = $(this).is(':checked');
+        diagram.lengthStrategy(do_qfs ? 'none' : 'symmetric')
             .relayout();
         doRender = true;
         if(!runner.isRunning())
