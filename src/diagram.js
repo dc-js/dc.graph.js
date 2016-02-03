@@ -1013,8 +1013,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke-width', param(_chart.edgeStrokeWidth()))
             .attr('marker-end', function(d) {
                 var name = param(_chart.edgeArrowhead())(d),
-                    arrow_id = edgeArrow(d, 'head', name);
-                return arrow_id ? 'url(#' + arrow_id + ')' : null;
+                    id = edgeArrow(d, 'head', name);
+                return id ? 'url(#' + id + ')' : null;
             })
             .attr('marker-start', function(d) {
                 var name = param(_chart.edgeArrowtail())(d),
