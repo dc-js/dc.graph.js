@@ -1254,7 +1254,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var path = d.ports[which][d.parallel];
         var spos = path.points[0], tpos = path.points[path.points.length-1];
         if(param(_chart.edgeArrowhead())(d))
-            d3.select('#' + arrowId(edge_id(d), 'head'))
+            d3.select('#' + arrow_id(d, 'head'))
                 .attr('orient', function(d) {
                     var near = bezier_point(path.points, 0.75);
                     return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
@@ -1545,8 +1545,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart;
     };
 
-    function arrowId(id, kind) {
-        return 'arrow-' + kind + '-' + id;
+    function arrow_id(d, kind) {
+        return 'arrow-' + kind + '-' + edge_id(d);
     }
 
     function add_remove_def(id, whether, tag) {
