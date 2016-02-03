@@ -68,37 +68,49 @@ function point_on_shape(chart, d, deltaX, deltaY) {
     }
 }
 
-function elaborate_shape(def) {
-    // as many as we can get from
-    // http://www.graphviz.org/doc/info/shapes.html
-    switch(def.shape) {
-    case 'ellipse':
+// as many as we can get from
+// http://www.graphviz.org/doc/info/shapes.html
+var dc_graph_shapes_ = {
+    ellipse: function() {
         return {shape: 'ellipse'};
-    case 'egg':
+    },
+    egg: function() {
         return {shape: 'polygon', sides: 100, distortion: -0.25};
-    case 'triangle':
+    },
+    triangle: function() {
         return {shape: 'polygon', sides: 3};
-    case 'diamond':
+    },
+    diamond: function() {
         return {shape: 'polygon', sides: 4, rotation: 45};
-    case 'trapezium':
+    },
+    trapezium: function() {
         return {shape: 'polygon', sides: 4, distortion: -0.5};
-    case 'parallelogram':
+    },
+    parallelogram: function() {
         return {shape: 'polygon', sides: 4, skew: 0.5};
-    case 'pentagon':
+    },
+    pentagon: function() {
         return {shape: 'polygon', sides: 5};
-    case 'hexagon':
+    },
+    hexagon: function() {
         return {shape: 'polygon', sides: 6};
-    case 'septagon':
+    },
+    septagon: function() {
         return {shape: 'polygon', sides: 7};
-    case 'octagon':
+    },
+    octagon: function() {
         return {shape: 'polygon', sides: 8};
-    case 'invtriangle':
+    },
+    invtriangle: function() {
         return {shape: 'polygon', sides: 3, rotation: 180};
-    case 'invtrapezium':
+    },
+    invtrapezium: function() {
         return {shape: 'polygon', sides: 4, distortion: 0.5};
-    case 'square':
+    },
+    square: function() {
         return {shape: 'polygon', sides: 4};
-    case 'polygon':
+    },
+    polygon: function(def) {
         return {
             shape: 'polygon',
             sides: def.sides,
@@ -106,8 +118,18 @@ function elaborate_shape(def) {
             distortion: def.distortion,
             rotation: def.rotation
         };
-    default: throw new Error('unknown shape ' + def.shape);
     }
+};
+
+function elaborate_shape(def) {
+    var shape = def.shape;
+    if(def.shape === 'random') {
+        var keys = Object.keys(dc_graph_shapes_);
+        shape = def._shape = keys[Math.floor(Math.random()*keys.length)];
+    }
+    return (dc_graph_shapes_[shape] || function() {
+        throw new Error('unknown shape ' + def.shape);
+    })(def);
 }
 function infer_shape(chart) {
     return function(d) {
@@ -167,7 +189,7 @@ function fit_shape(chart) {
             // not sure why something so simple works, i looked in graphviz:
             // https://github.com/ellson/graphviz/blob/master/lib/common/shapes.c#L1989
             if(d.dcg_shape.shape==='polygon')
-                d.dcg_rx /= Math.cos(Math.PI/d.dcg_shape.sides);
+                d.dcg_rx /= Math.cos(Math.PI/(d.dcg_shape.sides||4));
         }
         else d.dcg_rx = d.dcg_ry = r;
         d.width = Math.max(fitx, rplus);
