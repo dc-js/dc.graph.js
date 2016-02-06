@@ -204,18 +204,17 @@ var options = {
             var modf;
             switch(val) {
             case 'x':
-                modf = function(cola) { cola.flowLayout('x', 200); };
+                diagram.flowLayout({axis: 'x', minSeparation: 200});
                 break;
             case 'y':
-                modf = function(cola) { cola.flowLayout('y', 200); };
+                diagram.flowLayout({axis: 'y', minSeparation: 200});
                 break;
             case 'none':
-                modf = null;
+                diagram.flowLayout(null);
                 break;
             default:
                 throw new Error('unknown flow direction ' + val);
             }
-            diagram.modLayout(modf);
         }
     },
     node_limit: {

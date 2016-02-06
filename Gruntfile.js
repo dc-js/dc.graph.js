@@ -12,7 +12,10 @@ module.exports = function (grunt) {
         web: 'web',
         pkg: require('./package.json'),
         banner: grunt.file.read('./LICENSE_BANNER'),
-        jsFiles: module.exports.jsFiles
+        jsFiles: module.exports.jsFiles,
+        jsWorkerFiles: [
+            'src/cola-worker.js'
+        ]
     };
 
     grunt.initConfig({
@@ -29,7 +32,7 @@ module.exports = function (grunt) {
                 dest: '<%= conf.pkg.name %>.js'
             },
             worker: {
-                src: 'src/cola-worker.js',
+                src: '<%= conf.jsWorkerFiles %>',
                 dest: '<%= conf.pkg.name %>.worker.js'
             }
         },
@@ -212,6 +215,7 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.js.map',
                             '<%= conf.pkg.name %>.min.js',
                             '<%= conf.pkg.name %>.min.js.map',
+                            '<%= conf.pkg.name %>.worker.js',
                             'node_modules/jquery/dist/jquery.js',
                             'node_modules/d3/d3.js',
                             'node_modules/queue-async/queue.js',
