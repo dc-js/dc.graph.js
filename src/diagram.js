@@ -1035,7 +1035,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return '#' + id;
                 });
         edgeLabels.each(function(d) {
-            d.cola.dcg_bbox = null;
+            d.dcg_bbox = null;
         })
           .selectAll('textPath')
             .text(function(d){
@@ -1235,9 +1235,9 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function calc_edge_path(d, age, sx, sy, tx, ty) {
         if(!d.ports[age]) {
-            var source_padding = d.source.cola.dcg_ry +
+            var source_padding = d.source.dcg_ry +
                     param(_chart.nodeStrokeWidth())(d.source) / 2,
-                target_padding = d.target.cola.dcg_ry +
+                target_padding = d.target.dcg_ry +
                     param(_chart.nodeStrokeWidth())(d.target) / 2;
             d.ports[age] = new Array(d.ports.n);
             for(var p = 0; p < d.ports.n; ++p) {
@@ -1255,12 +1255,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function calc_old_edge_path(d) {
-        calc_edge_path(d, 'old', d.source.prevX || d.source.x, d.source.prevY || d.source.y,
-                         d.target.prevX || d.target.x, d.target.prevY || d.target.y);
+        calc_edge_path(d, 'old', d.source.prevX || d.source.cola.x, d.source.prevY || d.source.cola.y,
+                         d.target.prevX || d.target.cola.x, d.target.prevY || d.target.cola.y);
     }
 
     function calc_new_edge_path(d) {
-        var path = calc_edge_path(d, 'new', d.source.x, d.source.y, d.target.x, d.target.y);
+        var path = calc_edge_path(d, 'new', d.source.cola.x, d.source.cola.y, d.target.cola.x, d.target.cola.y);
         var spos = path.points[0], tpos = path.points[path.points.length-1];
         if(param(_chart.edgeArrowhead())(d))
             d3.select('#' + arrow_id(d, 'head'))
@@ -1296,17 +1296,17 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // start new nodes at their final position
         nodeEnter.attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
+            return "translate(" + d.cola.x + "," + d.cola.y + ")";
         });
         var ntrans = node.transition()
                 .duration(_chart.transitionDuration())
                 .attr('opacity', '1')
                 .attr("transform", function (d) {
-                    return "translate(" + d.x + "," + d.y + ")";
+                    return "translate(" + d.cola.x + "," + d.cola.y + ")";
                 });
         ntrans.each("end.record", function(d) {
-            d.prevX = d.x;
-            d.prevY = d.y;
+            d.prevX = d.cola.x;
+            d.prevY = d.cola.y;
         });
 
         // reset edge ports
@@ -1328,7 +1328,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edge.each(function(d) {
             var id = textpath_id(d);
             var path = d.ports.new[d.parallel];
-            var points = d.target.x < d.source.x ?
+            var points = d.target.cola.x < d.source.cola.x ?
                     path.points.slice(0).reverse() : path.points;
             d3.select('#' + id)
                 .attr('d', function(d) {
