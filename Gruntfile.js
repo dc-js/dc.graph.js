@@ -24,9 +24,13 @@ module.exports = function (grunt) {
                 sourceMap: true,
                 banner : '<%= conf.banner %>'
             },
-            js: {
+            main: {
                 src: '<%= conf.jsFiles %>',
                 dest: '<%= conf.pkg.name %>.js'
+            },
+            worker: {
+                src: 'src/cola-worker.js',
+                dest: '<%= conf.pkg.name %>.worker.js'
             }
         },
         uglify: {

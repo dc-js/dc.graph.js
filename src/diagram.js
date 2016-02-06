@@ -19,7 +19,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
     var _chart = {};
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _d3cola = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn');
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
@@ -777,10 +776,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.handleDisconnected = property(true);
 
     function initLayout() {
-        _d3cola = cola.d3adaptor()
-            .avoidOverlaps(true)
-            .size([_chart.width(), _chart.height()])
-            .handleDisconnected(_chart.handleDisconnected());
+        _worker.postMessage({command: 'init', args: [
 
         switch(_chart.lengthStrategy()) {
         case 'symmetric':
@@ -1211,9 +1207,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             return this;
         }
         var startTime = Date.now();
-        _d3cola.nodes(wnodes)
-            .links(layout_edges)
-            .constraints(constraints);
+        
         _dispatch.start(); // cola doesn't seem to fire this itself?
         window.setTimeout(function() {
             _d3cola
