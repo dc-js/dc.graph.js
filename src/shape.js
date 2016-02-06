@@ -192,8 +192,8 @@ function fit_shape(chart) {
                 d.dcg_rx /= Math.cos(Math.PI/(d.dcg_shape.sides||4));
         }
         else d.dcg_rx = d.dcg_ry = r;
-        d.width = Math.max(fitx, rplus);
-        d.height = rplus;
+        d.cola.width = Math.max(fitx, rplus);
+        d.cola.height = rplus;
     };
 }
 

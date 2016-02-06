@@ -888,27 +888,27 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
 
         var wnodes = nodes.map(function(v) {
-            return {orig: v};
+            return {orig: v, cola: {}};
         });
         var wedges = edges.map(function(e) {
-            return {orig: e};
+            return {orig: e, cola: {}};
         });
 
         var ndir = {}, edir = {};
         wnodes.forEach(function(v) {
-            v.dcg_nodeKey = param(_chart.nodeKey())(v);
-            ndir[v.dcg_nodeKey] = v;
+            v.cola.dcg_nodeKey = param(_chart.nodeKey())(v);
+            ndir[v.cola.dcg_nodeKey] = v;
             if(_chart.nodeFixed())
-                v.dcg_nodeFixed = param(_chart.nodeFixed())(v);
+                v.cola.dcg_nodeFixed = param(_chart.nodeFixed())(v);
         });
 
         wedges.forEach(function(e) {
-            e.dcg_edgeKey = _chart.edgeKey()(e);
-            edir[e.dcg_edgeKey] = e;
-            e.dcg_edgeSource = param(_chart.edgeSource())(e);
-            e.dcg_edgeTarget = param(_chart.edgeTarget())(e);
-            e.source = ndir[e.dcg_edgeSource];
-            e.target = ndir[e.dcg_edgeTarget];
+            e.cola.dcg_edgeKey = _chart.edgeKey()(e);
+            edir[e.cola.dcg_edgeKey] = e;
+            e.cola.dcg_edgeSource = param(_chart.edgeSource())(e);
+            e.cola.dcg_edgeTarget = param(_chart.edgeTarget())(e);
+            e.source = ndir[e.cola.dcg_edgeSource];
+            e.target = ndir[e.cola.dcg_edgeTarget];
         });
 
         // remove edges that don't have both end nodes
@@ -921,10 +921,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.induceNodes()) {
             var keeps = {};
             wedges.forEach(function(e) {
-                keeps[e.dcg_edgeSource] = true;
-                keeps[e.dcg_edgeTarget] = true;
+                keeps[e.cola.dcg_edgeSource] = true;
+                keeps[e.cola.dcg_edgeTarget] = true;
             });
-            wnodes = wnodes.filter(function(n) { return keeps[n.dcg_nodeKey]; });
+            wnodes = wnodes.filter(function(n) { return keeps[n.cola.dcg_nodeKey]; });
         }
 
         wnodes.forEach(function(v, i) {
@@ -1035,7 +1035,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return '#' + id;
                 });
         edgeLabels.each(function(d) {
-            d.dcg_bbox = null;
+            d.cola.dcg_bbox = null;
         })
           .selectAll('textPath')
             .text(function(d){
@@ -1169,16 +1169,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         function refreshObjects(rnodes, redges) {
             rnodes.forEach(function(rn) {
                 var n = ndir[rn.dcg_nodeKey];
+                n.cola.x = rn.x;
+                n.cola.y = rn.y;
             });
             redges.forEach(function(re) {
                 var e = edir[re.dcg_edgeKey];
             });
         }
         _worker.onmessage = function(e) {
-            switch(e.response) {
+            var args = e.data.args;
+            switch(e.data.response) {
             case 'tick':
                 var elapsed = Date.now() - startTime;
-                refreshObjects(e.args.nodes, e.args.edges);
+                refreshObjects(args.nodes, args.edges);
                 if(_chart.showLayoutSteps())
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
                 if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
@@ -1200,10 +1203,20 @@ dc_graph.diagram = function (parent, chartGroup) {
         };
         _dispatch.start(); // cola doesn't seem to fire this itself?
         _worker.postMessage({
+            command: 'data',
+            args: {
+                nodes: wnodes.map(function(v) { return v.cola; }),
+                edges: layout_edges.map(function(v) { return v.cola; }),
+                constraints: constraints
+            }
+        });
+        _worker.postMessage({
             command: 'start',
-            initialUnconstrainedIterations: 10,
-            initialUserConstraintIterations: 20,
-            initialAllConstraintsIterations: 20
+            args: {
+                initialUnconstrainedIterations: 10,
+                initialUserConstraintIterations: 20,
+                initialAllConstraintsIterations: 20
+            }
         });
         return this;
     };
@@ -1222,9 +1235,9 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function calc_edge_path(d, age, sx, sy, tx, ty) {
         if(!d.ports[age]) {
-            var source_padding = d.source.dcg_ry +
+            var source_padding = d.source.cola.dcg_ry +
                     param(_chart.nodeStrokeWidth())(d.source) / 2,
-                target_padding = d.target.dcg_ry +
+                target_padding = d.target.cola.dcg_ry +
                     param(_chart.nodeStrokeWidth())(d.target) / 2;
             d.ports[age] = new Array(d.ports.n);
             for(var p = 0; p < d.ports.n; ++p) {

@@ -42,7 +42,9 @@ function data_d3cola(nodes, edges, constraints) {
         var key = v.dcg_nodeKey;
         if(!_nodes[key]) _nodes[key] = {};
         var v1 = _nodes[key];
-        v1.orig = v;
+        v1.dcg_nodeKey = key;
+        v1.width = v.width;
+        v1.height = v.height;
         if(v.dcg_nodeFixed) {
             v1.x = v.x;
             v1.y = v.y;
@@ -57,7 +59,7 @@ function data_d3cola(nodes, edges, constraints) {
         var key = e.dcg_edgeKey;
         if(!_edges[key]) _edges[key] = {};
         var e1 = _edges[key];
-        e1.orig =  e;
+        e1.dcg_edgeKey = key;
         // cola edges can work with indices or with object references
         // but it will replace indices with object references
         e1.source = _nodes[e.dcg_edgeSource];
@@ -95,7 +97,7 @@ function data_d3cola(nodes, edges, constraints) {
     _d3cola.on('tick', function() {
         postResponseState('tick');
     }).on('start', function() {
-        postMessage('start', {response: 'start'});
+        postMessage({response: 'start'});
     }).on('end', function() {
         postResponseState('end');
     });
@@ -108,6 +110,10 @@ function start_d3cola(initialUnconstrainedIterations,
                       initialUserConstraintIterations,
                       initialAllConstraintsIterations,
                       gridSnapIterations) {
+    _d3cola.start(initialUnconstrainedIterations,
+                  initialUserConstraintIterations,
+                  initialAllConstraintsIterations,
+                  gridSnapIterations);
 }
 
 function stop_d3cola() {
