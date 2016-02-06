@@ -1,6 +1,6 @@
 /*!
  *  dc.graph <%= conf.pkg.version %>
  *  http://dc-js.github.io/dc.graph.js/
- *  Copyright (c) 2015 AT&T Intellectual Property
+ *  Copyright (c) <%= new Date().getFullYear() %> AT&T Intellectual Property
  *
  */
