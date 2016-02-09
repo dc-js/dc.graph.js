@@ -903,7 +903,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
 
         wedges.forEach(function(e) {
-            e.cola.dcg_edgeKey = _chart.edgeKey()(e);
+            e.cola.dcg_edgeKey = param(_chart.edgeKey())(e);
             edir[e.cola.dcg_edgeKey] = e;
             e.cola.dcg_edgeSource = param(_chart.edgeSource())(e);
             e.cola.dcg_edgeTarget = param(_chart.edgeTarget())(e);
