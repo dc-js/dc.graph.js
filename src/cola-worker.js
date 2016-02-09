@@ -38,7 +38,7 @@ var _nodes = {}, _edges = {};
 
 function data_d3cola(nodes, edges, constraints) {
     // create or re-use the objects cola.js will manipulate
-    function wrap_node(v, i) {
+    function wrap_node(v) {
         var key = v.dcg_nodeKey;
         if(!_nodes[key]) _nodes[key] = {};
         var v1 = _nodes[key];
