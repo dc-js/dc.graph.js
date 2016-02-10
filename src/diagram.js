@@ -21,6 +21,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _worker = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn');
+    var _nodes = {}, _edges = {}; // hold state between runs
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
     var _children = {}, _arrows = {};
@@ -887,28 +888,25 @@ dc_graph.diagram = function (parent, chartGroup) {
             edges = crossfilter.quicksort.by(_chart.edgeOrdering())(edges.slice(0), 0, edges.length);
         }
 
-        var wnodes = nodes.map(function(v) {
-            return {orig: v, cola: {}};
-        });
-        var wedges = edges.map(function(e) {
-            return {orig: e, cola: {}};
-        });
-
-        var ndir = {}, edir = {};
-        wnodes.forEach(function(v) {
-            v.cola.dcg_nodeKey = param(_chart.nodeKey())(v);
-            ndir[v.cola.dcg_nodeKey] = v;
+        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+            return _chart.nodeKey()(v);
+        }, function(v1, v) {
+            v1.orig = v;
+            v1.cola = v1.cola || {};
+            v1.cola.dcg_nodeKey = param(_chart.nodeKey())(v1);
             if(_chart.nodeFixed())
-                v.cola.dcg_nodeFixed = param(_chart.nodeFixed())(v);
+                v1.cola.dcg_nodeFixed = param(_chart.nodeFixed())(v1);
         });
-
-        wedges.forEach(function(e) {
-            e.cola.dcg_edgeKey = param(_chart.edgeKey())(e);
-            edir[e.cola.dcg_edgeKey] = e;
-            e.cola.dcg_edgeSource = param(_chart.edgeSource())(e);
-            e.cola.dcg_edgeTarget = param(_chart.edgeTarget())(e);
-            e.source = ndir[e.cola.dcg_edgeSource];
-            e.target = ndir[e.cola.dcg_edgeTarget];
+        var wedges = regenerate_objects(_edges, edges, function(e) {
+            return _chart.edgeKey()(e);
+        }, function(e1, e) {
+            e1.orig = e;
+            e1.cola = e1.cola || {};
+            e1.cola.dcg_edgeKey = param(_chart.edgeKey())(e1);
+            e1.cola.dcg_edgeSource = param(_chart.edgeSource())(e1);
+            e1.cola.dcg_edgeTarget = param(_chart.edgeTarget())(e1);
+            e1.source = _nodes[e1.cola.dcg_edgeSource];
+            e1.target = _nodes[e1.cola.dcg_edgeTarget];
         });
 
         // remove edges that don't have both end nodes
@@ -1168,12 +1166,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         function refreshObjects(rnodes, redges) {
             rnodes.forEach(function(rn) {
-                var n = ndir[rn.dcg_nodeKey];
+                var n = _nodes[rn.dcg_nodeKey];
                 n.cola.x = rn.x;
                 n.cola.y = rn.y;
             });
             redges.forEach(function(re) {
-                var e = edir[re.dcg_edgeKey];
+                var e = _edges[re.dcg_edgeKey];
             });
         }
         _worker.onmessage = function(e) {
