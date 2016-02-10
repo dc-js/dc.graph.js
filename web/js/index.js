@@ -116,12 +116,12 @@ function show_type_graph(nodes, edges, sourceattr, targetattr) {
                                               function(n) { return n.type; },
                                               function(e) { return e[sourceattr]; },
                                               function(e) { return e[targetattr]; });
-    var tedges = flat_group.make(typegraph.edges, function(d) { return d.etype; }),
+    var tedges = flat_group.make(typegraph.edges, function(d) { return d.type; }),
         tnodes = flat_group.make(typegraph.nodes, function(d) { return d.type; });
 
     overview.width(150)
         .height(150)
-        .nodeTitle(function(n) { return n.value.type; })
+        .nodeLabel(function(n) { return n.value.type; })
         .nodeDimension(tnodes.dimension).nodeGroup(tnodes.group)
         .edgeDimension(tedges.dimension).edgeGroup(tedges.group)
         .edgeSource(function(e) { return e.value.source; })
