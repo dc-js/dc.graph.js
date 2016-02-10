@@ -338,5 +338,6 @@ module.exports.jsFiles = [
     'src/tip.js',
     'src/load_graph.js',
     'src/generate.js',
+    'src/type-graph.js',
     'src/footer.js'  // NOTE: keep this last
 ];
