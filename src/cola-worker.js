@@ -71,7 +71,7 @@ function data_d3cola(nodes, edges, constraints) {
             v1.fixed = false;
     });
     var wedges = regenerate_objects(_edges, edges, function(e) {
-        return e.dvg_edgekey;
+        return e.dcg_edgeKey;
     }, function(e1, e) {
         e1.dcg_edgeKey = e.dcg_edgeKey;
         // cola edges can work with indices or with object references
