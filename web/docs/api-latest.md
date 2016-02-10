@@ -54,6 +54,7 @@ chart.width(600)
     * [.edgeIsLayout](#dc_graph.diagram+edgeIsLayout) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.flowLayout](#dc_graph.diagram+flowLayout)
     * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -65,7 +66,6 @@ chart.width(600)
     * [.layoutUnchanged](#dc_graph.diagram+layoutUnchanged) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.relayout](#dc_graph.diagram+relayout) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.induceNodes](#dc_graph.diagram+induceNodes) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-    * [.modLayout](#dc_graph.diagram+modLayout) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.child](#dc_graph.diagram+child) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -134,6 +134,7 @@ visualization versus conventional charts.
   * [.edgeIsLayout](#dc_graph.diagram+edgeIsLayout) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.flowLayout](#dc_graph.diagram+flowLayout)
   * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -145,7 +146,6 @@ visualization versus conventional charts.
   * [.layoutUnchanged](#dc_graph.diagram+layoutUnchanged) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.relayout](#dc_graph.diagram+relayout) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.induceNodes](#dc_graph.diagram+induceNodes) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.modLayout](#dc_graph.diagram+modLayout) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.child](#dc_graph.diagram+child) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -606,6 +606,21 @@ chart.edgeLength(function(kv) {
   return kv.value.distance;
 });
 ```
+<a name="dc_graph.diagram+flowLayout"></a>
+#### diagram.flowLayout
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [flowLayout] | <code>Object</code> | 
+
+**Example**  
+```js
+// No flow (default)
+chart.flowLayout(null)
+// flow in x with min separation 200
+chart.flowLayout({axis: 'x', minSeparation: 200})
+```
 <a name="dc_graph.diagram+baseLength"></a>
 #### diagram.baseLength ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
@@ -751,18 +766,6 @@ shown.
 | Param | Type | Default |
 | --- | --- | --- |
 | [induceNodes] | <code>Boolean</code> | <code>false</code> | 
-
-<a name="dc_graph.diagram+modLayout"></a>
-#### diagram.modLayout ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-If it is necessary to modify the cola layout object after it is created, this function
-can be called to add a modifier function which takes the layout object and sets
-additional parameters on it.
-
-**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
-
-| Param | Type |
-| --- | --- |
-| [modLayout] | <code>function</code> | 
 
 <a name="dc_graph.diagram+showLayoutSteps"></a>
 #### diagram.showLayoutSteps ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
