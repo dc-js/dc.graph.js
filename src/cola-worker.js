@@ -32,16 +32,33 @@ function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLeng
 
 }
 
+// create or re-use objects in a map, delete the ones that were not reused
+function regenerate_objects(preserved, list, key, assign) {
+    var keep = {};
+    function wrap(o) {
+        var k = key(o);
+        if(!preserved[k]) preserved[k] = {};
+        var o1 = preserved[k];
+        assign(o1, o);
+        keep[k] = true;
+        return o1;
+    }
+    var wlist = list.map(wrap);
+    // delete any objects from last round that are no longer used
+    for(var k in preserved)
+        if(!keep[k])
+            delete preserved[k];
+    return wlist;
+}
+
 // node and edge objects shared with cola.js, preserved from one iteration
 // to the next (as long as the object is still in the layout)
 var _nodes = {}, _edges = {};
 
 function data_d3cola(nodes, edges, constraints) {
-    // create or re-use the objects cola.js will manipulate
-    function wrap_node(v) {
-        var key = v.dcg_nodeKey;
-        if(!_nodes[key]) _nodes[key] = {};
-        var v1 = _nodes[key];
+    var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+        return v.dcg_nodeKey;
+    }, function(v1, v) {
         v1.width = v.width;
         v1.height = v.height;
         if(v.dcg_nodeFixed) {
@@ -51,32 +68,15 @@ function data_d3cola(nodes, edges, constraints) {
         }
         else
             v1.fixed = false;
-        keep_node[key] = true;
-        return v1;
-    }
-    function wrap_edge(e) {
-        var key = e.dcg_edgeKey;
-        if(!_edges[key]) _edges[key] = {};
-        var e1 = _edges[key];
+    });
+    var wedges = regenerate_objects(_edges, edges, function(e) {
+        return e.dvg_edgekey;
+    }, function(e1, e) {
         // cola edges can work with indices or with object references
         // but it will replace indices with object references
         e1.source = _nodes[e.dcg_edgeSource];
         e1.target = _nodes[e.dcg_edgeTarget];
-        keep_edge[key] = true;
-        return e1;
-    }
-
-    // delete any objects from last round that are no longer used
-    // this is mostly so cola.js won't get confused by old attributes
-    var keep_node = {}, keep_edge = {};
-    var wnodes = nodes.map(wrap_node);
-    for(var vk in _nodes)
-        if(!keep_node[vk])
-            delete _nodes[vk];
-    var wedges = edges.map(wrap_edge);
-    for(var ek in _edges)
-        if(!keep_edge[ek])
-            delete _edges[ek];
+    });
 
     // cola needs each node object to have an index property
     wnodes.forEach(function(v, i) {
