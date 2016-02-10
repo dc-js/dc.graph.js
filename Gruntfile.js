@@ -14,6 +14,7 @@ module.exports = function (grunt) {
         banner: grunt.file.read('./LICENSE_BANNER'),
         jsFiles: module.exports.jsFiles,
         jsWorkerFiles: [
+            'src/generate_objects.js',
             'src/cola-worker.js'
         ]
     };
@@ -329,6 +330,7 @@ module.exports = function (grunt) {
 module.exports.jsFiles = [
     'src/banner.js',   // NOTE: keep this first
     'src/core.js',
+    'src/generate_objects.js',
     'src/shape.js',
     'src/diagram.js',
     'src/legend.js',
