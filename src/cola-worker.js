@@ -71,7 +71,9 @@ function data_d3cola(nodes, edges, constraints) {
             response: response,
             args: {
                 nodes: wnodes,
-                edges: wedges
+                edges: wedges.map(function(e) {
+                    return {dcg_edgeKey: e.dcg_edgeKey};
+                })
             }
         });
     }
