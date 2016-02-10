@@ -36,3 +36,12 @@ body {
 #graph-stats {
     float: right;
 }
+
+#overview {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    background-color: rgba(255, 150, 0, 0.75);
+}

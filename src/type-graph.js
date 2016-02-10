@@ -21,7 +21,7 @@ dc_graph.build_type_graph = function(nodes, edges, nkey, ntype, esource, etarget
             };
     });
     return {
-        tnodes: Object.keys(tnodes).map(function(k) { return tnodes[k]; }),
-        tedges: Object.keys(tedges).map(function(k) { return tedges[k]; })
+        nodes: Object.keys(tnodes).map(function(k) { return tnodes[k]; }),
+        edges: Object.keys(tedges).map(function(k) { return tedges[k]; })
     };
 }

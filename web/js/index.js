@@ -44,6 +44,7 @@ var begin = 2, end = 12, curr = begin;
 var doRender = true;
 
 var diagram = dc_graph.diagram('#graph'), runner;
+var overview = dc_graph.diagram('#overview');
 
 function do_status() {
     $('#now').css('left', (curr-min)/(max-min)*100 + '%');
@@ -109,6 +110,25 @@ if(shape) {
 }
 else shape = {shape: 'ellipse'};
 
+function show_type_graph(nodes, edges, sourceattr, targetattr) {
+    var typegraph = dc_graph.build_type_graph(nodes, edges,
+                                              function(n) { return n.name; },
+                                              function(n) { return n.type; },
+                                              function(e) { return e[sourceattr]; },
+                                              function(e) { return e[targetattr]; });
+    var tedges = flat_group.make(typegraph.edges, function(d) { return d.etype; }),
+        tnodes = flat_group.make(typegraph.nodes, function(d) { return d.type; });
+
+    overview.width(150)
+        .height(150)
+        .nodeTitle(function(n) { return n.value.type; })
+        .nodeDimension(tnodes.dimension).nodeGroup(tnodes.group)
+        .edgeDimension(tedges.dimension).edgeGroup(tedges.group)
+        .edgeSource(function(e) { return e.value.source; })
+        .edgeTarget(function(e) { return e.value.target; })
+        .render();
+}
+
 source(function(error, data) {
     if(error) {
         console.log(error);
@@ -145,6 +165,9 @@ source(function(error, data) {
         data.links.forEach(function(e) { e.order = Math.random()*1000; });
         data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
     }
+
+    show_type_graph(data.nodes, data.links, sourceattr, targetattr);
+
 
     var edges = flat_group.make(data.links, function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
