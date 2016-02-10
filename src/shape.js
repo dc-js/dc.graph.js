@@ -192,8 +192,8 @@ function fit_shape(chart) {
                 d.dcg_rx /= Math.cos(Math.PI/(d.dcg_shape.sides||4));
         }
         else d.dcg_rx = d.dcg_ry = r;
-        d.width = Math.max(fitx, rplus);
-        d.height = rplus;
+        d.cola.width = Math.max(fitx, rplus);
+        d.cola.height = rplus;
     };
 }
 
@@ -264,7 +264,6 @@ function binary_search(f, a, b) {
     }
 }
 
-
 function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
@@ -287,12 +286,10 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
         bezDegree = 1;
     }
     else {
-        var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
-            tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x);
-        function p_on_s(node, ang) {
+        var p_on_s = function(node, ang) {
             return point_on_shape(chart, node, Math.cos(ang)*1000, Math.sin(ang)*1000);
-        }
-        function compare_dist(node, port0, goal) {
+        };
+        var compare_dist = function(node, port0, goal) {
             return function(ang) {
                 var port = p_on_s(node, ang);
                 if(!port)
@@ -309,6 +306,8 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
                     };
             };
         };
+        var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
+            tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x);
         var bss = binary_search(compare_dist(source, neighbor.sourcePort, offset),
                                 srcang, srcang + 2 * dir * offset / source_padding),
             bst = binary_search(compare_dist(target, neighbor.targetPort, offset),

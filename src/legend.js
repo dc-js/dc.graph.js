@@ -78,12 +78,12 @@ dc_graph.legend = function() {
     _legend.render = function() {
         var exemplars = _legend.exemplars();
         if(exemplars instanceof Array) {
-            _items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}}; });
+            _items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}, cola: {}}; });
         }
         else {
             _items = [];
             for(var item in exemplars)
-                _items.push({name: item, orig: {key: item, value: exemplars[item]}});
+                _items.push({name: item, orig: {key: item, value: exemplars[item]}, cola: {}});
         }
         _legend.redraw();
     };

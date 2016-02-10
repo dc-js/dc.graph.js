@@ -78,14 +78,14 @@ var options = {
     },
     stats: {
         default: false,
-        watch: function(k) {
+        subscribe: function(k) {
             toggle_stats.callback = k;
         },
         apply: apply_heading('#show-stats', '#graph-stats')
     },
     options: {
         default: false,
-        watch: function(k) {
+        subscribe: function(k) {
             toggle_options.callback = k;
         },
         apply: apply_heading('#show-options', '#options')
@@ -103,13 +103,13 @@ var options = {
         set: function(val) {
             osTypeSelect.filter(val);
         },
-        watch: function(k) {
+        subscribe: function(k) {
             osTypeSelect.on('filtered', function() {
                 var filters = osTypeSelect.filters();
                 k(filters);
             });
         },
-        dont_apply_after_watch: true,
+        dont_apply_after_subscribe: true,
         apply: function(val, diagram, filters) {
             if(filters.filterOSTypes) {
                 osTypeSelect
@@ -204,18 +204,17 @@ var options = {
             var modf;
             switch(val) {
             case 'x':
-                modf = function(cola) { cola.flowLayout('x', 200); };
+                diagram.flowLayout({axis: 'x', minSeparation: 200});
                 break;
             case 'y':
-                modf = function(cola) { cola.flowLayout('y', 200); };
+                diagram.flowLayout({axis: 'y', minSeparation: 200});
                 break;
             case 'none':
-                modf = null;
+                diagram.flowLayout(null);
                 break;
             default:
                 throw new Error('unknown flow direction ' + val);
             }
-            diagram.modLayout(modf);
         }
     },
     node_limit: {
@@ -294,7 +293,7 @@ function do_option(key, opt) {
             qs[opt.query] = write_query(type, val);
             update_interesting();
         }
-        if(opt.apply && !opt.dont_apply_after_watch)
+        if(opt.apply && !opt.dont_apply_after_subscribe)
             opt.apply(val, diagram, filters);
         if(opt.needs_relayout)
             diagram.relayout();
@@ -309,8 +308,8 @@ function do_option(key, opt) {
                     $(opt.selector)
                         .prop('checked', val);
             };
-            if(!opt.watch && opt.selector)
-                opt.watch = function(k) {
+            if(!opt.subscribe && opt.selector)
+                opt.subscribe = function(k) {
                     $(opt.selector)
                         .change(function() {
                             var val = $(this).is(':checked');
@@ -324,8 +323,8 @@ function do_option(key, opt) {
                     $(opt.selector)
                         .val(val);
                 };
-            if(!opt.watch && opt.selector)
-                opt.watch = function(k) {
+            if(!opt.subscribe && opt.selector)
+                opt.subscribe = function(k) {
                     $(opt.selector)
                         .change(function() {
                             var val = $(this).val();
@@ -338,8 +337,8 @@ function do_option(key, opt) {
     }
     if(opt.set)
         opt.set(settings[key]);
-    if(opt.watch)
-        opt.watch(function(val) {
+    if(opt.subscribe)
+        opt.subscribe(function(val) {
             update_setting(opt, val);
         });
 }

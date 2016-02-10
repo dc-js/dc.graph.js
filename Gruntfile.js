@@ -12,7 +12,11 @@ module.exports = function (grunt) {
         web: 'web',
         pkg: require('./package.json'),
         banner: grunt.file.read('./LICENSE_BANNER'),
-        jsFiles: module.exports.jsFiles
+        jsFiles: module.exports.jsFiles,
+        jsWorkerFiles: [
+            'src/generate_objects.js',
+            'src/cola-worker.js'
+        ]
     };
 
     grunt.initConfig({
@@ -24,9 +28,13 @@ module.exports = function (grunt) {
                 sourceMap: true,
                 banner : '<%= conf.banner %>'
             },
-            js: {
+            main: {
                 src: '<%= conf.jsFiles %>',
                 dest: '<%= conf.pkg.name %>.js'
+            },
+            worker: {
+                src: '<%= conf.jsWorkerFiles %>',
+                dest: '<%= conf.pkg.name %>.worker.js'
             }
         },
         uglify: {
@@ -208,6 +216,7 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.js.map',
                             '<%= conf.pkg.name %>.min.js',
                             '<%= conf.pkg.name %>.min.js.map',
+                            '<%= conf.pkg.name %>.worker.js',
                             'node_modules/jquery/dist/jquery.js',
                             'node_modules/d3/d3.js',
                             'node_modules/queue-async/queue.js',
@@ -321,6 +330,7 @@ module.exports = function (grunt) {
 module.exports.jsFiles = [
     'src/banner.js',   // NOTE: keep this first
     'src/core.js',
+    'src/generate_objects.js',
     'src/shape.js',
     'src/diagram.js',
     'src/legend.js',
