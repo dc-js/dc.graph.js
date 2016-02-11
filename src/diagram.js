@@ -907,6 +907,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             e1.cola.dcg_edgeTarget = param(_chart.edgeTarget())(e1);
             e1.source = _nodes[e1.cola.dcg_edgeSource];
             e1.target = _nodes[e1.cola.dcg_edgeTarget];
+            e1.cola.dcg_edgeLength = param(_chart.edgeLength())(e1);
         });
 
         // remove edges that don't have both end nodes

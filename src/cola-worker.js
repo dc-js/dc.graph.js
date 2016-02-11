@@ -18,9 +18,7 @@ function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLeng
             break;
         case 'individual':
             _d3cola.linkDistance(function(e) {
-                var d = e.orig ? e.dcg_edgeLength :
-                        e.internal && e.internal.distance;
-                return d || baseLength;
+                return e.dcg_edgeLength || baseLength;
             });
             break;
         case 'none':
@@ -59,6 +57,7 @@ function data_d3cola(nodes, edges, constraints) {
         // but it will replace indices with object references
         e1.source = _nodes[e.dcg_edgeSource];
         e1.target = _nodes[e.dcg_edgeTarget];
+        e1.dcg_edgeLength = e.dcg_edgeLength;
     });
 
     // cola needs each node object to have an index property
