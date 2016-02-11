@@ -778,6 +778,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.handleDisconnected = property(true);
 
     function initLayout() {
+        if(!_worker)
+            _worker = new Worker('js/dc.graph.worker.js');
         _worker.postMessage({
             command: 'init',
             args: {
@@ -874,8 +876,6 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         if(_worker)
             _worker.postMessage({command: 'stop'});
-        else
-            _worker = new Worker('js/dc.graph.worker.js');
 
         if(_chart.initLayoutOnRedraw())
             initLayout();
