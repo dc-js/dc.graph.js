@@ -26,10 +26,10 @@ body {
 }
 
 #run-indicator {
+    display: none;
     position: absolute;
     right: 1em;
     top: 1em;
-    display: hidden;
     color: darkred;
 }
 
@@ -38,6 +38,7 @@ body {
 }
 
 #overview {
+    display: none;
     position: absolute;
     top: 0;
     right: 0;
