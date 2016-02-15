@@ -113,7 +113,7 @@ else shape = {shape: 'ellipse'};
 function show_type_graph(nodes, edges, sourceattr, targetattr) {
     $('#overview').show();
     if(!overview)
-        overview = dc_graph.diagram('#overview');
+        overview = dc_graph.diagram('#overview', 'overview');
     var typegraph = dc_graph.build_type_graph(nodes, edges,
                                               function(n) { return n.name; },
                                               function(n) { return n.type; },
@@ -122,8 +122,10 @@ function show_type_graph(nodes, edges, sourceattr, targetattr) {
     var tedges = flat_group.make(typegraph.edges, function(d) { return d.type; }),
         tnodes = flat_group.make(typegraph.nodes, function(d) { return d.type; });
 
-    overview.width(150)
-        .height(150)
+    overview.width(250)
+        .height(250)
+        .nodeRadius(15)
+        .baseLength(25)
         .nodeLabel(function(n) { return n.value.type; })
         .nodeDimension(tnodes.dimension).nodeGroup(tnodes.group)
         .edgeDimension(tedges.dimension).edgeGroup(tedges.group)
