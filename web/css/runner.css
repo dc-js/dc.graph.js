@@ -8,7 +8,7 @@ body {
     position: absolute;
     top: 170px;
     right: 0;
-    background-color: rgba(221, 238, 221, 0.75);
+    background-color: rgba(221, 238, 221, 0.95);
     padding: 40px;
 }
 
@@ -44,7 +44,7 @@ body {
     right: 0;
     width: 250px;
     height: 250px;
-    background-color: rgba(255, 150, 0, 0.75);
+    background-color: rgba(255, 175, 60, 0.95);
 }
 
 #overview .dc-graph text.node-label {
