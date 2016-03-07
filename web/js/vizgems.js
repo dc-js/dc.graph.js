@@ -846,6 +846,8 @@ function load_history(tenant, k) {
         else if(i === -1)
             curr_hist = hist_events.length-1;
         else curr_hist = i;
+        if(!is_running)
+            runner.step();
     });
     curr_hist = 0;
     k();
