@@ -76,6 +76,10 @@ var options = {
     transition: {
         default: 2000
     },
+    slow_transition: {
+        default: 15000,
+        query: 'slow'
+    },
     stats: {
         default: false,
         subscribe: function(k) {
@@ -354,11 +358,10 @@ var is_running = true;
 function display_running() {
     $('#play-button i').attr('class', is_running ? 'fa fa-pause' : 'fa fa-play');
 }
-
 display_running();
 $('#play-button').click(function(e) {
     if(e.shiftKey)
-        diagram.transitionDuration(slow_transition);
+        diagram.transitionDuration(settings.slow_transition);
     else
         diagram.transitionDuration(settings.transition);
     if(is_running) {
@@ -372,13 +375,11 @@ $('#play-button').click(function(e) {
     display_running();
 });
 
-var slow_transition = 20000;
-
 $('#last-button').click(function(e) {
     curr_hist = (curr_hist+hist_files.length-2)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
     if(e.shiftKey)
-        diagram.transitionDuration(slow_transition);
+        diagram.transitionDuration(settings.slow_transition);
     else
         diagram.transitionDuration(settings.transition);
     runner.step();
@@ -388,7 +389,7 @@ $('#next-button').click(function(e) {
     //curr_hist = (curr_hist+1)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
     if(e.shiftKey)
-        diagram.transitionDuration(slow_transition);
+        diagram.transitionDuration(settings.slow_transition);
     else
         diagram.transitionDuration(settings.transition);
     runner.step();
