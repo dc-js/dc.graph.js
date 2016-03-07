@@ -1281,6 +1281,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.handleDisconnected = property(true);
 
     function initLayout() {
+        if(!_worker)
+            _worker = new Worker('js/dc.graph-worker.js');
         _worker.postMessage({
             command: 'init',
             args: {
@@ -1377,8 +1379,6 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         if(_worker)
             _worker.postMessage({command: 'stop'});
-        else
-            _worker = new Worker('js/dc.graph.worker.js');
 
         if(_chart.initLayoutOnRedraw())
             initLayout();
@@ -1410,6 +1410,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             e1.cola.dcg_edgeTarget = param(_chart.edgeTarget())(e1);
             e1.source = _nodes[e1.cola.dcg_edgeSource];
             e1.target = _nodes[e1.cola.dcg_edgeTarget];
+            e1.cola.dcg_edgeLength = param(_chart.edgeLength())(e1);
         });
 
         // remove edges that don't have both end nodes
@@ -2589,6 +2590,34 @@ dc_graph.wheel_edges = function(namef, nindices, R) {
     }
     return edges;
 };
+
+dc_graph.build_type_graph = function(nodes, edges, nkey, ntype, esource, etarget) {
+    var nmap = {}, tnodes = {}, tedges = {};
+    nodes.forEach(function(n) {
+        nmap[nkey(n)] = n;
+        var t = ntype(n);
+        if(!tnodes[t])
+            tnodes[t] = {type: t};
+    });
+    edges.forEach(function(e) {
+        var source = esource(e), target = etarget(e), sn, tn;
+        if(!(sn = nmap[source]))
+            throw new Error('source key ' + source + ' not found!');
+        if(!(tn = nmap[target]))
+            throw new Error('target key ' + target + ' not found!');
+        var etype = ntype(sn) + '/' + ntype(tn);
+        if(!tedges[etype])
+            tedges[etype] = {
+                type: etype,
+                source: ntype(sn),
+                target: ntype(tn)
+            };
+    });
+    return {
+        nodes: Object.keys(tnodes).map(function(k) { return tnodes[k]; }),
+        edges: Object.keys(tedges).map(function(k) { return tedges[k]; })
+    };
+}
 
 dc_graph.d3 = d3;
 dc_graph.crossfilter = crossfilter;
