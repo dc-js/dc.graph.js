@@ -42,6 +42,31 @@
     color: darkred;
 }
 
+.play-control {
+    display: table-cell;
+    vertical-align: top;
+    padding-top: 2px;
+}
+.play-control i {
+    padding: 5px;
+}
+
+.play-control i:hover {
+    outline: #bbb inset 1px;
+}
+
+#time-stuff {
+    width: 100%;
+    display: table-row;
+}
+
+#timeline {
+    display: table-cell;
+    padding-left: 10px;
+    padding-top: 5px;
+    width: 100%;
+}
+
 .dc-graph text.node-label {
     font: 12px verdana, san-serif;
 }

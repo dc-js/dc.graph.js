@@ -204,7 +204,8 @@ module.exports = function (grunt) {
                         flatten: true,
                         src: [
                             '<%= conf.pkg.name %>.css',
-                            'node_modules/dc/dc.css'
+                            'node_modules/dc/dc.css',
+                            'node_modules/font-awesome/css/font-awesome.css'
                         ],
                         dest: '<%= conf.web %>/css/'
                     },
@@ -226,6 +227,14 @@ module.exports = function (grunt) {
                             'test/env-data.js'
                         ],
                         dest: '<%= conf.web %>/js/'
+                    },
+                    {
+                        expand: true,
+                        flatten: true,
+                        src: [
+                            'node_modules/font-awesome/fonts/*'
+                        ],
+                        dest: '<%= conf.web %>/fonts/'
                     },
                     {
                         expand: true,

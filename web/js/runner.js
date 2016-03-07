@@ -35,6 +35,19 @@ var make_runner = function(init, step, interval) {
             init();
             return this;
         },
+        pause: function() {
+            return this.stop();
+        },
+        unpause: function() {
+            run_mode = true;
+            startTimer();
+            step();
+            return this;
+        },
+        step: function() {
+            step();
+            return this;
+        },
         stop: function() { // stop loop
             run_mode = false;
             return this;

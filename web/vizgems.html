@@ -6,6 +6,7 @@
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/vizgems.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/font-awesome.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
@@ -35,7 +36,12 @@
     running
   </div>
   <label id="tenant-option" style="display:none">Tenant: <select id="tenant-select"></select></label>
-  <div id="timeline" style="margin: 5px 0px"></div>
+  <div id="time-stuff">
+    <span id="last-button" class="play-control"><i class="fa fa-step-backward"></i></span>
+    <span id="play-button" class="play-control"><i class="fa fa-play"></i></span>
+    <span id="next-button" class="play-control"><i class="fa fa-step-forward"></i></span>
+    <span id="timeline" style="margin: 5px 0px"></span>
+  </div>
   <div id="type-views">
     <a href="javascript:choose_view('user')">user view</a>
     <a href="javascript:choose_view('image')">image view</a>

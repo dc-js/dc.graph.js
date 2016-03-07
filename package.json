@@ -26,7 +26,8 @@
   "dependencies": {
     "crossfilter": "1.x",
     "dc": "dc-js/dc.js#develop",
-    "d3": "3.x"
+    "d3": "3.x",
+    "font-awesome": "~4.5"
   },
   "devDependencies": {
     "d3-tip": "~0.6.7",

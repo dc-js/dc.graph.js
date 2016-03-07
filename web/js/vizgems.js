@@ -350,6 +350,39 @@ for(var key in options)
 
 /* end general options stuff */
 
+var is_running = true;
+function display_running() {
+    $('#play-button i').attr('class', is_running ? 'fa fa-pause' : 'fa fa-play');
+}
+
+display_running();
+$('#play-button').click(function() {
+    if(is_running) {
+        runner.pause();
+        is_running = false;
+    }
+    else {
+        runner.unpause();
+        is_running = true;
+    }
+    display_running();
+});
+
+$('#last-button').click(function() {
+    curr_hist = (curr_hist+hist_files.length-2)%hist_files.length;
+    timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
+    console.log('last to ', curr_hist);
+    runner.step();
+});
+
+$('#next-button').click(function() {
+    //curr_hist = (curr_hist+1)%hist_files.length;
+    timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
+    console.log('next to ', curr_hist);
+    runner.step();
+});
+
+
 var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
 var timeline = timeline('#timeline');
@@ -793,7 +826,7 @@ function load_history(tenant, k) {
         return datef.parse(match[1]);
     }).filter(function(dt) { return !!dt; });
     hist_events = hist_times.map(function(dt) { return {key: dt, value: {}}; });
-    timeline.width(280).height(20).events(hist_events).render();
+    timeline.width($('#timeline').innerWidth()).height(20).events(hist_events).render();
     timeline.on('jump', function(t) {
         var i = hist_events.findIndex(function(e) { return e.key > t; });
         if(i === 0)
