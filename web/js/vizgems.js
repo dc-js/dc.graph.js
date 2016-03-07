@@ -356,7 +356,11 @@ function display_running() {
 }
 
 display_running();
-$('#play-button').click(function() {
+$('#play-button').click(function(e) {
+    if(e.shiftKey)
+        diagram.transitionDuration(slow_transition);
+    else
+        diagram.transitionDuration(settings.transition);
     if(is_running) {
         runner.pause();
         is_running = false;
@@ -368,17 +372,25 @@ $('#play-button').click(function() {
     display_running();
 });
 
-$('#last-button').click(function() {
+var slow_transition = 20000;
+
+$('#last-button').click(function(e) {
     curr_hist = (curr_hist+hist_files.length-2)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
-    console.log('last to ', curr_hist);
+    if(e.shiftKey)
+        diagram.transitionDuration(slow_transition);
+    else
+        diagram.transitionDuration(settings.transition);
     runner.step();
 });
 
-$('#next-button').click(function() {
+$('#next-button').click(function(e) {
     //curr_hist = (curr_hist+1)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
-    console.log('next to ', curr_hist);
+    if(e.shiftKey)
+        diagram.transitionDuration(slow_transition);
+    else
+        diagram.transitionDuration(settings.transition);
     runner.step();
 });
 
