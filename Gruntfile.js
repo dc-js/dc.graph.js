@@ -34,7 +34,7 @@ module.exports = function (grunt) {
             },
             worker: {
                 src: '<%= conf.jsWorkerFiles %>',
-                dest: '<%= conf.pkg.name %>.worker.js'
+                dest: '<%= conf.pkg.name %>-worker.js'
             }
         },
         uglify: {
@@ -216,7 +216,8 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.js.map',
                             '<%= conf.pkg.name %>.min.js',
                             '<%= conf.pkg.name %>.min.js.map',
-                            '<%= conf.pkg.name %>.worker.js',
+                            '<%= conf.pkg.name %>-worker.js',
+                            '<%= conf.pkg.name %>-worker.js.map',
                             'node_modules/jquery/dist/jquery.js',
                             'node_modules/d3/d3.js',
                             'node_modules/queue-async/queue.js',

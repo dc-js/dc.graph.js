@@ -779,7 +779,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function initLayout() {
         if(!_worker)
-            _worker = new Worker('js/dc.graph.worker.js');
+            _worker = new Worker('js/dc.graph-worker.js');
         _worker.postMessage({
             command: 'init',
             args: {
