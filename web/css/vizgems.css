@@ -1,4 +1,5 @@
 #overlay {
+    z-index: 2; /* otherwise it can get clobbered by charts-area */
     width: 280px;
     position: absolute;
     top: 90px;
