@@ -141,6 +141,15 @@ var options = {
             diagram.edgeArrowhead(val ? 'vee' : null);
         }
     },
+    highlight_neighbors: {
+        default: false,
+        query: 'neighbors',
+        selector: '#highlight-neighbors',
+        needs_redraw: true,
+        apply: function(val, diagram) {
+            diagram.highlightNeighbors(val);
+        }
+    },
     disconnected: {
         default: true
     },
