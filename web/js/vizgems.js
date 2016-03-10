@@ -607,14 +607,20 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
         if(edge_attr_mismatch_warnings.length)
             warnings['edge attributes mismatched'] = edge_attr_mismatch_warnings;
     }
+    var mismatched_sttype_warnings = [];
     // infer node ostype from edge, if consistent
     vertices.forEach(function(n) {
-        console.assert(!n.ostype || !sttype[n.id1] || n.ostype === sttype[n.id1]);
+        if(n.ostype)
+            n.ostype = n.ostype.toUpperCase();
+        if(n.ostype && sttype[n.id1] && n.ostype !== sttype[n.id1])
+            mismatched_sttype_warnings.push({node: n.id1, ostype: n.ostype, sttype: sttype[n.id1]});
         if(sttype[n.id1])
             n.ostype = sttype[n.id1];
         // regardless, make sure all vertices have some ostype
         n.ostype = n.ostype || 'OTHER';
     });
+    if(mismatched_sttype_warnings.length)
+        warnings['nodes ostype did not match edges'] = mismatched_sttype_warnings;
 
     if(Object.keys(warnings).length)
         console.log('graph read warnings', warnings);
