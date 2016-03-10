@@ -47,6 +47,8 @@ chart.width(600)
     * [.nodeFixed](#dc_graph.diagram+nodeFixed) ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeStroke](#dc_graph.diagram+edgeStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeStrokeWidth](#dc_graph.diagram+edgeStrokeWidth) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.edgeHighlightStroke](#dc_graph.diagram+edgeHighlightStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.edgeHighlightStrokeWidth](#dc_graph.diagram+edgeHighlightStrokeWidth) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeOpacity](#dc_graph.diagram+edgeOpacity) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeLabel](#dc_graph.diagram+edgeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeArrowhead](#dc_graph.diagram+edgeArrowhead) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -127,6 +129,8 @@ visualization versus conventional charts.
   * [.nodeFixed](#dc_graph.diagram+nodeFixed) ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeStroke](#dc_graph.diagram+edgeStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeStrokeWidth](#dc_graph.diagram+edgeStrokeWidth) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.edgeHighlightStroke](#dc_graph.diagram+edgeHighlightStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.edgeHighlightStrokeWidth](#dc_graph.diagram+edgeHighlightStrokeWidth) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeOpacity](#dc_graph.diagram+edgeOpacity) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeLabel](#dc_graph.diagram+edgeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeArrowhead](#dc_graph.diagram+edgeArrowhead) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -497,6 +501,26 @@ Set or get the function which will be used to retrieve the stroke width for the 
 | Param | Type | Default |
 | --- | --- | --- |
 | [edgeStrokeWidth] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
+
+<a name="dc_graph.diagram+edgeHighlightStroke"></a>
+#### diagram.edgeHighlightStroke ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Set or get the function which will be used to retrieve the stroke color for highlighted edges.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [edgeHighlightStroke] | <code>function</code> &#124; <code>String</code> | <code>&#x27;black&#x27;</code> | 
+
+<a name="dc_graph.diagram+edgeHighlightStrokeWidth"></a>
+#### diagram.edgeHighlightStrokeWidth ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Set or get the function which will be used to retrieve the stroke width for highlighted edges.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [edgeHighlightStrokeWidth] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
 
 <a name="dc_graph.diagram+edgeOpacity"></a>
 #### diagram.edgeOpacity ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
