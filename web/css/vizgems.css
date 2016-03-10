@@ -43,8 +43,11 @@
     color: darkred;
 }
 
+#time-stuff {
+}
+
 .play-control {
-    display: table-cell;
+    float: left;
     vertical-align: top;
     padding-top: 2px;
 }
@@ -56,16 +59,11 @@
     outline: #bbb inset 1px;
 }
 
-#time-stuff {
-    width: 100%;
-    display: table-row;
-}
-
 #timeline {
-    display: table-cell;
+    display: block;
+    overflow: auto;
     padding-left: 10px;
     padding-top: 5px;
-    width: 100%;
 }
 
 .dc-graph text.node-label {
