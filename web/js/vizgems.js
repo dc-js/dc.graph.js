@@ -812,7 +812,7 @@ function init() {
             .showLayoutSteps(false)
             .handleDisconnected(settings.disconnected)
             .lengthStrategy('jaccard')
-            .baseLength(200)
+            .baseLength(150)
             .nodeTitle(function(kv) {
                 return kv.value.ostype==='PRT' ? kv.value.name : kv.key;
             })
