@@ -76,6 +76,9 @@ var options = {
     transition: {
         default: 2000
     },
+    date: {
+        default: ''
+    },
     slow_transition: {
         default: 15000,
         query: 'slow'
@@ -906,6 +909,12 @@ function step() {
 
 var preload, snapshots, hist_files, hist_events, curr_hist, runner;
 
+function history_index(t) {
+    // last date that is less than argument
+    var i = hist_events.findIndex(function(e) { return e.key > t; });
+    return i > 0 ? i-1 : i;
+}
+
 function load_history(tenant, k) {
     hist_files = snapshots.filter(function(r) { return new RegExp("auto-shagrat-" + tenant).test(r); });
     var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
@@ -921,7 +930,7 @@ function load_history(tenant, k) {
     hist_events = hist_times.map(function(dt) { return {key: dt, value: {}}; });
     timeline.width($('#timeline').innerWidth()).height(20).events(hist_events).render();
     timeline.on('jump', function(t) {
-        var i = hist_events.findIndex(function(e) { return e.key > t; });
+        var i = history_index(t);
         if(i === 0)
             curr_hist = 0;
         else if(i === -1)
@@ -930,7 +939,17 @@ function load_history(tenant, k) {
         if(!is_running)
             runner.step();
     });
-    curr_hist = 0;
+
+    curr_hist = -1;
+    if(settings.date) {
+        var date = datef.parse(settings.date);
+        if(!date)
+            date = d3.time.format('%Y%m%d').parse(settings.date);
+        if(date)
+            curr_hist = history_index(date);
+    }
+    if(curr_hist === -1)
+        curr_hist = 0;
     k();
 }
 function populate_tenant_select(tenants, curr) {
