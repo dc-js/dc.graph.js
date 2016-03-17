@@ -79,6 +79,9 @@ var options = {
     date: {
         default: ''
     },
+    play: {
+        default: false
+    },
     slow_transition: {
         default: 15000,
         query: 'slow'
@@ -377,7 +380,7 @@ for(var key in options)
 
 /* end general options stuff */
 
-var is_running = true;
+var is_running = settings.play;
 function display_running() {
     $('#play-button i').attr('class', is_running ? 'fa fa-pause' : 'fa fa-play');
 }
@@ -967,7 +970,7 @@ function populate_tenant_select(tenants, curr) {
     sel.on('change', function() {
         runner.stop();
         load_history(this.selectedOptions[0].value, function() {});
-        runner.start();
+        runner.start(!is_running);
     });
 }
 if(settings.histserv) {
@@ -989,7 +992,7 @@ else preload = function(k) { k(); };
 
 preload(function() {
     runner = make_runner(init, step, settings.interval);
-    runner.start();
+    runner.start(!is_running);
 });
 
 
