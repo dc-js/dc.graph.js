@@ -415,28 +415,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeStrokeWidth = _chart.edgeStrokeWidthAccessor = property(1);
 
     /**
-     * Set or get the function which will be used to retrieve the stroke color for highlighted edges.
-     * @name edgeHighlightStroke
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Function|String} [edgeHighlightStroke='black']
-     * @return {Function|String}
-     * @return {dc_graph.diagram}
-     **/
-    _chart.edgeHighlightStroke = _chart.edgeStrokeAccessor = property('orange');
-
-    /**
-     * Set or get the function which will be used to retrieve the stroke width for highlighted edges.
-     * @name edgeHighlightStrokeWidth
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Function|Number} [edgeHighlightStrokeWidth=1]
-     * @return {Function|Number}
-     * @return {dc_graph.diagram}
-     **/
-    _chart.edgeHighlightStrokeWidth = _chart.edgeStrokeWidthAccessor = property(3);
-
-    /**
      * Set or get the function which will be used to retrieve the edge opacity, a number from 0
      * to 1.
      * @name edgeOpacity

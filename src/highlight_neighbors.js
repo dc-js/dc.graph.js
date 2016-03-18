@@ -27,12 +27,12 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
                 edge
                     .attr('stroke-width', function(e) {
                         return (e.source === d || e.target === d ?
-                                param(chart.edgeHighlightStrokeWidth()) :
+                                param(highlightStrokeWidth) :
                                 param(chart.edgeStrokeWidth()))(e);
                     })
                     .attr('stroke', function(e) {
                         return (e.source === d || e.target === d ?
-                                param(chart.edgeHighlightStroke()) :
+                                param(highlightStroke) :
                                 param(chart.edgeStroke()))(e);
                     });
             })
