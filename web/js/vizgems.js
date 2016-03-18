@@ -153,7 +153,7 @@ var options = {
         selector: '#highlight-neighbors',
         needs_redraw: true,
         apply: function(val, diagram) {
-            diagram.highlightNeighbors(val);
+            diagram.child('highlight-neighbors', val ? dc_graph.highlight_neighbors() : null);
         }
     },
     disconnected: {

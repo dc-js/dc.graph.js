@@ -768,6 +768,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [id] - the name of the child to modify or add
+     * @param {Object} [object] - the child object to add, or null to remove
      * @example
      * // Display tooltips on node hover, via the d3-tip library
      * var tip = dc_graph.tip()
@@ -777,14 +778,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      *   k("This is <em>" + d.orig.value.name + "</em>");
      * });
      * diagram.child('tip', tip);
-     * @return {Object} [object] - the child object to add
      * @return {dc_graph.diagram}
      **/
     _chart.child = function(id, object) {
         if(_children[id])
             _children[id].parent(null);
         _children[id] = object;
-        object.parent(_chart);
+        if(object)
+            object.parent(_chart);
         return _chart;
     };
 
@@ -1073,25 +1074,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('class', 'node')
                 .attr('opacity', '0'); // don't show until has layout
                 // .call(_d3cola.drag);
-        node
-            .on('mouseover.highlight-neighbors', _chart.highlightNeighbors() ? function(d) {
-                edge
-                    .attr('stroke-width', function(e) {
-                        return (e.source === d || e.target === d ?
-                                param(_chart.edgeHighlightStrokeWidth()) :
-                                param(_chart.edgeStrokeWidth()))(e);
-                    })
-                    .attr('stroke', function(e) {
-                        return (e.source === d || e.target === d ?
-                                param(_chart.edgeHighlightStroke()) :
-                                param(_chart.edgeStroke()))(e);
-                    });
-            } : null)
-            .on('mouseout.highlight-neighbors', _chart.highlightNeighbors() ? function(d) {
-                edge
-                    .attr('stroke-width', param(_chart.edgeStrokeWidth()))
-                    .attr('stroke', param(_chart.edgeStroke()));
-            } : null);
 
         _chart._buildNode(node, nodeEnter);
         node.exit().transition()
