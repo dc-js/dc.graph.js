@@ -152,9 +152,12 @@ var options = {
         query: 'neighbors',
         selector: '#highlight-neighbors',
         needs_redraw: true,
-        apply: function(val, diagram) {
-            diagram.child('highlight-neighbors', val ? dc_graph.highlight_neighbors('orange', 3) : null);
-        }
+        apply: function() {
+            var highlighter = dc_graph.highlight_neighbors('orange', 3);
+            return function(val, diagram) {
+                diagram.child('highlight-neighbors', val ? highlighter : null);
+            };
+        }()
     },
     disconnected: {
         default: true

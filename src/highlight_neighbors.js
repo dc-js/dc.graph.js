@@ -8,10 +8,17 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
      **/
     _behavior.parent = property(null)
         .react(function(p) {
-            if(p)
+            if(p) {
+                var once = true, chart = p;
                 p.on('drawn.highlight-neighbors', function(node, edge) {
-                    add_behavior(_behavior.parent(), node, edge);
+                    add_behavior(chart, node, edge);
+                    if(once) {
+                        clear_all_highlights(chart, edge);
+                        once = false;
+                    }
+                    else draw_highlighted(chart, edge);
                 });
+            }
             else if(_behavior.parent()) {
                 var old_parent = _behavior.parent();
                 old_parent.on('drawn.highlight-neighbors', function(node, edge) {
@@ -21,25 +28,37 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
             }
         });
 
+    function draw_highlighted(chart, edge) {
+        edge
+            .attr('stroke-width', function(e) {
+                return e.dcg_highlighted ?
+                    highlightStrokeWidth :
+                    param(chart.edgeStrokeWidth())(e);
+            })
+            .attr('stroke', function(e) {
+                return e.dcg_highlighted ?
+                    highlightStroke :
+                    param(chart.edgeStroke())(e);
+            });
+    }
+
+    function clear_all_highlights(chart, edge) {
+        edge.each(function(e) {
+            e.dcg_highlighted = false;
+        });
+        draw_highlighted(chart, edge);
+    }
+
     function add_behavior(chart, node, edge) {
         node
             .on('mouseover.highlight-neighbors', function(d) {
-                edge
-                    .attr('stroke-width', function(e) {
-                        return (e.source === d || e.target === d ?
-                                param(highlightStrokeWidth) :
-                                param(chart.edgeStrokeWidth()))(e);
-                    })
-                    .attr('stroke', function(e) {
-                        return (e.source === d || e.target === d ?
-                                param(highlightStroke) :
-                                param(chart.edgeStroke()))(e);
-                    });
+                edge.each(function(e) {
+                    e.dcg_highlighted = e.source === d || e.target === d;
+                });
+                draw_highlighted(chart, edge);
             })
             .on('mouseout.highlight-neighbors', function(d) {
-                edge
-                    .attr('stroke-width', param(chart.edgeStrokeWidth()))
-                    .attr('stroke', param(chart.edgeStroke()));
+                clear_all_highlights(chart, edge);
             });
     }
 
@@ -47,9 +66,7 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
         node
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
-        edge
-            .attr('stroke-width', param(chart.edgeStrokeWidth()))
-            .attr('stroke', param(chart.edgeStroke()));
+        clear_all_highlights(chart, edge);
     }
 
     return _behavior;

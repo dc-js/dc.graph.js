@@ -759,6 +759,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _chart.child = function(id, object) {
+        // do not notify unnecessarily
+        if(_children[id] === object)
+            return _chart;
         if(_children[id])
             _children[id].parent(null);
         _children[id] = object;
