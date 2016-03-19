@@ -1034,7 +1034,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('startOffset', '50%')
                 .attr('xlink:href', function(d) {
                     var id = textpath_id(d);
-                    add_remove_def(id, true, 'svg:path');
+                    _chart.addOrRemoveDef(id, true, 'svg:path');
                     return '#' + id;
                 });
         edgeLabels.each(function(d) {
@@ -1545,7 +1545,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return 'arrow-' + kind + '-' + edge_id(d);
     }
 
-    function add_remove_def(id, whether, tag) {
+    _chart.addOrRemoveDef = function(id, whether, tag) {
         var data = whether ? [0] : [];
         var sel = _defs.selectAll('#' + id).data(data);
 
@@ -1554,11 +1554,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('id', id);
         sel.exit().remove();
         return selEnter;
-    }
+    };
 
     function edgeArrow(d, kind, name) {
         var id = arrow_id(d, kind),
-            markerEnter = add_remove_def(id, !!name, 'svg:marker');
+            markerEnter = _chart.addOrRemoveDef(id, !!name, 'svg:marker');
 
         if(name) {
             markerEnter

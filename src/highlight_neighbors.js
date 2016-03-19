@@ -8,8 +8,10 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
      **/
     _behavior.parent = property(null)
         .react(function(p) {
+            var chart;
             if(p) {
-                var once = true, chart = p;
+                var once = true;
+                chart = p;
                 p.on('drawn.highlight-neighbors', function(node, edge) {
                     add_behavior(chart, node, edge);
                     if(once) {
@@ -20,10 +22,10 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
                 });
             }
             else if(_behavior.parent()) {
-                var old_parent = _behavior.parent();
-                old_parent.on('drawn.highlight-neighbors', function(node, edge) {
-                    remove_behavior(old_parent, node, edge);
-                    old_parent.on('drawn.highlight-neighbors', null);
+                chart = _behavior.parent();
+                chart.on('drawn.highlight-neighbors', function(node, edge) {
+                    remove_behavior(chart, node, edge);
+                    chart.on('drawn.highlight-neighbors', null);
                 });
             }
         });

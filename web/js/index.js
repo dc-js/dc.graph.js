@@ -36,7 +36,9 @@ var steptime = +querystring.interval || 1000, // ms per step
     appLayout = null,
     useAppLayout = false,
     nodePrefix = querystring.prefix || '',
-    timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000;
+    timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000,
+    explore = querystring.explore;
+
 if(edgeStroke && /[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke))
     edgeStroke = '#' + edgeStroke;
 var min = 2, max = 12;
@@ -282,6 +284,41 @@ source(function(error, data) {
     if(randomize) {
         diagram.nodeOrdering(function(kv) { return kv.value.order; })
             .edgeOrdering(function(kv) { return kv.value.order; });
+    }
+
+    var expander = null, expanded;
+    if(explore) {
+        expanded = [explore];
+        // second group on keys so that first will observe it
+        expander = flat_group.another(nodes.crossfilter, function(d) { return d.name; });
+        function apply_expander_filter() {
+            expander.dimension.filterFunction(function(key) {
+                return expanded.indexOf(key) >= 0;
+            });
+        }
+        function adjacent_edges(key) {
+            return edges.group.all().filter(function(kv) {
+                return kv.value[sourceattr] === key || kv.value[targetattr] === key;
+            });
+        }
+        function adjacent_nodes(key) {
+            return adjacent_edges(key).map(function(kv) {
+                return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
+            });
+        }
+        apply_expander_filter();
+        diagram.child('expand-collapse',
+                      dc_graph.expand_collapse(function(key) { // get_degree
+                          return adjacent_edges(key).length;
+                      }, function(key) { // expand
+                          expanded = _.union(expanded, adjacent_nodes(key));
+                          apply_expander_filter();
+                          run();
+                      }, function(key) {
+                          expanded = _.difference(expanded, adjacent_nodes(key));
+                          apply_expander_filter();
+                          run();
+                      }));
     }
 
     // respond to browser resize (not necessary if width/height is static)

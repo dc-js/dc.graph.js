@@ -347,6 +347,7 @@ module.exports.jsFiles = [
     'src/constraint_pattern.js',
     'src/tip.js',
     'src/highlight_neighbors.js',
+    'src/expand_collapse.js',
     'src/load_graph.js',
     'src/generate.js',
     'src/type-graph.js',
