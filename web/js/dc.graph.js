@@ -931,28 +931,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeStrokeWidth = _chart.edgeStrokeWidthAccessor = property(1);
 
     /**
-     * Set or get the function which will be used to retrieve the stroke color for highlighted edges.
-     * @name edgeHighlightStroke
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Function|String} [edgeHighlightStroke='black']
-     * @return {Function|String}
-     * @return {dc_graph.diagram}
-     **/
-    _chart.edgeHighlightStroke = _chart.edgeStrokeAccessor = property('orange');
-
-    /**
-     * Set or get the function which will be used to retrieve the stroke width for highlighted edges.
-     * @name edgeHighlightStrokeWidth
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Function|Number} [edgeHighlightStrokeWidth=1]
-     * @return {Function|Number}
-     * @return {dc_graph.diagram}
-     **/
-    _chart.edgeHighlightStrokeWidth = _chart.edgeStrokeWidthAccessor = property(3);
-
-    /**
      * Set or get the function which will be used to retrieve the edge opacity, a number from 0
      * to 1.
      * @name edgeOpacity
@@ -1284,6 +1262,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [id] - the name of the child to modify or add
+     * @param {Object} [object] - the child object to add, or null to remove
      * @example
      * // Display tooltips on node hover, via the d3-tip library
      * var tip = dc_graph.tip()
@@ -1293,14 +1272,17 @@ dc_graph.diagram = function (parent, chartGroup) {
      *   k("This is <em>" + d.orig.value.name + "</em>");
      * });
      * diagram.child('tip', tip);
-     * @return {Object} [object] - the child object to add
      * @return {dc_graph.diagram}
      **/
     _chart.child = function(id, object) {
+        // do not notify unnecessarily
+        if(_children[id] === object)
+            return _chart;
         if(_children[id])
             _children[id].parent(null);
         _children[id] = object;
-        object.parent(_chart);
+        if(object)
+            object.parent(_chart);
         return _chart;
     };
 
@@ -1568,7 +1550,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('startOffset', '50%')
                 .attr('xlink:href', function(d) {
                     var id = textpath_id(d);
-                    add_remove_def(id, true, 'svg:path');
+                    _chart.addOrRemoveDef(id, true, 'svg:path');
                     return '#' + id;
                 });
         edgeLabels.each(function(d) {
@@ -1589,25 +1571,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('class', 'node')
                 .attr('opacity', '0'); // don't show until has layout
                 // .call(_d3cola.drag);
-        node
-            .on('mouseover.highlight-neighbors', _chart.highlightNeighbors() ? function(d) {
-                edge
-                    .attr('stroke-width', function(e) {
-                        return (e.source === d || e.target === d ?
-                                param(_chart.edgeHighlightStrokeWidth()) :
-                                param(_chart.edgeStrokeWidth()))(e);
-                    })
-                    .attr('stroke', function(e) {
-                        return (e.source === d || e.target === d ?
-                                param(_chart.edgeHighlightStroke()) :
-                                param(_chart.edgeStroke()))(e);
-                    });
-            } : null)
-            .on('mouseout.highlight-neighbors', _chart.highlightNeighbors() ? function(d) {
-                edge
-                    .attr('stroke-width', param(_chart.edgeStrokeWidth()))
-                    .attr('stroke', param(_chart.edgeStroke()));
-            } : null);
 
         _chart._buildNode(node, nodeEnter);
         node.exit().transition()
@@ -2098,7 +2061,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return 'arrow-' + kind + '-' + edge_id(d);
     }
 
-    function add_remove_def(id, whether, tag) {
+    _chart.addOrRemoveDef = function(id, whether, tag) {
         var data = whether ? [0] : [];
         var sel = _defs.selectAll('#' + id).data(data);
 
@@ -2107,11 +2070,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('id', id);
         sel.exit().remove();
         return selEnter;
-    }
+    };
 
     function edgeArrow(d, kind, name) {
         var id = arrow_id(d, kind),
-            markerEnter = add_remove_def(id, !!name, 'svg:marker');
+            markerEnter = _chart.addOrRemoveDef(id, !!name, 'svg:marker');
 
         if(name) {
             markerEnter
@@ -2458,6 +2421,41 @@ dc_graph.order_y = function(gap, ordering) {
     };
 };
 
+dc_graph.behavior = function(event_namespace, handlers) {
+    var _behavior = {};
+
+    /**
+     #### .parent([object])
+     Assigns this behavior to a diagram. It will highlight edges when their end-nodes
+     are hovered.
+     **/
+    _behavior.parent = property(null)
+        .react(function(p) {
+            var chart;
+            if(p) {
+                var first = true;
+                chart = p;
+                p.on('drawn.' + event_namespace, function(node, edge) {
+                    handlers.add_behavior(chart, node, edge);
+                    if(first && handlers.first) {
+                        handlers.first(chart, node, edge);
+                        first = false;
+                    }
+                    else if(handlers.rest)
+                        handlers.rest(chart, node, edge);
+                });
+            }
+            else if(_behavior.parent()) {
+                chart = _behavior.parent();
+                chart.on('drawn.' + event_namespace, function(node, edge) {
+                    handlers.remove_behavior(chart, node, edge);
+                    chart.on('drawn.highlight-neighbors', null);
+                });
+            }
+        });
+    return _behavior;
+};
+
 /* asynchronous d3.tip support for dc.graph.js (optional) */
 dc_graph.tip = function() {
     var _tip = {}, _d3tip = null;
@@ -2507,6 +2505,167 @@ dc_graph.tip = function() {
     });
 
     return _tip;
+};
+
+dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
+    function draw_highlighted(chart, edge) {
+        edge
+            .attr('stroke-width', function(e) {
+                return e.dcg_highlighted ?
+                    highlightStrokeWidth :
+                    param(chart.edgeStrokeWidth())(e);
+            })
+            .attr('stroke', function(e) {
+                return e.dcg_highlighted ?
+                    highlightStroke :
+                    param(chart.edgeStroke())(e);
+            });
+    }
+
+    function clear_all_highlights(chart, edge) {
+        edge.each(function(e) {
+            e.dcg_highlighted = false;
+        });
+        draw_highlighted(chart, edge);
+    }
+
+    function add_behavior(chart, node, edge) {
+        node
+            .on('mouseover.highlight-neighbors', function(d) {
+                edge.each(function(e) {
+                    e.dcg_highlighted = e.source === d || e.target === d;
+                });
+                draw_highlighted(chart, edge);
+            })
+            .on('mouseout.highlight-neighbors', function(d) {
+                clear_all_highlights(chart, edge);
+            });
+    }
+
+    function remove_behavior(chart, node, edge) {
+        node
+            .on('mouseover.highlight-neighbors', null)
+            .on('mouseout.highlight-neighbors', null);
+        clear_all_highlights(chart, edge);
+    }
+
+    return dc_graph.behavior('highlight-neighbors', {
+        add_behavior: add_behavior,
+        first: function(chart, node, edge) {
+            clear_all_highlights(chart, edge);
+        },
+        rest: function(chart, node, edge) {
+            draw_highlighted(chart, edge);
+        },
+        remove_behavior: function(chart, node, edge) {
+            remove_behavior(chart, node, edge);
+        }
+    });
+};
+
+
+dc_graph.expand_collapse = function(get_degree, expand, collapse) {
+    function add_gradient_def(chart) {
+        var gradient = chart.addOrRemoveDef('spike-gradient', true, 'linearGradient');
+        gradient.attr({
+            x1: '0%',
+            y1: '0%',
+            x2: '100%',
+            y2: '0%',
+            spreadMethod: 'pad'
+        });
+        gradient.selectAll('stop').data([[0,'black',1], [100, 'black', '0']])
+            .enter().append('stop').attr({
+                offset: function(d) {
+                    return d[0] + '%';
+                },
+                'stop-color': function(d) {
+                    return d[1];
+                },
+                'stop-opacity': function(d) {
+                    return d[2];
+                }
+            });
+    }
+
+    function draw_selected(chart, node) {
+        var spike = node
+            .selectAll('g.spikes')
+            .data(function(d) {
+                return d.dcg_expand_selected ? [d] : [];
+            });
+        spike.exit().remove();
+        spike
+          .enter().insert('g', ':first-child')
+            .classed('spikes', true)
+            .selectAll('rect.spike')
+            .data(function(d) {
+                var n = get_degree(param(chart.nodeKey())(d)),
+                    ret = Array(d.dcg_expand_degree);
+                for(var i = 0; i<n; ++i) {
+                    var a = Math.PI * 2 * i / n;
+                    ret[i] = {
+                        a: 360 * i / n,
+                        x: Math.cos(a) * d.dcg_rx*.9,
+                        y: Math.sin(a) * d.dcg_ry*.9
+                    };
+                }
+                return ret;
+            })
+          .enter().append('rect')
+            .classed('spike', true)
+            .attr({
+                width: 25,
+                height: 3,
+                fill: 'url(#spike-gradient)',
+                rx: 1,
+                ry: 1,
+                x: 0,
+                y: 0,
+                transform: function(d) {
+                    return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
+                }
+            });
+    }
+
+    function clear_selected(chart, node) {
+        node.each(function(n) {
+            n.dcg_expand_selected = false;
+        });
+        draw_selected(chart, node);
+    }
+
+    function add_behavior(chart, node, edge) {
+        node
+            .on('mouseover.expand-collapse', function(d) {
+                node.each(function(n) {
+                    n.dcg_expand_selected = n === d;
+                });
+                draw_selected(chart, node);
+            })
+            .on('mouseout.expand-collapse', function(d) {
+                clear_selected(chart, node);
+            })
+            .on('click', function(d) {
+                if((d.dcg_expanded = !d.dcg_expanded))
+                    expand(param(chart.nodeKey())(d));
+                else
+                    collapse(param(chart.nodeKey())(d));
+            });
+    }
+
+    function remove_behavior(chart, node, edge) {
+        node
+            .on('mouseover.expand-collapse', null)
+            .on('mouseout.expand-collapse', null);
+        clear_selected(chart, node);
+    }
+
+    return dc_graph.behavior('expand-collapse', {
+        add_behavior: add_behavior,
+        first: add_gradient_def,
+        remove_behavior: remove_behavior
+    });
 };
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
