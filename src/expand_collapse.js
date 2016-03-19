@@ -1,30 +1,4 @@
 dc_graph.expand_collapse = function(get_degree, expand, collapse) {
-    var _behavior = {};
-
-    /**
-     #### .parent([object])
-     Assigns this behavior to a diagram. It will highlight edges when their end-nodes
-     are hovered.
-     **/
-    _behavior.parent = property(null)
-        .react(function(p) {
-            var chart;
-            if(p) {
-                chart = p;
-                p.on('drawn.expand-collapse', function(node, edge) {
-                    add_gradient_def(chart);
-                    add_behavior(chart, node, edge);
-                });
-            }
-            else if(_behavior.parent()) {
-                chart = _behavior.parent();
-                chart.on('drawn.expand-collapse', function(node, edge) {
-                    remove_behavior(chart, node, edge);
-                    chart.on('drawn.expand-collapse', null);
-                });
-            }
-        });
-
     function add_gradient_def(chart) {
         var gradient = chart.addOrRemoveDef('spike-gradient', true, 'linearGradient');
         gradient.attr({
@@ -121,5 +95,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
         clear_selected(chart, node);
     }
 
-    return _behavior;
+    return dc_graph.behavior('expand-collapse', {
+        add_behavior: add_behavior,
+        first: add_gradient_def,
+        remove_behavior: remove_behavior
+    });
 };

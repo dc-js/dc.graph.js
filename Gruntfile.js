@@ -345,6 +345,7 @@ module.exports.jsFiles = [
     'src/diagram.js',
     'src/legend.js',
     'src/constraint_pattern.js',
+    'src/behavior.js',
     'src/tip.js',
     'src/highlight_neighbors.js',
     'src/expand_collapse.js',

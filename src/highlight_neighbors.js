@@ -1,35 +1,4 @@
 dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
-    var _behavior = {};
-
-    /**
-     #### .parent([object])
-     Assigns this behavior to a diagram. It will highlight edges when their end-nodes
-     are hovered.
-     **/
-    _behavior.parent = property(null)
-        .react(function(p) {
-            var chart;
-            if(p) {
-                var once = true;
-                chart = p;
-                p.on('drawn.highlight-neighbors', function(node, edge) {
-                    add_behavior(chart, node, edge);
-                    if(once) {
-                        clear_all_highlights(chart, edge);
-                        once = false;
-                    }
-                    else draw_highlighted(chart, edge);
-                });
-            }
-            else if(_behavior.parent()) {
-                chart = _behavior.parent();
-                chart.on('drawn.highlight-neighbors', function(node, edge) {
-                    remove_behavior(chart, node, edge);
-                    chart.on('drawn.highlight-neighbors', null);
-                });
-            }
-        });
-
     function draw_highlighted(chart, edge) {
         edge
             .attr('stroke-width', function(e) {
@@ -71,5 +40,17 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
         clear_all_highlights(chart, edge);
     }
 
-    return _behavior;
+    return dc_graph.behavior('highlight-neighbors', {
+        add_behavior: add_behavior,
+        first: function(chart, node, edge) {
+            clear_all_highlights(chart, edge);
+        },
+        rest: function(chart, node, edge) {
+            draw_highlighted(chart, edge);
+        },
+        remove_behavior: function(chart, node, edge) {
+            remove_behavior(chart, node, edge);
+        }
+    });
 };
+
