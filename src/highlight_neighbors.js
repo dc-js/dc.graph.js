@@ -1,15 +1,25 @@
 dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
     function draw_highlighted(chart, edge) {
-        edge
-            .attr('stroke-width', function(e) {
-                return e.dcg_highlighted ?
-                    highlightStrokeWidth :
-                    param(chart.edgeStrokeWidth())(e);
-            })
-            .attr('stroke', function(e) {
-                return e.dcg_highlighted ?
-                    highlightStroke :
-                    param(chart.edgeStroke())(e);
+        var highlighted = edge.filter(function(e) {
+            return e.dcg_highlighted;
+        }),
+            unhighlighted = edge.filter(function(e) {
+                return !e.dcg_highlighted;
+            });
+        highlighted
+            .attr('stroke-width', highlightStrokeWidth)
+            .attr('stroke', highlightStroke)
+            .each(function(e) {
+                d3.selectAll('#' + chart.arrowId(e, 'head') + ',#' + chart.arrowId(e, 'tail'))
+                    .attr('fill', highlightStroke);
+            });
+
+        unhighlighted
+            .attr('stroke-width', param(chart.edgeStrokeWidth()))
+            .attr('stroke', param(chart.edgeStroke()))
+            .each(function(e) {
+                d3.select('#' + chart.arrowId(e, 'head') + ',#' + chart.arrowId(e, 'tail'))
+                    .attr('fill', param(chart.edgeStroke())(e));
             });
     }
 
