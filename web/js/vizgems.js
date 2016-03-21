@@ -223,7 +223,7 @@ var options = {
         needs_redraw: true,
         apply: function(val, diagram) {
             diagram.constrain(val ? function(nodes, edges) {
-                return vizgems_constraints(nodes, edges, []);
+                return vm_constraints(nodes, edges, []);
             } : function() { return []; });
         }
     },
@@ -432,14 +432,17 @@ var node_inv = null, edge_inv = null;
 
 
 // demo of constraints applied by pattern
-var vizgems_rules = {
+var vm_rules = {
     nodes: [
         {id: 'ostype', partition: 'ostype', typename: function(id, value) { return value; }}
     ],
     edges: [
-        {source: 'VM', target: 'RTR', produce: dc_graph.gap_x(200, true)}
+        {source: 'VM', target: 'PRT', produce: dc_graph.gap_x(200, false)},
+        {source: 'VM', target: 'FS', produce: dc_graph.gap_x(200, false)},
+        {source: 'PRT', target: 'HYP', produce: dc_graph.gap_x(200, false)},
+        {source: 'FS', target: 'HYP', produce: dc_graph.gap_x(200, false)},
+        {source: 'VM', target: 'HYP', produce: dc_graph.gap_x(200, false)}
         /*
-        ,
             {source: 'Client', target: 'Metaserver',
              reverse: true,
              produce: function(members) {
@@ -482,7 +485,7 @@ var vizgems_rules = {
 */
     ]
 };
-var vizgems_constraints = dc_graph.constraint_pattern(diagram, vizgems_rules);
+var vm_constraints = dc_graph.constraint_pattern(diagram, vm_rules);
 
 function nocache_query() {
     return '?nocache=' + Date.now();
