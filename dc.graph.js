@@ -86,6 +86,17 @@ function get_original(x) {
     return x.orig;
 }
 
+// http://jsperf.com/cloning-an-object/101
+function clone(obj) {
+    var target = {};
+    for(var i in obj) {
+        if(obj.hasOwnProperty(i)) {
+            target[i] = obj[i];
+        }
+    }
+    return target;
+}
+
 // we want to allow either values or functions to be passed to specify parameters.
 // if a function, the function needs a preprocessor to extract the original key/value
 // pair from the wrapper object we put it in.
@@ -1286,6 +1297,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart;
     };
 
+
+    _chart.edgeId = function(d) {
+        return 'edge-' + param(_chart.edgeKey())(d).replace(/[^\w-_]/g, '-');
+    };
+
+    _chart.arrowId = function(d, kind) {
+        return 'arrow-' + kind + '-' + _chart.edgeId(d);
+    };
+
+    _chart.textpathId = function(d) {
+        return 'textpath-' + _chart.edgeId(d);
+    };
+
     /**
      * Instructs cola.js to fit the connected components. Default: true
      * @name handleDisconnected
@@ -1311,13 +1335,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                 flowLayout: _chart.flowLayout()
             }
         });
-    }
-
-    function edge_id(d) {
-        return 'edge-' + param(_chart.edgeKey())(d).replace(/[^\w-_]/g, '-');
-    }
-    function textpath_id(d) {
-        return 'textpath-' + edge_id(d);
     }
 
     _chart._buildNode = function(node, nodeEnter) {
@@ -1492,7 +1509,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var edgeEnter = edge.enter().append('svg:path')
                 .attr({
                     class: 'edge',
-                    id: edge_id,
+                    id: _chart.edgeId,
                     opacity: 0
                 });
         edge
@@ -1526,11 +1543,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke', 'green')
             .attr('stroke-width', 10)
             .on('mouseover', function(d) {
-                d3.select('#' + edge_id(d) + '-label')
+                d3.select('#' + _chart.edgeId(d) + '-label')
                     .attr('visibility', 'visible');
             })
             .on('mouseout', function(d) {
-                d3.select('#' + edge_id(d) + '-label')
+                d3.select('#' + _chart.edgeId(d) + '-label')
                     .attr('visibility', 'hidden');
             });
         edgeHover.exit().remove();
@@ -1540,7 +1557,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var edgeLabelsEnter = edgeLabels.enter()
               .append('text')
                 .attr('id', function(d) {
-                    return edge_id(d) + '-label';
+                    return _chart.edgeId(d) + '-label';
                 })
                 .attr('visibility', 'hidden')
                 .attr({'class':'edge-label',
@@ -1549,7 +1566,7 @@ dc_graph.diagram = function (parent, chartGroup) {
               .append('textPath')
                 .attr('startOffset', '50%')
                 .attr('xlink:href', function(d) {
-                    var id = textpath_id(d);
+                    var id = _chart.textpathId(d);
                     _chart.addOrRemoveDef(id, true, 'svg:path');
                     return '#' + id;
                 });
@@ -1771,7 +1788,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var path = calc_edge_path(d, 'new', d.source.cola.x, d.source.cola.y, d.target.cola.x, d.target.cola.y);
         var spos = path.points[0], tpos = path.points[path.points.length-1];
         if(param(_chart.edgeArrowhead())(d))
-            d3.select('#' + arrow_id(d, 'head'))
+            d3.select('#' + _chart.arrowId(d, 'head'))
                 .attr('orient', function(d) {
                     var near = bezier_point(path.points, 0.75);
                     return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
@@ -1834,7 +1851,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr("d", render_edge_path('new'));
 
         edge.each(function(d) {
-            var id = textpath_id(d);
+            var id = _chart.textpathId(d);
             var path = d.ports.new[d.parallel];
             var points = d.target.cola.x < d.source.cola.x ?
                     path.points.slice(0).reverse() : path.points;
@@ -2057,10 +2074,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart;
     };
 
-    function arrow_id(d, kind) {
-        return 'arrow-' + kind + '-' + edge_id(d);
-    }
-
     _chart.addOrRemoveDef = function(id, whether, tag) {
         var data = whether ? [0] : [];
         var sel = _defs.selectAll('#' + id).data(data);
@@ -2073,7 +2086,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     function edgeArrow(d, kind, name) {
-        var id = arrow_id(d, kind),
+        var id = _chart.arrowId(d, kind),
             markerEnter = _chart.addOrRemoveDef(id, !!name, 'svg:marker');
 
         if(name) {
@@ -2304,7 +2317,7 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             return;
         var rule = {source: e.source, target: e.target};
         rule.produce = typeof e.produce === 'function' ? e.produce : function() {
-            return Object.create(e.produce);
+            return clone(e.produce);
         };
         ['listname', 'wrap', 'reverse'].forEach(function(k) {
             if(e[k] !== undefined) rule[k] = e[k];
@@ -2509,16 +2522,26 @@ dc_graph.tip = function() {
 
 dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
     function draw_highlighted(chart, edge) {
-        edge
-            .attr('stroke-width', function(e) {
-                return e.dcg_highlighted ?
-                    highlightStrokeWidth :
-                    param(chart.edgeStrokeWidth())(e);
-            })
-            .attr('stroke', function(e) {
-                return e.dcg_highlighted ?
-                    highlightStroke :
-                    param(chart.edgeStroke())(e);
+        var highlighted = edge.filter(function(e) {
+            return e.dcg_highlighted;
+        }),
+            unhighlighted = edge.filter(function(e) {
+                return !e.dcg_highlighted;
+            });
+        highlighted
+            .attr('stroke-width', highlightStrokeWidth)
+            .attr('stroke', highlightStroke)
+            .each(function(e) {
+                d3.selectAll('#' + chart.arrowId(e, 'head') + ',#' + chart.arrowId(e, 'tail'))
+                    .attr('fill', highlightStroke);
+            });
+
+        unhighlighted
+            .attr('stroke-width', param(chart.edgeStrokeWidth()))
+            .attr('stroke', param(chart.edgeStroke()))
+            .each(function(e) {
+                d3.select('#' + chart.arrowId(e, 'head') + ',#' + chart.arrowId(e, 'tail'))
+                    .attr('fill', param(chart.edgeStroke())(e));
             });
     }
 
