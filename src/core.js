@@ -64,6 +64,17 @@ function get_original(x) {
     return x.orig;
 }
 
+// http://jsperf.com/cloning-an-object/101
+function clone(obj) {
+    var target = {};
+    for(var i in obj) {
+        if(obj.hasOwnProperty(i)) {
+            target[i] = obj[i];
+        }
+    }
+    return target;
+}
+
 // we want to allow either values or functions to be passed to specify parameters.
 // if a function, the function needs a preprocessor to extract the original key/value
 // pair from the wrapper object we put it in.

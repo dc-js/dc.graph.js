@@ -76,7 +76,7 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             return;
         var rule = {source: e.source, target: e.target};
         rule.produce = typeof e.produce === 'function' ? e.produce : function() {
-            return Object.create(e.produce);
+            return clone(e.produce);
         };
         ['listname', 'wrap', 'reverse'].forEach(function(k) {
             if(e[k] !== undefined) rule[k] = e[k];
