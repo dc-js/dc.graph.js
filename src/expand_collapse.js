@@ -22,7 +22,13 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             });
     }
 
-    function draw_selected(chart, node) {
+    function view_degree(edge, n) {
+        return edge.filter(function(e) {
+            return e.source === n || e.target === n;
+        }).size();
+    }
+
+    function draw_selected(chart, node, edge) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(d) {
@@ -34,12 +40,13 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             .classed('spikes', true)
             .selectAll('rect.spike')
             .data(function(d) {
-                var n = get_degree(param(chart.nodeKey())(d)),
+                var key = param(chart.nodeKey())(d);
+                var n = get_degree(key) - view_degree(edge, d),
                     ret = Array(d.dcg_expand_degree);
                 for(var i = 0; i<n; ++i) {
-                    var a = Math.PI * 2 * i / n;
+                    var a = Math.PI * (2 * i / n - 0.5);
                     ret[i] = {
-                        a: 360 * i / n,
+                        a: -90 + 360 * i / n,
                         x: Math.cos(a) * d.dcg_rx*.9,
                         y: Math.sin(a) * d.dcg_ry*.9
                     };
@@ -62,11 +69,11 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             });
     }
 
-    function clear_selected(chart, node) {
+    function clear_selected(chart, node, edge) {
         node.each(function(n) {
             n.dcg_expand_selected = false;
         });
-        draw_selected(chart, node);
+        draw_selected(chart, node, edge);
     }
 
     function add_behavior(chart, node, edge) {
@@ -75,10 +82,10 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
                 node.each(function(n) {
                     n.dcg_expand_selected = n === d;
                 });
-                draw_selected(chart, node);
+                draw_selected(chart, node, edge);
             })
             .on('mouseout.expand-collapse', function(d) {
-                clear_selected(chart, node);
+                clear_selected(chart, node, edge);
             })
             .on('click', function(d) {
                 if((d.dcg_expanded = !d.dcg_expanded))
