@@ -314,8 +314,8 @@ source(function(error, data) {
                           expanded = _.union(expanded, adjacent_nodes(key));
                           apply_expander_filter();
                           run();
-                      }, function(key) {
-                          expanded = _.difference(expanded, adjacent_nodes(key));
+                      }, function(key, collapsible) { // collapse
+                          expanded = _.difference(expanded, adjacent_nodes(key).filter(collapsible));
                           apply_expander_filter();
                           run();
                       }));
