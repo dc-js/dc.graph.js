@@ -42,7 +42,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             .data(function(d) {
                 var key = param(chart.nodeKey())(d);
                 var n = get_degree(key) - view_degree(edge, d),
-                    ret = Array(d.dcg_expand_degree);
+                    ret = Array(n);
                 for(var i = 0; i<n; ++i) {
                     var a = Math.PI * (2 * i / n - 0.5);
                     ret[i] = {
