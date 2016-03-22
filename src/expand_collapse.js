@@ -32,7 +32,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(d) {
-                return d.dcg_expand_selected ? [d] : [];
+                return (d.dcg_expand_selected && !d.dcg_expanded) ? [d] : [];
             });
         spike.exit().remove();
         spike
@@ -92,6 +92,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
                     expand(param(chart.nodeKey())(d));
                 else
                     collapse(param(chart.nodeKey())(d));
+                draw_selected(chart, node, edge);
             });
     }
 
