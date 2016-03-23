@@ -89,6 +89,7 @@ var options = {
     staged_transitions: {
         default: false,
         query: 'stage',
+        selector: '#stage-transitions',
         apply: function(val, diagram) {
             diagram.stageTransitions(val);
         }
