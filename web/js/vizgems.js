@@ -86,6 +86,13 @@ var options = {
         default: 15000,
         query: 'slow'
     },
+    staged_transitions: {
+        default: false,
+        query: 'stage',
+        apply: function(val, diagram) {
+            diagram.stageTransitions(val);
+        }
+    },
     stats: {
         default: false,
         subscribe: function(k) {

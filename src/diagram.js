@@ -580,6 +580,18 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.transitionDuration = property(500);
 
     /**
+     * Whether or not transitions should be split into separate animations to emphasize
+     * the delete, move, and insert operations.
+     * @name stageTransitions
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Number} [stageTransitions]
+     * @return {Number}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.stageTransitions = property(false);
+
+    /**
      * Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for no
      * limit.
      * @name timeLimit
@@ -843,6 +855,18 @@ dc_graph.diagram = function (parent, chartGroup) {
         return !!e.source && !!e.target;
     }
 
+    function transition_duration() {
+        return _chart.stageTransitions() ?
+            _chart.transitionDuration() / 3 :
+            _chart.transitionDuration();
+    }
+
+    function transition_delay() {
+        return _chart.stageTransitions() ?
+            _chart.transitionDuration() / 3 :
+            0;
+    }
+
     _chart.isRunning = function() {
         return _running;
     };
@@ -999,7 +1023,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return name ? 'url(#' + arrow_id + ')' : null;
             });
         edge.exit().transition()
-            .duration(_chart.transitionDuration())
+            .duration(transition_duration())
             .attr('opacity', 0)
             .each(function(d) {
                 edgeArrow(d, 'head', null);
@@ -1051,7 +1075,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return param(_chart.edgeLabel())(d);
             });
         edgeLabels.exit().transition()
-            .duration(_chart.transitionDuration())
+            .duration(transition_duration())
             .attr('opacity', 0).remove();
 
         // create node SVG elements
@@ -1064,7 +1088,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _chart._buildNode(node, nodeEnter);
         node.exit().transition()
-            .duration(_chart.transitionDuration())
+            .duration(transition_duration())
             .attr('opacity', 0)
             .remove();
 
@@ -1297,7 +1321,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             return "translate(" + d.cola.x + "," + d.cola.y + ")";
         });
         var ntrans = node.transition()
-                .duration(_chart.transitionDuration())
+                .duration(transition_duration())
+                .delay(transition_delay())
                 .attr('opacity', '1')
                 .attr("transform", function (d) {
                     return "translate(" + d.cola.x + "," + d.cola.y + ")";
@@ -1319,7 +1344,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         var etrans = edge.each(calc_new_edge_path)
               .transition()
-                .duration(_chart.transitionDuration())
+                .duration(transition_duration())
+                .delay(transition_delay())
                 .attr('opacity', param(_chart.edgeOpacity()))
                 .attr("d", render_edge_path('new'));
 
