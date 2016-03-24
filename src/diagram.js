@@ -1318,14 +1318,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         console.assert(edge.data().every(has_source_and_target));
 
         var nodeEntered = {};
-        nodeEnter.each(function(n) {
-            nodeEntered[param(_chart.nodeKey())(n)] = true;
-        });
-
-        // start new nodes at their final position
-        nodeEnter.attr("transform", function (d) {
-            return "translate(" + d.cola.x + "," + d.cola.y + ")";
-        });
+        nodeEnter
+            .each(function(n) {
+                nodeEntered[param(_chart.nodeKey())(n)] = true;
+            })
+            .attr("transform", function (d) {
+                // start new nodes at their final position
+                return "translate(" + d.cola.x + "," + d.cola.y + ")";
+            });
         var ntrans = node
                 .transition()
                 .duration(transition_duration())
@@ -1347,14 +1347,27 @@ dc_graph.diagram = function (parent, chartGroup) {
             d.ports.old = null;
         });
 
-        // start new edges at old positions of nodes, if any, else new positions
-        edgeEnter.each(calc_old_edge_path)
-            .attr('d', render_edge_path('old'));
+        var edgeEntered = {};
+        edgeEnter
+            .each(function(e) {
+                edgeEntered[param(_chart.edgeKey())(e)] = true;
+            })
+            .each(function(e) {
+                // if staging transitions, just fade new edges in at new position
+                // else start new edges at old positions of nodes, if any, else new positions
+                if(_chart.stageTransitions())
+                    calc_new_edge_path(e);
+                else
+                    calc_old_edge_path(e);
+            })
+            .attr('d', render_edge_path(_chart.stageTransitions() ? 'new' : 'old'));
 
         var etrans = edge.each(calc_new_edge_path)
               .transition()
                 .duration(transition_duration())
-                .delay(transition_delay())
+                .delay(function(e) {
+                    return edgeEntered[param(_chart.edgeKey())(e)] ? transition_delay() : 0;
+                })
                 .attr('opacity', param(_chart.edgeOpacity()))
                 .attr("d", render_edge_path('new'));
 
