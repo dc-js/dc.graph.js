@@ -855,15 +855,16 @@ dc_graph.diagram = function (parent, chartGroup) {
         return !!e.source && !!e.target;
     }
 
+    // three stages: delete before layout, and modify & insert split the transitionDuration
     function transition_duration() {
         return _chart.stageTransitions() ?
-            _chart.transitionDuration() / 3 :
+            _chart.transitionDuration() / 2 :
             _chart.transitionDuration();
     }
 
     function transition_delay() {
         return _chart.stageTransitions() ?
-            _chart.transitionDuration() / 3 :
+            _chart.transitionDuration() / 2 :
             0;
     }
 
@@ -1084,7 +1085,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr('opacity', '0'); // don't show until has layout
-                // .call(_d3cola.drag);
+        // .call(_d3cola.drag);
 
         _chart._buildNode(node, nodeEnter);
         node.exit().transition()
@@ -1316,21 +1317,29 @@ dc_graph.diagram = function (parent, chartGroup) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
+        var nodeEntered = {};
+        nodeEnter.each(function(n) {
+            nodeEntered[param(_chart.nodeKey())(n)] = true;
+        });
+
         // start new nodes at their final position
         nodeEnter.attr("transform", function (d) {
             return "translate(" + d.cola.x + "," + d.cola.y + ")";
         });
-        var ntrans = node.transition()
+        var ntrans = node
+                .transition()
                 .duration(transition_duration())
-                .delay(transition_delay())
+                .delay(function(n) {
+                    return nodeEntered[param(_chart.nodeKey())(n)] ? transition_delay() : 0;
+                })
                 .attr('opacity', '1')
                 .attr("transform", function (d) {
                     return "translate(" + d.cola.x + "," + d.cola.y + ")";
+                })
+                .each("end.record", function(d) {
+                    d.prevX = d.cola.x;
+                    d.prevY = d.cola.y;
                 });
-        ntrans.each("end.record", function(d) {
-            d.prevX = d.cola.x;
-            d.prevY = d.cola.y;
-        });
 
         // reset edge ports
         edge.each(function(d) {
