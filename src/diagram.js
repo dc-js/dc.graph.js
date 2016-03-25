@@ -1309,7 +1309,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     var near = bezier_point(path.points, 0.75);
                     return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
                 });
-        d.length =  Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
+        d.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
     }
 
     function render_edge_path(age) {
