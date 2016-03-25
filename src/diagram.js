@@ -580,8 +580,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.transitionDuration = property(500);
 
     /**
-     * Whether or not transitions should be split into separate animations to emphasize
-     * the delete, move, and insert operations.
+     * How transitions should be split into separate animations to emphasize
+     * the delete, modify, and insert operations: 'none', 'modins', 'insmod'
      * @name stageTransitions
      * @memberof dc_graph.diagram
      * @instance
@@ -589,7 +589,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Number}
      * @return {dc_graph.diagram}
      **/
-    _chart.stageTransitions = property(false);
+    _chart.stageTransitions = property('none');
 
     /**
      * Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for no
@@ -857,15 +857,16 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     // three stages: delete before layout, and modify & insert split the transitionDuration
     function transition_duration() {
-        return _chart.stageTransitions() ?
+        return (_chart.stageTransitions() !== 'none') ?
             _chart.transitionDuration() / 2 :
             _chart.transitionDuration();
     }
 
-    function transition_delay() {
-        return _chart.stageTransitions() ?
-            _chart.transitionDuration() / 2 :
-            0;
+    function transition_delay(is_enter) {
+        return _chart.stageTransitions() === 'none' ||
+            _chart.stageTransitions() === 'modins' === !is_enter ?
+            0 :
+            _chart.transitionDuration() / 2;
     }
 
     _chart.isRunning = function() {
@@ -1330,7 +1331,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .transition()
                 .duration(transition_duration())
                 .delay(function(n) {
-                    return nodeEntered[param(_chart.nodeKey())(n)] ? transition_delay() : 0;
+                    return transition_delay(nodeEntered[param(_chart.nodeKey())(n)]);
                 })
                 .attr('opacity', '1')
                 .attr("transform", function (d) {
@@ -1355,21 +1356,31 @@ dc_graph.diagram = function (parent, chartGroup) {
             .each(function(e) {
                 // if staging transitions, just fade new edges in at new position
                 // else start new edges at old positions of nodes, if any, else new positions
-                if(_chart.stageTransitions())
+                if(_chart.stageTransitions() === 'modins')
                     calc_new_edge_path(e);
                 else
                     calc_old_edge_path(e);
             })
-            .attr('d', render_edge_path(_chart.stageTransitions() ? 'new' : 'old'));
+            .attr('d', render_edge_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
 
         var etrans = edge.each(calc_new_edge_path)
               .transition()
                 .duration(transition_duration())
                 .delay(function(e) {
-                    return edgeEntered[param(_chart.edgeKey())(e)] ? transition_delay() : 0;
+                    return transition_delay(edgeEntered[param(_chart.edgeKey())(e)]);
                 })
                 .attr('opacity', param(_chart.edgeOpacity()))
+                .attr("d", function(e) {
+                    var when = _chart.stageTransitions() === 'insmod' &&
+                            edgeEntered[param(_chart.edgeKey())(e)] ? 'old' : 'new';
+                    return render_edge_path(when)(e);
+                });
+        if(_chart.stageTransitions() === 'insmod') {
+            // inserted edges transition twice in insmod mode
+            etrans.transition()
+                .duration(transition_duration())
                 .attr("d", render_edge_path('new'));
+        }
 
         edge.each(function(d) {
             var id = _chart.textpathId(d);

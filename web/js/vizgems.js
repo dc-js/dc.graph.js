@@ -87,7 +87,7 @@ var options = {
         query: 'slow'
     },
     staged_transitions: {
-        default: false,
+        default: 'none',
         query: 'stage',
         selector: '#stage-transitions',
         apply: function(val, diagram) {

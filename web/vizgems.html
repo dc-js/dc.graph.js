@@ -79,13 +79,21 @@
       <div><label><input type="checkbox" id="use-colors">Use Colors</label></div>
       <div><label><input type="checkbox" id="use-shapes">Use Shapes</label></div>
       <div><label><input type="checkbox" id="show-arrows">Show Arrows</label></div>
-      <div><label><input type="checkbox" id="stage-transitions">Staged Transitions</label></div>
+      <div style="margin-left: 5px"><label>Staged: <select id="stage-transitions">
+            <option value="insmod">Insert-Modify</option>
+            <option value="modins">Modify-Insert</option>
+            <option value="none">None</option>
+      </select></label></div>
       <!--div><label><input type="checkbox" id="show-steps">Show Layout Steps</label></div-->
       <!--div><label><input type="checkbox" id="layout-unchanged">Always Redraw</label></div-->
       <!--div><label><input type="checkbox" id="fit-labels">Fit Labels</label></div-->
       <div><label><input type="checkbox" id="layout-vms">Layout VMs</label></div>
       <div><label><input type="checkbox" id="highlight-neighbors">Highlight Neighbors</label></div>
-      <div style="margin-left: 5px"><label>Flow: <select id="flow-direction"><option value="x">X</option><option value="y">Y</option><option value="none">None</option></select></label></div>
+      <div style="margin-left: 5px"><label>Flow: <select id="flow-direction">
+            <option value="x">X</option>
+            <option value="y">Y</option>
+            <option value="none">None</option>
+      </select></label></div>
     </div>
   </div>
 </div>
