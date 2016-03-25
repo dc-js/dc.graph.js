@@ -868,9 +868,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('fill', param(_chart.nodeLabelFill()));
         node.select('title')
             .text(param(_chart.nodeTitle()));
-        node.select('text.node-label')
-            .text(param(_chart.nodeLabel()))
-            .each(fit_shape(_chart));
+        var text = node.select('text.node-label');
+        var tspan = text.selectAll('tspan').data(function(n) {
+            return param(_chart.nodeLabel())(n).split('/');
+        });
+        tspan.enter().append('tspan')
+            .attr('x', 0)
+            .attr('dy', function(d, i) { return i > 0 ? 12 : 0; });
+        tspan.text(function(d) { return d; });
+        text.each(fit_shape(_chart));
         node.select('.node-shape')
             .each(shape_attrs(_chart))
             .attr({
