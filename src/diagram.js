@@ -581,12 +581,17 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * How transitions should be split into separate animations to emphasize
-     * the delete, modify, and insert operations: 'none', 'modins', 'insmod'
+     * the delete, modify, and insert operations:
+     * * `none`: modify and insert operations animate at the same time
+     * * `modins`: modify operations happen before inserts
+     * * `insmod`: insert operations happen before modifies
+     *
+     * Deletions always happen before/during layout computation.
      * @name stageTransitions
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Number} [stageTransitions]
-     * @return {Number}
+     * @param {String} [stageTransitions]
+     * @return {String}
      * @return {dc_graph.diagram}
      **/
     _chart.stageTransitions = property('none');
