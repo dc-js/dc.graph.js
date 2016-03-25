@@ -193,7 +193,7 @@ source(function(error, data) {
     function run() {
         do_status();
         if(doReinit)
-            diagram.initLayoutOnRedraw(appLayout && useAppLayout);
+            diagram.initLayoutOnRedraw(explore || appLayout && useAppLayout);
         startDim.filterRange([0, curr]);
         $('#run-indicator').show();
         if(doRender) {
