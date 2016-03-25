@@ -17,6 +17,8 @@ var querystring = (function(a) {
 var steptime = +querystring.interval || 1000, // ms per step
     pause = +querystring.pause || 2500, // pause at end of loop
     showSteps = !(querystring.showsteps === 'false'),
+    transition = querystring.transition || 0,
+    stage = querystring.stage || 'insmod',
     file = querystring.file || null,
     generate = querystring.gen || null,
     shape = querystring.shape || null,
@@ -251,7 +253,8 @@ source(function(error, data) {
         .width($(window).width())
         .height($(window).height())
         .timeLimit(timeLimit)
-        .transitionDuration(0)
+        .transitionDuration(transition)
+        .stageTransitions(stage)
         .showLayoutSteps(showSteps)
         .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
         .edgeDimension(edges.dimension).edgeGroup(edges.group)
