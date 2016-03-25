@@ -597,6 +597,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.stageTransitions = property('none');
 
     /**
+     * Whether to put connected components each in their own group, to stabilize layout.
+     * @name groupConnected
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [stageTransitions]
+     * @return {String}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.groupConnected = property(false);
+
+    /**
      * Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for no
      * limit.
      * @name timeLimit
@@ -1236,7 +1247,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             args: {
                 nodes: wnodes.map(function(v) { return v.cola; }),
                 edges: layout_edges.map(function(v) { return v.cola; }),
-                constraints: constraints
+                constraints: constraints,
+                opts: {groupConnected: _chart.groupConnected()}
             }
         });
         _worker.postMessage({

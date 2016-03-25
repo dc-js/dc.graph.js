@@ -34,7 +34,7 @@ function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLeng
 // to the next (as long as the object is still in the layout)
 var _nodes = {}, _edges = {};
 
-function data_d3cola(nodes, edges, constraints) {
+function data_d3cola(nodes, edges, constraints, opts) {
     var wnodes = regenerate_objects(_nodes, nodes, function(v) {
         return v.dcg_nodeKey;
     }, function(v1, v) {
@@ -65,6 +65,14 @@ function data_d3cola(nodes, edges, constraints) {
         v.index = i;
     });
 
+    var groups = null;
+    if(opts.groupConnected) {
+        var components = cola.separateGraphs(wnodes, wedges);
+        groups = components.map(function(g) {
+            return {leaves: g.array.map(function(n) { return n.index; })};
+        });
+    }
+
     function postResponseState(response) {
         postMessage({
             response: response,
@@ -85,7 +93,8 @@ function data_d3cola(nodes, edges, constraints) {
     });
     _d3cola.nodes(wnodes)
         .links(wedges)
-        .constraints(constraints);
+        .constraints(constraints)
+        .groups(groups);
 }
 
 function start_d3cola(initialUnconstrainedIterations,
@@ -110,7 +119,7 @@ onmessage = function(e) {
                     args.lengthStrategy, args.baseLength, args.flowLayout);
         break;
     case 'data':
-        data_d3cola(args.nodes, args.edges, args.constraints);
+        data_d3cola(args.nodes, args.edges, args.constraints, args.opts);
         break;
     case 'start':
         start_d3cola(args.initialUnconstrainedIterations,
