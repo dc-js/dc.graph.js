@@ -597,6 +597,19 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.stageTransitions = property('none');
 
     /**
+     * The delete transition happens simultaneously with layout, which can take longer
+     * than the transition duration. Delaying it can bring it closer to the other
+     * staged transitions.
+     * @name deleteDelay
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Number} [deleteDelay]
+     * @return {Number}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.deleteDelay = property(0);
+
+    /**
      * Whether to put connected components each in their own group, to stabilize layout.
      * @name groupConnected
      * @memberof dc_graph.diagram
@@ -1042,6 +1055,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         edge.exit().transition()
             .duration(transition_duration())
+            .delay(_chart.deleteDelay())
             .attr('opacity', 0)
             .each(function(d) {
                 edgeArrow(d, 'head', null);
@@ -1094,6 +1108,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         edgeLabels.exit().transition()
             .duration(transition_duration())
+            .delay(_chart.deleteDelay())
             .attr('opacity', 0).remove();
 
         // create node SVG elements
@@ -1107,6 +1122,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _chart._buildNode(node, nodeEnter);
         node.exit().transition()
             .duration(transition_duration())
+            .delay(_chart.deleteDelay())
             .attr('opacity', 0)
             .remove();
 

@@ -76,6 +76,13 @@ var options = {
     transition: {
         default: 2000
     },
+    delete_delay: {
+        default: 0,
+        query: 'ddelay',
+        apply: function(val, diagram) {
+            diagram.deleteDelay(val);
+        }
+    },
     date: {
         default: ''
     },
