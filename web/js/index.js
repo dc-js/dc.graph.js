@@ -175,7 +175,7 @@ source(function(error, data) {
         data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
     }
 
-    if(appLayout)
+    if(false) // appLayout)
         show_type_graph(data.nodes, data.links, sourceattr, targetattr);
 
     var edges = flat_group.make(data.links, function(d) {
