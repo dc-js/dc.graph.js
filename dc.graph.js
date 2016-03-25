@@ -1107,6 +1107,18 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.transitionDuration = property(500);
 
     /**
+     * How transitions should be split into separate animations to emphasize
+     * the delete, modify, and insert operations: 'none', 'modins', 'insmod'
+     * @name stageTransitions
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Number} [stageTransitions]
+     * @return {Number}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.stageTransitions = property('none');
+
+    /**
      * Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for no
      * limit.
      * @name timeLimit
@@ -1370,6 +1382,20 @@ dc_graph.diagram = function (parent, chartGroup) {
         return !!e.source && !!e.target;
     }
 
+    // three stages: delete before layout, and modify & insert split the transitionDuration
+    function transition_duration() {
+        return (_chart.stageTransitions() !== 'none') ?
+            _chart.transitionDuration() / 2 :
+            _chart.transitionDuration();
+    }
+
+    function transition_delay(is_enter) {
+        return _chart.stageTransitions() === 'none' ||
+            _chart.stageTransitions() === 'modins' === !is_enter ?
+            0 :
+            _chart.transitionDuration() / 2;
+    }
+
     _chart.isRunning = function() {
         return _running;
     };
@@ -1526,7 +1552,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return name ? 'url(#' + arrow_id + ')' : null;
             });
         edge.exit().transition()
-            .duration(_chart.transitionDuration())
+            .duration(transition_duration())
             .attr('opacity', 0)
             .each(function(d) {
                 edgeArrow(d, 'head', null);
@@ -1578,7 +1604,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return param(_chart.edgeLabel())(d);
             });
         edgeLabels.exit().transition()
-            .duration(_chart.transitionDuration())
+            .duration(transition_duration())
             .attr('opacity', 0).remove();
 
         // create node SVG elements
@@ -1587,11 +1613,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr('opacity', '0'); // don't show until has layout
-                // .call(_d3cola.drag);
+        // .call(_d3cola.drag);
 
         _chart._buildNode(node, nodeEnter);
         node.exit().transition()
-            .duration(_chart.transitionDuration())
+            .duration(transition_duration())
             .attr('opacity', 0)
             .remove();
 
@@ -1819,20 +1845,29 @@ dc_graph.diagram = function (parent, chartGroup) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
-        // start new nodes at their final position
-        nodeEnter.attr("transform", function (d) {
-            return "translate(" + d.cola.x + "," + d.cola.y + ")";
-        });
-        var ntrans = node.transition()
-                .duration(_chart.transitionDuration())
+        var nodeEntered = {};
+        nodeEnter
+            .each(function(n) {
+                nodeEntered[param(_chart.nodeKey())(n)] = true;
+            })
+            .attr("transform", function (d) {
+                // start new nodes at their final position
+                return "translate(" + d.cola.x + "," + d.cola.y + ")";
+            });
+        var ntrans = node
+                .transition()
+                .duration(transition_duration())
+                .delay(function(n) {
+                    return transition_delay(nodeEntered[param(_chart.nodeKey())(n)]);
+                })
                 .attr('opacity', '1')
                 .attr("transform", function (d) {
                     return "translate(" + d.cola.x + "," + d.cola.y + ")";
+                })
+                .each("end.record", function(d) {
+                    d.prevX = d.cola.x;
+                    d.prevY = d.cola.y;
                 });
-        ntrans.each("end.record", function(d) {
-            d.prevX = d.cola.x;
-            d.prevY = d.cola.y;
-        });
 
         // reset edge ports
         edge.each(function(d) {
@@ -1840,15 +1875,39 @@ dc_graph.diagram = function (parent, chartGroup) {
             d.ports.old = null;
         });
 
-        // start new edges at old positions of nodes, if any, else new positions
-        edgeEnter.each(calc_old_edge_path)
-            .attr('d', render_edge_path('old'));
+        var edgeEntered = {};
+        edgeEnter
+            .each(function(e) {
+                edgeEntered[param(_chart.edgeKey())(e)] = true;
+            })
+            .each(function(e) {
+                // if staging transitions, just fade new edges in at new position
+                // else start new edges at old positions of nodes, if any, else new positions
+                if(_chart.stageTransitions() === 'modins')
+                    calc_new_edge_path(e);
+                else
+                    calc_old_edge_path(e);
+            })
+            .attr('d', render_edge_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
 
         var etrans = edge.each(calc_new_edge_path)
               .transition()
-                .duration(_chart.transitionDuration())
+                .duration(transition_duration())
+                .delay(function(e) {
+                    return transition_delay(edgeEntered[param(_chart.edgeKey())(e)]);
+                })
                 .attr('opacity', param(_chart.edgeOpacity()))
+                .attr("d", function(e) {
+                    var when = _chart.stageTransitions() === 'insmod' &&
+                            edgeEntered[param(_chart.edgeKey())(e)] ? 'old' : 'new';
+                    return render_edge_path(when)(e);
+                });
+        if(_chart.stageTransitions() === 'insmod') {
+            // inserted edges transition twice in insmod mode
+            etrans.transition()
+                .duration(transition_duration())
                 .attr("d", render_edge_path('new'));
+        }
 
         edge.each(function(d) {
             var id = _chart.textpathId(d);
@@ -2611,11 +2670,17 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             });
     }
 
-    function draw_selected(chart, node) {
+    function view_degree(chart, edge, key) {
+        return edge.filter(function(e) {
+            return param(chart.edgeSource())(e) === key || param(chart.edgeTarget())(e) === key;
+        }).size();
+    }
+
+    function draw_selected(chart, node, edge) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(d) {
-                return d.dcg_expand_selected ? [d] : [];
+                return (d.dcg_expand_selected && !d.dcg_expanded) ? [d] : [];
             });
         spike.exit().remove();
         spike
@@ -2623,12 +2688,13 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             .classed('spikes', true)
             .selectAll('rect.spike')
             .data(function(d) {
-                var n = get_degree(param(chart.nodeKey())(d)),
-                    ret = Array(d.dcg_expand_degree);
+                var key = param(chart.nodeKey())(d);
+                var n = get_degree(key) - view_degree(chart, edge, key),
+                    ret = Array(n);
                 for(var i = 0; i<n; ++i) {
-                    var a = Math.PI * 2 * i / n;
+                    var a = Math.PI * (2 * i / n - 0.5);
                     ret[i] = {
-                        a: 360 * i / n,
+                        a: -90 + 360 * i / n,
                         x: Math.cos(a) * d.dcg_rx*.9,
                         y: Math.sin(a) * d.dcg_ry*.9
                     };
@@ -2651,11 +2717,15 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             });
     }
 
-    function clear_selected(chart, node) {
+    function clear_selected(chart, node, edge) {
         node.each(function(n) {
             n.dcg_expand_selected = false;
         });
-        draw_selected(chart, node);
+        draw_selected(chart, node, edge);
+    }
+
+    function collapsible(chart, edge, key) {
+        return view_degree(chart, edge, key) === 1;
     }
 
     function add_behavior(chart, node, edge) {
@@ -2664,16 +2734,17 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
                 node.each(function(n) {
                     n.dcg_expand_selected = n === d;
                 });
-                draw_selected(chart, node);
+                draw_selected(chart, node, edge);
             })
             .on('mouseout.expand-collapse', function(d) {
-                clear_selected(chart, node);
+                clear_selected(chart, node, edge);
             })
             .on('click', function(d) {
                 if((d.dcg_expanded = !d.dcg_expanded))
                     expand(param(chart.nodeKey())(d));
                 else
-                    collapse(param(chart.nodeKey())(d));
+                    collapse(param(chart.nodeKey())(d), collapsible.bind(null, chart, edge));
+                draw_selected(chart, node, edge);
             });
     }
 
