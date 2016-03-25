@@ -5,8 +5,8 @@ var cb_colors = colorbrewer.Paired[12];
 cb_colors[5] = cb_colors[11];
 
 // arbitrary assigning of shapes as POC
-var shapes = ['square', 'ellipse', 'diamond', 'trapezium', 'pentagon', 'hexagon', 'egg',
-              'parallelogram', 'septagon', 'invtrapezium', 'triangle', 'invtriangle'],
+var shapes = ['invtrapezium', 'ellipse', 'diamond', 'trapezium', 'pentagon', 'hexagon', 'egg',
+              'parallelogram', 'septagon', 'square', 'triangle', 'invtriangle'],
     curr_shape = 0, shape_map = {};
 
 function show_stats(data_stats, layout_stats) {
