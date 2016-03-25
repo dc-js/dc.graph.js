@@ -59,6 +59,7 @@ chart.width(600)
     * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.deleteDelay](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.groupConnected](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.timeLimit](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.constrain](#dc_graph.diagram+constrain) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -141,6 +142,7 @@ visualization versus conventional charts.
   * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.deleteDelay](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.groupConnected](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.timeLimit](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.constrain](#dc_graph.diagram+constrain) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -674,6 +676,18 @@ Deletions always happen before/during layout computation.
 | Param | Type |
 | --- | --- |
 | [stageTransitions] | <code>String</code> | 
+
+<a name="dc_graph.diagram+deleteDelay"></a>
+#### diagram.deleteDelay ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+The delete transition happens simultaneously with layout, which can take longer
+than the transition duration. Delaying it can bring it closer to the other
+staged transitions.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [deleteDelay] | <code>Number</code> | 
 
 <a name="dc_graph.diagram+groupConnected"></a>
 #### diagram.groupConnected ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
