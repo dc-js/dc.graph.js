@@ -58,7 +58,8 @@ chart.width(600)
     * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-    * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.groupConnected](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.timeLimit](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.constrain](#dc_graph.diagram+constrain) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.parallelEdgeOffset](#dc_graph.diagram+parallelEdgeOffset) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -139,7 +140,8 @@ visualization versus conventional charts.
   * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.groupConnected](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.timeLimit](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.constrain](#dc_graph.diagram+constrain) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.parallelEdgeOffset](#dc_graph.diagram+parallelEdgeOffset) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -658,15 +660,30 @@ be animated.
 | [transitionDuration] | <code>Number</code> | 
 
 <a name="dc_graph.diagram+stageTransitions"></a>
-#### diagram.stageTransitions ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+#### diagram.stageTransitions ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 How transitions should be split into separate animations to emphasize
-the delete, modify, and insert operations: 'none', 'modins', 'insmod'
+the delete, modify, and insert operations:
+* `none`: modify and insert operations animate at the same time
+* `modins`: modify operations happen before inserts
+* `insmod`: insert operations happen before modifies
+
+Deletions always happen before/during layout computation.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 
 | Param | Type |
 | --- | --- |
-| [stageTransitions] | <code>Number</code> | 
+| [stageTransitions] | <code>String</code> | 
+
+<a name="dc_graph.diagram+groupConnected"></a>
+#### diagram.groupConnected ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Whether to put connected components each in their own group, to stabilize layout.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [stageTransitions] | <code>String</code> | 
 
 <a name="dc_graph.diagram+timeLimit"></a>
 #### diagram.timeLimit ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>

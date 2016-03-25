@@ -1108,15 +1108,31 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * How transitions should be split into separate animations to emphasize
-     * the delete, modify, and insert operations: 'none', 'modins', 'insmod'
+     * the delete, modify, and insert operations:
+     * * `none`: modify and insert operations animate at the same time
+     * * `modins`: modify operations happen before inserts
+     * * `insmod`: insert operations happen before modifies
+     *
+     * Deletions always happen before/during layout computation.
      * @name stageTransitions
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Number} [stageTransitions]
-     * @return {Number}
+     * @param {String} [stageTransitions]
+     * @return {String}
      * @return {dc_graph.diagram}
      **/
     _chart.stageTransitions = property('none');
+
+    /**
+     * Whether to put connected components each in their own group, to stabilize layout.
+     * @name groupConnected
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [stageTransitions]
+     * @return {String}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.groupConnected = property(false);
 
     /**
      * Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for no
@@ -1758,7 +1774,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             args: {
                 nodes: wnodes.map(function(v) { return v.cola; }),
                 edges: layout_edges.map(function(v) { return v.cola; }),
-                constraints: constraints
+                constraints: constraints,
+                opts: {groupConnected: _chart.groupConnected()}
             }
         });
         _worker.postMessage({
@@ -1819,7 +1836,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     var near = bezier_point(path.points, 0.75);
                     return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
                 });
-        d.length =  Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
+        d.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
     }
 
     function render_edge_path(age) {
