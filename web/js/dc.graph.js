@@ -1516,6 +1516,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 keeps[e.cola.dcg_edgeTarget] = true;
             });
             wnodes = wnodes.filter(function(n) { return keeps[n.cola.dcg_nodeKey]; });
+            for(var k in _nodes)
+                if(!keeps[k])
+                    delete _nodes[k];
         }
 
         wnodes.forEach(function(v, i) {
