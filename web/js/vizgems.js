@@ -602,8 +602,10 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
             mismatched_sttype_warnings.push({node: n.id1, ostype: n.ostype, sttype: sttype[n.id1]});
         if(sttype[n.id1])
             n.ostype = sttype[n.id1];
-        // regardless, make sure all vertices have some ostype
-        n.ostype = n.ostype || 'OTHER';
+        if(n.ostype === 'HOST')
+            n.ostype = 'HYP';
+        else // regardless, make sure all vertices have some ostype
+            n.ostype = n.ostype || 'OTHER';
     });
     if(mismatched_sttype_warnings.length)
         warnings['nodes ostype did not match edges'] = mismatched_sttype_warnings;
