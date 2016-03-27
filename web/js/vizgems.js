@@ -15,14 +15,17 @@ function show_stats(data_stats, layout_stats) {
     $('#time-last').html('' + ((runner.lastTime() || 0)/1000).toFixed(3));
     $('#time-avg').html('' + ((runner.avgTime() || 0)/1000).toFixed(3));
 }
+var run_indicator = false;
 function show_start() {
+    run_indicator = true;
     $('#run-indicator').show();
 }
 function show_stop() {
+    run_indicator = false;
     $('#run-indicator').hide();
 }
 function do_redraw() {
-    if(!$('#run-indicator').is(':hidden'))
+    if(run_indicator) // ??? fishy
         return;
     diagram.redrawGroup();
 }
