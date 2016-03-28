@@ -54,9 +54,13 @@ chart.width(600)
     * [.edgeIsLayout](#dc_graph.diagram+edgeIsLayout) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.flowLayout](#dc_graph.diagram+flowLayout)
     * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.deleteDelay](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.groupConnected](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.timeLimit](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.constrain](#dc_graph.diagram+constrain) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.parallelEdgeOffset](#dc_graph.diagram+parallelEdgeOffset) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -65,10 +69,9 @@ chart.width(600)
     * [.layoutUnchanged](#dc_graph.diagram+layoutUnchanged) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.relayout](#dc_graph.diagram+relayout) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.induceNodes](#dc_graph.diagram+induceNodes) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-    * [.modLayout](#dc_graph.diagram+modLayout) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-    * [.child](#dc_graph.diagram+child) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.child](#dc_graph.diagram+child) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.handleDisconnected](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.render](#dc_graph.diagram+render) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.on](#dc_graph.diagram+on) ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -134,9 +137,13 @@ visualization versus conventional charts.
   * [.edgeIsLayout](#dc_graph.diagram+edgeIsLayout) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.flowLayout](#dc_graph.diagram+flowLayout)
   * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.deleteDelay](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.groupConnected](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.timeLimit](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.constrain](#dc_graph.diagram+constrain) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.parallelEdgeOffset](#dc_graph.diagram+parallelEdgeOffset) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -145,10 +152,9 @@ visualization versus conventional charts.
   * [.layoutUnchanged](#dc_graph.diagram+layoutUnchanged) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.relayout](#dc_graph.diagram+relayout) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.induceNodes](#dc_graph.diagram+induceNodes) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.modLayout](#dc_graph.diagram+modLayout) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.child](#dc_graph.diagram+child) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.child](#dc_graph.diagram+child) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.handleDisconnected](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.render](#dc_graph.diagram+render) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.on](#dc_graph.diagram+on) ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -606,6 +612,21 @@ chart.edgeLength(function(kv) {
   return kv.value.distance;
 });
 ```
+<a name="dc_graph.diagram+flowLayout"></a>
+#### diagram.flowLayout
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [flowLayout] | <code>Object</code> | 
+
+**Example**  
+```js
+// No flow (default)
+chart.flowLayout(null)
+// flow in x with min separation 200
+chart.flowLayout({axis: 'x', minSeparation: 200})
+```
 <a name="dc_graph.diagram+baseLength"></a>
 #### diagram.baseLength ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
@@ -639,6 +660,44 @@ be animated.
 | Param | Type |
 | --- | --- |
 | [transitionDuration] | <code>Number</code> | 
+
+<a name="dc_graph.diagram+stageTransitions"></a>
+#### diagram.stageTransitions ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+How transitions should be split into separate animations to emphasize
+the delete, modify, and insert operations:
+* `none`: modify and insert operations animate at the same time
+* `modins`: modify operations happen before inserts
+* `insmod`: insert operations happen before modifies
+
+Deletions always happen before/during layout computation.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [stageTransitions] | <code>String</code> | 
+
+<a name="dc_graph.diagram+deleteDelay"></a>
+#### diagram.deleteDelay ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+The delete transition happens simultaneously with layout, which can take longer
+than the transition duration. Delaying it can bring it closer to the other
+staged transitions.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [deleteDelay] | <code>Number</code> | 
+
+<a name="dc_graph.diagram+groupConnected"></a>
+#### diagram.groupConnected ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Whether to put connected components each in their own group, to stabilize layout.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [stageTransitions] | <code>String</code> | 
 
 <a name="dc_graph.diagram+timeLimit"></a>
 #### diagram.timeLimit ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -752,18 +811,6 @@ shown.
 | --- | --- | --- |
 | [induceNodes] | <code>Boolean</code> | <code>false</code> | 
 
-<a name="dc_graph.diagram+modLayout"></a>
-#### diagram.modLayout ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-If it is necessary to modify the cola layout object after it is created, this function
-can be called to add a modifier function which takes the layout object and sets
-additional parameters on it.
-
-**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
-
-| Param | Type |
-| --- | --- |
-| [modLayout] | <code>function</code> | 
-
 <a name="dc_graph.diagram+showLayoutSteps"></a>
 #### diagram.showLayoutSteps ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 If this flag is true, the positions of nodes and will be updated while layout is
@@ -788,17 +835,17 @@ according to the visual encoding of this diagram.
 | [legend] | <code>Object</code> | 
 
 <a name="dc_graph.diagram+child"></a>
-#### diagram.child ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+#### diagram.child ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Specifies another kind of child layer or interface. For example, this can
 be used to display tooltips on nodes using `dc_graph.tip`.
 The child needs to support a `parent` method, the diagram to modify.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
-**Returns**: <code>Object</code> - [object] - the child object to add<code>[diagram](#dc_graph.diagram)</code>  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | [id] | <code>String</code> | the name of the child to modify or add |
+| [object] | <code>Object</code> | the child object to add, or null to remove |
 
 **Example**  
 ```js

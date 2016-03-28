@@ -1,4 +1,5 @@
 #overlay {
+    z-index: 2; /* otherwise it can get clobbered by charts-area */
     width: 280px;
     position: absolute;
     top: 90px;
@@ -40,6 +41,29 @@
     top: 1em;
     display: hidden;
     color: darkred;
+}
+
+#time-stuff {
+}
+
+.play-control {
+    float: left;
+    vertical-align: top;
+    padding-top: 2px;
+}
+.play-control i {
+    padding: 5px;
+}
+
+.play-control i:hover {
+    outline: #bbb inset 1px;
+}
+
+#timeline {
+    display: block;
+    overflow: auto;
+    padding-left: 10px;
+    padding-top: 5px;
 }
 
 .dc-graph text.node-label {

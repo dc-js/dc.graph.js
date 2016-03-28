@@ -19,15 +19,21 @@ var flat_group = (function() {
         };
     }
 
+    function dim_group(ndx, id_accessor) {
+        var dimension = ndx.dimension(id_accessor),
+            group = dimension.group();
+
+        one_zero_reduce(group);
+        return {crossfilter: ndx, dimension: dimension, group: non_null(group)};
+    }
+
     return {
         make: function(vec, id_accessor) {
             var ndx = crossfilter(vec);
-
-            var dimension = ndx.dimension(id_accessor),
-                group = dimension.group();
-
-            one_zero_reduce(group);
-            return {crossfilter: ndx, dimension: dimension, group: non_null(group)};
+            return dim_group(ndx, id_accessor);
+        },
+        another: function(ndx, id_accessor) { // wretched name
+            return dim_group(ndx, id_accessor);
         }
     };
 })();

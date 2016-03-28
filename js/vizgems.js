@@ -5,8 +5,8 @@ var cb_colors = colorbrewer.Paired[12];
 cb_colors[5] = cb_colors[11];
 
 // arbitrary assigning of shapes as POC
-var shapes = ['square', 'ellipse', 'diamond', 'trapezium', 'pentagon', 'hexagon', 'egg',
-              'parallelogram', 'septagon', 'invtrapezium', 'triangle', 'invtriangle'],
+var shapes = ['invtrapezium', 'ellipse', 'diamond', 'trapezium', 'pentagon', 'hexagon', 'egg',
+              'parallelogram', 'septagon', 'square', 'triangle', 'invtriangle'],
     curr_shape = 0, shape_map = {};
 
 function show_stats(data_stats, layout_stats) {
@@ -15,14 +15,17 @@ function show_stats(data_stats, layout_stats) {
     $('#time-last').html('' + ((runner.lastTime() || 0)/1000).toFixed(3));
     $('#time-avg').html('' + ((runner.avgTime() || 0)/1000).toFixed(3));
 }
+var run_indicator = false;
 function show_start() {
+    run_indicator = true;
     $('#run-indicator').show();
 }
 function show_stop() {
+    run_indicator = false;
     $('#run-indicator').hide();
 }
 function do_redraw() {
-    if(!$('#run-indicator').is(':hidden'))
+    if(run_indicator) // ??? fishy
         return;
     diagram.redrawGroup();
 }
@@ -76,16 +79,41 @@ var options = {
     transition: {
         default: 2000
     },
+    delete_delay: {
+        default: 0,
+        query: 'ddelay',
+        apply: function(val, diagram) {
+            diagram.deleteDelay(val);
+        }
+    },
+    date: {
+        default: ''
+    },
+    play: {
+        default: false
+    },
+    slow_transition: {
+        default: 15000,
+        query: 'slow'
+    },
+    staged_transitions: {
+        default: 'none',
+        query: 'stage',
+        selector: '#stage-transitions',
+        apply: function(val, diagram) {
+            diagram.stageTransitions(val);
+        }
+    },
     stats: {
         default: false,
-        watch: function(k) {
+        subscribe: function(k) {
             toggle_stats.callback = k;
         },
         apply: apply_heading('#show-stats', '#graph-stats')
     },
     options: {
         default: false,
-        watch: function(k) {
+        subscribe: function(k) {
             toggle_options.callback = k;
         },
         apply: apply_heading('#show-options', '#options')
@@ -103,13 +131,13 @@ var options = {
         set: function(val) {
             osTypeSelect.filter(val);
         },
-        watch: function(k) {
+        subscribe: function(k) {
             osTypeSelect.on('filtered', function() {
                 var filters = osTypeSelect.filters();
                 k(filters);
             });
         },
-        dont_apply_after_watch: true,
+        dont_apply_after_subscribe: true,
         apply: function(val, diagram, filters) {
             if(filters.filterOSTypes) {
                 osTypeSelect
@@ -136,6 +164,18 @@ var options = {
         apply: function(val, diagram, filters) {
             diagram.edgeArrowhead(val ? 'vee' : null);
         }
+    },
+    highlight_neighbors: {
+        default: false,
+        query: 'neighbors',
+        selector: '#highlight-neighbors',
+        needs_redraw: true,
+        apply: function() {
+            var highlighter = dc_graph.highlight_neighbors('orange', 3);
+            return function(val, diagram) {
+                diagram.child('highlight-neighbors', val ? highlighter : null);
+            };
+        }()
     },
     disconnected: {
         default: true
@@ -194,6 +234,17 @@ var options = {
             diagram.layoutUnchanged(val);
         }
     },
+    direct_vm: {
+        default: false,
+        query: 'vmlayout',
+        selector: '#layout-vms',
+        needs_redraw: true,
+        apply: function(val, diagram) {
+            diagram.constrain(val ? function(nodes, edges) {
+                return vm_constraints(nodes, edges, []);
+            } : function() { return []; });
+        }
+    },
     flow_direction: {
         default: "x",
         query: 'flow',
@@ -204,18 +255,17 @@ var options = {
             var modf;
             switch(val) {
             case 'x':
-                modf = function(cola) { cola.flowLayout('x', 200); };
+                diagram.flowLayout({axis: 'x', minSeparation: 200});
                 break;
             case 'y':
-                modf = function(cola) { cola.flowLayout('y', 200); };
+                diagram.flowLayout({axis: 'y', minSeparation: 200});
                 break;
             case 'none':
-                modf = null;
+                diagram.flowLayout(null);
                 break;
             default:
                 throw new Error('unknown flow direction ' + val);
             }
-            diagram.modLayout(modf);
         }
     },
     node_limit: {
@@ -294,7 +344,7 @@ function do_option(key, opt) {
             qs[opt.query] = write_query(type, val);
             update_interesting();
         }
-        if(opt.apply && !opt.dont_apply_after_watch)
+        if(opt.apply && !opt.dont_apply_after_subscribe)
             opt.apply(val, diagram, filters);
         if(opt.needs_relayout)
             diagram.relayout();
@@ -309,8 +359,8 @@ function do_option(key, opt) {
                     $(opt.selector)
                         .prop('checked', val);
             };
-            if(!opt.watch && opt.selector)
-                opt.watch = function(k) {
+            if(!opt.subscribe && opt.selector)
+                opt.subscribe = function(k) {
                     $(opt.selector)
                         .change(function() {
                             var val = $(this).is(':checked');
@@ -324,8 +374,8 @@ function do_option(key, opt) {
                     $(opt.selector)
                         .val(val);
                 };
-            if(!opt.watch && opt.selector)
-                opt.watch = function(k) {
+            if(!opt.subscribe && opt.selector)
+                opt.subscribe = function(k) {
                     $(opt.selector)
                         .change(function() {
                             var val = $(this).val();
@@ -338,8 +388,8 @@ function do_option(key, opt) {
     }
     if(opt.set)
         opt.set(settings[key]);
-    if(opt.watch)
-        opt.watch(function(val) {
+    if(opt.subscribe)
+        opt.subscribe(function(val) {
             update_setting(opt, val);
         });
 }
@@ -351,10 +401,68 @@ for(var key in options)
 
 /* end general options stuff */
 
+var is_running = settings.play;
+function display_running() {
+    $('#play-button i').attr('class', is_running ? 'fa fa-pause' : 'fa fa-play');
+}
+display_running();
+$('#play-button').click(function(e) {
+    if(e.shiftKey)
+        diagram.transitionDuration(settings.slow_transition);
+    else
+        diagram.transitionDuration(settings.transition);
+    if(is_running) {
+        runner.pause();
+        is_running = false;
+    }
+    else {
+        runner.unpause();
+        is_running = true;
+    }
+    display_running();
+});
+
+$('#last-button').click(function(e) {
+    curr_hist = (curr_hist+hist_files.length-2)%hist_files.length;
+    timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
+    if(e.shiftKey)
+        diagram.transitionDuration(settings.slow_transition);
+    else
+        diagram.transitionDuration(settings.transition);
+    runner.step();
+});
+
+$('#next-button').click(function(e) {
+    //curr_hist = (curr_hist+1)%hist_files.length;
+    timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
+    if(e.shiftKey)
+        diagram.transitionDuration(settings.slow_transition);
+    else
+        diagram.transitionDuration(settings.transition);
+    runner.step();
+});
+
+
 var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
 var timeline = timeline('#timeline');
 var node_inv = null, edge_inv = null;
+
+
+// demo of constraints applied by pattern
+var vm_rules = {
+    nodes: [
+        {id: 'ostype', partition: 'ostype', typename: function(id, value) { return value; }}
+    ],
+    edges: [
+        {source: 'VM', target: 'PRT', produce: dc_graph.gap_x(200, false)},
+        {source: 'VM', target: 'FS', produce: dc_graph.gap_x(200, false)},
+        {source: 'PRT', target: 'HYP', produce: dc_graph.gap_x(200, false)},
+        {source: 'FS', target: 'HYP', produce: dc_graph.gap_x(200, false)},
+        {source: 'VM', target: 'HYP', produce: dc_graph.gap_x(200, false)}
+    ]
+};
+var vm_constraints = dc_graph.constraint_pattern(diagram, vm_rules);
 
 function nocache_query() {
     return '?nocache=' + Date.now();
@@ -488,14 +596,22 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
         if(edge_attr_mismatch_warnings.length)
             warnings['edge attributes mismatched'] = edge_attr_mismatch_warnings;
     }
+    var mismatched_sttype_warnings = [];
     // infer node ostype from edge, if consistent
     vertices.forEach(function(n) {
-        console.assert(!n.ostype || !sttype[n.id1] || n.ostype === sttype[n.id1]);
+        if(n.ostype)
+            n.ostype = n.ostype.toUpperCase();
+        if(n.ostype && sttype[n.id1] && n.ostype !== sttype[n.id1])
+            mismatched_sttype_warnings.push({node: n.id1, ostype: n.ostype, sttype: sttype[n.id1]});
         if(sttype[n.id1])
             n.ostype = sttype[n.id1];
-        // regardless, make sure all vertices have some ostype
-        n.ostype = n.ostype || 'OTHER';
+        if(n.ostype === 'HOST')
+            n.ostype = 'HYP';
+        else // regardless, make sure all vertices have some ostype
+            n.ostype = n.ostype || 'OTHER';
     });
+    if(mismatched_sttype_warnings.length)
+        warnings['nodes ostype did not match edges'] = mismatched_sttype_warnings;
 
     if(Object.keys(warnings).length)
         console.log('graph read warnings', warnings);
@@ -687,7 +803,7 @@ function init() {
             .showLayoutSteps(false)
             .handleDisconnected(settings.disconnected)
             .lengthStrategy('jaccard')
-            .baseLength(200)
+            .baseLength(150)
             .nodeTitle(function(kv) {
                 return kv.value.ostype==='PRT' ? kv.value.name : kv.key;
             })
@@ -781,6 +897,12 @@ function step() {
 
 var preload, snapshots, hist_files, hist_events, curr_hist, runner;
 
+function history_index(t) {
+    // last date that is less than argument
+    var i = hist_events.findIndex(function(e) { return e.key > t; });
+    return i > 0 ? i-1 : i;
+}
+
 function load_history(tenant, k) {
     hist_files = snapshots.filter(function(r) { return new RegExp("auto-shagrat-" + tenant).test(r); });
     var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
@@ -794,16 +916,28 @@ function load_history(tenant, k) {
         return datef.parse(match[1]);
     }).filter(function(dt) { return !!dt; });
     hist_events = hist_times.map(function(dt) { return {key: dt, value: {}}; });
-    timeline.width(280).height(20).events(hist_events).render();
+    timeline.width($('#timeline').innerWidth()).height(20).events(hist_events).render();
     timeline.on('jump', function(t) {
-        var i = hist_events.findIndex(function(e) { return e.key > t; });
+        var i = history_index(t);
         if(i === 0)
             curr_hist = 0;
         else if(i === -1)
             curr_hist = hist_events.length-1;
         else curr_hist = i;
+        if(!is_running)
+            runner.step();
     });
-    curr_hist = 0;
+
+    curr_hist = -1;
+    if(settings.date) {
+        var date = datef.parse(settings.date);
+        if(!date)
+            date = d3.time.format('%Y%m%d').parse(settings.date);
+        if(date)
+            curr_hist = history_index(date);
+    }
+    if(curr_hist === -1)
+        curr_hist = 0;
     k();
 }
 function populate_tenant_select(tenants, curr) {
@@ -821,7 +955,7 @@ function populate_tenant_select(tenants, curr) {
     sel.on('change', function() {
         runner.stop();
         load_history(this.selectedOptions[0].value, function() {});
-        runner.start();
+        runner.start(!is_running);
     });
 }
 if(settings.histserv) {
@@ -843,7 +977,7 @@ else preload = function(k) { k(); };
 
 preload(function() {
     runner = make_runner(init, step, settings.interval);
-    runner.start();
+    runner.start(!is_running);
 });
 
 

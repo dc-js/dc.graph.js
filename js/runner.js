@@ -29,10 +29,23 @@ var make_runner = function(init, step, interval) {
             init();
             return this;
         },
-        start: function() { // start loop
-            run_mode = true;
+        start: function(paused) { // start loop
+            run_mode = !paused;
             startTimer();
             init();
+            return this;
+        },
+        pause: function() {
+            return this.stop();
+        },
+        unpause: function() {
+            run_mode = true;
+            startTimer();
+            step();
+            return this;
+        },
+        step: function() {
+            step();
             return this;
         },
         stop: function() { // stop loop

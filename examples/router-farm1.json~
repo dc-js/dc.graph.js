@@ -64,10 +64,6 @@
     {
       "id": 15,
       "name": "CE-DC-UPS"
-    },
-    {
-      "id": 16,
-      "name": "froggy"
     }
   ],
   "links": [
@@ -130,10 +126,6 @@
     {
       "sourcename": "PVM-DC-FEDEX",
       "targetname": "CE-DC-FEDEX"
-    },
-    {
-      "sourcename": "CE-DC-FEDEX",
-      "targetname": "froggy"
     }
   ]
 }

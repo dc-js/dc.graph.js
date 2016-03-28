@@ -6,6 +6,7 @@
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/vizgems.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/font-awesome.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
@@ -35,7 +36,12 @@
     running
   </div>
   <label id="tenant-option" style="display:none">Tenant: <select id="tenant-select"></select></label>
-  <div id="timeline" style="margin: 5px 0px"></div>
+  <div id="time-stuff">
+    <span id="last-button" class="play-control"><i class="fa fa-step-backward"></i></span>
+    <span id="play-button" class="play-control"><i class="fa fa-play"></i></span>
+    <span id="next-button" class="play-control"><i class="fa fa-step-forward"></i></span>
+    <span id="timeline" style="margin: 5px 0px"></span>
+  </div>
   <div id="type-views">
     <a href="javascript:choose_view('user')">user view</a>
     <a href="javascript:choose_view('image')">image view</a>
@@ -73,10 +79,21 @@
       <div><label><input type="checkbox" id="use-colors">Use Colors</label></div>
       <div><label><input type="checkbox" id="use-shapes">Use Shapes</label></div>
       <div><label><input type="checkbox" id="show-arrows">Show Arrows</label></div>
-      <div><label><input type="checkbox" id="show-steps">Show Layout Steps</label></div>
-      <div><label><input type="checkbox" id="layout-unchanged">Always Redraw</label></div>
-      <div><label><input type="checkbox" id="fit-labels">Fit Labels</label></div>
-      <div style="margin-left: 5px"><label>Flow: <select id="flow-direction"><option value="x">X</option><option value="y">Y</option><option value="none">None</option></select></label></div>
+      <div style="margin-left: 5px"><label>Staged: <select id="stage-transitions">
+            <option value="none">None</option>
+            <option value="insmod">Insert-Modify</option>
+            <option value="modins">Modify-Insert</option>
+      </select></label></div>
+      <!--div><label><input type="checkbox" id="show-steps">Show Layout Steps</label></div-->
+      <!--div><label><input type="checkbox" id="layout-unchanged">Always Redraw</label></div-->
+      <!--div><label><input type="checkbox" id="fit-labels">Fit Labels</label></div-->
+      <div><label><input type="checkbox" id="layout-vms">Layout VMs</label></div>
+      <div><label><input type="checkbox" id="highlight-neighbors">Highlight Neighbors</label></div>
+      <div style="margin-left: 5px"><label>Flow: <select id="flow-direction">
+            <option value="none">None</option>
+            <option value="x">X</option>
+            <option value="y">Y</option>
+      </select></label></div>
     </div>
   </div>
 </div>

@@ -34,7 +34,20 @@ function timeline(parent) {
     _chart.events = function(events) {
         if(!arguments.length)
             return _events;
-        _events = events;
+        _events = events.map(function(e) {
+            var value;
+            if(e.value.adds !== undefined) {
+                value = [
+                    {key: 'adds', height: e.value.adds, fill: 'green'},
+                    {key: 'dels', height: e.value.dels, fill: 'red'}
+                ];
+            } else {
+                value = [
+                    {key: 'place', height: NaN, fill: 'grey'}
+                ];
+            }
+            return {key: e.key, value: value};
+        });
         return _chart;
     };
 
@@ -49,6 +62,10 @@ function timeline(parent) {
         return _height*3/4;
     }
 
+    function y(height) {
+        return isNaN(height) ? 2 : _y(0) - _y(height);
+    }
+
     _chart.redraw = function() {
         var bl = baseline();
         if(!_x) _x = d3.time.scale();
@@ -56,7 +73,7 @@ function timeline(parent) {
         _x.domain(d3.extent(_events, function(e) { return e.key; }))
             .range([_timewid, _width]);
         var max = Math.max(20, d3.max(_events, function(e) {
-            return e.value.adds ? Math.max(e.value.adds, e.value.dels) : 0;
+            return e.value[0].key === 'adds' ? Math.max(e.value[0].height, e.value[1].height) : 0;
         }));
         _y.domain([max, 0]).range([0, bl]);
         var axis = _g.selectAll('rect.timeline').data([0]);
@@ -72,29 +89,20 @@ function timeline(parent) {
         ticks.attr('transform', function(d) {
             return 'translate(' + Math.floor(_x(d.key)) + ',0)';
         });
-        ticks.each(function(d) {
-            var g = d3.select(this);
-            var ticks = [];
-            if(d.value.adds !== undefined) {
-                ticks = [
-                    {key: 'adds', height: _y(0) - _y(d.value.adds), fill: 'green'},
-                    {key: 'dels', height: _y(0) - _y(d.value.dels), fill: 'red'}
-                ];
-            } else {
-                ticks = [
-                    {key: 'place', height: 2, fill: 'grey'}
-                ];
-            }
-            var tr = g.selectAll('rect').data(ticks, function(t) { return t.key; });
-            tr.enter().append('rect');
-            tr.attr({
-                width: _tickwidth, height: function(t) { return t.height; },
-                x: function(_,i) { return i*_tickwidth; }, y: function(t) { return bl-t.height; },
-                fill: function(t) { return t.fill; },
-                opacity: 0.5
-            });
-            tr.exit().remove();
+        ticks.exit().remove();
+        var tick = ticks.selectAll('rect')
+                .data(function(d) { return d.value; }, function(t) { return t.key; });
+        tick.enter().append('rect');
+        tick.attr({
+            width: _tickwidth,
+            height: function(t) {
+                return y(t.height); },
+            x: function(_,i) { return i*_tickwidth; }, y: function(t) {
+                return bl-y(t.height); },
+            fill: function(t) { return t.fill; },
+            opacity: 0.5
         });
+        tick.exit().remove();
         if(_current) {
             var text = _g.selectAll('text.currtime')
                     .data([0]);

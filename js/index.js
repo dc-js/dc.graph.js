@@ -17,6 +17,8 @@ var querystring = (function(a) {
 var steptime = +querystring.interval || 1000, // ms per step
     pause = +querystring.pause || 2500, // pause at end of loop
     showSteps = !(querystring.showsteps === 'false'),
+    transition = querystring.transition || 0,
+    stage = querystring.stage || 'insmod',
     file = querystring.file || null,
     generate = querystring.gen || null,
     shape = querystring.shape || null,
@@ -36,7 +38,9 @@ var steptime = +querystring.interval || 1000, // ms per step
     appLayout = null,
     useAppLayout = false,
     nodePrefix = querystring.prefix || '',
-    timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000;
+    timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000,
+    explore = querystring.explore;
+
 if(edgeStroke && /[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke))
     edgeStroke = '#' + edgeStroke;
 var min = 2, max = 12;
@@ -44,6 +48,7 @@ var begin = 2, end = 12, curr = begin;
 var doRender = true;
 
 var diagram = dc_graph.diagram('#graph'), runner;
+var overview;
 
 function do_status() {
     $('#now').css('left', (curr-min)/(max-min)*100 + '%');
@@ -109,6 +114,30 @@ if(shape) {
 }
 else shape = {shape: 'ellipse'};
 
+function show_type_graph(nodes, edges, sourceattr, targetattr) {
+    $('#overview').show();
+    if(!overview)
+        overview = dc_graph.diagram('#overview', 'overview');
+    var typegraph = dc_graph.build_type_graph(nodes, edges,
+                                              function(n) { return n.name; },
+                                              function(n) { return n.type; },
+                                              function(e) { return e[sourceattr]; },
+                                              function(e) { return e[targetattr]; });
+    var tedges = flat_group.make(typegraph.edges, function(d) { return d.type; }),
+        tnodes = flat_group.make(typegraph.nodes, function(d) { return d.type; });
+
+    overview.width(250)
+        .height(250)
+        .nodeRadius(15)
+        .baseLength(25)
+        .nodeLabel(function(n) { return n.value.type; })
+        .nodeDimension(tnodes.dimension).nodeGroup(tnodes.group)
+        .edgeDimension(tedges.dimension).edgeGroup(tedges.group)
+        .edgeSource(function(e) { return e.value.source; })
+        .edgeTarget(function(e) { return e.value.target; })
+        .render();
+}
+
 source(function(error, data) {
     if(error) {
         console.log(error);
@@ -146,6 +175,9 @@ source(function(error, data) {
         data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
     }
 
+    if(false) // appLayout)
+        show_type_graph(data.nodes, data.links, sourceattr, targetattr);
+
     var edges = flat_group.make(data.links, function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     }),
@@ -161,7 +193,7 @@ source(function(error, data) {
     function run() {
         do_status();
         if(doReinit)
-            diagram.initLayoutOnRedraw(appLayout && useAppLayout);
+            diagram.initLayoutOnRedraw(explore || appLayout && useAppLayout);
         startDim.filterRange([0, curr]);
         $('#run-indicator').show();
         if(doRender) {
@@ -221,7 +253,8 @@ source(function(error, data) {
         .width($(window).width())
         .height($(window).height())
         .timeLimit(timeLimit)
-        .transitionDuration(0)
+        .transitionDuration(transition)
+        .stageTransitions(stage)
         .showLayoutSteps(showSteps)
         .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
         .edgeDimension(edges.dimension).edgeGroup(edges.group)
@@ -254,6 +287,41 @@ source(function(error, data) {
     if(randomize) {
         diagram.nodeOrdering(function(kv) { return kv.value.order; })
             .edgeOrdering(function(kv) { return kv.value.order; });
+    }
+
+    var expander = null, expanded;
+    if(explore) {
+        expanded = [explore];
+        // second group on keys so that first will observe it
+        expander = flat_group.another(nodes.crossfilter, function(d) { return d.name; });
+        function apply_expander_filter() {
+            expander.dimension.filterFunction(function(key) {
+                return expanded.indexOf(key) >= 0;
+            });
+        }
+        function adjacent_edges(key) {
+            return edges.group.all().filter(function(kv) {
+                return kv.value[sourceattr] === key || kv.value[targetattr] === key;
+            });
+        }
+        function adjacent_nodes(key) {
+            return adjacent_edges(key).map(function(kv) {
+                return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
+            });
+        }
+        apply_expander_filter();
+        diagram.child('expand-collapse',
+                      dc_graph.expand_collapse(function(key) { // get_degree
+                          return adjacent_edges(key).length;
+                      }, function(key) { // expand
+                          expanded = _.union(expanded, adjacent_nodes(key));
+                          apply_expander_filter();
+                          run();
+                      }, function(key, collapsible) { // collapse
+                          expanded = _.difference(expanded, adjacent_nodes(key).filter(collapsible));
+                          apply_expander_filter();
+                          run();
+                      }));
     }
 
     // respond to browser resize (not necessary if width/height is static)
