@@ -63,7 +63,7 @@ function timeline(parent) {
     }
 
     function y(height) {
-        return isNaN(height) ? 2 : _y(0) - _y(height);
+        return isNaN(height) ? 3 : _y(0) - _y(height);
     }
 
     _chart.redraw = function() {
@@ -98,7 +98,7 @@ function timeline(parent) {
             height: function(t) {
                 return y(t.height); },
             x: 0, y: function(t) {
-                return t.key==='adds' ? bl-y(t.height) : bl; },
+                return t.key==='place' ? bl-1 : t.key==='adds' ? bl-y(t.height) : bl; },
             fill: function(t) { return t.fill; },
             opacity: 0.5
         });
