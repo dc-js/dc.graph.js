@@ -1338,7 +1338,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         var path = calc_edge_path(d, 'new', d.source.cola.x, d.source.cola.y, d.target.cola.x, d.target.cola.y);
         var spos = path.points[0], tpos = path.points[path.points.length-1];
         d.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
-        orient_head(d, 'new');
     }
 
     function render_edge_path(age) {
