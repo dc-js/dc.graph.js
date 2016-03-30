@@ -1445,6 +1445,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             etrans = etrans.transition()
                 .duration(transition_duration())
                 .attr("d", render_edge_path('new'));
+            d3.timer.flush();
         }
 
         edge.each(function(d) {
