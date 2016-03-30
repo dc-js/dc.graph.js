@@ -1313,14 +1313,28 @@ dc_graph.diagram = function (parent, chartGroup) {
                 // alternate parallel edges over, then under
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
-                    last = port ? d.ports[age][p > 2 ? p - 2 : 0] : null;
-                d.ports[age][p] = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
-                                                        last, dir, _chart.parallelEdgeOffset(),
-                                                        source_padding, target_padding
-                                                       );
+                    last = port ? d.ports[age][p > 2 ? p - 2 : 0].path : null;
+                var path = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
+                                              last, dir, _chart.parallelEdgeOffset(),
+                                              source_padding, target_padding
+                                              );
+                var spos = path.points[0], tpos = path.points[path.points.length-1];
+                var near = bezier_point(path.points, 0.75);
+                d.ports[age][p] = {
+                    path: path,
+                    orient: Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad'
+                };
             }
         }
-        return d.ports[age][d.parallel];
+        return d.ports[age][d.parallel].path;
+    }
+
+    function orient_head(d, age) {
+        if(param(_chart.edgeArrowhead())(d))
+            d3.select('#' + _chart.arrowId(d, 'head'))
+            .attr('orient', function() {
+                return d.ports[age][d.parallel].orient;
+            });
     }
 
     function calc_old_edge_path(d) {
@@ -1331,18 +1345,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     function calc_new_edge_path(d) {
         var path = calc_edge_path(d, 'new', d.source.cola.x, d.source.cola.y, d.target.cola.x, d.target.cola.y);
         var spos = path.points[0], tpos = path.points[path.points.length-1];
-        if(param(_chart.edgeArrowhead())(d))
-            d3.select('#' + _chart.arrowId(d, 'head'))
-                .attr('orient', function(d) {
-                    var near = bezier_point(path.points, 0.75);
-                    return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
-                });
         d.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
+        orient_head(d, 'new');
     }
 
     function render_edge_path(age) {
         return function(d) {
-            var path = d.ports[age][d.parallel];
+            var path = d.ports[age][d.parallel].path;
             return generate_path(path.points, path.bezDegree);
         };
     }
@@ -1429,7 +1438,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         edge.each(function(d) {
             var id = _chart.textpathId(d);
-            var path = d.ports.new[d.parallel];
+            var path = d.ports.new[d.parallel].path;
             var points = d.target.cola.x < d.source.cola.x ?
                     path.points.slice(0).reverse() : path.points;
             d3.select('#' + id)
