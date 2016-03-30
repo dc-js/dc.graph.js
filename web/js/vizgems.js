@@ -895,7 +895,7 @@ function step() {
     });
 }
 
-var preload, snapshots, hist_files, hist_events, curr_hist, runner;
+var preload, snapshots, hist_files, hist_events, curr_hist, runner, tenant_name;
 
 function history_index(t) {
     // last date that is less than argument
@@ -905,6 +905,7 @@ function history_index(t) {
 
 function load_history(tenant, k) {
     hist_files = snapshots.filter(function(r) { return new RegExp("auto-shagrat-" + tenant).test(r); });
+    console.log('tenant ' + tenant_name[tenant] + ': ' + hist_files.length + ' snapshots');
     var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
     var datef = d3.time.format('%Y%m%d-%H%M%S');
     var hist_times = hist_files.map(function(f) {
@@ -941,6 +942,10 @@ function load_history(tenant, k) {
     k();
 }
 function populate_tenant_select(tenants, curr) {
+    tenant_name = tenants.reduce(function(m, v) {
+        m[v[0]] = v[1];
+        return m;
+    }, {});
     $('#tenant-option').show();
     var sel = d3.select('#tenant-select');
     sel.selectAll('option')
