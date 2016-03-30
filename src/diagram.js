@@ -864,18 +864,21 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('class', 'node-shape');
         nodeEnter.append('text')
             .attr('class', 'node-label')
-            .attr('dy', '0.3em')
             .attr('fill', param(_chart.nodeLabelFill()));
         node.select('title')
             .text(param(_chart.nodeTitle()));
         var text = node.select('text.node-label');
         var tspan = text.selectAll('tspan').data(function(n) {
-            return param(_chart.nodeLabel())(n).split('/');
+            var lines = param(_chart.nodeLabel())(n);
+            if(typeof lines === 'string')
+                lines = [lines];
+            var first = lines.length%2 ? 0.3 - (lines.length-1)/2 : 1-lines.length/2;
+                    return lines.map(function(line, i) { return {line: line, ofs: (i==0 ? first : 1) + 'em'}; });
         });
         tspan.enter().append('tspan')
             .attr('x', 0)
-            .attr('dy', function(d, i) { return i > 0 ? 12 : 0; });
-        tspan.text(function(d) { return d; });
+            .attr('dy', function(d) { return d.ofs; });
+        tspan.text(function(d) { return d.line; });
         text.each(fit_shape(_chart));
         node.select('.node-shape')
             .each(shape_attrs(_chart))

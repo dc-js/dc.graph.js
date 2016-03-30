@@ -178,6 +178,8 @@ function fit_shape(chart) {
             bbox = this.getBBox();
         var fitx = 0;
         if(bbox && bbox.width && bbox.height) {
+            // make sure we can fit height in r
+            r = Math.max(r, bbox.height/2 + 5);
             // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
             // http://stackoverflow.com/a/433438/676195
             var y_over_B = bbox.height/2/r;

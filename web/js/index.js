@@ -260,6 +260,7 @@ source(function(error, data) {
         .edgeDimension(edges.dimension).edgeGroup(edges.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
+        .nodeLabel(function(n) { return n.value.name.split('/'); })
         .nodeShape(shape)
         .nodeRadius(radius)
         .nodeFill(appLayout && app_layouts[appLayout].colors || fill)
