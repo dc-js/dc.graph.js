@@ -906,6 +906,8 @@ function history_index(t) {
 function load_history(tenant, k) {
     hist_files = snapshots.filter(function(r) { return new RegExp("auto-shagrat-" + tenant).test(r); });
     console.log('tenant ' + tenant_name[tenant] + ': ' + hist_files.length + ' snapshots');
+    ndicts = [];
+    edicts = [];
     var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
     var datef = d3.time.format('%Y%m%d-%H%M%S');
     var hist_times = hist_files.map(function(f) {
