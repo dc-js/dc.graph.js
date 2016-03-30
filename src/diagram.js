@@ -1442,7 +1442,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 });
         if(_chart.stageTransitions() === 'insmod') {
             // inserted edges transition twice in insmod mode
-            etrans.transition()
+            etrans = etrans.transition()
                 .duration(transition_duration())
                 .attr("d", render_edge_path('new'));
         }
