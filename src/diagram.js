@@ -1329,14 +1329,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         return d.ports[age][d.parallel].path;
     }
 
-    function orient_head(d, age) {
-        if(param(_chart.edgeArrowhead())(d))
-            d3.select('#' + _chart.arrowId(d, 'head'))
-            .attr('orient', function() {
-                return d.ports[age][d.parallel].orient;
-            });
-    }
-
     function calc_old_edge_path(d) {
         calc_edge_path(d, 'old', d.source.prevX || d.source.cola.x, d.source.prevY || d.source.cola.y,
                          d.target.prevX || d.target.cola.x, d.target.prevY || d.target.cola.y);
@@ -1410,14 +1402,34 @@ dc_graph.diagram = function (parent, chartGroup) {
             .each(function(e) {
                 // if staging transitions, just fade new edges in at new position
                 // else start new edges at old positions of nodes, if any, else new positions
-                if(_chart.stageTransitions() === 'modins')
+                var age;
+                if(_chart.stageTransitions() === 'modins') {
                     calc_new_edge_path(e);
-                else
+                    age = 'new';
+                }
+                else {
                     calc_old_edge_path(e);
+                    age = 'old';
+                }
+                if(param(_chart.edgeArrowhead())(e))
+                    d3.select('#' + _chart.arrowId(e, 'head'))
+                    .attr('orient', function() {
+                        return e.ports[age][e.parallel].orient;
+                    });
             })
             .attr('d', render_edge_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
 
         var etrans = edge.each(calc_new_edge_path)
+                .each(function(e) {
+                    if(param(_chart.edgeArrowhead())(e)) {
+                        d3.select('#' + _chart.arrowId(e, 'head'))
+                            .transition().duration(transition_duration())
+                            .delay(transition_delay(false))
+                            .attr('orient', function() {
+                                return e.ports.new[e.parallel].orient;
+                            });
+                    }
+                })
               .transition()
                 .duration(transition_duration())
                 .delay(function(e) {
