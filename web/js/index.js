@@ -138,50 +138,107 @@ function show_type_graph(nodes, edges, sourceattr, targetattr) {
         .render();
 }
 
+function can_get_graph_from_this(data) {
+    return (data.nodes || data.vertices) &&  (data.edges || data.links);
+}
+
 source(function(error, data) {
     if(error) {
         console.log(error);
         return;
     }
-    // infer some common structures for the json data
-    if(!data.links && data.edges)
-        data.links = data.edges;
+    // we want data = {nodes, edges}; find those in common other formats
+    if(!can_get_graph_from_this(data)) {
+        var wrappers = ['database', 'response'];
+        var wi = wrappers.findIndex(function(f) { return data[f] && can_get_graph_from_this(data[f]); });
+        if(wi<0)
+            throw new Error("couldn't find the data!");
+        data = data[wrappers[wi]];
+    }
+    if(!data.edges && data.links)
+        data.edges = data.links;
+    if(!data.nodes && data.vertices)
+        data.nodes = data.vertices;
+
+    function find_attr(o, attrs) {
+        return attrs.filter(function(a) { return !!o[a]; });
+    }
+
+    //var edgekeyattr = "id";
     var sourceattr = "sourcename", targetattr = "targetname";
-    if(!data.links[0][sourceattr]) {
-        var sourceattrs = ["node1", "source", "tail"], targetattrs = ["node2", "target", "head"];
-        if(data.links[0].node0 && data.links[0].node1) {
+    var edge0 = data.edges[0];
+    if(!edge0[sourceattr]) {
+        var sourceattrs = ['source_ecomp_uid', "node1", "source", "tail"], targetattrs = ['target_ecomp_uid', "node2", "target", "head"];
+        //var edgekeyattrs = ['id', '_id', 'ecomp_uid'];
+        var edgewrappers = ['edge'];
+        if(edge0.node0 && edge0.node1) { // specific conflict here
             sourceattr = 'node0';
             targetattr = 'node1';
         }
         else {
-            var candidates = sourceattrs.filter(function(n) { return !!data.links[0][n]; });
+            var candidates = find_attr(edge0, sourceattrs);
             if(!candidates.length) {
-                console.log("didn't find any source attr", sourceattrs);
-                return;
+                wi = edgewrappers.findIndex(function(w) { return edge0[w] && find_attr(edge0[w], sourceattrs).length; });
+                if(wi<0)
+                    throw new Error("didn't find any source attr");
+                // I don't like to coerce data but it would be pretty annoying to add this everywhere
+                data.edges = data.edges.map(function(e) { return e[edgewrappers[wi]]; });
+                edge0 = data.edges[0];
+                candidates = find_attr(edge0, sourceattrs);
             }
             if(candidates.length > 1)
                 console.warn('found more than one possible source attr', candidates);
             sourceattr = candidates[0];
-            candidates = targetattrs.filter(function(n) { return !!data.links[0][n]; });
+
+            candidates = find_attr(edge0, targetattrs);
             if(!candidates.length)
-                console.log("didn't find any target attr", targetattrs);
+                throw new Error("didn't find any target attr");
             if(candidates.length > 1)
                 console.warn('found more than one possible target attr', candidates);
             targetattr = candidates[0];
+
+            /*
+             // we're currently assembling our own edgeid
+            candidates = find_attr(edge0, edgekeyattrs);
+            if(!candidates.length)
+                throw new Error("didn't find any edge key");
+            if(candidates.length > 1)
+                console.warn('found more than one edge key attr', candidates);
+            edgekeyattr = candidates[0];
+             */
         }
     }
+    var nodekeyattr = "id";
+    var node0 = data.nodes[0];
+    if(!node0[nodekeyattr]) {
+        var nodekeyattrs = ['ecomp_uid', 'id', '_id'];
+        var nodewrappers = ['vertex'];
+        candidates = find_attr(node0, nodekeyattrs);
+        if(!candidates.length) {
+            wi = nodewrappers.findIndex(function(w) { return node0[w] && find_attr(node0[w], nodekeyattrs).length; });
+            if(wi<0)
+                throw new Error("couldn't find the node data");
+            // again, coersion here
+            data.nodes = data.nodes.map(function(n) { return n[nodewrappers[wi]]; });
+            node0 = data.nodes[0];
+            candidates = find_attr(node0, nodekeyattrs);
+        }
+        if(candidates.length > 1)
+            console.warn('found more than one possible node key attr', candidates);
+        nodekeyattr = candidates[0];
+    }
     if(randomize) {
-        data.links.forEach(function(e) { e.order = Math.random()*1000; });
+        data.edges.forEach(function(e) { e.order = Math.random()*1000; });
         data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
     }
 
     if(false) // appLayout)
-        show_type_graph(data.nodes, data.links, sourceattr, targetattr);
+        show_type_graph(data.nodes, data.edges, sourceattr, targetattr);
 
-    var edges = flat_group.make(data.links, function(d) {
+    var edges = flat_group.make(data.edges, function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     }),
-        nodes = flat_group.make(data.nodes, function(d) { return d.name; });
+        nodes = flat_group.make(data.nodes, function(d) { return d[nodekeyattr]; });
 
     appLayout && app_layouts[appLayout].data && app_layouts[appLayout].data(nodes, edges);
 
