@@ -61,7 +61,9 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             var partition = n.partition;
             var value = n.value || n.id;
             if(n.all || n.typename) {
-                type.match = function(n2) { return n2.value[partition]; };
+                type.match = n.extract ?
+                    function(n2) { return n.extract(n2.value[partition]); } :
+                    function(n2) { return n2.value[partition]; };
                 type.typename = n.typename || function(n2) { return partition + '=' + n2.value[partition]; };
             }
             else
