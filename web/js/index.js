@@ -337,8 +337,10 @@ source(function(error, data) {
         .on('end', function() {
             $('#run-indicator').hide();
             runner.endStep();
-            show_stats({totnodes: data.nodes.length, totedges: data.links.length}, diagram.getStats());
-        });
+            show_stats({totnodes: data.nodes.length, totedges: data.edges.length}, diagram.getStats());
+        })
+        .child('highlight-neighbors', dc_graph.highlight_neighbors('orange', 3));
+
     appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
     if(linkLength)
         diagram.baseLength(linkLength);
