@@ -167,7 +167,7 @@ source(function(error, data) {
     //var edgekeyattr = "id";
     var sourceattr = "sourcename", targetattr = "targetname";
     var edge0 = data.edges[0];
-    if(!edge0[sourceattr]) {
+    if(edge0[sourceattr] === undefined) {
         var sourceattrs = ['source_ecomp_uid', "node1", "source", "tail"], targetattrs = ['target_ecomp_uid', "node2", "target", "head"];
         //var edgekeyattrs = ['id', '_id', 'ecomp_uid'];
         var edgewrappers = ['edge'];
@@ -210,7 +210,7 @@ source(function(error, data) {
     }
     var nodekeyattr = "id";
     var node0 = data.nodes[0];
-    if(!node0[nodekeyattr]) {
+    if(node0[nodekeyattr] === undefined) {
         var nodekeyattrs = ['ecomp_uid', 'id', '_id'];
         var nodewrappers = ['vertex'];
         candidates = find_attr(node0, nodekeyattrs);
