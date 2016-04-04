@@ -208,7 +208,7 @@ source(function(error, data) {
              */
         }
     }
-    var nodekeyattr = "id";
+    var nodekeyattr = "name";
     var node0 = data.nodes[0];
     if(node0[nodekeyattr] === undefined) {
         var nodekeyattrs = ['ecomp_uid', 'id', '_id'];
