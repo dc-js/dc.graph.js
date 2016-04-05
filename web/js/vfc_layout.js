@@ -21,6 +21,7 @@ app_layouts.vfc = {
             .nodeLabel(null)
             .nodeRadius(3)
             .parallelEdgeOffset(1)
+            .edgeLabel(null)
             .edgeArrowSize(0.5)
             .nodeTitle(function(n) { return n.value.name; })
         ;
