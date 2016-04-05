@@ -881,7 +881,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         var text = node.select('text.node-label');
         var tspan = text.selectAll('tspan').data(function(n) {
             var lines = param(_chart.nodeLabel())(n);
-            if(typeof lines === 'string')
+            if(!lines)
+                return [];
+            else if(typeof lines === 'string')
                 lines = [lines];
             var first = lines.length%2 ? 0.3 - (lines.length-1)/2 : 1-lines.length/2;
                     return lines.map(function(line, i) { return {line: line, ofs: (i==0 ? first : 1) + 'em'}; });
