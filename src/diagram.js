@@ -26,6 +26,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes_snapshot, _edges_snapshot;
     var _children = {}, _arrows = {};
     var _running = false; // for detecting concurrency issues
+    var _translate = [0,0], _scale = 1;
     var _anchor, _chartGroup;
 
     /**
@@ -1446,9 +1447,32 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .each("end.all", function() { if (!--n) callback(); });
         });
     }
+
+    function node_bounds(n) {
+        return {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
+                right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
+    }
+
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
+
+        var node0 = node.datum();
+        var bounds;
+        node.each(function(n, i) {
+            var b = node_bounds(node.datum());
+            if(!i)
+                bounds = b;
+            else {
+                bounds = {
+                    left: Math.min(b.left, bounds.left),
+                    top: Math.min(b.top, bounds.top),
+                    right: Math.max(b.right, bounds.right),
+                    bottom: Math.max(b.bottom, bounds.bottom)
+                };
+            }
+        });
+        //globalTransform([bounds.left, bounds.top], 1);
 
         var nodeEntered = {};
         nodeEnter
@@ -1790,8 +1814,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         return name ? id : null;
     }
 
+    function globalTransform(pos, scale) {
+        console.log('transform', pos, scale);
+        _translate = pos;
+        _scale = scale;
+        _g.attr("transform", "translate(" + pos + ")" + " scale(" + scale + ")");
+    }
+
     function doZoom() {
-        _g.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+        globalTransform(d3.event.translate, d3.event.scale);
     }
 
     function resizeSvg() {
