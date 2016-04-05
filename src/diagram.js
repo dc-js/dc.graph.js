@@ -737,8 +737,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.layoutUnchanged = property(false);
 
     /**
-     * When `layoutUnchanged` is false, call this when changing a parameter in order to force
-     * layout to happen again. (Yes, probably should not be necessary.)
+     * When `layoutUnchanged` is false, this will force layout to happen again. This may be needed
+     * when changing a parameter but not changing the topology of the graph. (Yes, probably should
+     * not be necessary.)
      * @name relayout
      * @memberof dc_graph.diagram
      * @instance
