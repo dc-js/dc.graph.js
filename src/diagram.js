@@ -472,6 +472,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeArrowtail = _chart.edgeArrowtailAccessor = property(null);
 
     /**
+     * Multiplier for arrow size.
+     * @name edgeArrowSize
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function|Number} [edgeArrowSize=1]
+     * @return {Function|Number}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.edgeArrowSize = property(1);
+
+    /**
      * To draw an edge but not have it affect the layout, specify a function which returns
      * false for that edge.  By default, will return false if the `notLayout` field of the edge
      * value is truthy, true otherwise.
@@ -1693,8 +1704,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('refX', _arrows[name].refX)
                 .attr('refY', _arrows[name].refY)
                 .attr('markerUnits', 'userSpaceOnUse')
-                .attr('markerWidth', _arrows[name].width)
-                .attr('markerHeight', _arrows[name].height)
+                .attr('markerWidth', _arrows[name].width*param(_chart.edgeArrowSize())(d))
+                .attr('markerHeight', _arrows[name].height*param(_chart.edgeArrowSize())(d))
                 .attr('stroke', param(_chart.edgeStroke())(d))
                 .attr('fill', param(_chart.edgeStroke())(d))
                 .call(_arrows[name].drawFunction);
