@@ -761,6 +761,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.initialLayout = property(null);
 
+    _chart.initialOnly = property(false);
+
     /**
      * By default, all nodes are included, and edges are only included if both end-nodes are
      * visible.  If `.induceNodes` is set, then only nodes which have at least one edge will be
@@ -1312,7 +1314,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             args: {
                 initialUnconstrainedIterations: 10,
                 initialUserConstraintIterations: 20,
-                initialAllConstraintsIterations: 20
+                initialAllConstraintsIterations: 20,
+                initialOnly: _chart.initialOnly()
             }
         });
         return this;
