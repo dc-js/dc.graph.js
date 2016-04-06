@@ -751,6 +751,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
+     * Function to call to generate an initial layout. Takes (diagram, nodes, edges)
+     * @name initialLayout
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [initialLayout=null]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.initialLayout = property(null);
+
+    /**
      * By default, all nodes are included, and edges are only included if both end-nodes are
      * visible.  If `.induceNodes` is set, then only nodes which have at least one edge will be
      * shown.
@@ -1056,6 +1067,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                     if(em[i][j].n)
                         em[i][j].ports.n = em[i][j].n;
         }
+
+        if(_chart.initialLayout())
+            _chart.initialLayout()(_chart, wnodes, wedges);
 
         // create edge SVG elements
         var edge = _edgeLayer.selectAll('.edge')
