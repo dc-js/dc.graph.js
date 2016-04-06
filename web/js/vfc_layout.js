@@ -1,7 +1,11 @@
+function vfc_rank(label) {
+    return label.split(':')[2];
+}
+
 app_layouts.vfc = {
     rules: {
         nodes: [
-            {id: 'layer', partition: 'label_', extract: function(v) { return v.split(':')[2]; },
+            {id: 'layer', partition: 'label_', extract: function(v) { return vfc_rank(v); },
              typename: function(id, value) { return value; }}
         ],
         edges: [
@@ -24,6 +28,14 @@ app_layouts.vfc = {
             .edgeLabel(null)
             .edgeArrowSize(0.5)
             .nodeTitle(function(n) { return n.value.name; })
+            .initialLayout(dc_graph.initialize_tree(
+                function(n) { // is root
+                    return vfc_rank(n.orig.value.label_) === 'VNF';
+                },
+                function(e) { // is tree edge
+                    return vfc_rank(e.source.orig.value.label_) !== vfc_rank(e.target.orig.value.label_);
+                },
+                100))
         ;
     }
 };
