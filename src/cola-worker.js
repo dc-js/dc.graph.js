@@ -41,13 +41,13 @@ function data_d3cola(nodes, edges, constraints, opts) {
         v1.dcg_nodeKey = v.dcg_nodeKey;
         v1.width = v.width;
         v1.height = v.height;
-        if(v.dcg_nodeFixed) {
+        v.dcg_nodeFixed = !!v1.fixed;
+
+        // should we support e.g. null to unset x,y?
+        if(v.x !== undefined)
             v1.x = v.x;
+        if(v.y !== undefined)
             v1.y = v.y;
-            v1.fixed = true;
-        }
-        else
-            v1.fixed = false;
     });
     var wedges = regenerate_objects(_edges, edges, function(e) {
         return e.dcg_edgeKey;
