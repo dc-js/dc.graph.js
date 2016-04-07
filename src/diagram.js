@@ -1321,7 +1321,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 initialUnconstrainedIterations: 10,
                 initialUserConstraintIterations: 20,
                 initialAllConstraintsIterations: 20,
-                initialOnly: _chart.initialOnly()
+                initialOnly: _chart.initialOnly(),
+                showLayoutSteps: _chart.showLayoutSteps()
             }
         });
         return this;

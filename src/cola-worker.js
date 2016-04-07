@@ -1,7 +1,7 @@
 importScripts('cola.js');
 importScripts('d3.js');
 
-var _d3cola = null, _stop;
+var _d3cola = null, _tick, _stop;
 
 function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout) {
     _d3cola = cola.d3adaptor()
@@ -90,7 +90,7 @@ function data_d3cola(nodes, edges, constraints, opts) {
             }
         });
     }
-    _d3cola.on('tick', function() {
+    _d3cola.on('tick', _tick = function() {
         postResponseState('tick');
     }).on('start', function() {
         postMessage({response: 'start'});
@@ -128,8 +128,11 @@ onmessage = function(e) {
         data_d3cola(args.nodes, args.edges, args.constraints, args.opts);
         break;
     case 'start':
-        if(args.initialOnly)
+        if(args.initialOnly) {
+            if(args.showLayoutSteps)
+                _tick();
             _stop();
+        }
         else
             start_d3cola(args.initialUnconstrainedIterations,
                          args.initialUserConstraintIterations,
