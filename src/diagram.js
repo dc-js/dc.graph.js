@@ -1322,7 +1322,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var near = bezier_point(path.points, 0.75);
                 d.ports[age][p] = {
                     path: path,
-                    orient: Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad'
+                    orient: Math.atan2(tpos.y - near.y, tpos.x - near.x)
                 };
             }
         }
@@ -1413,7 +1413,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(param(_chart.edgeArrowhead())(e))
                     d3.select('#' + _chart.arrowId(e, 'head'))
                     .attr('orient', function() {
-                        return e.ports[age][e.parallel].orient;
+                        return e.ports[age][e.parallel].orient + 'rad';
                     });
             })
             .attr('d', render_edge_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
@@ -1425,7 +1425,19 @@ dc_graph.diagram = function (parent, chartGroup) {
                             .transition().duration(transition_duration())
                             .delay(transition_delay(false))
                             .attr('orient', function() {
-                                return e.ports.new[e.parallel].orient;
+                                var orient = e.ports.new[e.parallel].orient;
+                                if(e.ports.old && e.ports.old[e.parallel] && e.ports.old[e.parallel].orient !== undefined) {
+                                    var old = e.ports.old[e.parallel].orient, curr = orient, fix;
+                                    if(old < -Math.PI/2 && orient > Math.PI/2)
+                                        fix = orient = curr - 2 * Math.PI;
+                                    else if(old > Math.PI/2 && orient < -Math.PI/2)
+                                        fix = orient = curr + 2 * Math.PI;
+                                    else
+                                        orient = curr;
+                                    if(fix)
+                                        console.log('correct orient', curr, 'to', orient, 'since old is', old);
+                                }
+                                return orient + 'rad';
                             });
                     }
                 })
