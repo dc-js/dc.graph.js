@@ -2,7 +2,7 @@
 dc_graph.initialize_tree = function(rootf, treef, gap) {
     return function(diagram, nodes, edges) {
         if(treef)
-            edges = edges.filter(treef);
+            edges = edges.filter(function(e) { return treef(e.orig); });
 
         var outmap = edges.reduce(function(m, e) {
             var tail = param(diagram.edgeSource())(e),
@@ -14,36 +14,36 @@ dc_graph.initialize_tree = function(rootf, treef, gap) {
 
         var rows = [];
         var placed = {};
-        function place_tree(n, r) {
+        function place_tree(n, r, x) {
             var key = param(diagram.nodeKey())(n);
             if(placed[key])
-                return;
+                return x;
             if(!rows[r])
                 rows[r] = [];
+            n.cola.x = x;
+            n.cola.y = r*gap;
             rows[r].push(n);
             placed[key] = true;
             if(outmap[key])
-                outmap[key].forEach(function(e) {
-                    place_tree(e.target, r+1);
+                outmap[key].forEach(function(e, ei) {
+                    if(ei)
+                        x += 12;
+                    x = place_tree(e.target, r+1, x);
                 });
+            return x;
         }
 
         var roots;
         if(rootf)
-            roots = nodes.filter(rootf);
+            roots = nodes.filter(function(n) { return rootf(n.orig); });
         else {
             throw new Error("root-finder not implemented (it's easy!)");
         }
-        roots.forEach(function(n) {
-            place_tree(n, 0);
-        });
-        rows.forEach(function(row, ri) {
-            var x = 0, y = ri*gap;
-            row.forEach(function(n) {
-                n.cola.x = x;
-                n.cola.y = y;
-                x += 20; // NO
-            });
+        var x = 0;
+        roots.forEach(function(n, ni) {
+            if(ni)
+                x += 12;
+            x = place_tree(n, 0, x);
         });
     };
 };
