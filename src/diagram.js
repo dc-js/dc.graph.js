@@ -849,6 +849,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         return 'textpath-' + _chart.edgeId(d);
     };
 
+    // this kind of begs a (meta)graph ADT
+    // instead of munging this into the diagram
+    _chart.getNode = function(id) {
+        return _nodes[id] ? _nodes[id].orig : null;
+    };
+
     /**
      * Instructs cola.js to fit the connected components. Default: true
      * @name handleDisconnected
