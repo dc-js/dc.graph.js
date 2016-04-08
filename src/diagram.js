@@ -1181,7 +1181,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // i am not satisfied with this constraint generation api...
         // https://github.com/dc-js/dc.graph.js/issues/10
-        var constraints = _chart.constrain()(wnodes, wedges);
+        var constraints = _chart.constrain()(_chart, wnodes, wedges);
         // translate references from names to indices (ugly)
         constraints.forEach(function(c) {
             if(c.type) {

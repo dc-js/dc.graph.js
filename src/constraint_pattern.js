@@ -50,7 +50,7 @@
  * @param {Object} pattern - a graph which defines the constraints to be generated
  * @return {Function}
  */
-dc_graph.constraint_pattern = function(diagram, pattern) {
+dc_graph.constraint_pattern = function(pattern) {
     var types = {}, rules = [];
 
     pattern.nodes.forEach(function(n) {
@@ -86,7 +86,8 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
         rules.push(rule);
     });
 
-    return function(nodes, edges, constraints) {
+    return function(diagram, nodes, edges) {
+        var constraints = [];
         var members = {};
         nodes.forEach(function(n) {
             var key = param(diagram.nodeKey())(n);

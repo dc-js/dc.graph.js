@@ -269,7 +269,7 @@ source(function(error, data) {
         runner.toggle();
     };
 
-    var app_constraints = null;
+    var rule_constraints = null;
     if(appLayout) {
         var rules = appLayout && app_layouts[appLayout].rules;
         if(rules) {
@@ -281,15 +281,17 @@ source(function(error, data) {
                 if(!doOrdering && c.produce && c.produce.type === 'ordering')
                     c.disable = true;
             });
-            app_constraints = dc_graph.constraint_pattern(diagram, rules);
+            rule_constraints = dc_graph.constraint_pattern(rules);
         }
     }
 
-    function constrain(nodes, edges) {
-        var constraints = [];
-        if(appLayout && useAppLayout && app_constraints)
-            constraints = app_constraints(nodes, edges, constraints);
+    function constrain(diagram, nodes, edges) {
+        var constraintses = [];
+        if(appLayout && useAppLayout && rule_constraints)
+            constraintses.push(rule_constraints(diagram, nodes, edges));
 
+        if(appLayout && useAppLayout && app_layouts[appLayout].constraints)
+            constraintses.push(app_layouts[appLayout].constraints(diagram, nodes, edges));
         var circles = {};
         nodes.forEach(function(n, i) {
             if(n.orig.value.circle) {
@@ -298,12 +300,13 @@ source(function(error, data) {
                 circles[circ].push({node: n.orig.key});
             }
         });
-        for(var circ in circles)
-            constraints.push({
+        constraintses.push(Object.keys(circles).map(function(circ) {
+            return {
                 type: 'circle',
                 nodes: circles[circ]
-            });
-        return constraints;
+            };
+        }));
+        return Array.prototype.concat.apply([], constraintses);
     }
 
     diagram
