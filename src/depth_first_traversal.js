@@ -20,7 +20,7 @@ dc_graph.depth_first_traversal = function(rootf, treef, placef, sibf, pushf, pop
                 return;
             if(!rows[r])
                 rows[r] = [];
-            placef && placef(n, r);
+            placef && placef(n, r, rows[r]);
             rows[r].push(n);
             placed[key] = true;
             if(outmap[key])
