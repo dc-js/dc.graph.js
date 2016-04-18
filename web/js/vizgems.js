@@ -242,9 +242,7 @@ var options = {
         selector: '#layout-vms',
         needs_redraw: true,
         apply: function(val, diagram) {
-            diagram.constrain(val ? function(nodes, edges) {
-                return vm_constraints(nodes, edges, []);
-            } : function() { return []; });
+            diagram.constrain(val ? vm_constraints : function() { return []; });
         }
     },
     flow_direction: {
@@ -464,7 +462,7 @@ var vm_rules = {
         {source: 'VM', target: 'HYP', produce: dc_graph.gap_x(200, false)}
     ]
 };
-var vm_constraints = dc_graph.constraint_pattern(diagram, vm_rules);
+var vm_constraints = dc_graph.constraint_pattern(vm_rules);
 
 function nocache_query() {
     return '?nocache=' + Date.now();
