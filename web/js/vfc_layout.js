@@ -32,7 +32,7 @@ app_layouts.vfc = function() {
         },
         constraints: function(diagram, nodes, edges) {
             return dc_graph.tree_constraints(is_root_node,
-                                             is_tree_edge.bind(null, diagram), 12)
+                                             is_tree_edge.bind(null, diagram), 12, 100)
             (diagram, nodes, edges);
         },
         initDiagram: function(diagram) {
