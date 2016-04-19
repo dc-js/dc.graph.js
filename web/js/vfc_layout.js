@@ -32,7 +32,7 @@ app_layouts.vfc = function() {
         },
         constraints: function(diagram, nodes, edges) {
             return dc_graph.tree_constraints(is_root_node,
-                                             is_tree_edge.bind(null, diagram), 20, 100)
+                                             is_tree_edge.bind(null, diagram), 10, 100)
             (diagram, nodes, edges);
         },
         initDiagram: function(diagram) {
@@ -53,7 +53,7 @@ app_layouts.vfc = function() {
             ;
             if(querystring.treeOnly === 'true') {
                 diagram
-                    .initialLayout(dc_graph.initialize_tree(is_root_node, is_tree_edge.bind(null, diagram), 20, 100))
+                    .initialLayout(dc_graph.initialize_tree(is_root_node, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
                     .initialOnly(true)
                 ;
             }
