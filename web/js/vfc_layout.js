@@ -50,9 +50,13 @@ app_layouts.vfc = function() {
                     return is_root_node(n) ? true : null;
                 })
                 .nodeTitle(function(n) { return n.value.name; })
-            // .initialLayout(dc_graph.initialize_tree(is_root_node, is_tree_edge.bind(null, diagram), 20, 100))
-            // .initialOnly(true)
             ;
+            if(querystring.treeOnly === 'true') {
+                diagram
+                    .initialLayout(dc_graph.initialize_tree(is_root_node, is_tree_edge.bind(null, diagram), 20, 100))
+                    .initialOnly(true)
+                ;
+            }
         }
     };
 }();
