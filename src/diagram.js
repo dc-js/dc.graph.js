@@ -751,6 +751,19 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
+     * Function to call to generate an initial layout. Takes (diagram, nodes, edges)
+     * @name initialLayout
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [initialLayout=null]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.initialLayout = property(null);
+
+    _chart.initialOnly = property(false);
+
+    /**
      * By default, all nodes are included, and edges are only included if both end-nodes are
      * visible.  If `.induceNodes` is set, then only nodes which have at least one edge will be
      * shown.
@@ -834,6 +847,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.textpathId = function(d) {
         return 'textpath-' + _chart.edgeId(d);
+    };
+
+    // this kind of begs a (meta)graph ADT
+    // instead of munging this into the diagram
+    _chart.getNode = function(id) {
+        return _nodes[id] ? _nodes[id].orig : null;
     };
 
     /**
@@ -1057,6 +1076,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                         em[i][j].ports.n = em[i][j].n;
         }
 
+        if(_chart.initialLayout())
+            _chart.initialLayout()(_chart, wnodes, wedges);
+
         // create edge SVG elements
         var edge = _edgeLayer.selectAll('.edge')
                 .data(wedges, param(_chart.edgeKey()));
@@ -1159,7 +1181,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // i am not satisfied with this constraint generation api...
         // https://github.com/dc-js/dc.graph.js/issues/10
-        var constraints = _chart.constrain()(wnodes, wedges);
+        var constraints = _chart.constrain()(_chart, wnodes, wedges);
         // translate references from names to indices (ugly)
         constraints.forEach(function(c) {
             if(c.type) {
@@ -1298,7 +1320,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             args: {
                 initialUnconstrainedIterations: 10,
                 initialUserConstraintIterations: 20,
-                initialAllConstraintsIterations: 20
+                initialAllConstraintsIterations: 20,
+                initialOnly: _chart.initialOnly(),
+                showLayoutSteps: _chart.showLayoutSteps()
             }
         });
         return this;

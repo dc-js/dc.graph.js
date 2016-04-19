@@ -1,7 +1,7 @@
 importScripts('cola.js');
 importScripts('d3.js');
 
-var _d3cola = null;
+var _d3cola = null, _tick, _stop;
 
 function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout) {
     _d3cola = cola.d3adaptor()
@@ -41,13 +41,19 @@ function data_d3cola(nodes, edges, constraints, opts) {
         v1.dcg_nodeKey = v.dcg_nodeKey;
         v1.width = v.width;
         v1.height = v.height;
-        if(v.dcg_nodeFixed) {
-            v1.x = v.x;
-            v1.y = v.y;
-            v1.fixed = true;
+        v1.fixed = !!v.dgc_nodeFixed;
+
+        if(typeof v.dgc_nodeFixed === 'object') {
+            v1.x = v.dgc_nodeFixed.x;
+            v1.y = v.dgc_nodeFixed.y;
         }
-        else
-            v1.fixed = false;
+        else {
+            // should we support e.g. null to unset x,y?
+            if(v.x !== undefined)
+                v1.x = v.x;
+            if(v.y !== undefined)
+                v1.y = v.y;
+        }
     });
     var wedges = regenerate_objects(_edges, edges, function(e) {
         return e.dcg_edgeKey;
@@ -84,11 +90,11 @@ function data_d3cola(nodes, edges, constraints, opts) {
             }
         });
     }
-    _d3cola.on('tick', function() {
+    _d3cola.on('tick', _tick = function() {
         postResponseState('tick');
     }).on('start', function() {
         postMessage({response: 'start'});
-    }).on('end', function() {
+    }).on('end', _stop = function() {
         postResponseState('end');
     });
     _d3cola.nodes(wnodes)
@@ -122,10 +128,16 @@ onmessage = function(e) {
         data_d3cola(args.nodes, args.edges, args.constraints, args.opts);
         break;
     case 'start':
-        start_d3cola(args.initialUnconstrainedIterations,
-                     args.initialUserConstraintIterations,
-                     args.initialAllConstraintsIterations,
-                     args.gridSnapIterationse);
+        if(args.initialOnly) {
+            if(args.showLayoutSteps)
+                _tick();
+            _stop();
+        }
+        else
+            start_d3cola(args.initialUnconstrainedIterations,
+                         args.initialUserConstraintIterations,
+                         args.initialAllConstraintsIterations,
+                         args.gridSnapIterationse);
         break;
     case 'stop':
         stop_d3cola();
