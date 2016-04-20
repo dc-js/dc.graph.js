@@ -414,6 +414,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.edgeStrokeWidth = _chart.edgeStrokeWidthAccessor = property(1);
 
+    _chart.edgeIsFlat = property(false);
+
     /**
      * Set or get the function which will be used to retrieve the edge opacity, a number from 0
      * to 1.
@@ -1075,6 +1077,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                     if(em[i][j].n)
                         em[i][j].ports.n = em[i][j].n;
         }
+
+        wedges.filter(param(_chart.edgeIsFlat())).forEach(function(e) {
+            e.parallel = 1;
+            e.ports = {n: 1};
+        });
 
         if(_chart.initialLayout())
             _chart.initialLayout()(_chart, wnodes, wedges);

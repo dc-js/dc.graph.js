@@ -46,6 +46,11 @@ app_layouts.vfc = function() {
                 .edgeIsLayout(function(e) {
                     return is_tree_edge(diagram, e);
                 })
+            /*
+                .edgeIsFlat(function(e) {
+                    return !is_tree_edge(diagram, e);
+                })
+             */
                 .nodeFixed(function(n) {
                     return is_root_node(n) ? true : null;
                 })
