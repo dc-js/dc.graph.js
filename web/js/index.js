@@ -42,7 +42,7 @@ var steptime = +querystring.interval || 1000, // ms per step
     timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000,
     explore = querystring.explore;
 
-if(edgeStroke && /[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke))
+if(edgeStroke && (/[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke)))
     edgeStroke = '#' + edgeStroke;
 var min = 2, max = 12;
 var begin = 2, end = 12, curr = begin;
