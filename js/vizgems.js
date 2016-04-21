@@ -3,6 +3,8 @@ var data_stats;
 
 var cb_colors = colorbrewer.Paired[12];
 cb_colors[5] = cb_colors[11];
+cb_colors[8] = cb_colors[1];
+cb_colors[1] = 'dimgray';
 
 // arbitrary assigning of shapes as POC
 var shapes = ['invtrapezium', 'ellipse', 'diamond', 'trapezium', 'pentagon', 'hexagon', 'egg',
@@ -240,9 +242,7 @@ var options = {
         selector: '#layout-vms',
         needs_redraw: true,
         apply: function(val, diagram) {
-            diagram.constrain(val ? function(nodes, edges) {
-                return vm_constraints(nodes, edges, []);
-            } : function() { return []; });
+            diagram.constrain(val ? vm_constraints : function() { return []; });
         }
     },
     flow_direction: {
@@ -462,7 +462,7 @@ var vm_rules = {
         {source: 'VM', target: 'HYP', produce: dc_graph.gap_x(200, false)}
     ]
 };
-var vm_constraints = dc_graph.constraint_pattern(diagram, vm_rules);
+var vm_constraints = dc_graph.constraint_pattern(vm_rules);
 
 function nocache_query() {
     return '?nocache=' + Date.now();
@@ -849,7 +849,12 @@ function init() {
         diagram
             .initLayoutOnRedraw(true)
             .nodeFitLabel(settings.fit_labels)
-            .nodeRadius(30)
+            .nodeRadius(function(n) {
+                switch(n.value.ostype) {
+                case 'PRT': return 5;
+                default: return 30;
+                }
+            })
             .induceNodes(true) // drop zero-degree nodes for now
             .nodeLabel(function(kv) {
                 switch(kv.value.ostype) {
@@ -865,8 +870,13 @@ function init() {
                     return bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
                         kv.key : kv.value.name;
                 }
+            })
+            .nodeLabelFill(function(n) {
+                var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
+                    // https://www.w3.org/TR/AERT#color-contrast
+                    brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                return brightness > 127 ? 'black' : 'ghostwhite';
             });
-
         var exs = [];
         for(var ost in ostypes)
             exs.push({key: '', name: ostypes[ost], value: {ostype: ost}});
@@ -895,7 +905,7 @@ function step() {
     });
 }
 
-var preload, snapshots, hist_files, hist_events, curr_hist, runner;
+var preload, snapshots, hist_files, hist_events, curr_hist, runner, tenant_name;
 
 function history_index(t) {
     // last date that is less than argument
@@ -905,6 +915,9 @@ function history_index(t) {
 
 function load_history(tenant, k) {
     hist_files = snapshots.filter(function(r) { return new RegExp("auto-shagrat-" + tenant).test(r); });
+    console.log('tenant ' + tenant_name[tenant] + ': ' + hist_files.length + ' snapshots');
+    ndicts = [];
+    edicts = [];
     var dtreg = /^cm\.([0-9]{8}-[0-9]{6})\./;
     var datef = d3.time.format('%Y%m%d-%H%M%S');
     var hist_times = hist_files.map(function(f) {
@@ -941,6 +954,10 @@ function load_history(tenant, k) {
     k();
 }
 function populate_tenant_select(tenants, curr) {
+    tenant_name = tenants.reduce(function(m, v) {
+        m[v[0]] = v[1];
+        return m;
+    }, {});
     $('#tenant-option').show();
     var sel = d3.select('#tenant-select');
     sel.selectAll('option')

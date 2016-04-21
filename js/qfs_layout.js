@@ -58,6 +58,9 @@ app_layouts.qfs = {
     node_fixed: function(n) {
         return n.value.class === 'Client' ? {x: 0, y: 0} : null;
     },
+    initDiagram: function(diagram) {
+        diagram.nodeLabel(function(n) { return n.value.label; });
+    },
     init: function() {
         show_stepper();
     }

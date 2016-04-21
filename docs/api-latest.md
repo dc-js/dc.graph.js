@@ -51,6 +51,7 @@ chart.width(600)
     * [.edgeLabel](#dc_graph.diagram+edgeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeArrowhead](#dc_graph.diagram+edgeArrowhead) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeArrowtail](#dc_graph.diagram+edgeArrowtail) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.edgeArrowSize](#dc_graph.diagram+edgeArrowSize) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeIsLayout](#dc_graph.diagram+edgeIsLayout) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -68,6 +69,7 @@ chart.width(600)
     * [.initLayoutOnRedraw](#dc_graph.diagram+initLayoutOnRedraw) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.layoutUnchanged](#dc_graph.diagram+layoutUnchanged) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.relayout](#dc_graph.diagram+relayout) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.initialLayout](#dc_graph.diagram+initialLayout) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.induceNodes](#dc_graph.diagram+induceNodes) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -134,6 +136,7 @@ visualization versus conventional charts.
   * [.edgeLabel](#dc_graph.diagram+edgeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeArrowhead](#dc_graph.diagram+edgeArrowhead) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeArrowtail](#dc_graph.diagram+edgeArrowtail) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.edgeArrowSize](#dc_graph.diagram+edgeArrowSize) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeIsLayout](#dc_graph.diagram+edgeIsLayout) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -151,6 +154,7 @@ visualization versus conventional charts.
   * [.initLayoutOnRedraw](#dc_graph.diagram+initLayoutOnRedraw) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.layoutUnchanged](#dc_graph.diagram+layoutUnchanged) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.relayout](#dc_graph.diagram+relayout) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+  * [.initialLayout](#dc_graph.diagram+initialLayout) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.induceNodes](#dc_graph.diagram+induceNodes) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -557,6 +561,16 @@ for the tail/source of the edge. Arrow symbols can be specified with
 | --- | --- | --- |
 | [edgeArrowtail] | <code>function</code> &#124; <code>String</code> | <code></code> | 
 
+<a name="dc_graph.diagram+edgeArrowSize"></a>
+#### diagram.edgeArrowSize ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Multiplier for arrow size.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [edgeArrowSize] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
+
 <a name="dc_graph.diagram+edgeIsLayout"></a>
 #### diagram.edgeIsLayout ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 To draw an edge but not have it affect the layout, specify a function which returns
@@ -795,10 +809,21 @@ Whether to perform layout when the data is unchanged from the last redraw.
 
 <a name="dc_graph.diagram+relayout"></a>
 #### diagram.relayout ⇒ <code>[diagram](#dc_graph.diagram)</code>
-When `layoutUnchanged` is false, call this when changing a parameter in order to force
-layout to happen again. (Yes, probably should not be necessary.)
+When `layoutUnchanged` is false, this will force layout to happen again. This may be needed
+when changing a parameter but not changing the topology of the graph. (Yes, probably should
+not be necessary.)
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+<a name="dc_graph.diagram+initialLayout"></a>
+#### diagram.initialLayout ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Function to call to generate an initial layout. Takes (diagram, nodes, edges)
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [initialLayout] | <code>function</code> | <code></code> | 
+
 <a name="dc_graph.diagram+induceNodes"></a>
 #### diagram.induceNodes ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 By default, all nodes are included, and edges are only included if both end-nodes are

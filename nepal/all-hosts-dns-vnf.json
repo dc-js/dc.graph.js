@@ -1,0 +1,1385 @@
+{
+    "results": [
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JT-AM-rI",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "6495dcfeec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2624",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS03",
+                        "ecomp_uid": "6495dcfeec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS03",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS03v"
+                    }
+                },
+                {
+                    "element_id": "8ud-Gk-Ky",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "6495dcfeec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "757cf1baec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2956",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "757cf1baec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns03.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx207",
+                        "ip_address": "107.250.178.63",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 8192,
+                        "name": "WT2CWA1DNS03v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:08",
+                        "time_modified_": "2016-03-17 18:49:08",
+                        "vcpus": 8,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9Nb-LG-Q6",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "757cf1baec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "794ebb2aec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3328",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "794ebb2aec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx207",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JR-AM-rQ",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "64942670ec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2612",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS08",
+                        "ecomp_uid": "64942670ec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS08",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS08v"
+                    }
+                },
+                {
+                    "element_id": "8sz-G8-Ka",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "64942670ec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "74a2f960ec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2944",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "74a2f960ec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns08.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx307",
+                        "ip_address": "107.250.178.68",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS08v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:07",
+                        "time_modified_": "2016-03-17 18:49:07",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9Mj-Lu-US",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "74a2f960ec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "794f5076ec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3332",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "794f5076ec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx307",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JF-AM-rY",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "6491162eec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2592",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS10",
+                        "ecomp_uid": "6491162eec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS10",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS10v"
+                    }
+                },
+                {
+                    "element_id": "8pP-FO-Jw",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "6491162eec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "744183a6ec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2924",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "744183a6ec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns10.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx507",
+                        "ip_address": "107.250.178.70",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS10v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:06",
+                        "time_modified_": "2016-03-17 18:49:06",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9Ln-La-UC",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "744183a6ec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "79508856ec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3340",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "79508856ec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx507",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JX-AM-s6",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "648fc724ec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2584",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS06",
+                        "ecomp_uid": "648fc724ec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS06",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS06v"
+                    }
+                },
+                {
+                    "element_id": "8oJ-FG-Jg",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "648fc724ec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "741a28baec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2916",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "741a28baec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns06.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx107",
+                        "ip_address": "107.250.178.66",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS06v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:06",
+                        "time_modified_": "2016-03-17 18:49:06",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9KV-L2-Uu",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "741a28baec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "7951ceaaec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3348",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "7951ceaaec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx107",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JJ-AM-se",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "6491b552ec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2596",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS09",
+                        "ecomp_uid": "6491b552ec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS09",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS09v"
+                    }
+                },
+                {
+                    "element_id": "8qn-FS-JE",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "6491b552ec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "7454c506ec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2928",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "7454c506ec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns09.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx507",
+                        "ip_address": "107.250.178.69",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS09v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:06",
+                        "time_modified_": "2016-03-17 18:49:06",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9Lp-Le-PI",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "7454c506ec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "79508856ec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3340",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "79508856ec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx507",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JN-AM-sm",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "6495552cec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2620",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS04",
+                        "ecomp_uid": "6495552cec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS04",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS04v"
+                    }
+                },
+                {
+                    "element_id": "8tF-Gg-Kq",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "6495552cec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "75676a5cec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2952",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "75676a5cec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns04.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx207",
+                        "ip_address": "107.250.178.64",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS04v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:08",
+                        "time_modified_": "2016-03-17 18:49:08",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9N9-LC-V8",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "75676a5cec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "794ebb2aec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3328",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "794ebb2aec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx207",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JB-AM-su",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "6492efe4ec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2604",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS11",
+                        "ecomp_uid": "6492efe4ec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS11",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS11v"
+                    }
+                },
+                {
+                    "element_id": "8rt-G0-JU",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "6492efe4ec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "747bde98ec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2936",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "747bde98ec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns11.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx407",
+                        "ip_address": "107.250.178.71",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS11v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:06",
+                        "time_modified_": "2016-03-17 18:49:06",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9LR-Lm-UK",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "747bde98ec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "794fef22ec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3336",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "794fef22ec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx407",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JP-AM-sC",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "64925476ec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2600",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS12",
+                        "ecomp_uid": "64925476ec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS12",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS12v"
+                    }
+                },
+                {
+                    "element_id": "8qV-FW-JM",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "64925476ec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "74684694ec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2932",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "74684694ec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns12.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx407",
+                        "ip_address": "107.250.178.72",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS12v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:06",
+                        "time_modified_": "2016-03-17 18:49:06",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9Lr-Li-PQ",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "74684694ec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "794fef22ec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3336",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "794fef22ec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx407",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JH-AM-sK",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "648f32a0ec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2580",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS02",
+                        "ecomp_uid": "648f32a0ec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS02",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS02v"
+                    }
+                },
+                {
+                    "element_id": "8ob-FC-J8",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "648f32a0ec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "74065204ec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2912",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "74065204ec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns02.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx107",
+                        "ip_address": "107.250.178.62",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS02v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:06",
+                        "time_modified_": "2016-03-17 18:49:06",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9Kv-KY-Um",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "74065204ec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "7951ceaaec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3348",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "7951ceaaec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx107",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JL-AM-sS",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "64906af8ec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2588",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS05",
+                        "ecomp_uid": "64906af8ec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS05",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS05v"
+                    }
+                },
+                {
+                    "element_id": "8ph-FK-Jo",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "64906af8ec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "742e363eec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2920",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "742e363eec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns05.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx107",
+                        "ip_address": "107.250.178.65",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS05v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:06",
+                        "time_modified_": "2016-03-17 18:49:06",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9KX-L6-PA",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "742e363eec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "7951ceaaec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3348",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "7951ceaaec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx107",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JV-AM-t0",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "6494bbbcec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2616",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS01",
+                        "ecomp_uid": "6494bbbcec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS01",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS01v"
+                    }
+                },
+                {
+                    "element_id": "8t7-Gc-Ki",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "6494bbbcec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "754eab3eec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2948",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "754eab3eec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns01.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx207",
+                        "ip_address": "107.250.178.61",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS01v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:08",
+                        "time_modified_": "2016-03-17 18:49:08",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9MJ-Ly-V0",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "754eab3eec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "794ebb2aec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3328",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "794ebb2aec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx207",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7JD-AM-t8",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted:Composition",
+                        "source_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "64938b0cec9211e5b511005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2608",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS",
+                        "description": "DNS07",
+                        "ecomp_uid": "64938b0cec9211e5b511005056a9660d",
+                        "label_": "Base:Node:VFC:DNS",
+                        "name": "DNS07",
+                        "time_added_": "2016-03-17 18:48:40",
+                        "time_modified_": "2016-03-17 18:48:40",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1DNS07v"
+                    }
+                },
+                {
+                    "element_id": "8s1-G4-K2",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "64938b0cec9211e5b511005056a9660d",
+                        "target_ecomp_uid": "748f6454ec9211e5a8f0005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2940",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "748f6454ec9211e5a8f0005056a9660d",
+                        "full_name": "wt2cwa1dns07.lte.mobilephone.net",
+                        "hostname": "wt2cwa1esx307",
+                        "ip_address": "107.250.178.67",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 4096,
+                        "name": "WT2CWA1DNS07v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-03-17 18:49:06",
+                        "time_modified_": "2016-03-17 18:49:06",
+                        "vcpus": 4,
+                        "version_": "1.0",
+                        "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "9LT-Lq-PY",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "748f6454ec9211e5a8f0005056a9660d",
+                        "target_ecomp_uid": "794f5076ec9211e58944005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "3332",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "794f5076ec9211e58944005056a9660d",
+                        "hw_cpu_Mhz": 2499,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant BL460c Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 4,
+                        "hw_num_nics": 6,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "wt2cwa1esx307",
+                        "time_added_": "2016-03-17 18:49:14",
+                        "time_modified_": "2016-03-17 18:49:14",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        }
+    ],
+    "version": "0.0.2"
+}

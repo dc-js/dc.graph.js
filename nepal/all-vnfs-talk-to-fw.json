@@ -1,0 +1,653 @@
+{
+    "results": [
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7i1-AI-3c",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2292",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7il-AI-4u",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2268",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7i1-AI-3c",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2292",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7hR-AY-2i",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f180ebeec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2288",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "PROXY_VNF",
+                        "description": "PROXY_VNF",
+                        "ecomp_uid": "5f180ebeec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:PROXY_VNF",
+                        "name": "PROXY_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7i1-AI-3c",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2292",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7hV-AY-2O",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f173070ec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2284",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "PCRF_VNF",
+                        "description": "PCRF_VNF",
+                        "ecomp_uid": "5f173070ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:PCRF_VNF",
+                        "name": "PCRF_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7i1-AI-3c",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2292",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7i3-AY-3k",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7i1-AI-3c",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2292",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7i7-AY-3A",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2268",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7il-AI-4u",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2268",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7i9-AA-3I",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2292",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "5f18f4dcec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7il-AI-4u",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2268",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7ib-AA-3Q",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f180ebeec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2288",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "PROXY_VNF",
+                        "description": "PROXY_VNF",
+                        "ecomp_uid": "5f180ebeec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:PROXY_VNF",
+                        "name": "PROXY_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7il-AI-4u",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2268",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7if-AA-46",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f173070ec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2284",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "PCRF_VNF",
+                        "description": "PCRF_VNF",
+                        "ecomp_uid": "5f173070ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:PCRF_VNF",
+                        "name": "PCRF_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "2276",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7il-AI-4u",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f14bcf0ec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2268",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "7in-AA-4C",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "5f10979cec9211e5b808005056a9660d",
+                        "target_ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "2280",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "5f15fb4cec9211e5b808005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-03-17 18:48:30",
+                        "time_modified_": "2016-03-17 18:48:30",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        }
+    ],
+    "version": "0.0.2"
+}

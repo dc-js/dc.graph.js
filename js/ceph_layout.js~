@@ -1,4 +1,0 @@
-app_layouts.ceph = {
-    data: function(nodes, edges) {
-    }
-};

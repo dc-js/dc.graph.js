@@ -59,11 +59,11 @@ function timeline(parent) {
     };
 
     function baseline() {
-        return _height*3/4;
+        return _height/2;
     }
 
     function y(height) {
-        return isNaN(height) ? 2 : _y(0) - _y(height);
+        return isNaN(height) ? 3 : _y(0) - _y(height);
     }
 
     _chart.redraw = function() {
@@ -75,7 +75,7 @@ function timeline(parent) {
         var max = Math.max(20, d3.max(_events, function(e) {
             return e.value[0].key === 'adds' ? Math.max(e.value[0].height, e.value[1].height) : 0;
         }));
-        _y.domain([max, 0]).range([0, bl]);
+        _y.domain([max, -max]).range([0, bl]);
         var axis = _g.selectAll('rect.timeline').data([0]);
         axis.enter().append('rect').attr('class', 'timeline');
         axis.attr({
@@ -97,8 +97,8 @@ function timeline(parent) {
             width: _tickwidth,
             height: function(t) {
                 return y(t.height); },
-            x: function(_,i) { return i*_tickwidth; }, y: function(t) {
-                return bl-y(t.height); },
+            x: 0, y: function(t) {
+                return t.key==='place' ? bl-1 : t.key==='adds' ? bl-y(t.height) : bl; },
             fill: function(t) { return t.fill; },
             opacity: 0.5
         });

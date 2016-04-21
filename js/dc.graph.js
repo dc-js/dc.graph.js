@@ -140,6 +140,56 @@ Math.hypot = Math.hypot || function() {
   return Math.sqrt(y);
 };
 
+// this naive tree-drawer is paraphrased from memory from dot
+dc_graph.depth_first_traversal = function(rootf, treef, placef, sibf, pushf, popf) {
+    return function(diagram, nodes, edges) {
+        if(treef)
+            edges = edges.filter(function(e) { return treef(e.orig); });
+
+        var outmap = edges.reduce(function(m, e) {
+            var tail = param(diagram.edgeSource())(e),
+                head = param(diagram.edgeTarget())(e);
+            if(!m[tail]) m[tail] = [];
+            m[tail].push(e);
+            return m;
+        }, {});
+
+        var rows = [];
+        var placed = {};
+        function place_tree(n, r) {
+            var key = param(diagram.nodeKey())(n);
+            if(placed[key])
+                return;
+            if(!rows[r])
+                rows[r] = [];
+            placef && placef(n, r, rows[r]);
+            rows[r].push(n);
+            placed[key] = true;
+            if(outmap[key])
+                outmap[key].forEach(function(e, ei) {
+                    if(ei && sibf)
+                        sibf();
+                    pushf && pushf();
+                    place_tree(e.target, r+1);
+                });
+            popf && popf();
+        }
+
+        var roots;
+        if(rootf)
+            roots = nodes.filter(function(n) { return rootf(n.orig); });
+        else {
+            throw new Error("root-finder not implemented (it's easy!)");
+        }
+        roots.forEach(function(n, ni) {
+            if(ni && sibf)
+                sibf();
+            pushf && pushf();
+            place_tree(n, 0);
+        });
+    };
+};
+
 // create or re-use objects in a map, delete the ones that were not reused
 function regenerate_objects(preserved, list, key, assign) {
     var keep = {};
@@ -339,6 +389,8 @@ function fit_shape(chart) {
             bbox = this.getBBox();
         var fitx = 0;
         if(bbox && bbox.width && bbox.height) {
+            // make sure we can fit height in r
+            r = Math.max(r, bbox.height/2 + 5);
             // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
             // http://stackoverflow.com/a/433438/676195
             var y_over_B = bbox.height/2/r;
@@ -999,6 +1051,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeArrowtail = _chart.edgeArrowtailAccessor = property(null);
 
     /**
+     * Multiplier for arrow size.
+     * @name edgeArrowSize
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function|Number} [edgeArrowSize=1]
+     * @return {Function|Number}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.edgeArrowSize = property(1);
+
+    /**
      * To draw an edge but not have it affect the layout, specify a function which returns
      * false for that edge.  By default, will return false if the `notLayout` field of the edge
      * value is truthy, true otherwise.
@@ -1253,8 +1316,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.layoutUnchanged = property(false);
 
     /**
-     * When `layoutUnchanged` is false, call this when changing a parameter in order to force
-     * layout to happen again. (Yes, probably should not be necessary.)
+     * When `layoutUnchanged` is false, this will force layout to happen again. This may be needed
+     * when changing a parameter but not changing the topology of the graph. (Yes, probably should
+     * not be necessary.)
      * @name relayout
      * @memberof dc_graph.diagram
      * @instance
@@ -1264,6 +1328,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         _nodes_snapshot = _edges_snapshot = null;
         return this;
     };
+
+    /**
+     * Function to call to generate an initial layout. Takes (diagram, nodes, edges)
+     * @name initialLayout
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [initialLayout=null]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.initialLayout = property(null);
+
+    _chart.initialOnly = property(false);
 
     /**
      * By default, all nodes are included, and edges are only included if both end-nodes are
@@ -1351,6 +1428,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         return 'textpath-' + _chart.edgeId(d);
     };
 
+    // this kind of begs a (meta)graph ADT
+    // instead of munging this into the diagram
+    _chart.getNode = function(id) {
+        return _nodes[id] ? _nodes[id].orig : null;
+    };
+
     /**
      * Instructs cola.js to fit the connected components. Default: true
      * @name handleDisconnected
@@ -1391,13 +1474,24 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('class', 'node-shape');
         nodeEnter.append('text')
             .attr('class', 'node-label')
-            .attr('dy', '0.3em')
             .attr('fill', param(_chart.nodeLabelFill()));
         node.select('title')
             .text(param(_chart.nodeTitle()));
-        node.select('text.node-label')
-            .text(param(_chart.nodeLabel()))
-            .each(fit_shape(_chart));
+        var text = node.select('text.node-label');
+        var tspan = text.selectAll('tspan').data(function(n) {
+            var lines = param(_chart.nodeLabel())(n);
+            if(!lines)
+                return [];
+            else if(typeof lines === 'string')
+                lines = [lines];
+            var first = lines.length%2 ? 0.3 - (lines.length-1)/2 : 1-lines.length/2;
+                    return lines.map(function(line, i) { return {line: line, ofs: (i==0 ? first : 1) + 'em'}; });
+        });
+        tspan.enter().append('tspan')
+            .attr('x', 0)
+            .attr('dy', function(d) { return d.ofs; });
+        tspan.text(function(d) { return d.line; });
+        text.each(fit_shape(_chart));
         node.select('.node-shape')
             .each(shape_attrs(_chart))
             .attr({
@@ -1561,6 +1655,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                         em[i][j].ports.n = em[i][j].n;
         }
 
+        if(_chart.initialLayout())
+            _chart.initialLayout()(_chart, wnodes, wedges);
+
         // create edge SVG elements
         var edge = _edgeLayer.selectAll('.edge')
                 .data(wedges, param(_chart.edgeKey()));
@@ -1663,7 +1760,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // i am not satisfied with this constraint generation api...
         // https://github.com/dc-js/dc.graph.js/issues/10
-        var constraints = _chart.constrain()(wnodes, wedges);
+        var constraints = _chart.constrain()(_chart, wnodes, wedges);
         // translate references from names to indices (ugly)
         constraints.forEach(function(c) {
             if(c.type) {
@@ -1802,7 +1899,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             args: {
                 initialUnconstrainedIterations: 10,
                 initialUserConstraintIterations: 20,
-                initialAllConstraintsIterations: 20
+                initialAllConstraintsIterations: 20,
+                initialOnly: _chart.initialOnly(),
+                showLayoutSteps: _chart.showLayoutSteps()
             }
         });
         return this;
@@ -1831,14 +1930,20 @@ dc_graph.diagram = function (parent, chartGroup) {
                 // alternate parallel edges over, then under
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
-                    last = port ? d.ports[age][p > 2 ? p - 2 : 0] : null;
-                d.ports[age][p] = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
-                                                        last, dir, _chart.parallelEdgeOffset(),
-                                                        source_padding, target_padding
-                                                       );
+                    last = port ? d.ports[age][p > 2 ? p - 2 : 0].path : null;
+                var path = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
+                                              last, dir, _chart.parallelEdgeOffset(),
+                                              source_padding, target_padding
+                                              );
+                var spos = path.points[0], tpos = path.points[path.points.length-1];
+                var near = bezier_point(path.points, 0.75);
+                d.ports[age][p] = {
+                    path: path,
+                    orient: Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad'
+                };
             }
         }
-        return d.ports[age][d.parallel];
+        return d.ports[age][d.parallel].path;
     }
 
     function calc_old_edge_path(d) {
@@ -1849,18 +1954,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     function calc_new_edge_path(d) {
         var path = calc_edge_path(d, 'new', d.source.cola.x, d.source.cola.y, d.target.cola.x, d.target.cola.y);
         var spos = path.points[0], tpos = path.points[path.points.length-1];
-        if(param(_chart.edgeArrowhead())(d))
-            d3.select('#' + _chart.arrowId(d, 'head'))
-                .attr('orient', function(d) {
-                    var near = bezier_point(path.points, 0.75);
-                    return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
-                });
         d.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
     }
 
     function render_edge_path(age) {
         return function(d) {
-            var path = d.ports[age][d.parallel];
+            var path = d.ports[age][d.parallel].path;
             return generate_path(path.points, path.bezDegree);
         };
     }
@@ -1919,14 +2018,34 @@ dc_graph.diagram = function (parent, chartGroup) {
             .each(function(e) {
                 // if staging transitions, just fade new edges in at new position
                 // else start new edges at old positions of nodes, if any, else new positions
-                if(_chart.stageTransitions() === 'modins')
+                var age;
+                if(_chart.stageTransitions() === 'modins') {
                     calc_new_edge_path(e);
-                else
+                    age = 'new';
+                }
+                else {
                     calc_old_edge_path(e);
+                    age = 'old';
+                }
+                if(param(_chart.edgeArrowhead())(e))
+                    d3.select('#' + _chart.arrowId(e, 'head'))
+                    .attr('orient', function() {
+                        return e.ports[age][e.parallel].orient;
+                    });
             })
             .attr('d', render_edge_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
 
         var etrans = edge.each(calc_new_edge_path)
+                .each(function(e) {
+                    if(param(_chart.edgeArrowhead())(e)) {
+                        d3.select('#' + _chart.arrowId(e, 'head'))
+                            .transition().duration(transition_duration())
+                            .delay(transition_delay(false))
+                            .attr('orient', function() {
+                                return e.ports.new[e.parallel].orient;
+                            });
+                    }
+                })
               .transition()
                 .duration(transition_duration())
                 .delay(function(e) {
@@ -1940,14 +2059,15 @@ dc_graph.diagram = function (parent, chartGroup) {
                 });
         if(_chart.stageTransitions() === 'insmod') {
             // inserted edges transition twice in insmod mode
-            etrans.transition()
+            etrans = etrans.transition()
                 .duration(transition_duration())
                 .attr("d", render_edge_path('new'));
+            d3.timer.flush();
         }
 
         edge.each(function(d) {
             var id = _chart.textpathId(d);
-            var path = d.ports.new[d.parallel];
+            var path = d.ports.new[d.parallel].path;
             var points = d.target.cola.x < d.source.cola.x ?
                     path.points.slice(0).reverse() : path.points;
             d3.select('#' + id)
@@ -2190,8 +2310,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('refX', _arrows[name].refX)
                 .attr('refY', _arrows[name].refY)
                 .attr('markerUnits', 'userSpaceOnUse')
-                .attr('markerWidth', _arrows[name].width)
-                .attr('markerHeight', _arrows[name].height)
+                .attr('markerWidth', _arrows[name].width*param(_chart.edgeArrowSize())(d))
+                .attr('markerHeight', _arrows[name].height*param(_chart.edgeArrowSize())(d))
                 .attr('stroke', param(_chart.edgeStroke())(d))
                 .attr('fill', param(_chart.edgeStroke())(d))
                 .call(_arrows[name].drawFunction);
@@ -2386,7 +2506,7 @@ dc_graph.legend = function() {
  * @param {Object} pattern - a graph which defines the constraints to be generated
  * @return {Function}
  */
-dc_graph.constraint_pattern = function(diagram, pattern) {
+dc_graph.constraint_pattern = function(pattern) {
     var types = {}, rules = [];
 
     pattern.nodes.forEach(function(n) {
@@ -2397,7 +2517,9 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
             var partition = n.partition;
             var value = n.value || n.id;
             if(n.all || n.typename) {
-                type.match = function(n2) { return n2.value[partition]; };
+                type.match = n.extract ?
+                    function(n2) { return n.extract(n2.value[partition]); } :
+                    function(n2) { return n2.value[partition]; };
                 type.typename = n.typename || function(n2) { return partition + '=' + n2.value[partition]; };
             }
             else
@@ -2420,7 +2542,8 @@ dc_graph.constraint_pattern = function(diagram, pattern) {
         rules.push(rule);
     });
 
-    return function(nodes, edges, constraints) {
+    return function(diagram, nodes, edges) {
+        var constraints = [];
         var members = {};
         nodes.forEach(function(n) {
             var key = param(diagram.nodeKey())(n);
@@ -2526,6 +2649,33 @@ dc_graph.order_y = function(gap, ordering) {
         axis: 'y',
         gap: 60,
         ordering: ordering
+    };
+};
+
+// this naive tree-drawer is paraphrased from memory from dot
+dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
+    return function(diagram, nodes, edges) {
+        var constraints = [];
+        var x = 0;
+        var dfs = dc_graph.depth_first_traversal(rootf, treef, function(n, r, row) {
+            if(row.length) {
+                var last = row[row.length-1];
+                constraints.push({
+                    left: param(diagram.nodeKey())(last),
+                    right: param(diagram.nodeKey())(n),
+                    axis: 'x',
+                    gap: x-last.foo_x,
+                    equality: true
+                });
+            }
+            n.foo_x = x;
+            // n.cola.x = x;
+            // n.cola.y = r*ygap;
+        }, function() {
+            x += xgap;
+        });
+        dfs(diagram, nodes, edges);
+        return constraints;
     };
 };
 
@@ -2796,6 +2946,19 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
         first: add_gradient_def,
         remove_behavior: remove_behavior
     });
+};
+
+// this naive tree-drawer is paraphrased from memory from dot
+dc_graph.initialize_tree = function(rootf, treef, ofsx, ofsy, xgap, ygap) {
+    var x = ofsx;
+    var dfs = dc_graph.depth_first_traversal(rootf, treef, function(n, r) {
+        n.cola.x = x;
+        n.cola.y = r*ygap + ofsy;
+    }, function() {
+        x += xgap;
+    });
+
+    return dfs;
 };
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
