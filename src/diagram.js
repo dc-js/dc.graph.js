@@ -343,7 +343,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Function|Object}
      * @return {dc_graph.diagram}
      **/
-    _chart.nodeShape = property({shape: 'ellipse'});
+    _chart.nodeShape = property(default_shape);
 
     /**
      * Set or get the function which will be used to retrieve the node title, usually rendered
