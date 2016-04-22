@@ -180,19 +180,17 @@ source(function(error, data) {
     };
 
     var rule_constraints = null;
-    if(appLayout) {
-        var rules = appLayout && app_layouts[appLayout].rules;
-        if(rules) {
-            rules.edges.forEach(function(c) {
-                if(!doDisplacement && c.produce && !c.produce.type)
-                    c.disable = true;
-                if(!doAlignment && c.produce && c.produce.type === 'alignment')
-                    c.disable = true;
-                if(!doOrdering && c.produce && c.produce.type === 'ordering')
-                    c.disable = true;
-            });
-            rule_constraints = dc_graph.constraint_pattern(rules);
-        }
+    var rules = appLayout && app_layouts[appLayout].rules;
+    if(rules) {
+        rules.edges.forEach(function(c) {
+            if(!doDisplacement && c.produce && !c.produce.type)
+                c.disable = true;
+            if(!doAlignment && c.produce && c.produce.type === 'alignment')
+                c.disable = true;
+            if(!doOrdering && c.produce && c.produce.type === 'ordering')
+                c.disable = true;
+        });
+        rule_constraints = dc_graph.constraint_pattern(rules);
     }
 
     function constrain(diagram, nodes, edges) {
