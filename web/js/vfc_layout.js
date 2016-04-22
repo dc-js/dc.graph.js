@@ -51,7 +51,7 @@ app_layouts.vfc = function() {
                 })
                 .nodeTitle(function(n) { return n.value.name; })
             ;
-            if(querystring.treeOnly === 'true') {
+            if(qs.treeOnly === 'true') {
                 diagram
                     .initialLayout(dc_graph.initialize_tree(is_root_node, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
                     .initialOnly(true)

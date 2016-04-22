@@ -1,46 +1,32 @@
+var qs = querystring.parse();
 
-// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-var querystring = (function(a) {
-    if (a == "") return {};
-    var b = {};
-    for (var i = 0; i < a.length; ++i)
-    {
-        var p=a[i].split('=', 2);
-        if (p.length == 1)
-            b[p[0]] = "";
-        else
-            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
-    }
-    return b;
-})(window.location.search.substr(1).split('&'));
-
-var steptime = +querystring.interval || 1000, // ms per step
-    pause = +querystring.pause || 2500, // pause at end of loop
-    showSteps = !(querystring.showsteps === 'false'),
-    transition = querystring.transition || 0,
-    stage = querystring.stage || 'insmod',
-    file = querystring.file || null,
-    paths = querystring.paths || null,
-    generate = querystring.gen || null,
-    shape = querystring.shape || null,
-    radius = +querystring.radius || 25,
-    fill = querystring.fill || 'white',
-    nodeStroke = querystring.nodestroke || 'black',
-    nodeStrokeWidth = querystring.nodestrokewidth || 1,
-    randomize = querystring.randomize === 'true',
-    doReinit = !(querystring.reinit==="false"),
-    doDisplacement = !(querystring.displace==="false"),
-    doAlignment = !(querystring.align==="false"),
-    doOrdering = !(querystring.order==="false"),
-    linkLength = +querystring.linklength || 30,
-    edgeStroke = querystring.edgestroke || 'black',
-    edgeStrokeWidth = querystring.edgestrokewidth || 1,
-    edgeOpacity = +querystring.opacity || 1,
+var steptime = +qs.interval || 1000, // ms per step
+    pause = +qs.pause || 2500, // pause at end of loop
+    showSteps = !(qs.showsteps === 'false'),
+    transition = qs.transition || 0,
+    stage = qs.stage || 'insmod',
+    file = qs.file || null,
+    paths = qs.paths || null,
+    generate = qs.gen || null,
+    shape = qs.shape || null,
+    radius = +qs.radius || 25,
+    fill = qs.fill || 'white',
+    nodeStroke = qs.nodestroke || 'black',
+    nodeStrokeWidth = qs.nodestrokewidth || 1,
+    randomize = qs.randomize === 'true',
+    doReinit = !(qs.reinit==="false"),
+    doDisplacement = !(qs.displace==="false"),
+    doAlignment = !(qs.align==="false"),
+    doOrdering = !(qs.order==="false"),
+    linkLength = +qs.linklength || 30,
+    edgeStroke = qs.edgestroke || 'black',
+    edgeStrokeWidth = qs.edgestrokewidth || 1,
+    edgeOpacity = +qs.opacity || 1,
     appLayout = null,
     useAppLayout = false,
-    nodePrefix = querystring.prefix || '',
-    timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000,
-    explore = querystring.explore;
+    nodePrefix = qs.prefix || '',
+    timeLimit = qs.limit !== undefined ? +qs.limit : 10000,
+    explore = qs.explore;
 
 if(edgeStroke && (/[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke)))
     edgeStroke = '#' + edgeStroke;
@@ -73,13 +59,13 @@ do_status();
 var source;
 if(!generate && !file)
     file = "qfs.json";
-appLayout = querystring.applayout || file === 'qfs.json' && 'qfs';
+appLayout = qs.applayout || file === 'qfs.json' && 'qfs';
 if(appLayout === 'none' || !app_layouts[appLayout])
     appLayout = null;
 if(appLayout) {
     useAppLayout = true;
-    if('useapplayout' in querystring) {
-        useAppLayout = !!+querystring.useapplayout;
+    if('useapplayout' in qs) {
+        useAppLayout = !!+qs.useapplayout;
         $('#use-app-layout').prop('checked', useAppLayout);
     }
     $('#app-options').show();
