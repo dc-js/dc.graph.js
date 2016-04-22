@@ -125,107 +125,30 @@ function show_type_graph(nodes, edges, sourceattr, targetattr) {
         .render();
 }
 
-function can_get_graph_from_this(data) {
-    return (data.nodes || data.vertices) &&  (data.edges || data.links);
-}
-
 source(function(error, data) {
     if(error) {
         console.log(error);
         return;
     }
-    // we want data = {nodes, edges}; find those in common other formats
-    if(!can_get_graph_from_this(data)) {
-        var wrappers = ['database', 'response'];
-        var wi = wrappers.findIndex(function(f) { return data[f] && can_get_graph_from_this(data[f]); });
-        if(wi<0)
-            throw new Error("couldn't find the data!");
-        data = data[wrappers[wi]];
-    }
-    if(!data.edges && data.links)
-        data.edges = data.links;
-    if(!data.nodes && data.vertices)
-        data.nodes = data.vertices;
+    var graph_data = munge_graph(data),
+        nodes = graph_data.nodes,
+        edges = graph_data.edges,
+        sourceattr = graph_data.sourceattr,
+        targetattr = graph_data.targetattr,
+        nodekeyattr = graph_data.nodekeyattr;
 
-    function find_attr(o, attrs) {
-        return attrs.filter(function(a) { return !!o[a]; });
-    }
-
-    //var edgekeyattr = "id";
-    var sourceattr = "sourcename", targetattr = "targetname";
-    var edge0 = data.edges[0];
-    if(edge0[sourceattr] === undefined) {
-        var sourceattrs = ['source_ecomp_uid', "node1", "source", "tail"], targetattrs = ['target_ecomp_uid', "node2", "target", "head"];
-        //var edgekeyattrs = ['id', '_id', 'ecomp_uid'];
-        var edgewrappers = ['edge'];
-        if(edge0.node0 && edge0.node1) { // specific conflict here
-            sourceattr = 'node0';
-            targetattr = 'node1';
-        }
-        else {
-            var candidates = find_attr(edge0, sourceattrs);
-            if(!candidates.length) {
-                wi = edgewrappers.findIndex(function(w) { return edge0[w] && find_attr(edge0[w], sourceattrs).length; });
-                if(wi<0)
-                    throw new Error("didn't find any source attr");
-                // I don't like to coerce data but it would be pretty annoying to add this everywhere
-                data.edges = data.edges.map(function(e) { return e[edgewrappers[wi]]; });
-                edge0 = data.edges[0];
-                candidates = find_attr(edge0, sourceattrs);
-            }
-            if(candidates.length > 1)
-                console.warn('found more than one possible source attr', candidates);
-            sourceattr = candidates[0];
-
-            candidates = find_attr(edge0, targetattrs);
-            if(!candidates.length)
-                throw new Error("didn't find any target attr");
-            if(candidates.length > 1)
-                console.warn('found more than one possible target attr', candidates);
-            targetattr = candidates[0];
-
-            /*
-             // we're currently assembling our own edgeid
-            candidates = find_attr(edge0, edgekeyattrs);
-            if(!candidates.length)
-                throw new Error("didn't find any edge key");
-            if(candidates.length > 1)
-                console.warn('found more than one edge key attr', candidates);
-            edgekeyattr = candidates[0];
-             */
-        }
-    }
-    var nodekeyattr = "name";
-    var node0 = data.nodes[0];
-    if(node0[nodekeyattr] === undefined) {
-        var nodekeyattrs = ['ecomp_uid', 'id', '_id'];
-        var nodewrappers = ['vertex'];
-        candidates = find_attr(node0, nodekeyattrs);
-        if(!candidates.length) {
-            wi = nodewrappers.findIndex(function(w) { return node0[w] && find_attr(node0[w], nodekeyattrs).length; });
-            if(wi<0)
-                throw new Error("couldn't find the node data");
-            // again, coersion here
-            data.nodes = data.nodes.map(function(n) { return n[nodewrappers[wi]]; });
-            node0 = data.nodes[0];
-            candidates = find_attr(node0, nodekeyattrs);
-        }
-        if(candidates.length > 1)
-            console.warn('found more than one possible node key attr', candidates);
-        nodekeyattr = candidates[0];
-    }
     if(randomize) {
-        data.edges.forEach(function(e) { e.order = Math.random()*1000; });
-        data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
+        edges.forEach(function(e) { e.order = Math.random()*1000; });
+        nodes.forEach(function(n) { n.order = Math.random()*1000; });
     }
 
     if(false) // appLayout)
-        show_type_graph(data.nodes, data.edges, sourceattr, targetattr);
+        show_type_graph(nodes, edges, sourceattr, targetattr);
 
-    var edges = flat_group.make(data.edges, function(d) {
+    var edge_flat = flat_group.make(edges, function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     }),
-        nodes = flat_group.make(data.nodes, function(d) { return d[nodekeyattr]; });
+        node_flat = flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
     appLayout && app_layouts[appLayout].data && app_layouts[appLayout].data(nodes, edges);
 
@@ -303,8 +226,8 @@ source(function(error, data) {
         .transitionDuration(transition)
         .stageTransitions(stage)
         .showLayoutSteps(showSteps)
-        .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
-        .edgeDimension(edges.dimension).edgeGroup(edges.group)
+        .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
+        .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .nodeLabel(function(n) { return n.value.name.split('/'); })
@@ -327,7 +250,7 @@ source(function(error, data) {
         .on('end', function() {
             $('#run-indicator').hide();
             runner.endStep();
-            show_stats({totnodes: data.nodes.length, totedges: data.edges.length}, diagram.getStats());
+            show_stats({totnodes: nodes.length, totedges: edges.length}, diagram.getStats());
         })
         .child('highlight-neighbors', dc_graph.highlight_neighbors('orange', 3));
 
@@ -343,14 +266,14 @@ source(function(error, data) {
     if(explore) {
         expanded = [explore];
         // second group on keys so that first will observe it
-        expander = flat_group.another(nodes.crossfilter, function(d) { return d.name; });
+        expander = flat_group.another(node_flat.crossfilter, function(d) { return d.name; });
         function apply_expander_filter() {
             expander.dimension.filterFunction(function(key) {
                 return expanded.indexOf(key) >= 0;
             });
         }
         function adjacent_edges(key) {
-            return edges.group.all().filter(function(kv) {
+            return edge_flat.group.all().filter(function(kv) {
                 return kv.value[sourceattr] === key || kv.value[targetattr] === key;
             });
         }
@@ -430,7 +353,7 @@ source(function(error, data) {
     // this is kind of a brain-dead way to test transitions
     // i mean, you can cram the concept of adding and deleting stuff over time
     // into crossfilter data, but do you really want to do that?
-    var startDim = nodes.crossfilter.dimension(function(d) { return d.start || 0; }),
+    var startDim = node_flat.crossfilter.dimension(function(d) { return d.start || 0; }),
         startGroup = startDim.group();
 
 
