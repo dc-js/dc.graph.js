@@ -30,7 +30,7 @@ dc_graph.depth_first_traversal = function(rootf, treef, placef, sibf, pushf, pop
                     pushf && pushf();
                     place_tree(e.target, r+1);
                 });
-            popf && popf();
+            popf && popf(n);
         }
 
         var roots;

@@ -2,11 +2,14 @@
 dc_graph.initialize_tree = function(rootf, treef, ofsx, ofsy, xgap, ygap) {
     var x = ofsx;
     var dfs = dc_graph.depth_first_traversal(rootf, treef, function(n, r) {
-        n.cola.x = x;
+        n.left_x = x;
         n.cola.y = r*ygap + ofsy;
     }, function() {
         x += xgap;
+    }, null, function(n) {
+        n.cola.x = (n.left_x + x)/2;
     });
 
     return dfs;
 };
+2
