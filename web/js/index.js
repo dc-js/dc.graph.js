@@ -99,7 +99,6 @@ if(shape) {
         break;
     }
 }
-else shape = {shape: 'ellipse'};
 
 function show_type_graph(nodes, edges, sourceattr, targetattr) {
     $('#overview').show();

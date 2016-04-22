@@ -121,6 +121,8 @@ var dc_graph_shapes_ = {
     }
 };
 
+var default_shape = {shape: 'ellipse'};
+
 function elaborate_shape(def) {
     var shape = def.shape;
     if(def.shape === 'random') {
@@ -131,16 +133,18 @@ function elaborate_shape(def) {
         throw new Error('unknown shape ' + def.shape);
     })(def);
 }
+
 function infer_shape(chart) {
     return function(d) {
-        var def = param(chart.nodeShape())(d);
+        var def = param(chart.nodeShape())(d) || default_shape;
         d.dcg_shape = elaborate_shape(def);
         d.dcg_shape.abstract = def;
     };
 }
+
 function shape_changed(chart) {
     return function(d) {
-        var def = param(chart.nodeShape())(d);
+        var def = param(chart.nodeShape())(d) || default_shape;
         var old = d.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
