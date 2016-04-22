@@ -1479,11 +1479,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return render_edge_path(when)(e);
                 });
         if(_chart.stageTransitions() === 'insmod') {
+            // d3 seems to have trouble with chained transition of duration 0
+            d3.timer.flush();
             // inserted edges transition twice in insmod mode
             etrans = etrans.transition()
                 .duration(transition_duration())
                 .attr("d", render_edge_path('new'));
-            d3.timer.flush();
         }
 
         edge.each(function(d) {
