@@ -172,7 +172,7 @@ dc_graph.depth_first_traversal = function(rootf, treef, placef, sibf, pushf, pop
                     pushf && pushf();
                     place_tree(e.target, r+1);
                 });
-            popf && popf();
+            popf && popf(n);
         }
 
         var roots;
@@ -332,6 +332,8 @@ var dc_graph_shapes_ = {
     }
 };
 
+var default_shape = {shape: 'ellipse'};
+
 function elaborate_shape(def) {
     var shape = def.shape;
     if(def.shape === 'random') {
@@ -342,16 +344,18 @@ function elaborate_shape(def) {
         throw new Error('unknown shape ' + def.shape);
     })(def);
 }
+
 function infer_shape(chart) {
     return function(d) {
-        var def = param(chart.nodeShape())(d);
+        var def = param(chart.nodeShape())(d) || default_shape;
         d.dcg_shape = elaborate_shape(def);
         d.dcg_shape.abstract = def;
     };
 }
+
 function shape_changed(chart) {
     return function(d) {
-        var def = param(chart.nodeShape())(d);
+        var def = param(chart.nodeShape())(d) || default_shape;
         var old = d.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
@@ -922,7 +926,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Function|Object}
      * @return {dc_graph.diagram}
      **/
-    _chart.nodeShape = property({shape: 'ellipse'});
+    _chart.nodeShape = property(default_shape);
 
     /**
      * Set or get the function which will be used to retrieve the node title, usually rendered
@@ -2952,14 +2956,17 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
 dc_graph.initialize_tree = function(rootf, treef, ofsx, ofsy, xgap, ygap) {
     var x = ofsx;
     var dfs = dc_graph.depth_first_traversal(rootf, treef, function(n, r) {
-        n.cola.x = x;
+        n.left_x = x;
         n.cola.y = r*ygap + ofsy;
     }, function() {
         x += xgap;
+    }, null, function(n) {
+        n.cola.x = (n.left_x + x)/2;
     });
 
     return dfs;
 };
+2
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
 dc_graph.load_graph = function(file, callback) {
