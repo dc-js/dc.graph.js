@@ -1,5 +1,10 @@
-// this naive tree-drawer is paraphrased from memory from dot
-dc_graph.depth_first_traversal = function(rootf, rowf, treef, placef, sibf, pushf, popf) {
+// arguably depth first search is a stupid algorithm to modularize -
+// there are many, many interesting moments to insert a behavior
+// and those end up being almost bigger than the function itself
+
+// this is an argument for providing a graph API which could make it
+// easy to just write a recursive function instead of using this
+dc_graph.depth_first_traversal = function(rootf, rowf, treef, placef, sibf, pushf, popf, skipf) {
     return function(diagram, nodes, edges) {
         if(treef)
             edges = edges.filter(function(e) { return treef(e.orig); });
@@ -17,8 +22,10 @@ dc_graph.depth_first_traversal = function(rootf, rowf, treef, placef, sibf, push
         var placed = {};
         function place_tree(n, r) {
             var key = param(diagram.nodeKey())(n);
-            if(placed[key])
+            if(placed[key]) {
+                skipf && skipf(n, indegree[key]);
                 return;
+            }
             if(!rows[r])
                 rows[r] = [];
             placef && placef(n, r, rows[r]);
