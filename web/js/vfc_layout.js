@@ -63,7 +63,7 @@ app_layouts.vfc = function() {
             ;
             if(treeOnly) {
                 diagram
-                    .initialLayout(dc_graph.initialize_tree(null, node_row, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
+                    .initialLayout(dc_graph.tree_positions(null, node_row, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
                     .initialOnly(true)
                 ;
             }
