@@ -90,7 +90,7 @@ dc_graph.constraint_pattern = function(pattern) {
         var constraints = [];
         var members = {};
         nodes.forEach(function(n) {
-            var key = param(diagram.nodeKey())(n);
+            var key = diagram.nodeKey.eval(n);
             for(var t in types) {
                 var type = types[t], value = type.match(n.orig);
                 if(value) {
@@ -113,8 +113,8 @@ dc_graph.constraint_pattern = function(pattern) {
             return r.source === r.target;
         });
         edges.forEach(function(e) {
-            var source = param(diagram.edgeSource())(e),
-                target = param(diagram.edgeTarget())(e);
+            var source = diagram.edgeSource.eval(e),
+                target = diagram.edgeTarget.eval(e);
             edge_rules.forEach(function(r) {
                 if(members[r.source] && members[r.source].whether[source] &&
                    members[r.target] && members[r.target].whether[target]) {

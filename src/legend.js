@@ -72,7 +72,9 @@ dc_graph.legend = function() {
             .text(function(d) {
                 return d.name;
             });
-        _legend.parent()._buildNode(node, nodeEnter);
+        _legend.parent()
+            ._enterNode(nodeEnter)
+            ._updateNode(node);
     };
 
     _legend.render = function() {
