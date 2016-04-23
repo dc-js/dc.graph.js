@@ -7,8 +7,8 @@ dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
             if(row.length) {
                 var last = row[row.length-1];
                 constraints.push({
-                    left: param(diagram.nodeKey())(last),
-                    right: param(diagram.nodeKey())(n),
+                    left: diagram.nodeKey.eval(last),
+                    right: diagram.nodeKey.eval(n),
                     axis: 'x',
                     gap: x-last.foo_x,
                     equality: true

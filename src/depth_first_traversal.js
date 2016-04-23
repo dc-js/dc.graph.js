@@ -10,8 +10,8 @@ dc_graph.depth_first_traversal = function(rootf, rowf, treef, placef, sibf, push
             edges = edges.filter(function(e) { return treef(e.orig); });
         var indegree = {};
         var outmap = edges.reduce(function(m, e) {
-            var tail = param(diagram.edgeSource())(e),
-                head = param(diagram.edgeTarget())(e);
+            var tail = diagram.edgeSource.eval(e),
+                head = diagram.edgeTarget.eval(e);
             if(!m[tail]) m[tail] = [];
             m[tail].push(e);
             indegree[head] = (indegree[head] || 0) + 1;
@@ -21,7 +21,7 @@ dc_graph.depth_first_traversal = function(rootf, rowf, treef, placef, sibf, push
         var rows = [];
         var placed = {};
         function place_tree(n, r) {
-            var key = param(diagram.nodeKey())(n);
+            var key = diagram.nodeKey.eval(n);
             if(placed[key]) {
                 skipf && skipf(n, indegree[key]);
                 return;
@@ -45,7 +45,7 @@ dc_graph.depth_first_traversal = function(rootf, rowf, treef, placef, sibf, push
         if(rootf)
             roots = nodes.filter(function(n) { return rootf(n.orig); });
         else {
-            roots = nodes.filter(function(n) { return !indegree[param(diagram.nodeKey())(n)]; });
+            roots = nodes.filter(function(n) { return !indegree[diagram.nodeKey.eval(n)]; });
         }
         roots.forEach(function(n, ni) {
             if(ni && sibf)

@@ -136,7 +136,7 @@ function elaborate_shape(def) {
 
 function infer_shape(chart) {
     return function(d) {
-        var def = param(chart.nodeShape())(d) || default_shape;
+        var def = chart.nodeShape.eval(d) || default_shape;
         d.dcg_shape = elaborate_shape(def);
         d.dcg_shape.abstract = def;
     };
@@ -144,7 +144,7 @@ function infer_shape(chart) {
 
 function shape_changed(chart) {
     return function(d) {
-        var def = param(chart.nodeShape())(d) || default_shape;
+        var def = chart.nodeShape.eval(d) || default_shape;
         var old = d.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
@@ -175,10 +175,10 @@ function shape_element(chart) {
 
 function fit_shape(chart) {
     return function(d) {
-        var r = param(chart.nodeRadius())(d);
+        var r = chart.nodeRadius.eval(d);
         var rplus = r*2 + chart.nodePadding();
         var bbox;
-        if(param(chart.nodeFitLabel())(d))
+        if(chart.nodeFitLabel.eval(d))
             bbox = this.getBBox();
         var fitx = 0;
         if(bbox && bbox.width && bbox.height) {

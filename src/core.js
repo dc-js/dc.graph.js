@@ -21,6 +21,7 @@ var dc_graph = {
 
 var property = function (defaultValue) {
     var value = defaultValue, react = null;
+    var cascade = [];
     var ret = function (_) {
         if (!arguments.length) {
             return value;
@@ -29,6 +30,34 @@ var property = function (defaultValue) {
             react(_);
         value = _;
         return this;
+    };
+    ret.cascade = function (n, f) {
+        for(var i = 0; i<cascade.length; ++i) {
+            if(cascade[i].n === n) {
+                if(f)
+                    cascade[i].f = f;
+                else delete cascade[i];
+                return ret;
+            } else if(cascade[i].n > n) {
+                cascade.splice(i, 0, {n: n, f: f});
+                return ret;
+            }
+        }
+        cascade.push({n: n, f: f});
+        return ret;
+    };
+    ret._eval = function(o, n) {
+        if(n===0 || !cascade.length)
+            return param(ret())(o);
+        else {
+            var last = cascade[n-1];
+            return last.f(o, function() {
+                return ret._eval(o, n-1);
+            });
+        }
+    };
+    ret.eval = function(o) {
+        return ret._eval(o, cascade.length);
     };
     ret.react = function(_) {
         if (!arguments.length) {
@@ -64,6 +93,13 @@ function get_original(x) {
     return x.orig;
 }
 
+// we want to allow either values or functions to be passed to specify parameters.
+// if a function, the function needs a preprocessor to extract the original key/value
+// pair from the wrapper object we put it in.
+function param(v) {
+    return dc_graph.functor_wrap(v, get_original);
+}
+
 // http://jsperf.com/cloning-an-object/101
 function clone(obj) {
     var target = {};
@@ -73,13 +109,6 @@ function clone(obj) {
         }
     }
     return target;
-}
-
-// we want to allow either values or functions to be passed to specify parameters.
-// if a function, the function needs a preprocessor to extract the original key/value
-// pair from the wrapper object we put it in.
-function param(v) {
-    return dc_graph.functor_wrap(v, get_original);
 }
 
 // because i don't think we need to bind edge point data (yet!)

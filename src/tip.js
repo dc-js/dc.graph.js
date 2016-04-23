@@ -43,7 +43,7 @@ dc_graph.tip = function() {
      if needed, and then pass it forward to `k`.
      **/
     _tip.content = property(function(d, k) {
-        k(_tip.parent() ? param(_tip.parent().nodeTitle())(d) : '');
+        k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
     });
 
     return _tip;

@@ -24,7 +24,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
 
     function view_degree(chart, edge, key) {
         return edge.filter(function(e) {
-            return param(chart.edgeSource())(e) === key || param(chart.edgeTarget())(e) === key;
+            return chart.edgeSource.eval(e) === key || chart.edgeTarget.eval(e) === key;
         }).size();
     }
 
@@ -40,7 +40,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             .classed('spikes', true)
             .selectAll('rect.spike')
             .data(function(d) {
-                var key = param(chart.nodeKey())(d);
+                var key = chart.nodeKey.eval(d);
                 var n = get_degree(key) - view_degree(chart, edge, key),
                     ret = Array(n);
                 for(var i = 0; i<n; ++i) {
@@ -93,9 +93,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             })
             .on('click', function(d) {
                 if((d.dcg_expanded = !d.dcg_expanded))
-                    expand(param(chart.nodeKey())(d));
+                    expand(chart.nodeKey.eval(d));
                 else
-                    collapse(param(chart.nodeKey())(d), collapsible.bind(null, chart, edge));
+                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge));
                 draw_selected(chart, node, edge);
             });
     }
