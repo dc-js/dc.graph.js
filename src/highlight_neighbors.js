@@ -1,4 +1,4 @@
-dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
+dc_graph.highlight_neighbors = function(props) {
     function clear_all_highlights(edge) {
         edge.each(function(e) {
             e.dcg_highlighted = false;
@@ -6,18 +6,17 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
     }
 
     function add_behavior(chart, node, edge) {
-        chart.cascade(100, {
-            edgeStrokeWidth: function(e, last) {
-                return e.dcg_highlighted ?
-                    highlightStrokeWidth :
-                    last();
-            },
-            edgeStroke: function(e, last) {
-                return e.dcg_highlighted ?
-                    highlightStroke :
-                    last();
-            }
-        });
+        function _if(pred, curr) {
+            return function(o, last) {
+                return pred(o) ? curr(o) : last();
+            };
+        }
+        var props2 = {};
+        for(var p in props)
+            props2[p] = _if(function(e) {
+                return e.dcg_highlighted;
+            }, param(props[p]));
+        chart.cascade(100, props2);
         node
             .on('mouseover.highlight-neighbors', function(d) {
                 edge.each(function(e) {

@@ -81,7 +81,11 @@ source(function(error, data) {
         .edgeArrowhead(function(kv) {
             return kv.value.undirected ? null : 'vee';
         })
-        .child('highlight-neighbors', dc_graph.highlight_neighbors('orange', 3));
+        .child('highlight-neighbors',
+               dc_graph.highlight_neighbors({
+                   edgeStroke: 'orange',
+                   edgeStrokeWidth: 3
+               }));
 
     appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
     diagram.initLayoutOnRedraw(appLayout && useAppLayout);
