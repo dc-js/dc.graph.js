@@ -5,8 +5,8 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, xgap, ygap) {
         n.left_x = x;
         n.hit_ins = 1;
         n.cola.y = r*ygap + ofsy;
-    }, function() {
-        x += xgap;
+    }, function(isroot) {
+        x += isroot ? xgap*1.5 : xgap;
     }, null, function(n) {
         n.cola.x = (n.left_x + x)/2;
         delete n.left_x;
