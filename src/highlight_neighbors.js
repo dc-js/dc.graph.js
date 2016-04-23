@@ -6,15 +6,17 @@ dc_graph.highlight_neighbors = function(highlightStroke, highlightStrokeWidth) {
     }
 
     function add_behavior(chart, node, edge) {
-        chart.edgeStrokeWidth.cascade(100, function(e, last) {
-            return e.dcg_highlighted ?
-                highlightStrokeWidth :
-                last();
-        });
-        chart.edgeStroke.cascade(100, function(e, last) {
-            return e.dcg_highlighted ?
-                highlightStroke :
-                last();
+        chart.cascade(100, {
+            edgeStrokeWidth: function(e, last) {
+                return e.dcg_highlighted ?
+                    highlightStrokeWidth :
+                    last();
+            },
+            edgeStroke: function(e, last) {
+                return e.dcg_highlighted ?
+                    highlightStroke :
+                    last();
+            }
         });
         node
             .on('mouseover.highlight-neighbors', function(d) {
