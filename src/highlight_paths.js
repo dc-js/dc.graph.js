@@ -9,12 +9,12 @@ dc_graph.highlight_paths = function(pathprops, hoverprops) {
 
     function add_behavior(chart, node, edge) {
         chart
-            .cascade(200, conditional_properties(function(e) {
-                return e.dcg_paths;
+            .cascade(200, conditional_properties(function(o) {
+                return !!o.dcg_paths;
             }, pathprops))
-            .cascade(300, conditional_properties(function(e) {
-                return hoverpaths && e.dcg_paths && hoverpaths.some(function(hpath) {
-                    return e.dcg_paths.indexOf(hpath)>=0;
+            .cascade(300, conditional_properties(function(o) {
+                return hoverpaths && o.dcg_paths && hoverpaths.some(function(hpath) {
+                    return o.dcg_paths.indexOf(hpath)>=0;
                 });
             }, hoverprops));
 
