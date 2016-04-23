@@ -140,17 +140,23 @@ Math.hypot = Math.hypot || function() {
   return Math.sqrt(y);
 };
 
-// this naive tree-drawer is paraphrased from memory from dot
-dc_graph.depth_first_traversal = function(rootf, treef, placef, sibf, pushf, popf) {
+// arguably depth first search is a stupid algorithm to modularize -
+// there are many, many interesting moments to insert a behavior
+// and those end up being almost bigger than the function itself
+
+// this is an argument for providing a graph API which could make it
+// easy to just write a recursive function instead of using this
+dc_graph.depth_first_traversal = function(rootf, rowf, treef, placef, sibf, pushf, popf, skipf) {
     return function(diagram, nodes, edges) {
         if(treef)
             edges = edges.filter(function(e) { return treef(e.orig); });
-
+        var indegree = {};
         var outmap = edges.reduce(function(m, e) {
             var tail = param(diagram.edgeSource())(e),
                 head = param(diagram.edgeTarget())(e);
             if(!m[tail]) m[tail] = [];
             m[tail].push(e);
+            indegree[head] = (indegree[head] || 0) + 1;
             return m;
         }, {});
 
@@ -158,8 +164,10 @@ dc_graph.depth_first_traversal = function(rootf, treef, placef, sibf, pushf, pop
         var placed = {};
         function place_tree(n, r) {
             var key = param(diagram.nodeKey())(n);
-            if(placed[key])
+            if(placed[key]) {
+                skipf && skipf(n, indegree[key]);
                 return;
+            }
             if(!rows[r])
                 rows[r] = [];
             placef && placef(n, r, rows[r]);
@@ -179,13 +187,13 @@ dc_graph.depth_first_traversal = function(rootf, treef, placef, sibf, pushf, pop
         if(rootf)
             roots = nodes.filter(function(n) { return rootf(n.orig); });
         else {
-            throw new Error("root-finder not implemented (it's easy!)");
+            roots = nodes.filter(function(n) { return !indegree[param(diagram.nodeKey())(n)]; });
         }
         roots.forEach(function(n, ni) {
             if(ni && sibf)
                 sibf();
             pushf && pushf();
-            place_tree(n, 0);
+            place_tree(n, rowf ? rowf(n.orig) : 0);
         });
     };
 };
@@ -2062,11 +2070,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return render_edge_path(when)(e);
                 });
         if(_chart.stageTransitions() === 'insmod') {
+            // d3 seems to have trouble with chained transition of duration 0
+            d3.timer.flush();
             // inserted edges transition twice in insmod mode
             etrans = etrans.transition()
                 .duration(transition_duration())
                 .attr("d", render_edge_path('new'));
-            d3.timer.flush();
         }
 
         edge.each(function(d) {
@@ -2661,7 +2670,7 @@ dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
     return function(diagram, nodes, edges) {
         var constraints = [];
         var x = 0;
-        var dfs = dc_graph.depth_first_traversal(rootf, treef, function(n, r, row) {
+        var dfs = dc_graph.depth_first_traversal(rootf, null, treef, function(n, r, row) {
             if(row.length) {
                 var last = row[row.length-1];
                 constraints.push({
@@ -2682,6 +2691,29 @@ dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
         return constraints;
     };
 };
+
+// this naive tree-drawer is paraphrased from memory from dot
+dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, xgap, ygap) {
+    var x = ofsx;
+    var dfs = dc_graph.depth_first_traversal(rootf, rowf, treef, function(n, r) {
+        n.left_x = x;
+        n.hit_ins = 1;
+        n.cola.y = r*ygap + ofsy;
+    }, function() {
+        x += xgap;
+    }, null, function(n) {
+        n.cola.x = (n.left_x + x)/2;
+        delete n.left_x;
+    }, function(n, indegree) {
+        // rolling average of in-neighbor x positions
+        n.cola.x = (n.hit_ins*n.cola.x + x)/++n.hit_ins;
+        if(n.hit_ins === indegree)
+            delete n.hit_ins;
+    });
+
+    return dfs;
+};
+
 
 dc_graph.behavior = function(event_namespace, handlers) {
     var _behavior = {};
@@ -2951,22 +2983,6 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
         remove_behavior: remove_behavior
     });
 };
-
-// this naive tree-drawer is paraphrased from memory from dot
-dc_graph.initialize_tree = function(rootf, treef, ofsx, ofsy, xgap, ygap) {
-    var x = ofsx;
-    var dfs = dc_graph.depth_first_traversal(rootf, treef, function(n, r) {
-        n.left_x = x;
-        n.cola.y = r*ygap + ofsy;
-    }, function() {
-        x += xgap;
-    }, null, function(n) {
-        n.cola.x = (n.left_x + x)/2;
-    });
-
-    return dfs;
-};
-2
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
 dc_graph.load_graph = function(file, callback) {
