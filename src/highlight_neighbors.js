@@ -5,20 +5,8 @@ dc_graph.highlight_neighbors = function(props) {
         });
     }
 
-    function ternary_props(pred, props) {
-        function _if(pred, curr) {
-            return function(o, last) {
-                return pred(o) ? curr(o) : last();
-            };
-        }
-        var props2 = {};
-        for(var p in props)
-            props2[p] = _if(pred, param(props[p]));
-        return props2;
-    }
-
     function add_behavior(chart, node, edge) {
-        chart.cascade(100, ternary_props(function(e) {
+        chart.cascade(100, conditional_properties(function(e) {
             return e.dcg_highlighted;
         }, props));
         node
