@@ -831,6 +831,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _chart.child = function(id, object) {
+        if(arguments.length === 1)
+            return _children[id];
         // do not notify unnecessarily
         if(_children[id] === object)
             return _chart;
