@@ -83,7 +83,13 @@ source(function(error, data) {
         })
         .child('highlight-neighbors',
                dc_graph.highlight_neighbors({
-                   edgeStroke: 'orange',
+                   edgeStroke: function(kv) {
+                       this.scale = this.scale ||
+                         d3.scale.quantize()
+                           .domain([2268,3348])
+                           .range(['#F07A89','#A88CC1','#2C9EB0','#459A66','#8F8430','#BB6549']);
+                       return this.scale(kv.value.inV);
+                   },
                    edgeStrokeWidth: 3
                }));
 
