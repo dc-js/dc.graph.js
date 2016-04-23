@@ -351,6 +351,7 @@ module.exports.jsFiles = [
     'src/behavior.js',
     'src/tip.js',
     'src/highlight_neighbors.js',
+    'src/highlight_paths.js',
     'src/expand_collapse.js',
     'src/load_graph.js',
     'src/generate.js',

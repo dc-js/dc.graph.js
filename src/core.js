@@ -19,7 +19,11 @@ var dc_graph = {
     version: '<%= conf.pkg.version %>'
 };
 
-var property = function (defaultValue) {
+var property = function (defaultValue, unwrap) {
+    if(unwrap === undefined)
+        unwrap = get_original;
+    else if(unwrap === false)
+        unwrap = identity;
     var value = defaultValue, react = null;
     var cascade = [];
     var ret = function (_) {
@@ -48,7 +52,7 @@ var property = function (defaultValue) {
     };
     ret._eval = function(o, n) {
         if(n===0 || !cascade.length)
-            return param(ret())(o);
+            return dc_graph.functor_wrap(ret(), unwrap)(o);
         else {
             var last = cascade[n-1];
             return last.f(o, function() {

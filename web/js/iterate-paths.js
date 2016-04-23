@@ -5,15 +5,14 @@ function iterate_paths(diagram, paths) {
     if(paths) {
         // make sure it draws first (?)
         setTimeout(function() {
-            d3.json(paths, function(error, pathv) {
+            d3.json(paths, function(error, data) {
                 if(error)
                     throw new Error(error);
                 var i = 0;
-                setInterval(function() {
-                    // i continue not to understand the horrible concurrency issues
-                    // i'm running into - double-draws can peg the CPU
-                    if(diagram.isRunning())
-                        return;
+                var highlight_paths = diagram.child('highlight-paths');
+                highlight_paths.data(data);
+                diagram.redraw();
+                /*
                     var path = pathv.results[i].element_list;
                     var pnodes = {}, pedges = {};
                     path.forEach(function(el) {
@@ -41,7 +40,7 @@ function iterate_paths(diagram, paths) {
                         })
                         .redraw();
                     i = (i+1) % pathv.results.length;
-                }, 2000);
+                 */
             });
         }, 1000);
     }
