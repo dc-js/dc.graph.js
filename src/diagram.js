@@ -1055,17 +1055,6 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _stats = {nnodes: wnodes.length, nedges: wedges.length};
 
-        // optionally do nothing if the topology hasn't changed
-        var skip_layout = false;
-        if(!_chart.layoutUnchanged()) {
-            var nodes_snapshot = JSON.stringify(wnodes.map(get_original)),
-                edges_snapshot = JSON.stringify(wedges.map(get_original));
-            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
-                skip_layout = true;
-            _nodes_snapshot = nodes_snapshot;
-            _edges_snapshot = edges_snapshot;
-        }
-
         // annotate parallel edges so we can draw them specially
         if(_chart.parallelEdgeOffset()) {
             var em = new Array(wnodes.length);
@@ -1169,6 +1158,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         // .call(_d3cola.drag);
 
         _chart._enterNode(nodeEnter);
+
+        _dispatch.drawn(node, edge);
+
         _chart.refresh(node, edge);
 
         node.exit().transition()
@@ -1177,7 +1169,16 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('opacity', 0)
             .remove();
 
-        _dispatch.drawn(node, edge);
+        // no layout if the topology hasn't changed
+        var skip_layout = false;
+        if(!_chart.layoutUnchanged()) {
+            var nodes_snapshot = JSON.stringify(wnodes.map(get_original)),
+                edges_snapshot = JSON.stringify(wedges.map(get_original));
+            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
+                skip_layout = true;
+            _nodes_snapshot = nodes_snapshot;
+            _edges_snapshot = edges_snapshot;
+        }
 
         // cola constraints always use indices, but node references
         // are more friendly, so translate those
