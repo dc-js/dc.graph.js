@@ -69,6 +69,19 @@ var property = function (defaultValue) {
     return ret;
 };
 
+// i'm sure there's a word for this in haskell
+function conditional_properties(pred, props) {
+    function _if(pred, curr) {
+        return function(o, last) {
+            return pred(o) ? curr(o) : last();
+        };
+    }
+    var props2 = {};
+    for(var p in props)
+        props2[p] = _if(pred, param(props[p]));
+    return props2;
+}
+
 var identity = function(x) { return x; };
 function compose(f, g) {
     return function() {
