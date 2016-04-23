@@ -1,34 +1,36 @@
 dc_graph.highlight_paths = function(pathprops, hoverprops) {
-    var node_on_path = {}, edge_on_path = {};
-    var hoverpath;
+    var node_on_paths = {}, edge_on_paths = {};
+    var hoverpaths;
     function clear_all_highlights(edge) {
         edge.each(function(e) {
-            e.dcg_lightpath = null;
+            e.dcg_paths = null;
         });
     }
 
     function add_behavior(chart, node, edge) {
         chart
             .cascade(200, conditional_properties(function(e) {
-                return e.dcg_lightpath;
+                return e.dcg_paths;
             }, pathprops))
             .cascade(300, conditional_properties(function(e) {
-                return hoverpath && e.dcg_lightpath === hoverpath;
+                return hoverpaths && e.dcg_paths && hoverpaths.some(function(hpath) {
+                    return e.dcg_paths.indexOf(hpath)>=0;
+                });
             }, hoverprops));
 
         node.each(function(n) {
-            n.dcg_lightpath = node_on_path[chart.nodeKey.eval(n)];
+            n.dcg_paths = node_on_paths[chart.nodeKey.eval(n)];
         });
         edge.each(function(e) {
-            e.dcg_lightpath = edge_on_path[chart.edgeKey.eval(e)];
+            e.dcg_paths = edge_on_paths[chart.edgeKey.eval(e)];
         });
         node
             .on('mouseover.highlight-paths', function(d) {
-                hoverpath = node_on_path[chart.nodeKey.eval(d)];
+                hoverpaths = node_on_paths[chart.nodeKey.eval(d)];
                 chart.refresh(node, edge);
             })
             .on('mouseout.highlight-paths', function(d) {
-                hoverpath = null;
+                hoverpaths = null;
                 chart.refresh(node, edge);
             });
     }
@@ -56,16 +58,21 @@ dc_graph.highlight_paths = function(pathprops, hoverprops) {
     _behavior.edgeSource = property(null, false);
     _behavior.edgeTarget = property(null, false);
     _behavior.data = function(data) {
+        node_on_paths = {}; edge_on_paths = {};
         _behavior.pathList.eval(data).forEach(function(path) {
             _behavior.elementList.eval(path).forEach(function(element) {
+                var key, paths;
                 switch(_behavior.elementType.eval(element)) {
                 case 'node':
-                    node_on_path[_behavior.nodeKey.eval(element)] = path;
+                    key = _behavior.nodeKey.eval(element);
+                    paths = node_on_paths[key] = node_on_paths[key] || [];
                     break;
                 case 'edge':
-                    edge_on_path[_behavior.edgeSource.eval(element) + '-' + _behavior.edgeTarget.eval(element)] = path;
+                    key = _behavior.edgeSource.eval(element) + '-' + _behavior.edgeTarget.eval(element);
+                    paths = edge_on_paths[key] = edge_on_paths[key] || [];
                     break;
                 }
+                paths.push(path);
             });
         });
     };
