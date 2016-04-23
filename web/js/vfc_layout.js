@@ -12,6 +12,16 @@ app_layouts.vfc = function() {
         return rank(n.value.label_) === 'VNF';
     }
 
+    var _rowmap = {
+        VNF: 0,
+        VFC: 1,
+        VM: 2,
+        Host: 3
+    };
+    function node_row(n) {
+        return _rowmap[rank(n.value.label_)];
+    }
+
     return {
         rules: {
             nodes: [
@@ -53,7 +63,7 @@ app_layouts.vfc = function() {
             ;
             if(treeOnly) {
                 diagram
-                    .initialLayout(dc_graph.initialize_tree(is_root_node, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
+                    .initialLayout(dc_graph.initialize_tree(null, node_row, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
                     .initialOnly(true)
                 ;
             }
