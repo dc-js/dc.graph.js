@@ -107,7 +107,7 @@ source(function(error, data) {
                }).edgeSource(function(element) {
                    return element.property_map.source_ecomp_uid;
                }).edgeTarget(function(element) {
-                   return element.property_map.ecomp_uid;
+                   return element.property_map.target_ecomp_uid;
                })
               );
 
