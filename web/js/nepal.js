@@ -81,8 +81,8 @@ source(function(error, data) {
         .edgeArrowhead(function(kv) {
             return kv.value.undirected ? null : 'vee';
         })
-        .child('highlight-neighbors',
-               dc_graph.highlight_neighbors({
+        .child('highlight-paths',
+               dc_graph.highlight_paths({ // path props
                    edgeStroke: function(kv) {
                        this.scale = this.scale ||
                          d3.scale.quantize()
@@ -90,8 +90,26 @@ source(function(error, data) {
                            .range(['#F07A89','#A88CC1','#2C9EB0','#459A66','#8F8430','#BB6549']);
                        return this.scale(kv.value.inV);
                    },
-                   edgeStrokeWidth: 3
-               }));
+                   edgeStrokeWidth: 2,
+                   edgeOpacity: 1
+               }, { // hover props
+                   nodeStroke: 'red',
+                   nodeRadius: 10,
+                   edgeStrokeWidth: 5
+               }).pathList(function(data) { // i'm not sure i like where this is going
+                   return data.results;
+               }).elementList(function(path) {
+                   return path.element_list;
+               }).elementType(function(element) {
+                   return element.element_type;
+               }).nodeKey(function(element) {
+                   return element.property_map.ecomp_uid;
+               }).edgeSource(function(element) {
+                   return element.property_map.source_ecomp_uid;
+               }).edgeTarget(function(element) {
+                   return element.property_map.ecomp_uid;
+               })
+              );
 
     appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
     diagram.initLayoutOnRedraw(appLayout && useAppLayout);
