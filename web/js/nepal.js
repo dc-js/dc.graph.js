@@ -142,5 +142,12 @@ source(function(error, data) {
     dc.renderAll();
 
     if(paths)
-        iterate_paths(diagram, paths);
+        d3.json(paths, function(error, data) {
+            if(error)
+                throw new Error(error);
+            var i = 0;
+            var highlight_paths = diagram.child('highlight-paths');
+            highlight_paths.data(data);
+            diagram.relayout().redraw();
+        });
 });
