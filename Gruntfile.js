@@ -354,6 +354,7 @@ module.exports.jsFiles = [
     'src/highlight_paths.js',
     'src/expand_collapse.js',
     'src/load_graph.js',
+    'src/path_reader.js',
     'src/generate.js',
     'src/type-graph.js',
     'src/footer.js'  // NOTE: keep this last

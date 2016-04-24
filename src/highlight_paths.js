@@ -71,33 +71,8 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
             highlight_paths_group.on('hover_changed.' + anchor, p ? hover_changed : null);
         }
     });
-    _behavior.pathList =  property(identity, false);
-    _behavior.elementList = property(identity, false);
-    _behavior.elementType = property(null, false);
-    _behavior.nodeKey = property(null, false);
-    _behavior.edgeSource = property(null, false);
-    _behavior.edgeTarget = property(null, false);
-    _behavior.data = function(data) {
-        var nop = {}, eop = {};
-        _behavior.pathList.eval(data).forEach(function(path) {
-            _behavior.elementList.eval(path).forEach(function(element) {
-                var key, paths;
-                switch(_behavior.elementType.eval(element)) {
-                case 'node':
-                    key = _behavior.nodeKey.eval(element);
-                    paths = nop[key] = nop[key] || [];
-                    break;
-                case 'edge':
-                    key = _behavior.edgeSource.eval(element) + '-' + _behavior.edgeTarget.eval(element);
-                    paths = eop[key] = eop[key] || [];
-                    break;
-                }
-                paths.push(path);
-            });
-        });
-        highlight_paths_group.paths_changed(nop, eop);
-    };
 
+    // reuse this
     window.chart_registry.create_type('highlight-paths', function() {
         return d3.dispatch('paths_changed', 'hover_changed');
     });

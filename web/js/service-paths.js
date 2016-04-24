@@ -116,18 +116,6 @@ source(function(error, data) {
             nodeRadius: 7,
             edgeStrokeWidth: 2,
             edgeStroke: '#e41a1c'
-        }).pathList(function(data) { // this api is a bit excessive?
-            return data.results;
-        }).elementList(function(path) {
-            return path.element_list;
-        }).elementType(function(element) {
-            return element.element_type;
-        }).nodeKey(function(element) {
-            return element.property_map.ecomp_uid;
-        }).edgeSource(function(element) {
-            return element.property_map.source_ecomp_uid;
-        }).edgeTarget(function(element) {
-            return element.property_map.target_ecomp_uid;
         })
     ;
     var diagram = create_diagram('#hierarchy');
@@ -157,12 +145,27 @@ source(function(error, data) {
 
     dc.renderAll();
 
-    if(paths)
+    if(paths) {
+        var read_paths = dc_graph.path_reader()
+                .pathList(function(data) {
+                    return data.results;
+                }).elementList(function(path) {
+                    return path.element_list;
+                }).elementType(function(element) {
+                    return element.element_type;
+                }).nodeKey(function(element) {
+                    return element.property_map.ecomp_uid;
+                }).edgeSource(function(element) {
+                    return element.property_map.source_ecomp_uid;
+                }).edgeTarget(function(element) {
+                    return element.property_map.target_ecomp_uid;
+                });
+
         d3.json(paths, function(error, data) {
             if(error)
                 throw new Error(error);
             var i = 0;
-            var highlight_paths = diagram.child('highlight-paths');
-            highlight_paths.data(data);
+            read_paths.data(data);
         });
+    }
 });
