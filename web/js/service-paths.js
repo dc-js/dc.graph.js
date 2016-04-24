@@ -133,7 +133,7 @@ source(function(error, data) {
     }
 
     diagram
-        .initialLayout(dc_graph.tree_positions(null, node_row, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
+        .initialLayout(dc_graph.tree_positions(null, node_row, is_tree_edge.bind(null, diagram), 25, 25, 10, 100))
         .initialOnly(true)
     ;
 
