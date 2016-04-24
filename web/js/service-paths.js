@@ -1,14 +1,18 @@
-function node_type(label) {
-    return label.split(':')[2];
+function raw_node_type(n) {
+    return n.label_.split(':')[2];
+}
+
+function node_type(n) {
+    return raw_node_type(n.value);
 }
 
 function is_tree_edge(diagram, e) {
-    return node_type(diagram.getNode(diagram.edgeSource()(e)).value.label_) !==
-        node_type(diagram.getNode(diagram.edgeTarget()(e)).value.label_);
+    return node_type(diagram.getNode(diagram.edgeSource()(e))) !==
+        node_type(diagram.getNode(diagram.edgeTarget()(e)));
 }
 
 function is_root_node(n) {
-    return node_type(n.value.label_) === 'VNF';
+    return node_type(n) === 'VNF';
 }
 
 var _rankmap = {
@@ -26,7 +30,7 @@ var _colormap = {
 };
 
 function node_rank(n) {
-    return _rankmap[node_type(n.value.label_)];
+    return _rankmap[node_type(n)];
 }
 
 var qs = querystring.parse();
@@ -44,11 +48,15 @@ var stage = 'none',
 if(!file)
     throw new Error('need a file');
 
-var diagram = dc_graph.diagram('#hierarchy'), runner;
-
 var source = function(callback) {
     dc_graph.load_graph(file, callback);
 };
+
+function create_diagram(sel) {
+    return dc_graph.diagram(sel)
+        .width($(sel).width())
+        .height($(sel).height());
+}
 
 function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr) {
     var edge_flat = flat_group.make(edges, function(d) {
@@ -74,20 +82,19 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .nodeTitle(function(n) { return n.value.name; })
         .nodeStrokeWidth(0)
         .nodeFill(function(n) {
-            return _colormap[node_type(n.value.label_)];
+            return _colormap[node_type(n)];
         })
     ;
 }
 
-function level_diagram(sel, sourceattr, targetattr) {
-    var dialev = dc_graph.diagram(sel);
-    diagram_common(dialev, sourceattr, targetattr);
-    dialev
+function level_diagram(diagram) {
+    diagram
         .edgeArrowhead(function(kv) {
             return kv.value.undirected ? null : 'vee';
         })
         .edgeArrowSize(0.5)
-        .linkLength(50)
+        .nodeRadius(10)
+        .baseLength(30)
         .lengthStrategy('symmetric')
     ;
 }
@@ -128,10 +135,9 @@ source(function(error, data) {
             return element.property_map.target_ecomp_uid;
         })
     ;
+    var diagram = create_diagram('#hierarchy');
     diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr);
     diagram
-        .width($('#hierarchy').width())
-        .height($('#hierarchy').height())
         .edgeArrowhead(null)
         .nodeRadius(2)
         .child('highlight-paths', highlight_paths)
@@ -141,7 +147,18 @@ source(function(error, data) {
         .initialOnly(true)
     ;
 
-    diagram.initLayoutOnRedraw(appLayout && useAppLayout);
+    var bylayer = nodes.reduce(function(m, n) {
+        var t = raw_node_type(n);
+        (m[t] = m[t] || []).push(n);
+        return m;
+    }, {});
+
+    for(var type in bylayer) {
+        var sel = '#' + type.toLowerCase();
+        var dialev = create_diagram(sel);
+        diagram_common(dialev, bylayer[type], edges, nodekeyattr, sourceattr, targetattr);
+        level_diagram(dialev);
+    }
 
     dc.renderAll();
 
