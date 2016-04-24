@@ -50,8 +50,15 @@ var source = function(callback) {
     dc_graph.load_graph(file, callback);
 };
 
-function diagram_common(diagram, sourceattr, targetattr) {
+function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr) {
+    var edge_flat = flat_group.make(edges, function(d) {
+        return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
+    }),
+        node_flat = flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
+
     diagram
+        .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
+        .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .parallelEdgeOffset(1)
@@ -97,11 +104,6 @@ source(function(error, data) {
         targetattr = graph_data.targetattr,
         nodekeyattr = graph_data.nodekeyattr;
 
-    var edge_flat = flat_group.make(edges, function(d) {
-        return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
-    }),
-        node_flat = flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
-
     var highlight_paths = dc_graph.highlight_paths(
         { // path props
             edgeOpacity: 1,
@@ -126,12 +128,10 @@ source(function(error, data) {
             return element.property_map.target_ecomp_uid;
         })
     ;
-    diagram_common(diagram, sourceattr, targetattr);
+    diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr);
     diagram
         .width($('#hierarchy').width())
         .height($('#hierarchy').height())
-        .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
-        .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeArrowhead(null)
         .nodeRadius(2)
         .child('highlight-paths', highlight_paths)
