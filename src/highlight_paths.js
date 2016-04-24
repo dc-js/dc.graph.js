@@ -1,6 +1,18 @@
-dc_graph.highlight_paths = function(pathprops, hoverprops) {
-    var node_on_paths = {}, edge_on_paths = {};
-    var hoverpaths;
+dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
+    var node_on_paths = {}, edge_on_paths = {}, hoverpaths;
+    var refresh;
+
+    function paths_changed(nop, eop) {
+        node_on_paths = nop;
+        edge_on_paths = eop;
+        refresh();
+    }
+
+    function hover_changed(hp) {
+        hoverpaths = hp;
+        refresh();
+    }
+
     function clear_all_highlights(edge) {
         edge.each(function(e) {
             e.dcg_paths = null;
@@ -8,6 +20,9 @@ dc_graph.highlight_paths = function(pathprops, hoverprops) {
     }
 
     function add_behavior(chart, node, edge) {
+        refresh = function() {
+            chart.refresh(node, edge);
+        };
         chart
             .cascade(200, conditional_properties(function(o) {
                 return !!o.dcg_paths;
@@ -26,12 +41,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops) {
         });
         node
             .on('mouseover.highlight-paths', function(d) {
-                hoverpaths = node_on_paths[chart.nodeKey.eval(d)];
-                chart.refresh(node, edge);
+                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(d)]);
             })
             .on('mouseout.highlight-paths', function(d) {
-                hoverpaths = null;
-                chart.refresh(node, edge);
+                highlight_paths_group.hover_changed(null);
             });
     }
 
@@ -49,6 +62,11 @@ dc_graph.highlight_paths = function(pathprops, hoverprops) {
         remove_behavior: function(chart, node, edge) {
             remove_behavior(chart, node, edge);
             return this;
+        },
+        parent: function(p) {
+            var anchor = p.anchorName();
+            highlight_paths_group.on('paths_changed.' + anchor, p ? paths_changed : null);
+            highlight_paths_group.on('hover_changed.' + anchor, p ? hover_changed : null);
         }
     });
     _behavior.pathList =  property(identity, false);
@@ -58,24 +76,32 @@ dc_graph.highlight_paths = function(pathprops, hoverprops) {
     _behavior.edgeSource = property(null, false);
     _behavior.edgeTarget = property(null, false);
     _behavior.data = function(data) {
-        node_on_paths = {}; edge_on_paths = {};
+        var nop = {}, eop = {}; 
         _behavior.pathList.eval(data).forEach(function(path) {
             _behavior.elementList.eval(path).forEach(function(element) {
                 var key, paths;
                 switch(_behavior.elementType.eval(element)) {
                 case 'node':
                     key = _behavior.nodeKey.eval(element);
-                    paths = node_on_paths[key] = node_on_paths[key] || [];
+                    paths = nop[key] = nop[key] || [];
                     break;
                 case 'edge':
                     key = _behavior.edgeSource.eval(element) + '-' + _behavior.edgeTarget.eval(element);
-                    paths = edge_on_paths[key] = edge_on_paths[key] || [];
+                    paths = eop[key] = eop[key] || [];
                     break;
                 }
                 paths.push(path);
             });
         });
+        highlight_paths_group.paths_changed(nop, eop);
     };
+
+    window.chart_registry.create_type('highlight-paths', function() {
+        return d3.dispatch('paths_changed', 'hover_changed');
+    });
+    pathsgroup = pathsgroup || 'highlight-paths-group';
+    var highlight_paths_group = window.chart_registry.create_group('highlight-paths', pathsgroup);
+
     return _behavior;
 };
 
