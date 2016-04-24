@@ -35,13 +35,7 @@ function node_rank(n) {
 
 var qs = querystring.parse();
 
-var stage = 'none',
-    appLayout = 'vfc',
-    useAppLayout = true,
-    treeOnly = qs.treeOnly !== 'false',
-    transition = 1000,
-    showSteps = false,
-    timeLimit = 10000,
+var treeOnly = qs.treeOnly !== 'false',
     file = qs.file || null,
     paths = qs.paths || null;
 
@@ -70,10 +64,10 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .parallelEdgeOffset(1)
-        .timeLimit(timeLimit)
-        .transitionDuration(transition)
-        .stageTransitions(stage)
-        .showLayoutSteps(showSteps)
+        .timeLimit(10000)
+        .transitionDuration(0)
+        .stageTransitions('none')
+        .showLayoutSteps(false)
         .edgeOpacity(0.2)
         .nodeOpacity(0.2)
         .edgeLabel(null)
@@ -113,12 +107,13 @@ source(function(error, data) {
 
     var highlight_paths = dc_graph.highlight_paths(
         { // path props
+            nodeRadius: 3,
             edgeOpacity: 1,
             nodeOpacity: 1
         }, { // hover props
             nodeStroke: '#e41a1c',
             nodeStrokeWidth: 2,
-            nodeRadius: 6,
+            nodeRadius: 7,
             edgeStrokeWidth: 2,
             edgeStroke: '#e41a1c'
         }).pathList(function(data) { // this api is a bit excessive?
