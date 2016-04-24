@@ -1,6 +1,9 @@
 dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     var node_on_paths = {}, edge_on_paths = {}, hoverpaths;
-    var refresh;
+
+    function refresh() {
+        _behavior.parent().relayout().redraw();
+    }
 
     function paths_changed(nop, eop) {
         node_on_paths = nop;
@@ -20,9 +23,6 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     }
 
     function add_behavior(chart, node, edge) {
-        refresh = function() {
-            chart.refresh(node, edge);
-        };
         chart
             .cascade(200, conditional_properties(function(o) {
                 return !!o.dcg_paths;
@@ -76,7 +76,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     _behavior.edgeSource = property(null, false);
     _behavior.edgeTarget = property(null, false);
     _behavior.data = function(data) {
-        var nop = {}, eop = {}; 
+        var nop = {}, eop = {};
         _behavior.pathList.eval(data).forEach(function(path) {
             _behavior.elementList.eval(path).forEach(function(element) {
                 var key, paths;
