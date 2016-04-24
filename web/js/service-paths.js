@@ -1,3 +1,34 @@
+function node_type(label) {
+    return label.split(':')[2];
+}
+
+function is_tree_edge(diagram, e) {
+    return node_type(diagram.getNode(diagram.edgeSource()(e)).value.label_) !==
+        node_type(diagram.getNode(diagram.edgeTarget()(e)).value.label_);
+}
+
+function is_root_node(n) {
+    return node_type(n.value.label_) === 'VNF';
+}
+
+var _rankmap = {
+    VNF: 0,
+    VFC: 1,
+    VM: 2,
+    Host: 3
+};
+
+var _colormap = {
+    VNF: '#ff7f00',
+    VFC: '#377eb8',
+    VM: '#4daf4a',
+    Host: '#984ea3'
+};
+
+function node_rank(n) {
+    return _rankmap[node_type(n.value.label_)];
+}
+
 var qs = querystring.parse();
 
 var stage = 'none',
@@ -29,10 +60,15 @@ function diagram_common(diagram, sourceattr, targetattr) {
         .stageTransitions(stage)
         .showLayoutSteps(showSteps)
         .edgeOpacity(0.2)
+        .nodeOpacity(0.2)
         .edgeLabel(null)
         .induceNodes(true)
         .nodeLabel(null)
         .nodeTitle(function(n) { return n.value.name; })
+        .nodeStrokeWidth(0)
+        .nodeFill(function(n) {
+            return _colormap[node_type(n.value.label_)];
+        })
     ;
 }
 
@@ -68,23 +104,14 @@ source(function(error, data) {
 
     var highlight_paths = dc_graph.highlight_paths(
         { // path props
-            edgeStroke: function(kv) {
-                this.scale = this.scale ||
-                    d3.scale.linear()
-                    .domain([2268,3348])
-                    .range([d3.hsl(0,0.8,0.5), d3.hsl(220,0.8,0.6)]);
-                return this.scale(kv.value.inV);
-            },
-            edgeStrokeWidth: 2,
             edgeOpacity: 1,
-            nodeFill: 'blue'
+            nodeOpacity: 1
         }, { // hover props
-            nodeStroke: 'red',
-            nodeStrokeWidth: 3,
-            nodeRadius: 10,
-            nodeFill: 'green',
-            edgeStrokeWidth: 5,
-            edgeStroke: 'red'
+            nodeStroke: '#e41a1c',
+            nodeStrokeWidth: 2,
+            nodeRadius: 6,
+            edgeStrokeWidth: 2,
+            edgeStroke: '#e41a1c'
         }).pathList(function(data) { // this api is a bit excessive?
             return data.results;
         }).elementList(function(path) {
@@ -106,34 +133,11 @@ source(function(error, data) {
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeArrowhead(null)
-        .nodeRadius(1)
+        .nodeRadius(2)
         .child('highlight-paths', highlight_paths)
     ;
-    function rank(label) {
-        return label.split(':')[2];
-    }
-
-    function is_tree_edge(diagram, e) {
-        return rank(diagram.getNode(diagram.edgeSource()(e)).value.label_) !==
-            rank(diagram.getNode(diagram.edgeTarget()(e)).value.label_);
-    }
-
-    function is_root_node(n) {
-        return rank(n.value.label_) === 'VNF';
-    }
-
-    var _rowmap = {
-        VNF: 0,
-        VFC: 1,
-        VM: 2,
-        Host: 3
-    };
-    function node_row(n) {
-        return _rowmap[rank(n.value.label_)];
-    }
-
     diagram
-        .initialLayout(dc_graph.tree_positions(null, node_row, is_tree_edge.bind(null, diagram), 25, 25, 10, 100))
+        .initialLayout(dc_graph.tree_positions(null, node_rank, is_tree_edge.bind(null, diagram), 25, 25, 10, 100))
         .initialOnly(true)
     ;
 
