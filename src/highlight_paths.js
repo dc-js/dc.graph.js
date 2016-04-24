@@ -17,28 +17,30 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     }
 
     function clear_all_highlights(edge) {
-        edge.each(function(e) {
-            e.dcg_paths = null;
-        });
+        node_on_paths = {};
+        edge_on_paths = {};
     }
 
+    function intersect_hoverpaths(paths) {
+        if(!paths || !hoverpaths)
+            return false;
+        return hoverpaths.some(function(hpath) {
+                    return paths.indexOf(hpath)>=0;
+        });
+    }
     function add_behavior(chart, node, edge) {
         chart
-            .cascade(200, conditional_properties(function(o) {
-                return !!o.dcg_paths;
+            .cascade(200, conditional_properties(function(n) {
+                return !!node_on_paths[chart.nodeKey.eval(n)];
+            }, function(e) {
+                return !!edge_on_paths[chart.edgeKey.eval(e)];
             }, pathprops))
-            .cascade(300, conditional_properties(function(o) {
-                return hoverpaths && o.dcg_paths && hoverpaths.some(function(hpath) {
-                    return o.dcg_paths.indexOf(hpath)>=0;
-                });
+            .cascade(300, conditional_properties(function(n) {
+                return intersect_hoverpaths(node_on_paths[chart.nodeKey.eval(n)]);
+            }, function(e) {
+                return intersect_hoverpaths(edge_on_paths[chart.edgeKey.eval(e)]);
             }, hoverprops));
 
-        node.each(function(n) {
-            n.dcg_paths = node_on_paths[chart.nodeKey.eval(n)];
-        });
-        edge.each(function(e) {
-            e.dcg_paths = edge_on_paths[chart.edgeKey.eval(e)];
-        });
         node
             .on('mouseover.highlight-paths', function(d) {
                 highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(d)]);
