@@ -169,6 +169,5 @@ source(function(error, data) {
             var i = 0;
             var highlight_paths = diagram.child('highlight-paths');
             highlight_paths.data(data);
-            diagram.relayout().redraw();
         });
 });
