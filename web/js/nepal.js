@@ -4,12 +4,8 @@ var stage = 'none',
     appLayout = 'vfc',
     useAppLayout = true,
     treeOnly = qs.treeOnly !== 'false',
-    linkLength = 50,
     transition = 1000,
     showSteps = false,
-    shape = qs.shape || null,
-    radius = +qs.radius || 25,
-    fill = qs.fill || 'white',
     timeLimit = 10000,
     file = qs.file || null,
     paths = qs.paths || null;
@@ -17,13 +13,41 @@ var stage = 'none',
 if(!file)
     throw new Error('need a file');
 
-var diagram = dc_graph.diagram('#graph'), runner;
-
-app_layouts[appLayout].init && app_layouts[appLayout].init();
+var diagram = dc_graph.diagram('#hierarchy'), runner;
 
 var source = function(callback) {
     dc_graph.load_graph(file, callback);
 };
+
+function diagram_common(diagram, sourceattr, targetattr) {
+    diagram
+        .edgeSource(function(e) { return e.value[sourceattr]; })
+        .edgeTarget(function(e) { return e.value[targetattr]; })
+        .parallelEdgeOffset(1)
+        .timeLimit(timeLimit)
+        .transitionDuration(transition)
+        .stageTransitions(stage)
+        .showLayoutSteps(showSteps)
+        .edgeOpacity(0.2)
+        .edgeLabel(null)
+        .induceNodes(true)
+        .nodeLabel(null)
+        .nodeTitle(function(n) { return n.value.name; })
+    ;
+}
+
+function level_diagram(sel, sourceattr, targetattr) {
+    var dialev = dc_graph.diagram(sel);
+    diagram_common(dialev, sourceattr, targetattr);
+    dialev
+        .edgeArrowhead(function(kv) {
+            return kv.value.undirected ? null : 'vee';
+        })
+        .edgeArrowSize(0.5)
+        .linkLength(50)
+        .lengthStrategy('symmetric')
+    ;
+}
 
 source(function(error, data) {
     if(error) {
@@ -42,76 +66,77 @@ source(function(error, data) {
     }),
         node_flat = flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
-    appLayout && app_layouts[appLayout].data && app_layouts[appLayout].data(nodes, edges);
+    var highlight_paths = dc_graph.highlight_paths(
+        { // path props
+            edgeStroke: function(kv) {
+                this.scale = this.scale ||
+                    d3.scale.linear()
+                    .domain([2268,3348])
+                    .range([d3.hsl(0,0.8,0.5), d3.hsl(220,0.8,0.6)]);
+                return this.scale(kv.value.inV);
+            },
+            edgeStrokeWidth: 2,
+            edgeOpacity: 1,
+            nodeFill: 'blue'
+        }, { // hover props
+            nodeStroke: 'red',
+            nodeStrokeWidth: 3,
+            nodeRadius: 10,
+            nodeFill: 'green',
+            edgeStrokeWidth: 5,
+            edgeStroke: 'red'
+        }).pathList(function(data) { // this api is a bit excessive?
+            return data.results;
+        }).elementList(function(path) {
+            return path.element_list;
+        }).elementType(function(element) {
+            return element.element_type;
+        }).nodeKey(function(element) {
+            return element.property_map.ecomp_uid;
+        }).edgeSource(function(element) {
+            return element.property_map.source_ecomp_uid;
+        }).edgeTarget(function(element) {
+            return element.property_map.target_ecomp_uid;
+        })
+    ;
+    diagram_common(diagram, sourceattr, targetattr);
+    diagram
+        .width($('#hierarchy').width())
+        .height($('#hierarchy').height())
+        .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
+        .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
+        .edgeArrowhead(null)
+        .nodeRadius(1)
+        .child('highlight-paths', highlight_paths)
+    ;
+    function rank(label) {
+        return label.split(':')[2];
+    }
 
-    var rule_constraints = null;
-    var rules = appLayout && app_layouts[appLayout].rules;
-    if(rules)
-        rule_constraints = dc_graph.constraint_pattern(rules);
+    function is_tree_edge(diagram, e) {
+        return rank(diagram.getNode(diagram.edgeSource()(e)).value.label_) !==
+            rank(diagram.getNode(diagram.edgeTarget()(e)).value.label_);
+    }
 
-    function constrain(diagram, nodes, edges) {
-        var constraintses = [];
-        if(appLayout && useAppLayout && rule_constraints)
-            constraintses.push(rule_constraints(diagram, nodes, edges));
+    function is_root_node(n) {
+        return rank(n.value.label_) === 'VNF';
+    }
 
-        if(appLayout && useAppLayout && app_layouts[appLayout].constraints)
-            constraintses.push(app_layouts[appLayout].constraints(diagram, nodes, edges));
-        return Array.prototype.concat.apply([], constraintses);
+    var _rowmap = {
+        VNF: 0,
+        VFC: 1,
+        VM: 2,
+        Host: 3
+    };
+    function node_row(n) {
+        return _rowmap[rank(n.value.label_)];
     }
 
     diagram
-        .width($(window).width())
-        .height($(window).height())
-        .timeLimit(timeLimit)
-        .transitionDuration(transition)
-        .stageTransitions(stage)
-        .showLayoutSteps(showSteps)
-        .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
-        .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
-        .edgeSource(function(e) { return e.value[sourceattr]; })
-        .edgeTarget(function(e) { return e.value[targetattr]; })
-        .nodeLabel(function(n) { return n.value.name.split('/'); })
-        .nodeShape(shape)
-        .nodeRadius(radius)
-        .nodeFill(appLayout && app_layouts[appLayout].colors || fill)
-        .nodeFixed(appLayout && app_layouts[appLayout].node_fixed)
-        .constrain(constrain)
-        .lengthStrategy(useAppLayout ? app_layouts[appLayout].lengthStrategy || 'none' :
-                        'symmetric')
-        .edgeArrowhead(function(kv) {
-            return kv.value.undirected ? null : 'vee';
-        })
-        .child('highlight-paths',
-               dc_graph.highlight_paths({ // path props
-                   edgeStroke: function(kv) {
-                       this.scale = this.scale ||
-                         d3.scale.quantize()
-                           .domain([2268,3348])
-                           .range(['#F07A89','#A88CC1','#2C9EB0','#459A66','#8F8430','#BB6549']);
-                       return this.scale(kv.value.inV);
-                   },
-                   edgeStrokeWidth: 2,
-                   edgeOpacity: 1
-               }, { // hover props
-                   nodeStroke: 'red',
-                   nodeRadius: 10,
-                   edgeStrokeWidth: 5
-               }).pathList(function(data) { // i'm not sure i like where this is going
-                   return data.results;
-               }).elementList(function(path) {
-                   return path.element_list;
-               }).elementType(function(element) {
-                   return element.element_type;
-               }).nodeKey(function(element) {
-                   return element.property_map.ecomp_uid;
-               }).edgeSource(function(element) {
-                   return element.property_map.source_ecomp_uid;
-               }).edgeTarget(function(element) {
-                   return element.property_map.target_ecomp_uid;
-               })
-              );
+        .initialLayout(dc_graph.tree_positions(null, node_row, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
+        .initialOnly(true)
+    ;
 
-    appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
     diagram.initLayoutOnRedraw(appLayout && useAppLayout);
 
     dc.renderAll();
