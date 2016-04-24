@@ -26,6 +26,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes_snapshot, _edges_snapshot;
     var _children = {}, _arrows = {};
     var _running = false; // for detecting concurrency issues
+    var _anchor, _chartGroup;
 
     /**
      * Set or get the width attribute of the diagram. See `.height` below.
@@ -1814,8 +1815,57 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke-width', '0px');
     });
 
-    _chart.root(d3.select(parent));
+    /**
+     * Set the root SVGElement to either be any valid [d3 single
+     * selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom
+     * block element such as a div; or a dom element or d3 selection. This class is called
+     * internally on chart initialization, but be called again to relocate the chart. However, it
+     * will orphan any previously created SVGElements.
+     * @method anchor
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {anchorSelector|anchorNode|d3.selection} [parent]
+     * @param {String} [chartGroup]
+     * @return {String|node|d3.selection}
+     * @return {dc_graph.diagram}
+     */
+    _chart.anchor = function(parent, chartGroup) {
+        if (!arguments.length) {
+            return _anchor;
+        }
+        if (parent) {
+            if (parent.select && parent.classed) { // detect d3 selection
+                _anchor = parent.node();
+            } else {
+                _anchor = parent;
+            }
+            _chart.root(d3.select(_anchor));
+            _chart.root().classed(dc.constants.CHART_CLASS, true);
+            dc.registerChart(_chart, chartGroup);
+        } else {
+            throw new dc.errors.BadArgumentException('parent must be defined');
+        }
+        _chartGroup = chartGroup;
+        return _chart;
+    };
 
-    dc.registerChart(_chart, chartGroup);
-    return _chart;
+    /**
+     * Returns the DOM id for the chart's anchored location.
+     * @method anchorName
+     * @memberof dc_graph.diagram
+     * @instance
+     * @return {String}
+     */
+    _chart.anchorName = function () {
+        var a = _chart.anchor();
+        if (a && a.id) {
+            return a.id;
+        }
+        if (a && a.replace) {
+            return a.replace('#', '');
+        }
+        return 'dc-graph' + _chart.chartID();
+    };
+
+    return _chart.anchor(parent, chartGroup);
 };
