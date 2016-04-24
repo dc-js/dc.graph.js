@@ -11,7 +11,7 @@ function iterate_paths(diagram, paths) {
                 var i = 0;
                 var highlight_paths = diagram.child('highlight-paths');
                 highlight_paths.data(data);
-                diagram.redraw();
+                diagram.relayout().redraw();
                 /*
                     var path = pathv.results[i].element_list;
                     var pnodes = {}, pedges = {};
