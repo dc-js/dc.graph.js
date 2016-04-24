@@ -3,8 +3,7 @@ dc_graph.behavior = function(event_namespace, handlers) {
 
     /**
      #### .parent([object])
-     Assigns this behavior to a diagram. It will highlight edges when their end-nodes
-     are hovered.
+     Assigns this behavior to a diagram.
      **/
     _behavior.parent = property(null)
         .react(function(p) {
@@ -29,6 +28,7 @@ dc_graph.behavior = function(event_namespace, handlers) {
                     chart.on('drawn' + event_namespace, null);
                 });
             }
+            handlers.parent && handlers.parent(p);
         });
     return _behavior;
 };
