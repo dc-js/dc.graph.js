@@ -279,6 +279,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeFill = _chart.nodeFillAccessor = property('white');
 
     /**
+     * Set or get the function which will be used to retrieve the opacity of each node.
+     * @name nodeOpacity
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function|Number} [nodeOpacity=1]
+     * @return {Function|Number}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.nodeOpacity = property(1);
+
+    /**
      * Set or get the padding or minimum distance, in pixels, between nodes in the diagram.
      * @name nodePadding
      * @memberof dc_graph.diagram
@@ -1442,7 +1453,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .delay(function(n) {
                     return transition_delay(nodeEntered[_chart.nodeKey.eval(n)]);
                 })
-                .attr('opacity', '1')
+                .attr('opacity', _chart.nodeOpacity.eval)
                 .attr("transform", function (d) {
                     return "translate(" + d.cola.x + "," + d.cola.y + ")";
                 })
