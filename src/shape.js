@@ -313,14 +313,22 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
             };
         };
         var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
-            tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x);
-        var bss = binary_search(compare_dist(source, neighbor.sourcePort, offset),
-                                srcang, srcang + 2 * dir * offset / source_padding),
+            tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x),
+            bss, bst;
+        if(chart.nodeRadius.eval(source) > 2) {
+            bss = binary_search(compare_dist(source, neighbor.sourcePort, offset),
+                                srcang, srcang + 2 * dir * offset / source_padding);
+        }
+        else bss = {ang: srcang, port: {x: 0, y: 0}};
+        if(chart.nodeRadius.eval(target) > 2) {
             bst = binary_search(compare_dist(target, neighbor.targetPort, offset),
                                 tarang, tarang - 2 * dir * offset / source_padding);
+        }
+        else bst = {ang: tarang, port: {x: 0, y: 0}};
 
         sp = bss.port;
         tp = bst.port;
+
         var sdist = Math.hypot(sp.x, sp.y),
             tdist = Math.hypot(tp.x, tp.y),
             c1dist = sdist+source_padding/2,
