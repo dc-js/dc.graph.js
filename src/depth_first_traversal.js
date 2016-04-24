@@ -4,8 +4,9 @@
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(rootf, rowf, treef, placef, sibf, pushf, popf, skipf) {
+dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sibf, pushf, popf, skipf) {
     return function(diagram, nodes, edges) {
+        initf && initf();
         if(treef)
             edges = edges.filter(function(e) { return treef(e.orig); });
         var indegree = {};

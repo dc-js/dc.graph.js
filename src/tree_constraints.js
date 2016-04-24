@@ -3,7 +3,7 @@ dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
     return function(diagram, nodes, edges) {
         var constraints = [];
         var x = 0;
-        var dfs = dc_graph.depth_first_traversal(rootf, null, treef, function(n, r, row) {
+        var dfs = dc_graph.depth_first_traversal(null, rootf, null, treef, function(n, r, row) {
             if(row.length) {
                 var last = row[row.length-1];
                 constraints.push({
