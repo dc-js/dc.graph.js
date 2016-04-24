@@ -726,7 +726,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _chart[p].cascade(level, props[p]);
         return _chart;
     };
-    
+
     /**
      * Currently there are some bugs when the same instance of cola.js is used multiple
      * times. (In particular, overlaps between nodes may not be eliminated

@@ -73,7 +73,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     });
     _behavior.pathList =  property(identity, false);
     _behavior.elementList = property(identity, false);
-    _behavior.elementType =  property(null, false);
+    _behavior.elementType = property(null, false);
     _behavior.nodeKey = property(null, false);
     _behavior.edgeSource = property(null, false);
     _behavior.edgeTarget = property(null, false);
