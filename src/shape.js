@@ -314,10 +314,23 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
         };
         var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
             tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x);
-        var bss = binary_search(compare_dist(source, neighbor.sourcePort, offset),
-                                srcang, srcang + 2 * dir * offset / source_padding),
+        var bss, bst;
+
+        // don't like this but throwing is unacceptable
+        try {
+            bss = binary_search(compare_dist(source, neighbor.sourcePort, offset),
+                                srcang, srcang + 2 * dir * offset / source_padding);
+        }
+        catch(x) {
+            bss = {ang: srcang, port: neighbor.sourcePort};
+        }
+        try {
             bst = binary_search(compare_dist(target, neighbor.targetPort, offset),
                                 tarang, tarang - 2 * dir * offset / source_padding);
+        }
+        catch(x) {
+            bst = {ang: tarang, port: neighbor.targetPort};
+        }
 
         sp = bss.port;
         tp = bst.port;
