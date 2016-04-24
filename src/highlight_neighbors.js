@@ -6,7 +6,7 @@ dc_graph.highlight_neighbors = function(props) {
     }
 
     function add_behavior(chart, node, edge) {
-        chart.cascade(100, conditional_properties(function(e) {
+        chart.cascade(100, null, conditional_properties(function(e) {
             return e.dcg_highlighted;
         }, props));
         node
