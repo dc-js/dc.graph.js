@@ -63,7 +63,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
-        .parallelEdgeOffset(1)
+        .parallelEdgeOffset(3)
         .timeLimit(10000)
         .transitionDuration(0)
         .stageTransitions('none')
@@ -81,18 +81,6 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
     ;
 }
 
-function level_diagram(diagram) {
-    diagram
-        .edgeArrowhead(function(kv) {
-            return kv.value.undirected ? null : 'vee';
-        })
-        .edgeArrowSize(0.5)
-        .nodeRadius(10)
-        .baseLength(30)
-        .lengthStrategy('symmetric')
-    ;
-}
-
 source(function(error, data) {
     if(error) {
         console.log(error);
@@ -105,25 +93,24 @@ source(function(error, data) {
         targetattr = graph_data.targetattr,
         nodekeyattr = graph_data.nodekeyattr;
 
-    var highlight_paths = dc_graph.highlight_paths(
-        { // path props
-            nodeRadius: 3,
-            edgeOpacity: 1,
-            nodeOpacity: 1
-        }, { // hover props
-            nodeStroke: '#e41a1c',
-            nodeStrokeWidth: 2,
-            nodeRadius: 7,
-            edgeStrokeWidth: 2,
-            edgeStroke: '#e41a1c'
-        })
-    ;
+    var highlight_paths_hier = dc_graph.highlight_paths({ // path props
+        nodeRadius: 3,
+        edgeOpacity: 1,
+        nodeOpacity: 1
+    }, { // hover props
+        nodeStroke: '#e41a1c',
+        nodeStrokeWidth: 2,
+        nodeRadius: 7,
+        edgeStrokeWidth: 2,
+        edgeStroke: '#e41a1c'
+    });
+
     var diagram = create_diagram('#hierarchy');
     diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr);
     diagram
         .edgeArrowhead(null)
         .nodeRadius(2)
-        .child('highlight-paths', highlight_paths)
+        .child('highlight-paths', highlight_paths_hier)
     ;
     diagram
         .initialLayout(dc_graph.tree_positions(null, node_rank, is_tree_edge.bind(null, diagram), 25, 25, 10, 100))
@@ -136,11 +123,34 @@ source(function(error, data) {
         return m;
     }, {});
 
+    var highlight_paths_level = dc_graph.highlight_paths({ // path props
+        edgeOpacity: 1,
+        nodeOpacity: 1,
+        nodeRadius: 8,
+        edgeArrowhead: function(e) {
+            return e.value.undirected ? null : 'vee';
+        }
+    }, { // hover props
+        nodeStroke: '#e41a1c',
+        nodeStrokeWidth: 2,
+        nodeRadius: 10,
+        edgeStrokeWidth: 2,
+        edgeStroke: '#e41a1c'
+    });
+
     for(var type in bylayer) {
         var sel = '#' + type.toLowerCase();
         var dialev = create_diagram(sel);
         diagram_common(dialev, bylayer[type], edges, nodekeyattr, sourceattr, targetattr);
-        level_diagram(dialev);
+        dialev
+            .edgeArrowSize(0.5)
+            .nodeRadius(5)
+            .parallelEdgeOffset(5)
+            //.edgeArrowhead(null)
+            .baseLength(20)
+            .lengthStrategy('symmetric')
+            .child('highlight-paths', highlight_paths_level)
+        ;
     }
 
     dc.renderAll();
