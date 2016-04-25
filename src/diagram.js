@@ -1376,7 +1376,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_needsRedraw) {
             _needsRedraw = false;
             window.setTimeout(function() {
-                _chart.startLayout();
+                if(!_chart.isRunning()) // someone else may already have started
+                    _chart.redraw();
             }, 0);
         }
     }
