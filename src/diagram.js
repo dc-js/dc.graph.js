@@ -1075,7 +1075,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 for(var j = 0; j < em.length; ++j)
                     em[i][j] = {
                         n: 0,
-                        ports: {}
+                        ports: {
+                            rev: []
+                        }
                     };
             }
             wedges.forEach(function(e) {
@@ -1083,6 +1085,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     max = Math.max(e.source.index, e.target.index);
                 e.parallel = em[min][max].n++;
                 e.ports = em[min][max].ports;
+                e.ports.rev.push(min !== e.source.index);
             });
             for(i = 0; i < em.length; ++i)
                 for(j = 0; j < em.length; ++j)
@@ -1385,6 +1388,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 target_padding = d.target.dcg_ry +
                     _chart.nodeStrokeWidth.eval(d.target) / 2;
             d.ports[age] = new Array(d.ports.n);
+            var reversedness = d.ports.rev[d.parallel];
             for(var p = 0; p < d.ports.n; ++p) {
                 // alternate parallel edges over, then under
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
@@ -1394,6 +1398,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                                               last, dir, _chart.parallelEdgeOffset(),
                                               source_padding, target_padding
                                               );
+                if(d.ports.rev[p] !== reversedness)
+                    path.points.reverse();
                 var spos = path.points[0], tpos = path.points[path.points.length-1];
                 var near = bezier_point(path.points, 0.75);
                 d.ports[age][p] = {
