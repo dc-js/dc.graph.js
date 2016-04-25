@@ -127,9 +127,7 @@ source(function(error, data) {
         edgeOpacity: 1,
         nodeOpacity: 1,
         nodeRadius: 8,
-        edgeArrowhead: function(e) {
-            return e.value.undirected ? null : 'vee';
-        }
+        edgeArrowhead: 'vee'
     }, { // hover props
         nodeStroke: '#e41a1c',
         nodeStrokeWidth: 2,
@@ -146,7 +144,7 @@ source(function(error, data) {
             .edgeArrowSize(0.5)
             .nodeRadius(5)
             .parallelEdgeOffset(5)
-            //.edgeArrowhead(null)
+            .edgeArrowhead(null)
             .baseLength(20)
             .lengthStrategy('symmetric')
             .child('highlight-paths', highlight_paths_level)
