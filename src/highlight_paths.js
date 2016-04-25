@@ -28,7 +28,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
                     return paths.indexOf(hpath)>=0;
         });
     }
-    function add_behavior(chart, node, edge) {
+    function add_behavior(chart, node, edge, ehover) {
         chart
             .cascade(200, conditional_properties(function(n) {
                 return !!node_on_paths[chart.nodeKey.eval(n)];
@@ -42,10 +42,24 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
             }, hoverprops));
 
         node
-            .on('mouseover.highlight-paths', function(d) {
-                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(d)]);
+            .on('mouseover.highlight-paths', function(n) {
+                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(n)]);
             })
-            .on('mouseout.highlight-paths', function(d) {
+            .on('mouseout.highlight-paths', function(n) {
+                highlight_paths_group.hover_changed(null);
+            });
+
+        /*
+        edge.each(function(e) {
+            var dirs = edge_on_paths[chart.edgeKey.eval(e)].reduce(function(ds, p) 
+        });
+         */
+
+        ehover
+            .on('mouseover.highlight-paths', function(e) {
+                highlight_paths_group.hover_changed(edge_on_paths[chart.edgeKey.eval(e)]);
+            })
+            .on('mouseout.highlight-paths', function(e) {
                 highlight_paths_group.hover_changed(null);
             });
     }
@@ -61,7 +75,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
 
     var _behavior = dc_graph.behavior('highlight-paths', {
         add_behavior: add_behavior,
-        remove_behavior: function(chart, node, edge) {
+        remove_behavior: function(chart, node, edge, ehover) {
             remove_behavior(chart, node, edge);
             return this;
         },
