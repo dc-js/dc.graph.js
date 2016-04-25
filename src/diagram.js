@@ -1174,7 +1174,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _chart._enterNode(nodeEnter);
 
-        _dispatch.drawn(node, edge);
+        _dispatch.drawn(node, edge, edgeHover);
 
         _chart.refresh(node, edge);
 
