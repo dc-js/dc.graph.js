@@ -291,7 +291,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeOpacity = property(1);
 
     /**
-     * Set or get the padding or minimum distance, in pixels, between nodes in the diagram.
+     * Set or get the padding or minimum distance, in pixels, for a node. (Will be distributed
+     * to both sides of the node.)
      * @name nodePadding
      * @memberof dc_graph.diagram
      * @instance
