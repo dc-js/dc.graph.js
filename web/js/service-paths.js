@@ -65,7 +65,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .parallelEdgeOffset(3)
         .timeLimit(10000)
-        .transitionDuration(0)
+        .transitionDuration(500)
         .stageTransitions('none')
         .showLayoutSteps(false)
         .edgeOpacity(0.2)
@@ -94,13 +94,14 @@ source(function(error, data) {
         nodekeyattr = graph_data.nodekeyattr;
 
     var highlight_paths_hier = dc_graph.highlight_paths({ // path props
-        nodeRadius: 3,
+        nodeRadius: 25,
+        nodeLabel: function(n) {
+            return n.value.name;
+        },
         edgeOpacity: 1,
         nodeOpacity: 1
     }, { // hover props
         nodeStroke: '#e41a1c',
-        nodeStrokeWidth: 2,
-        nodeRadius: 7,
         edgeStrokeWidth: 2,
         edgeStroke: '#e41a1c'
     });
@@ -113,7 +114,8 @@ source(function(error, data) {
         .child('highlight-paths', highlight_paths_hier)
     ;
     diagram
-        .initialLayout(dc_graph.tree_positions(null, node_rank, is_tree_edge.bind(null, diagram), 25, 25, 10, 100))
+        .initialLayout(dc_graph.tree_positions(null, node_rank, is_tree_edge.bind(null, diagram),
+                                               25, 25, function(n) { return diagram.nodeRadius.eval(n) + diagram.nodePadding(); }, 100))
         .initialOnly(true)
     ;
 
