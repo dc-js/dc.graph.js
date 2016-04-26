@@ -116,7 +116,9 @@ source(function(error, data) {
     ;
     diagram
         .initialLayout(dc_graph.tree_positions(null, node_rank, is_tree_edge.bind(null, diagram),
-                                               25, 25, function(n) { return diagram.nodeRadius.eval(n) + diagram.nodePadding(); }, 100))
+                                               25, 25, function(n) {
+                                                   return n.dcg_rx*2 + diagram.nodePadding();
+                                               }, 100))
         .initialOnly(true)
     ;
 
