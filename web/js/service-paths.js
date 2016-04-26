@@ -111,6 +111,7 @@ source(function(error, data) {
     diagram
         .edgeArrowhead(null)
         .nodeRadius(2)
+        .nodePadding(2)
         .child('highlight-paths', highlight_paths_hier)
     ;
     diagram
@@ -129,6 +130,7 @@ source(function(error, data) {
         edgeOpacity: 1,
         nodeOpacity: 1,
         nodeRadius: 8,
+        nodePadding: 10,
         edgeArrowhead: 'vee'
     }, { // hover props
         nodeStroke: '#e41a1c',
