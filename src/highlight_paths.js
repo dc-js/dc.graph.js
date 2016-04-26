@@ -1,4 +1,7 @@
 dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
+    pathprops = pathprops || {};
+    hoverprops = hoverprops || {};
+    pathsgroup = pathsgroup || 'highlight-paths-group';
     var node_on_paths = {}, edge_on_paths = {}, hoverpaths;
 
     function refresh() {
@@ -90,7 +93,6 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     window.chart_registry.create_type('highlight-paths', function() {
         return d3.dispatch('paths_changed', 'hover_changed');
     });
-    pathsgroup = pathsgroup || 'highlight-paths-group';
     var highlight_paths_group = window.chart_registry.create_group('highlight-paths', pathsgroup);
 
     return _behavior;
