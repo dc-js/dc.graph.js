@@ -4,7 +4,12 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
     nwidth = d3.functor(nwidth);
     var dfs = dc_graph.depth_first_traversal(function() {
         x = ofsx;
-    }, rootf, rowf, treef, function(n, r) {
+    }, rootf, rowf, treef, function(n, r, row) {
+        if(row.length) {
+            var left = row[row.length-1];
+            var g = (nwidth(left) + nwidth(n)) / 2;
+            x = Math.max(x, left.left_x + g);
+        }
         n.left_x = x;
         n.hit_ins = 1;
         n.cola.y = r*ygap + ofsy;
@@ -14,7 +19,6 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
         x += g;
     }, null, function(n) {
         n.cola.x = (n.left_x + x)/2;
-        delete n.left_x;
     }, function(n, indegree) {
         // rolling average of in-neighbor x positions
         n.cola.x = (n.hit_ins*n.cola.x + x)/++n.hit_ins;
