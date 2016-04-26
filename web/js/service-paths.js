@@ -65,7 +65,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .parallelEdgeOffset(3)
         .timeLimit(10000)
-        .transitionDuration(500)
+        .transitionDuration(250)
         .stageTransitions('none')
         .showLayoutSteps(false)
         .edgeOpacity(0.2)
@@ -99,8 +99,9 @@ source(function(error, data) {
             return n.value.name;
         },
         edgeOpacity: 1,
-        nodeOpacity: 1
+        nodeOpacity: 0.5
     }, { // hover props
+        nodeOpacity: 1,
         nodeStroke: '#e41a1c',
         edgeStrokeWidth: 2,
         edgeStroke: '#e41a1c'
