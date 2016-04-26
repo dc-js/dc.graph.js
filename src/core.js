@@ -16,7 +16,10 @@
  */
 
 var dc_graph = {
-    version: '<%= conf.pkg.version %>'
+    version: '<%= conf.pkg.version %>',
+    constants: {
+        CHART_CLASS: 'dc-graph'
+    }
 };
 
 var property = function (defaultValue, unwrap) {

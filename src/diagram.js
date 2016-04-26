@@ -1564,7 +1564,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_chart.initLayoutOnRedraw())
             initLayout();
         _chart.resetSvg();
-        _g = _svg.append('g').attr('class', 'dc-graph');
+        _g = _svg.append('g');
         _edgeLayer = _g.append('g');
         _nodeLayer = _g.append('g');
 
@@ -1847,7 +1847,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 _anchor = parent;
             }
             _chart.root(d3.select(_anchor));
-            _chart.root().classed(dc.constants.CHART_CLASS, true);
+            _chart.root().classed(dc_graph.constants.CHART_CLASS, true);
             dc.registerChart(_chart, chartGroup);
         } else {
             throw new dc.errors.BadArgumentException('parent must be defined');
