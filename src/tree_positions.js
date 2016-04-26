@@ -1,7 +1,7 @@
 // this naive tree-drawer is paraphrased from memory from dot
-dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, xgap, ygap) {
+dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
     var x;
-    xgap = d3.functor(xgap);
+    nwidth = d3.functor(nwidth);
     var dfs = dc_graph.depth_first_traversal(function() {
         x = ofsx;
     }, rootf, rowf, treef, function(n, r) {
@@ -9,7 +9,7 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, xgap, ygap) {
         n.hit_ins = 1;
         n.cola.y = r*ygap + ofsy;
     }, function(isroot, left, right) {
-        var g = (xgap(left) + xgap(right)) / 2;
+        var g = (nwidth(left) + nwidth(right)) / 2;
         if(isroot) g = g*1.5;
         x += g;
     }, null, function(n) {
