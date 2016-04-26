@@ -35,7 +35,7 @@ dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sib
             if(outmap[key])
                 outmap[key].forEach(function(e, ei) {
                     if(ei && sibf)
-                        sibf(false);
+                        sibf(false, outmap[key][ei-1].target, e.target);
                     pushf && pushf();
                     place_tree(e.target, r+1);
                 });
@@ -50,7 +50,7 @@ dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sib
         }
         roots.forEach(function(n, ni) {
             if(ni && sibf)
-                sibf(true);
+                sibf(true, roots[ni-1], n);
             pushf && pushf();
             place_tree(n, rowf ? rowf(n.orig) : 0);
         });
