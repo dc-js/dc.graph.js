@@ -1094,9 +1094,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                         em[i][j].ports.n = em[i][j].n;
         }
 
-        if(_chart.initialLayout())
-            _chart.initialLayout()(_chart, wnodes, wedges);
-
         // create edge SVG elements
         var edge = _edgeLayer.selectAll('.edge')
                 .data(wedges, _chart.edgeKey.eval);
@@ -1175,15 +1172,20 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _chart._enterNode(nodeEnter);
 
-        _dispatch.drawn(node, edge, edgeHover);
-
-        _chart.refresh(node, edge);
-
         node.exit().transition()
             .duration(transition_duration())
             .delay(_chart.deleteDelay())
             .attr('opacity', 0)
             .remove();
+
+        _dispatch.drawn(node, edge, edgeHover);
+
+        _chart.refresh(node, edge);
+
+        // really we should have layout chaining like in the good old Dynagraph days
+        // the ordering of this and the previous 4 statements is somewhat questionable
+        if(_chart.initialLayout())
+            _chart.initialLayout()(_chart, wnodes, wedges);
 
         // no layout if the topology hasn't changed
         var skip_layout = false;
