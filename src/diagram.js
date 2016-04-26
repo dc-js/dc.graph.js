@@ -906,11 +906,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.nodeTitle())
             nodeEnter.append('title');
         nodeEnter.each(infer_shape(_chart));
+        nodeEnter.append(shape_element(_chart))
+            .attr('class', 'node-shape');
         nodeEnter.append('text')
             .attr('class', 'node-label')
             .attr('fill', _chart.nodeLabelFill.eval);
-        nodeEnter.append(shape_element(_chart))
-            .attr('class', 'node-shape');
         return _chart;
     };
 
