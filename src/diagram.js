@@ -937,6 +937,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('x', 0)
             .attr('dy', function(d) { return d.ofs; });
         tspan.text(function(d) { return d.line; });
+        tspan.exit().remove();
         text.each(fit_shape(_chart));
         node.select('.node-shape')
             .each(shape_attrs(_chart))
