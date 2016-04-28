@@ -94,14 +94,14 @@ source(function(error, data) {
         nodekeyattr = graph_data.nodekeyattr;
 
     var highlight_paths_hier = dc_graph.highlight_paths({ // path props
-        nodeRadius: 25,
+        nodeRadius: 10,
+        edgeOpacity: 1,
+        nodeOpacity: 0.7
+    }, { // hover props
+        nodeOpacity: 1,
         nodeLabel: function(n) {
             return n.value.name;
         },
-        edgeOpacity: 1,
-        nodeOpacity: 0.5
-    }, { // hover props
-        nodeOpacity: 1,
         nodeStroke: '#e41a1c',
         edgeStrokeWidth: 2,
         edgeStroke: '#e41a1c'

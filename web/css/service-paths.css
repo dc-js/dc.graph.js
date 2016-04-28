@@ -30,3 +30,9 @@ html, body, #main {
     border: solid 1px;
     margin-left: -1px
 }
+
+.dc-graph text.node-label {
+    font: 10px helvetica, san-serif;
+    text-anchor: middle;
+    pointer-events: none;
+}
