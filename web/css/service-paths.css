@@ -5,24 +5,39 @@ html, body, #main {
 
 #main {
     display: flex;
+    flex-direction: row;
+}
+
+#left, #right {
+    display: flex;
     flex-direction: column;
 }
 
-#hierarchy {
+#left {
+    flex: 3;
+}
+
+#right {
     flex: 1;
+}
+
+#hierarchy {
+    flex: 2;
     margin: 0;
 }
 
-#levels {
+#query {
     flex: 1;
-    display: flex;
-    flex-direction: row;
 }
 
 #vnf, #vfc, #vm, #host {
     flex: 1;
+}
+
+#left div, #right div {
     border: solid 1px;
-    margin-left: -1px
+    margin-left: -1px;
+    margin-top: -1px;
 }
 
 .dc-graph text.node-label {
