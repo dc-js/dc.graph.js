@@ -37,6 +37,7 @@ chart.width(600)
     * [.nodeStroke](#dc_graph.diagram+nodeStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodeFillScale](#dc_graph.diagram+nodeFillScale) ⇒ <code>function</code> &#124; <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodeFill](#dc_graph.diagram+nodeFill) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.nodeOpacity](#dc_graph.diagram+nodeOpacity) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodePadding](#dc_graph.diagram+nodePadding) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodeLabel](#dc_graph.diagram+nodeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodeLabelFill](#dc_graph.diagram+nodeLabelFill) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -85,6 +86,8 @@ chart.width(600)
     * [.redrawGroup](#dc_graph.diagram+redrawGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.renderGroup](#dc_graph.diagram+renderGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.defineArrow](#dc_graph.diagram+defineArrow) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
   * [.constraint_pattern](#dc_graph.constraint_pattern) ⇒ <code>function</code>
 
 <a name="dc_graph.diagram"></a>
@@ -122,6 +125,7 @@ visualization versus conventional charts.
   * [.nodeStroke](#dc_graph.diagram+nodeStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.nodeFillScale](#dc_graph.diagram+nodeFillScale) ⇒ <code>function</code> &#124; <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.nodeFill](#dc_graph.diagram+nodeFill) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.nodeOpacity](#dc_graph.diagram+nodeOpacity) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.nodePadding](#dc_graph.diagram+nodePadding) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.nodeLabel](#dc_graph.diagram+nodeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.nodeLabelFill](#dc_graph.diagram+nodeLabelFill) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -170,6 +174,8 @@ visualization versus conventional charts.
   * [.redrawGroup](#dc_graph.diagram+redrawGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.renderGroup](#dc_graph.diagram+renderGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.defineArrow](#dc_graph.diagram+defineArrow) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+  * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
 
 <a name="dc_graph.diagram+width"></a>
 #### diagram.width ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -384,9 +390,20 @@ node.
 | --- | --- | --- |
 | [nodeFill] | <code>function</code> &#124; <code>String</code> | <code>&#x27;white&#x27;</code> | 
 
+<a name="dc_graph.diagram+nodeOpacity"></a>
+#### diagram.nodeOpacity ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Set or get the function which will be used to retrieve the opacity of each node.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [nodeOpacity] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
+
 <a name="dc_graph.diagram+nodePadding"></a>
 #### diagram.nodePadding ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-Set or get the padding or minimum distance, in pixels, between nodes in the diagram.
+Set or get the padding or minimum distance, in pixels, for a node. (Will be distributed
+to both sides of the node.)
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 
@@ -1025,6 +1042,26 @@ _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
     .attr('stroke-width', '0px');
 });
 ```
+<a name="dc_graph.diagram+anchor"></a>
+#### diagram.anchor([parent], [chartGroup]) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Set the root SVGElement to either be any valid [d3 single
+selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom
+block element such as a div; or a dom element or d3 selection. This class is called
+internally on chart initialization, but be called again to relocate the chart. However, it
+will orphan any previously created SVGElements.
+
+**Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [parent] | <code>anchorSelector</code> &#124; <code>anchorNode</code> &#124; <code>d3.selection</code> | 
+| [chartGroup] | <code>String</code> | 
+
+<a name="dc_graph.diagram+anchorName"></a>
+#### diagram.anchorName() ⇒ <code>String</code>
+Returns the DOM id for the chart's anchored location.
+
+**Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.constraint_pattern"></a>
 ### dc_graph.constraint_pattern ⇒ <code>function</code>
 In cola.js there are three factors which influence the positions of nodes:
