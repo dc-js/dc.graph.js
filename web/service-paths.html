@@ -23,6 +23,10 @@
   <script type="text/javascript" src="js/querystring.js"></script>
   <script type="text/javascript" src="js/munge-graph.js"></script>
   <script type="text/javascript" src="js/flat-group.js"></script>
+
+  <script type="text/javascript" src="js/ace.js"></script>
+
+  <script type="text/javascript" src="js/nepalqueries.js"></script>
 </head>
 
 <body>
@@ -31,7 +35,19 @@
   <div id="main">
     <div id="left">
       <div id="hierarchy"></div>
-      <div id="query"></div>
+      <div id="query">
+        <div id="selections">
+          <label>&nbsp;&nbsp;Query: <select id="squery"></select></label>
+          <span id="select1">
+            <label>
+              &nbsp;&nbsp;<span class="desc"></span>:&nbsp;
+              <select></select>
+            </label>
+          </span>
+          <button id="submit">Submit</input>
+        </div>
+        <div id="qedit"></div>
+      </div>
     </div>
     <div id="right">
       <div id="vnf"></div>

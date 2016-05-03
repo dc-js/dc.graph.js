@@ -28,13 +28,20 @@ html, body, #main {
 
 #query {
     flex: 1;
+    font: 12px helvetica, san-serif;
+    display: flex;
+    flex-direction: column
+}
+
+#qedit {
+    flex-grow: 1;
 }
 
 #vnf, #vfc, #vm, #host {
     flex: 1;
 }
 
-#left div, #right div {
+#left > div, #right > div {
     border: solid 1px;
     margin-left: -1px;
     margin-top: -1px;

@@ -81,6 +81,85 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
     ;
 }
 
+var read_paths = dc_graph.path_reader()
+        .pathList(function(data) {
+            return data.results;
+        }).elementList(function(path) {
+            return path.element_list;
+        }).elementType(function(element) {
+            return element.element_type;
+        }).nodeKey(function(element) {
+            return element.property_map.ecomp_uid;
+        }).edgeSource(function(element) {
+            return element.property_map.source_ecomp_uid;
+        }).edgeTarget(function(element) {
+            return element.property_map.target_ecomp_uid;
+        });
+
+
+function init_queries(nodes, edges) {
+    function populate_select(select, vals, def) {
+        var opts = select.selectAll('option').data(vals);
+        opts.enter().append('option');
+        opts.exit().remove();
+        opts
+            .attr('value', function(d) { return d; })
+            .text(function(d) { return d; });
+        var i = 0;
+        if(def) {
+            var j = vals.indexOf(def);
+            if(j>=0)
+                i = j;
+        }
+        select.node().selectedIndex = i;
+        return vals[i];
+    }
+    function populate_qedit(text, p1) {
+        text = text.replace(/\$\$1\$\$/, p1);
+        qedit.getSession().setValue(text);
+    }
+    function do_selects(index) {
+        nquery = nepal_queries[index];
+        var s1 = nquery.select1, p1;
+        select1.style('display', s1 ? null : 'none');
+        if(s1) {
+            select1.select('.desc').text(s1.name);
+            p1 = populate_select(select1.select('select'), values1 = s1.init(nodes, edges), s1.default);
+        }
+        populate_qedit(nquery.query, p1);
+    }
+    var squery = d3.select('#squery'), select1 = d3.select('#select1');
+    var nquery, values1;
+    var qopts = squery.selectAll('option').data(nepal_queries);
+    qopts.enter().append('option')
+        .attr('value', function(d) { return d.name; })
+        .text(function(d) { return d.description; });
+    qopts.exit().remove();
+    squery.on('change', function() {
+        var val = this.selectedIndex;
+        do_selects(val);
+    });
+    select1.select('select').on('change', function() {
+        var val = this.selectedIndex;
+        populate_qedit(nquery.query, values1[val]);
+    });
+    do_selects(0);
+}
+
+var qedit = ace.edit("qedit");
+qedit.setTheme("ace/theme/tomorrow");
+qedit.getSession().setMode("ace/mode/sql");
+
+var nepal = d3.xhr(qs.nepal).header("Content-type", "application/x-www-form-urlencoded");
+
+d3.select('#submit').on('click', function() {
+    nepal.post("url=" + encodeURIComponent(qs.nurl) + "&query=" + encodeURIComponent(qedit.getSession().getValue()), function(error, result) {
+        if(error)
+            throw new Error(error);
+        read_paths.data(JSON.parse(result.responseText));
+    });
+});
+
 source(function(error, data) {
     if(error) {
         console.log(error);
@@ -92,6 +171,8 @@ source(function(error, data) {
         sourceattr = graph_data.sourceattr,
         targetattr = graph_data.targetattr,
         nodekeyattr = graph_data.nodekeyattr;
+
+    init_queries(nodes, edges);
 
     var highlight_paths_hier = dc_graph.highlight_paths({ // path props
         nodeRadius: 10,
@@ -161,25 +242,9 @@ source(function(error, data) {
     dc.renderAll();
 
     if(paths) {
-        var read_paths = dc_graph.path_reader()
-                .pathList(function(data) {
-                    return data.results;
-                }).elementList(function(path) {
-                    return path.element_list;
-                }).elementType(function(element) {
-                    return element.element_type;
-                }).nodeKey(function(element) {
-                    return element.property_map.ecomp_uid;
-                }).edgeSource(function(element) {
-                    return element.property_map.source_ecomp_uid;
-                }).edgeTarget(function(element) {
-                    return element.property_map.target_ecomp_uid;
-                });
-
         d3.json(paths, function(error, data) {
             if(error)
                 throw new Error(error);
-            var i = 0;
             read_paths.data(data);
         });
     }
