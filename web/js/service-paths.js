@@ -152,13 +152,31 @@ qedit.getSession().setMode("ace/mode/sql");
 
 var nepal = d3.xhr(qs.nepal).header("Content-type", "application/x-www-form-urlencoded");
 
-d3.select('#submit').on('click', function() {
+function execute_query() {
     nepal.post("url=" + encodeURIComponent(qs.nurl) + "&query=" + encodeURIComponent(qedit.getSession().getValue()), function(error, result) {
         if(error)
             throw new Error(error);
         read_paths.data(JSON.parse(result.responseText));
     });
+}
+
+d3.select('#submit').on('click', execute_query);
+d3.select('#selections').on('keypress', function(e) {
+    if(d3.event.keyCode === $.ui.keyCode.ENTER)
+        execute_query();
 });
+qedit.commands.addCommands([{
+    name: 'executeQuery',
+    bindKey: {
+        win: 'Alt-Return',
+        mac: 'Alt-Return',
+        sender: 'editor'
+    },
+    exec: function() {
+        execute_query();
+    }
+}]);
+
 
 source(function(error, data) {
     if(error) {
