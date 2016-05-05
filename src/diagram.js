@@ -1484,12 +1484,23 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
     }
 
-    function auto_zoom(node) {
+    function union_bounds(b1, b2) {
+        // wahahahaha
+        return b1 ? b2 ? {
+            left: Math.min(b1.left, b2.left),
+            top: Math.min(b1.top, b2.top),
+            right: Math.max(b1.right, b2.right),
+            bottom: Math.max(b1.bottom, b2.bottom)
+        } : b1 : b2;
+    }
+
+    function auto_zoom(node, edge) {
         if(_chart.fitStrategy()) {
-            var bounds;
-            node.each(function(n, i) {
-                var b = node_bounds(n);
-                if(!i)
+            var bounds = node.data().map(node_bounds).reduce(union_bounds, null);
+            /*
+            edge.each(function(e, i) {
+                var b = edge_bounds(e);
+                if(!bounds)
                     bounds = b;
                 else {
                     bounds = {
@@ -1500,6 +1511,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     };
                 }
             });
+             */
             if(!bounds)
                 return;
             var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
@@ -1524,7 +1536,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
-        auto_zoom(node);
+        auto_zoom(node, edge);
         var nodeEntered = {};
         nodeEnter
             .each(function(n) {
