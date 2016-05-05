@@ -27,6 +27,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _children = {}, _arrows = {};
     var _running = false; // for detecting concurrency issues
     var _translate = [0,0], _scale = 1;
+    var _zoom;
     var _anchor, _chartGroup;
 
     /**
@@ -53,6 +54,18 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _chart.height = property(200).react(resizeSvg);
+
+    /**
+     * Set or get the fitting strategy for the canvas. If `null`, no attempt is made to fit the
+     * canvas to the svg element. Other choices are `'vertical'`, `'horizontal'`
+     * @name fitStrategy
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [fitStrategy=null]
+     * @return {String}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.fitStrategy = property(null);
 
     /**
      * Get or set the root element, which is usually the parent div. Normally the root is set
@@ -1453,27 +1466,60 @@ dc_graph.diagram = function (parent, chartGroup) {
                 right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
     }
 
+    function debug_bounds(bounds) {
+        var brect = _g.selectAll('rect.bounds').data([0]);
+        brect.enter()
+            .insert('rect', ":first-child").attr({
+                class: 'bounds',
+                fill: 'rgba(128,255,128,0.1)',
+                stroke: '#000'
+            });
+        brect
+            .attr({
+                x: bounds.left,
+                y: bounds.top,
+                width: bounds.right - bounds.left,
+                height: bounds.bottom - bounds.top
+            });
+    }
+
+    function auto_zoom(node) {
+        if(_chart.fitStrategy()) {
+            var bounds;
+            node.each(function(n, i) {
+                var b = node_bounds(n);
+                if(!i)
+                    bounds = b;
+                else {
+                    bounds = {
+                        left: Math.min(b.left, bounds.left),
+                        top: Math.min(b.top, bounds.top),
+                        right: Math.max(b.right, bounds.right),
+                        bottom: Math.max(b.bottom, bounds.bottom)
+                    };
+                }
+            });
+            if(!bounds)
+                return;
+            if(_chart.DEBUG_BOUNDS)
+                debug_bounds(bounds);
+            var origin = [bounds.left, bounds.top], zoom;
+            switch(_chart.fitStrategy()) {
+            case 'vertical':
+                zoom = _chart.effectiveHeight()/(bounds.bottom - bounds.top);
+                var w = (bounds.right - bounds.left)*zoom;
+                origin = [(zoom*w -  _chart.effectiveWidth())/2 + _chart.margins().left, -zoom*bounds.top + _chart.margins().top];
+                break;
+            }
+            _zoom.translate(origin).scale(zoom).event(_svg);
+        }
+    }
+
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
-        var node0 = node.datum();
-        var bounds;
-        node.each(function(n, i) {
-            var b = node_bounds(node.datum());
-            if(!i)
-                bounds = b;
-            else {
-                bounds = {
-                    left: Math.min(b.left, bounds.left),
-                    top: Math.min(b.top, bounds.top),
-                    right: Math.max(b.right, bounds.right),
-                    bottom: Math.max(b.bottom, bounds.bottom)
-                };
-            }
-        });
-        //globalTransform([bounds.left, bounds.top], 1);
-
+        auto_zoom(node);
         var nodeEntered = {};
         nodeEnter
             .each(function(n) {
@@ -1839,7 +1885,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable())
-            _svg.call(d3.behavior.zoom().on("zoom", doZoom));
+            _svg.call(_zoom = d3.behavior.zoom().on("zoom", doZoom));
 
         return _svg;
     }
