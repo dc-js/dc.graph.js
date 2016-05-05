@@ -81,6 +81,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
             return _colormap[node_type(n)];
         })
     ;
+    //diagram.DEBUG_BOUNDS = true;
 }
 
 var read_paths = dc_graph.path_reader()

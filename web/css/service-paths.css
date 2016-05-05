@@ -56,3 +56,7 @@ html, body, #main {
     text-anchor: middle;
     pointer-events: none;
 }
+
+.dc-graph svg {
+    padding: 5px;
+}
