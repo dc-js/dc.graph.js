@@ -52,12 +52,6 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
                 highlight_paths_group.hover_changed(null);
             });
 
-        /*
-        edge.each(function(e) {
-            var dirs = edge_on_paths[chart.edgeKey.eval(e)].reduce(function(ds, p) 
-        });
-         */
-
         ehover
             .on('mouseover.highlight-paths', function(e) {
                 highlight_paths_group.hover_changed(edge_on_paths[chart.edgeKey.eval(e)]);
