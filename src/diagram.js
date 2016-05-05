@@ -1876,6 +1876,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _svg.attr('width', _chart.width())
                 .attr('height', _chart.height());
         }
+            //_zoom.size([_chart.width(), _chart.height()]);
     }
 
     function generateSvg() {
