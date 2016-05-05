@@ -2,7 +2,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
     pathsgroup = pathsgroup || 'highlight-paths-group';
-    var node_on_paths = {}, edge_on_paths = {}, hoverpaths;
+    var node_on_paths = {}, edge_on_paths = {}, hoverpaths = null;
 
     function refresh() {
         _behavior.parent().relayout().redraw();
@@ -15,8 +15,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     }
 
     function hover_changed(hp) {
-        hoverpaths = hp;
-        refresh();
+        if(hp !== hoverpaths) {
+            hoverpaths = hp;
+            refresh();
+        }
     }
 
     function clear_all_highlights(edge) {
@@ -46,7 +48,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
 
         node
             .on('mouseover.highlight-paths', function(n) {
-                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(n)]);
+                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(n)] || null);
             })
             .on('mouseout.highlight-paths', function(n) {
                 highlight_paths_group.hover_changed(null);
@@ -54,7 +56,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
 
         ehover
             .on('mouseover.highlight-paths', function(e) {
-                highlight_paths_group.hover_changed(edge_on_paths[chart.edgeKey.eval(e)]);
+                highlight_paths_group.hover_changed(edge_on_paths[chart.edgeKey.eval(e)] || null);
             })
             .on('mouseout.highlight-paths', function(e) {
                 highlight_paths_group.hover_changed(null);
