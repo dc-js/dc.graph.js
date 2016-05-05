@@ -57,7 +57,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Set or get the fitting strategy for the canvas. If `null`, no attempt is made to fit the
-     * canvas to the svg element. Other choices are `'vertical'`, `'horizontal'`
+     * canvas to the svg element. `'default'` sets the `viewBox` but doesn't scale or
+     * translate. Other choices are `'vertical'`, ...
      * @name fitStrategy
      * @memberof dc_graph.diagram
      * @instance
@@ -1501,15 +1502,18 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
             if(!bounds)
                 return;
+            var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(bounds);
-            var translate = [-bounds.left, -bounds.top], scale;
+            _svg.attr('viewBox', [bounds.left, bounds.top, width, height].join(' '));
+            var translate, scale;
             switch(_chart.fitStrategy()) {
+            case 'default':
+                return; // do not apply translate and scale
             case 'vertical':
-                scale = _chart.effectiveHeight()/(bounds.bottom - bounds.top);
-                var w = (bounds.right - bounds.left)*scale;
-                translate = [(_chart.effectiveWidth() - w)/2 + _chart.margins().left,
-                             -scale*bounds.top + _chart.margins().top];
+                scale = _chart.effectiveHeight()/height;
+                translate = [(_chart.effectiveWidth() - width*scale)/2 + _chart.margins().left,
+                             _chart.margins().top];
                 break;
             }
             _zoom.translate(translate).scale(scale).event(_svg);
