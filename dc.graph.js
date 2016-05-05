@@ -680,7 +680,7 @@ function bezier_point(points, t_) {
  **/
 dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
-    var _chart = {};
+    var _chart = dc.marginMixin({});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _worker = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn');
@@ -689,6 +689,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _nodes_snapshot, _edges_snapshot;
     var _children = {}, _arrows = {};
     var _running = false; // for detecting concurrency issues
+    var _translate = [0,0], _scale = 1;
+    var _zoom;
     var _anchor, _chartGroup;
 
     /**
@@ -715,6 +717,19 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _chart.height = property(200).react(resizeSvg);
+
+    /**
+     * Set or get the fitting strategy for the canvas. If `null`, no attempt is made to fit the
+     * canvas to the svg element. `'default'` sets the `viewBox` but doesn't scale or
+     * translate. Other choices are `'vertical'`, ...
+     * @name fitStrategy
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [fitStrategy=null]
+     * @return {String}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.fitStrategy = property(null);
 
     /**
      * Get or set the root element, which is usually the parent div. Normally the root is set
@@ -2109,10 +2124,70 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .each("end.all", function() { if (!--n) callback(); });
         });
     }
+
+    function node_bounds(n) {
+        return {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
+                right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
+    }
+
+    function debug_bounds(bounds) {
+        var brect = _g.selectAll('rect.bounds').data([0]);
+        brect.enter()
+            .insert('rect', ":first-child").attr({
+                class: 'bounds',
+                fill: 'rgba(128,255,128,0.1)',
+                stroke: '#000'
+            });
+        brect
+            .attr({
+                x: bounds.left,
+                y: bounds.top,
+                width: bounds.right - bounds.left,
+                height: bounds.bottom - bounds.top
+            });
+    }
+
+    function auto_zoom(node) {
+        if(_chart.fitStrategy()) {
+            var bounds;
+            node.each(function(n, i) {
+                var b = node_bounds(n);
+                if(!i)
+                    bounds = b;
+                else {
+                    bounds = {
+                        left: Math.min(b.left, bounds.left),
+                        top: Math.min(b.top, bounds.top),
+                        right: Math.max(b.right, bounds.right),
+                        bottom: Math.max(b.bottom, bounds.bottom)
+                    };
+                }
+            });
+            if(!bounds)
+                return;
+            var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
+            if(_chart.DEBUG_BOUNDS)
+                debug_bounds(bounds);
+            _svg.attr('viewBox', [bounds.left, bounds.top, width, height].join(' '));
+            var translate, scale;
+            switch(_chart.fitStrategy()) {
+            case 'default':
+                return; // do not apply translate and scale
+            case 'vertical':
+                scale = _chart.effectiveHeight()/height;
+                translate = [(_chart.effectiveWidth() - width*scale)/2 + _chart.margins().left,
+                             _chart.margins().top];
+                break;
+            }
+            _zoom.translate(translate).scale(scale).event(_svg);
+        }
+    }
+
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
+        auto_zoom(node);
         var nodeEntered = {};
         nodeEnter
             .each(function(n) {
@@ -2453,8 +2528,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         return name ? id : null;
     }
 
+    function globalTransform(pos, scale) {
+        console.log('transform', pos, scale);
+        _translate = pos;
+        _scale = scale;
+        _g.attr("transform", "translate(" + pos + ")" + " scale(" + scale + ")");
+    }
+
     function doZoom() {
-        _g.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+        globalTransform(d3.event.translate, d3.event.scale);
     }
 
     function resizeSvg() {
@@ -2471,7 +2553,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable())
-            _svg.call(d3.behavior.zoom().on("zoom", doZoom));
+            _svg.call(_zoom = d3.behavior.zoom().on("zoom", doZoom));
 
         return _svg;
     }
@@ -3028,7 +3110,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
     pathsgroup = pathsgroup || 'highlight-paths-group';
-    var node_on_paths = {}, edge_on_paths = {}, hoverpaths;
+    var node_on_paths = {}, edge_on_paths = {}, hoverpaths = null;
 
     function refresh() {
         _behavior.parent().relayout().redraw();
@@ -3041,8 +3123,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
     }
 
     function hover_changed(hp) {
-        hoverpaths = hp;
-        refresh();
+        if(hp !== hoverpaths) {
+            hoverpaths = hp;
+            refresh();
+        }
     }
 
     function clear_all_highlights(edge) {
@@ -3072,21 +3156,15 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, pathsgroup) {
 
         node
             .on('mouseover.highlight-paths', function(n) {
-                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(n)]);
+                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(n)] || null);
             })
             .on('mouseout.highlight-paths', function(n) {
                 highlight_paths_group.hover_changed(null);
             });
 
-        /*
-        edge.each(function(e) {
-            var dirs = edge_on_paths[chart.edgeKey.eval(e)].reduce(function(ds, p) 
-        });
-         */
-
         ehover
             .on('mouseover.highlight-paths', function(e) {
-                highlight_paths_group.hover_changed(edge_on_paths[chart.edgeKey.eval(e)]);
+                highlight_paths_group.hover_changed(edge_on_paths[chart.edgeKey.eval(e)] || null);
             })
             .on('mouseout.highlight-paths', function(e) {
                 highlight_paths_group.hover_changed(null);
