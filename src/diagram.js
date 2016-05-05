@@ -1503,15 +1503,16 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return;
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(bounds);
-            var origin = [bounds.left, bounds.top], zoom;
+            var translate = [-bounds.left, -bounds.top], scale;
             switch(_chart.fitStrategy()) {
             case 'vertical':
-                zoom = _chart.effectiveHeight()/(bounds.bottom - bounds.top);
-                var w = (bounds.right - bounds.left)*zoom;
-                origin = [(zoom*w -  _chart.effectiveWidth())/2 + _chart.margins().left, -zoom*bounds.top + _chart.margins().top];
+                scale = _chart.effectiveHeight()/(bounds.bottom - bounds.top);
+                var w = (bounds.right - bounds.left)*scale;
+                translate = [(_chart.effectiveWidth() - w)/2 + _chart.margins().left,
+                             -scale*bounds.top + _chart.margins().top];
                 break;
             }
-            _zoom.translate(origin).scale(zoom).event(_svg);
+            _zoom.translate(translate).scale(scale).event(_svg);
         }
     }
 
