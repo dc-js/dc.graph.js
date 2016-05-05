@@ -30,7 +30,11 @@ html, body, #main {
     flex: 1;
     font: 12px helvetica, san-serif;
     display: flex;
-    flex-direction: column
+    flex-direction: column;
+}
+
+#selections {
+    padding: 5px;
 }
 
 #qedit {
