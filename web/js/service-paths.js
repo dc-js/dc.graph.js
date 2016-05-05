@@ -64,6 +64,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
+        .fitStrategy('vertical')
         .parallelEdgeOffset(3)
         .timeLimit(10000)
         .transitionDuration(250)
@@ -178,9 +179,9 @@ qedit.commands.addCommands([{
     }
 }]);
 
+var diagram, levels = {};
 
 source(function(error, data) {
-var diagram, levels = {};
     if(error) {
         console.log(error);
         return;
