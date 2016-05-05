@@ -180,6 +180,7 @@ qedit.commands.addCommands([{
 
 
 source(function(error, data) {
+var diagram, levels = {};
     if(error) {
         console.log(error);
         return;
@@ -207,7 +208,7 @@ source(function(error, data) {
         edgeStroke: '#e41a1c'
     });
 
-    var diagram = create_diagram('#hierarchy');
+    diagram = create_diagram('#hierarchy');
     diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr);
     diagram
         .edgeArrowhead(null)
@@ -247,7 +248,7 @@ source(function(error, data) {
         var sel = '#' + type.toLowerCase();
         var dialev = create_diagram(sel);
         diagram_common(dialev, bylayer[type], edges, nodekeyattr, sourceattr, targetattr);
-        dialev
+        levels[type] = dialev
             .edgeArrowSize(0.5)
             .nodeRadius(5)
             .parallelEdgeOffset(5)
