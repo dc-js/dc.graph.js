@@ -22,6 +22,7 @@ chart.width(600)
   * [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.fitStrategy](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.mouseZoomable](#dc_graph.diagram+mouseZoomable) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodeDimension](#dc_graph.diagram+nodeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -110,6 +111,7 @@ visualization versus conventional charts.
 * [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.fitStrategy](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.mouseZoomable](#dc_graph.diagram+mouseZoomable) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.nodeDimension](#dc_graph.diagram+nodeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -199,6 +201,18 @@ the height attribute will be returned. Default: 200
 | Param | Type | Default |
 | --- | --- | --- |
 | [height] | <code>Number</code> | <code>200</code> | 
+
+<a name="dc_graph.diagram+fitStrategy"></a>
+#### diagram.fitStrategy ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Set or get the fitting strategy for the canvas. If `null`, no attempt is made to fit the
+canvas to the svg element. `'default'` sets the `viewBox` but doesn't scale or
+translate. Other choices are `'vertical'`, ...
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [fitStrategy] | <code>String</code> | <code></code> | 
 
 <a name="dc_graph.diagram+root"></a>
 #### diagram.root ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
