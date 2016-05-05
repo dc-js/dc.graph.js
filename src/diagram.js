@@ -17,7 +17,7 @@
  **/
 dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
-    var _chart = {};
+    var _chart = dc.marginMixin({});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _worker = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn');

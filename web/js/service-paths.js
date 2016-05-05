@@ -48,8 +48,9 @@ var source = function(callback) {
 
 function create_diagram(sel) {
     return dc_graph.diagram(sel)
-        .width($(sel).width())
-        .height($(sel).height());
+        .width($(sel)[0].offsetWidth)
+        .height($(sel)[0].offsetHeight)
+        .margins({left: 5, top: 5, right: 5, bottom: 5});
 }
 
 function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr) {
