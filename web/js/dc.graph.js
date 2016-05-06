@@ -2130,6 +2130,30 @@ dc_graph.diagram = function (parent, chartGroup) {
                 right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
     }
 
+    function union_bounds(b1, b2) {
+        return {
+            left: Math.min(b1.left, b2.left),
+            top: Math.min(b1.top, b2.top),
+            right: Math.max(b1.right, b2.right),
+            bottom: Math.max(b1.bottom, b2.bottom)
+        };
+    }
+
+    function point_to_bounds(p) {
+        return {
+            left: p.x,
+            top: p.y,
+            right: p.x,
+            bottom: p.y
+        };
+    }
+
+    function edge_bounds(e) {
+        // assumption: edge must have some points
+        var points = e.ports.new[e.parallel].path.points;
+        return points.map(point_to_bounds).reduce(union_bounds);
+    }
+
     function debug_bounds(bounds) {
         var brect = _g.selectAll('rect.bounds').data([0]);
         brect.enter()
@@ -2147,22 +2171,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
     }
 
-    function auto_zoom(node) {
-        if(_chart.fitStrategy()) {
-            var bounds;
-            node.each(function(n, i) {
-                var b = node_bounds(n);
-                if(!i)
-                    bounds = b;
-                else {
-                    bounds = {
-                        left: Math.min(b.left, bounds.left),
-                        top: Math.min(b.top, bounds.top),
-                        right: Math.max(b.right, bounds.right),
-                        bottom: Math.max(b.bottom, bounds.bottom)
-                    };
-                }
-            });
+    function auto_zoom(node, edge) {
+        if(_chart.fitStrategy() && node.size()) {
+            // assumption: there can be no edges without nodes
+            var bounds = node.data().map(node_bounds).reduce(union_bounds);
+            bounds = edge.data().map(edge_bounds).reduce(union_bounds, bounds);
             if(!bounds)
                 return;
             var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
@@ -2187,7 +2200,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
-        auto_zoom(node);
         var nodeEntered = {};
         nodeEnter
             .each(function(n) {
@@ -2290,6 +2302,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             endall([ntrans, etrans], function() { layout_done(true); });
 
         edgeHover.attr('d', render_edge_path('new'));
+        auto_zoom(node, edge);
     }
 
     /**

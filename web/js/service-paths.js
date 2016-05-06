@@ -67,7 +67,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .fitStrategy('default')
         .parallelEdgeOffset(3)
         .timeLimit(10000)
-        .transitionDuration(250)
+        .transitionDuration(5000)
         .stageTransitions('none')
         .showLayoutSteps(false)
         .edgeOpacity(0.2)
