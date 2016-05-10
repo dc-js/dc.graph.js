@@ -27,6 +27,7 @@
     "crossfilter": "1.x",
     "dc": "dc-js/dc.js#develop",
     "d3": "3.x",
+    "queue-async": "~1.x",
     "font-awesome": "~4.5"
   },
   "devDependencies": {
@@ -51,7 +52,6 @@
     "marked": "~0.3.3",
     "uglify-js": "2.4.x",
     "time-grunt": "~1.0.0",
-    "queue-async": "~1.x",
     "jquery": "~2.1.x"
   },
   "scripts": {
