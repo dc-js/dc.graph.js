@@ -1531,7 +1531,15 @@ dc_graph.diagram = function (parent, chartGroup) {
                 pAR = 'xMidYMid ' + mOS;
                 break;
             default:
-                pAR = _chart.fitStrategy();
+                switch(typeof fitS) {
+                case 'function':
+                    pAR = fitS(width, height, _chart.width(), _chart.height());
+                    break;
+                case 'string':
+                    pAR = _chart.fitStrategy();
+                    break;
+                default: throw new Error('unknown fitStrategy type ' + typeof fitS);
+                }
             }
             _svg.attr({
                 viewBox: [bounds.left, bounds.top, width, height].join(' '),
