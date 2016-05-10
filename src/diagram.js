@@ -1522,7 +1522,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1;
             if(fitS === 'default') {
                 pAR = null; // xMidYMid meet
-            } else if(fitS === 'vertical' || fitS === 'horizontal') {
+            }
+            else if(fitS === 'vertical' || fitS === 'horizontal') {
                 var sAR = sheight /swidth,
                 vAR = vheight / vwidth,
                     vrl = vAR<sAR,
@@ -1532,11 +1533,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                 scale = fsv ?
                     (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
                     (swidth - _chart.margins().left - _chart.margins().right) / swidth;
-            } else if(typeof fitS === 'function')
+            }
+            else if(typeof fitS === 'function')
                 pAR = fitS(vwidth, vheight,swidth, sheight);
             else if(typeof fitS === 'string')
                 pAR = _chart.fitStrategy();
-            else throw new Error('unknown fitStrategy type ' + typeof fitS);
+            else
+                throw new Error('unknown fitStrategy type ' + typeof fitS);
 
             _svg.attr({
                 viewBox: [bounds.left, bounds.top, vwidth, vheight].join(' '),
