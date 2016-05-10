@@ -66,7 +66,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {String}
      * @return {dc_graph.diagram}
      **/
-    _chart.fitStrategy = property(null);
+    _chart.fitStrategy = property('default');
 
     /**
      * Get or set the root element, which is usually the parent div. Normally the root is set
@@ -1518,17 +1518,25 @@ dc_graph.diagram = function (parent, chartGroup) {
             var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(bounds);
-            _svg.attr('viewBox', [bounds.left, bounds.top, width, height].join(' '));
-            var translate, scale;
-            switch(_chart.fitStrategy()) {
+            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1;
+            switch(fitS) {
             case 'default':
-                return; // do not apply translate and scale
-            case 'vertical':
-                scale = _chart.effectiveHeight()/height;
-                translate = [(_chart.effectiveWidth() - width*scale)/2 + _chart.margins().left,
-                             _chart.margins().top];
+                pAR = null; // xMidYMid meet
                 break;
+            case 'vertical':
+            case 'horizontal':
+                var sAR = _chart.height() / _chart.width(),
+                    vAR = height / width,
+                    mOS = vAR<sAR ^ fitS==='vertical' ? 'meet' : 'slice';
+                pAR = 'xMidYMid ' + mOS;
+                break;
+            default:
+                pAR = _chart.fitStrategy();
             }
+            _svg.attr({
+                viewBox: [bounds.left, bounds.top, width, height].join(' '),
+                preserveAspectRatio: pAR
+            });
             _zoom.translate(translate).scale(scale).event(_svg);
         }
     }

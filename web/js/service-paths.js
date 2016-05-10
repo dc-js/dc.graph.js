@@ -64,10 +64,9 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
-        .fitStrategy('default')
         .parallelEdgeOffset(3)
         .timeLimit(10000)
-        .transitionDuration(250)
+        .transitionDuration(qs.tdur || 250)
         .stageTransitions('none')
         .showLayoutSteps(false)
         .edgeOpacity(0.2)
@@ -213,6 +212,7 @@ source(function(error, data) {
     diagram = create_diagram('#hierarchy');
     diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr);
     diagram
+        .fitStrategy('vertical')
         .edgeArrowhead(null)
         .nodeRadius(2)
         .nodePadding(2)
