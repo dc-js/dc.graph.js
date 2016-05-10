@@ -38,12 +38,16 @@ var qs = querystring.parse();
 var treeOnly = qs.treeOnly !== 'false',
     file = qs.file || null,
     paths = qs.paths || null;
+    file2 = qs.file2 || null,
 
 if(!file)
     throw new Error('need a file');
 
 var source = function(callback) {
-    dc_graph.load_graph(file, callback);
+    if(file2)
+        dc_graph.load_graph(file, file2, callback);
+    else
+        dc_graph.load_graph(file, callback);
 };
 
 function create_diagram(sel) {
@@ -186,7 +190,7 @@ source(function(error, data) {
         console.log(error);
         return;
     }
-    var graph_data = munge_graph(data),
+    var graph_data = munge_graph(data, 'ecomp_uid'),
         nodes = graph_data.nodes,
         edges = graph_data.edges,
         sourceattr = graph_data.sourceattr,
