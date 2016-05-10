@@ -1,11 +1,36 @@
 // load a graph from various formats and return the data in consistent {nodes, links} format
-dc_graph.load_graph = function(file, callback) {
+dc_graph.load_graph = function() {
     // ignore any query parameters for checking extension
-    var file2 = file.replace(/\?.*/, '');
-    if(/\.json$/.test(file2))
-        d3.json(file, callback);
-    else if(/\.gv|\.dot$/.test(file2))
-        d3.text(file, function (error, f) {
+    function ignore_query(file) {
+        return file.replace(/\?.*/, '');
+    }
+    var file1, file2, callback;
+    file1 = arguments[0];
+    if(arguments.length===3) {
+        file2 = arguments[1];
+        callback = arguments[2];
+    }
+    else if(arguments.length===2) {
+        callback = arguments[1];
+    }
+    else throw new Error('need two or three arguments');
+
+    if(file2) {
+        // this is not general - really titan-specific
+        queue()
+            .defer(d3.json, file1)
+            .defer(d3.json, file2)
+            .await(function(error, nodes, edges) {
+                if(error)
+                    callback(error, null);
+                else
+                    callback(null, {nodes: nodes.results, edges: edges.results});
+            });
+    }
+    else if(/\.json$/.test(ignore_query(file1)))
+        d3.json(file1, callback);
+    else if(/\.gv|\.dot$/.test(ignore_query(file2)))
+        d3.text(file1, function (error, f) {
             if(error) {
                 callback(error, null);
                 return;
