@@ -1515,34 +1515,31 @@ dc_graph.diagram = function (parent, chartGroup) {
             bounds = edge.data().map(edge_bounds).reduce(union_bounds, bounds);
             if(!bounds)
                 return;
-            var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
+            var vwidth = bounds.right - bounds.left, vheight = bounds.bottom - bounds.top,
+                swidth =  _chart.width(), sheight = _chart.height();
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(bounds);
             var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1;
-            switch(fitS) {
-            case 'default':
+            if(fitS === 'default') {
                 pAR = null; // xMidYMid meet
-                break;
-            case 'vertical':
-            case 'horizontal':
-                var sAR = _chart.height() / _chart.width(),
-                    vAR = height / width,
-                    mOS = vAR<sAR ^ fitS==='vertical' ? 'meet' : 'slice';
-                pAR = 'xMidYMid ' + mOS;
-                break;
-            default:
-                switch(typeof fitS) {
-                case 'function':
-                    pAR = fitS(width, height, _chart.width(), _chart.height());
-                    break;
-                case 'string':
-                    pAR = _chart.fitStrategy();
-                    break;
-                default: throw new Error('unknown fitStrategy type ' + typeof fitS);
-                }
-            }
+            } else if(fitS === 'vertical' || fitS === 'horizontal') {
+                var sAR = sheight /swidth,
+                vAR = vheight / vwidth,
+                    vrl = vAR<sAR,
+                    fsv = fitS==='vertical';
+                pAR = 'xMidYMid ' + (vrl ^ fsv ? 'meet' : 'slice');
+                translate = [_chart.margins().left, _chart.margins().top];
+                scale = fsv ?
+                    (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
+                    (swidth - _chart.margins().left - _chart.margins().right) / swidth;
+            } else if(typeof fitS === 'function')
+                pAR = fitS(vwidth, vheight,swidth, sheight);
+            else if(typeof fitS === 'string')
+                pAR = _chart.fitStrategy();
+            else throw new Error('unknown fitStrategy type ' + typeof fitS);
+
             _svg.attr({
-                viewBox: [bounds.left, bounds.top, width, height].join(' '),
+                viewBox: [bounds.left, bounds.top, vwidth, vheight].join(' '),
                 preserveAspectRatio: pAR
             });
             _zoom.translate(translate).scale(scale).event(_svg);
