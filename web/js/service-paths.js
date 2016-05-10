@@ -50,7 +50,7 @@ function create_diagram(sel) {
     return dc_graph.diagram(sel)
         .width($(sel)[0].offsetWidth)
         .height($(sel)[0].offsetHeight)
-        .margins({left: 5, top: 5, right: 5, bottom: 5});
+        .margins({left: 10, top: 10, right: 10, bottom: 10});
 }
 
 function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr) {
