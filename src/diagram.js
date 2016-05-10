@@ -1519,18 +1519,21 @@ dc_graph.diagram = function (parent, chartGroup) {
                 swidth =  _chart.width(), sheight = _chart.height();
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(bounds);
-            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1;
-            if(fitS === 'default') {
-                pAR = null; // xMidYMid meet
-            }
-            else if(fitS === 'vertical' || fitS === 'horizontal') {
-                var sAR = sheight /swidth,
-                vAR = vheight / vwidth,
-                    vrl = vAR<sAR,
-                    fsv = fitS==='vertical';
-                pAR = 'xMidYMid ' + (vrl ^ fsv ? 'meet' : 'slice');
+            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
+                amv; // align margins vertically
+            if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
+                var sAR = sheight / swidth, vAR = vheight / vwidth,
+                    vrl = vAR<sAR; // view aspect ratio is less (wider)
+                if(fitS === 'default') {
+                    amv = !vrl;
+                    pAR = null;
+                }
+                else {
+                    amv = fitS==='vertical';
+                    pAR = 'xMidYMid ' + (vrl ^ amv ? 'meet' : 'slice');
+                }
                 translate = [_chart.margins().left, _chart.margins().top];
-                scale = fsv ?
+                scale = amv ?
                     (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
                     (swidth - _chart.margins().left - _chart.margins().right) / swidth;
             }
