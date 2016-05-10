@@ -729,7 +729,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {String}
      * @return {dc_graph.diagram}
      **/
-    _chart.fitStrategy = property(null);
+    _chart.fitStrategy = property('default');
 
     /**
      * Get or set the root element, which is usually the parent div. Normally the root is set
@@ -2178,20 +2178,39 @@ dc_graph.diagram = function (parent, chartGroup) {
             bounds = edge.data().map(edge_bounds).reduce(union_bounds, bounds);
             if(!bounds)
                 return;
-            var width = bounds.right - bounds.left, height = bounds.bottom - bounds.top;
+            var vwidth = bounds.right - bounds.left, vheight = bounds.bottom - bounds.top,
+                swidth =  _chart.width(), sheight = _chart.height();
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(bounds);
-            _svg.attr('viewBox', [bounds.left, bounds.top, width, height].join(' '));
-            var translate, scale;
-            switch(_chart.fitStrategy()) {
-            case 'default':
-                return; // do not apply translate and scale
-            case 'vertical':
-                scale = _chart.effectiveHeight()/height;
-                translate = [(_chart.effectiveWidth() - width*scale)/2 + _chart.margins().left,
-                             _chart.margins().top];
-                break;
+            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
+                amv; // align margins vertically
+            if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
+                var sAR = sheight / swidth, vAR = vheight / vwidth,
+                    vrl = vAR<sAR; // view aspect ratio is less (wider)
+                if(fitS === 'default') {
+                    amv = !vrl;
+                    pAR = null;
+                }
+                else {
+                    amv = fitS==='vertical';
+                    pAR = 'xMidYMid ' + (vrl ^ amv ? 'meet' : 'slice');
+                }
+                translate = [_chart.margins().left, _chart.margins().top];
+                scale = amv ?
+                    (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
+                    (swidth - _chart.margins().left - _chart.margins().right) / swidth;
             }
+            else if(typeof fitS === 'function')
+                pAR = fitS(vwidth, vheight,swidth, sheight);
+            else if(typeof fitS === 'string')
+                pAR = _chart.fitStrategy();
+            else
+                throw new Error('unknown fitStrategy type ' + typeof fitS);
+
+            _svg.attr({
+                viewBox: [bounds.left, bounds.top, vwidth, vheight].join(' '),
+                preserveAspectRatio: pAR
+            });
             _zoom.translate(translate).scale(scale).event(_svg);
         }
     }
