@@ -62,7 +62,9 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
     var edge_flat = flat_group.make(edges, function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     }),
-        node_flat = flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
+        node_flat = flat_group.make(nodes, function(d) {
+            return d[nodekeyattr];
+        });
 
     diagram
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
@@ -239,9 +241,11 @@ source(function(error, data) {
         return m;
     }, {});
 
-    bylayer.VM = bylayer.VM.concat(bylayer.Network);
-    bylayer.Host = bylayer.Host.concat(bylayer.Network);
-    delete bylayer.Network;
+    if(bylayer.Network) {
+        bylayer.VM = bylayer.VM.concat(bylayer.Network);
+        bylayer.Host = bylayer.Host.concat(bylayer.Network);
+        delete bylayer.Network;
+    }
 
     var highlight_paths_level = dc_graph.highlight_paths({ // path props
         edgeOpacity: 1,
