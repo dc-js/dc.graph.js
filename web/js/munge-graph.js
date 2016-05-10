@@ -2,9 +2,10 @@ function can_get_graph_from_this(data) {
     return (data.nodes || data.vertices) &&  (data.edges || data.links);
 }
 
-function munge_graph(data) {
+function munge_graph(data, nodekeyattr, sourceattr, targetattr) {
     // we want data = {nodes, edges} and the field names for keys; find those in common json formats
-    var nodes, edges, nodekeyattr = "name", sourceattr = "sourcename", targetattr = "targetname";
+    var nodes, edges, nka = nodekeyattr || "name",
+        sa = sourceattr || "sourcename", ta = targetattr || "targetname";
 
     if(!can_get_graph_from_this(data)) {
         var wrappers = ['database', 'response'];
@@ -22,18 +23,23 @@ function munge_graph(data) {
 
     //var edgekeyattr = "id";
     var edge0 = edges[0];
-    if(edge0[sourceattr] === undefined) {
-        var sourceattrs = ['source_ecomp_uid', "node1", "source", "tail"], targetattrs = ['target_ecomp_uid', "node2", "target", "head"];
+    if(sourceattr && !edge0[sourceattr])
+        throw new Error('sourceattr ' + sa + " didn't work");
+    if(targetattr && !edge0[targetattr])
+        throw new Error('targetattr ' + ta + " didn't work");
+    if(edge0[sa] === undefined) {
+        var sourceattrs = ['source_ecomp_uid', "node1", "source", "tail"],
+            targetattrs = ['target_ecomp_uid', "node2", "target", "head"];
         //var edgekeyattrs = ['id', '_id', 'ecomp_uid'];
         var edgewrappers = ['edge'];
         if(edge0.node0 && edge0.node1) { // specific conflict here
-            sourceattr = 'node0';
-            targetattr = 'node1';
+            sa = 'node0';
+            ta = 'node1';
         }
         else {
-            var candidates = find_attr(edge0, sourceattrs);
+            var candidates = sourceattr ? [sourceattr] : find_attr(edge0, sourceattrs);
             if(!candidates.length) {
-                wi = edgewrappers.findIndex(function(w) { return edge0[w] && find_attr(edge0[w], sourceattrs).length; });
+                wi = edgewrappers.findIndex(function(w) { return edge0[w] && find_attr(edge0[w], candidates).length; });
                 if(wi<0)
                     throw new Error("didn't find any source attr");
                 edges = edges.map(function(e) { return e[edgewrappers[wi]]; });
@@ -42,14 +48,14 @@ function munge_graph(data) {
             }
             if(candidates.length > 1)
                 console.warn('found more than one possible source attr', candidates);
-            sourceattr = candidates[0];
+            sa = candidates[0];
 
-            candidates = find_attr(edge0, targetattrs);
+            candidates = targetattr ? [targetattr] : find_attr(edge0, targetattrs);
             if(!candidates.length)
                 throw new Error("didn't find any target attr");
             if(candidates.length > 1)
                 console.warn('found more than one possible target attr', candidates);
-            targetattr = candidates[0];
+            ta = candidates[0];
 
             /*
              // we're currently assembling our own edgeid
@@ -63,12 +69,14 @@ function munge_graph(data) {
         }
     }
     var node0 = nodes[0];
-    if(node0[nodekeyattr] === undefined) {
+    if(nodekeyattr && !node0[nodekeyattr])
+        throw new Error('nodekeyattr ' + nka + " didn't work");
+    if(node0[nka] === undefined) {
         var nodekeyattrs = ['ecomp_uid', 'id', '_id'];
         var nodewrappers = ['vertex'];
-        candidates = find_attr(node0, nodekeyattrs);
+        candidates = nodekeyattr ? [nodekeyattr] : find_attr(node0, nodekeyattrs);
         if(!candidates.length) {
-            wi = nodewrappers.findIndex(function(w) { return node0[w] && find_attr(node0[w], nodekeyattrs).length; });
+            wi = nodewrappers.findIndex(function(w) { return node0[w] && find_attr(node0[w], candidates).length; });
             if(wi<0)
                 throw new Error("couldn't find the node data");
             nodes = nodes.map(function(n) { return n[nodewrappers[wi]]; });
@@ -77,14 +85,14 @@ function munge_graph(data) {
         }
         if(candidates.length > 1)
             console.warn('found more than one possible node key attr', candidates);
-        nodekeyattr = candidates[0];
+        nka = candidates[0];
     }
 
     return {
         nodes: nodes,
         edges: edges,
-        nodekeyattr: nodekeyattr,
-        sourceattr: sourceattr,
-        targetattr: targetattr
+        nodekeyattr: nka,
+        sourceattr: sa,
+        targetattr: ta
     };
 }
