@@ -26,7 +26,8 @@ var _colormap = {
     VNF: '#ff7f00',
     VFC: '#377eb8',
     VM: '#4daf4a',
-    Host: '#984ea3'
+    Host: '#984ea3',
+    Network: '#ffff33'
 };
 
 function node_rank(n) {
@@ -213,8 +214,10 @@ source(function(error, data) {
         edgeStroke: '#e41a1c'
     });
 
+    var hnodes = nodes.filter(function(n) { return raw_node_type(n) !== 'Network'; });
+
     diagram = create_diagram('#hierarchy');
-    diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr);
+    diagram_common(diagram, hnodes, edges, nodekeyattr, sourceattr, targetattr);
     diagram
         .fitStrategy('vertical')
         .edgeArrowhead(null)
@@ -235,6 +238,10 @@ source(function(error, data) {
         (m[t] = m[t] || []).push(n);
         return m;
     }, {});
+
+    bylayer.VM = bylayer.VM.concat(bylayer.Network);
+    bylayer.Host = bylayer.Host.concat(bylayer.Network);
+    delete bylayer.Network;
 
     var highlight_paths_level = dc_graph.highlight_paths({ // path props
         edgeOpacity: 1,
