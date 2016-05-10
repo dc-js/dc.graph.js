@@ -38,8 +38,8 @@ var qs = querystring.parse();
 
 var treeOnly = qs.treeOnly !== 'false',
     file = qs.file || null,
-    paths = qs.paths || null;
     file2 = qs.file2 || null,
+    paths = qs.paths || null;
 
 if(!file)
     throw new Error('need a file');
@@ -75,7 +75,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .stageTransitions('none')
         .showLayoutSteps(false)
         .edgeOpacity(0.2)
-        .nodeOpacity(0.2)
+        .nodeOpacity(0.4)
         .edgeLabel(null)
         .induceNodes(true)
         .nodeLabel(null)
@@ -221,8 +221,8 @@ source(function(error, data) {
     diagram
         .fitStrategy('vertical')
         .edgeArrowhead(null)
-        .nodeRadius(2)
-        .nodePadding(2)
+        .nodeRadius(3)
+        .nodePadding(1)
         .child('highlight-paths', highlight_paths_hier)
     ;
     diagram
