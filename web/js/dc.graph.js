@@ -2561,7 +2561,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function globalTransform(pos, scale) {
-        console.log('transform', pos, scale);
         _translate = pos;
         _scale = scale;
         _g.attr("transform", "translate(" + pos + ")" + " scale(" + scale + ")");
