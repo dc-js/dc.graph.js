@@ -250,11 +250,15 @@ source(function(error, data) {
 
     var highlight_paths_level = dc_graph.highlight_paths({ // path props
         edgeOpacity: 1,
-        nodeOpacity: 1,
+        nodeOpacity: 0.7,
         nodeRadius: 8,
         nodePadding: 10,
         edgeArrowhead: 'vee'
     }, { // hover props
+        nodeOpacity: 1,
+        nodeLabel: function(n) {
+            return n.value.name;
+        },
         nodeStroke: '#e41a1c',
         nodeStrokeWidth: 2,
         nodeRadius: 10,
