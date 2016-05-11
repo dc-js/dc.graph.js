@@ -158,6 +158,7 @@ function init_queries(nodes, edges) {
 var qedit = ace.edit("qedit");
 qedit.setTheme("ace/theme/tomorrow");
 qedit.getSession().setMode("ace/mode/sql");
+qedit.setOptions({fontSize: "14px"});
 
 var nepal = d3.xhr(qs.nepal).header("Content-type", "application/x-www-form-urlencoded");
 

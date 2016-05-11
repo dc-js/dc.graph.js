@@ -28,7 +28,7 @@ html, body, #main {
 
 #query {
     flex: 1;
-    font: 12px helvetica, san-serif;
+    font: 14px helvetica, san-serif;
     display: flex;
     flex-direction: column;
 }
@@ -38,7 +38,7 @@ html, body, #main {
 }
 
 #qedit {
-    flex-grow: 1;
+    flex: 1;
 }
 
 #vnf, #vfc, #vm, #host {
