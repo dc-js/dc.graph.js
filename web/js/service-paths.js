@@ -248,25 +248,25 @@ source(function(error, data) {
         delete bylayer.Network;
     }
 
-    var highlight_paths_level = dc_graph.highlight_paths({ // path props
-        edgeOpacity: 1,
-        nodeOpacity: 0.7,
-        nodeRadius: 8,
-        nodePadding: 10,
-        edgeArrowhead: 'vee'
-    }, { // hover props
-        nodeOpacity: 1,
-        nodeLabel: function(n) {
-            return n.value.name;
-        },
-        nodeStroke: '#e41a1c',
-        nodeStrokeWidth: 2,
-        nodeRadius: 10,
-        edgeStrokeWidth: 2,
-        edgeStroke: '#e41a1c'
-    });
-
     for(var type in bylayer) {
+        var highlight_paths_level = dc_graph.highlight_paths({ // path props
+            edgeOpacity: 1,
+            nodeOpacity: 0.7,
+            nodeRadius: 8,
+            nodePadding: 10,
+            edgeArrowhead: 'vee'
+        }, { // hover props
+            nodeOpacity: 1,
+            nodeLabel: function(n) {
+                return n.value.name;
+            },
+            nodeStroke: '#e41a1c',
+            nodeStrokeWidth: 2,
+            nodeRadius: 10,
+            edgeStrokeWidth: 2,
+            edgeStroke: '#e41a1c'
+        });
+
         var sel = '#' + type.toLowerCase();
         var dialev = create_diagram(sel);
         diagram_common(dialev, bylayer[type], edges, nodekeyattr, sourceattr, targetattr);
