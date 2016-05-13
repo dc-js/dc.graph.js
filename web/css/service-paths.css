@@ -43,6 +43,7 @@ html, body, #main {
 
 #qedit {
     flex: 1;
+    font-size: 24px;
 }
 
 #vnf, #vfc, #vm, #host {
