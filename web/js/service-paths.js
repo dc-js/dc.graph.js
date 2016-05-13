@@ -187,6 +187,7 @@ qedit.commands.addCommands([{
     }
 }]);
 
+var pathsel = path_selector('#paths', read_paths);
 var diagram, levels = {};
 
 source(function(error, data) {

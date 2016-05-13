@@ -60,6 +60,9 @@ html, body, #main {
     flex: 1;
 }
 
+#paths {
+    padding: 7px;
+}
 
 button {
     background-color: white;
