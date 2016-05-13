@@ -29,7 +29,7 @@ dc_graph.path_reader = function(pathsgroup) {
     };
     // reuse this.
     window.chart_registry.create_type('highlight-paths', function() {
-        return d3.dispatch('paths_changed', 'hover_changed');
+        return d3.dispatch('paths_changed', 'hover_changed', 'select_changed');
     });
     pathsgroup = pathsgroup || 'highlight-paths-group';
     var highlight_paths_group = window.chart_registry.create_group('highlight-paths', pathsgroup);
