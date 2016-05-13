@@ -204,17 +204,19 @@ source(function(error, data) {
     init_queries(nodes, edges);
 
     var highlight_paths_hier = dc_graph.highlight_paths({ // path props
-        nodeRadius: 10,
+        nodeRadius: 8,
         edgeOpacity: 1,
-        nodeOpacity: 0.7
+        nodeOpacity: 0.5
     }, { // hover props
+        nodeOpacity: 0.7,
+        edgeStrokeWidth: 2,
+        edgeStroke: '#e41a1c'
+    }, { // selected props
         nodeOpacity: 1,
         nodeLabel: function(n) {
             return n.value.name;
         },
-        nodeStroke: '#e41a1c',
-        edgeStrokeWidth: 2,
-        edgeStroke: '#e41a1c'
+        nodeStroke: '#e41a1c'
     });
 
     var hnodes = nodes.filter(function(n) { return raw_node_type(n) !== 'Network'; });
@@ -251,20 +253,22 @@ source(function(error, data) {
     for(var type in bylayer) {
         var highlight_paths_level = dc_graph.highlight_paths({ // path props
             edgeOpacity: 1,
-            nodeOpacity: 0.7,
+            nodeOpacity: 0.5,
             nodeRadius: 8,
             nodePadding: 10,
             edgeArrowhead: 'vee'
         }, { // hover props
+            nodeOpacity: 0.7,
+            edgeStrokeWidth: 2,
+            edgeStroke: '#e41a1c'
+        }, { // selected props
             nodeOpacity: 1,
             nodeLabel: function(n) {
                 return n.value.name;
             },
             nodeStroke: '#e41a1c',
             nodeStrokeWidth: 2,
-            nodeRadius: 10,
-            edgeStrokeWidth: 2,
-            edgeStroke: '#e41a1c'
+            nodeRadius: 10
         });
 
         var sel = '#' + type.toLowerCase();
