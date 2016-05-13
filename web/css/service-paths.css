@@ -37,6 +37,10 @@ html, body, #main {
     padding: 5px;
 }
 
+#selections select, #selections button {
+    font-size: larger;
+}
+
 #qedit {
     flex: 1;
 }
