@@ -8,8 +8,9 @@ dc_graph.path_reader = function(pathsgroup) {
         edgeSource: property(null, false),
         edgeTarget: property(null, false),
         data: function(data) {
-            var nop = {}, eop = {};
+            var nop = {}, eop = {}, allpaths = [];
             reader.pathList.eval(data).forEach(function(path) {
+                allpaths.push(path);
                 reader.elementList.eval(path).forEach(function(element) {
                     var key, paths;
                     switch(reader.elementType.eval(element)) {
@@ -25,7 +26,7 @@ dc_graph.path_reader = function(pathsgroup) {
                     paths.push(path);
                 });
             });
-            highlight_paths_group.paths_changed(nop, eop);
+            highlight_paths_group.paths_changed(nop, eop, allpaths);
         }
     };
 
