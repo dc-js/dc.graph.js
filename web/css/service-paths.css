@@ -41,25 +41,25 @@ html, body, #main {
     font-size: larger;
 }
 
-#qedit {
+#query_paths {
     flex: 1;
-    font-size: 24px;
+    display: flex;
+    flex-direction: row;
+}
+
+#qedit {
+    flex: 2;
+    font-size: 22px;
+}
+
+#paths {
+    flex: 1;
 }
 
 #vnf, #vfc, #vm, #host {
     flex: 1;
 }
 
-#left > div, #right > div {
-    border: solid 1px;
-    margin-left: -1px;
-    margin-top: -1px;
-}
-
-.dc-graph text.node-label {
-    font: 10px helvetica, san-serif;
-    text-anchor: middle;
-    pointer-events: none;
 
 button {
     background-color: white;
@@ -72,4 +72,14 @@ button:active {
     background-color: lightblue;
 }
 
+#left > div, #right > div {
+    border: solid 1px;
+    margin-left: -1px;
+    margin-top: -1px;
+}
+
+.dc-graph text.node-label {
+    font: 10px helvetica, san-serif;
+    text-anchor: middle;
+    pointer-events: none;
 }
