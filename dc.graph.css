@@ -20,3 +20,7 @@
     font: bold 14px verdana, san-serif;
     pointer-events: none;
 }
+
+.dc-graph > svg {
+    display: block;
+}
