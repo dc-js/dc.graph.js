@@ -26,6 +26,7 @@
   <script type="text/javascript" src="js/flat-group.js"></script>
 
   <script type="text/javascript" src="js/path_selector.js"></script>
+  <script type="text/javascript" src="js/d3.flexdivs.js"></script>
   <script type="text/javascript" src="js/ace.js"></script>
 
   <script type="text/javascript" src="js/nepalqueries.js"></script>
@@ -33,34 +34,19 @@
 
 <body>
 
-
-  <div id="main">
-    <div id="left">
-      <div id="hierarchy"></div>
-      <div id="query">
-        <div id="selections">
-          <label>&nbsp;&nbsp;Query: <select id="squery"></select></label>
-          <span id="select1">
-            <label>
-              &nbsp;&nbsp;<span class="desc"></span>:&nbsp;
-              <select></select>
-            </label>
-          </span>
-          &nbsp;&nbsp;<button id="submit">Submit</input>
-        </div>
-        <div id="query_paths">
-          <div id="qedit"></div>
-          <div id="paths"></div>
-        </div>
-      </div>
-    </div>
-    <div id="right">
-      <div id="vnf"></div>
-      <div id="vfc"></div>
-      <div id="vm"></div>
-      <div id="host"></div>
-    </div>
+  <!-- to be pulled into #main -->
+  <div id="selections">
+    <label>&nbsp;&nbsp;Query: <select id="squery"></select></label>
+    <span id="select1">
+      <label>
+        &nbsp;&nbsp;<span class="desc"></span>:&nbsp;
+        <select></select>
+      </label>
+    </span>
+    &nbsp;&nbsp;<button id="submit">Submit</input>
   </div>
+
+  <div id="main"></div>
 
 <script type="text/javascript" src="js/service-paths.js"></script>
 </body>

@@ -30,6 +30,53 @@ var _colormap = {
     Network: '#ffff33'
 };
 
+var lr_layout = {
+    direction: 'row',
+    divs: [{
+        id: 'left',
+        flex: 3,
+        direction: 'column',
+        divs: [{
+            id: 'hierarchy',
+            flex: 2
+        }, {
+            id: 'query',
+            flex: 1,
+            direction: 'column',
+            divs: [{
+                id: 'selections'
+            }, {
+                id: 'query_paths',
+                flex: 1,
+                direction: 'row',
+                divs: [{
+                    id: 'qedit',
+                    flex: 2
+                }, {
+                    id: 'paths',
+                    flex: 1
+                }]
+            }]
+        }]
+    }, {
+        id: 'right',
+        flex: 1,
+        direction: 'column',
+        deflex: 1,
+        divs: [{
+            id: 'vnf'
+        }, {
+            id: 'vfc'
+        }, {
+            id: 'vm'
+        }, {
+            id: 'host'
+        }]
+    }]
+};
+
+flex_divs('#main', lr_layout);
+
 function node_rank(n) {
     return _rankmap[node_type(n)];
 }
