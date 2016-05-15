@@ -38,7 +38,7 @@ var lr_layout = {
         direction: 'column',
         divs: [{
             id: 'hierarchy',
-            flex: 2
+            flex: 3
         }, {
             id: 'query',
             flex: 1,
@@ -82,7 +82,7 @@ var zoom_layout = {
         flex: 4,
         direction: 'column',
         divs: [{
-            flex: 2,
+            flex: 3,
             direction: 'row',
             deflex: 1,
             divs: [{
