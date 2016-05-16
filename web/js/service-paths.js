@@ -327,7 +327,10 @@ source(function(error, data) {
         nodeStroke: '#e41a1c'
     });
 
-    var hnodes = nodes.filter(function(n) { return raw_node_type(n) !== 'Network'; });
+    var hnodes = nodes.filter(function(n) {
+        var type = raw_node_type(n);
+        return ['Network', 'VFC_A'].indexOf(type)===-1;
+    });
 
     if(!qs.skipDiagrams) {
         diagram = create_diagram('#hierarchy');
@@ -358,6 +361,11 @@ source(function(error, data) {
         bylayer.VM = bylayer.VM.concat(bylayer.Network);
         bylayer.Host = bylayer.Host.concat(bylayer.Network);
         delete bylayer.Network;
+    }
+
+    if(bylayer.VFC_A) {
+        bylayer.VFC = bylayer.VFC.concat(bylayer.VFC_A);
+        delete bylayer.VFC_A;
     }
 
     for(var type in bylayer) {
