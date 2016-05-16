@@ -1,3 +1,5 @@
+var qs = querystring.parse();
+
 function raw_node_type(n) {
     return n.label_.split(':')[2];
 }
@@ -13,6 +15,10 @@ function is_tree_edge(diagram, e) {
 
 function is_root_node(n) {
     return node_type(n) === 'VNF';
+}
+
+function node_rank(n) {
+    return _rankmap[node_type(n)];
 }
 
 var _rankmap = {
@@ -127,16 +133,15 @@ var zoom_layout = {
 flex_divs('#main', lr_layout);
 
 var zoomed = false;
-d3.select('#switch-layout').on('click', function() {
-    zoomed = !zoomed;
-    flex_divs('#main', zoomed ? zoom_layout : lr_layout);
-});
 
-function node_rank(n) {
-    return _rankmap[node_type(n)];
+if(qs.switchLayout) {
+    d3.select('#switch-layout')
+        .style('display', 'inline')
+        .on('click', function() {
+            zoomed = !zoomed;
+            flex_divs('#main', zoomed ? zoom_layout : lr_layout);
+        });
 }
-
-var qs = querystring.parse();
 
 var treeOnly = qs.treeOnly !== 'false',
     file = qs.file || null,
@@ -324,22 +329,24 @@ source(function(error, data) {
 
     var hnodes = nodes.filter(function(n) { return raw_node_type(n) !== 'Network'; });
 
-    diagram = create_diagram('#hierarchy');
-    diagram_common(diagram, hnodes, edges, nodekeyattr, sourceattr, targetattr);
-    diagram
-        .fitStrategy('vertical')
-        .edgeArrowhead(null)
-        .nodeRadius(3)
-        .nodePadding(1)
-        .child('highlight-paths', highlight_paths_hier)
-    ;
-    diagram
-        .initialLayout(dc_graph.tree_positions(null, node_rank, is_tree_edge.bind(null, diagram),
-                                               25, 25, function(n) {
-                                                   return n.dcg_rx*2 + diagram.nodePadding();
-                                               }, 100))
-        .initialOnly(true)
-    ;
+    if(!qs.skipDiagrams) {
+        diagram = create_diagram('#hierarchy');
+        diagram_common(diagram, hnodes, edges, nodekeyattr, sourceattr, targetattr);
+        diagram
+            .fitStrategy('vertical')
+            .edgeArrowhead(null)
+            .nodeRadius(3)
+            .nodePadding(1)
+            .child('highlight-paths', highlight_paths_hier)
+        ;
+        diagram
+            .initialLayout(dc_graph.tree_positions(null, node_rank, is_tree_edge.bind(null, diagram),
+                                                   25, 25, function(n) {
+                                                       return n.dcg_rx*2 + diagram.nodePadding();
+                                                   }, 100))
+            .initialOnly(true)
+        ;
+    }
 
     var bylayer = nodes.reduce(function(m, n) {
         var t = raw_node_type(n);
@@ -375,17 +382,19 @@ source(function(error, data) {
         });
 
         var sel = '#' + type.toLowerCase();
-        var dialev = create_diagram(sel);
-        diagram_common(dialev, bylayer[type], edges, nodekeyattr, sourceattr, targetattr);
-        levels[type] = dialev
-            .edgeArrowSize(0.5)
-            .nodeRadius(5)
-            .parallelEdgeOffset(5)
-            .edgeArrowhead(null)
-            .baseLength(20)
-            .lengthStrategy('symmetric')
-            .child('highlight-paths', highlight_paths_level)
-        ;
+        if(!qs.skipDiagrams) {
+            var dialev = create_diagram(sel);
+            diagram_common(dialev, bylayer[type], edges, nodekeyattr, sourceattr, targetattr);
+            levels[type] = dialev
+                .edgeArrowSize(0.5)
+                .nodeRadius(5)
+                .parallelEdgeOffset(5)
+                .edgeArrowhead(null)
+                .baseLength(20)
+                .lengthStrategy('symmetric')
+                .child('highlight-paths', highlight_paths_level)
+            ;
+        }
     }
 
     dc.renderAll();
