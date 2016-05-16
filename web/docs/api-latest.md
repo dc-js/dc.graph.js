@@ -90,6 +90,11 @@ chart.width(600)
     * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
   * [.constraint_pattern](#dc_graph.constraint_pattern) ⇒ <code>function</code>
+  * [.tip](#dc_graph.tip) ⇒ <code>Object</code>
+    * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
+    * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
+    * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
 
 <a name="dc_graph.diagram"></a>
 ### dc_graph.diagram ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -1130,3 +1135,86 @@ Then we'll build back up from the ground up and show how inference works.
 | diagram | <code>[diagram](#dc_graph.diagram)</code> | the diagram to pull attributes from, mostly to determine the keys of nodes and edge sources and targets |
 | pattern | <code>Object</code> | a graph which defines the constraints to be generated |
 
+<a name="dc_graph.tip"></a>
+### dc_graph.tip ⇒ <code>Object</code>
+Asynchronous [d3.tip](https://github.com/Caged/d3-tip) support for dc.graph.js
+
+Add tooltips to the nodes and edges of a graph using an asynchronous callback to get
+the html to show.
+
+Optional - requires separately loading the d3.tip script and CSS (which are included in
+dc.graph.js in `web/js/d3-tip/index.js` and `web/css/d3-tip/example-styles.css`)
+
+**Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
+
+* [.tip](#dc_graph.tip) ⇒ <code>Object</code>
+  * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+  * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
+  * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
+  * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
+
+<a name="dc_graph.tip+parent"></a>
+#### tip.parent ⇒ <code>[diagram](#dc_graph.diagram)</code>
+Assigns this tip object to a diagram. It will show tips for nodes in that diagram.
+Usually you will not call this function directly. Instead, attach the tip object
+using `diagram.child('tip', dc_graph.tip())`
+
+**Kind**: instance property of <code>[tip](#dc_graph.tip)</code>  
+
+| Param | Type |
+| --- | --- |
+| [parent] | <code>[diagram](#dc_graph.diagram)</code> | 
+
+<a name="dc_graph.tip+direction"></a>
+#### tip.direction ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
+Specify the direction for tooltips. Currently supports the
+[cardinal and intercardinaldirections](https://en.wikipedia.org/wiki/Points_of_the_compass) supported by
+[d3.tip.direction](https://github.com/Caged/d3-tip/blob/master/docs/positioning-tooltips.md#tipdirection):
+`'n'`, `'ne'`, `'e'`, etc.
+
+**Kind**: instance property of <code>[tip](#dc_graph.tip)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [direction] | <code>String</code> | <code>&#x27;n&#x27;</code> | 
+
+**Example**  
+```js
+// show all the attributes and values in the node and edge objects
+var tip = dc_graph.tip();
+tip.content(tip.table());
+```
+<a name="dc_graph.tip+table"></a>
+#### tip.table ⇒ <code>function</code>
+Generates a handler which can be passed to `tip.content` to produce a table of the
+attributes and values of the hovered object.
+
+Note: this interface is not great and is subject to change in the near term.
+
+**Kind**: instance property of <code>[tip](#dc_graph.tip)</code>  
+**Example**  
+```js
+// show all the attributes and values in the node and edge objects
+var tip = dc_graph.tip();
+tip.content(tip.table());
+```
+<a name="dc_graph.tip+content"></a>
+#### tip.content ⇒ <code>function</code>
+Specifies the function to generate content for the tooltip. This function has the
+signature `function(d, k)`, where `d` is the datum of the node being hovered over,
+and `k` is a continuation. The function should fetch the content, asynchronously if
+needed, and then pass html forward to `k`.
+
+**Kind**: instance property of <code>[tip](#dc_graph.tip)</code>  
+
+| Param | Type |
+| --- | --- |
+| [content] | <code>function</code> | 
+
+**Example**  
+```js
+// Default behavior: show title
+var tip = dc_graph.tip().content(function(d, k) {
+    k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
+});
+```
