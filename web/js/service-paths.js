@@ -31,6 +31,7 @@ var _rankmap = {
 var _colormap = {
     VNF: '#ff7f00',
     VFC: '#377eb8',
+    VFC_A: '#f0027f',
     VM: '#4daf4a',
     Host: '#984ea3',
     Network: '#ffff33'
