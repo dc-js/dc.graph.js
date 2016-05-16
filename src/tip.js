@@ -46,7 +46,8 @@ dc_graph.tip = function() {
         if(!_d3tip) {
             _d3tip = d3.tip()
                 .attr('class', 'd3-tip')
-                .html(function(d) { return "<span>" + d + "</span>"; });
+                .html(function(d) { return "<span>" + d + "</span>"; })
+                .direction(_tip.direction());
             _tip.parent().svg().call(_d3tip);
         }
         node
@@ -60,6 +61,24 @@ dc_graph.tip = function() {
                 _d3tip.hide();
             });
     }
+
+    /**
+     * Specify the direction for tooltips. Currently supports the
+     * [cardinal and intercardinaldirections](https://en.wikipedia.org/wiki/Points_of_the_compass) supported by
+     * [d3.tip.direction](https://github.com/Caged/d3-tip/blob/master/docs/positioning-tooltips.md#tipdirection):
+     * `'n'`, `'ne'`, `'e'`, etc.
+     * @name direction
+     * @memberof dc_graph.tip
+     * @instance
+     * @param {String} [direction='n']
+     * @return {String}
+     * @return {dc_graph.tip}
+     * @example
+     * // show all the attributes and values in the node and edge objects
+     * var tip = dc_graph.tip();
+     * tip.content(tip.table());
+     **/
+    _tip.direction = property('n');
 
     /**
      * Generates a handler which can be passed to `tip.content` to produce a table of the

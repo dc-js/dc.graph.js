@@ -197,7 +197,9 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
     ;
 
     var tip = dc_graph.tip();
-    tip.content(tip.table());
+    tip
+        .direction('e')
+        .content(tip.table());
 
     diagram.child('tip', tip);
     //diagram.DEBUG_BOUNDS = true;
