@@ -195,6 +195,11 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
             return _colormap[node_type(n)];
         })
     ;
+
+    var tip = dc_graph.tip();
+    tip.content(tip.table());
+
+    diagram.child('tip', tip);
     //diagram.DEBUG_BOUNDS = true;
 }
 
