@@ -6,7 +6,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     var node_on_paths = {}, edge_on_paths = {}, selected = null, hoverpaths = null;
 
     function refresh() {
-        _behavior.parent().relayout().redraw();
+        if(_behavior.doRedraw())
+            _behavior.parent().relayout().redraw();
+        else
+            _behavior.parent().refresh();
     }
 
     function paths_changed(nop, eop) {
@@ -133,6 +136,9 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             highlight_paths_group.on('select_changed.' + anchor, p ? select_changed : null);
         }
     });
+
+        // whether to do relayout & redraw (true) or just refresh (false)
+        _behavior.doRedraw = property(false);
 
     return _behavior;
 };
