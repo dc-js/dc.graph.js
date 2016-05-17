@@ -1,5 +1,5 @@
 {
-    "queryTime": 2160.076968,
+    "queryTime": 960.968528,
     "results": [
         {
             "_id": 19348,
@@ -521,6 +521,18 @@
             "version_": "1.0"
         },
         {
+            "_id": 20020,
+            "_type": "vertex",
+            "category": "STRM",
+            "description": "STRM",
+            "ecomp_uid": "e0be4eb2195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:STRM",
+            "name": "STRM",
+            "time_added_": "2016-05-13 17:51:41",
+            "time_modified_": "2016-05-13 17:51:41",
+            "version_": "1.0"
+        },
+        {
             "_id": 19452,
             "_type": "vertex",
             "connection_state": "connected",
@@ -637,6 +649,18 @@
             "vcpus": 18,
             "version_": "1.0",
             "vm_os": "Other 2.6.x Linux (64-bit)"
+        },
+        {
+            "_id": 20016,
+            "_type": "vertex",
+            "category": "VCM",
+            "description": "VCM",
+            "ecomp_uid": "e0bbd696195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:VCM",
+            "name": "VCM",
+            "time_added_": "2016-05-13 17:51:41",
+            "time_modified_": "2016-05-13 17:51:41",
+            "version_": "1.0"
         },
         {
             "_id": 19660,
@@ -1173,6 +1197,18 @@
             "vm": "wt2cwa1psm04v"
         },
         {
+            "_id": 20052,
+            "_type": "vertex",
+            "category": "FGI_A",
+            "description": "FGI_A",
+            "ecomp_uid": "e0c3395e195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:FGI_A",
+            "name": "FGI_A",
+            "time_added_": "2016-05-13 17:51:42",
+            "time_modified_": "2016-05-13 17:51:42",
+            "version_": "1.0"
+        },
+        {
             "_id": 19276,
             "_type": "vertex",
             "connection_state": "connected",
@@ -1377,6 +1413,18 @@
             "vcpus": 4,
             "version_": "1.0",
             "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+        },
+        {
+            "_id": 20024,
+            "_type": "vertex",
+            "category": "PCRF_FA",
+            "description": "PCRF_FA",
+            "ecomp_uid": "e0bf1ce8195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:PCRF_FA",
+            "name": "PCRF_FA",
+            "time_added_": "2016-05-13 17:51:41",
+            "time_modified_": "2016-05-13 17:51:41",
+            "version_": "1.0"
         },
         {
             "_id": 18912,
@@ -2257,6 +2305,18 @@
             "version_": "1.0"
         },
         {
+            "_id": 20028,
+            "_type": "vertex",
+            "category": "CCM_A",
+            "description": "CCM_A",
+            "ecomp_uid": "e0bfdc32195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:CCM_A",
+            "name": "CCM_A",
+            "time_added_": "2016-05-13 17:51:41",
+            "time_modified_": "2016-05-13 17:51:41",
+            "version_": "1.0"
+        },
+        {
             "_id": 19360,
             "_type": "vertex",
             "connection_state": "connected",
@@ -2296,6 +2356,18 @@
             "name": "PCRF_SP",
             "time_added_": "2016-05-09 16:03:24",
             "time_modified_": "2016-05-09 16:03:24",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20056,
+            "_type": "vertex",
+            "category": "FNS_A",
+            "description": "FNS_A",
+            "ecomp_uid": "e0c3b834195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:FNS_A",
+            "name": "FNS_A",
+            "time_added_": "2016-05-13 17:51:42",
+            "time_modified_": "2016-05-13 17:51:42",
             "version_": "1.0"
         },
         {
@@ -2708,6 +2780,18 @@
             "vcpus": 18,
             "version_": "1.0",
             "vm_os": "Other 2.6.x Linux (64-bit)"
+        },
+        {
+            "_id": 20048,
+            "_type": "vertex",
+            "category": "WSM_A",
+            "description": "WSM_A",
+            "ecomp_uid": "e0c2c302195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:WSM_A",
+            "name": "WSM_A",
+            "time_added_": "2016-05-13 17:51:42",
+            "time_modified_": "2016-05-13 17:51:42",
+            "version_": "1.0"
         },
         {
             "_id": 19532,
@@ -3439,6 +3523,18 @@
             "version_": "1.0"
         },
         {
+            "_id": 20044,
+            "_type": "vertex",
+            "category": "DCM_A",
+            "description": "DCM_A",
+            "ecomp_uid": "e0c24a62195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:DCM_A",
+            "name": "DCM_A",
+            "time_added_": "2016-05-13 17:51:42",
+            "time_modified_": "2016-05-13 17:51:42",
+            "version_": "1.0"
+        },
+        {
             "_id": 19732,
             "_type": "vertex",
             "ecomp_uid": "0aafa2da161b11e6b1f2005056a9660d",
@@ -3694,6 +3790,18 @@
             "name": "PCRF_VNF",
             "time_added_": "2016-05-09 15:16:39",
             "time_modified_": "2016-05-09 15:16:39",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20040,
+            "_type": "vertex",
+            "category": "ASM_A",
+            "description": "ASM_A",
+            "ecomp_uid": "e0c1b67e195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:ASM_A",
+            "name": "ASM_A",
+            "time_added_": "2016-05-13 17:51:42",
+            "time_modified_": "2016-05-13 17:51:42",
             "version_": "1.0"
         },
         {
@@ -4399,6 +4507,18 @@
             "version_": "1.0"
         },
         {
+            "_id": 20032,
+            "_type": "vertex",
+            "category": "IOM_A",
+            "description": "IOM_A",
+            "ecomp_uid": "e0c0b1ca195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:IOM_A",
+            "name": "IOM_A",
+            "time_added_": "2016-05-13 17:51:42",
+            "time_modified_": "2016-05-13 17:51:42",
+            "version_": "1.0"
+        },
+        {
             "_id": 19376,
             "_type": "vertex",
             "connection_state": "connected",
@@ -4429,6 +4549,18 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1ASM27v"
+        },
+        {
+            "_id": 20036,
+            "_type": "vertex",
+            "category": "MCM_A",
+            "description": "MCM_A",
+            "ecomp_uid": "e0c13a96195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:MCM_A",
+            "name": "MCM_A",
+            "time_added_": "2016-05-13 17:51:42",
+            "time_modified_": "2016-05-13 17:51:42",
+            "version_": "1.0"
         },
         {
             "_id": 19368,
@@ -4613,6 +4745,18 @@
             "name": "wt2cwa1esx506",
             "time_added_": "2016-05-09 15:20:08",
             "time_modified_": "2016-05-09 15:20:08",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20060,
+            "_type": "vertex",
+            "category": "DNS_A",
+            "description": "DNS_A",
+            "ecomp_uid": "e0c42da0195411e69fe9005056a9660d",
+            "label_": "Base:Node:VFC_A:DNS_A",
+            "name": "DNS_A",
+            "time_added_": "2016-05-13 17:51:42",
+            "time_modified_": "2016-05-13 17:51:42",
             "version_": "1.0"
         },
         {
@@ -5226,6 +5370,6 @@
             "vm": "WT2CWA1MCM07v"
         }
     ],
-    "totalSize": 296,
+    "totalSize": 308,
     "version": "2.4.0"
 }
