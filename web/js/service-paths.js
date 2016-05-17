@@ -197,9 +197,14 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
     ;
 
     var tip = dc_graph.tip();
+    var table = dc_graph.tip.table();
+    table
+        .filter(function(k) {
+            return k==='label_' || !(/^_/.test(k) || /_$/.test(k));
+        });
     tip
         .direction('e')
-        .content(tip.table());
+        .content(table);
 
     diagram.child('tip', tip);
     //diagram.DEBUG_BOUNDS = true;
