@@ -190,6 +190,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .induceNodes(true)
         .nodeLabel(null)
         .nodeTitle(null)
+        .autoZoom('once')
         .nodeStrokeWidth(0)
         .nodeFill(function(n) {
             return _colormap[node_type(n)];
