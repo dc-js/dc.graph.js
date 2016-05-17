@@ -189,7 +189,7 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .edgeLabel(null)
         .induceNodes(true)
         .nodeLabel(null)
-        .nodeTitle(function(n) { return n.value.name; })
+        .nodeTitle(null)
         .nodeStrokeWidth(0)
         .nodeFill(function(n) {
             return _colormap[node_type(n)];
