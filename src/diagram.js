@@ -1366,7 +1366,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    _chart.refresh = function(node, edge) {
+    _chart.refresh = function(node, edge, edgeHover, edgeLabels) {
+        node = node || _nodeLayer.selectAll('.node');
+        edge = edge || _edgeLayer.selectAll('.edge');
+        edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
+        edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
+
         edge
             .attr('stroke', _chart.edgeStroke.eval)
             .attr('stroke-width', _chart.edgeStrokeWidth.eval)
@@ -1381,11 +1386,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return name ? 'url(#' + arrow_id + ')' : null;
             })
             .each(function(e) {
-                d3.selectAll('#' + _chart.arrowId(e, 'head') + ',#' + _chart.arrowId(e, 'tail'))
-                    .attr('fill', _chart.edgeStroke.eval(e));
+                // d3.selectAll('#' + _chart.arrowId(e, 'head') + ',#' + _chart.arrowId(e, 'tail'))
+                //     .attr('fill', _chart.edgeStroke.eval(e));
             });
 
         _chart._updateNode(node);
+        var nullSel = d3.select(null); // no enters
+        draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel);
     };
 
 
@@ -1553,7 +1560,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
-        console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
         var nodeEntered = {};
