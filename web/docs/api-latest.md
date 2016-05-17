@@ -22,9 +22,10 @@ chart.width(600)
   * [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-    * [.fitStrategy](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.mouseZoomable](#dc_graph.diagram+mouseZoomable) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.fitStrategy](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.autoZoom](#dc_graph.diagram+autoZoom) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodeDimension](#dc_graph.diagram+nodeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodeGroup](#dc_graph.diagram+nodeGroup) ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeDimension](#dc_graph.diagram+edgeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -116,9 +117,10 @@ visualization versus conventional charts.
 * [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.fitStrategy](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.mouseZoomable](#dc_graph.diagram+mouseZoomable) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.fitStrategy](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+  * [.autoZoom](#dc_graph.diagram+autoZoom) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.nodeDimension](#dc_graph.diagram+nodeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.nodeGroup](#dc_graph.diagram+nodeGroup) ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
   * [.edgeDimension](#dc_graph.diagram+edgeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -207,18 +209,6 @@ the height attribute will be returned. Default: 200
 | --- | --- | --- |
 | [height] | <code>Number</code> | <code>200</code> | 
 
-<a name="dc_graph.diagram+fitStrategy"></a>
-#### diagram.fitStrategy ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-Set or get the fitting strategy for the canvas. If `null`, no attempt is made to fit the
-canvas to the svg element. `'default'` sets the `viewBox` but doesn't scale or
-translate. Other choices are `'vertical'`, ...
-
-**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
-
-| Param | Type | Default |
-| --- | --- | --- |
-| [fitStrategy] | <code>String</code> | <code></code> | 
-
 <a name="dc_graph.diagram+root"></a>
 #### diagram.root ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Get or set the root element, which is usually the parent div. Normally the root is set
@@ -240,6 +230,49 @@ whether dragging on the background pans the diagram.
 | Param | Type | Default |
 | --- | --- | --- |
 | [mouseZoomable] | <code>Boolean</code> | <code>true</code> | 
+
+<a name="dc_graph.diagram+fitStrategy"></a>
+#### diagram.fitStrategy ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Set or get the fitting strategy for the canvas, which affects how the
+[viewBox](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox) and
+[preserveAspectRatio](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio)
+attributes get set. All options except `null` set the `viewBox` attribute.
+
+These options set the `viewBox` and adjust the scale and translate to implement the margins.
+* `'default'` - uses the default behavior of `xMidYMid meet` (but with margins)
+* `'vertical'` - fits the canvas vertically (with vertical margins) and centers it
+horizontally. If the canvas is taller than the viewport, it will meet vertically and
+there will be blank areas to the left and right. If the canvas is wider than the
+viewport, it will be sliced.
+* `'horizontal'` - fitst the canvas horizontally (with horizontal margins) and centers
+it vertically. If the canvas is wider than the viewport, it will meet horizontally and
+there will be blank areas above and below. If the canvas is taller than the viewport, it
+will be sliced.
+
+Other options
+* `null` - no attempt is made to fit the canvas to the svg element, `viewBox` is unset.
+* another string - sets the `viewBox` and uses the string for `preserveAspectRatio`.
+* function - will be called with (viewport width, viewport height, canvas width, canvas
+height) and result will be used to set `preserveAspectRatio`.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [fitStrategy] | <code>String</code> | <code></code> | 
+
+<a name="dc_graph.diagram+autoZoom"></a>
+#### diagram.autoZoom ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Auto-zoom behavior.
+* `'always'` - zoom every time layout happens
+* `'once'` - zoom the first time layout happens
+* `null` - manual, call `zoomToFit` to fit
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [autoZoom] | <code>String</code> | <code></code> | 
 
 <a name="dc_graph.diagram+nodeDimension"></a>
 #### diagram.nodeDimension ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
