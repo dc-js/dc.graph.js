@@ -81,33 +81,6 @@ dc_graph.tip = function() {
     _tip.direction = property('n');
 
     /**
-     * Generates a handler which can be passed to `tip.content` to produce a table of the
-     * attributes and values of the hovered object.
-     *
-     * Note: this interface is not great and is subject to change in the near term.
-     * @name table
-     * @memberof dc_graph.tip
-     * @instance
-     * @return {Function}
-     * @example
-     * // show all the attributes and values in the node and edge objects
-     * var tip = dc_graph.tip();
-     * tip.content(tip.table());
-     **/
-    _tip.table = function() {
-        return function(d, k) {
-            d = d.orig.value;
-            var keys = Object.keys(d);
-            var table = d3.select(document.createElement('table'));
-            var rows = table.selectAll('tr').data(keys);
-            var rowsEnter = rows.enter().append('tr');
-            rowsEnter.append('td').text(function(k) { return k; });
-            rowsEnter.append('td').text(function(k) { return d[k]; });
-            k(table.node().outerHTML); // optimizing for clarity over speed (?)
-        };
-    };
-
-    /**
      * Specifies the function to generate content for the tooltip. This function has the
      * signature `function(d, k)`, where `d` is the datum of the node being hovered over,
      * and `k` is a continuation. The function should fetch the content, asynchronously if
@@ -128,4 +101,31 @@ dc_graph.tip = function() {
     });
 
     return _tip;
+};
+
+/**
+ * Generates a handler which can be passed to `tip.content` to produce a table of the
+ * attributes and values of the hovered object.
+ *
+ * Note: this interface is not great and is subject to change in the near term.
+ * @name table
+ * @memberof dc_graph.tip
+ * @instance
+ * @return {Function}
+ * @example
+ * // show all the attributes and values in the node and edge objects
+ * var tip = dc_graph.tip();
+ * tip.content(tip.table());
+ **/
+dc_graph.tip.table = function() {
+    return function(d, k) {
+        d = d.orig.value;
+        var keys = Object.keys(d);
+        var table = d3.select(document.createElement('table'));
+        var rows = table.selectAll('tr').data(keys);
+        var rowsEnter = rows.enter().append('tr');
+        rowsEnter.append('td').text(function(k) { return k; });
+        rowsEnter.append('td').text(function(k) { return d[k]; });
+        k(table.node().outerHTML); // optimizing for clarity over speed (?)
+    };
 };
