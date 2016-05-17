@@ -719,19 +719,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.height = property(200).react(resizeSvg);
 
     /**
-     * Set or get the fitting strategy for the canvas. If `null`, no attempt is made to fit the
-     * canvas to the svg element. `'default'` sets the `viewBox` but doesn't scale or
-     * translate. Other choices are `'vertical'`, ...
-     * @name fitStrategy
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {String} [fitStrategy=null]
-     * @return {String}
-     * @return {dc_graph.diagram}
-     **/
-    _chart.fitStrategy = property('default');
-
-    /**
      * Get or set the root element, which is usually the parent div. Normally the root is set
      * when the diagram is constructed; setting it later may have unexpected consequences.
      * @name root
@@ -757,6 +744,56 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _chart.mouseZoomable = property(true);
+
+    /**
+     * Set or get the fitting strategy for the canvas, which affects how the
+     * [viewBox](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox) and
+     * [preserveAspectRatio](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio)
+     * attributes get set. All options except `null` set the `viewBox` attribute.
+     *
+     * These options set the `viewBox` and adjust the scale and translate to implement the margins.
+     * * `'default'` - uses the default behavior of `xMidYMid meet` (but with margins)
+     * * `'vertical'` - fits the canvas vertically (with vertical margins) and centers it
+     * horizontally. If the canvas is taller than the viewport, it will meet vertically and
+     * there will be blank areas to the left and right. If the canvas is wider than the
+     * viewport, it will be sliced.
+     * * `'horizontal'` - fitst the canvas horizontally (with horizontal margins) and centers
+     * it vertically. If the canvas is wider than the viewport, it will meet horizontally and
+     * there will be blank areas above and below. If the canvas is taller than the viewport, it
+     * will be sliced.
+     *
+     * Other options
+     * * `null` - no attempt is made to fit the canvas to the svg element, `viewBox` is unset.
+     * * another string - sets the `viewBox` and uses the string for `preserveAspectRatio`.
+     * * function - will be called with (viewport width, viewport height, canvas width, canvas
+     * height) and result will be used to set `preserveAspectRatio`.
+     * @name fitStrategy
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [fitStrategy=null]
+     * @return {String}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.fitStrategy = property('default');
+
+    /**
+     * Auto-zoom behavior.
+     * * `'always'` - zoom every time layout happens
+     * * `'once'` - zoom the first time layout happens
+     * * `null` - manual, call `zoomToFit` to fit
+     * @name autoZoom
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [autoZoom=null]
+     * @return {String}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.autoZoom = property(null);
+    _chart.zoomToFit = function() {
+        var node = _nodeLayer.selectAll('.node'),
+            edge = _edgeLayer.selectAll('.edge');
+        auto_zoom(node, edge);
+    };
 
     /**
      * Set or get the crossfilter dimension which represents the nodes (vertices) in the
@@ -2000,6 +2037,20 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!_chart.showLayoutSteps())
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
                 else layout_done(true);
+                var do_zoom;
+                switch(_chart.autoZoom()) {
+                case 'always':
+                    do_zoom = true;
+                    break;
+                case 'once':
+                    do_zoom = true;
+                    _chart.autoZoom(null);
+                    break;
+                default:
+                    do_zoom = false;
+                }
+                if(do_zoom)
+                    auto_zoom(node, edge);
                 break;
             case 'start':
                 console.log('COLA START'); // doesn't seem to fire
@@ -2208,7 +2259,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     (swidth - _chart.margins().left - _chart.margins().right) / swidth;
             }
             else if(typeof fitS === 'function')
-                pAR = fitS(vwidth, vheight,swidth, sheight);
+                pAR = fitS(vwidth, vheight, swidth, sheight);
             else if(typeof fitS === 'string')
                 pAR = _chart.fitStrategy();
             else
@@ -2327,7 +2378,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             endall([ntrans, etrans], function() { layout_done(true); });
 
         edgeHover.attr('d', render_edge_path('new'));
-        auto_zoom(node, edge);
     }
 
     /**
