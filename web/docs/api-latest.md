@@ -93,8 +93,8 @@ chart.width(600)
   * [.tip](#dc_graph.tip) ⇒ <code>Object</code>
     * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
-    * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
     * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
+    * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
 
 <a name="dc_graph.diagram"></a>
 ### dc_graph.diagram ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -1150,8 +1150,8 @@ dc.graph.js in `web/js/d3-tip/index.js` and `web/css/d3-tip/example-styles.css`)
 * [.tip](#dc_graph.tip) ⇒ <code>Object</code>
   * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
   * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
-  * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
   * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
+  * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
 
 <a name="dc_graph.tip+parent"></a>
 #### tip.parent ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -1184,20 +1184,6 @@ Specify the direction for tooltips. Currently supports the
 var tip = dc_graph.tip();
 tip.content(tip.table());
 ```
-<a name="dc_graph.tip+table"></a>
-#### tip.table ⇒ <code>function</code>
-Generates a handler which can be passed to `tip.content` to produce a table of the
-attributes and values of the hovered object.
-
-Note: this interface is not great and is subject to change in the near term.
-
-**Kind**: instance property of <code>[tip](#dc_graph.tip)</code>  
-**Example**  
-```js
-// show all the attributes and values in the node and edge objects
-var tip = dc_graph.tip();
-tip.content(tip.table());
-```
 <a name="dc_graph.tip+content"></a>
 #### tip.content ⇒ <code>function</code>
 Specifies the function to generate content for the tooltip. This function has the
@@ -1217,4 +1203,18 @@ needed, and then pass html forward to `k`.
 var tip = dc_graph.tip().content(function(d, k) {
     k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
 });
+```
+<a name="dc_graph.tip+table"></a>
+#### tip.table ⇒ <code>function</code>
+Generates a handler which can be passed to `tip.content` to produce a table of the
+attributes and values of the hovered object.
+
+Note: this interface is not great and is subject to change in the near term.
+
+**Kind**: instance property of <code>[tip](#dc_graph.tip)</code>  
+**Example**  
+```js
+// show all the attributes and values in the node and edge objects
+var tip = dc_graph.tip();
+tip.content(tip.table());
 ```
