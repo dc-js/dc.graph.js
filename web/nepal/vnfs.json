@@ -1,0 +1,653 @@
+{
+    "results": [
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfD-4TS-62",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18856",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfX-4TS-7k",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18832",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfD-4TS-62",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18856",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "Hft-4U8-5o",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e81844e161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18852",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "PROXY_VNF",
+                        "description": "PROXY_VNF",
+                        "ecomp_uid": "8e81844e161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:PROXY_VNF",
+                        "name": "PROXY_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfD-4TS-62",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18856",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "Hfx-4U8-5E",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e80d512161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18848",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "PCRF_VNF",
+                        "description": "PCRF_VNF",
+                        "ecomp_uid": "8e80d512161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:PCRF_VNF",
+                        "name": "PCRF_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfD-4TS-62",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18856",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfF-4U8-6a",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e7fdbf8161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18844",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "8e7fdbf8161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfD-4TS-62",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18856",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfJ-4U8-6q",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18832",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfX-4TS-7k",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18832",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfL-4TK-6y",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18856",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SPGW_VNF",
+                        "description": "SPGW_VNF",
+                        "ecomp_uid": "8e82390c161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:SPGW_VNF",
+                        "name": "SPGW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfX-4TS-7k",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18832",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfN-4TK-6G",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e81844e161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18852",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "PROXY_VNF",
+                        "description": "PROXY_VNF",
+                        "ecomp_uid": "8e81844e161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:PROXY_VNF",
+                        "name": "PROXY_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfX-4TS-7k",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18832",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfR-4TK-6W",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e80d512161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18848",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "PCRF_VNF",
+                        "description": "PCRF_VNF",
+                        "ecomp_uid": "8e80d512161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:PCRF_VNF",
+                        "name": "PCRF_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18840",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "FW_VNF",
+                        "description": "FW_VNF",
+                        "ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:FW_VNF",
+                        "name": "FW_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfX-4TS-7k",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7ecaf6161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18832",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "CCE_VNF",
+                        "description": "CCE_VNF",
+                        "ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:CCE_VNF",
+                        "name": "CCE_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "HfZ-4TK-7s",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all VNF-level connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Connects:VNF_Connect",
+                        "source_ecomp_uid": "8e7b7efa161a11e6bc49005056a9660d",
+                        "target_ecomp_uid": "8e7fdbf8161a11e6bc49005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "18844",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "DNS_VNF",
+                        "description": "DNS_VNF",
+                        "ecomp_uid": "8e7fdbf8161a11e6bc49005056a9660d",
+                        "label_": "Base:Node:VNF:DNS_VNF",
+                        "name": "DNS_VNF",
+                        "time_added_": "2016-05-09 15:16:39",
+                        "time_modified_": "2016-05-09 15:16:39",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        }
+    ],
+    "version": "0.0.2"
+}

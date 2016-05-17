@@ -1,0 +1,361 @@
+{
+    "results": [
+        {
+            "element_list": [
+                {
+                    "element_id": "18868",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "VCC",
+                        "description": "VCC101",
+                        "ecomp_uid": "a17ad686161a11e6b9fa005056a9660d",
+                        "label_": "Base:Node:VFC:VCC",
+                        "name": "VCC101",
+                        "time_added_": "2016-05-09 15:17:11",
+                        "time_modified_": "2016-05-09 15:17:11",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1VCC101v"
+                    }
+                },
+                {
+                    "element_id": "HKh-4Uk-D4",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "a17ad686161a11e6b9fa005056a9660d",
+                        "target_ecomp_uid": "b5e8f382161a11e6bf51005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "19200",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "b5e8f382161a11e6bf51005056a9660d",
+                        "full_name": "WT2CWA1VCC101",
+                        "hostname": "107.250.178.201",
+                        "ip_address": "107.250.178.13",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 32768,
+                        "name": "WT2CWA1VCC101v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-05-09 15:17:45",
+                        "time_modified_": "2016-05-09 15:17:45",
+                        "vcpus": 24,
+                        "version_": "1.0",
+                        "vm_os": "Microsoft Windows Server 2012 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "Jt7-4ZG-NE",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "b5e8f382161a11e6bf51005056a9660d",
+                        "target_ecomp_uid": "0a7f5cb0161b11e6b1f2005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "19532",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "0a7f5cb0161b11e6b1f2005056a9660d",
+                        "hw_cpu_Mhz": 2493,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant DL380p Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 5,
+                        "hw_num_nics": 10,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "107.250.178.201",
+                        "time_added_": "2016-05-09 15:20:07",
+                        "time_modified_": "2016-05-09 15:20:07",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18880",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "MAM",
+                        "description": "MAM101",
+                        "ecomp_uid": "a17da898161a11e6b9fa005056a9660d",
+                        "label_": "Base:Node:VFC:MAM",
+                        "name": "MAM101",
+                        "time_added_": "2016-05-09 15:17:11",
+                        "time_modified_": "2016-05-09 15:17:11",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1MAM101v"
+                    }
+                },
+                {
+                    "element_id": "HLV-4Uw-Ds",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "a17da898161a11e6b9fa005056a9660d",
+                        "target_ecomp_uid": "b8d9dcb4161a11e6bf51005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "19212",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "b8d9dcb4161a11e6bf51005056a9660d",
+                        "full_name": "WT2CWA1MAM101v",
+                        "hostname": "107.250.178.199",
+                        "ip_address": "107.250.178.16",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 65536,
+                        "name": "WT2CWA1MAM101v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-05-09 15:17:50",
+                        "time_modified_": "2016-05-09 15:17:50",
+                        "vcpus": 24,
+                        "version_": "1.0",
+                        "vm_os": "Microsoft Windows Server 2012 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "Jtd-4ZS-NM",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "b8d9dcb4161a11e6bf51005056a9660d",
+                        "target_ecomp_uid": "0a7e0342161b11e6b1f2005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "19528",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "0a7e0342161b11e6b1f2005056a9660d",
+                        "hw_cpu_Mhz": 2493,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant DL380p Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 5,
+                        "hw_num_nics": 10,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "107.250.178.199",
+                        "time_added_": "2016-05-09 15:20:07",
+                        "time_modified_": "2016-05-09 15:20:07",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18872",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "SQL",
+                        "description": "SQL101",
+                        "ecomp_uid": "a17bc816161a11e6b9fa005056a9660d",
+                        "label_": "Base:Node:VFC:SQL",
+                        "name": "SQL101",
+                        "time_added_": "2016-05-09 15:17:11",
+                        "time_modified_": "2016-05-09 15:17:11",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1SQL101v"
+                    }
+                },
+                {
+                    "element_id": "HKP-4Uo-Dc",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "a17bc816161a11e6b9fa005056a9660d",
+                        "target_ecomp_uid": "b70f0364161a11e6bf51005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "19204",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "b70f0364161a11e6bf51005056a9660d",
+                        "full_name": "WT2CWA1SQL101v",
+                        "hostname": "107.250.178.199",
+                        "ip_address": "107.250.178.15",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 65536,
+                        "name": "WT2CWA1SQL101v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-05-09 15:17:47",
+                        "time_modified_": "2016-05-09 15:17:47",
+                        "vcpus": 16,
+                        "version_": "1.0",
+                        "vm_os": "Microsoft Windows Server 2012 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "Jt9-4ZK-T4",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "b70f0364161a11e6bf51005056a9660d",
+                        "target_ecomp_uid": "0a7e0342161b11e6b1f2005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "19528",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "0a7e0342161b11e6b1f2005056a9660d",
+                        "hw_cpu_Mhz": 2493,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant DL380p Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 5,
+                        "hw_num_nics": 10,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "107.250.178.199",
+                        "time_added_": "2016-05-09 15:20:07",
+                        "time_modified_": "2016-05-09 15:20:07",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        },
+        {
+            "element_list": [
+                {
+                    "element_id": "18876",
+                    "element_type": "node",
+                    "property_map": {
+                        "category": "VCC",
+                        "description": "VCC201",
+                        "ecomp_uid": "a17cc3ec161a11e6b9fa005056a9660d",
+                        "label_": "Base:Node:VFC:VCC",
+                        "name": "VCC201",
+                        "time_added_": "2016-05-09 15:17:11",
+                        "time_modified_": "2016-05-09 15:17:11",
+                        "version_": "1.0",
+                        "vm": "WT2CWA1VCC201v"
+                    }
+                },
+                {
+                    "element_id": "HLn-4Us-Dk",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "a17cc3ec161a11e6b9fa005056a9660d",
+                        "target_ecomp_uid": "b84cea48161a11e6bf51005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "19208",
+                    "element_type": "node",
+                    "property_map": {
+                        "connection_state": "connected",
+                        "ecomp_uid": "b84cea48161a11e6bf51005056a9660d",
+                        "full_name": "WT2CWA1VCC201v",
+                        "hostname": "107.250.178.199",
+                        "ip_address": "107.250.178.17",
+                        "label_": "Base:Node:VM",
+                        "memory_size_MB": 32768,
+                        "name": "WT2CWA1VCC201v",
+                        "power": "poweredOn",
+                        "status": "green",
+                        "time_added_": "2016-05-09 15:17:49",
+                        "time_modified_": "2016-05-09 15:17:49",
+                        "vcpus": 8,
+                        "version_": "1.0",
+                        "vm_os": "Microsoft Windows Server 2012 (64-bit)"
+                    }
+                },
+                {
+                    "element_id": "Jtb-4ZO-V8",
+                    "element_type": "edge",
+                    "property_map": {
+                        "description": "Class for all interlayer connections",
+                        "ecomp_uid": "",
+                        "label_": "Base:Edge:Hosted",
+                        "source_ecomp_uid": "b84cea48161a11e6bf51005056a9660d",
+                        "target_ecomp_uid": "0a7e0342161b11e6b1f2005056a9660d",
+                        "version_": "1.0"
+                    }
+                },
+                {
+                    "element_id": "19528",
+                    "element_type": "node",
+                    "property_map": {
+                        "ecomp_uid": "0a7e0342161b11e6b1f2005056a9660d",
+                        "hw_cpu_Mhz": 2493,
+                        "hw_cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
+                        "hw_model": "ProLiant DL380p Gen8",
+                        "hw_num_cpu_cores": 20,
+                        "hw_num_cpu_pkgs": 2,
+                        "hw_num_cpu_threads": 40,
+                        "hw_num_hbas": 5,
+                        "hw_num_nics": 10,
+                        "hw_vendor": "HP",
+                        "hyp_name": "VMware ESXi",
+                        "hyp_os_type": "vmnix-x86",
+                        "hyp_vendor": "VMware, Inc.",
+                        "hyp_version": "",
+                        "label_": "Base:Node:Host",
+                        "name": "107.250.178.199",
+                        "time_added_": "2016-05-09 15:20:07",
+                        "time_modified_": "2016-05-09 15:20:07",
+                        "version_": "1.0"
+                    }
+                }
+            ]
+        }
+    ],
+    "version": "0.0.2"
+}
