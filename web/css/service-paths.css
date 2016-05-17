@@ -49,3 +49,7 @@ button:active {
     text-anchor: middle;
     pointer-events: none;
 }
+
+.d3-tip {
+    z-index: 10;
+}
