@@ -1811,7 +1811,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         edgeHover.exit().remove();
 
-        var edgeLabels = _edgeLayer.selectAll(".edge-label")
+        var edgeLabels = _edgeLayer.selectAll('.edge-label')
                 .data(wedges, _chart.edgeKey.eval);
         var edgeLabelsEnter = edgeLabels.enter()
               .append('text')
@@ -2029,7 +2029,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    _chart.refresh = function(node, edge) {
+    _chart.refresh = function(node, edge, edgeHover, edgeLabels) {
+        node = node || _nodeLayer.selectAll('.node');
+        edge = edge || _edgeLayer.selectAll('.edge');
+        edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
+        edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
+
         edge
             .attr('stroke', _chart.edgeStroke.eval)
             .attr('stroke-width', _chart.edgeStrokeWidth.eval)
@@ -2044,11 +2049,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return name ? 'url(#' + arrow_id + ')' : null;
             })
             .each(function(e) {
-                d3.selectAll('#' + _chart.arrowId(e, 'head') + ',#' + _chart.arrowId(e, 'tail'))
-                    .attr('fill', _chart.edgeStroke.eval(e));
+                // d3.selectAll('#' + _chart.arrowId(e, 'head') + ',#' + _chart.arrowId(e, 'tail'))
+                //     .attr('fill', _chart.edgeStroke.eval(e));
             });
 
         _chart._updateNode(node);
+        var nullSel = d3.select(null); // no enters
+        draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel);
     };
 
 
@@ -2121,7 +2128,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         transitions.forEach(function(transition) {
             transition
                 .each(function() { ++n; })
-                .each("end.all", function() { if (!--n) callback(); });
+                .each('end.all', function() { if (!--n) callback(); });
         });
     }
 
@@ -2157,7 +2164,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     function debug_bounds(bounds) {
         var brect = _g.selectAll('rect.bounds').data([0]);
         brect.enter()
-            .insert('rect', ":first-child").attr({
+            .insert('rect', ':first-child').attr({
                 class: 'bounds',
                 fill: 'rgba(128,255,128,0.1)',
                 stroke: '#000'
@@ -2216,7 +2223,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
-        console.assert(_running);
         console.assert(edge.data().every(has_source_and_target));
 
         var nodeEntered = {};
@@ -2224,9 +2230,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .each(function(n) {
                 nodeEntered[_chart.nodeKey.eval(n)] = true;
             })
-            .attr("transform", function (d) {
+            .attr('transform', function (d) {
                 // start new nodes at their final position
-                return "translate(" + d.cola.x + "," + d.cola.y + ")";
+                return 'translate(' + d.cola.x + ',' + d.cola.y + ')';
             });
         var ntrans = node
                 .transition()
@@ -2235,10 +2241,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return transition_delay(nodeEntered[_chart.nodeKey.eval(n)]);
                 })
                 .attr('opacity', _chart.nodeOpacity.eval)
-                .attr("transform", function (d) {
-                    return "translate(" + d.cola.x + "," + d.cola.y + ")";
+                .attr('transform', function (d) {
+                    return 'translate(' + d.cola.x + ',' + d.cola.y + ')';
                 })
-                .each("end.record", function(d) {
+                .each('end.record', function(d) {
                     d.prevX = d.cola.x;
                     d.prevY = d.cola.y;
                 });
@@ -2291,7 +2297,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return transition_delay(edgeEntered[_chart.edgeKey.eval(e)]);
                 })
                 .attr('opacity', _chart.edgeOpacity.eval)
-                .attr("d", function(e) {
+                .attr('d', function(e) {
                     var when = _chart.stageTransitions() === 'insmod' &&
                             edgeEntered[_chart.edgeKey.eval(e)] ? 'old' : 'new';
                     return render_edge_path(when)(e);
@@ -2302,7 +2308,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             // inserted edges transition twice in insmod mode
             etrans = etrans.transition()
                 .duration(transition_duration())
-                .attr("d", render_edge_path('new'));
+                .attr('d', render_edge_path('new'));
         }
 
         edge.each(function(d) {
@@ -2563,7 +2569,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     function globalTransform(pos, scale) {
         _translate = pos;
         _scale = scale;
-        _g.attr("transform", "translate(" + pos + ")" + " scale(" + scale + ")");
+        _g.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
     }
 
     function doZoom() {
@@ -2584,7 +2590,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable())
-            _svg.call(_zoom = d3.behavior.zoom().on("zoom", doZoom));
+            _svg.call(_zoom = d3.behavior.zoom().on('zoom', doZoom));
 
         return _svg;
     }
@@ -3234,7 +3240,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     var node_on_paths = {}, edge_on_paths = {}, selected = null, hoverpaths = null;
 
     function refresh() {
-        _behavior.parent().relayout().redraw();
+        if(_behavior.doRedraw())
+            _behavior.parent().relayout().redraw();
+        else
+            _behavior.parent().refresh();
     }
 
     function paths_changed(nop, eop) {
@@ -3361,6 +3370,9 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             highlight_paths_group.on('select_changed.' + anchor, p ? select_changed : null);
         }
     });
+
+        // whether to do relayout & redraw (true) or just refresh (false)
+        _behavior.doRedraw = property(false);
 
     return _behavior;
 };
