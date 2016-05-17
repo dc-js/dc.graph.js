@@ -335,6 +335,8 @@ source(function(error, data) {
         nodeStroke: '#e41a1c'
     });
 
+    highlight_paths_hier.doRedraw(true);
+
     var hnodes = nodes.filter(function(n) {
         var type = raw_node_type(n);
         return ['Network', 'VFC_A'].indexOf(type)===-1;
