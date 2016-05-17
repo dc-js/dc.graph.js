@@ -118,9 +118,9 @@ dc_graph.tip = function() {
  * tip.content(tip.table());
  **/
 dc_graph.tip.table = function() {
-    return function(d, k) {
+    var gen = function(d, k) {
         d = d.orig.value;
-        var keys = Object.keys(d);
+        var keys = Object.keys(d).filter(d3.functor(gen.filter()));
         var table = d3.select(document.createElement('table'));
         var rows = table.selectAll('tr').data(keys);
         var rowsEnter = rows.enter().append('tr');
@@ -128,4 +128,6 @@ dc_graph.tip.table = function() {
         rowsEnter.append('td').text(function(k) { return d[k]; });
         k(table.node().outerHTML); // optimizing for clarity over speed (?)
     };
+    gen.filter = property(true);
+    return gen;
 };
