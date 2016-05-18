@@ -2080,12 +2080,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    _chart.refresh = function(node, edge, edgeHover, edgeLabels) {
-        node = node || _nodeLayer.selectAll('.node');
-        edge = edge || _edgeLayer.selectAll('.edge');
-        edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
-        edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
-
+    function _refresh(node, edge) {
         edge
             .attr('stroke', _chart.edgeStroke.eval)
             .attr('stroke-width', _chart.edgeStrokeWidth.eval)
@@ -2105,6 +2100,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
 
         _chart._updateNode(node);
+    }
+
+    _chart.refresh = function(node, edge, edgeHover, edgeLabels) {
+        node = node || _nodeLayer.selectAll('.node');
+        edge = edge || _edgeLayer.selectAll('.edge');
+        _refresh(node, edge);
+
+        edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
+        edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
         var nullSel = d3.select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel);
     };
@@ -3115,6 +3119,7 @@ dc_graph.behavior = function(event_namespace, handlers) {
  **/
 dc_graph.tip = function() {
     var _tip = {}, _d3tip = null;
+    var _timeout;
 
     /**
      * Assigns this tip object to a diagram. It will show tips for nodes in that diagram.
@@ -3138,12 +3143,29 @@ dc_graph.tip = function() {
 
     function fetch_and_show_content(fetcher) {
          return function(d) {
-             var target = d3.event.target;
-             _tip[fetcher]()(d, function(content) {
-                 _d3tip.show(content, target);
-             });
+             var target = d3.event.target,
+                 next = function() {
+                     _tip[fetcher]()(d, function(content) {
+                         _d3tip.show(content, target);
+                     });
+                 };
+
+             if(_tip.delay()) {
+                 clearTimeout(_timeout);
+                 _timeout = setTimeout(next, _tip.delay());
+             }
+             else next();
          };
     }
+
+    function hide_tip() {
+        if(_timeout) {
+            clearTimeout(_timeout);
+            _timeout = null;
+        }
+        _d3tip.hide();
+    }
+
     function annotate(node, ehover) {
         if(!_d3tip) {
             _d3tip = d3.tip()
@@ -3154,14 +3176,10 @@ dc_graph.tip = function() {
         }
         node
             .on('mouseover.tip', fetch_and_show_content('content'))
-            .on('mouseout.tip', function(d) {
-                _d3tip.hide();
-            });
+            .on('mouseout.tip', hide_tip);
         ehover
             .on('mouseover.tip', fetch_and_show_content('content'))
-            .on('mouseout.tip', function(d) {
-                _d3tip.hide();
-            });
+            .on('mouseout.tip', hide_tip);
     }
 
     /**
@@ -3201,6 +3219,8 @@ dc_graph.tip = function() {
     _tip.content = property(function(d, k) {
         k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
     });
+
+    _tip.delay = property(0);
 
     return _tip;
 };
