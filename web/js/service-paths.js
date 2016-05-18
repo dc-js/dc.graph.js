@@ -205,7 +205,8 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         });
     tip
         .direction('e')
-        .content(table);
+        .content(table)
+        .delay(500);
 
     diagram.child('tip', tip);
     //diagram.DEBUG_BOUNDS = true;
