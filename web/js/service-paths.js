@@ -45,13 +45,16 @@ var lr_layout = {
         direction: 'column',
         divs: [{
             id: 'hierarchy',
+            bring: true,
             flex: 3
         }, {
             id: 'query',
+            bring: true,
             flex: 1,
             direction: 'column',
             divs: [{
-                id: 'selections'
+                id: 'selections',
+                bring: true
             }, {
                 id: 'query_paths',
                 flex: 1,
@@ -71,13 +74,17 @@ var lr_layout = {
         direction: 'column',
         deflex: 1,
         divs: [{
-            id: 'vnf'
+            id: 'vnf',
+            bring: true
         }, {
-            id: 'vfc'
+            id: 'vfc',
+            bring: true
         }, {
-            id: 'vm'
+            id: 'vm',
+            bring: true
         }, {
-            id: 'host'
+            id: 'host',
+            bring: true
         }]
     }]
 };
@@ -93,16 +100,20 @@ var zoom_layout = {
             direction: 'row',
             deflex: 1,
             divs: [{
-                id: 'hierarchy'
+                id: 'hierarchy',
+                bring: true
             }, {
-                id: 'vm'
+                id: 'vm',
+                bring: true
             }]
         }, {
             id: 'query',
+            bring: true,
             flex: 1,
             direction: 'column',
             divs: [{
-                id: 'selections'
+                id: 'selections',
+                bring: true
             }, {
                 id: 'query_paths',
                 flex: 1,
@@ -122,11 +133,14 @@ var zoom_layout = {
         direction: 'column',
         deflex: 1,
         divs: [{
-            id: 'vnf'
+            id: 'vnf',
+            bring: true
         }, {
-            id: 'vfc'
+            id: 'vfc',
+            bring: true
         }, {
-            id: 'host'
+            id: 'host',
+            bring: true
         }]
     }]
 };
@@ -141,6 +155,10 @@ if(qs.switchLayout) {
         .on('click', function() {
             zoomed = !zoomed;
             flex_divs('#main', zoomed ? zoom_layout : lr_layout);
+            size_diagram(diagram, '#hierarchy');
+            Object.keys(levels).forEach(function(k) {
+                size_diagram(levels[k], '#' + k.toLowerCase());
+            });
         });
 }
 
@@ -159,11 +177,17 @@ var source = function(callback) {
         dc_graph.load_graph(file, callback);
 };
 
-function create_diagram(sel) {
-    return dc_graph.diagram(sel)
+function size_diagram(diagram, sel) {
+    diagram
         .width($(sel).innerWidth())
-        .height($(sel).innerHeight())
-        .margins({left: 10, top: 10, right: 10, bottom: 10});
+        .height($(sel).innerHeight());
+    return diagram;
+}
+
+function create_diagram(sel) {
+    return size_diagram(dc_graph.diagram(sel)
+                        .margins({left: 10, top: 10, right: 10, bottom: 10}),
+                        sel);
 }
 
 function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr) {

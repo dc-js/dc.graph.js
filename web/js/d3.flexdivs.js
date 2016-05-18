@@ -1,42 +1,58 @@
-function flex_div_helper(data) {
-    function select_or_create(d) {
-        var div;
-        if(d.id)
-            div = document.getElementById(d.id);
-        if(!div) {
-            div = document.createElement("div");
+function flex_div_helper_mapper(map) {
+    return function flex_div_helper(data) {
+        function select_or_create(d) {
+            var div;
             if(d.id)
-                div.id = d.id;
+                div = map[d.id];
+            if(!div) {
+                div = document.createElement("div");
+                if(d.id)
+                    div.id = d.id;
+            }
+            return div;
         }
-        return div;
-    }
 
-    var me = d3.select(this);
+        var me = d3.select(this);
 
-    me.style({
-        flex: function(d) {
-            if(d.flex)
-                return d.flex;
-            var pdat = d3.select(this.parentNode).datum();
-            return pdat && pdat.deflex || null;
-        },
-        display: function(d) {
-            return d.direction ? 'flex' : null;
-        },
-        'flex-direction': function(d) {
-            return d.direction || null;
+        me.style({
+            flex: function(d) {
+                if(d.flex)
+                    return d.flex;
+                var pdat = d3.select(this.parentNode).datum();
+                return pdat && pdat.deflex || null;
+            },
+            display: function(d) {
+                return d.direction ? 'flex' : null;
+            },
+            'flex-direction': function(d) {
+                return d.direction || null;
+            }
+        });
+
+        if(data.divs) {
+            var divs = me.selectAll('div.flex-div').data(data.divs);
+            divs.enter().append(select_or_create).attr('class', 'flex-div');
+            divs.exit().remove(); // this won't work
+            divs.each(flex_div_helper);
         }
-    });
-
-    if(data.divs) {
-        var divs = me.selectAll('div.flex-div').data(data.divs);
-        divs.enter().append(select_or_create);
-        divs.exit().remove(); // this won't work
-        divs.each(flex_div_helper);
+    };
+}
+function bringover(data, map) {
+    if(data.id && data.bring) {
+        var e = document.getElementById(data.id);
+        if(e)
+            map[data.id] = e.parentNode.removeChild(e);
     }
+    if(data.divs)
+        data.divs.forEach(function(d) {
+            bringover(d, map);
+        });
 }
 
 function flex_divs(root, data) {
+    var map = {};
+    bringover(data, map);
+    var flex_div_helper = flex_div_helper_mapper(map);
     d3.select(root).data([data])
         .each(flex_div_helper);
 }
