@@ -3,8 +3,11 @@ function flex_div_helper(data) {
         var div;
         if(d.id)
             div = document.getElementById(d.id);
-        if(!div)
-            (div = document.createElement("div")).id = d.id;
+        if(!div) {
+            div = document.createElement("div");
+            if(d.id)
+                div.id = d.id;
+        }
         return div;
     }
 
