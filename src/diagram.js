@@ -1233,7 +1233,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _dispatch.drawn(node, edge, edgeHover);
 
-        _chart.refresh(node, edge);
+        _refresh(node, edge);
 
         // really we should have layout chaining like in the good old Dynagraph days
         // the ordering of this and the previous 4 statements is somewhat questionable
@@ -1417,12 +1417,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    _chart.refresh = function(node, edge, edgeHover, edgeLabels) {
-        node = node || _nodeLayer.selectAll('.node');
-        edge = edge || _edgeLayer.selectAll('.edge');
-        edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
-        edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
-
+    function _refresh(node, edge) {
         edge
             .attr('stroke', _chart.edgeStroke.eval)
             .attr('stroke-width', _chart.edgeStrokeWidth.eval)
@@ -1442,6 +1437,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
 
         _chart._updateNode(node);
+    }
+
+    _chart.refresh = function(node, edge, edgeHover, edgeLabels) {
+        node = node || _nodeLayer.selectAll('.node');
+        edge = edge || _edgeLayer.selectAll('.edge');
+        _refresh(node, edge);
+
+        edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
+        edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
         var nullSel = d3.select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel);
     };
