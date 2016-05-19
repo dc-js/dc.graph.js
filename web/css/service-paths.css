@@ -49,6 +49,22 @@ div.thin-border {
     pointer-events: none;
 }
 
+.dc-graph {
+    position: relative;
+}
+
+.graph-title {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font: 14px helvetica, san-serif;
+    cursor: pointer;
+}
+
+.graph-title:hover {
+    text-decoration: underline;
+}
+
 .d3-tip {
     z-index: 10;
 }

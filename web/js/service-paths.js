@@ -37,7 +37,7 @@ var _colormap = {
     Network: '#ffff33'
 };
 
-var lr_layout = {
+var hierarchy_big_layout = {
     direction: 'row',
     divs: [{
         id: 'left',
@@ -80,7 +80,7 @@ var lr_layout = {
     }]
 };
 
-var zoom_layout = {
+var split_layout = {
     direction: 'row',
     divs: [{
         id: 'left',
@@ -95,7 +95,6 @@ var zoom_layout = {
                 class: 'thin-border',
                 bring: true
             }, {
-                id: 'vm',
                 class: 'thin-border',
                 bring: true
             }]
@@ -112,15 +111,12 @@ var zoom_layout = {
         direction: 'column',
         deflex: 1,
         divs: [{
-            id: 'vnf',
             class: 'thin-border',
             bring: true
         }, {
-            id: 'vfc',
             class: 'thin-border',
             bring: true
         }, {
-            id: 'host',
             class: 'thin-border',
             bring: true
         }]
@@ -134,17 +130,29 @@ function place_diagram(id) {
         size_diagram(levels[id], '#wrap-' + id);
 }
 
-flex_divs('#main', lr_layout);
+flex_divs('#main', hierarchy_big_layout);
 
-var zoomed = false;
+var expanded = 'hierarchy';
 
-if(qs.switchLayout) {
-    d3.select('#switch-layout')
-        .style('display', 'inline')
-        .on('click', function() {
-            zoomed = !zoomed;
-            flex_divs('#main', zoomed ? zoom_layout : lr_layout, place_diagram);
+function expanded_layout(id) {
+    if(id === 'hierarchy')
+        return hierarchy_big_layout;
+    else {
+        var layout = split_layout;
+        layout.divs[0].divs[0].divs[1].id = id;
+        var remaining = ['vnf', 'vfc', 'vm', 'host'].filter(function(n) { return n !== id; });
+        layout.divs[1].divs.forEach(function(d, i) {
+            d.id = remaining[i];
         });
+        return layout;
+    }
+}
+
+function expand_view(id) {
+    if(id === expanded)
+        id = 'hierarchy';
+    flex_divs('#main', expanded_layout(id), place_diagram);
+    expanded = id;
 }
 
 var treeOnly = qs.treeOnly !== 'false',
@@ -171,6 +179,13 @@ function size_diagram(diagram, sel) {
 }
 
 function create_diagram(id) {
+    d3.select('#' + id)
+        .append('span')
+        .attr('class', 'graph-title')
+        .text(id)
+        .on('click', function() {
+            expand_view(id);
+        });
     return size_diagram(dc_graph.diagram('#' + id)
                         .margins({left: 10, top: 10, right: 10, bottom: 10}),
                         '#wrap-' + id);
@@ -219,7 +234,6 @@ function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetat
         .delay(500);
 
     diagram.child('tip', tip);
-    //diagram.DEBUG_BOUNDS = true;
 }
 
 var read_paths = dc_graph.path_reader()
