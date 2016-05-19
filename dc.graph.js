@@ -2107,8 +2107,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return name ? 'url(#' + arrow_id + ')' : null;
             })
             .each(function(e) {
-                // d3.selectAll('#' + _chart.arrowId(e, 'head') + ',#' + _chart.arrowId(e, 'tail'))
-                //     .attr('fill', _chart.edgeStroke.eval(e));
+                d3.selectAll('#' + _chart.arrowId(e, 'head') + ',#' + _chart.arrowId(e, 'tail'))
+                    .attr('fill', _chart.edgeStroke.eval(e));
             });
 
         _chart._updateNode(node);
@@ -3333,6 +3333,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     function paths_changed(nop, eop) {
         node_on_paths = nop;
         edge_on_paths = eop;
+        selected = hoverpaths = null;
         refresh();
     }
 
