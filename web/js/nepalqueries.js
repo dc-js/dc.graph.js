@@ -63,6 +63,14 @@ where
 		return ["FNS01", "FNS02"];
 		}
             }
+    },
+    {
+        name: 'virtualization_layer',
+        description: 'Virtualization-layer service path between FNS01 and IOM1',
+        query: `Retrieve P
+from PATHS P
+where
+	P MATCHES VM(name = "WT2CWA1FNS01v")->[Connects()]{3, 4}->VM(name = "WT2CWA1IOM02v")`
     }
 ];
 
