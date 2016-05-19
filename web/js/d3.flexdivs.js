@@ -1,17 +1,5 @@
 function flex_div_helper_mapper(map) {
     return function flex_div_helper(data) {
-        function select_or_create(d) {
-            var div;
-            if(d.id)
-                div = map[d.id];
-            if(!div) {
-                div = document.createElement("div");
-                if(d.id)
-                    div.id = d.id;
-            }
-            return div;
-        }
-
         var me = d3.select(this);
 
         me.style({
@@ -30,9 +18,20 @@ function flex_div_helper_mapper(map) {
         });
 
         if(data.divs) {
-            var divs = me.selectAll('div.flex-div').data(data.divs);
-            divs.enter().append(select_or_create).attr('class', 'flex-div');
-            divs.exit().remove(); // this won't work
+            var divs = me.selectAll(function() {
+                return this.childNodes;
+            }).data(data.divs);
+            var enter = divs.enter().append('div').attr({
+                class: 'flex-div'
+            });
+            enter.filter(function(d) { return d.bring && !map[d.id]; })
+                .append('div')
+                    .attr('id', function(d) { return d.id; });
+            divs.exit().remove();
+            divs.attr('id', function(d) {
+                return d.bring ? 'wrap-' + d.id : d.id;
+            });
+
             divs.each(flex_div_helper);
         }
     };
@@ -49,10 +48,15 @@ function bringover(data, map) {
         });
 }
 
-function flex_divs(root, data) {
+function flex_divs(root, data, place) {
     var map = {};
     bringover(data, map);
     var flex_div_helper = flex_div_helper_mapper(map);
     d3.select(root).data([data])
         .each(flex_div_helper);
+    Object.keys(map).forEach(function(k) {
+        if(place)
+            place(k);
+        document.getElementById('wrap-' + k).appendChild(map[k]);
+    });
 }
