@@ -1444,8 +1444,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return name ? 'url(#' + arrow_id + ')' : null;
             })
             .each(function(e) {
-                // d3.selectAll('#' + _chart.arrowId(e, 'head') + ',#' + _chart.arrowId(e, 'tail'))
-                //     .attr('fill', _chart.edgeStroke.eval(e));
+                d3.selectAll('#' + _chart.arrowId(e, 'head') + ',#' + _chart.arrowId(e, 'tail'))
+                    .attr('fill', _chart.edgeStroke.eval(e));
             });
 
         _chart._updateNode(node);
