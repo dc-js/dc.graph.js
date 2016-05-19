@@ -49,24 +49,20 @@ where
         and length(P) <= 5`
     },
     {
-        name: 'vnf_vnfs',
-        description: 'Find all VNFs that talk to VNF',
+        name: 'vfc_paths',
+        description: 'Find all service paths between FNS VFC and DNS VFC',
         query: `Retrieve P
 from PATHS P
 where
-        P MATCHES VNF(name = "$$1$$")->[Connects()]{1,2}->VNF()
+        P MATCHES FNS(name="$$1$$")->[Connects()]{2,4}->DNS()
         and length(P) <= 5`,
         select1: {
-            name: 'VNF',
-            default: 'FW_VNF',
+            name: 'FNS',
+            default: 'FNS01',
             init: function(nodes, edges) {
-                return nodes.filter(function(n) {
-                    return raw_node_type(n) === 'VNF';
-                }).map(function(n) {
-                    return n.name;
-                });
+		return ["FNS01", "FNS02"];
+		}
             }
-        }
     }
 ];
 
