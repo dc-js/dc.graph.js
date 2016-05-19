@@ -127,6 +127,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.autoZoom = property(null);
     _chart.zoomToFit = function() {
+        if(!(_nodeLayer && _edgeLayer))
+            return;
         var node = _nodeLayer.selectAll('.node'),
             edge = _edgeLayer.selectAll('.edge');
         auto_zoom(node, edge);

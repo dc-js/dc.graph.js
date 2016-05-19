@@ -49,24 +49,9 @@ var lr_layout = {
             flex: 3
         }, {
             id: 'query',
-            bring: true,
             flex: 1,
             direction: 'column',
-            divs: [{
-                id: 'selections',
-                bring: true
-            }, {
-                id: 'query_paths',
-                flex: 1,
-                direction: 'row',
-                divs: [{
-                    id: 'qedit',
-                    flex: 2
-                }, {
-                    id: 'paths',
-                    flex: 1
-                }]
-            }]
+            bring: true
         }]
     }, {
         id: 'right',
@@ -108,24 +93,9 @@ var zoom_layout = {
             }]
         }, {
             id: 'query',
-            bring: true,
             flex: 1,
             direction: 'column',
-            divs: [{
-                id: 'selections',
-                bring: true
-            }, {
-                id: 'query_paths',
-                flex: 1,
-                direction: 'row',
-                divs: [{
-                    id: 'qedit',
-                    flex: 2
-                }, {
-                    id: 'paths',
-                    flex: 1
-                }]
-            }]
+            bring: true
         }]
     }, {
         id: 'right',
@@ -145,6 +115,13 @@ var zoom_layout = {
     }]
 };
 
+function place_diagram(id) {
+    if(id==='hierarchy' && diagram)
+        size_diagram(diagram, '#wrap-hierarchy');
+    else if(levels[id])
+        size_diagram(levels[id], '#wrap-' + id);
+}
+
 flex_divs('#main', lr_layout);
 
 var zoomed = false;
@@ -154,11 +131,7 @@ if(qs.switchLayout) {
         .style('display', 'inline')
         .on('click', function() {
             zoomed = !zoomed;
-            flex_divs('#main', zoomed ? zoom_layout : lr_layout);
-            size_diagram(diagram, '#hierarchy');
-            Object.keys(levels).forEach(function(k) {
-                size_diagram(levels[k], '#' + k.toLowerCase());
-            });
+            flex_divs('#main', zoomed ? zoom_layout : lr_layout, place_diagram);
         });
 }
 
@@ -180,14 +153,15 @@ var source = function(callback) {
 function size_diagram(diagram, sel) {
     diagram
         .width($(sel).innerWidth())
-        .height($(sel).innerHeight());
+        .height($(sel).innerHeight())
+        .zoomToFit();
     return diagram;
 }
 
-function create_diagram(sel) {
-    return size_diagram(dc_graph.diagram(sel)
+function create_diagram(id) {
+    return size_diagram(dc_graph.diagram('#' + id)
                         .margins({left: 10, top: 10, right: 10, bottom: 10}),
-                        sel);
+                        '#wrap-' + id);
 }
 
 function diagram_common(diagram, nodes, edges, nodekeyattr, sourceattr, targetattr) {
@@ -374,7 +348,7 @@ source(function(error, data) {
     });
 
     if(!qs.skipDiagrams) {
-        diagram = create_diagram('#hierarchy');
+        diagram = create_diagram('hierarchy');
         diagram_common(diagram, hnodes, edges, nodekeyattr, sourceattr, targetattr);
         diagram
             .fitStrategy('vertical')
@@ -430,11 +404,11 @@ source(function(error, data) {
             nodeRadius: 10
         });
 
-        var sel = '#' + type.toLowerCase();
+        var id = type.toLowerCase();
         if(!qs.skipDiagrams) {
-            var dialev = create_diagram(sel);
+            var dialev = create_diagram(id);
             diagram_common(dialev, bylayer[type], edges, nodekeyattr, sourceattr, targetattr);
-            levels[type] = dialev
+            levels[type.toLowerCase()] = dialev
                 .edgeArrowSize(0.5)
                 .nodeRadius(5)
                 .parallelEdgeOffset(5)

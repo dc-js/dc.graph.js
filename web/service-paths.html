@@ -37,18 +37,23 @@
 <body>
 
   <!-- to be pulled into #main -->
-  <div id="selections">
-    <label>&nbsp;&nbsp;Query: <select id="squery"></select></label>
-    <span id="select1">
-      <label>
-        &nbsp;&nbsp;<span class="desc"></span>:&nbsp;
-        <select></select>
-      </label>
-    </span>
-    &nbsp;&nbsp;<button id="submit">Submit</button>
+  <div id="query" style="display:flex; flex-direction: column; flex: 1">
+    <div id="selections">
+      <label>&nbsp;&nbsp;Query: <select id="squery"></select></label>
+      <span id="select1">
+        <label>
+          &nbsp;&nbsp;<span class="desc"></span>:&nbsp;
+          <select></select>
+        </label>
+      </span>
+      &nbsp;&nbsp;<button id="submit">Submit</button>
       &nbsp;&nbsp;<a style="display:none" id="switch-layout" href='#'>switch layout</a>
+    </div>
+    <div id="query_paths" style="flex: 1 1 0%; display: flex; flex-direction: row">
+      <div id="qedit" style="flex: 2 1 0%"></div>
+      <div id="paths" style="flex: 1 1 0%"></div>
+    </div>
   </div>
-
   <div id="main"></div>
 
 <script type="text/javascript" src="js/service-paths.js"></script>
