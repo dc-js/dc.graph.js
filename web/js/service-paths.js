@@ -456,10 +456,14 @@ source(function(error, data) {
                 .nodeRadius(5)
                 .parallelEdgeOffset(5)
                 .edgeArrowhead(null)
-                .baseLength(20)
-                .lengthStrategy('symmetric')
                 .child('highlight-paths', highlight_paths_level)
             ;
+            if(qs.jaccard)
+                dialev.baseLength(20)
+                    .lengthStrategy('jaccard');
+            else
+                dialev.baseLength(7.1)
+                    .lengthStrategy('symmetric');
         }
     }
 
