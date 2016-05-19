@@ -39,7 +39,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Number}
      * @return {dc_graph.diagram}
      **/
-    _chart.width = property(200).react(resizeSvg);
+    _chart.width = property(200).react(function(w) {
+        resizeSvg(w,0);
+    });
 
     /**
      * Set or get the height attribute of the diagram. The width and height are applied to the
@@ -53,7 +55,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Number}
      * @return {dc_graph.diagram}
      **/
-    _chart.height = property(200).react(resizeSvg);
+    _chart.height = property(200).react(function(h) {
+        resizeSvg(0,h);
+    });
 
     /**
      * Get or set the root element, which is usually the parent div. Normally the root is set
@@ -1969,10 +1973,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         globalTransform(d3.event.translate, d3.event.scale);
     }
 
-    function resizeSvg() {
+    function resizeSvg(w, h) {
         if(_svg) {
-            _svg.attr('width', _chart.width())
-                .attr('height', _chart.height());
+            _svg.attr('width', w || _chart.width())
+                .attr('height', h || _chart.height());
         }
     }
 
