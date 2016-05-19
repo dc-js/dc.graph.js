@@ -31,10 +31,13 @@ var _rankmap = {
 var _colormap = {
     VNF: '#ff7f00',
     VFC: '#377eb8',
-    VFC_A: '#f0027f',
     VM: '#4daf4a',
     Host: '#984ea3',
-    Network: '#ffff33'
+    VFC_A: '#a65628',
+    Network: '#f0027f',
+    CCE_Logical: '#fb8072',
+    Switch: '#ffff33',
+    CCE_Physical: '#8dd3c7'
 };
 
 var hierarchy_big_layout = {
@@ -416,14 +419,14 @@ source(function(error, data) {
         delete bylayer.CCE_Logical;
     }
 
-    if(bylayer.CCE_Physical) {
-        bylayer.Host = bylayer.Host.concat(bylayer.CCE_Physical);
-        delete bylayer.CCE_Physical;
-    }
-
     if(bylayer.Switch) {
         bylayer.Host = bylayer.Host.concat(bylayer.Switch);
         delete bylayer.Switch;
+    }
+
+    if(bylayer.CCE_Physical) {
+        bylayer.Host = bylayer.Host.concat(bylayer.CCE_Physical);
+        delete bylayer.CCE_Physical;
     }
 
     for(var type in bylayer) {
