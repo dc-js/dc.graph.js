@@ -1,5 +1,5 @@
 {
-    "queryTime": 960.968528,
+    "queryTime": 2218.664396,
     "results": [
         {
             "_id": 19348,
@@ -70,16 +70,6 @@
             "vcpus": 18,
             "version_": "1.0",
             "vm_os": "Other 2.6.x Linux (64-bit)"
-        },
-        {
-            "_id": 19944,
-            "_type": "vertex",
-            "ecomp_uid": "9be26902161d11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "FW-DNS-TRUSTED-3850",
-            "time_added_": "2016-05-09 15:38:30",
-            "time_modified_": "2016-05-09 15:38:30",
-            "version_": "1.0"
         },
         {
             "_id": 19096,
@@ -210,6 +200,16 @@
             "version_": "1.0"
         },
         {
+            "_id": 20100,
+            "_type": "vertex",
+            "ecomp_uid": "21353d0c1d3811e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "PCRF_GX",
+            "time_added_": "2016-05-18 16:35:59",
+            "time_modified_": "2016-05-18 16:35:59",
+            "version_": "1.0"
+        },
+        {
             "_id": 19220,
             "_type": "vertex",
             "connection_state": "connected",
@@ -229,6 +229,18 @@
             "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
         },
         {
+            "_id": 20148,
+            "_type": "vertex",
+            "category": "EW-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3b168e1d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "EW-Switch-4",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19264,
             "_type": "vertex",
             "connection_state": "connected",
@@ -246,16 +258,6 @@
             "vcpus": 6,
             "version_": "1.0",
             "vm_os": "CentOS 4/5/6/7 (64-bit)"
-        },
-        {
-            "_id": 19932,
-            "_type": "vertex",
-            "ecomp_uid": "a3069a4c161c11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "Base1_503",
-            "time_added_": "2016-05-09 15:31:33",
-            "time_modified_": "2016-05-09 15:31:33",
-            "version_": "1.0"
         },
         {
             "_id": 19752,
@@ -331,16 +333,6 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1ASM39v"
-        },
-        {
-            "_id": 20008,
-            "_type": "vertex",
-            "ecomp_uid": "fa3a88fe162211e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "SR_IOV_NS2",
-            "time_added_": "2016-05-09 16:16:56",
-            "time_modified_": "2016-05-09 16:16:56",
-            "version_": "1.0"
         },
         {
             "_id": 19512,
@@ -722,6 +714,28 @@
             "version_": "1.0"
         },
         {
+            "_id": 20124,
+            "_type": "vertex",
+            "ecomp_uid": "58191bb21d3911e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "SR_IOV_NS1",
+            "time_added_": "2016-05-18 16:44:40",
+            "time_modified_": "2016-05-18 16:44:40",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20168,
+            "_type": "vertex",
+            "category": "NS-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3e47be1d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "NS-Switch-3",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19628,
             "_type": "vertex",
             "ecomp_uid": "0a96524e161b11e6b1f2005056a9660d",
@@ -785,16 +799,6 @@
             "vcpus": 8,
             "version_": "1.0",
             "vm_os": ""
-        },
-        {
-            "_id": 19928,
-            "_type": "vertex",
-            "ecomp_uid": "36a76b2e161c11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "Base1_502",
-            "time_added_": "2016-05-09 15:28:31",
-            "time_modified_": "2016-05-09 15:28:31",
-            "version_": "1.0"
         },
         {
             "_id": 18948,
@@ -1209,6 +1213,18 @@
             "version_": "1.0"
         },
         {
+            "_id": 20144,
+            "_type": "vertex",
+            "category": "EW-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3a68381d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "EW-Switch-3",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19276,
             "_type": "vertex",
             "connection_state": "connected",
@@ -1257,16 +1273,6 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "wt2cwa1psm01v"
-        },
-        {
-            "_id": 19952,
-            "_type": "vertex",
-            "ecomp_uid": "eb71cc92161d11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "GI_UNTRUSTED",
-            "time_added_": "2016-05-09 15:40:44",
-            "time_modified_": "2016-05-09 15:40:44",
-            "version_": "1.0"
         },
         {
             "_id": 19252,
@@ -1463,26 +1469,6 @@
             "version_": "1.0"
         },
         {
-            "_id": 19976,
-            "_type": "vertex",
-            "ecomp_uid": "2b30143c161f11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "OAM",
-            "time_added_": "2016-05-09 15:49:40",
-            "time_modified_": "2016-05-09 15:49:40",
-            "version_": "1.0"
-        },
-        {
-            "_id": 19940,
-            "_type": "vertex",
-            "ecomp_uid": "56f056ba161d11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "East-West 2 Network",
-            "time_added_": "2016-05-09 15:36:34",
-            "time_modified_": "2016-05-09 15:36:34",
-            "version_": "1.0"
-        },
-        {
             "_id": 19848,
             "_type": "vertex",
             "ecomp_uid": "0acd5672161b11e6b1f2005056a9660d",
@@ -1503,6 +1489,17 @@
             "name": "wt2cwa1esx309",
             "time_added_": "2016-05-09 15:20:08",
             "time_modified_": "2016-05-09 15:20:08",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20192,
+            "_type": "vertex",
+            "category": "cce_logical",
+            "ecomp_uid": "58bf63921d6511e6913d005056a9660d",
+            "label_": "Base:Node:CCE_Logical",
+            "name": "cce_logical",
+            "time_added_": "2016-05-18 21:59:39",
+            "time_modified_": "2016-05-18 21:59:39",
             "version_": "1.0"
         },
         {
@@ -1714,16 +1711,6 @@
             "version_": "1.0"
         },
         {
-            "_id": 19980,
-            "_type": "vertex",
-            "ecomp_uid": "b90799c8162011e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "PCRF_GX",
-            "time_added_": "2016-05-09 16:00:48",
-            "time_modified_": "2016-05-09 16:00:48",
-            "version_": "1.0"
-        },
-        {
             "_id": 18852,
             "_type": "vertex",
             "category": "PROXY_VNF",
@@ -1747,16 +1734,6 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1DNS02v"
-        },
-        {
-            "_id": 20000,
-            "_type": "vertex",
-            "ecomp_uid": "f95675b6162111e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "SR_IOV_EW2",
-            "time_added_": "2016-05-09 16:09:45",
-            "time_modified_": "2016-05-09 16:09:45",
-            "version_": "1.0"
         },
         {
             "_id": 19132,
@@ -1803,16 +1780,6 @@
             "version_": "1.0"
         },
         {
-            "_id": 19916,
-            "_type": "vertex",
-            "ecomp_uid": "7ccdc176161b11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "APIGW-FW",
-            "time_added_": "2016-05-09 15:23:19",
-            "time_modified_": "2016-05-09 15:23:19",
-            "version_": "1.0"
-        },
-        {
             "_id": 19476,
             "_type": "vertex",
             "connection_state": "connected",
@@ -1855,16 +1822,6 @@
             "version_": "1.0"
         },
         {
-            "_id": 19984,
-            "_type": "vertex",
-            "ecomp_uid": "dca3e7f6162011e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "PCRF_INTERNAL",
-            "time_added_": "2016-05-09 16:01:47",
-            "time_modified_": "2016-05-09 16:01:47",
-            "version_": "1.0"
-        },
-        {
             "_id": 19796,
             "_type": "vertex",
             "ecomp_uid": "0ac167fe161b11e6b1f2005056a9660d",
@@ -1885,6 +1842,18 @@
             "name": "wt2cwa1esx404",
             "time_added_": "2016-05-09 15:20:08",
             "time_modified_": "2016-05-09 15:20:08",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20152,
+            "_type": "vertex",
+            "category": "EW-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3bc1b01d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "EW-Switch-5",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
             "version_": "1.0"
         },
         {
@@ -2036,16 +2005,6 @@
             "vm": "WT2CWA1ACU01v1"
         },
         {
-            "_id": 19968,
-            "_type": "vertex",
-            "ecomp_uid": "8d1ab112161e11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "North-South 1 Network",
-            "time_added_": "2016-05-09 15:45:15",
-            "time_modified_": "2016-05-09 15:45:15",
-            "version_": "1.0"
-        },
-        {
             "_id": 19424,
             "_type": "vertex",
             "connection_state": "connected",
@@ -2063,16 +2022,6 @@
             "vcpus": 16,
             "version_": "1.0",
             "vm_os": "Other 2.6.x Linux (64-bit)"
-        },
-        {
-            "_id": 19948,
-            "_type": "vertex",
-            "ecomp_uid": "bfc070e4161d11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "GI_TRUSTED",
-            "time_added_": "2016-05-09 15:39:30",
-            "time_modified_": "2016-05-09 15:39:30",
-            "version_": "1.0"
         },
         {
             "_id": 19336,
@@ -2094,16 +2043,6 @@
             "vm_os": "Other 2.6.x Linux (64-bit)"
         },
         {
-            "_id": 20012,
-            "_type": "vertex",
-            "ecomp_uid": "5812469c162311e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "VM Network",
-            "time_added_": "2016-05-09 16:19:33",
-            "time_modified_": "2016-05-09 16:19:33",
-            "version_": "1.0"
-        },
-        {
             "_id": 18980,
             "_type": "vertex",
             "category": "ASM",
@@ -2115,16 +2054,6 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1ASM28v"
-        },
-        {
-            "_id": 19956,
-            "_type": "vertex",
-            "ecomp_uid": "18ae2c6e161e11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "HA",
-            "time_added_": "2016-05-09 15:42:00",
-            "time_modified_": "2016-05-09 15:42:00",
-            "version_": "1.0"
         },
         {
             "_id": 19876,
@@ -2241,6 +2170,16 @@
             "version_": "1.0"
         },
         {
+            "_id": 20072,
+            "_type": "vertex",
+            "ecomp_uid": "c09ed3e61d3611e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "Base1_503",
+            "time_added_": "2016-05-18 16:26:07",
+            "time_modified_": "2016-05-18 16:26:07",
+            "version_": "1.0"
+        },
+        {
             "_id": 19652,
             "_type": "vertex",
             "ecomp_uid": "0a9c6580161b11e6b1f2005056a9660d",
@@ -2347,16 +2286,6 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "wt2cwa1pps03v"
-        },
-        {
-            "_id": 19988,
-            "_type": "vertex",
-            "ecomp_uid": "168ad84e162111e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "PCRF_SP",
-            "time_added_": "2016-05-09 16:03:24",
-            "time_modified_": "2016-05-09 16:03:24",
-            "version_": "1.0"
         },
         {
             "_id": 20056,
@@ -2517,6 +2446,18 @@
             "vm": "WT2CWA1DNS07v"
         },
         {
+            "_id": 20160,
+            "_type": "vertex",
+            "category": "NS-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3d0c6e1d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "NS-Switch-1",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19708,
             "_type": "vertex",
             "ecomp_uid": "0aa9b1fe161b11e6b1f2005056a9660d",
@@ -2572,16 +2513,6 @@
             "vm": "WT2CWA1ASM41v"
         },
         {
-            "_id": 19920,
-            "_type": "vertex",
-            "ecomp_uid": "a966b116161b11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "Base 1 Network",
-            "time_added_": "2016-05-09 15:24:34",
-            "time_modified_": "2016-05-09 15:24:34",
-            "version_": "1.0"
-        },
-        {
             "_id": 19256,
             "_type": "vertex",
             "connection_state": "connected",
@@ -2599,6 +2530,16 @@
             "vcpus": 10,
             "version_": "1.0",
             "vm_os": "CentOS 4/5/6/7 (64-bit)"
+        },
+        {
+            "_id": 20120,
+            "_type": "vertex",
+            "ecomp_uid": "e1903b9c1d3811e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "SR_IOV_EW2",
+            "time_added_": "2016-05-18 16:41:22",
+            "time_modified_": "2016-05-18 16:41:22",
+            "version_": "1.0"
         },
         {
             "_id": 19292,
@@ -2782,6 +2723,16 @@
             "vm_os": "Other 2.6.x Linux (64-bit)"
         },
         {
+            "_id": 20104,
+            "_type": "vertex",
+            "ecomp_uid": "29724e381d3811e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "PCRF_INTERNAL",
+            "time_added_": "2016-05-18 16:36:13",
+            "time_modified_": "2016-05-18 16:36:13",
+            "version_": "1.0"
+        },
+        {
             "_id": 20048,
             "_type": "vertex",
             "category": "WSM_A",
@@ -2955,6 +2906,18 @@
             "version_": "1.0"
         },
         {
+            "_id": 20176,
+            "_type": "vertex",
+            "category": "NS-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3f77881d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "NS-Switch-5",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19428,
             "_type": "vertex",
             "connection_state": "connected",
@@ -3053,16 +3016,6 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1ASM29v"
-        },
-        {
-            "_id": 19964,
-            "_type": "vertex",
-            "ecomp_uid": "60e813be161e11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "Log",
-            "time_added_": "2016-05-09 15:44:01",
-            "time_modified_": "2016-05-09 15:44:01",
-            "version_": "1.0"
         },
         {
             "_id": 19588,
@@ -3185,6 +3138,17 @@
             "version_": "1.0"
         },
         {
+            "_id": 20196,
+            "_type": "vertex",
+            "category": "cce_physical",
+            "ecomp_uid": "58c303d01d6511e6913d005056a9660d",
+            "label_": "Base:Node:CCE_Physical",
+            "name": "cce_physical",
+            "time_added_": "2016-05-18 21:59:39",
+            "time_modified_": "2016-05-18 21:59:39",
+            "version_": "1.0"
+        },
+        {
             "_id": 19648,
             "_type": "vertex",
             "ecomp_uid": "0a9b65a4161b11e6b1f2005056a9660d",
@@ -3294,6 +3258,16 @@
             "version_": "1.0"
         },
         {
+            "_id": 20092,
+            "_type": "vertex",
+            "ecomp_uid": "dacd46201d3711e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "LOG",
+            "time_added_": "2016-05-18 16:34:01",
+            "time_modified_": "2016-05-18 16:34:01",
+            "version_": "1.0"
+        },
+        {
             "_id": 19672,
             "_type": "vertex",
             "ecomp_uid": "0aa13768161b11e6b1f2005056a9660d",
@@ -3372,6 +3346,16 @@
             "vcpus": 6,
             "version_": "1.0",
             "vm_os": "CentOS 4/5/6/7 (64-bit)"
+        },
+        {
+            "_id": 20116,
+            "_type": "vertex",
+            "ecomp_uid": "6ca9ca001d3811e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "SR_IOV_EW1",
+            "time_added_": "2016-05-18 16:38:05",
+            "time_modified_": "2016-05-18 16:38:05",
+            "version_": "1.0"
         },
         {
             "_id": 18892,
@@ -3474,6 +3458,18 @@
             "name": "wt2cwa1esx401",
             "time_added_": "2016-05-09 15:20:08",
             "time_modified_": "2016-05-09 15:20:08",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20180,
+            "_type": "vertex",
+            "category": "NS-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c4019681d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "NS-Switch-6",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
             "version_": "1.0"
         },
         {
@@ -4010,6 +4006,16 @@
             "version_": "1.0"
         },
         {
+            "_id": 20112,
+            "_type": "vertex",
+            "ecomp_uid": "64d0d77e1d3811e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "PCRF_SY",
+            "time_added_": "2016-05-18 16:37:52",
+            "time_modified_": "2016-05-18 16:37:52",
+            "version_": "1.0"
+        },
+        {
             "_id": 19528,
             "_type": "vertex",
             "ecomp_uid": "0a7e0342161b11e6b1f2005056a9660d",
@@ -4030,26 +4036,6 @@
             "name": "107.250.178.199",
             "time_added_": "2016-05-09 15:20:07",
             "time_modified_": "2016-05-09 15:20:07",
-            "version_": "1.0"
-        },
-        {
-            "_id": 20004,
-            "_type": "vertex",
-            "ecomp_uid": "9b99628e162211e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "SR_IOV_NS1",
-            "time_added_": "2016-05-09 16:14:17",
-            "time_modified_": "2016-05-09 16:14:17",
-            "version_": "1.0"
-        },
-        {
-            "_id": 19936,
-            "_type": "vertex",
-            "ecomp_uid": "0fc57202161d11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "East-West 1 Network",
-            "time_added_": "2016-05-09 15:34:35",
-            "time_modified_": "2016-05-09 15:34:35",
             "version_": "1.0"
         },
         {
@@ -4196,26 +4182,6 @@
             "version_": "1.0"
         },
         {
-            "_id": 19996,
-            "_type": "vertex",
-            "ecomp_uid": "63f6f3b0162111e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "SR_IOV_EW1",
-            "time_added_": "2016-05-09 16:05:34",
-            "time_modified_": "2016-05-09 16:05:34",
-            "version_": "1.0"
-        },
-        {
-            "_id": 19924,
-            "_type": "vertex",
-            "ecomp_uid": "f0b20cd2161b11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "Base 2 Network",
-            "time_added_": "2016-05-09 15:26:33",
-            "time_modified_": "2016-05-09 15:26:33",
-            "version_": "1.0"
-        },
-        {
             "_id": 18908,
             "_type": "vertex",
             "category": "STM",
@@ -4238,16 +4204,6 @@
             "name": "CNC_VNF",
             "time_added_": "2016-05-09 15:16:39",
             "time_modified_": "2016-05-09 15:16:39",
-            "version_": "1.0"
-        },
-        {
-            "_id": 19960,
-            "_type": "vertex",
-            "ecomp_uid": "443d6714161e11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "LOG",
-            "time_added_": "2016-05-09 15:43:13",
-            "time_modified_": "2016-05-09 15:43:13",
             "version_": "1.0"
         },
         {
@@ -4302,6 +4258,16 @@
             "name": "wt2cwa1esx606",
             "time_added_": "2016-05-09 15:20:08",
             "time_modified_": "2016-05-09 15:20:08",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20108,
+            "_type": "vertex",
+            "ecomp_uid": "5ccab16c1d3811e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "PCRF_SP",
+            "time_added_": "2016-05-18 16:37:39",
+            "time_modified_": "2016-05-18 16:37:39",
             "version_": "1.0"
         },
         {
@@ -4364,6 +4330,16 @@
             "vcpus": 16,
             "version_": "1.0",
             "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
+        },
+        {
+            "_id": 20128,
+            "_type": "vertex",
+            "ecomp_uid": "77476c1e1d3911e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "SR_IOV_NS2",
+            "time_added_": "2016-05-18 16:45:33",
+            "time_modified_": "2016-05-18 16:45:33",
+            "version_": "1.0"
         },
         {
             "_id": 19332,
@@ -4442,6 +4418,18 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1FGI04v"
+        },
+        {
+            "_id": 20156,
+            "_type": "vertex",
+            "category": "EW-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3c6d861d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "EW-Switch-6",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
         },
         {
             "_id": 19136,
@@ -4601,6 +4589,16 @@
             "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
         },
         {
+            "_id": 20088,
+            "_type": "vertex",
+            "ecomp_uid": "b3e3702a1d3711e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "HA",
+            "time_added_": "2016-05-18 16:32:55",
+            "time_modified_": "2016-05-18 16:32:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19872,
             "_type": "vertex",
             "ecomp_uid": "0ad28494161b11e6b1f2005056a9660d",
@@ -4624,6 +4622,16 @@
             "version_": "1.0"
         },
         {
+            "_id": 20076,
+            "_type": "vertex",
+            "ecomp_uid": "364752801d3711e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "FW-DNS-TRUSTED-3850",
+            "time_added_": "2016-05-18 16:29:25",
+            "time_modified_": "2016-05-18 16:29:25",
+            "version_": "1.0"
+        },
+        {
             "_id": 19380,
             "_type": "vertex",
             "connection_state": "connected",
@@ -4641,16 +4649,6 @@
             "vcpus": 20,
             "version_": "1.0",
             "vm_os": "Other 2.6.x Linux (64-bit)"
-        },
-        {
-            "_id": 19972,
-            "_type": "vertex",
-            "ecomp_uid": "dabd2256161e11e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "North-South 2 Network",
-            "time_added_": "2016-05-09 15:47:25",
-            "time_modified_": "2016-05-09 15:47:25",
-            "version_": "1.0"
         },
         {
             "_id": 19052,
@@ -4783,6 +4781,18 @@
             "version_": "1.0"
         },
         {
+            "_id": 20164,
+            "_type": "vertex",
+            "category": "NS-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3da4801d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "NS-Switch-2",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19548,
             "_type": "vertex",
             "ecomp_uid": "0a845d00161b11e6b1f2005056a9660d",
@@ -4849,6 +4859,16 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1ASM37v"
+        },
+        {
+            "_id": 20080,
+            "_type": "vertex",
+            "ecomp_uid": "6728a3541d3711e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "GI_TRUSTED",
+            "time_added_": "2016-05-18 16:30:47",
+            "time_modified_": "2016-05-18 16:30:47",
+            "version_": "1.0"
         },
         {
             "_id": 18832,
@@ -5007,6 +5027,18 @@
             "version_": "1.0"
         },
         {
+            "_id": 20136,
+            "_type": "vertex",
+            "category": "EW-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c37d6ae1d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "EW-Switch-1",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19048,
             "_type": "vertex",
             "category": "IOM",
@@ -5018,6 +5050,18 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1IOM04v"
+        },
+        {
+            "_id": 20172,
+            "_type": "vertex",
+            "category": "NS-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c3edf3a1d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "NS-Switch-4",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
         },
         {
             "_id": 18972,
@@ -5056,16 +5100,6 @@
             "version_": "1.0"
         },
         {
-            "_id": 19992,
-            "_type": "vertex",
-            "ecomp_uid": "3c144064162111e6b3b7005056a9660d",
-            "label_": "Base:Node:Network",
-            "name": "PCRF_SY",
-            "time_added_": "2016-05-09 16:04:27",
-            "time_modified_": "2016-05-09 16:04:27",
-            "version_": "1.0"
-        },
-        {
             "_id": 19056,
             "_type": "vertex",
             "category": "ASM",
@@ -5077,6 +5111,16 @@
             "time_modified_": "2016-05-09 15:17:11",
             "version_": "1.0",
             "vm": "WT2CWA1ASM35v"
+        },
+        {
+            "_id": 20096,
+            "_type": "vertex",
+            "ecomp_uid": "f8cb0f181d3711e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "Log",
+            "time_added_": "2016-05-18 16:34:51",
+            "time_modified_": "2016-05-18 16:34:51",
+            "version_": "1.0"
         },
         {
             "_id": 19636,
@@ -5195,6 +5239,28 @@
             "vm": "WT2CWA1STM04v"
         },
         {
+            "_id": 20132,
+            "_type": "vertex",
+            "ecomp_uid": "94f592721d3911e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "VM Network",
+            "time_added_": "2016-05-18 16:46:23",
+            "time_modified_": "2016-05-18 16:46:23",
+            "version_": "1.0"
+        },
+        {
+            "_id": 20140,
+            "_type": "vertex",
+            "category": "EW-Switch",
+            "description": "Physical Switches",
+            "ecomp_uid": "8c39b5001d3e11e68d38005056a9660d",
+            "label_": "Base:Node:Switch:",
+            "name": "EW-Switch-2",
+            "time_added_": "2016-05-18 17:21:55",
+            "time_modified_": "2016-05-18 17:21:55",
+            "version_": "1.0"
+        },
+        {
             "_id": 19396,
             "_type": "vertex",
             "connection_state": "connected",
@@ -5296,6 +5362,16 @@
             "version_": "1.0"
         },
         {
+            "_id": 20084,
+            "_type": "vertex",
+            "ecomp_uid": "8e4ff4501d3711e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "GI_UNTRUSTED",
+            "time_added_": "2016-05-18 16:31:52",
+            "time_modified_": "2016-05-18 16:31:52",
+            "version_": "1.0"
+        },
+        {
             "_id": 19412,
             "_type": "vertex",
             "connection_state": "connected",
@@ -5313,6 +5389,16 @@
             "vcpus": 18,
             "version_": "1.0",
             "vm_os": "Other 2.6.x Linux (64-bit)"
+        },
+        {
+            "_id": 20068,
+            "_type": "vertex",
+            "ecomp_uid": "4aa2f1721d3611e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "Base1_502",
+            "time_added_": "2016-05-18 16:22:49",
+            "time_modified_": "2016-05-18 16:22:49",
+            "version_": "1.0"
         },
         {
             "_id": 19580,
@@ -5357,6 +5443,16 @@
             "vm_os": "Red Hat Enterprise Linux 6 (64-bit)"
         },
         {
+            "_id": 20064,
+            "_type": "vertex",
+            "ecomp_uid": "2880f24c1d3611e6a036005056a9660d",
+            "label_": "Base:Node:Network",
+            "name": "APIGW-FW",
+            "time_added_": "2016-05-18 16:21:52",
+            "time_modified_": "2016-05-18 16:21:52",
+            "version_": "1.0"
+        },
+        {
             "_id": 19000,
             "_type": "vertex",
             "category": "MCM",
@@ -5370,6 +5466,6 @@
             "vm": "WT2CWA1MCM07v"
         }
     ],
-    "totalSize": 308,
+    "totalSize": 315,
     "version": "2.4.0"
 }
