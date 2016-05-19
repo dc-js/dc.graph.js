@@ -344,7 +344,7 @@ source(function(error, data) {
 
     var hnodes = nodes.filter(function(n) {
         var type = raw_node_type(n);
-        return ['Network', 'VFC_A'].indexOf(type)===-1;
+        return ['Network', 'VFC_A', 'CCE_Logical', 'CCE_Physical', 'Switch'].indexOf(type)===-1;
     });
 
     if(!qs.skipDiagrams) {
@@ -372,15 +372,29 @@ source(function(error, data) {
         return m;
     }, {});
 
-    if(bylayer.Network) {
-        bylayer.VM = bylayer.VM.concat(bylayer.Network);
-        bylayer.Host = bylayer.Host.concat(bylayer.Network);
-        delete bylayer.Network;
-    }
-
     if(bylayer.VFC_A) {
         bylayer.VFC = bylayer.VFC.concat(bylayer.VFC_A);
         delete bylayer.VFC_A;
+    }
+
+    if(bylayer.Network) {
+        bylayer.VM = bylayer.VM.concat(bylayer.Network);
+        delete bylayer.Network;
+    }
+
+    if(bylayer.CCE_Logical) {
+        bylayer.VM = bylayer.VM.concat(bylayer.CCE_Logical);
+        delete bylayer.CCE_Logical;
+    }
+
+    if(bylayer.CCE_Physical) {
+        bylayer.Host = bylayer.Host.concat(bylayer.CCE_Physical);
+        delete bylayer.CCE_Physical;
+    }
+
+    if(bylayer.Switch) {
+        bylayer.Host = bylayer.Host.concat(bylayer.Switch);
+        delete bylayer.Switch;
     }
 
     for(var type in bylayer) {
