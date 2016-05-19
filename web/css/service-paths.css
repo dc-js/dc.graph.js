@@ -3,6 +3,10 @@ html, body, #main {
     height: 100%;
 }
 
+#main {
+    overflow: hidden; /* no matter what, don't scroll */
+}
+
 #hierarchy {
     margin: 0;
 }
