@@ -368,6 +368,9 @@ source(function(error, data) {
             .nodeRadius(3)
             .nodePadding(1)
             .child('highlight-paths', highlight_paths_hier)
+            .edgeIsShown(function(e) {
+                return is_tree_edge(diagram, e);
+            })
         ;
         diagram
             .initialLayout(dc_graph.tree_positions(null, node_rank, is_tree_edge.bind(null, diagram),
