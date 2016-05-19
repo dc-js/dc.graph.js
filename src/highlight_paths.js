@@ -15,6 +15,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     function paths_changed(nop, eop) {
         node_on_paths = nop;
         edge_on_paths = eop;
+        selected = hoverpaths = null;
         refresh();
     }
 
