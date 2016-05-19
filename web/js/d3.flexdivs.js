@@ -17,26 +17,25 @@ function flex_div_helper_mapper(map) {
             }
         });
 
-        if(data.divs) {
-            var divs = me.selectAll(function() {
-                return this.childNodes;
-            }).data(data.divs);
-            var enter = divs.enter().append('div');
-            enter.filter(function(d) { return d.bring && !map[d.id]; })
-                .append('div')
-                    .attr('id', function(d) { return d.id; });
-            divs.exit().remove();
-            divs.attr({
-                class: function(d) {
-                    return d.class || null;
-                },
-                id: function(d) {
-                    return d.bring ? 'wrap-' + d.id : d.id;
-                }
+        var divs = me.selectAll(function() {
+            return this.childNodes;
+        }).data(data.divs || []);
+        divs.enter().append('div');
+        divs.exit().remove();
+        divs.attr({
+            class: function(d) {
+                return d.class || null;
+            },
+            id: function(d) {
+                return d.bring ? 'wrap-' + d.id : d.id;
+            }
+        });
+        divs.each(flex_div_helper);
+        divs.filter(function(d) { return d.bring && !map[d.id]; })
+            .append('div')
+            .attr('id', function(d) {
+                return d.id;
             });
-
-            divs.each(flex_div_helper);
-        }
     };
 }
 function bringover(data, map) {
