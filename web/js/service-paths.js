@@ -45,10 +45,12 @@ var lr_layout = {
         direction: 'column',
         divs: [{
             id: 'hierarchy',
+            class: 'thin-border',
             bring: true,
             flex: 3
         }, {
             id: 'query',
+            class: 'thin-border',
             flex: 1,
             direction: 'column',
             bring: true
@@ -60,15 +62,19 @@ var lr_layout = {
         deflex: 1,
         divs: [{
             id: 'vnf',
+            class: 'thin-border',
             bring: true
         }, {
             id: 'vfc',
+            class: 'thin-border',
             bring: true
         }, {
             id: 'vm',
+            class: 'thin-border',
             bring: true
         }, {
             id: 'host',
+            class: 'thin-border',
             bring: true
         }]
     }]
@@ -86,13 +92,16 @@ var zoom_layout = {
             deflex: 1,
             divs: [{
                 id: 'hierarchy',
+                class: 'thin-border',
                 bring: true
             }, {
                 id: 'vm',
+                class: 'thin-border',
                 bring: true
             }]
         }, {
             id: 'query',
+            class: 'thin-border',
             flex: 1,
             direction: 'column',
             bring: true
@@ -104,12 +113,15 @@ var zoom_layout = {
         deflex: 1,
         divs: [{
             id: 'vnf',
+            class: 'thin-border',
             bring: true
         }, {
             id: 'vfc',
+            class: 'thin-border',
             bring: true
         }, {
             id: 'host',
+            class: 'thin-border',
             bring: true
         }]
     }]

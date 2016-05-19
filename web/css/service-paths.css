@@ -38,10 +38,9 @@ button:active {
     background-color: lightblue;
 }
 
-#left > div, #right > div {
-    border: solid 1px;
-    margin-left: -1px;
-    margin-top: -1px;
+div.thin-border {
+    border-right: 1px solid;
+    border-bottom: 1px solid;
 }
 
 .dc-graph text.node-label {
