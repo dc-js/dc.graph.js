@@ -573,6 +573,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return !kv.value.notLayout;
     });
 
+    // conversely, you could have an edge but not want to draw it - not documenting this
+    // yet because it seems like it maybe should be combined with edgeIsLayout
+    _chart.edgeIsShown = _chart.edgeIsLayoutAccessor = property(true);
+
     /**
      * Currently, three strategies are supported for specifying the lengths of edges:
      * * 'individual' - uses the `edgeLength` for each edge. If it returns falsy, uses the
@@ -1107,6 +1111,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // remove self-edges (since we can't draw them - will be option later)
         wedges = wedges.filter(function(e) { return e.source !== e.target; });
+
+        wedges = wedges.filter(_chart.edgeIsShown.eval);
 
         // and optionally, nodes that have no edges
         if(_chart.induceNodes()) {
