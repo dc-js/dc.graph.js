@@ -21,15 +21,18 @@ function flex_div_helper_mapper(map) {
             var divs = me.selectAll(function() {
                 return this.childNodes;
             }).data(data.divs);
-            var enter = divs.enter().append('div').attr({
-                class: 'flex-div'
-            });
+            var enter = divs.enter().append('div');
             enter.filter(function(d) { return d.bring && !map[d.id]; })
                 .append('div')
                     .attr('id', function(d) { return d.id; });
             divs.exit().remove();
-            divs.attr('id', function(d) {
-                return d.bring ? 'wrap-' + d.id : d.id;
+            divs.attr({
+                class: function(d) {
+                    return d.class || null;
+                },
+                id: function(d) {
+                    return d.bring ? 'wrap-' + d.id : d.id;
+                }
             });
 
             divs.each(flex_div_helper);
