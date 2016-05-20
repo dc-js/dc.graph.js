@@ -25,8 +25,8 @@ where
         query: `Retrieve P
 from PATHS P
 where
-        P MATCHES VFC()->[Hosted()]{1,5}->Host(name = "$$1$$")
-        and length(P) <= 5`,
+	P MATCHES VFC()->[Hosted()]{1,5}->Host(name = "$$1$$")
+	and length(P) <= 5`,
         select1: {
             name: 'Host',
             default: 'wt2cwa1esx207',
@@ -45,8 +45,8 @@ where
         query: `Retrieve P
 from PATHS P
 where
-        P MATCHES VFC()->[Hosted()]{1,5}->VM(vm_os="Microsoft Windows Server 2012 (64-bit)")->Host(hw_num_nics=10)
-        and length(P) <= 5`
+	P MATCHES VFC()->[Hosted()]{1,5}->VM(vm_os="Microsoft Windows Server 2012 (64-bit)")->Host(hw_num_nics=10)
+	and length(P) <= 5`
     },
     {
         name: 'vfc_paths',
@@ -54,8 +54,8 @@ where
         query: `Retrieve P
 from PATHS P
 where
-        P MATCHES FNS(name="$$1$$")->[Connects()]{2,4}->DNS()
-        and length(P) <= 5`,
+	P MATCHES FNS(name="$$1$$")->[Connects()]{2,4}->DNS()
+	and length(P) <= 5`,
         select1: {
             name: 'FNS',
             default: 'FNS01',
@@ -66,11 +66,19 @@ where
     },
     {
         name: 'virtualization_layer',
-        description: 'Virtualization-layer service path between FNS01 and IOM1',
+        description: 'Find all virtualization-layer service paths between FNS01 and IOM1',
         query: `Retrieve P
 from PATHS P
 where
 	P MATCHES VM(name = "WT2CWA1FNS01v")->[Connects()]{3, 4}->VM(name = "WT2CWA1IOM02v")`
+    },
+    {
+        name: 'physical_layer',
+        description: 'Find all physical-layer service paths between two hosts',
+        query: `Retrieve P
+from PATHS P
+where
+	P MATCHES Host(name = "wt2cwa1esx507")->[Connects()]{2,4}->Host(name = "wt2cwa1esx201")`
     }
 ];
 
