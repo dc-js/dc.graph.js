@@ -70,7 +70,7 @@ where
         query: `Retrieve P
 from PATHS P
 where
-	P MATCHES VM(name = "WT2CWA1FNS01v")->[Connects()]{3, 4}->VM(name = "WT2CWA1IOM02v")`
+	P MATCHES VM(name = "WT2CWA1FNS01v")->[Connects()]{2,4}->VM(name = "WT2CWA1IOM02v")`
     },
     {
         name: 'physical_layer',
