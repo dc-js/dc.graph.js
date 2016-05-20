@@ -272,22 +272,30 @@ function init_queries(nodes, edges) {
         select.node().selectedIndex = i;
         return vals[i];
     }
-    function populate_qedit(text, p1) {
+    function populate_qedit(text, p1, p2) {
         text = text.replace(/\$\$1\$\$/, p1);
+        text = text.replace(/\$\$2\$\$/, p2);
         qedit.getSession().setValue(text);
     }
     function do_selects(index) {
         nquery = nepal_queries[index];
-        var s1 = nquery.select1, p1;
+        var params = [];
+        var s1 = nquery.select1;
         select1.style('display', s1 ? null : 'none');
         if(s1) {
             select1.select('.desc').text(s1.name);
             p1 = populate_select(select1.select('select'), values1 = s1.init(nodes, edges), s1.default);
         }
-        populate_qedit(nquery.query, p1);
+        var s2 = nquery.select2;
+        select2.style('display', s2 ? null : 'none');
+        if(s2) {
+            select2.select('.desc').text(s2.name);
+            p2 = populate_select(select2.select('select'), values2 = s2.init(nodes, edges), s2.default);
+        }
+        populate_qedit(nquery.query, p1, p2);
     }
-    var squery = d3.select('#squery'), select1 = d3.select('#select1');
-    var nquery, values1;
+    var squery = d3.select('#squery'), select1 = d3.select('#select1'), select2 = d3.select('#select2');
+    var nquery, values1, values2, p1, p2;
     var qopts = squery.selectAll('option').data(nepal_queries);
     qopts.enter().append('option')
         .attr('value', function(d) { return d.name; })
@@ -299,7 +307,13 @@ function init_queries(nodes, edges) {
     });
     select1.select('select').on('change', function() {
         var val = this.selectedIndex;
-        populate_qedit(nquery.query, values1[val]);
+        p1 = values1[val];
+        populate_qedit(nquery.query, p1, p2);
+    });
+    select2.select('select').on('change', function() {
+        var val = this.selectedIndex;
+        p2 = values2[val];
+        populate_qedit(nquery.query, p1, p2);
     });
     do_selects(0);
 }

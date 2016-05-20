@@ -78,7 +78,21 @@ where
         query: `Retrieve P
 from PATHS P
 where
-	P MATCHES Host(name = "wt2cwa1esx507")->[Connects()]{2,4}->Host(name = "wt2cwa1esx201")`
+	P MATCHES Host(name = "$$1$$")->[Connects()]{2,4}->Host(name = "$$2$$")`,
+        select1: {
+            name: 'Host 1',
+            default: 'wt2cwa1esx507',
+            init: function(nodes, edges) {
+		return ['wt2cwa1esx507', 'wt2cwa1esx201', 'wt2cwa1esx402'];
+		}
+            },
+        select2: {
+            name: 'Host 2',
+            default: 'wt2cwa1esx201',
+            init: function(nodes, edges) {
+		return ['wt2cwa1esx507', 'wt2cwa1esx201', 'wt2cwa1esx402'];
+		}
+            }
     }
 ];
 
