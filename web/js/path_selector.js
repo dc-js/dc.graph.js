@@ -32,7 +32,7 @@ function path_selector(parent, reader, pathsgroup) {
     // in fact, you can't even reliably overlap attributes without that (so we don't)
 
     function draw_paths(paths) {
-        var p2 = root.selectAll('span').data(paths);
+        var p2 = root.selectAll('span.path-selector').data(paths);
         p2.enter()
             .append('span')
             .attr('class', 'path-selector')
@@ -59,6 +59,9 @@ function path_selector(parent, reader, pathsgroup) {
             .on('click', function(d) {
                 highlight_paths_group.select_changed(toggle_paths(selected, [d]));
             });
+        var no_paths = root.selectAll('span.no-paths').data(paths.length === 0 ? [0] : []);
+        no_paths.enter().append('span').attr('class', 'no-paths').text('No paths found!');
+        no_paths.exit().remove();
     }
 
     function draw_hovered() {
