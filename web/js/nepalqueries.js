@@ -1,7 +1,7 @@
 var nepal_queries = [
     {
         name: 'vnf_hosts',
-        description: 'Find all hosts on which VNF runs',
+        description: 'hosts on which VNF runs',
         query: `Retrieve P
 from PATHS P
 where
@@ -21,7 +21,7 @@ where
     },
     {
         name: 'host_vfcs',
-        description: 'Find all VFCs running on a given host',
+        description: 'VFCs running on a given host',
         query: `Retrieve P
 from PATHS P
 where
@@ -41,7 +41,7 @@ where
     },
     {
         name: 'windows_vfcs',
-        description: 'Find all VFCs running on VMs with Windows Server and hypervisor with 10 NICs',
+        description: 'VFCs running on VMs with Windows Server and hypervisor with 10 NICs',
         query: `Retrieve P
 from PATHS P
 where
@@ -50,7 +50,7 @@ where
     },
     {
         name: 'vfc_paths',
-        description: 'Find all service paths between FNS VFC and DNS VFC',
+        description: 'service paths between FNS VFC and DNS VFC',
         query: `Retrieve P
 from PATHS P
 where
@@ -66,7 +66,7 @@ where
     },
     {
         name: 'virtualization_layer',
-        description: 'Find all virtualization-layer service paths between FNS01 and IOM1',
+        description: 'virtualization-layer service paths between two VMs',
         query: `Retrieve P
 from PATHS P
 where
@@ -74,7 +74,7 @@ where
     },
     {
         name: 'physical_layer',
-        description: 'Find all physical-layer service paths between two hosts',
+        description: 'physical-layer service paths between two hosts',
         query: `Retrieve P
 from PATHS P
 where
