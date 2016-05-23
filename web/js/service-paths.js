@@ -279,18 +279,21 @@ function init_queries(nodes, edges) {
     }
     function do_selects(index) {
         nquery = nepal_queries[index];
+        var values;
+        if(nquery.init)
+            values = nquery.init(nodes, edges);
         var params = [];
         var s1 = nquery.select1;
         select1.style('display', s1 ? null : 'none');
         if(s1) {
             select1.select('.desc').text(s1.name);
-            p1 = populate_select(select1.select('select'), values1 = s1.init(nodes, edges), s1.default);
+            p1 = populate_select(select1.select('select'), values1 = values || s1.init(nodes, edges), s1.default);
         }
         var s2 = nquery.select2;
         select2.style('display', s2 ? null : 'none');
         if(s2) {
             select2.select('.desc').text(s2.name);
-            p2 = populate_select(select2.select('select'), values2 = s2.init(nodes, edges), s2.default);
+            p2 = populate_select(select2.select('select'), values2 = values || s2.init(nodes, edges), s2.default);
         }
         populate_qedit(nquery.query, p1, p2);
     }
