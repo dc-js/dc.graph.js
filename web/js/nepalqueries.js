@@ -15,7 +15,7 @@ where
                     return raw_node_type(n) === 'VNF';
                 }).map(function(n) {
                     return n.name;
-                });
+                }).sort();
             }
         }
     },
@@ -35,7 +35,7 @@ where
                     return raw_node_type(n) === 'Host';
                 }).map(function(n) {
                     return n.name;
-                });
+                }).sort();
             }
         }
     },
@@ -70,7 +70,24 @@ where
         query: `Retrieve P
 from PATHS P
 where
-	P MATCHES VM(name = "WT2CWA1FNS01v")->[Connects()]{2,4}->VM(name = "WT2CWA1IOM02v")`
+	P MATCHES VM(name = "WT2CWA1$$1$$v")->[Connects()]{2,4}->VM(name = "WT2CWA1$$2$$v")`,
+        init: function(nodes, edges) {
+            if(!qs.showall)
+                return ['FNS01', 'IOM01'];
+            return nodes.filter(function(n) {
+                return raw_node_type(n) === 'VM' && /WT2CWA1/.test(n.name);
+            }).map(function(n) {
+                return n.name.replace(/WT2CWA1([A-Z]+[0-9]+)v/, '$1');
+            }).sort();
+        },
+        select1: {
+            name: 'Host',
+            default: 'FNS01'
+        },
+        select2: {
+            name: 'Host',
+            default: 'IOM01'
+        }
     },
     {
         name: 'physical_layer',
@@ -78,21 +95,24 @@ where
         query: `Retrieve P
 from PATHS P
 where
-	P MATCHES Host(name = "$$1$$")->[Connects()]{2,4}->Host(name = "$$2$$")`,
+	P MATCHES Host(name = "wt2cwa1$$1$$")->[Connects()]{2,4}->Host(name = "wt2cwa1$$2$$")`,
+        init: function(nodes, edges) {
+            if(!qs.showall)
+	        return ['esx507', 'esx201', 'esx402'];
+            return nodes.filter(function(n) {
+                return raw_node_type(n) === 'Host' && /wt2cwa1/.test(n.name);
+            }).map(function(n) {
+                return n.name.replace(/WT2CWA1([A-Z]+[0-9]+)v/, '$1');
+            }).sort();
+	},
         select1: {
             name: 'Host 1',
-            default: 'wt2cwa1esx507',
-            init: function(nodes, edges) {
-		return ['wt2cwa1esx507', 'wt2cwa1esx201', 'wt2cwa1esx402'];
-		}
-            },
+            default: 'wt2cwa1esx507'
+        },
         select2: {
             name: 'Host 2',
-            default: 'wt2cwa1esx201',
-            init: function(nodes, edges) {
-		return ['wt2cwa1esx507', 'wt2cwa1esx201', 'wt2cwa1esx402'];
-		}
-            }
+            default: 'wt2cwa1esx201'
+        }
     }
 ];
 
