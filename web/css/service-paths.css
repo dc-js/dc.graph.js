@@ -1,10 +1,12 @@
-html, body, #main {
+html, body {
     margin: 0;
     height: 100%;
 }
 
 #main {
     overflow: hidden; /* no matter what, don't scroll */
+    margin: 0;
+    height: 100vh;
 }
 
 #hierarchy {
@@ -29,6 +31,8 @@ html, body, #main {
 
 #paths {
     padding: 7px;
+    overflow-y: auto;
+    height: 220px; /* fed up trying to figure out how to get 100% */
 }
 
 button {
