@@ -329,7 +329,9 @@ qedit.getSession().setUseWrapMode(true);
 var nepal = d3.xhr(qs.nepal).header("Content-type", "application/x-www-form-urlencoded");
 
 function execute_query() {
+    d3.select('#loading').style('visibility', 'visible');
     nepal.post("url=" + encodeURIComponent(qs.nurl) + "&query=" + encodeURIComponent(qedit.getSession().getValue()), function(error, result) {
+        d3.select('#loading').style('visibility', 'hidden');
         if(error)
             throw new Error(error);
         read_paths.data(JSON.parse(result.responseText));
