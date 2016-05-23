@@ -73,7 +73,7 @@ where
 	P MATCHES VM(name = "WT2CWA1$$1$$v")->[Connects()]{2,4}->VM(name = "WT2CWA1$$2$$v")`,
         init: function(nodes, edges) {
             if(!qs.showall)
-                return ['FNS01', 'IOM01'];
+                return ['FNS01', 'IOM01', 'DCM13'];
             return nodes.filter(function(n) {
                 return raw_node_type(n) === 'VM' && /WT2CWA1/.test(n.name);
             }).map(function(n) {
