@@ -3586,6 +3586,8 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
 dc_graph.load_graph = function() {
     // ignore any query parameters for checking extension
     function ignore_query(file) {
+        if(!file)
+            return null;
         return file.replace(/\?.*/, '');
     }
     var file1, file2, callback;
@@ -3613,7 +3615,7 @@ dc_graph.load_graph = function() {
     }
     else if(/\.json$/.test(ignore_query(file1)))
         d3.json(file1, callback);
-    else if(/\.gv|\.dot$/.test(ignore_query(file2)))
+    else if(/\.gv|\.dot$/.test(ignore_query(file1)))
         d3.text(file1, function (error, f) {
             if(error) {
                 callback(error, null);
