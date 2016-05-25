@@ -136,7 +136,10 @@ dc_graph.tip = function() {
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
         d = d.orig.value;
-        var keys = Object.keys(d).filter(d3.functor(gen.filter()));
+        var keys = Object.keys(d).filter(d3.functor(gen.filter()))
+                .filter(function(k) {
+                    return d[k];
+                });
         var table = d3.select(document.createElement('table'));
         var rows = table.selectAll('tr').data(keys);
         var rowsEnter = rows.enter().append('tr');
