@@ -7,12 +7,12 @@
   <link rel="stylesheet" type="text/css" href="css/runner.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
 
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
   <script type="text/javascript" src="js/dc.js"></script>
 
-  <link rel="stylesheet" href="css/jquery-ui.css">
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/jquery-ui.js"></script>
   <script type="text/javascript" src="js/lodash.js"></script>
@@ -35,6 +35,10 @@
 
 <body>
 
+  <div class="ui-widget" id="search">
+    <label for="tags">Search: </label>
+    <input id="tags">
+  </div>
 
   <div id="graph" class="chart"></div>
   <div id="overview" class="chart"></div>

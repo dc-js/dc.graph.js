@@ -261,6 +261,15 @@ source(function(error, data) {
 
     var expander = null, expanded;
     if(explore) {
+        $('#search')
+            .show()
+            .autocomplete({
+                disabled: false,
+                source: ["business-interaction","BusinessInteraction","business-interaction-version"] /*nodes.map(function(n) {
+                                                                                                       return n.name;
+                                                                                                       })*/
+            })
+            .attr("autocomplete", "on");
         expanded = [explore];
         // second group on keys so that first will observe it
         expander = flat_group.another(node_flat.crossfilter, function(d) { return d.name; });
