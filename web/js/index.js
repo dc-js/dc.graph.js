@@ -261,16 +261,6 @@ source(function(error, data) {
 
     var expander = null, expanded;
     if(explore) {
-        $('#search')
-            .show()
-            .autocomplete({
-                disabled: false,
-                source: ["business-interaction","BusinessInteraction","business-interaction-version"] /*nodes.map(function(n) {
-                                                                                                       return n.name;
-                                                                                                       })*/
-            })
-            .attr("autocomplete", "on");
-        expanded = [explore];
         // second group on keys so that first will observe it
         expander = flat_group.another(node_flat.crossfilter, function(d) { return d.name; });
         function apply_expander_filter() {
@@ -288,6 +278,7 @@ source(function(error, data) {
                 return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
             });
         }
+        expanded = [];
         apply_expander_filter();
         diagram.child('expand-collapse',
                       dc_graph.expand_collapse(function(key) { // get_degree
@@ -301,6 +292,17 @@ source(function(error, data) {
                           apply_expander_filter();
                           run();
                       }));
+        $('#search')
+            .show()
+            .autocomplete({
+                source: nodes.map(function(n) { return n.name; }),
+                select: function(event, ui) {
+                    expanded = [ui.item.value];
+                    apply_expander_filter();
+                    run();
+                }
+            })
+            .attr("autocomplete", "on");
     }
 
     if(paths)
