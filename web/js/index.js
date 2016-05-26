@@ -292,8 +292,9 @@ source(function(error, data) {
                           apply_expander_filter();
                           run();
                       }));
+        $('#search-wrapper')
+            .show();
         $('#search')
-            .show()
             .autocomplete({
                 source: nodes.map(function(n) { return n.name; }),
                 select: function(event, ui) {
