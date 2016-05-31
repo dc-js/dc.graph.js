@@ -2,3 +2,7 @@
     float: none;
     margin: 5px;
 }
+
+.dc-graph text.node-label {
+    font: 12px verdana, san-serif;
+}

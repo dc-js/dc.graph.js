@@ -8,7 +8,7 @@ d3.csv(qs.data, function(error, data) {
     if(error)
         throw new Error(error);
 
-    var treeAttrs = ['zLocation', 'aCLLI', 'aSiteID', 'aCage', 'aRackCabinet', 'aRouter', 'aPort', 'zPort', 'zRouter'];
+    var treeAttrs = ['zLocation', 'aCLLI', 'aSiteID', 'aCage', 'aRackCabinet', 'aRouter', 'aPort'];
     var nester = d3.nest();
     treeAttrs.forEach(function(a) {
         nester.key(dc.pluck(a));
@@ -26,10 +26,14 @@ d3.csv(qs.data, function(error, data) {
         return d.zLocation;
     });
     var locGroup = locDim.group();
+    locDim.filter('no-location');
     var select = dc.selectMenu('#select-location')
             .dimension(locDim)
             .group(locGroup)
-            .promptText('Select a location');
+            .multiple(true)
+            .size(12)
+            .promptText('Select location(s)')
+            .promptValue('no-location');
 
     var topologyDiagram = dc_graph.diagram('#topology');
     topologyDiagram
@@ -37,12 +41,14 @@ d3.csv(qs.data, function(error, data) {
         .height(1000)
         .transitionDuration(250)
         .baseLength(20)
+        .initLayoutOnRedraw(true)
         .showLayoutSteps(true)
         .nodeDimension(topo_nodes.dimension).nodeGroup(topo_nodes.group)
         .edgeDimension(topo_edges.dimension).edgeGroup(topo_edges.group)
-        .flowLayout({axis: 'x', minSeparation: 100})
+        .flowLayout({axis: 'x', minSeparation: 150})
+        .nodeShape({shape: 'rectangle'})
         .nodeLabel(function(d) {
-            return d.value.name || d.value.aConnectionID || d.value.aSiteCalc || d.key;
+            return d.value.name || d.value.aConnectionID || d.value.aSiteCalc;
         });
 
     var tip = dc_graph.tip();
