@@ -162,6 +162,14 @@ function clone(obj) {
     return target;
 }
 
+// http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+}
+
 // because i don't think we need to bind edge point data (yet!)
 var bez_cmds = {
     1: 'L', 2: 'Q', 3: 'C'
@@ -357,6 +365,9 @@ var dc_graph_shapes_ = {
     },
     triangle: function() {
         return {shape: 'polygon', sides: 3};
+    },
+    rectangle: function() {
+        return {shape: 'polygon', sides: 4};
     },
     diamond: function() {
         return {shape: 'polygon', sides: 4, rotation: 45};
@@ -3645,6 +3656,39 @@ dc_graph.load_graph = function() {
             var graph = {nodes: nodes, links: edges};
             callback(null, graph);
         });
+};
+
+// make crossfilter-suitable data from d3.nest {key, values} format
+dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
+    inherit = inherit || {};
+    if(attrs.length) {
+        var attr = attrs.shift();
+        var nodes = [], edges = [];
+        var children = nest.map(function(v) {
+            inherit[attr] = v.key;
+            var child = uuid();
+            var node = clone(inherit);
+            node[nodeKeyAttr] = child;
+            node.name = attr + ':' + v.key;
+            nodes.push(node);
+            if(parent) {
+                var edge = {};
+                edge[edgeSourceAttr] = parent;
+                edge[edgeTargetAttr] = child;
+                edges.push(edge);
+            }
+            var recurse = dc_graph.convert_nest(v.values, attrs.slice(0), nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, child, clone(inherit));
+            return recurse;
+        });
+        return {nodes: Array.prototype.concat.apply(nodes, children.map(dc.pluck('nodes'))),
+                edges: Array.prototype.concat.apply(edges, children.map(dc.pluck('edges')))};
+    }
+    else return {nodes: nest, edges: nest.map(function(v) {
+        var edge = {};
+        edge[edgeSourceAttr] = parent;
+        edge[edgeTargetAttr] = v[nodeKeyAttr];
+        return edge;
+    })};
 };
 
 dc_graph.path_reader = function(pathsgroup) {
