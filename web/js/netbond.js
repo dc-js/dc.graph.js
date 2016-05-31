@@ -8,90 +8,28 @@ d3.csv(qs.data, function(error, data) {
     if(error)
         throw new Error(error);
 
-    var port_flat = flat_group.make(data, function(d) {
-            return d.ID;
-        });
-    var cityDim = port_flat.crossfilter.dimension(function(d) {
+    var treeAttrs = ['zLocation', 'aCLLI', 'aSiteID', 'aCage', 'aRackCabinet', 'aRouter', 'aPort', 'zPort', 'zRouter'];
+    var nester = d3.nest();
+    treeAttrs.forEach(function(a) {
+        nester.key(dc.pluck(a));
+    });
+    var supplimented = dc_graph.convert_nest(nester.entries(data), treeAttrs, 'ID', 'sourcename', 'targetname', 'CBB');
+    supplimented.nodes.push({ID: 'CBB'});
+    var topo_nodes = flat_group.make(supplimented.nodes, function(d) {
+        return d.ID;
+    });
+    var topo_edges = flat_group.make(supplimented.edges, function(d) {
+        return d.sourcename + '-' + d.targetname;
+    });
+
+    var locDim = topo_nodes.crossfilter.dimension(function(d) {
         return d.zLocation;
     });
-    var cityGroup = cityDim.group();
+    var locGroup = locDim.group();
     var select = dc.selectMenu('#select-location')
-            .dimension(cityDim)
-            .group(cityGroup)
-            .promptText('Select a city');
-
-    var edges; // lame, but we're going to initialize this each time we init nodes
-    var thingsGroup = {
-        all: function() {
-            var ports = port_flat.group.all();
-            var things = [];
-            edges = [];
-            things.push({
-                key: 'CBB',
-                value: {
-                    name: 'CBB'
-                }
-            });
-            var cages = {}, racks = {};
-            ports.forEach(function(kv) {
-                var tail = 'CBB';
-                if(is_value(kv.value.aCage)) {
-                    var cage = 'cage-' + kv.value.aCage;
-                    if(!cages[kv.value.aCage]) {
-                        things.push({
-                            key: cage,
-                            value: {
-                                name: kv.value.aCage
-                            }
-                        });
-                        edges.push({
-                            key: tail + '-' + kv.value.aCage,
-                            value: {
-                                sourcename: tail,
-                                targetname: cage
-                            }
-                        });
-                        cages[kv.value.aCage] = true;
-                    }
-                    tail = cage;
-                }
-                if(is_value(kv.value.aRackCabinet)) {
-                    var rack = 'rack-' + kv.value.aRackCabinet;
-                    if(!racks[kv.value.aRackCabinet]) {
-                        things.push({
-                            key: rack,
-                            value: {
-                                name: kv.value.aRackCabinet
-                            }
-                        });
-                        edges.push({
-                            key: tail + '-' + kv.value.aRackCabinet,
-                            value: {
-                                sourcename: tail,
-                                targetname: rack
-                            }
-                        });
-                        racks[kv.value.aRackCabinet] = true;
-                    }
-                    tail = rack;
-                }
-                things.push(kv);
-                edges.push({
-                    key: kv.key,
-                    value: {
-                        sourcename: tail,
-                        targetname: kv.key
-                    }
-                });
-            });
-            return things;
-        }
-    };
-    var edgeGroup = {
-        all: function() {
-            return edges;
-        }
-    };
+            .dimension(locDim)
+            .group(locGroup)
+            .promptText('Select a location');
 
     var topologyDiagram = dc_graph.diagram('#topology');
     topologyDiagram
@@ -100,10 +38,11 @@ d3.csv(qs.data, function(error, data) {
         .transitionDuration(250)
         .baseLength(20)
         .showLayoutSteps(true)
-        .nodeDimension(port_flat.dimension).nodeGroup(thingsGroup)
-        .edgeDimension(null).edgeGroup(edgeGroup)
+        .nodeDimension(topo_nodes.dimension).nodeGroup(topo_nodes.group)
+        .edgeDimension(topo_edges.dimension).edgeGroup(topo_edges.group)
+        .flowLayout({axis: 'x', minSeparation: 100})
         .nodeLabel(function(d) {
-            return d.value.name || d.value.aConnectionID || d.value.aSiteCalc;
+            return d.value.name || d.value.aConnectionID || d.value.aSiteCalc || d.key;
         });
 
     var tip = dc_graph.tip();
