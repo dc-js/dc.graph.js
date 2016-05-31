@@ -80,6 +80,9 @@ var dc_graph_shapes_ = {
     triangle: function() {
         return {shape: 'polygon', sides: 3};
     },
+    rectangle: function() {
+        return {shape: 'polygon', sides: 4};
+    },
     diamond: function() {
         return {shape: 'polygon', sides: 4, rotation: 45};
     },
