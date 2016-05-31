@@ -14,7 +14,7 @@ d3.csv(qs.data, function(error, data) {
         nester.key(dc.pluck(a));
     });
     var supplimented = dc_graph.convert_nest(nester.entries(data), treeAttrs, 'ID', 'sourcename', 'targetname', 'CBB');
-    supplimented.nodes.push({ID: 'CBB'});
+    supplimented.nodes.push({ID: 'CBB', name: 'CBB'});
     var topo_nodes = flat_group.make(supplimented.nodes, function(d) {
         return d.ID;
     });
