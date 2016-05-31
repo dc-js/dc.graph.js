@@ -6,9 +6,10 @@ dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeT
         var nodes = [], edges = [];
         var children = nest.map(function(v) {
             inherit[attr] = v.key;
-            var child = attr + ':' + v.key;
+            var child = uuid();
             var node = clone(inherit);
             node[nodeKeyAttr] = child;
+            node.name = attr + ':' + v.key;
             nodes.push(node);
             if(parent) {
                 var edge = {};
