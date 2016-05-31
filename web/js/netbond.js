@@ -45,7 +45,7 @@ d3.csv(qs.data, function(error, data) {
         .showLayoutSteps(true)
         .nodeDimension(topo_nodes.dimension).nodeGroup(topo_nodes.group)
         .edgeDimension(topo_edges.dimension).edgeGroup(topo_edges.group)
-        .flowLayout({axis: 'x', minSeparation: 150})
+        .flowLayout(qs.unconstrained ? null : {axis: 'x', minSeparation: 150})
         .nodeShape({shape: 'rectangle'})
         .nodeLabel(function(d) {
             return d.value.name || d.value.aConnectionID || d.value.aSiteCalc;
