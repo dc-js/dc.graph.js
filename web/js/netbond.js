@@ -32,7 +32,7 @@ d3.csv(qs.data, function(error, data) {
             .dimension(locDim)
             .group(locGroup)
             .multiple(true)
-            .size(12)
+            .numberVisible(12)
             .promptText('Select location(s)')
             .promptValue('no-location');
 
