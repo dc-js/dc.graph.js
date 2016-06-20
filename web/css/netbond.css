@@ -6,6 +6,12 @@
     top: 5px;
 }
 
+#level {
+    position: absolute;
+    left: 5px;
+    top: 200px;
+}
+
 .dc-graph text.node-label {
     font: 12px verdana, san-serif;
 }

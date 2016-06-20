@@ -13,12 +13,12 @@ d3.csv(qs.data, function(error, data) {
     treeAttrs.forEach(function(a) {
         nester.key(dc.pluck(a));
     });
-    var supplimented = dc_graph.convert_nest(nester.entries(data), treeAttrs, 'ID', 'sourcename', 'targetname', 'CBB');
-    supplimented.nodes.push({ID: 'CBB', name: 'CBB'});
-    var topo_nodes = flat_group.make(supplimented.nodes, function(d) {
+    var supplemented = dc_graph.convert_nest(nester.entries(data), treeAttrs, 'ID', 'sourcename', 'targetname', 'CBB');
+    supplemented.nodes.push({ID: 'CBB', name: 'CBB'});
+    var topo_nodes = flat_group.make(supplemented.nodes, function(d) {
         return d.ID;
     });
-    var topo_edges = flat_group.make(supplimented.edges, function(d) {
+    var topo_edges = flat_group.make(supplemented.edges, function(d) {
         return d.sourcename + '-' + d.targetname;
     });
 
@@ -39,7 +39,7 @@ d3.csv(qs.data, function(error, data) {
     topologyDiagram
         .width(window.innerWidth)
         .height(window.innerHeight)
-        .transitionDuration(250)
+        .transitionDuration(0)
         .baseLength(20)
         .initLayoutOnRedraw(true)
         .showLayoutSteps(true)
@@ -50,6 +50,46 @@ d3.csv(qs.data, function(error, data) {
         .nodeLabel(function(d) {
             return d.value.name || d.value.aConnectionID || d.value.aSiteCalc;
         });
+
+    function child_edges(nk) {
+        return supplemented.edges.filter(function(kv) {
+            return kv.sourcename === nk;
+        });
+    }
+
+    var colspand = topo_nodes.crossfilter.dimension(function(d) {
+        return d._level + '/' + d.ID;
+    });
+
+    var level = +d3.select('#level').node().value, xpand = [];
+
+    var expand = dc_graph.expand_collapse(function(nk) { // degree
+        return 1 + child_edges(nk).length; // 1 parent, children
+    }, function(nk) { // expand
+        var es = child_edges(nk);
+        Array.prototype.push.apply(xpand, es.map(function(e) {
+            return e.targetname;
+        }));
+        colspand.filterFunction(expandf);
+        topologyDiagram.redraw();
+    }, function(nk) { // collapse
+
+    });
+
+    function expandf(d) {
+        d = d.split('/');
+        return +d[0] <= level || xpand.indexOf(d[1]) >= 0;
+    }
+
+    colspand.filterFunction(expandf);
+
+    topologyDiagram.child('expand-collapse', expand);
+
+    d3.select('#level').on('change', function() {
+        level = +this.value;
+        colspand.filterFunction(expandf);
+        topologyDiagram.redraw();
+    });
 
     // respond to browser resize (not necessary if width/height is static)
     d3.select(window).on('resize', function() {
