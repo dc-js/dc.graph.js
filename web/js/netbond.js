@@ -37,8 +37,8 @@ d3.csv(qs.data, function(error, data) {
 
     var topologyDiagram = dc_graph.diagram('#topology');
     topologyDiagram
-        .width(1000)
-        .height(1000)
+        .width(window.innerWidth)
+        .height(window.innerHeight)
         .transitionDuration(250)
         .baseLength(20)
         .initLayoutOnRedraw(true)
@@ -50,6 +50,13 @@ d3.csv(qs.data, function(error, data) {
         .nodeLabel(function(d) {
             return d.value.name || d.value.aConnectionID || d.value.aSiteCalc;
         });
+
+    // respond to browser resize (not necessary if width/height is static)
+    d3.select(window).on('resize', function() {
+        topologyDiagram
+            .width(window.innerWidth)
+            .height(window.innerHeight);
+    });
 
     var tip = dc_graph.tip();
     var table = dc_graph.tip.table();
