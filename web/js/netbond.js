@@ -58,6 +58,15 @@ d3.csv(qs.data, function(error, data) {
         });
     }
 
+    // here's where you start to want a real graph ADT
+    // not that the slowness matters yet...
+    function child_tree_nodes(nk) {
+        var es = child_edges(nk), tn = es.map(function(e) {
+            return e.targetname;
+        });
+        return Array.prototype.concat.apply(tn, tn.map(child_tree_nodes));
+    }
+
     var colspand = topo_nodes.crossfilter.dimension(function(d) {
         return d._level + '/' + d.ID;
     });
@@ -72,9 +81,13 @@ d3.csv(qs.data, function(error, data) {
             return e.targetname;
         }));
         colspand.filterFunction(expandf);
-        topologyDiagram.redraw();
+        dc.redrawAll();
     }, function(nk) { // collapse
-
+        var tree = child_tree_nodes(nk);
+        // slow n^2
+        xpand = xpand.filter(function(nk) { return tree.indexOf(nk)<0; });
+        colspand.filterFunction(expandf);
+        dc.redrawAll();
     });
 
     function expandf(d) {
@@ -89,7 +102,7 @@ d3.csv(qs.data, function(error, data) {
     d3.select('#level').on('change', function() {
         level = +this.value;
         colspand.filterFunction(expandf);
-        topologyDiagram.redraw();
+        dc.redrawAll();
     });
 
     // respond to browser resize (not necessary if width/height is static)
