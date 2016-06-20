@@ -8,6 +8,7 @@ d3.csv(qs.data, function(error, data) {
     if(error)
         throw new Error(error);
 
+    data = data.filter(function(r) { return !!r.zLocation; });
     var treeAttrs = ['zLocation', 'aCLLI', 'aSiteID', 'aCage', 'aRackCabinet', 'aRouter', 'aPort'];
     var nester = d3.nest();
     treeAttrs.forEach(function(a) {
