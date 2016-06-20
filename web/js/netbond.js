@@ -15,7 +15,8 @@ d3.csv(qs.data, function(error, data) {
         nester.key(dc.pluck(a));
     });
     var supplemented = dc_graph.convert_nest(nester.entries(data), treeAttrs, 'ID', 'sourcename', 'targetname', 'CBB');
-    supplemented.nodes.push({ID: 'CBB', name: 'CBB'});
+    var CBB = {ID: 'CBB', name: 'CBB', _level: 0};
+    supplemented.nodes.push(CBB);
     var topo_nodes = flat_group.make(supplemented.nodes, function(d) {
         return d.ID;
     });
@@ -26,6 +27,15 @@ d3.csv(qs.data, function(error, data) {
     var locDim = topo_nodes.crossfilter.dimension(function(d) {
         return d.zLocation;
     });
+    function include_cbb(group) {
+        return {
+            all: function() {
+                var ret = group.all().slice(0);
+                ret.push({key: 'CBB', value: CBB});
+                return ret;
+            }
+        };
+    };
     var locGroup = locDim.group();
     locDim.filter('no-location');
     var select = dc.selectMenu('#select-location')
@@ -44,7 +54,7 @@ d3.csv(qs.data, function(error, data) {
         .baseLength(20)
         .initLayoutOnRedraw(true)
         .showLayoutSteps(true)
-        .nodeDimension(topo_nodes.dimension).nodeGroup(topo_nodes.group)
+        .nodeDimension(topo_nodes.dimension).nodeGroup(include_cbb(topo_nodes.group))
         .edgeDimension(topo_edges.dimension).edgeGroup(topo_edges.group)
         .flowLayout(qs.unconstrained ? null : {axis: 'x', minSeparation: 150})
         .nodeShape({shape: 'rectangle'})
