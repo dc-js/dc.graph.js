@@ -3661,6 +3661,7 @@ dc_graph.load_graph = function() {
 // make crossfilter-suitable data from d3.nest {key, values} format
 dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
     inherit = inherit || {};
+    var level = Object.keys(inherit).length;
     if(attrs.length) {
         var attr = attrs.shift();
         var nodes = [], edges = [];
@@ -3670,6 +3671,7 @@ dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeT
             var node = clone(inherit);
             node[nodeKeyAttr] = child;
             node.name = attr + ':' + v.key;
+            node._level = level+1;
             nodes.push(node);
             if(parent) {
                 var edge = {};
@@ -3683,7 +3685,10 @@ dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeT
         return {nodes: Array.prototype.concat.apply(nodes, children.map(dc.pluck('nodes'))),
                 edges: Array.prototype.concat.apply(edges, children.map(dc.pluck('edges')))};
     }
-    else return {nodes: nest, edges: nest.map(function(v) {
+    else return {nodes: nest.map(function(v) {
+        v._level = level+1;
+        return v;
+    }), edges: nest.map(function(v) {
         var edge = {};
         edge[edgeSourceAttr] = parent;
         edge[edgeTargetAttr] = v[nodeKeyAttr];
