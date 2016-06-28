@@ -26,3 +26,123 @@ var querystring = (function() {
         }
     };
 })();
+
+/* this general options stuff will be moved into querystring.js
+ just needs a little more refactoring */
+
+function apply_options() {
+    for(var key in options)
+        if(options[key].apply)
+            options[key].apply(settings[key], diagram, filters);
+}
+
+function read_query(type, val) {
+    switch(type) {
+    case 'boolean':
+        return val === 'true';
+    case 'number':
+        return +val;
+    case 'string':
+        return val;
+    case 'array':
+        return val.split('|');
+    default: throw new Error('unsupported query type ' + type);
+    }
+}
+
+function write_query(type, val) {
+    switch(type) {
+    case 'array':
+        return val.join('|');
+    case 'boolean':
+    case 'number':
+    case 'string':
+        return '' + val;
+    default: throw new Error('unsupported query type ' + type);
+    }
+}
+
+function query_type(val) {
+    return _.isArray(val) ? 'array' : typeof val;
+}
+
+function update_interesting() {
+    var interesting = _.keys(options)
+            .filter(function(k) {
+                return qs[options[k].query] !== write_query(query_type(options[k].default), options[k].default);
+            }).map(function(k) {
+                return options[k].query || k;
+            });
+    querystring.update(_.pick(qs, interesting));
+}
+
+var settings = {};
+function do_option(key, opt) {
+    settings[key] = opt.default;
+    var query = opt.query = opt.query || key;
+    var type = query_type(opt.default);
+    if(query in qs)
+        settings[key] = read_query(type, qs[query]);
+
+    function update_setting(opt, val) {
+        settings[key] = val;
+        if(opt.query) {
+            qs[opt.query] = write_query(type, val);
+            update_interesting();
+        }
+        if(opt.apply && !opt.dont_apply_after_subscribe)
+            opt.apply(val, diagram, filters);
+        if(opt.needs_relayout)
+            diagram.relayout();
+        if(opt.needs_redraw)
+            do_redraw();
+    }
+    if(opt.selector) {
+        switch(type) {
+        case 'boolean':
+            if(!opt.set && opt.selector)
+                opt.set = function(val) {
+                    $(opt.selector)
+                        .prop('checked', val);
+            };
+            if(!opt.subscribe && opt.selector)
+                opt.subscribe = function(k) {
+                    $(opt.selector)
+                        .change(function() {
+                            var val = $(this).is(':checked');
+                            k(val);
+                        });
+                };
+            break;
+        case 'string':
+            if(!opt.set && opt.selector)
+                opt.set = function(val) {
+                    $(opt.selector)
+                        .val(val);
+                };
+            if(!opt.subscribe && opt.selector)
+                opt.subscribe = function(k) {
+                    $(opt.selector)
+                        .change(function() {
+                            var val = $(this).val();
+                            k(val);
+                        });
+                };
+            break;
+        default: throw new Error('unsupported selector type ' + type);
+        }
+    }
+    if(opt.set)
+        opt.set(settings[key]);
+    if(opt.subscribe)
+        opt.subscribe(function(val) {
+            update_setting(opt, val);
+        });
+}
+
+function do_options(options) {
+    for(var key in options)
+        do_option(key, options[key]);
+}
+
+/* end general options stuff */
