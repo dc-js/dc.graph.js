@@ -283,7 +283,7 @@ var options = {
 
 var osTypeSelect = dc.selectMenu('#ostype-select', 'network');
 
-do_options(options);
+var settings = querystring.do_options(options);
 
 var is_running = settings.play;
 function display_running() {
@@ -713,7 +713,7 @@ function init() {
             })
             .multiple(true)
             .size(12);
-        apply_options();
+        querystring.apply_options(options, settings);
 
         // respond to browser resize (not necessary if width/height is static)
         $(window).resize(function() {
