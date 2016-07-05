@@ -780,7 +780,7 @@ function step() {
             return; // cola sometimes dies on empty input; hope that next iteration will succeed
         }
         filters = crossfilters(vertices, edges);
-        apply_options();
+        querystring.apply_options(options, settings);
         diagram
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
