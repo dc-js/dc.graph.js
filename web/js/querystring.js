@@ -26,17 +26,27 @@ var querystring = (function() {
     }
 
     function query_type(val) {
-        return _.isArray(val) ? 'array' : typeof val;
+        return Array.isArray(val) ? 'array' : typeof val;
+    }
+
+    // we could probably depend on _, but _.pick is the only thing we need atm
+    function pick(object, fields) {
+        return fields.reduce(function(reduced, key) {
+            if(key in object)
+                reduced[key] = object[key];
+            return reduced;
+        }, {});
     }
 
     function update_interesting() {
-        var interesting = _.keys(options)
+        var interesting = Object.keys(options)
                 .filter(function(k) {
                     return qs[options[k].query] !== write_query(query_type(options[k].default), options[k].default);
                 }).map(function(k) {
                     return options[k].query || k;
                 });
-        querystring.update(_.pick(qs, interesting));
+        var interested = pick(qs, interesting);
+        querystring.update(interested);
     }
 
     function do_option(settings, key, opt) {
