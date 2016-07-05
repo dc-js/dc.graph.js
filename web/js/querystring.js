@@ -1,5 +1,4 @@
 var querystring = (function() {
-
     function read_query(type, val) {
         switch(type) {
         case 'boolean':
@@ -134,12 +133,14 @@ var querystring = (function() {
                 do_option(settings, key, options[key]);
             return settings;
         },
-        apply_options: function(options, settings) {
+        apply_options: function(options, settings /* ... */) {
+            var args = Array.prototype.slice.call(arguments, 2);
+            args.unshift(0);
             for(var key in options)
-                if(options[key].apply)
-                    options[key].apply(settings[key], diagram, filters);
+                if(options[key].apply) {
+                    args[0] = settings[key];
+                    options[key].apply.apply(options[key], args);
+                }
         }
     };
 })();
-
-/* end general options stuff */

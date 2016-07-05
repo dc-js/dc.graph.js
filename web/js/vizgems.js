@@ -720,7 +720,7 @@ function init() {
             })
             .multiple(true)
             .size(12);
-        querystring.apply_options(options, settings);
+        querystring.apply_options(options, settings, diagram, filters);
 
         // respond to browser resize (not necessary if width/height is static)
         $(window).resize(function() {
@@ -781,7 +781,7 @@ function step() {
             return; // cola sometimes dies on empty input; hope that next iteration will succeed
         }
         filters = crossfilters(vertices, edges);
-        querystring.apply_options(options, settings);
+        querystring.apply_options(options, settings, diagram, filters);
         diagram
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
