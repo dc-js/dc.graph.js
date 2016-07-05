@@ -972,8 +972,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         nodeEnter.append(shape_element(_chart))
             .attr('class', 'node-shape');
         nodeEnter.append('text')
-            .attr('class', 'node-label')
-            .attr('fill', _chart.nodeLabelFill.eval);
+            .attr('class', 'node-label');
         return _chart;
     };
 
@@ -1000,7 +999,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('dy', function(d) { return d.ofs; });
         tspan.text(function(d) { return d.line; });
         tspan.exit().remove();
-        text.each(fit_shape(_chart));
+        text
+            .attr('fill', _chart.nodeLabelFill.eval)
+            .each(fit_shape(_chart));
         node.select('.node-shape')
             .each(shape_attrs(_chart))
             .attr({
