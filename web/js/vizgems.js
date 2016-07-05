@@ -196,12 +196,19 @@ var options = {
                     .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(cb_colors))
                     .nodeFill(function(kv) {
                         return kv.value.ostype;
+                    })
+                    .nodeLabelFill(function(n) {
+                        var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
+                            // https://www.w3.org/TR/AERT#color-contrast
+                            brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                        return brightness > 127 ? 'black' : 'ghostwhite';
                     });
             } else {
                 diagram
                     .nodeStrokeWidth(1)
                     .nodeFillScale(null)
-                    .nodeFill('white');
+                    .nodeFill('white')
+                    .nodeLabelFill('black');
             }
         }
     },
@@ -754,12 +761,6 @@ function init() {
                     return bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
                         kv.key : kv.value.name;
                 }
-            })
-            .nodeLabelFill(function(n) {
-                var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
-                    // https://www.w3.org/TR/AERT#color-contrast
-                    brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
-                return brightness > 127 ? 'black' : 'ghostwhite';
             });
         var exs = [];
         for(var ost in ostypes)
