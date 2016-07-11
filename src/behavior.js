@@ -25,7 +25,7 @@ dc_graph.behavior = function(event_namespace, handlers) {
                 chart = _behavior.parent();
                 chart.on('drawn.' + event_namespace, function(node, edge, ehover) {
                     handlers.remove_behavior(chart, node, edge, ehover);
-                    chart.on('drawn' + event_namespace, null);
+                    chart.on('drawn.' + event_namespace, null);
                 });
             }
             handlers.parent && handlers.parent(p);
