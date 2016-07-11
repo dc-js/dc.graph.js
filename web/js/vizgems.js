@@ -1,4 +1,3 @@
-var qs = querystring.parse();
 var data_stats;
 
 var cb_colors = colorbrewer.Paired[12];
@@ -32,11 +31,11 @@ function do_redraw() {
     diagram.redrawGroup();
 }
 function toggle_stats() {
-    var val = !settings.stats;
+    var val = !tracker.vals.stats;
     toggle_stats.callback(val);
 }
 function toggle_options() {
-    var val = !settings.options;
+    var val = !tracker.vals.options;
     toggle_options.callback(val);
 }
 function apply_heading(link, section) {
@@ -247,6 +246,7 @@ var options = {
         default: false,
         query: 'vmlayout',
         selector: '#layout-vms',
+        needs_relayout: true,
         needs_redraw: true,
         apply: function(val, diagram) {
             diagram.constrain(val ? vm_constraints : function() { return []; });
@@ -288,20 +288,33 @@ var options = {
     }
 };
 
+
+var graph_domain = {
+    on_apply: function(opt) {
+        if(opt.needs_relayout)
+            diagram.relayout();
+        if(opt.needs_redraw)
+            do_redraw();
+    }
+};
+
 var osTypeSelect = dc.selectMenu('#ostype-select', 'network');
+var filters = {};
+var diagram = dc_graph.diagram('#graph', 'network');
+var timeline = timeline('#timeline');
+var node_inv = null, edge_inv = null;
+var tracker = querystring.option_tracker(options, graph_domain, diagram, filters);
 
-var settings = querystring.do_options(options);
-
-var is_running = settings.play;
+var is_running = tracker.vals.play;
 function display_running() {
     $('#play-button i').attr('class', is_running ? 'fa fa-pause' : 'fa fa-play');
 }
 display_running();
 $('#play-button').click(function(e) {
     if(e.shiftKey)
-        diagram.transitionDuration(settings.slow_transition);
+        diagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(settings.transition);
+        diagram.transitionDuration(tracker.vals.transition);
     if(is_running) {
         runner.pause();
         is_running = false;
@@ -317,9 +330,9 @@ $('#last-button').click(function(e) {
     curr_hist = (curr_hist+hist_files.length-2)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
     if(e.shiftKey)
-        diagram.transitionDuration(settings.slow_transition);
+        diagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(settings.transition);
+        diagram.transitionDuration(tracker.vals.transition);
     runner.step();
 });
 
@@ -327,18 +340,11 @@ $('#next-button').click(function(e) {
     //curr_hist = (curr_hist+1)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
     if(e.shiftKey)
-        diagram.transitionDuration(settings.slow_transition);
+        diagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(settings.transition);
+        diagram.transitionDuration(tracker.vals.transition);
     runner.step();
 });
-
-
-var filters = {};
-var diagram = dc_graph.diagram('#graph', 'network');
-var timeline = timeline('#timeline');
-var node_inv = null, edge_inv = null;
-
 
 // demo of constraints applied by pattern
 var vm_rules = {
@@ -511,13 +517,13 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
 var psv = d3.dsv("|", "text/plain");
 
 function queue_inv(Q) {
-    var inv_nodes_url = settings.server + '/inv-nodes.psv', inv_edges_url = settings.server + '/inv-edges.psv';
+    var inv_nodes_url = tracker.vals.server + '/inv-nodes.psv', inv_edges_url = tracker.vals.server + '/inv-edges.psv';
     Q.defer(psv, inv_nodes_url + nocache_query())
         .defer(psv, inv_edges_url + nocache_query());
 }
 
 function load_live(get_inv, callback) {
-    var vertices_url = settings.server + '/nodes.psv', edges_url = settings.server + '/edges.psv';
+    var vertices_url = tracker.vals.server + '/nodes.psv', edges_url = tracker.vals.server + '/edges.psv';
 
     var Q = queue()
             .defer(psv, vertices_url + nocache_query())
@@ -549,8 +555,8 @@ var edge_header = "object|level1|id1|level2|id2|metatype|type|extra",
 var ndicts = [], edicts = [];
 function load_hist(file, get_inv, callback) {
     var Q = queue()
-            .defer(d3.text, settings.histserv + '/' + file);
-    if(get_inv && settings.server)
+            .defer(d3.text, tracker.vals.histserv + '/' + file);
+    if(get_inv && tracker.vals.server)
         queue_inv(Q);
     Q.await(function(error, hist, inv_vertices, inv_edges) {
         if(error)
@@ -589,8 +595,8 @@ function load(get_inv, callback) {
 }
 
 function crossfilters(nodes, edges) {
-    if(settings.node_limit)
-        nodes = nodes.slice(0, settings.node_limit);
+    if(tracker.vals.node_limit)
+        nodes = nodes.slice(0, tracker.vals.node_limit);
     var node_stuff = flat_group.make(nodes, function(d) { return d.id1; }),
         edge_stuff = flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; }),
         filterIds = node_stuff.crossfilter.dimension(function(d) { return d.id1; }),
@@ -607,8 +613,8 @@ function clickiness() {
         .on('click.vizgems', function(d) {
             selected_node = d.orig.key;
             do_redraw();
-            if(qs.statserv) {
-                var req = qs.statserv + "/rest/dataquery/stat/json/level_o=" + d.orig.key;
+            if(tracker.vals.statserv) {
+                var req = tracker.vals.statserv + "/rest/dataquery/stat/json/level_o=" + d.orig.key;
                 //not valid jsond3.json(req, function(error, data) {
                 d3.xhr(req, function(error, response) {
                     if(error) {
@@ -685,14 +691,14 @@ var ostypes = {
 function init() {
     load(true, function(vertices, edges) {
         data_stats = {totnodes: vertices.length, totedges: edges.length};
-        filters = crossfilters(vertices, edges);
+        Object.assign(filters, crossfilters(vertices, edges));
         // basic diagram setup
         diagram
             .width($(window).width())
             .height($(window).height())
-            .transitionDuration(settings.transition)
+            .transitionDuration(tracker.vals.transition)
             .showLayoutSteps(false)
-            .handleDisconnected(settings.disconnected)
+            .handleDisconnected(tracker.vals.disconnected)
             .lengthStrategy('jaccard')
             .baseLength(150)
             .nodeTitle(function(kv) {
@@ -720,7 +726,7 @@ function init() {
             })
             .multiple(true)
             .size(12);
-        querystring.apply_options(options, settings, diagram, filters);
+        tracker.exert();
 
         // respond to browser resize (not necessary if width/height is static)
         $(window).resize(function() {
@@ -739,7 +745,7 @@ function init() {
         // aesthetics: look at kv.value for node/edge attributes and return appropriate values
         diagram
             .initLayoutOnRedraw(true)
-            .nodeFitLabel(settings.fit_labels)
+            .nodeFitLabel(tracker.vals.fit_labels)
             .nodeRadius(function(n) {
                 switch(n.value.ostype) {
                 case 'PRT': return 5;
@@ -780,8 +786,8 @@ function step() {
             runner.endStep();
             return; // cola sometimes dies on empty input; hope that next iteration will succeed
         }
-        filters = crossfilters(vertices, edges);
-        querystring.apply_options(options, settings, diagram, filters);
+        Object.assign(filters, crossfilters(vertices, edges));
+        tracker.exert();
         diagram
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
@@ -827,10 +833,10 @@ function load_history(tenant, k) {
     });
 
     curr_hist = -1;
-    if(settings.date) {
-        var date = datef.parse(settings.date);
+    if(tracker.vals.date) {
+        var date = datef.parse(tracker.vals.date);
         if(!date)
-            date = d3.time.format('%Y%m%d').parse(settings.date);
+            date = d3.time.format('%Y%m%d').parse(tracker.vals.date);
         if(date)
             curr_hist = history_index(date);
     }
@@ -860,16 +866,16 @@ function populate_tenant_select(tenants, curr) {
         runner.start(!is_running);
     });
 }
-if(settings.histserv) {
+if(tracker.vals.histserv) {
     preload = function(k) {
         var Q = queue()
-            .defer(d3.text, settings.histserv + '/list.txt' + nocache_query())
-            .defer(d3.text, settings.histserv + '/customer.txt' + nocache_query());
+            .defer(d3.text, tracker.vals.histserv + '/list.txt' + nocache_query())
+            .defer(d3.text, tracker.vals.histserv + '/customer.txt' + nocache_query());
         Q.await(function(error, list, tenants) {
             snapshots = list.split('\n'); tenants = tenants.split('\n');
             tenants = tenants.filter(function(t) { return !!t; })
                 .map(function(c) { return c.split('|'); });
-            var tenant = settings.tenant || tenants[0][0];
+            var tenant = tracker.vals.tenant || tenants[0][0];
             populate_tenant_select(tenants, tenant);
             load_history(tenant, k);
         });
@@ -878,7 +884,7 @@ if(settings.histserv) {
 else preload = function(k) { k(); };
 
 preload(function() {
-    runner = make_runner(init, step, settings.interval);
+    runner = make_runner(init, step, tracker.vals.interval);
     runner.start(!is_running);
 });
 
