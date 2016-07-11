@@ -6,7 +6,7 @@ dc_graph.highlight_neighbors = function(props) {
     }
 
     function add_behavior(chart, node, edge) {
-        chart.cascade(100, null, conditional_properties(function(e) {
+        chart.cascade(100, true, conditional_properties(null, function(e) {
             return e.dcg_highlighted;
         }, props));
         node
@@ -27,8 +27,7 @@ dc_graph.highlight_neighbors = function(props) {
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
         clear_all_highlights(edge);
-        chart.edgeStrokeWidth.cascade(100, null);
-        chart.edgeStroke.cascade(100, null);
+        chart.cascade(100, false, props);
     }
 
     return dc_graph.behavior('highlight-neighbors', {

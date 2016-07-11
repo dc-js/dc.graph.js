@@ -784,9 +784,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.edgeOrdering = property(null);
 
-    _chart.cascade = function(level, props) {
+    _chart.cascade = function(level, add, props) {
         for(var p in props)
-            _chart[p].cascade(level, props[p]);
+            _chart[p].cascade(level, add ? props[p] : null);
         return _chart;
     };
 
