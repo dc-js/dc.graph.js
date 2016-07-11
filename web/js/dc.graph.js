@@ -1458,9 +1458,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.edgeOrdering = property(null);
 
-    _chart.cascade = function(level, props) {
+    _chart.cascade = function(level, add, props) {
         for(var p in props)
-            _chart[p].cascade(level, props[p]);
+            _chart[p].cascade(level, add ? props[p] : null);
         return _chart;
     };
 
@@ -1646,8 +1646,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         nodeEnter.append(shape_element(_chart))
             .attr('class', 'node-shape');
         nodeEnter.append('text')
-            .attr('class', 'node-label')
-            .attr('fill', _chart.nodeLabelFill.eval);
+            .attr('class', 'node-label');
         return _chart;
     };
 
@@ -1674,7 +1673,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('dy', function(d) { return d.ofs; });
         tspan.text(function(d) { return d.line; });
         tspan.exit().remove();
-        text.each(fit_shape(_chart));
+        text
+            .attr('fill', _chart.nodeLabelFill.eval)
+            .each(fit_shape(_chart));
         node.select('.node-shape')
             .each(shape_attrs(_chart))
             .attr({
@@ -3119,7 +3120,7 @@ dc_graph.behavior = function(event_namespace, handlers) {
                 chart = _behavior.parent();
                 chart.on('drawn.' + event_namespace, function(node, edge, ehover) {
                     handlers.remove_behavior(chart, node, edge, ehover);
-                    chart.on('drawn' + event_namespace, null);
+                    chart.on('drawn.' + event_namespace, null);
                 });
             }
             handlers.parent && handlers.parent(p);
@@ -3288,7 +3289,7 @@ dc_graph.highlight_neighbors = function(props) {
     }
 
     function add_behavior(chart, node, edge) {
-        chart.cascade(100, null, conditional_properties(function(e) {
+        chart.cascade(100, true, conditional_properties(null, function(e) {
             return e.dcg_highlighted;
         }, props));
         node
@@ -3309,8 +3310,7 @@ dc_graph.highlight_neighbors = function(props) {
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
         clear_all_highlights(edge);
-        chart.edgeStrokeWidth.cascade(100, null);
-        chart.edgeStroke.cascade(100, null);
+        chart.cascade(100, false, props);
     }
 
     return dc_graph.behavior('highlight-neighbors', {
@@ -3402,17 +3402,17 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
 
     function add_behavior(chart, node, edge, ehover) {
         chart
-            .cascade(200, conditional_properties(function(n) {
+            .cascade(200, true, conditional_properties(function(n) {
                 return !!node_on_paths[chart.nodeKey.eval(n)];
             }, function(e) {
                 return !!edge_on_paths[chart.edgeKey.eval(e)];
             }, pathprops))
-            .cascade(300, conditional_properties(function(n) {
+            .cascade(300, true, conditional_properties(function(n) {
                 return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], selected);
             }, function(e) {
                 return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], selected);
             }, selectprops))
-            .cascade(400, conditional_properties(function(n) {
+            .cascade(400, true, conditional_properties(function(n) {
                 return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], hoverpaths);
             }, function(e) {
                 return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], hoverpaths);
@@ -3452,8 +3452,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             .on('mouseout.highlight-paths', null)
             .on('click.highlight-paths', null);
         clear_all_highlights();
-        chart.edgeStrokeWidth.cascade(100, null);
-        chart.edgeStroke.cascade(100, null);
+        chart
+            .cascade(200, false, pathprops)
+            .cascade(300, false, selectprops)
+            .cascade(400, false, hoverprops);
     }
 
     var _behavior = dc_graph.behavior('highlight-paths', {
