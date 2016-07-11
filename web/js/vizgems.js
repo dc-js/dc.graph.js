@@ -172,7 +172,7 @@ var options = {
         selector: '#highlight-neighbors',
         needs_redraw: true,
         exert: function() {
-            var highlighter = dc_graph.highlight_neighbors('orange', 3);
+            var highlighter = dc_graph.highlight_neighbors({edgeStroke: 'orange', edgeStrokeWidth: 3});
             return function(val, diagram) {
                 diagram.child('highlight-neighbors', val ? highlighter : null);
             };
