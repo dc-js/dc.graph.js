@@ -16,19 +16,11 @@ function show_stats(data_stats, layout_stats) {
     $('#time-last').html('' + ((runner.lastTime() || 0)/1000).toFixed(3));
     $('#time-avg').html('' + ((runner.avgTime() || 0)/1000).toFixed(3));
 }
-var run_indicator = false;
 function show_start() {
-    run_indicator = true;
     $('#run-indicator').show();
 }
 function show_stop() {
-    run_indicator = false;
     $('#run-indicator').hide();
-}
-function do_redraw() {
-    if(run_indicator) // ??? fishy
-        return;
-    diagram.redrawGroup();
 }
 function toggle_stats() {
     var val = !tracker.vals.stats;
@@ -247,7 +239,6 @@ var options = {
         query: 'vmlayout',
         selector: '#layout-vms',
         needs_relayout: true,
-        needs_redraw: true,
         exert: function(val, diagram) {
             diagram.constrain(val ? vm_constraints : function() { return []; });
         }
@@ -256,7 +247,6 @@ var options = {
         default: "x",
         query: 'flow',
         selector: '#flow-direction',
-        needs_redraw: true,
         needs_relayout: true,
         exert: function(val, diagram, filters) {
             var modf;
@@ -282,28 +272,18 @@ var options = {
     fit_labels: {
         default: true,
         selector: '#fit-labels',
-        needs_redraw: true,
         needs_relayout: true,
         query: 'fit'
     }
 };
 
 
-var graph_domain = {
-    on_exert: function(opt) {
-        if(opt.needs_relayout)
-            diagram.relayout();
-        if(opt.needs_redraw)
-            do_redraw();
-    }
-};
-
 var osTypeSelect = dc.selectMenu('#ostype-select', 'network');
 var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
 var timeline = timeline('#timeline');
 var node_inv = null, edge_inv = null;
-var tracker = querystring.option_tracker(options, graph_domain, diagram, filters);
+var tracker = querystring.option_tracker(options, dcgraph_domain, diagram, filters);
 
 var is_running = tracker.vals.play;
 function display_running() {
@@ -612,7 +592,7 @@ function clickiness() {
     diagram.selectAll('g.node')
         .on('click.vizgems', function(d) {
             selected_node = d.orig.key;
-            do_redraw();
+            dc.redrawAll('network');
             if(tracker.vals.statserv) {
                 var req = tracker.vals.statserv + "/rest/dataquery/stat/json/level_o=" + d.orig.key;
                 //not valid jsond3.json(req, function(error, data) {
@@ -791,7 +771,7 @@ function step() {
         diagram
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
-        do_redraw();
+        dc.redrawAll('network');
         clickiness();
     });
 }
