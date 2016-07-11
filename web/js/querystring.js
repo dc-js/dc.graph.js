@@ -38,78 +38,100 @@ var querystring = (function() {
         }, {});
     }
 
-    function update_interesting() {
-        var interesting = Object.keys(options)
-                .filter(function(k) {
-                    return qs[options[k].query] !== write_query(query_type(options[k].default), options[k].default);
-                }).map(function(k) {
-                    return options[k].query || k;
+    function create_tracker(options, domain, args) {
+        var qs = querystring.parse();
+        var settings = {};
+
+        function update_interesting(qs) {
+            var interesting = Object.keys(options)
+                    .filter(function(k) {
+                        return qs[options[k].query] !== write_query(query_type(options[k].default), options[k].default);
+                    }).map(function(k) {
+                        return options[k].query || k;
+                    });
+            var interested = pick(qs, interesting);
+            querystring.update(interested);
+        }
+
+        function do_option(key, opt, callback) {
+            settings[key] = opt.default;
+            var query = opt.query = opt.query || key;
+            var type = query_type(opt.default);
+            if(query in qs)
+                settings[key] = read_query(type, qs[query]);
+
+            function update_setting(opt, val) {
+                settings[key] = val;
+                if(opt.query) {
+                    qs[opt.query] = write_query(type, val);
+                    update_interesting(qs);
+                }
+            }
+            if(opt.selector) {
+                switch(type) {
+                case 'boolean':
+                    if(!opt.set && opt.selector)
+                        opt.set = function(val) {
+                            $(opt.selector)
+                                .prop('checked', val);
+                        };
+                    if(!opt.subscribe && opt.selector)
+                        opt.subscribe = function(k) {
+                            $(opt.selector)
+                                .change(function() {
+                                    var val = $(this).is(':checked');
+                                    k(val);
+                                });
+                        };
+                    break;
+                case 'string':
+                    if(!opt.set && opt.selector)
+                        opt.set = function(val) {
+                            $(opt.selector)
+                                .val(val);
+                        };
+                    if(!opt.subscribe && opt.selector)
+                        opt.subscribe = function(k) {
+                            $(opt.selector)
+                                .change(function() {
+                                    var val = $(this).val();
+                                    k(val);
+                                });
+                        };
+                    break;
+                default: throw new Error('unsupported selector type ' + type);
+                }
+            }
+            if(opt.set)
+                opt.set(settings[key]);
+            if(opt.subscribe)
+                opt.subscribe(function(val) {
+                    update_setting(opt, val);
+                    callback && callback(val);
                 });
-        var interested = pick(qs, interesting);
-        querystring.update(interested);
-    }
-
-    function do_option(settings, key, opt) {
-        settings[key] = opt.default;
-        var query = opt.query = opt.query || key;
-        var type = query_type(opt.default);
-        if(query in qs)
-            settings[key] = read_query(type, qs[query]);
-
-        function update_setting(opt, val) {
-            settings[key] = val;
-            if(opt.query) {
-                qs[opt.query] = write_query(type, val);
-                update_interesting();
-            }
-            if(opt.apply && !opt.dont_apply_after_subscribe)
-                opt.apply(val, diagram, filters);
-            if(opt.needs_relayout)
-                diagram.relayout();
-            if(opt.needs_redraw)
-                do_redraw();
         }
-        if(opt.selector) {
-            switch(type) {
-            case 'boolean':
-                if(!opt.set && opt.selector)
-                    opt.set = function(val) {
-                        $(opt.selector)
-                            .prop('checked', val);
-                    };
-                if(!opt.subscribe && opt.selector)
-                    opt.subscribe = function(k) {
-                        $(opt.selector)
-                            .change(function() {
-                                var val = $(this).is(':checked');
-                                k(val);
-                            });
-                    };
-                break;
-            case 'string':
-                if(!opt.set && opt.selector)
-                    opt.set = function(val) {
-                        $(opt.selector)
-                            .val(val);
-                    };
-                if(!opt.subscribe && opt.selector)
-                    opt.subscribe = function(k) {
-                        $(opt.selector)
-                            .change(function() {
-                                var val = $(this).val();
-                                k(val);
-                            });
-                    };
-                break;
-            default: throw new Error('unsupported selector type ' + type);
-            }
+
+        for(var key in options) {
+            var callback = function(opt, val) {
+                args[0] = val;
+                if(opt.apply && !opt.dont_apply_after_subscribe)
+                    opt.apply.apply(opt, args);
+                if(domain && domain.on_apply)
+                    domain.on_apply(opt);
+            };
+            do_option(key, options[key], callback.bind(null, options[key]));
         }
-        if(opt.set)
-            opt.set(settings[key]);
-        if(opt.subscribe)
-            opt.subscribe(function(val) {
-                update_setting(opt, val);
-            });
+
+        return {
+            vals: settings,
+            exert: function() {
+                for(var key in options)
+                    if(options[key].apply) {
+                        args[0] = settings[key];
+                        options[key].apply.apply(options[key], args);
+                    }
+            }
+        };
     }
 
     return {
@@ -137,20 +159,10 @@ var querystring = (function() {
             window.history.pushState(null, null, url);
             return this;
         },
-        do_options: function(options) {
-            var settings = {};
-            for(var key in options)
-                do_option(settings, key, options[key]);
-            return settings;
-        },
-        apply_options: function(options, settings /* ... */) {
+        option_tracker: function(options, domain /* ... arguments for apply ... */) {
             var args = Array.prototype.slice.call(arguments, 2);
             args.unshift(0);
-            for(var key in options)
-                if(options[key].apply) {
-                    args[0] = settings[key];
-                    options[key].apply.apply(options[key], args);
-                }
+            return create_tracker(options, domain, args);
         }
     };
 })();
