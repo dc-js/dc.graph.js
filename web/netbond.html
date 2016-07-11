@@ -12,10 +12,13 @@
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
   <script type="text/javascript" src="js/dc.js"></script>
-  <script type="text/javascript" src="js/queue.js"></script>
   <script type="text/javascript" src="js/d3-tip/index.js"></script>
 
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/queue.js"></script>
+
   <script type="text/javascript" src="js/querystring.js"></script>
+  <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
@@ -26,8 +29,12 @@
 
 <body>
 
-  <input id="level" type="range" value="5" min="0" max="8" step="1">
-  <div id="select-location"></div> <!-- will be map-->
+  <div id="options-panel">
+    <div id="select-location"></div> <!-- will be map-->
+    <div><label><input id="unconstrained" type="checkbox">Unconstrained</label></div>
+    <div><input id="level" type="range" value="5" min="0" max="8" step="1"></div>
+  </div>
+
   <div id="topology"></div>
 
   <script type="text/javascript" src="js/netbond.js"></script>

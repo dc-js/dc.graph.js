@@ -1,10 +1,26 @@
-var qs = querystring.parse();
+var options = {
+    data: {
+        default: 'RoutersLocationsPorts.csv'
+    },
+    unconstrained: {
+        default: false,
+        selector: '#unconstrained',
+        needs_relayout: true,
+        exert: function(val, diagram) {
+            diagram.flowLayout(val ? null : {axis: 'x', minSeparation: 150});
+        }
+    }
+};
+
+
+var topologyDiagram = dc_graph.diagram('#topology');
+var tracker = querystring.option_tracker(options, dcgraph_domain(topologyDiagram), topologyDiagram);
 
 function is_value(s) {
     return s && s.trim()!='N/A';
 }
 
-d3.csv(qs.data, function(error, data) {
+d3.csv(tracker.vals.data, function(error, data) {
     if(error)
         throw new Error(error);
 
@@ -36,17 +52,24 @@ d3.csv(qs.data, function(error, data) {
             }
         };
     };
+    function freeze_group(group) {
+        var all = group.all().map(function(kv) { return Object.assign({}, kv); });
+        return {
+            all: function() {
+                return all;
+            }
+        };
+    }
     var locGroup = locDim.group();
     locDim.filter('no-location');
     var select = dc.selectMenu('#select-location')
             .dimension(locDim)
-            .group(locGroup)
+            .group(freeze_group(locGroup))
             .multiple(true)
             .numberVisible(12)
             .promptText('Select location(s)')
             .promptValue('no-location');
 
-    var topologyDiagram = dc_graph.diagram('#topology');
     topologyDiagram
         .width(window.innerWidth)
         .height(window.innerHeight)
@@ -56,7 +79,6 @@ d3.csv(qs.data, function(error, data) {
         .showLayoutSteps(true)
         .nodeDimension(topo_nodes.dimension).nodeGroup(include_cbb(topo_nodes.group))
         .edgeDimension(topo_edges.dimension).edgeGroup(topo_edges.group)
-        .flowLayout(qs.unconstrained ? null : {axis: 'x', minSeparation: 150})
         .nodeShape({shape: 'rectangle'})
         .nodeLabel(function(d) {
             return d.value.name || d.value.aConnectionID || d.value.aSiteCalc;
@@ -134,6 +156,8 @@ d3.csv(qs.data, function(error, data) {
         .delay(500);
 
     topologyDiagram.child('tip', tip);
+
+    tracker.exert();
 
     dc.renderAll();
 });

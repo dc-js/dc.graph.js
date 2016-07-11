@@ -1,15 +1,12 @@
-#select-location {
-    float: none;
-    margin: 5px;
+#options-panel {
     position: absolute;
     left: 5px;
     top: 5px;
 }
 
-#level {
-    position: absolute;
-    left: 5px;
-    top: 200px;
+#select-location {
+    float: none;
+    margin: 5px;
 }
 
 .dc-graph text.node-label {
