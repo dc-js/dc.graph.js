@@ -107,11 +107,11 @@ where
 	},
         select1: {
             name: 'Host 1',
-            default: 'wt2cwa1esx507'
+            default: 'esx507'
         },
         select2: {
             name: 'Host 2',
-            default: 'wt2cwa1esx201'
+            default: 'esx201'
         }
     }
 ];
