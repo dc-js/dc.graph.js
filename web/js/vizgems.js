@@ -83,7 +83,7 @@ var options = {
     delete_delay: {
         default: 0,
         query: 'ddelay',
-        apply: function(val, diagram) {
+        exert: function(val, diagram) {
             diagram.deleteDelay(val);
         }
     },
@@ -101,7 +101,7 @@ var options = {
         default: 'none',
         query: 'stage',
         selector: '#stage-transitions',
-        apply: function(val, diagram) {
+        exert: function(val, diagram) {
             diagram.stageTransitions(val);
         }
     },
@@ -110,19 +110,19 @@ var options = {
         subscribe: function(k) {
             toggle_stats.callback = k;
         },
-        apply: apply_heading('#show-stats', '#graph-stats')
+        exert: apply_heading('#show-stats', '#graph-stats')
     },
     options: {
         default: false,
         subscribe: function(k) {
             toggle_options.callback = k;
         },
-        apply: apply_heading('#show-options', '#options')
+        exert: apply_heading('#show-options', '#options')
     },
     timeLimit: {
         default: 750,
         query: 'limit',
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             diagram.timeLimit(val);
         }
     },
@@ -138,8 +138,8 @@ var options = {
                 k(filters);
             });
         },
-        dont_apply_after_subscribe: true,
-        apply: function(val, diagram, filters) {
+        dont_exert_after_subscribe: true,
+        exert: function(val, diagram, filters) {
             if(filters.filterOSTypes) {
                 osTypeSelect
                     .dimension(filters.filterOSTypes)
@@ -153,7 +153,7 @@ var options = {
         query: 'steps',
         selector: '#show-steps',
         needs_redraw: false,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             diagram.showLayoutSteps(val);
         }
     },
@@ -162,7 +162,7 @@ var options = {
         query: 'arrows',
         selector: '#show-arrows',
         needs_redraw: true,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             diagram.edgeArrowhead(val ? 'vee' : null);
         }
     },
@@ -171,7 +171,7 @@ var options = {
         query: 'neighbors',
         selector: '#highlight-neighbors',
         needs_redraw: true,
-        apply: function() {
+        exert: function() {
             var highlighter = dc_graph.highlight_neighbors('orange', 3);
             return function(val, diagram) {
                 diagram.child('highlight-neighbors', val ? highlighter : null);
@@ -186,7 +186,7 @@ var options = {
         query: 'usecolor',
         selector: '#use-colors',
         needs_redraw: true,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             if(val) {
                 diagram
                     .nodeStrokeWidth(function(kv) {
@@ -216,7 +216,7 @@ var options = {
         query: 'useshape',
         selector: '#use-shapes',
         needs_redraw: true,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             if(val) {
                 diagram
                     .nodeShape(function(kv) {
@@ -238,7 +238,7 @@ var options = {
         query: 'unchanged',
         selector: '#layout-unchanged',
         needs_redraw: false,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             diagram.layoutUnchanged(val);
         }
     },
@@ -248,7 +248,7 @@ var options = {
         selector: '#layout-vms',
         needs_relayout: true,
         needs_redraw: true,
-        apply: function(val, diagram) {
+        exert: function(val, diagram) {
             diagram.constrain(val ? vm_constraints : function() { return []; });
         }
     },
@@ -258,7 +258,7 @@ var options = {
         selector: '#flow-direction',
         needs_redraw: true,
         needs_relayout: true,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             var modf;
             switch(val) {
             case 'x':
@@ -290,7 +290,7 @@ var options = {
 
 
 var graph_domain = {
-    on_apply: function(opt) {
+    on_exert: function(opt) {
         if(opt.needs_relayout)
             diagram.relayout();
         if(opt.needs_redraw)

@@ -114,10 +114,10 @@ var querystring = (function() {
         for(var key in options) {
             var callback = function(opt, val) {
                 args[0] = val;
-                if(opt.apply && !opt.dont_apply_after_subscribe)
-                    opt.apply.apply(opt, args);
-                if(domain && domain.on_apply)
-                    domain.on_apply(opt);
+                if(opt.exert && !opt.dont_exert_after_subscribe)
+                    opt.exert.apply(opt, args);
+                if(domain && domain.on_exert)
+                    domain.on_exert(opt);
             };
             do_option(key, options[key], callback.bind(null, options[key]));
         }
@@ -126,9 +126,9 @@ var querystring = (function() {
             vals: settings,
             exert: function() {
                 for(var key in options)
-                    if(options[key].apply) {
+                    if(options[key].exert) {
                         args[0] = settings[key];
-                        options[key].apply.apply(options[key], args);
+                        options[key].exert.apply(options[key], args);
                     }
             }
         };
@@ -159,7 +159,7 @@ var querystring = (function() {
             window.history.pushState(null, null, url);
             return this;
         },
-        option_tracker: function(options, domain /* ... arguments for apply ... */) {
+        option_tracker: function(options, domain /* ... arguments for exert ... */) {
             var args = Array.prototype.slice.call(arguments, 2);
             args.unshift(0);
             return create_tracker(options, domain, args);
