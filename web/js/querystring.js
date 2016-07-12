@@ -85,6 +85,7 @@ var querystring = (function() {
                                 });
                         };
                     break;
+                case 'number':
                 case 'string':
                     if(!opt.set)
                         opt.set = function(val) {
