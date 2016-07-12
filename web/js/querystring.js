@@ -71,12 +71,12 @@ var querystring = (function() {
             if(opt.selector) {
                 switch(type) {
                 case 'boolean':
-                    if(!opt.set && opt.selector)
+                    if(!opt.set)
                         opt.set = function(val) {
                             $(opt.selector)
                                 .prop('checked', val);
                         };
-                    if(!opt.subscribe && opt.selector)
+                    if(!opt.subscribe)
                         opt.subscribe = function(k) {
                             $(opt.selector)
                                 .change(function() {
@@ -86,12 +86,12 @@ var querystring = (function() {
                         };
                     break;
                 case 'string':
-                    if(!opt.set && opt.selector)
+                    if(!opt.set)
                         opt.set = function(val) {
                             $(opt.selector)
                                 .val(val);
                         };
-                    if(!opt.subscribe && opt.selector)
+                    if(!opt.subscribe)
                         opt.subscribe = function(k) {
                             $(opt.selector)
                                 .change(function() {
