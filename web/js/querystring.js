@@ -162,7 +162,9 @@ var querystring = (function() {
             var parts = [];
             for(var k in m)
                 parts.push(k + '=' + encodeURIComponent(m[k]));
-            var url = base + '?' + parts.join('&');
+            var url = base;
+            if(parts.length)
+                url +=  '?' + parts.join('&');
             window.history.pushState(null, null, url);
             return this;
         },
