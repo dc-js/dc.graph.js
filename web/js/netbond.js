@@ -1,3 +1,4 @@
+querystring.listsep('-');
 var options = {
     data: {
         default: 'RoutersLocationsPorts.csv'

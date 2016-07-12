@@ -1,4 +1,5 @@
 var querystring = (function() {
+    var listsep_ = '|';
     function read_query(type, val) {
         switch(type) {
         case 'boolean':
@@ -8,7 +9,7 @@ var querystring = (function() {
         case 'string':
             return val;
         case 'array':
-            return val.split('|');
+            return val.split(listsep_);
         default: throw new Error('unsupported query type ' + type);
         }
     }
@@ -16,7 +17,7 @@ var querystring = (function() {
     function write_query(type, val) {
         switch(type) {
         case 'array':
-            return val.join('|');
+            return val.join(listsep_);
         case 'boolean':
         case 'number':
         case 'string':
@@ -135,6 +136,12 @@ var querystring = (function() {
     }
 
     return {
+        listsep: function(s) {
+            if(!arguments.length)
+                return listsep_;
+            listsep_ = s;
+            return this;
+        },
         parse: function() {
             return (function(a) {
                 if (a == "") return {};
