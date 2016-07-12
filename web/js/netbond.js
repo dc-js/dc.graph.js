@@ -3,6 +3,27 @@ var options = {
     data: {
         default: 'RoutersLocationsPorts.csv'
     },
+    locations: {
+        default: ['no-location'],
+        set: function(val) {
+            selectLocations.filter(val);
+        },
+        subscribe: function(k) {
+            selectLocations.on('filtered', function() {
+                var filters = selectLocations.filters();
+                k(filters);
+            });
+        },
+        dont_exert_after_subscribe: true,
+        exert: function(val, diagram, filters) {
+            if(filters.locations) {
+                selectLocations
+                    .dimension(filters.locations)
+                    .group(filters.locations.group())
+                    .replaceFilter([val]);
+            }
+        }
+    },
     unconstrained: {
         default: false,
         selector: '#unconstrained',
@@ -10,12 +31,23 @@ var options = {
         exert: function(val, diagram) {
             diagram.flowLayout(val ? null : {axis: 'x', minSeparation: 150});
         }
+    },
+    level: {
+        default: 5,
+        selector: '#level',
+        needs_redraw: true,
+        exert: function(val, _, filters) {
+            filters.relevel();
+        }
     }
 };
 
 
 var topologyDiagram = dc_graph.diagram('#topology');
-var tracker = querystring.option_tracker(options, dcgraph_domain(topologyDiagram), topologyDiagram);
+var selectLocations = dc.selectMenu('#select-location');
+var filters = {};
+var tracker = querystring.option_tracker(options, dcgraph_domain(topologyDiagram),
+                                         topologyDiagram, filters);
 
 function is_value(s) {
     return s && s.trim()!='N/A';
@@ -44,6 +76,7 @@ d3.csv(tracker.vals.data, function(error, data) {
     var locDim = topo_nodes.crossfilter.dimension(function(d) {
         return d.zLocation;
     });
+    filters.locations = locDim;
     function include_cbb(group) {
         return {
             all: function() {
@@ -63,7 +96,7 @@ d3.csv(tracker.vals.data, function(error, data) {
     }
     var locGroup = locDim.group();
     locDim.filter('no-location');
-    var select = dc.selectMenu('#select-location')
+    selectLocations
             .dimension(locDim)
             .group(freeze_group(locGroup))
             .multiple(true)
@@ -104,7 +137,7 @@ d3.csv(tracker.vals.data, function(error, data) {
         return d._level + '/' + d.ID;
     });
 
-    var level = +d3.select('#level').node().value, xpand = [];
+    var xpand = [];
 
     var expand = dc_graph.expand_collapse(function(nk) { // degree
         return 1 + child_edges(nk).length; // 1 parent, children
@@ -125,18 +158,15 @@ d3.csv(tracker.vals.data, function(error, data) {
 
     function expandf(d) {
         d = d.split('/');
-        return +d[0] <= level || xpand.indexOf(d[1]) >= 0;
+        return +d[0] <= tracker.vals.level || xpand.indexOf(d[1]) >= 0;
     }
+    filters.relevel = function() {
+        colspand.filterFunction(expandf);
+    };
 
     colspand.filterFunction(expandf);
 
     topologyDiagram.child('expand-collapse', expand);
-
-    d3.select('#level').on('change', function() {
-        level = +this.value;
-        colspand.filterFunction(expandf);
-        dc.redrawAll();
-    });
 
     // respond to browser resize (not necessary if width/height is static)
     d3.select(window).on('resize', function() {
