@@ -2,6 +2,7 @@ function path_selector(parent, reader, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     var root = d3.select(parent);
     var hovered = null, selected = null;
+    var queried_ = false;
 
     // unfortunately these functions are copied from dc_graph.highlight_paths
     function contains_path(paths) {
@@ -60,7 +61,7 @@ function path_selector(parent, reader, pathsgroup) {
                 highlight_paths_group.select_changed(toggle_paths(selected, [d]));
             });
         var no_paths = root.selectAll('span.no-paths').data(paths.length === 0 ? [0] : []);
-        no_paths.enter().append('span').attr('class', 'no-paths').text('No paths found!');
+        no_paths.enter().append('span').attr('class', 'no-paths').text(queried_ ? 'No paths found!' : 'Click Submit to query.');
         no_paths.exit().remove();
     }
 
@@ -98,4 +99,14 @@ function path_selector(parent, reader, pathsgroup) {
             selected = spaths;
             draw_selected();
         });
+    draw_paths([]);
+    var selector = {
+        queried: function(val) {
+            if(!arguments.length)
+                return queried_;
+            queried_ = val;
+            return this;
+        }
+    };
+    return selector;
 }

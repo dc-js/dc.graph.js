@@ -7,6 +7,9 @@ dc_graph.path_reader = function(pathsgroup) {
         nodeKey: property(null, false),
         edgeSource: property(null, false),
         edgeTarget: property(null, false),
+        clear: function() {
+            highlight_paths_group.paths_changed({}, {}, []);
+        },
         data: function(data) {
             var nop = {}, eop = {}, allpaths = [];
             reader.pathList.eval(data).forEach(function(path) {
