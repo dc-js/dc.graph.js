@@ -465,7 +465,7 @@ function shape_element(chart) {
 function fit_shape(chart) {
     return function(d) {
         var r = chart.nodeRadius.eval(d);
-        var rplus = r*2 + chart.nodePadding.eval(d);
+        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         var bbox;
         if(chart.nodeFitLabel.eval(d))
             bbox = this.getBBox();
@@ -477,7 +477,7 @@ function fit_shape(chart) {
             // http://stackoverflow.com/a/433438/676195
             var y_over_B = bbox.height/2/r;
             var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
-            fitx = rx*2 + chart.nodePadding.eval(d);
+            fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
             d.dcg_rx = Math.max(rx, r);
             d.dcg_ry = r;
             // needs extra width for polygons since they cut in a bit
@@ -3707,6 +3707,9 @@ dc_graph.path_reader = function(pathsgroup) {
         nodeKey: property(null, false),
         edgeSource: property(null, false),
         edgeTarget: property(null, false),
+        clear: function() {
+            highlight_paths_group.paths_changed({}, {}, []);
+        },
         data: function(data) {
             var nop = {}, eop = {}, allpaths = [];
             reader.pathList.eval(data).forEach(function(path) {
