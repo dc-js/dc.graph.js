@@ -278,7 +278,7 @@ function init_queries(nodes, edges) {
         qedit.getSession().setValue(text);
     }
     function do_selects(index) {
-        nquery = nepal_queries[index];
+        nquery = nepal_config.queries[index];
         var values;
         if(nquery.init)
             values = nquery.init(nodes, edges);
@@ -299,7 +299,7 @@ function init_queries(nodes, edges) {
     }
     var squery = d3.select('#squery'), select1 = d3.select('#select1'), select2 = d3.select('#select2');
     var nquery, values1, values2, p1, p2;
-    var qopts = squery.selectAll('option').data(nepal_queries);
+    var qopts = squery.selectAll('option').data(nepal_config.queries);
     qopts.enter().append('option')
         .attr('value', function(d) { return d.name; })
         .text(function(d) { return d.description; });

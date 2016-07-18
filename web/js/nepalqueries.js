@@ -1,5 +1,6 @@
-var nepal_queries = [
-    {
+var nepal_config = {
+    temporal_queries: true,
+    queries: [{
         name: 'vnf_hosts',
         description: 'hosts on which VNF runs',
         query: `Retrieve P
@@ -18,8 +19,7 @@ where
                 }).sort();
             }
         }
-    },
-    {
+    }, {
         name: 'host_vfcs',
         description: 'VFCs running on a given host',
         query: `Retrieve P
@@ -38,8 +38,7 @@ where
                 }).sort();
             }
         }
-    },
-    {
+    }, {
         name: 'windows_vfcs',
         description: 'VFCs running on VMs with Windows Server and hypervisor with 10 NICs',
         query: `Retrieve P
@@ -47,8 +46,7 @@ from PATHS P
 where
 	P MATCHES VFC()->[Hosted()]{1,5}->VM(vm_os="Microsoft Windows Server 2012 (64-bit)")->Host(hw_num_nics=10)
 	and length(P) <= 5`
-    },
-    {
+    }, {
         name: 'vfc_paths',
         description: 'service paths between FNS VFC and DNS VFC',
         query: `Retrieve P
@@ -63,8 +61,7 @@ where
 		return ["FNS01", "FNS02"];
 		}
             }
-    },
-    {
+    }, {
         name: 'virtualization_layer',
         description: 'virtualization-layer service paths between two VMs',
         query: `Retrieve P
@@ -88,8 +85,7 @@ where
             name: 'Host',
             default: 'IOM01'
         }
-    },
-    {
+    }, {
         name: 'physical_layer',
         description: 'physical-layer service paths between two hosts',
         query: `Retrieve P
@@ -114,5 +110,5 @@ where
             default: 'esx201'
         }
     }
-];
+]};
 
