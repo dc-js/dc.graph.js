@@ -24,3 +24,9 @@
 .dc-graph > svg {
     display: block;
 }
+
+.no-paths.error {
+    white-space: pre;
+    color: darkred;
+    font-family: Monaco, monospace;
+}

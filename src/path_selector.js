@@ -1,8 +1,8 @@
-dc_graph.path_selector = function(parent, reader, pathsgroup) {
+dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     var root = d3.select(parent);
+    var paths_ = [];
     var hovered = null, selected = null;
-    var queried_ = false;
 
     // unfortunately these functions are copied from dc_graph.highlight_paths
     function contains_path(paths) {
@@ -61,8 +61,13 @@ dc_graph.path_selector = function(parent, reader, pathsgroup) {
                 highlight_paths_group.select_changed(toggle_paths(selected, [d]));
             });
         var no_paths = root.selectAll('span.no-paths').data(paths.length === 0 ? [0] : []);
-        no_paths.enter().append('span').attr('class', 'no-paths').text(queried_ ? 'No paths found!' : 'Click Submit to query.');
         no_paths.exit().remove();
+        no_paths.enter()
+          .append('span')
+            .attr('class', 'no-paths');
+        no_paths
+            .classed('error', !!selector.error_text())
+            .text(selector.error_text() || (selector.queried() ? selector.zero_text() : selector.default_text()));
     }
 
     function draw_hovered() {
@@ -87,9 +92,8 @@ dc_graph.path_selector = function(parent, reader, pathsgroup) {
     highlight_paths_group
         .on('paths_changed.selector', function(nop, eop, paths) {
             hovered = selected = null;
-            draw_paths(paths);
-            draw_hovered();
-            draw_selected();
+            paths_ = paths;
+            selector.redraw();
         })
         .on('hover_changed.selector', function(hpaths) {
             hovered = hpaths;
@@ -99,14 +103,21 @@ dc_graph.path_selector = function(parent, reader, pathsgroup) {
             selected = spaths;
             draw_selected();
         });
-    draw_paths([]);
     var selector = {
-        queried: function(val) {
-            if(!arguments.length)
-                return queried_;
-            queried_ = val;
+        default_text: property('Nothing here'),
+        zero_text: property('No paths'),
+        error_text: property(null),
+        queried: property(false),
+        redraw: function() {
+            draw_paths(paths_);
+            draw_hovered();
+            draw_selected();
+        },
+        render: function() {
+            this.redraw();
             return this;
         }
     };
+    dc.registerChart(selector, chartgroup);
     return selector;
 }
