@@ -357,6 +357,7 @@ module.exports.jsFiles = [
     'src/load_graph.js',
     'src/convert_nest.js',
     'src/path_reader.js',
+    'src/path_selector.js',
     'src/generate.js',
     'src/type-graph.js',
     'src/footer.js'  // NOTE: keep this last

@@ -1,4 +1,4 @@
-function path_selector(parent, reader, pathsgroup) {
+dc_graph.path_selector = function(parent, reader, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     var root = d3.select(parent);
     var hovered = null, selected = null;
