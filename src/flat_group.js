@@ -1,6 +1,9 @@
-var flat_group = (function() {
-    // when there will be exactly one or zero items in a group, a reasonable reduction
-    // is just to use the row or null
+/* for the special case where there will be exactly one or zero items in a group,
+ a reasonable reduction is just to use the row or null.
+ this could be useful outside dc.graph (esp e.g bubble charts, scatter plots where each
+ observation is either shown or not) but it would have to be cleaned up a bit */
+
+dc_graph.flat_group = (function() {
     function one_zero_reduce(group) {
         group.reduce(
             function(p, v) { return v; },

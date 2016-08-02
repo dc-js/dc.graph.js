@@ -577,8 +577,8 @@ function load(get_inv, callback) {
 function crossfilters(nodes, edges) {
     if(tracker.vals.node_limit)
         nodes = nodes.slice(0, tracker.vals.node_limit);
-    var node_stuff = flat_group.make(nodes, function(d) { return d.id1; }),
-        edge_stuff = flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; }),
+    var node_stuff = dc_graph.flat_group.make(nodes, function(d) { return d.id1; }),
+        edge_stuff = dc_graph.flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; }),
         filterIds = node_stuff.crossfilter.dimension(function(d) { return d.id1; }),
         filterOSTypes = node_stuff.crossfilter.dimension(function(d) { return d.ostype; });
 

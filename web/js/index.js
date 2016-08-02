@@ -109,8 +109,8 @@ function show_type_graph(nodes, edges, sourceattr, targetattr) {
                                               function(n) { return n.type; },
                                               function(e) { return e[sourceattr]; },
                                               function(e) { return e[targetattr]; });
-    var tedges = flat_group.make(typegraph.edges, function(d) { return d.type; }),
-        tnodes = flat_group.make(typegraph.nodes, function(d) { return d.type; });
+    var tedges = dc_graph.flat_group.make(typegraph.edges, function(d) { return d.type; }),
+        tnodes = dc_graph.flat_group.make(typegraph.nodes, function(d) { return d.type; });
 
     overview.width(250)
         .height(250)
@@ -129,7 +129,7 @@ source(function(error, data) {
         console.log(error);
         return;
     }
-    var graph_data = munge_graph(data),
+    var graph_data = dc_graph.munge_graph(data),
         nodes = graph_data.nodes,
         edges = graph_data.edges,
         sourceattr = graph_data.sourceattr,
@@ -144,10 +144,10 @@ source(function(error, data) {
     if(false) // appLayout)
         show_type_graph(nodes, edges, sourceattr, targetattr);
 
-    var edge_flat = flat_group.make(edges, function(d) {
+    var edge_flat = dc_graph.flat_group.make(edges, function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     }),
-        node_flat = flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
+        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
     appLayout && app_layouts[appLayout].data && app_layouts[appLayout].data(nodes, edges);
 
@@ -262,7 +262,7 @@ source(function(error, data) {
     var expander = null, expanded;
     if(explore) {
         // second group on keys so that first will observe it
-        expander = flat_group.another(node_flat.crossfilter, function(d) { return d.name; });
+        expander = dc_graph.flat_group.another(node_flat.crossfilter, function(d) { return d.name; });
         function apply_expander_filter() {
             expander.dimension.filterFunction(function(key) {
                 return expanded.indexOf(key) >= 0;

@@ -248,6 +248,8 @@ module.exports.jsFiles = [
     'src/highlight_paths.js',
     'src/expand_collapse.js',
     'src/load_graph.js',
+    'src/munge_graph.js',
+    'src/flat_group.js',
     'src/convert_nest.js',
     'src/path_reader.js',
     'src/path_selector.js',
