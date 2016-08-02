@@ -715,7 +715,8 @@ var cola;
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    __.prototype = b.prototype;
+    d.prototype = new __();
 };
 var cola;
 (function (cola) {
@@ -1618,7 +1619,6 @@ var cola;
                 this.nodes.forEach(updateNodeBounds);
                 if (this.rootGroup && this.avoidOverlaps) {
                     this.groups.forEach(updateGroupBounds);
-                    computeGroupBounds(this.rootGroup);
                 }
             };
             Projection.prototype.solve = function (vs, cs, starting, desired) {
@@ -3383,9 +3383,6 @@ var cola;
     })(cola.EventType || (cola.EventType = {}));
     var EventType = cola.EventType;
     ;
-    function isGroup(g) {
-        return typeof g.leaves !== 'undefined' || typeof g.groups !== 'undefined';
-    }
     /**
      * Main interface to cola layout.
      * @class Layout
@@ -3700,6 +3697,8 @@ var cola;
             if (gridSnapIterations === void 0) { gridSnapIterations = 0; }
             if (keepRunning === void 0) { keepRunning = true; }
             var i, j, n = this.nodes().length, N = n + 2 * this._groups.length, m = this._links.length, w = this._canvasSize[0], h = this._canvasSize[1];
+            if (this._linkLengthCalculator)
+                this._linkLengthCalculator();
             var x = new Array(N), y = new Array(N);
             var G = null;
             var ao = this._avoidOverlaps;
@@ -3710,8 +3709,6 @@ var cola;
                 }
                 x[i] = v.x, y[i] = v.y;
             });
-            if (this._linkLengthCalculator)
-                this._linkLengthCalculator();
             //should we do this to clearly label groups?
             //this._groups.forEach((g, i) => g.groupIndex = i);
             var distances;
@@ -3786,9 +3783,7 @@ var cola;
             }
             this._descent.threshold = this._threshold;
             // apply initialIterations without user constraints or nonoverlap constraints
-            // if groups are specified, dummy nodes and edges will be added to untangle
-            // with respect to group connectivity
-            this.initialLayout(initialUnconstrainedIterations, x, y);
+            this._descent.run(initialUnconstrainedIterations);
             // apply initialIterations with user constraints but no nonoverlap constraints
             if (curConstraints.length > 0)
                 this._descent.project = new cola.vpsc.Projection(this._nodes, this._groups, this._rootGroup, curConstraints).projectFunctions();
@@ -3820,41 +3815,6 @@ var cola;
             this.updateNodePositions();
             this.separateOverlappingComponents(w, h);
             return keepRunning ? this.resume() : this;
-        };
-        Layout.prototype.initialLayout = function (iterations, x, y) {
-            if (this._groups.length > 0 && iterations > 0) {
-                // construct a flat graph with dummy nodes for the groups and edges connecting group dummy nodes to their children
-                // todo: edges attached to groups are replaced with edges connected to the corresponding group dummy node
-                var n = this._nodes.length;
-                var edges = this._links.map(function (e) { return { source: e.source.index, target: e.target.index }; });
-                var vs = this._nodes.map(function (v) { return { index: v.index }; });
-                this._groups.forEach(function (g, i) {
-                    vs.push({ index: g.index = n + i });
-                });
-                this._groups.forEach(function (g, i) {
-                    if (typeof g.leaves !== 'undefined')
-                        g.leaves.forEach(function (v) { return edges.push({ source: g.index, target: v.index }); });
-                    if (typeof g.groups !== 'undefined')
-                        g.groups.forEach(function (gg) { return edges.push({ source: g.index, target: gg.index }); });
-                });
-                // layout the flat graph with dummy nodes and edges
-                new cola.Layout()
-                    .size(this.size())
-                    .nodes(vs)
-                    .links(edges)
-                    .avoidOverlaps(false)
-                    .linkDistance(this.linkDistance())
-                    .symmetricDiffLinkLengths(5)
-                    .convergenceThreshold(1e-4)
-                    .start(iterations, 0, 0, 0, false);
-                this._nodes.forEach(function (v) {
-                    x[v.index] = vs[v.index].x;
-                    y[v.index] = vs[v.index].y;
-                });
-            }
-            else {
-                this._descent.run(iterations);
-            }
         };
         // recalculate nodes position for disconnected graphs
         Layout.prototype.separateOverlappingComponents = function (width, height) {
@@ -3943,94 +3903,19 @@ var cola;
         // Bit 1 can be set externally (e.g., d.fixed = true) and show persist.
         // Bit 2 stores the dragging state, from mousedown to mouseup.
         // Bit 3 stores the hover state, from mouseover to mouseout.
+        // Dragend is a special case: it also clears the hover state.
         Layout.dragStart = function (d) {
-            if (isGroup(d)) {
-                Layout.storeOffset(d, Layout.dragOrigin(d));
-            }
-            else {
-                Layout.stopNode(d);
-                d.fixed |= 2; // set bit 2
-            }
+            d.fixed |= 2; // set bit 2
+            d.px = d.x, d.py = d.y; // set velocity to zero
         };
-        // we clobber any existing desired positions for nodes
-        // in case another tick event occurs before the drag
-        Layout.stopNode = function (v) {
-            v.px = v.x;
-            v.py = v.y;
-        };
-        // we store offsets for each node relative to the centre of the ancestor group 
-        // being dragged in a pair of properties on the node
-        Layout.storeOffset = function (d, origin) {
-            if (typeof d.leaves !== 'undefined') {
-                d.leaves.forEach(function (v) {
-                    v.fixed |= 2;
-                    Layout.stopNode(v);
-                    v._dragGroupOffsetX = v.x - origin.x;
-                    v._dragGroupOffsetY = v.y - origin.y;
-                });
-            }
-            if (typeof d.groups !== 'undefined') {
-                d.groups.forEach(function (g) { return Layout.storeOffset(g, origin); });
-            }
-        };
-        // the drag origin is taken as the centre of the node or group
-        Layout.dragOrigin = function (d) {
-            if (isGroup(d)) {
-                return {
-                    x: d.bounds.cx(),
-                    y: d.bounds.cy()
-                };
-            }
-            else {
-                return d;
-            }
-        };
-        // for groups, the drag translation is propagated down to all of the children of
-        // the group.
-        Layout.drag = function (d, position) {
-            if (isGroup(d)) {
-                if (typeof d.leaves !== 'undefined') {
-                    d.leaves.forEach(function (v) {
-                        d.bounds.setXCentre(position.x);
-                        d.bounds.setYCentre(position.y);
-                        v.px = v._dragGroupOffsetX + position.x;
-                        v.py = v._dragGroupOffsetY + position.y;
-                    });
-                }
-                if (typeof d.groups !== 'undefined') {
-                    d.groups.forEach(function (g) { return Layout.drag(g, position); });
-                }
-            }
-            else {
-                d.px = position.x;
-                d.py = position.y;
-            }
-        };
-        // we unset only bits 2 and 3 so that the user can fix nodes with another a different
-        // bit such that the lock persists between drags 
         Layout.dragEnd = function (d) {
-            if (isGroup(d)) {
-                if (typeof d.leaves !== 'undefined') {
-                    d.leaves.forEach(function (v) {
-                        Layout.dragEnd(v);
-                        delete v._dragGroupOffsetX;
-                        delete v._dragGroupOffsetY;
-                    });
-                }
-                if (typeof d.groups !== 'undefined') {
-                    d.groups.forEach(Layout.dragEnd);
-                }
-            }
-            else {
-                d.fixed &= ~6; // unset bits 2 and 3
-            }
+            d.fixed &= ~6; // unset bits 2 and 3
+            //d.fixed = 0;
         };
-        // in d3 hover temporarily locks nodes, currently not used in cola
         Layout.mouseOver = function (d) {
             d.fixed |= 4; // set bit 3
             d.px = d.x, d.py = d.y; // set velocity to zero
         };
-        // in d3 hover temporarily locks nodes, currently not used in cola
         Layout.mouseOut = function (d) {
             d.fixed &= ~4; // unset bit 3
         };
@@ -4192,10 +4077,10 @@ var cola;
             this.drag = function () {
                 if (!drag) {
                     var drag = d3.behavior.drag()
-                        .origin(cola.Layout.dragOrigin)
+                        .origin(function (d) { return d; })
                         .on("dragstart.d3adaptor", cola.Layout.dragStart)
                         .on("drag.d3adaptor", function (d) {
-                        cola.Layout.drag(d, d3.event);
+                        d.px = d3.event.x, d.py = d3.event.y;
                         d3layout.resume(); // restart annealing
                     })
                         .on("dragend.d3adaptor", cola.Layout.dragEnd);

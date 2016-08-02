@@ -1,80 +1,106 @@
-(function() {
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define('queue', factory) :
+  (global.queue = factory());
+}(this, function () { 'use strict';
+
   var slice = [].slice;
 
-  function queue(parallelism) {
+  function noop() {}
+
+  var noabort = {};
+  var success = [null];
+  function newQueue(concurrency) {
+    if (!(concurrency >= 1)) throw new Error;
+
     var q,
         tasks = [],
-        started = 0, // number of tasks that have been started (and perhaps finished)
-        active = 0, // number of tasks currently being executed (started but not finished)
-        remaining = 0, // number of tasks not yet finished
-        popping, // inside a synchronous task callback?
-        error = null,
-        await = noop,
-        all;
+        results = [],
+        waiting = 0,
+        active = 0,
+        ended = 0,
+        starting, // inside a synchronous task callback?
+        error,
+        callback = noop,
+        callbackAll = true;
 
-    if (!parallelism) parallelism = Infinity;
-
-    function pop() {
-      while (popping = started < tasks.length && active < parallelism) {
-        var i = started++,
+    function start() {
+      if (starting) return; // let the current task complete
+      while (starting = waiting && active < concurrency) {
+        var i = ended + active,
             t = tasks[i],
-            a = slice.call(t, 1);
-        a.push(callback(i));
-        ++active;
-        t[0].apply(null, a);
+            j = t.length - 1,
+            c = t[j];
+        t[j] = end(i);
+        --waiting, ++active, tasks[i] = c.apply(null, t) || noabort;
       }
     }
 
-    function callback(i) {
+    function end(i) {
       return function(e, r) {
-        --active;
-        if (error != null) return;
+        if (!tasks[i]) throw new Error; // detect multiple callbacks
+        --active, ++ended, tasks[i] = null;
+        if (error != null) return; // only report the first error
         if (e != null) {
-          error = e; // ignore new tasks and squelch active callbacks
-          started = remaining = NaN; // stop queued tasks from starting
-          notify();
+          abort(e);
         } else {
-          tasks[i] = r;
-          if (--remaining) popping || pop();
-          else notify();
+          results[i] = r;
+          if (waiting) start();
+          else if (!active) notify();
         }
       };
     }
 
+    function abort(e) {
+      error = e; // ignore new tasks and squelch active callbacks
+      waiting = NaN; // stop queued tasks from starting
+      notify();
+    }
+
     function notify() {
-      if (error != null) await(error);
-      else if (all) await(error, tasks);
-      else await.apply(null, [error].concat(tasks));
+      if (error != null) callback(error);
+      else if (callbackAll) callback(null, results);
+      else callback.apply(null, success.concat(results));
     }
 
     return q = {
-      defer: function() {
-        if (!error) {
-          tasks.push(arguments);
-          ++remaining;
-          pop();
+      defer: function(f) {
+        if (callback !== noop) throw new Error;
+        var t = slice.call(arguments, 1);
+        t.push(f);
+        ++waiting, tasks.push(t);
+        start();
+        return q;
+      },
+      abort: function() {
+        if (error == null) {
+          var i = ended + active, t;
+          while (--i >= 0) (t = tasks[i]) && t.abort && t.abort();
+          abort(new Error("abort"));
         }
         return q;
       },
       await: function(f) {
-        await = f;
-        all = false;
-        if (!remaining) notify();
+        if (callback !== noop) throw new Error;
+        callback = f, callbackAll = false;
+        if (!waiting && !active) notify();
         return q;
       },
       awaitAll: function(f) {
-        await = f;
-        all = true;
-        if (!remaining) notify();
+        if (callback !== noop) throw new Error;
+        callback = f, callbackAll = true;
+        if (!waiting && !active) notify();
         return q;
       }
     };
   }
 
-  function noop() {}
+  function queue(concurrency) {
+    return newQueue(arguments.length ? +concurrency : Infinity);
+  }
 
-  queue.version = "1.0.7";
-  if (typeof define === "function" && define.amd) define(function() { return queue; });
-  else if (typeof module === "object" && module.exports) module.exports = queue;
-  else this.queue = queue;
-})();
+  queue.version = "1.2.1";
+
+  return queue;
+
+}));
