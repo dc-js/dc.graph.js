@@ -1,3 +1,8 @@
+/* this independent library is looking for a home
+ it provides round-trip query string parsing & generating
+ Copyright 2016 Gordon Woodhull, MIT License
+ */
+
 var querystring = (function() {
     var listsep_ = '|';
     function read_query(type, val) {

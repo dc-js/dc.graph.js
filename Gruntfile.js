@@ -2,7 +2,7 @@ module.exports = function (grunt) {
     'use strict';
 
     require('load-grunt-tasks')(grunt, {
-        pattern: ['grunt-*', '!grunt-lib-phantomjs', '!grunt-template-jasmine-istanbul']
+        pattern: ['grunt-*']
     });
     require('time-grunt')(grunt);
 
@@ -78,18 +78,6 @@ module.exports = function (grunt) {
                 files: ['<%= conf.src %>/**/*.js', 'dc.graph.css'],
                 tasks: ['docs']
             },
-            jsdoc2md: {
-                files: ['<%= conf.src %>/**/*.js'],
-                tasks: ['build', 'jsdoc2md']
-            },
-            jasmineRunner: {
-                files: ['<%= conf.spec %>/**/*.js'],
-                tasks: ['jasmine:specs:build']
-            },
-            tests: {
-                files: ['<%= conf.src %>/**/*.js', '<%= conf.spec %>/**/*.js'],
-                tasks: ['test']
-            },
             reload: {
                 files: ['<%= conf.pkg.name %>.js',
                     '<%= conf.pkg.name %>css',
@@ -106,87 +94,6 @@ module.exports = function (grunt) {
                 options: {
                     port: 8888,
                     base: '.'
-                }
-            }
-        },
-        jasmine: {
-            specs: {
-                options: {
-                    display: 'short',
-                    summary: true,
-                    specs:  '<%= conf.spec %>/*-spec.js',
-                    helpers: '<%= conf.spec %>/helpers/*.js',
-                    version: '2.0.0',
-                    outfile: '<%= conf.spec %>/index.html',
-                    keepRunner: true
-                },
-                src: [
-                    '<%= conf.web %>/js/d3.js',
-                    '<%= conf.web %>/js/crossfilter.js',
-                    '<%= conf.web %>/js/colorbrewer.js',
-                    '<%= conf.pkg.name %>.js'
-                ]
-            },
-            coverage:{
-                src: '<%= jasmine.specs.src %>',
-                options:{
-                    specs: '<%= jasmine.specs.options.specs %>',
-                    helpers: '<%= jasmine.specs.options.helpers %>',
-                    version: '<%= jasmine.specs.options.version %>',
-                    template: require('grunt-template-jasmine-istanbul'),
-                    templateOptions: {
-                        coverage: 'coverage/jasmine/coverage.json',
-                        report: [
-                            {
-                                type: 'html',
-                                options: {
-                                    dir: 'coverage/jasmine'
-                                }
-                            }
-                        ]
-                    }
-                }
-            },
-            browserify: {
-                options: {
-                    display: 'short',
-                    summary: true,
-                    specs:  '<%= conf.spec %>/*-spec.js',
-                    helpers: '<%= conf.spec %>/helpers/*.js',
-                    version: '2.0.0',
-                    outfile: '<%= conf.spec %>/index-browserify.html',
-                    keepRunner: true
-                },
-                src: [
-                    'bundle.js'
-                ]
-            }
-        },
-        'saucelabs-jasmine': {
-            all: {
-                options: {
-                    urls: ['http://localhost:8888/spec/'],
-                    tunnelTimeout: 5,
-                    build: process.env.TRAVIS_JOB_ID,
-                    concurrency: 3,
-                    browsers: [
-                        {
-                            browserName: 'firefox',
-                            version: '25',
-                            platform: 'linux'
-                        },
-                        {
-                            browserName: 'safari',
-                            version: '7',
-                            platform: 'OS X 10.9'
-                        },
-                        {
-                            browserName: 'internet explorer',
-                            version: '10',
-                            platform: 'WIN8'
-                        }
-                    ],
-                    testname: '<%= conf.pkg.name %>.js'
                 }
             }
         },
@@ -219,13 +126,14 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.min.js.map',
                             '<%= conf.pkg.name %>-worker.js',
                             '<%= conf.pkg.name %>-worker.js.map',
-                            'node_modules/jquery/dist/jquery.js',
-                            'node_modules/d3/d3.js',
-                            'node_modules/queue-async/queue.js',
-                            'node_modules/dc/dc.js',
+                            'querystring.js',
                             'node_modules/crossfilter/crossfilter.js',
-                            'test/env-data.js'
-                        ],
+                            'node_modules/d3/d3.js',
+                            'node_modules/dc/dc.js',
+                            'node_modules/jquery/dist/jquery.js',
+                            'node_modules/queue-async/build/queue.js',
+                            'node_modules/webcola/WebCola/cola.js'
+                          ],
                         dest: '<%= conf.web %>/js/'
                     },
                     {
@@ -311,27 +219,12 @@ module.exports = function (grunt) {
     grunt.registerTask('update-stock-example', 'Update the baseline stock example web page.', function () {
         require('./regression/stock-regression-test.js').updateStockExample(this.async());
     });
-    grunt.registerTask('watch:jasmine', function () {
-        grunt.config('watch', {
-            options: {
-                interrupt: true
-            },
-            runner: grunt.config('watch').jasmineRunner,
-            scripts: grunt.config('watch').scripts
-        });
-        grunt.task.run('watch');
-    });
 
     // task aliases
     grunt.registerTask('build', ['concat', 'uglify']);
     grunt.registerTask('docs', ['build', 'copy', 'jsdoc2md']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
-    grunt.registerTask('server', ['docs', 'jasmine:specs:build', 'connect:server', 'watch:jasmine']);
-    grunt.registerTask('test', ['build', 'jasmine:specs']);
-    grunt.registerTask('test-browserify', ['build', 'browserify', 'jasmine:browserify']);
-    grunt.registerTask('coverage', ['build', 'jasmine:coverage']);
-    grunt.registerTask('ci', ['test', 'jasmine:specs:build', 'connect:server', 'saucelabs-jasmine']);
-    grunt.registerTask('ci-pull', ['test', 'jasmine:specs:build', 'connect:server']);
+    grunt.registerTask('server', ['docs', 'connect:server', 'watch:scripts']);
     grunt.registerTask('lint', ['build', 'jshint', 'jscs']);
     grunt.registerTask('jsdoc', ['build', 'jsdoc2md', 'watch:jsdoc2md']);
     grunt.registerTask('default', ['build', 'shell:hooks']);
