@@ -127,11 +127,13 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>-worker.js',
                             '<%= conf.pkg.name %>-worker.js.map',
                             'd3.flexdivs.js',
+                            'dc.graph.tracker.domain.js',
                             'querystring.js',
                             'node_modules/crossfilter/crossfilter.js',
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
                             'node_modules/jquery/dist/jquery.js',
+                            'node_modules/lodash/lodash.js',
                             'node_modules/queue-async/build/queue.js',
                             'node_modules/webcola/WebCola/cola.js'
                           ],
