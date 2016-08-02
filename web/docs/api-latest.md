@@ -1,4 +1,5 @@
 <a name="dc_graph"></a>
+
 ## dc_graph : <code>object</code>
 The entire dc.graph.js library is scoped under the **dc_graph** name space. It does not introduce
 anything else into the global name space.
@@ -8,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.1.1  
+**Version**: 0.2.0  
 **Example**  
 ```js
 // Example chaining
@@ -19,7 +20,103 @@ chart.width(600)
 ```
 
 * [dc_graph](#dc_graph) : <code>object</code>
-  * [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.mouseZoomable](#dc_graph.diagram+mouseZoomable) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.fitStrategy](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.autoZoom](#dc_graph.diagram+autoZoom) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeDimension](#dc_graph.diagram+nodeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeGroup](#dc_graph.diagram+nodeGroup) ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeDimension](#dc_graph.diagram+edgeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeGroup](#dc_graph.diagram+edgeGroup) ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeKey](#dc_graph.diagram+nodeKey) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeKey](#dc_graph.diagram+edgeKey) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeSource](#dc_graph.diagram+edgeSource) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeTarget](#dc_graph.diagram+edgeTarget) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeRadius](#dc_graph.diagram+nodeRadius) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeStrokeWidth](#dc_graph.diagram+nodeStrokeWidth) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeStroke](#dc_graph.diagram+nodeStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeFillScale](#dc_graph.diagram+nodeFillScale) ⇒ <code>function</code> &#124; <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeFill](#dc_graph.diagram+nodeFill) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeOpacity](#dc_graph.diagram+nodeOpacity) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodePadding](#dc_graph.diagram+nodePadding) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeLabel](#dc_graph.diagram+nodeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeLabelFill](#dc_graph.diagram+nodeLabelFill) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeFitLabel](#dc_graph.diagram+nodeFitLabel) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeShape](#dc_graph.diagram+nodeShape) ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeTitle](#dc_graph.diagram+nodeTitle) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeOrdering](#dc_graph.diagram+nodeOrdering) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.nodeFixed](#dc_graph.diagram+nodeFixed) ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeStroke](#dc_graph.diagram+edgeStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeStrokeWidth](#dc_graph.diagram+edgeStrokeWidth) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeOpacity](#dc_graph.diagram+edgeOpacity) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeLabel](#dc_graph.diagram+edgeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeArrowhead](#dc_graph.diagram+edgeArrowhead) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeArrowtail](#dc_graph.diagram+edgeArrowtail) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeArrowSize](#dc_graph.diagram+edgeArrowSize) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeIsLayout](#dc_graph.diagram+edgeIsLayout) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.flowLayout](#dc_graph.diagram+flowLayout)
+        * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.deleteDelay](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.groupConnected](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.timeLimit](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.constrain](#dc_graph.diagram+constrain) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.parallelEdgeOffset](#dc_graph.diagram+parallelEdgeOffset) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.edgeOrdering](#dc_graph.diagram+edgeOrdering) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.initLayoutOnRedraw](#dc_graph.diagram+initLayoutOnRedraw) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.layoutUnchanged](#dc_graph.diagram+layoutUnchanged) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.relayout](#dc_graph.diagram+relayout) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.initialLayout](#dc_graph.diagram+initialLayout) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.induceNodes](#dc_graph.diagram+induceNodes) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.child](#dc_graph.diagram+child) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.handleDisconnected](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.render](#dc_graph.diagram+render) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.on](#dc_graph.diagram+on) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.getStats](#dc_graph.diagram+getStats) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.select](#dc_graph.diagram+select) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.selectAll](#dc_graph.diagram+selectAll) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.svg](#dc_graph.diagram+svg) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.resetSvg](#dc_graph.diagram+resetSvg) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.redrawGroup](#dc_graph.diagram+redrawGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.renderGroup](#dc_graph.diagram+renderGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.defineArrow](#dc_graph.diagram+defineArrow) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
+    * [.constraint_pattern](#dc_graph.constraint_pattern) ⇒ <code>function</code>
+    * [.tip](#dc_graph.tip) ⇒ <code>Object</code>
+        * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
+        * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
+        * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
+
+<a name="dc_graph.diagram"></a>
+
+### dc_graph.diagram ⇒ <code>[diagram](#dc_graph.diagram)</code>
+`dc_graph.diagram` is a dc.js-compatible network visualization component. It registers in
+the dc.js chart registry and its nodes and edges are generated from crossfilter groups. It
+logically derives from the dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin),
+but it does not physically derive from it since so much is different about network
+visualization versus conventional charts.
+
+**Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| parent | <code>String</code> &#124; <code>node</code> | Any valid [d3 single selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom block element such as a div; or a dom element. |
+| [chartGroup] | <code>String</code> | The name of the chart group this chart instance should be placed in. Filter interaction with a chart will only trigger events and redraws within the chart's group. |
+
+
+* [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -90,103 +187,9 @@ chart.width(600)
     * [.defineArrow](#dc_graph.diagram+defineArrow) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
-  * [.constraint_pattern](#dc_graph.constraint_pattern) ⇒ <code>function</code>
-  * [.tip](#dc_graph.tip) ⇒ <code>Object</code>
-    * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-    * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
-    * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
-    * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
-
-<a name="dc_graph.diagram"></a>
-### dc_graph.diagram ⇒ <code>[diagram](#dc_graph.diagram)</code>
-`dc_graph.diagram` is a dc.js-compatible network visualization component. It registers in
-the dc.js chart registry and its nodes and edges are generated from crossfilter groups. It
-logically derives from the dc.js
-[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin),
-but it does not physically derive from it since so much is different about network
-visualization versus conventional charts.
-
-**Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| parent | <code>String</code> &#124; <code>node</code> | Any valid [d3 single selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom block element such as a div; or a dom element. |
-| [chartGroup] | <code>String</code> | The name of the chart group this chart instance should be placed in. Filter interaction with a chart will only trigger events and redraws within the chart's group. |
-
-
-* [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.mouseZoomable](#dc_graph.diagram+mouseZoomable) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.fitStrategy](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.autoZoom](#dc_graph.diagram+autoZoom) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeDimension](#dc_graph.diagram+nodeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeGroup](#dc_graph.diagram+nodeGroup) ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeDimension](#dc_graph.diagram+edgeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeGroup](#dc_graph.diagram+edgeGroup) ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeKey](#dc_graph.diagram+nodeKey) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeKey](#dc_graph.diagram+edgeKey) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeSource](#dc_graph.diagram+edgeSource) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeTarget](#dc_graph.diagram+edgeTarget) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeRadius](#dc_graph.diagram+nodeRadius) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeStrokeWidth](#dc_graph.diagram+nodeStrokeWidth) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeStroke](#dc_graph.diagram+nodeStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeFillScale](#dc_graph.diagram+nodeFillScale) ⇒ <code>function</code> &#124; <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeFill](#dc_graph.diagram+nodeFill) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeOpacity](#dc_graph.diagram+nodeOpacity) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodePadding](#dc_graph.diagram+nodePadding) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeLabel](#dc_graph.diagram+nodeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeLabelFill](#dc_graph.diagram+nodeLabelFill) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeFitLabel](#dc_graph.diagram+nodeFitLabel) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeShape](#dc_graph.diagram+nodeShape) ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeTitle](#dc_graph.diagram+nodeTitle) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeOrdering](#dc_graph.diagram+nodeOrdering) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.nodeFixed](#dc_graph.diagram+nodeFixed) ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeStroke](#dc_graph.diagram+edgeStroke) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeStrokeWidth](#dc_graph.diagram+edgeStrokeWidth) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeOpacity](#dc_graph.diagram+edgeOpacity) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeLabel](#dc_graph.diagram+edgeLabel) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeArrowhead](#dc_graph.diagram+edgeArrowhead) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeArrowtail](#dc_graph.diagram+edgeArrowtail) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeArrowSize](#dc_graph.diagram+edgeArrowSize) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeIsLayout](#dc_graph.diagram+edgeIsLayout) ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.flowLayout](#dc_graph.diagram+flowLayout)
-  * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.deleteDelay](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.groupConnected](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.timeLimit](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.constrain](#dc_graph.diagram+constrain) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.parallelEdgeOffset](#dc_graph.diagram+parallelEdgeOffset) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.edgeOrdering](#dc_graph.diagram+edgeOrdering) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.initLayoutOnRedraw](#dc_graph.diagram+initLayoutOnRedraw) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.layoutUnchanged](#dc_graph.diagram+layoutUnchanged) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.relayout](#dc_graph.diagram+relayout) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.initialLayout](#dc_graph.diagram+initialLayout) ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.induceNodes](#dc_graph.diagram+induceNodes) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.child](#dc_graph.diagram+child) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.handleDisconnected](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.render](#dc_graph.diagram+render) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.on](#dc_graph.diagram+on) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.getStats](#dc_graph.diagram+getStats) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.select](#dc_graph.diagram+select) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.selectAll](#dc_graph.diagram+selectAll) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.svg](#dc_graph.diagram+svg) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.resetSvg](#dc_graph.diagram+resetSvg) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.redrawGroup](#dc_graph.diagram+redrawGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.renderGroup](#dc_graph.diagram+renderGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.defineArrow](#dc_graph.diagram+defineArrow) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-  * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
 
 <a name="dc_graph.diagram+width"></a>
+
 #### diagram.width ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the width attribute of the diagram. See `.height` below.
 
@@ -197,6 +200,7 @@ Set or get the width attribute of the diagram. See `.height` below.
 | [width] | <code>Number</code> | <code>200</code> | 
 
 <a name="dc_graph.diagram+height"></a>
+
 #### diagram.height ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the height attribute of the diagram. The width and height are applied to the
 SVG element generated by the diagram when rendered. If a value is given, then the
@@ -210,6 +214,7 @@ the height attribute will be returned. Default: 200
 | [height] | <code>Number</code> | <code>200</code> | 
 
 <a name="dc_graph.diagram+root"></a>
+
 #### diagram.root ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Get or set the root element, which is usually the parent div. Normally the root is set
 when the diagram is constructed; setting it later may have unexpected consequences.
@@ -221,6 +226,7 @@ when the diagram is constructed; setting it later may have unexpected consequenc
 | [root] | <code>node</code> | 
 
 <a name="dc_graph.diagram+mouseZoomable"></a>
+
 #### diagram.mouseZoomable ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Get or set whether mouse wheel rotation or touchpad gestures will zoom the diagram, and
 whether dragging on the background pans the diagram.
@@ -232,6 +238,7 @@ whether dragging on the background pans the diagram.
 | [mouseZoomable] | <code>Boolean</code> | <code>true</code> | 
 
 <a name="dc_graph.diagram+fitStrategy"></a>
+
 #### diagram.fitStrategy ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the fitting strategy for the canvas, which affects how the
 [viewBox](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox) and
@@ -262,6 +269,7 @@ height) and result will be used to set `preserveAspectRatio`.
 | [fitStrategy] | <code>String</code> | <code></code> | 
 
 <a name="dc_graph.diagram+autoZoom"></a>
+
 #### diagram.autoZoom ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Auto-zoom behavior.
 * `'always'` - zoom every time layout happens
@@ -275,6 +283,7 @@ Auto-zoom behavior.
 | [autoZoom] | <code>String</code> | <code></code> | 
 
 <a name="dc_graph.diagram+nodeDimension"></a>
+
 #### diagram.nodeDimension ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the crossfilter dimension which represents the nodes (vertices) in the
 diagram. Typically there will be a crossfilter instance for the nodes, and another for
@@ -290,6 +299,7 @@ selected.*
 | [nodeDimension] | <code>crossfilter.dimension</code> | 
 
 <a name="dc_graph.diagram+nodeGroup"></a>
+
 #### diagram.nodeGroup ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the crossfilter group which is the data source for the nodes in the
 diagram. The diagram will use the group's `.all()` method to get an array of `{key,
@@ -307,6 +317,7 @@ crossfilter group.
 | [nodeGroup] | <code>crossfilter.group</code> | 
 
 <a name="dc_graph.diagram+edgeDimension"></a>
+
 #### diagram.edgeDimension ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the crossfilter dimension which represents the edges in the
 diagram. Typically there will be a crossfilter instance for the nodes, and another for
@@ -322,6 +333,7 @@ selected.*
 | [edgeDimension] | <code>crossfilter.dimension</code> | 
 
 <a name="dc_graph.diagram+edgeGroup"></a>
+
 #### diagram.edgeGroup ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the crossfilter group which is the data source for the edges in the
 diagram. See `.nodeGroup` above for the way data is loaded from a crossfilter group.
@@ -336,6 +348,7 @@ keys as the `nodeKey`
 | [edgeGroup] | <code>crossfilter.group</code> | 
 
 <a name="dc_graph.diagram+nodeKey"></a>
+
 #### diagram.nodeKey ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the unique key for each node. By
 default, this accesses the `key` field of the object passed to it. The keys should match
@@ -348,6 +361,7 @@ the keys returned by the `.edgeSource` and `.edgeTarget`.
 | [nodeKey] | <code>function</code> | 
 
 <a name="dc_graph.diagram+edgeKey"></a>
+
 #### diagram.edgeKey ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the unique key for each edge. By
 default, this accesses the `key` field of the object passed to it.
@@ -359,6 +373,7 @@ default, this accesses the `key` field of the object passed to it.
 | [edgeKey] | <code>function</code> | 
 
 <a name="dc_graph.diagram+edgeSource"></a>
+
 #### diagram.edgeSource ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the source (origin/tail) key of
 the edge objects.  The key must equal the key returned by the `.nodeKey` for one of the
@@ -372,6 +387,7 @@ displayed. By default, looks for `.value.sourcename`.
 | [edgeSource] | <code>function</code> | 
 
 <a name="dc_graph.diagram+edgeTarget"></a>
+
 #### diagram.edgeTarget ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the target (destination/head) key
 of the edge objects.  The key must equal the key returned by the `.nodeKey` for one of
@@ -385,6 +401,7 @@ be displayed. By default, looks for `.value.targetname`.
 | [edgeTarget] | <code>function</code> | 
 
 <a name="dc_graph.diagram+nodeRadius"></a>
+
 #### diagram.nodeRadius ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the radius, in pixels, for each
 node. This determines the height of nodes, and the width, if `nodeFitLabel` is
@@ -397,6 +414,7 @@ false.
 | [nodeRadius] | <code>function</code> &#124; <code>Number</code> | <code>25</code> | 
 
 <a name="dc_graph.diagram+nodeStrokeWidth"></a>
+
 #### diagram.nodeStrokeWidth ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the stroke width, in pixels, for
 drawing the outline of each node. According to the SVG specification, the outline will
@@ -409,6 +427,7 @@ be drawn half on top of the fill, and half outside. Default: 1
 | [nodeStrokeWidth] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
 
 <a name="dc_graph.diagram+nodeStroke"></a>
+
 #### diagram.nodeStroke ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the stroke color for the outline
 of each node.
@@ -420,6 +439,7 @@ of each node.
 | [nodeStroke] | <code>function</code> &#124; <code>String</code> | <code>&#x27;black&#x27;</code> | 
 
 <a name="dc_graph.diagram+nodeFillScale"></a>
+
 #### diagram.nodeFillScale ⇒ <code>function</code> &#124; <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 If set, the value returned from `nodeFill` will be processed through this
 [d3.scale](https://github.com/mbostock/d3/wiki/Scales)
@@ -432,6 +452,7 @@ to return the fill color. If falsy, uses the identity function (no scale).
 | [nodeFillScale] | <code>function</code> &#124; <code>d3.scale</code> | 
 
 <a name="dc_graph.diagram+nodeFill"></a>
+
 #### diagram.nodeFill ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the fill color for the body of each
 node.
@@ -443,6 +464,7 @@ node.
 | [nodeFill] | <code>function</code> &#124; <code>String</code> | <code>&#x27;white&#x27;</code> | 
 
 <a name="dc_graph.diagram+nodeOpacity"></a>
+
 #### diagram.nodeOpacity ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the opacity of each node.
 
@@ -453,6 +475,7 @@ Set or get the function which will be used to retrieve the opacity of each node.
 | [nodeOpacity] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
 
 <a name="dc_graph.diagram+nodePadding"></a>
+
 #### diagram.nodePadding ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the padding or minimum distance, in pixels, for a node. (Will be distributed
 to both sides of the node.)
@@ -464,6 +487,7 @@ to both sides of the node.)
 | [nodePadding] | <code>function</code> &#124; <code>Number</code> | <code>6</code> | 
 
 <a name="dc_graph.diagram+nodeLabel"></a>
+
 #### diagram.nodeLabel ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the label text to display in each
 node. By default, looks for a field `label` or `name` inside the `value` field.
@@ -482,6 +506,7 @@ diagram.nodeLabel(function(kv) {
 });
 ```
 <a name="dc_graph.diagram+nodeLabelFill"></a>
+
 #### diagram.nodeLabelFill ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the label fill color. Default: null
 
@@ -492,6 +517,7 @@ Set or get the function which will be used to retrieve the label fill color. Def
 | [nodeLabelFill] | <code>function</code> &#124; <code>String</code> | <code></code> | 
 
 <a name="dc_graph.diagram+nodeFitLabel"></a>
+
 #### diagram.nodeFitLabel ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Whether to fit the node shape around the label
 
@@ -502,6 +528,7 @@ Whether to fit the node shape around the label
 | [nodeFitLabel] | <code>function</code> &#124; <code>Boolean</code> | <code>true</code> | 
 
 <a name="dc_graph.diagram+nodeShape"></a>
+
 #### diagram.nodeShape ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 The shape to use for drawing each node, specified as an object with at least the field
 `shape`: ellipse, polygon
@@ -515,6 +542,7 @@ If `shape = polygon`:
 | [nodeShape] | <code>function</code> &#124; <code>Object</code> | <code>{shape: &#x27;ellipse&#x27;}</code> | 
 
 <a name="dc_graph.diagram+nodeTitle"></a>
+
 #### diagram.nodeTitle ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the node title, usually rendered
 as a tooltip. By default, uses the key of the node.
@@ -533,6 +561,7 @@ chart.nodeTitle(function(kv) {
 });
 ```
 <a name="dc_graph.diagram+nodeOrdering"></a>
+
 #### diagram.nodeOrdering ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 By default, nodes are added to the layout in the order that `.nodeGroup().all()` returns
 them. If specified, `.nodeOrdering` provides an accessor that returns a key to sort the
@@ -546,6 +575,7 @@ affect the layout in some cases.*
 | [nodeOrdering] | <code>function</code> | 
 
 <a name="dc_graph.diagram+nodeFixed"></a>
+
 #### diagram.nodeFixed ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Specify an accessor that returns an {x,y} coordinate for a node that should be
 [fixed in place](https://github.com/tgdwyer/WebCola/wiki/Fixed-Node-Positions),
@@ -558,6 +588,7 @@ and returns falsy for other nodes.
 | [nodeFixed] | <code>function</code> &#124; <code>Object</code> | 
 
 <a name="dc_graph.diagram+edgeStroke"></a>
+
 #### diagram.edgeStroke ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the stroke color for the edges.
 
@@ -568,6 +599,7 @@ Set or get the function which will be used to retrieve the stroke color for the 
 | [edgeStroke] | <code>function</code> &#124; <code>String</code> | <code>&#x27;black&#x27;</code> | 
 
 <a name="dc_graph.diagram+edgeStrokeWidth"></a>
+
 #### diagram.edgeStrokeWidth ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the stroke width for the edges.
 
@@ -578,6 +610,7 @@ Set or get the function which will be used to retrieve the stroke width for the 
 | [edgeStrokeWidth] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
 
 <a name="dc_graph.diagram+edgeOpacity"></a>
+
 #### diagram.edgeOpacity ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the edge opacity, a number from 0
 to 1.
@@ -589,6 +622,7 @@ to 1.
 | [edgeOpacity] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
 
 <a name="dc_graph.diagram+edgeLabel"></a>
+
 #### diagram.edgeLabel ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the edge label text. The label is
 displayed when an edge is hovered over. By default, uses the `edgeKey`.
@@ -607,6 +641,7 @@ chart.edgeLabel(function(d) {
 });
 ```
 <a name="dc_graph.diagram+edgeArrowhead"></a>
+
 #### diagram.edgeArrowhead ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the name of the arrowhead to use
 for the target/ head/destination of the edge. Arrow symbols can be specified with
@@ -619,6 +654,7 @@ for the target/ head/destination of the edge. Arrow symbols can be specified wit
 | [edgeArrowhead] | <code>function</code> &#124; <code>String</code> | <code>&#x27;vee&#x27;</code> | 
 
 <a name="dc_graph.diagram+edgeArrowtail"></a>
+
 #### diagram.edgeArrowtail ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the name of the arrow tail to use
 for the tail/source of the edge. Arrow symbols can be specified with
@@ -631,6 +667,7 @@ for the tail/source of the edge. Arrow symbols can be specified with
 | [edgeArrowtail] | <code>function</code> &#124; <code>String</code> | <code></code> | 
 
 <a name="dc_graph.diagram+edgeArrowSize"></a>
+
 #### diagram.edgeArrowSize ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Multiplier for arrow size.
 
@@ -641,6 +678,7 @@ Multiplier for arrow size.
 | [edgeArrowSize] | <code>function</code> &#124; <code>Number</code> | <code>1</code> | 
 
 <a name="dc_graph.diagram+edgeIsLayout"></a>
+
 #### diagram.edgeIsLayout ⇒ <code>function</code> &#124; <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 To draw an edge but not have it affect the layout, specify a function which returns
 false for that edge.  By default, will return false if the `notLayout` field of the edge
@@ -660,6 +698,7 @@ chart.edgeIsLayout(function(kv) {
 });
 ```
 <a name="dc_graph.diagram+lengthStrategy"></a>
+
 #### diagram.lengthStrategy ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Currently, three strategies are supported for specifying the lengths of edges:
 * 'individual' - uses the `edgeLength` for each edge. If it returns falsy, uses the
@@ -677,6 +716,7 @@ for more details.
 | [lengthStrategy] | <code>function</code> &#124; <code>String</code> | <code>&#x27;symmetric&#x27;</code> | 
 
 <a name="dc_graph.diagram+edgeLength"></a>
+
 #### diagram.edgeLength ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 When the `.lengthStrategy` is 'individual', this accessor will be used to read the
 length of each edge.  By default, reads the `distance` field of the edge. If the
@@ -696,6 +736,7 @@ chart.edgeLength(function(kv) {
 });
 ```
 <a name="dc_graph.diagram+flowLayout"></a>
+
 #### diagram.flowLayout
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 
@@ -711,6 +752,7 @@ chart.flowLayout(null)
 chart.flowLayout({axis: 'x', minSeparation: 200})
 ```
 <a name="dc_graph.diagram+baseLength"></a>
+
 #### diagram.baseLength ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
 'individual', and the base value to be multiplied for 'symmetric' and 'jaccard' edge
@@ -723,6 +765,7 @@ lengths.
 | [baseLength] | <code>Number</code> | 
 
 <a name="dc_graph.diagram+highlightNeighbors"></a>
+
 #### diagram.highlightNeighbors ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Whether to highlight neighboring edges when hovering over a node. Not completely working
 yet.
@@ -734,6 +777,7 @@ yet.
 | [highlightNeighbors] | <code>Boolean</code> | 
 
 <a name="dc_graph.diagram+transitionDuration"></a>
+
 #### diagram.transitionDuration ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Gets or sets the transition duration, the length of time each change to the diagram will
 be animated.
@@ -745,6 +789,7 @@ be animated.
 | [transitionDuration] | <code>Number</code> | 
 
 <a name="dc_graph.diagram+stageTransitions"></a>
+
 #### diagram.stageTransitions ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 How transitions should be split into separate animations to emphasize
 the delete, modify, and insert operations:
@@ -761,6 +806,7 @@ Deletions always happen before/during layout computation.
 | [stageTransitions] | <code>String</code> | 
 
 <a name="dc_graph.diagram+deleteDelay"></a>
+
 #### diagram.deleteDelay ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 The delete transition happens simultaneously with layout, which can take longer
 than the transition duration. Delaying it can bring it closer to the other
@@ -773,6 +819,7 @@ staged transitions.
 | [deleteDelay] | <code>Number</code> | 
 
 <a name="dc_graph.diagram+groupConnected"></a>
+
 #### diagram.groupConnected ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Whether to put connected components each in their own group, to stabilize layout.
 
@@ -783,6 +830,7 @@ Whether to put connected components each in their own group, to stabilize layout
 | [stageTransitions] | <code>String</code> | 
 
 <a name="dc_graph.diagram+timeLimit"></a>
+
 #### diagram.timeLimit ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for no
 limit.
@@ -794,6 +842,7 @@ limit.
 | [timeLimit] | <code>function</code> &#124; <code>Number</code> | <code>0</code> | 
 
 <a name="dc_graph.diagram+constrain"></a>
+
 #### diagram.constrain ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Gets or sets a function which will be called with the current nodes and edges on each
 redraw in order to derive new layout constraints. The constraints are built from scratch
@@ -826,6 +875,7 @@ this constrain function, specifying the constraints themselves in a graph.
 | [constrain] | <code>function</code> | 
 
 <a name="dc_graph.diagram+parallelEdgeOffset"></a>
+
 #### diagram.parallelEdgeOffset ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 If there are multiple edges between the same two nodes, start them this many pixels away
 from the original so they don't overlap.
@@ -837,6 +887,7 @@ from the original so they don't overlap.
 | [parallelEdgeOffset] | <code>Number</code> | <code>10</code> | 
 
 <a name="dc_graph.diagram+edgeOrdering"></a>
+
 #### diagram.edgeOrdering ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 By default, edges are added to the layout in the order that `.edgeGroup().all()` returns
 them. If specified, `.edgeOrdering` provides an accessor that returns a key to sort the
@@ -852,6 +903,7 @@ parallel edge is which.)*
 | [edgeOrdering] | <code>function</code> | 
 
 <a name="dc_graph.diagram+initLayoutOnRedraw"></a>
+
 #### diagram.initLayoutOnRedraw ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Currently there are some bugs when the same instance of cola.js is used multiple
 times. (In particular, overlaps between nodes may not be eliminated
@@ -867,6 +919,7 @@ soon.
 | [initLayoutOnRedraw] | <code>Boolean</code> | <code>false</code> | 
 
 <a name="dc_graph.diagram+layoutUnchanged"></a>
+
 #### diagram.layoutUnchanged ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Whether to perform layout when the data is unchanged from the last redraw.
 
@@ -877,6 +930,7 @@ Whether to perform layout when the data is unchanged from the last redraw.
 | [layoutUnchanged] | <code>Boolean</code> | <code>false</code> | 
 
 <a name="dc_graph.diagram+relayout"></a>
+
 #### diagram.relayout ⇒ <code>[diagram](#dc_graph.diagram)</code>
 When `layoutUnchanged` is false, this will force layout to happen again. This may be needed
 when changing a parameter but not changing the topology of the graph. (Yes, probably should
@@ -884,6 +938,7 @@ not be necessary.)
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.diagram+initialLayout"></a>
+
 #### diagram.initialLayout ⇒ <code>function</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Function to call to generate an initial layout. Takes (diagram, nodes, edges)
 
@@ -894,6 +949,7 @@ Function to call to generate an initial layout. Takes (diagram, nodes, edges)
 | [initialLayout] | <code>function</code> | <code></code> | 
 
 <a name="dc_graph.diagram+induceNodes"></a>
+
 #### diagram.induceNodes ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 By default, all nodes are included, and edges are only included if both end-nodes are
 visible.  If `.induceNodes` is set, then only nodes which have at least one edge will be
@@ -906,6 +962,7 @@ shown.
 | [induceNodes] | <code>Boolean</code> | <code>false</code> | 
 
 <a name="dc_graph.diagram+showLayoutSteps"></a>
+
 #### diagram.showLayoutSteps ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 If this flag is true, the positions of nodes and will be updated while layout is
 iterating. If false, the positions will only be updated once layout has
@@ -918,6 +975,7 @@ stabilized. Note: this may not be compatible with transitionDuration.
 | [showLayoutSteps] | <code>Boolean</code> | <code>false</code> | 
 
 <a name="dc_graph.diagram+legend"></a>
+
 #### diagram.legend ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Assigns a legend object which will be displayed within the same SVG element and
 according to the visual encoding of this diagram.
@@ -929,6 +987,7 @@ according to the visual encoding of this diagram.
 | [legend] | <code>Object</code> | 
 
 <a name="dc_graph.diagram+child"></a>
+
 #### diagram.child ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Specifies another kind of child layer or interface. For example, this can
 be used to display tooltips on nodes using `dc_graph.tip`.
@@ -953,6 +1012,7 @@ tip.content(function(d, k) {
 diagram.child('tip', tip);
 ```
 <a name="dc_graph.diagram+handleDisconnected"></a>
+
 #### diagram.handleDisconnected ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Instructs cola.js to fit the connected components. Default: true
 
@@ -963,6 +1023,7 @@ Instructs cola.js to fit the connected components. Default: true
 | [handleDisconnected] | <code>Boolean</code> | <code>true</code> | 
 
 <a name="dc_graph.diagram+render"></a>
+
 #### diagram.render ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
@@ -971,6 +1032,7 @@ must be called the first time, and `.redraw()` can be called after that.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.diagram+on"></a>
+
 #### diagram.on ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
@@ -988,6 +1050,7 @@ and can be modified through the passed d3 selections.
 | [f] | <code>function</code> | the event handler |
 
 <a name="dc_graph.diagram+getStats"></a>
+
 #### diagram.getStats ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Returns an object with current statistics on graph layout.
 * `nnodes` - number of nodes displayed
@@ -995,6 +1058,7 @@ Returns an object with current statistics on graph layout.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.diagram+select"></a>
+
 #### diagram.select ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
@@ -1013,6 +1077,7 @@ calls can be chained after it.)
 | [selector] | <code>String</code> | 
 
 <a name="dc_graph.diagram+selectAll"></a>
+
 #### diagram.selectAll ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
@@ -1031,6 +1096,7 @@ calls can be chained after it.)
 | [selector] | <code>String</code> | 
 
 <a name="dc_graph.diagram+svg"></a>
+
 #### diagram.svg ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
@@ -1044,6 +1110,7 @@ svg element, but setting the svg element on a diagram may have unexpected conseq
 | [selection] | <code>d3.selection</code> | 
 
 <a name="dc_graph.diagram+resetSvg"></a>
+
 #### diagram.resetSvg ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
@@ -1052,6 +1119,7 @@ element.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.diagram+redrawGroup"></a>
+
 #### diagram.redrawGroup ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
@@ -1059,6 +1127,7 @@ method. Causes all charts in the chart group to be redrawn.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.diagram+renderGroup"></a>
+
 #### diagram.renderGroup ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
@@ -1066,6 +1135,7 @@ method. Causes all charts in the chart group to be rendered.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.diagram+defineArrow"></a>
+
 #### diagram.defineArrow ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Creates an svg marker definition for drawing edge arrow tails or heads. The `viewBox` of
 the marker is `0 -5 10 10`, so the arrow should be drawn from (0, -5) to (10, 5); it
@@ -1095,6 +1165,7 @@ _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
 });
 ```
 <a name="dc_graph.diagram+anchor"></a>
+
 #### diagram.anchor([parent], [chartGroup]) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set the root SVGElement to either be any valid [d3 single
 selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom
@@ -1110,11 +1181,13 @@ will orphan any previously created SVGElements.
 | [chartGroup] | <code>String</code> | 
 
 <a name="dc_graph.diagram+anchorName"></a>
+
 #### diagram.anchorName() ⇒ <code>String</code>
 Returns the DOM id for the chart's anchored location.
 
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.constraint_pattern"></a>
+
 ### dc_graph.constraint_pattern ⇒ <code>function</code>
 In cola.js there are three factors which influence the positions of nodes:
 * *edge length* suggestions, controlled by the
@@ -1169,6 +1242,7 @@ Then we'll build back up from the ground up and show how inference works.
 | pattern | <code>Object</code> | a graph which defines the constraints to be generated |
 
 <a name="dc_graph.tip"></a>
+
 ### dc_graph.tip ⇒ <code>Object</code>
 Asynchronous [d3.tip](https://github.com/Caged/d3-tip) support for dc.graph.js
 
@@ -1181,12 +1255,13 @@ dc.graph.js in `web/js/d3-tip/index.js` and `web/css/d3-tip/example-styles.css`)
 **Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
 
 * [.tip](#dc_graph.tip) ⇒ <code>Object</code>
-  * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-  * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
-  * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
-  * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
+    * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
+    * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
+    * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
 
 <a name="dc_graph.tip+parent"></a>
+
 #### tip.parent ⇒ <code>[diagram](#dc_graph.diagram)</code>
 Assigns this tip object to a diagram. It will show tips for nodes in that diagram.
 Usually you will not call this function directly. Instead, attach the tip object
@@ -1199,6 +1274,7 @@ using `diagram.child('tip', dc_graph.tip())`
 | [parent] | <code>[diagram](#dc_graph.diagram)</code> | 
 
 <a name="dc_graph.tip+direction"></a>
+
 #### tip.direction ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
 Specify the direction for tooltips. Currently supports the
 [cardinal and intercardinaldirections](https://en.wikipedia.org/wiki/Points_of_the_compass) supported by
@@ -1218,6 +1294,7 @@ var tip = dc_graph.tip();
 tip.content(tip.table());
 ```
 <a name="dc_graph.tip+content"></a>
+
 #### tip.content ⇒ <code>function</code>
 Specifies the function to generate content for the tooltip. This function has the
 signature `function(d, k)`, where `d` is the datum of the node being hovered over,
@@ -1238,6 +1315,7 @@ var tip = dc_graph.tip().content(function(d, k) {
 });
 ```
 <a name="dc_graph.tip+table"></a>
+
 #### tip.table ⇒ <code>function</code>
 Generates a handler which can be passed to `tip.content` to produce a table of the
 attributes and values of the hovered object.

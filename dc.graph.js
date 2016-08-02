@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.1.1
+ *  dc.graph 0.2.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.1.1
+ * @version 0.2.0
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.1.1',
+    version: '0.2.0',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3659,6 +3659,163 @@ dc_graph.load_graph = function() {
             callback(null, graph);
         });
 };
+
+function can_get_graph_from_this(data) {
+    return (data.nodes || data.vertices) &&  (data.edges || data.links);
+}
+
+// general-purpose reader of various json-based graph formats
+// (esp but not limited to titan graph database-like formats)
+// this could be generalized a lot
+dc_graph.munge_graph = function(data, nodekeyattr, sourceattr, targetattr) {
+    // we want data = {nodes, edges} and the field names for keys; find those in common json formats
+    var nodes, edges, nka = nodekeyattr || "name",
+        sa = sourceattr || "sourcename", ta = targetattr || "targetname";
+
+    if(!can_get_graph_from_this(data)) {
+        var wrappers = ['database', 'response'];
+        var wi = wrappers.findIndex(function(f) { return data[f] && can_get_graph_from_this(data[f]); });
+        if(wi<0)
+            throw new Error("couldn't find the data!");
+        data = data[wrappers[wi]];
+    }
+    edges = data.edges || data.links;
+    nodes = data.nodes || data.vertices;
+
+    function find_attr(o, attrs) {
+        return attrs.filter(function(a) { return !!o[a]; });
+    }
+
+    //var edgekeyattr = "id";
+    var edge0 = edges[0];
+    if(edge0[sa] === undefined) {
+        var sourceattrs = sourceattr ? [sourceattr] : ['source_ecomp_uid', "node1", "source", "tail"],
+            targetattrs = targetattr ? [targetattr] : ['target_ecomp_uid', "node2", "target", "head"];
+        //var edgekeyattrs = ['id', '_id', 'ecomp_uid'];
+        var edgewrappers = ['edge'];
+        if(edge0.node0 && edge0.node1) { // specific conflict here
+            sa = 'node0';
+            ta = 'node1';
+        }
+        else {
+            var candidates = find_attr(edge0, sourceattrs);
+            if(!candidates.length) {
+                wi = edgewrappers.findIndex(function(w) {
+                    return edge0[w] && find_attr(edge0[w], sourceattrs).length;
+                });
+                if(wi<0) {
+                    if(sourceattr)
+                        throw new Error('sourceattr ' + sa + " didn't work");
+                    else
+                        throw new Error("didn't find any source attr");
+                }
+                edges = edges.map(function(e) { return e[edgewrappers[wi]]; });
+                edge0 = edges[0];
+                candidates = find_attr(edge0, sourceattrs);
+            }
+            if(candidates.length > 1)
+                console.warn('found more than one possible source attr', candidates);
+            sa = candidates[0];
+
+            candidates = find_attr(edge0, targetattrs);
+            if(!candidates.length) {
+                if(targetattr && !edge0[targetattr])
+                    throw new Error('targetattr ' + ta + " didn't work");
+                else
+                    throw new Error("didn't find any target attr");
+            }
+            if(candidates.length > 1)
+                console.warn('found more than one possible target attr', candidates);
+            ta = candidates[0];
+
+            /*
+             // we're currently assembling our own edgeid
+            candidates = find_attr(edge0, edgekeyattrs);
+            if(!candidates.length)
+                throw new Error("didn't find any edge key");
+            if(candidates.length > 1)
+                console.warn('found more than one edge key attr', candidates);
+            edgekeyattr = candidates[0];
+             */
+        }
+    }
+    var node0 = nodes[0];
+    if(node0[nka] === undefined) {
+        var nodekeyattrs = nodekeyattr ? [nodekeyattr] : ['ecomp_uid', 'id', '_id'];
+        var nodewrappers = ['vertex'];
+        candidates = find_attr(node0, nodekeyattrs);
+        if(!candidates.length) {
+            wi = nodewrappers.findIndex(function(w) {
+                return node0[w] && find_attr(node0[w], nodekeyattrs).length;
+            });
+            if(wi<0) {
+                if(nodekeyattr)
+                    throw new Error('nodekeyattr ' + nka + " didn't work");
+                else
+                    throw new Error("couldn't find the node data");
+            }
+            nodes = nodes.map(function(n) { return n[nodewrappers[wi]]; });
+            node0 = nodes[0];
+            candidates = find_attr(node0, nodekeyattrs);
+        }
+        if(candidates.length > 1)
+            console.warn('found more than one possible node key attr', candidates);
+        nka = candidates[0];
+    }
+
+    return {
+        nodes: nodes,
+        edges: edges,
+        nodekeyattr: nka,
+        sourceattr: sa,
+        targetattr: ta
+    };
+}
+
+/* for the special case where there will be exactly one or zero items in a group,
+ a reasonable reduction is just to use the row or null.
+ this could be useful outside dc.graph (esp e.g bubble charts, scatter plots where each
+ observation is either shown or not) but it would have to be cleaned up a bit */
+
+dc_graph.flat_group = (function() {
+    function one_zero_reduce(group) {
+        group.reduce(
+            function(p, v) { return v; },
+            function() { return null; },
+            function() { return null; }
+        );
+    }
+    // now we only really want to see the non-null values, so make a fake group
+    function non_null(group) {
+        return {
+            all: function() {
+                return group.all().filter(function(kv) {
+                    return kv.value !== null;
+                });
+            }
+        };
+    }
+
+    function dim_group(ndx, id_accessor) {
+        var dimension = ndx.dimension(id_accessor),
+            group = dimension.group();
+
+        one_zero_reduce(group);
+        return {crossfilter: ndx, dimension: dimension, group: non_null(group)};
+    }
+
+    return {
+        make: function(vec, id_accessor) {
+            var ndx = crossfilter(vec);
+            return dim_group(ndx, id_accessor);
+        },
+        another: function(ndx, id_accessor) { // wretched name
+            return dim_group(ndx, id_accessor);
+        }
+    };
+})();
+
+
 
 // make crossfilter-suitable data from d3.nest {key, values} format
 dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
