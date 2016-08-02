@@ -126,6 +126,7 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.min.js.map',
                             '<%= conf.pkg.name %>-worker.js',
                             '<%= conf.pkg.name %>-worker.js.map',
+                            'd3.flexdivs.js',
                             'querystring.js',
                             'node_modules/crossfilter/crossfilter.js',
                             'node_modules/d3/d3.js',
