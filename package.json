@@ -26,6 +26,7 @@
   "dependencies": {
     "crossfilter": "1.x",
     "dc": "dc-js/dc.js#develop",
+    "dagre": "0.7.x",
     "d3": "3.x",
     "queue-async": "~1.x",
     "font-awesome": "~4.5",
