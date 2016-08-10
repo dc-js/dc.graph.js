@@ -642,18 +642,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.baseLength = property(30);
 
     /**
-     * Whether to highlight neighboring edges when hovering over a node. Not completely working
-     * yet.
-     * @name highlightNeighbors
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Boolean} [highlightNeighbors]
-     * @return {Boolean}
-     * @return {dc_graph.diagram}
-     **/
-    _chart.highlightNeighbors = property(false);
-
-    /**
      * Gets or sets the transition duration, the length of time each change to the diagram will
      * be animated.
      * @name transitionDuration
