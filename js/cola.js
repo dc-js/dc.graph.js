@@ -3454,6 +3454,7 @@ var cola;
             for(var iii = 0; iii < this._tickSize; ++iii) {
             if (this._alpha < this._threshold) {
                 this._running = false;
+                console.log('tick converged');
                 this.trigger({ type: EventType.end, alpha: this._alpha = 0, stress: this._lastStress });
                 return true;
             }
@@ -3479,9 +3480,11 @@ var cola;
             else if (typeof this._lastStress !== 'undefined') {
                 this._alpha = s1; //Math.abs(Math.abs(this._lastStress / s1) - 1);
             }
+            console.log('tick last stress', iii, s1);
             this._lastStress = s1;
             this.updateNodePositions();
             }
+            console.log('tick hit ticksize');
             this.trigger({ type: EventType.tick, alpha: this._alpha, stress: this._lastStress });
             return false;
         };
