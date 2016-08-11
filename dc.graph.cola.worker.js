@@ -186,4 +186,4 @@ onmessage = function(e) {
 };
 
 
-//# sourceMappingURL=dc.graph-worker.js.map
+//# sourceMappingURL=dc.graph.cola.worker.js.map
