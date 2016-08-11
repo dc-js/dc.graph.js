@@ -5,6 +5,7 @@ var steptime = +qs.interval || 1000, // ms per step
     showSteps = !(qs.showsteps === 'false'),
     transition = qs.transition || 0,
     stage = qs.stage || 'insmod',
+    tickSize = qs.ticksize || 1,
     file = qs.file || null,
     paths = qs.paths || null,
     generate = qs.gen || null,
@@ -221,6 +222,7 @@ source(function(error, data) {
         .height($(window).height())
         .timeLimit(timeLimit)
         .transitionDuration(transition)
+        .tickSize(tickSize)
         .stageTransitions(stage)
         .showLayoutSteps(showSteps)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)

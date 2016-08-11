@@ -3,11 +3,13 @@ importScripts('d3.js');
 
 var _d3cola = null, _tick, _stop;
 
-function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout) {
+function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize) {
+    console.log('tickSize', tickSize);
     _d3cola = cola.d3adaptor()
         .avoidOverlaps(true)
         .size([width, height])
-        .handleDisconnected(handleDisconnected);
+        .handleDisconnected(handleDisconnected)
+        .tickSize(tickSize);
 
     switch(lengthStrategy) {
         case 'symmetric':
@@ -122,7 +124,8 @@ onmessage = function(e) {
     switch(e.data.command) {
     case 'init':
         init_d3cola(args.width, args.height, args.handleDisconnected,
-                    args.lengthStrategy, args.baseLength, args.flowLayout);
+                    args.lengthStrategy, args.baseLength, args.flowLayout,
+                    args.tickSize);
         break;
     case 'data':
         data_d3cola(args.nodes, args.edges, args.constraints, args.opts);
