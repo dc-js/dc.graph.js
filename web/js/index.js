@@ -351,5 +351,8 @@ source(function(error, data) {
     dc.constants.EVENT_DELAY = 100;
 
     runner.init();
+
+    if(qs.play)
+        runner.toggle();
 });
 
