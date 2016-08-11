@@ -3409,6 +3409,7 @@ var cola;
             this._threshold = 0.01;
             this._visibilityGraph = null;
             this._groupCompactness = 1e-6;
+            this._tickSize = 1;
             // sub-class and override this property to replace with a more sophisticated eventing mechanism
             this.event = null;
             this.linkAccessor = {
@@ -3450,6 +3451,7 @@ var cola;
          * iterate the layout.  Returns true when layout converged.
          */
         Layout.prototype.tick = function () {
+            for(var iii = 0; iii < this._tickSize; ++iii) {
             if (this._alpha < this._threshold) {
                 this._running = false;
                 this.trigger({ type: EventType.end, alpha: this._alpha = 0, stress: this._lastStress });
@@ -3479,8 +3481,15 @@ var cola;
             }
             this._lastStress = s1;
             this.updateNodePositions();
+            }
             this.trigger({ type: EventType.tick, alpha: this._alpha, stress: this._lastStress });
             return false;
+        };
+        Layout.prototype.tickSize = function (v) {
+            if (!arguments.length)
+                return this._tickSize;
+            this._tickSize = v || 1;
+            return this;
         };
         // copy positions out of descent instance into each of the nodes' center coords
         Layout.prototype.updateNodePositions = function () {
