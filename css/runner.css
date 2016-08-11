@@ -54,3 +54,8 @@ body {
 #overview .dc-graph text.edge-label {
     font: 6px verdana, san-serif;
 }
+
+#search-wrapper {
+    display: none;
+    padding: 4px;
+}

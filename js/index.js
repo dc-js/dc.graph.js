@@ -1,46 +1,33 @@
+var qs = querystring.parse();
 
-// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-var querystring = (function(a) {
-    if (a == "") return {};
-    var b = {};
-    for (var i = 0; i < a.length; ++i)
-    {
-        var p=a[i].split('=', 2);
-        if (p.length == 1)
-            b[p[0]] = "";
-        else
-            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
-    }
-    return b;
-})(window.location.search.substr(1).split('&'));
-
-var steptime = +querystring.interval || 1000, // ms per step
-    pause = +querystring.pause || 2500, // pause at end of loop
-    showSteps = !(querystring.showsteps === 'false'),
-    transition = querystring.transition || 0,
-    stage = querystring.stage || 'insmod',
-    file = querystring.file || null,
-    paths = querystring.paths || null,
-    generate = querystring.gen || null,
-    shape = querystring.shape || null,
-    radius = +querystring.radius || 25,
-    fill = querystring.fill || 'white',
-    nodeStroke = querystring.nodestroke || 'black',
-    nodeStrokeWidth = querystring.nodestrokewidth || 1,
-    randomize = querystring.randomize === 'true',
-    doReinit = !(querystring.reinit==="false"),
-    doDisplacement = !(querystring.displace==="false"),
-    doAlignment = !(querystring.align==="false"),
-    doOrdering = !(querystring.order==="false"),
-    linkLength = +querystring.linklength || 30,
-    edgeStroke = querystring.edgestroke || 'black',
-    edgeStrokeWidth = querystring.edgestrokewidth || 1,
-    edgeOpacity = +querystring.opacity || 1,
+var steptime = +qs.interval || 1000, // ms per step
+    pause = +qs.pause || 2500, // pause at end of loop
+    showSteps = !(qs.showsteps === 'false'),
+    transition = qs.transition || 0,
+    stage = qs.stage || 'insmod',
+    tickSize = qs.ticksize || 1,
+    file = qs.file || null,
+    paths = qs.paths || null,
+    generate = qs.gen || null,
+    shape = qs.shape || null,
+    radius = +qs.radius || 25,
+    fill = qs.fill || 'white',
+    nodeStroke = qs.nodestroke || 'black',
+    nodeStrokeWidth = qs.nodestrokewidth || 1,
+    randomize = qs.randomize === 'true',
+    doReinit = !(qs.reinit==="false"),
+    doDisplacement = !(qs.displace==="false"),
+    doAlignment = !(qs.align==="false"),
+    doOrdering = !(qs.order==="false"),
+    linkLength = +qs.linklength || 30,
+    edgeStroke = qs.edgestroke || 'black',
+    edgeStrokeWidth = qs.edgestrokewidth || 1,
+    edgeOpacity = +qs.opacity || 1,
     appLayout = null,
     useAppLayout = false,
-    nodePrefix = querystring.prefix || '',
-    timeLimit = querystring.limit !== undefined ? +querystring.limit : 10000,
-    explore = querystring.explore;
+    nodePrefix = qs.prefix || '',
+    timeLimit = qs.limit !== undefined ? +qs.limit : 10000,
+    explore = qs.explore;
 
 if(edgeStroke && (/[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edgeStroke)))
     edgeStroke = '#' + edgeStroke;
@@ -73,13 +60,13 @@ do_status();
 var source;
 if(!generate && !file)
     file = "qfs.json";
-appLayout = querystring.applayout || file === 'qfs.json' && 'qfs';
+appLayout = qs.applayout || file === 'qfs.json' && 'qfs';
 if(appLayout === 'none' || !app_layouts[appLayout])
     appLayout = null;
 if(appLayout) {
     useAppLayout = true;
-    if('useapplayout' in querystring) {
-        useAppLayout = !!+querystring.useapplayout;
+    if('useapplayout' in qs) {
+        useAppLayout = !!+qs.useapplayout;
         $('#use-app-layout').prop('checked', useAppLayout);
     }
     $('#app-options').show();
@@ -113,7 +100,6 @@ if(shape) {
         break;
     }
 }
-else shape = {shape: 'ellipse'};
 
 function show_type_graph(nodes, edges, sourceattr, targetattr) {
     $('#overview').show();
@@ -124,8 +110,8 @@ function show_type_graph(nodes, edges, sourceattr, targetattr) {
                                               function(n) { return n.type; },
                                               function(e) { return e[sourceattr]; },
                                               function(e) { return e[targetattr]; });
-    var tedges = flat_group.make(typegraph.edges, function(d) { return d.type; }),
-        tnodes = flat_group.make(typegraph.nodes, function(d) { return d.type; });
+    var tedges = dc_graph.flat_group.make(typegraph.edges, function(d) { return d.type; }),
+        tnodes = dc_graph.flat_group.make(typegraph.nodes, function(d) { return d.type; });
 
     overview.width(250)
         .height(250)
@@ -139,107 +125,30 @@ function show_type_graph(nodes, edges, sourceattr, targetattr) {
         .render();
 }
 
-function can_get_graph_from_this(data) {
-    return (data.nodes || data.vertices) &&  (data.edges || data.links);
-}
-
 source(function(error, data) {
     if(error) {
         console.log(error);
         return;
     }
-    // we want data = {nodes, edges}; find those in common other formats
-    if(!can_get_graph_from_this(data)) {
-        var wrappers = ['database', 'response'];
-        var wi = wrappers.findIndex(function(f) { return data[f] && can_get_graph_from_this(data[f]); });
-        if(wi<0)
-            throw new Error("couldn't find the data!");
-        data = data[wrappers[wi]];
-    }
-    if(!data.edges && data.links)
-        data.edges = data.links;
-    if(!data.nodes && data.vertices)
-        data.nodes = data.vertices;
+    var graph_data = dc_graph.munge_graph(data),
+        nodes = graph_data.nodes,
+        edges = graph_data.edges,
+        sourceattr = graph_data.sourceattr,
+        targetattr = graph_data.targetattr,
+        nodekeyattr = graph_data.nodekeyattr;
 
-    function find_attr(o, attrs) {
-        return attrs.filter(function(a) { return !!o[a]; });
-    }
-
-    //var edgekeyattr = "id";
-    var sourceattr = "sourcename", targetattr = "targetname";
-    var edge0 = data.edges[0];
-    if(edge0[sourceattr] === undefined) {
-        var sourceattrs = ['source_ecomp_uid', "node1", "source", "tail"], targetattrs = ['target_ecomp_uid', "node2", "target", "head"];
-        //var edgekeyattrs = ['id', '_id', 'ecomp_uid'];
-        var edgewrappers = ['edge'];
-        if(edge0.node0 && edge0.node1) { // specific conflict here
-            sourceattr = 'node0';
-            targetattr = 'node1';
-        }
-        else {
-            var candidates = find_attr(edge0, sourceattrs);
-            if(!candidates.length) {
-                wi = edgewrappers.findIndex(function(w) { return edge0[w] && find_attr(edge0[w], sourceattrs).length; });
-                if(wi<0)
-                    throw new Error("didn't find any source attr");
-                // I don't like to coerce data but it would be pretty annoying to add this everywhere
-                data.edges = data.edges.map(function(e) { return e[edgewrappers[wi]]; });
-                edge0 = data.edges[0];
-                candidates = find_attr(edge0, sourceattrs);
-            }
-            if(candidates.length > 1)
-                console.warn('found more than one possible source attr', candidates);
-            sourceattr = candidates[0];
-
-            candidates = find_attr(edge0, targetattrs);
-            if(!candidates.length)
-                throw new Error("didn't find any target attr");
-            if(candidates.length > 1)
-                console.warn('found more than one possible target attr', candidates);
-            targetattr = candidates[0];
-
-            /*
-             // we're currently assembling our own edgeid
-            candidates = find_attr(edge0, edgekeyattrs);
-            if(!candidates.length)
-                throw new Error("didn't find any edge key");
-            if(candidates.length > 1)
-                console.warn('found more than one edge key attr', candidates);
-            edgekeyattr = candidates[0];
-             */
-        }
-    }
-    var nodekeyattr = "name";
-    var node0 = data.nodes[0];
-    if(node0[nodekeyattr] === undefined) {
-        var nodekeyattrs = ['ecomp_uid', 'id', '_id'];
-        var nodewrappers = ['vertex'];
-        candidates = find_attr(node0, nodekeyattrs);
-        if(!candidates.length) {
-            wi = nodewrappers.findIndex(function(w) { return node0[w] && find_attr(node0[w], nodekeyattrs).length; });
-            if(wi<0)
-                throw new Error("couldn't find the node data");
-            // again, coersion here
-            data.nodes = data.nodes.map(function(n) { return n[nodewrappers[wi]]; });
-            node0 = data.nodes[0];
-            candidates = find_attr(node0, nodekeyattrs);
-        }
-        if(candidates.length > 1)
-            console.warn('found more than one possible node key attr', candidates);
-        nodekeyattr = candidates[0];
-    }
     if(randomize) {
-        data.edges.forEach(function(e) { e.order = Math.random()*1000; });
-        data.nodes.forEach(function(n) { n.order = Math.random()*1000; });
+        edges.forEach(function(e) { e.order = Math.random()*1000; });
+        nodes.forEach(function(n) { n.order = Math.random()*1000; });
     }
 
     if(false) // appLayout)
-        show_type_graph(data.nodes, data.edges, sourceattr, targetattr);
+        show_type_graph(nodes, edges, sourceattr, targetattr);
 
-    var edges = flat_group.make(data.edges, function(d) {
+    var edge_flat = dc_graph.flat_group.make(edges, function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     }),
-        nodes = flat_group.make(data.nodes, function(d) { return d[nodekeyattr]; });
+        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
     appLayout && app_layouts[appLayout].data && app_layouts[appLayout].data(nodes, edges);
 
@@ -271,19 +180,17 @@ source(function(error, data) {
     };
 
     var rule_constraints = null;
-    if(appLayout) {
-        var rules = appLayout && app_layouts[appLayout].rules;
-        if(rules) {
-            rules.edges.forEach(function(c) {
-                if(!doDisplacement && c.produce && !c.produce.type)
-                    c.disable = true;
-                if(!doAlignment && c.produce && c.produce.type === 'alignment')
-                    c.disable = true;
-                if(!doOrdering && c.produce && c.produce.type === 'ordering')
-                    c.disable = true;
-            });
-            rule_constraints = dc_graph.constraint_pattern(rules);
-        }
+    var rules = appLayout && app_layouts[appLayout].rules;
+    if(rules) {
+        rules.edges.forEach(function(c) {
+            if(!doDisplacement && c.produce && !c.produce.type)
+                c.disable = true;
+            if(!doAlignment && c.produce && c.produce.type === 'alignment')
+                c.disable = true;
+            if(!doOrdering && c.produce && c.produce.type === 'ordering')
+                c.disable = true;
+        });
+        rule_constraints = dc_graph.constraint_pattern(rules);
     }
 
     function constrain(diagram, nodes, edges) {
@@ -315,10 +222,11 @@ source(function(error, data) {
         .height($(window).height())
         .timeLimit(timeLimit)
         .transitionDuration(transition)
+        .tickSize(tickSize)
         .stageTransitions(stage)
         .showLayoutSteps(showSteps)
-        .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
-        .edgeDimension(edges.dimension).edgeGroup(edges.group)
+        .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
+        .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .nodeLabel(function(n) { return n.value.name.split('/'); })
@@ -341,9 +249,9 @@ source(function(error, data) {
         .on('end', function() {
             $('#run-indicator').hide();
             runner.endStep();
-            show_stats({totnodes: data.nodes.length, totedges: data.edges.length}, diagram.getStats());
+            show_stats({totnodes: nodes.length, totedges: edges.length}, diagram.getStats());
         })
-        .child('highlight-neighbors', dc_graph.highlight_neighbors('orange', 3));
+        .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orange', edgeStrokeWidth: 3}));
 
     appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
     if(linkLength)
@@ -355,16 +263,15 @@ source(function(error, data) {
 
     var expander = null, expanded;
     if(explore) {
-        expanded = [explore];
         // second group on keys so that first will observe it
-        expander = flat_group.another(nodes.crossfilter, function(d) { return d.name; });
+        expander = dc_graph.flat_group.another(node_flat.crossfilter, function(d) { return d.name; });
         function apply_expander_filter() {
             expander.dimension.filterFunction(function(key) {
                 return expanded.indexOf(key) >= 0;
             });
         }
         function adjacent_edges(key) {
-            return edges.group.all().filter(function(kv) {
+            return edge_flat.group.all().filter(function(kv) {
                 return kv.value[sourceattr] === key || kv.value[targetattr] === key;
             });
         }
@@ -373,6 +280,7 @@ source(function(error, data) {
                 return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
             });
         }
+        expanded = [];
         apply_expander_filter();
         diagram.child('expand-collapse',
                       dc_graph.expand_collapse(function(key) { // get_degree
@@ -386,51 +294,22 @@ source(function(error, data) {
                           apply_expander_filter();
                           run();
                       }));
+        $('#search-wrapper')
+            .show();
+        $('#search')
+            .autocomplete({
+                source: nodes.map(function(n) { return n.name; }),
+                select: function(event, ui) {
+                    expanded = [ui.item.value];
+                    apply_expander_filter();
+                    run();
+                }
+            })
+            .attr("autocomplete", "on");
     }
 
-    if(paths) {
-        // make sure it draws first (?)
-        setTimeout(function() {
-            d3.json(paths, function(error, pathv) {
-                if(error)
-                    throw new Error(error);
-                var i = 0;
-                setInterval(function() {
-                    // i continue not to understand the horrible concurrency issues
-                    // i'm running into - double-draws can peg the CPU
-                    if(diagram.isRunning())
-                        return;
-                    var path = pathv.results[i].element_list;
-                    var pnodes = {}, pedges = {};
-                    path.forEach(function(el) {
-                        switch(el.element_type) {
-                        case 'node':
-                            pnodes[el.property_map.ecomp_uid] = true;
-                            break;
-                        case 'edge':
-                            pedges[el.property_map.source_ecomp_uid + '-' + el.property_map.target_ecomp_uid] = true;
-                            break;
-                        }
-                    });
-                    diagram
-                        .edgeStrokeWidth(function(e) {
-                            return pedges[diagram.edgeKey()(e)] ? 4 : 1;
-                        })
-                        .edgeStroke(function(e) {
-                            return pedges[diagram.edgeKey()(e)] ? 'red' : 'black';
-                        })
-                        .nodeStrokeWidth(function(n) {
-                            return pnodes[diagram.nodeKey()(n)] ? 3 : 1;
-                        })
-                        .nodeStroke(function(n) {
-                            return pnodes[diagram.nodeKey()(n)] ? 'red' : 'black';
-                        })
-                        .redraw();
-                    i = (i+1) % pathv.results.length;
-                }, 2000);
-            });
-        }, 1000);
-    }
+    if(paths)
+        iterate_paths(diagram, paths);
 
     // respond to browser resize (not necessary if width/height is static)
     $(window).resize(function() {
@@ -444,7 +323,7 @@ source(function(error, data) {
     // this is kind of a brain-dead way to test transitions
     // i mean, you can cram the concept of adding and deleting stuff over time
     // into crossfilter data, but do you really want to do that?
-    var startDim = nodes.crossfilter.dimension(function(d) { return d.start || 0; }),
+    var startDim = node_flat.crossfilter.dimension(function(d) { return d.start || 0; }),
         startGroup = startDim.group();
 
 
@@ -472,5 +351,8 @@ source(function(error, data) {
     dc.constants.EVENT_DELAY = 100;
 
     runner.init();
+
+    if(qs.play)
+        runner.toggle();
 });
 

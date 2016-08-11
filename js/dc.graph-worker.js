@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.1.1
+ *  dc.graph 0.2.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -41,11 +41,13 @@ importScripts('d3.js');
 
 var _d3cola = null, _tick, _stop;
 
-function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout) {
+function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize) {
+    console.log('tickSize', tickSize);
     _d3cola = cola.d3adaptor()
         .avoidOverlaps(true)
         .size([width, height])
-        .handleDisconnected(handleDisconnected);
+        .handleDisconnected(handleDisconnected)
+        .tickSize(tickSize);
 
     switch(lengthStrategy) {
         case 'symmetric':
@@ -160,7 +162,8 @@ onmessage = function(e) {
     switch(e.data.command) {
     case 'init':
         init_d3cola(args.width, args.height, args.handleDisconnected,
-                    args.lengthStrategy, args.baseLength, args.flowLayout);
+                    args.lengthStrategy, args.baseLength, args.flowLayout,
+                    args.tickSize);
         break;
     case 'data':
         data_d3cola(args.nodes, args.edges, args.constraints, args.opts);

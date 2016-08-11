@@ -48,10 +48,10 @@
             return;
         }
 
-        var edges = flat_group.make(data.links, function(d) {
+        var edges = dc_graph.flat_group.make(data.links, function(d) {
             return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : '');
         }),
-            nodes = flat_group.make(data.nodes, function(d) { return d.name; });
+            nodes = dc_graph.flat_group.make(data.nodes, function(d) { return d.name; });
 
         diagram
             .width($(window).width())

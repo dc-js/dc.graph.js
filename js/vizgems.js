@@ -1,4 +1,3 @@
-var qs = querystring.parse();
 var data_stats;
 
 var cb_colors = colorbrewer.Paired[12];
@@ -17,26 +16,18 @@ function show_stats(data_stats, layout_stats) {
     $('#time-last').html('' + ((runner.lastTime() || 0)/1000).toFixed(3));
     $('#time-avg').html('' + ((runner.avgTime() || 0)/1000).toFixed(3));
 }
-var run_indicator = false;
 function show_start() {
-    run_indicator = true;
     $('#run-indicator').show();
 }
 function show_stop() {
-    run_indicator = false;
     $('#run-indicator').hide();
 }
-function do_redraw() {
-    if(run_indicator) // ??? fishy
-        return;
-    diagram.redrawGroup();
-}
 function toggle_stats() {
-    var val = !settings.stats;
+    var val = !tracker.vals.stats;
     toggle_stats.callback(val);
 }
 function toggle_options() {
-    var val = !settings.options;
+    var val = !tracker.vals.options;
     toggle_options.callback(val);
 }
 function apply_heading(link, section) {
@@ -84,7 +75,7 @@ var options = {
     delete_delay: {
         default: 0,
         query: 'ddelay',
-        apply: function(val, diagram) {
+        exert: function(val, diagram) {
             diagram.deleteDelay(val);
         }
     },
@@ -102,7 +93,7 @@ var options = {
         default: 'none',
         query: 'stage',
         selector: '#stage-transitions',
-        apply: function(val, diagram) {
+        exert: function(val, diagram) {
             diagram.stageTransitions(val);
         }
     },
@@ -111,19 +102,19 @@ var options = {
         subscribe: function(k) {
             toggle_stats.callback = k;
         },
-        apply: apply_heading('#show-stats', '#graph-stats')
+        exert: apply_heading('#show-stats', '#graph-stats')
     },
     options: {
         default: false,
         subscribe: function(k) {
             toggle_options.callback = k;
         },
-        apply: apply_heading('#show-options', '#options')
+        exert: apply_heading('#show-options', '#options')
     },
     timeLimit: {
         default: 750,
         query: 'limit',
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             diagram.timeLimit(val);
         }
     },
@@ -139,8 +130,8 @@ var options = {
                 k(filters);
             });
         },
-        dont_apply_after_subscribe: true,
-        apply: function(val, diagram, filters) {
+        dont_exert_after_subscribe: true,
+        exert: function(val, diagram, filters) {
             if(filters.filterOSTypes) {
                 osTypeSelect
                     .dimension(filters.filterOSTypes)
@@ -154,7 +145,7 @@ var options = {
         query: 'steps',
         selector: '#show-steps',
         needs_redraw: false,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             diagram.showLayoutSteps(val);
         }
     },
@@ -163,7 +154,7 @@ var options = {
         query: 'arrows',
         selector: '#show-arrows',
         needs_redraw: true,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             diagram.edgeArrowhead(val ? 'vee' : null);
         }
     },
@@ -172,8 +163,8 @@ var options = {
         query: 'neighbors',
         selector: '#highlight-neighbors',
         needs_redraw: true,
-        apply: function() {
-            var highlighter = dc_graph.highlight_neighbors('orange', 3);
+        exert: function() {
+            var highlighter = dc_graph.highlight_neighbors({edgeStroke: 'orange', edgeStrokeWidth: 3});
             return function(val, diagram) {
                 diagram.child('highlight-neighbors', val ? highlighter : null);
             };
@@ -187,7 +178,7 @@ var options = {
         query: 'usecolor',
         selector: '#use-colors',
         needs_redraw: true,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             if(val) {
                 diagram
                     .nodeStrokeWidth(function(kv) {
@@ -196,12 +187,19 @@ var options = {
                     .nodeFillScale(d3.scale.ordinal().domain(_.keys(ostypes)).range(cb_colors))
                     .nodeFill(function(kv) {
                         return kv.value.ostype;
+                    })
+                    .nodeLabelFill(function(n) {
+                        var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
+                            // https://www.w3.org/TR/AERT#color-contrast
+                            brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                        return brightness > 127 ? 'black' : 'ghostwhite';
                     });
             } else {
                 diagram
                     .nodeStrokeWidth(1)
                     .nodeFillScale(null)
-                    .nodeFill('white');
+                    .nodeFill('white')
+                    .nodeLabelFill('black');
             }
         }
     },
@@ -210,7 +208,7 @@ var options = {
         query: 'useshape',
         selector: '#use-shapes',
         needs_redraw: true,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             if(val) {
                 diagram
                     .nodeShape(function(kv) {
@@ -232,7 +230,7 @@ var options = {
         query: 'unchanged',
         selector: '#layout-unchanged',
         needs_redraw: false,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             diagram.layoutUnchanged(val);
         }
     },
@@ -240,8 +238,8 @@ var options = {
         default: false,
         query: 'vmlayout',
         selector: '#layout-vms',
-        needs_redraw: true,
-        apply: function(val, diagram) {
+        needs_relayout: true,
+        exert: function(val, diagram) {
             diagram.constrain(val ? vm_constraints : function() { return []; });
         }
     },
@@ -249,9 +247,8 @@ var options = {
         default: "x",
         query: 'flow',
         selector: '#flow-direction',
-        needs_redraw: true,
         needs_relayout: true,
-        apply: function(val, diagram, filters) {
+        exert: function(val, diagram, filters) {
             var modf;
             switch(val) {
             case 'x':
@@ -275,142 +272,29 @@ var options = {
     fit_labels: {
         default: true,
         selector: '#fit-labels',
-        needs_redraw: true,
         needs_relayout: true,
         query: 'fit'
     }
 };
 
-/* this general options stuff will be moved into querystring.js
- just needs a little more refactoring */
-
-function apply_options() {
-    for(var key in options)
-        if(options[key].apply)
-            options[key].apply(settings[key], diagram, filters);
-}
-
-function read_query(type, val) {
-    switch(type) {
-    case 'boolean':
-        return val === 'true';
-    case 'number':
-        return +val;
-    case 'string':
-        return val;
-    case 'array':
-        return val.split('|');
-    default: throw new Error('unsupported query type ' + type);
-    }
-}
-
-function write_query(type, val) {
-    switch(type) {
-    case 'array':
-        return val.join('|');
-    case 'boolean':
-    case 'number':
-    case 'string':
-        return '' + val;
-    default: throw new Error('unsupported query type ' + type);
-    }
-}
-
-function query_type(val) {
-    return _.isArray(val) ? 'array' : typeof val;
-}
-
-function update_interesting() {
-    var interesting = _.keys(options)
-            .filter(function(k) {
-                return qs[options[k].query] !== write_query(query_type(options[k].default), options[k].default);
-            }).map(function(k) {
-                return options[k].query || k;
-            });
-    querystring.update(_.pick(qs, interesting));
-}
-
-var settings = {};
-function do_option(key, opt) {
-    settings[key] = opt.default;
-    var query = opt.query = opt.query || key;
-    var type = query_type(opt.default);
-    if(query in qs)
-        settings[key] = read_query(type, qs[query]);
-
-    function update_setting(opt, val) {
-        settings[key] = val;
-        if(opt.query) {
-            qs[opt.query] = write_query(type, val);
-            update_interesting();
-        }
-        if(opt.apply && !opt.dont_apply_after_subscribe)
-            opt.apply(val, diagram, filters);
-        if(opt.needs_relayout)
-            diagram.relayout();
-        if(opt.needs_redraw)
-            do_redraw();
-    }
-    if(opt.selector) {
-        switch(type) {
-        case 'boolean':
-            if(!opt.set && opt.selector)
-                opt.set = function(val) {
-                    $(opt.selector)
-                        .prop('checked', val);
-            };
-            if(!opt.subscribe && opt.selector)
-                opt.subscribe = function(k) {
-                    $(opt.selector)
-                        .change(function() {
-                            var val = $(this).is(':checked');
-                            k(val);
-                        });
-                };
-            break;
-        case 'string':
-            if(!opt.set && opt.selector)
-                opt.set = function(val) {
-                    $(opt.selector)
-                        .val(val);
-                };
-            if(!opt.subscribe && opt.selector)
-                opt.subscribe = function(k) {
-                    $(opt.selector)
-                        .change(function() {
-                            var val = $(this).val();
-                            k(val);
-                        });
-                };
-            break;
-        default: throw new Error('unsupported selector type ' + type);
-        }
-    }
-    if(opt.set)
-        opt.set(settings[key]);
-    if(opt.subscribe)
-        opt.subscribe(function(val) {
-            update_setting(opt, val);
-        });
-}
 
 var osTypeSelect = dc.selectMenu('#ostype-select', 'network');
+var filters = {};
+var diagram = dc_graph.diagram('#graph', 'network');
+var timeline = timeline('#timeline');
+var node_inv = null, edge_inv = null;
+var tracker = querystring.option_tracker(options, dcgraph_domain, diagram, filters);
 
-for(var key in options)
-    do_option(key, options[key]);
-
-/* end general options stuff */
-
-var is_running = settings.play;
+var is_running = tracker.vals.play;
 function display_running() {
     $('#play-button i').attr('class', is_running ? 'fa fa-pause' : 'fa fa-play');
 }
 display_running();
 $('#play-button').click(function(e) {
     if(e.shiftKey)
-        diagram.transitionDuration(settings.slow_transition);
+        diagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(settings.transition);
+        diagram.transitionDuration(tracker.vals.transition);
     if(is_running) {
         runner.pause();
         is_running = false;
@@ -426,9 +310,9 @@ $('#last-button').click(function(e) {
     curr_hist = (curr_hist+hist_files.length-2)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
     if(e.shiftKey)
-        diagram.transitionDuration(settings.slow_transition);
+        diagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(settings.transition);
+        diagram.transitionDuration(tracker.vals.transition);
     runner.step();
 });
 
@@ -436,18 +320,11 @@ $('#next-button').click(function(e) {
     //curr_hist = (curr_hist+1)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
     if(e.shiftKey)
-        diagram.transitionDuration(settings.slow_transition);
+        diagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(settings.transition);
+        diagram.transitionDuration(tracker.vals.transition);
     runner.step();
 });
-
-
-var filters = {};
-var diagram = dc_graph.diagram('#graph', 'network');
-var timeline = timeline('#timeline');
-var node_inv = null, edge_inv = null;
-
 
 // demo of constraints applied by pattern
 var vm_rules = {
@@ -620,13 +497,13 @@ function read_data(vertices, edges, inv_vertices, inv_edges, is_hist, callback) 
 var psv = d3.dsv("|", "text/plain");
 
 function queue_inv(Q) {
-    var inv_nodes_url = settings.server + '/inv-nodes.psv', inv_edges_url = settings.server + '/inv-edges.psv';
+    var inv_nodes_url = tracker.vals.server + '/inv-nodes.psv', inv_edges_url = tracker.vals.server + '/inv-edges.psv';
     Q.defer(psv, inv_nodes_url + nocache_query())
         .defer(psv, inv_edges_url + nocache_query());
 }
 
 function load_live(get_inv, callback) {
-    var vertices_url = settings.server + '/nodes.psv', edges_url = settings.server + '/edges.psv';
+    var vertices_url = tracker.vals.server + '/nodes.psv', edges_url = tracker.vals.server + '/edges.psv';
 
     var Q = queue()
             .defer(psv, vertices_url + nocache_query())
@@ -658,8 +535,8 @@ var edge_header = "object|level1|id1|level2|id2|metatype|type|extra",
 var ndicts = [], edicts = [];
 function load_hist(file, get_inv, callback) {
     var Q = queue()
-            .defer(d3.text, settings.histserv + '/' + file);
-    if(get_inv && settings.server)
+            .defer(d3.text, tracker.vals.histserv + '/' + file);
+    if(get_inv && tracker.vals.server)
         queue_inv(Q);
     Q.await(function(error, hist, inv_vertices, inv_edges) {
         if(error)
@@ -698,10 +575,10 @@ function load(get_inv, callback) {
 }
 
 function crossfilters(nodes, edges) {
-    if(settings.node_limit)
-        nodes = nodes.slice(0, settings.node_limit);
-    var node_stuff = flat_group.make(nodes, function(d) { return d.id1; }),
-        edge_stuff = flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; }),
+    if(tracker.vals.node_limit)
+        nodes = nodes.slice(0, tracker.vals.node_limit);
+    var node_stuff = dc_graph.flat_group.make(nodes, function(d) { return d.id1; }),
+        edge_stuff = dc_graph.flat_group.make(edges, function(d) { return d.id1 + '-' + d.id2; }),
         filterIds = node_stuff.crossfilter.dimension(function(d) { return d.id1; }),
         filterOSTypes = node_stuff.crossfilter.dimension(function(d) { return d.ostype; });
 
@@ -715,9 +592,9 @@ function clickiness() {
     diagram.selectAll('g.node')
         .on('click.vizgems', function(d) {
             selected_node = d.orig.key;
-            do_redraw();
-            if(qs.statserv) {
-                var req = qs.statserv + "/rest/dataquery/stat/json/level_o=" + d.orig.key;
+            dc.redrawAll('network');
+            if(tracker.vals.statserv) {
+                var req = tracker.vals.statserv + "/rest/dataquery/stat/json/level_o=" + d.orig.key;
                 //not valid jsond3.json(req, function(error, data) {
                 d3.xhr(req, function(error, response) {
                     if(error) {
@@ -794,14 +671,14 @@ var ostypes = {
 function init() {
     load(true, function(vertices, edges) {
         data_stats = {totnodes: vertices.length, totedges: edges.length};
-        filters = crossfilters(vertices, edges);
+        Object.assign(filters, crossfilters(vertices, edges));
         // basic diagram setup
         diagram
             .width($(window).width())
             .height($(window).height())
-            .transitionDuration(settings.transition)
+            .transitionDuration(tracker.vals.transition)
             .showLayoutSteps(false)
-            .handleDisconnected(settings.disconnected)
+            .handleDisconnected(tracker.vals.disconnected)
             .lengthStrategy('jaccard')
             .baseLength(150)
             .nodeTitle(function(kv) {
@@ -829,7 +706,7 @@ function init() {
             })
             .multiple(true)
             .size(12);
-        apply_options();
+        tracker.exert();
 
         // respond to browser resize (not necessary if width/height is static)
         $(window).resize(function() {
@@ -848,7 +725,7 @@ function init() {
         // aesthetics: look at kv.value for node/edge attributes and return appropriate values
         diagram
             .initLayoutOnRedraw(true)
-            .nodeFitLabel(settings.fit_labels)
+            .nodeFitLabel(tracker.vals.fit_labels)
             .nodeRadius(function(n) {
                 switch(n.value.ostype) {
                 case 'PRT': return 5;
@@ -870,12 +747,6 @@ function init() {
                     return bad_name(kv.value.name) ? bad_name(kv.key) ? '' :
                         kv.key : kv.value.name;
                 }
-            })
-            .nodeLabelFill(function(n) {
-                var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
-                    // https://www.w3.org/TR/AERT#color-contrast
-                    brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
-                return brightness > 127 ? 'black' : 'ghostwhite';
             });
         var exs = [];
         for(var ost in ostypes)
@@ -895,12 +766,12 @@ function step() {
             runner.endStep();
             return; // cola sometimes dies on empty input; hope that next iteration will succeed
         }
-        filters = crossfilters(vertices, edges);
-        apply_options();
+        Object.assign(filters, crossfilters(vertices, edges));
+        tracker.exert();
         diagram
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
-        do_redraw();
+        dc.redrawAll('network');
         clickiness();
     });
 }
@@ -942,10 +813,10 @@ function load_history(tenant, k) {
     });
 
     curr_hist = -1;
-    if(settings.date) {
-        var date = datef.parse(settings.date);
+    if(tracker.vals.date) {
+        var date = datef.parse(tracker.vals.date);
         if(!date)
-            date = d3.time.format('%Y%m%d').parse(settings.date);
+            date = d3.time.format('%Y%m%d').parse(tracker.vals.date);
         if(date)
             curr_hist = history_index(date);
     }
@@ -975,16 +846,16 @@ function populate_tenant_select(tenants, curr) {
         runner.start(!is_running);
     });
 }
-if(settings.histserv) {
+if(tracker.vals.histserv) {
     preload = function(k) {
         var Q = queue()
-            .defer(d3.text, settings.histserv + '/list.txt' + nocache_query())
-            .defer(d3.text, settings.histserv + '/customer.txt' + nocache_query());
+            .defer(d3.text, tracker.vals.histserv + '/list.txt' + nocache_query())
+            .defer(d3.text, tracker.vals.histserv + '/customer.txt' + nocache_query());
         Q.await(function(error, list, tenants) {
             snapshots = list.split('\n'); tenants = tenants.split('\n');
             tenants = tenants.filter(function(t) { return !!t; })
                 .map(function(c) { return c.split('|'); });
-            var tenant = settings.tenant || tenants[0][0];
+            var tenant = tracker.vals.tenant || tenants[0][0];
             populate_tenant_select(tenants, tenant);
             load_history(tenant, k);
         });
@@ -993,7 +864,7 @@ if(settings.histserv) {
 else preload = function(k) { k(); };
 
 preload(function() {
-    runner = make_runner(init, step, settings.interval);
+    runner = make_runner(init, step, tracker.vals.interval);
     runner.start(!is_running);
 });
 
