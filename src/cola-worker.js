@@ -4,7 +4,6 @@ importScripts('d3.js');
 var _d3cola = null, _tick, _stop;
 
 function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize) {
-    console.log('tickSize', tickSize);
     _d3cola = cola.d3adaptor()
         .avoidOverlaps(true)
         .size([width, height])
