@@ -1316,18 +1316,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.baseLength = property(30);
 
     /**
-     * Whether to highlight neighboring edges when hovering over a node. Not completely working
-     * yet.
-     * @name highlightNeighbors
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Boolean} [highlightNeighbors]
-     * @return {Boolean}
-     * @return {dc_graph.diagram}
-     **/
-    _chart.highlightNeighbors = property(false);
-
-    /**
      * Gets or sets the transition duration, the length of time each change to the diagram will
      * be animated.
      * @name transitionDuration
@@ -1596,6 +1584,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart;
     };
 
+    _chart.tickSize = property(1);
+
 
     _chart.edgeId = function(d) {
         return 'edge-' + _chart.edgeKey.eval(d).replace(/[^\w-_]/g, '-');
@@ -1637,7 +1627,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 handleDisconnected: _chart.handleDisconnected(),
                 lengthStrategy: _chart.lengthStrategy(),
                 baseLength: _chart.baseLength(),
-                flowLayout: _chart.flowLayout()
+                flowLayout: _chart.flowLayout(),
+                tickSize: _chart.tickSize()
             }
         });
     }

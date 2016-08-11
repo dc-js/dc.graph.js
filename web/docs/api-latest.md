@@ -61,7 +61,6 @@ chart.width(600)
         * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.flowLayout](#dc_graph.diagram+flowLayout)
         * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-        * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.deleteDelay](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -157,7 +156,6 @@ visualization versus conventional charts.
     * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.flowLayout](#dc_graph.diagram+flowLayout)
     * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-    * [.highlightNeighbors](#dc_graph.diagram+highlightNeighbors) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.deleteDelay](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -763,18 +761,6 @@ lengths.
 | Param | Type |
 | --- | --- |
 | [baseLength] | <code>Number</code> | 
-
-<a name="dc_graph.diagram+highlightNeighbors"></a>
-
-#### diagram.highlightNeighbors ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-Whether to highlight neighboring edges when hovering over a node. Not completely working
-yet.
-
-**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
-
-| Param | Type |
-| --- | --- |
-| [highlightNeighbors] | <code>Boolean</code> | 
 
 <a name="dc_graph.diagram+transitionDuration"></a>
 
