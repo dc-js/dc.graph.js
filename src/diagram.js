@@ -910,6 +910,22 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart;
     };
 
+    /**
+     * Currently, you can specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it
+     * will replace the back-end. In the future, there will be subclasses like colaDiagram and
+     * dagreDiagram with appropriate interfaces for each, but it is not yet clear which features are
+     * common between them.
+     * @name layoutAlgorithm
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [algo] - the name of the layout algorithm to use
+     * @example
+     * // use dagre for layout
+     * diagram.layoutAlgorithm('dagre');
+     * @return {dc_graph.diagram}
+     **/
+    _chart.layoutAlgorithm = property('cola');
+
     _chart.tickSize = property(1);
 
 
@@ -944,7 +960,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function initLayout() {
         if(!_worker)
-            _worker = new Worker('js/dc.graph.cola.worker.js');
+            _worker = new Worker('js/dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
         _worker.postMessage({
             command: 'init',
             args: {
@@ -1397,7 +1413,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     auto_zoom(node, edge);
                 break;
             case 'start':
-                console.log('COLA START'); // doesn't seem to fire
+                console.log('algo ' + _chart.layoutAlgorithm() + ' started.');
                 _dispatch.start();
             }
         };

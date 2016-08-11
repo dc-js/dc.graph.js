@@ -16,6 +16,10 @@ module.exports = function (grunt) {
         colaWorkerFiles: [
             'src/generate_objects.js',
             'src/cola.worker.js'
+        ],
+        dagreWorkerFiles: [
+            'src/generate_objects.js',
+            'src/dagre.worker.js'
         ]
     };
 
@@ -35,6 +39,10 @@ module.exports = function (grunt) {
             colaWorker: {
                 src: '<%= conf.colaWorkerFiles %>',
                 dest: '<%= conf.pkg.name %>.cola.worker.js'
+            },
+            dagreWorker: {
+                src: '<%= conf.dagreWorkerFiles %>',
+                dest: '<%= conf.pkg.name %>.dagre.worker.js'
             }
         },
         uglify: {
@@ -126,6 +134,8 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.min.js.map',
                             '<%= conf.pkg.name %>.cola.worker.js',
                             '<%= conf.pkg.name %>.cola.worker.js.map',
+                            '<%= conf.pkg.name %>.dagre.worker.js',
+                            '<%= conf.pkg.name %>.dagre.worker.js.map',
                             'd3.flexdivs.js',
                             'dc.graph.tracker.domain.js',
                             'querystring.js',
@@ -135,6 +145,7 @@ module.exports = function (grunt) {
                             'node_modules/jquery/dist/jquery.js',
                             'node_modules/lodash/lodash.js',
                             'node_modules/queue-async/build/queue.js',
+                            'node_modules/dagre/dist/dagre.js',
                             'node_modules/webcola/WebCola/cola.js'
                           ],
                         dest: '<%= conf.web %>/js/'

@@ -23,6 +23,7 @@ var steptime = +qs.interval || 1000, // ms per step
     edgeStroke = qs.edgestroke || 'black',
     edgeStrokeWidth = qs.edgestrokewidth || 1,
     edgeOpacity = +qs.opacity || 1,
+    layoutAlgorithm = qs.algo || 'cola',
     appLayout = null,
     useAppLayout = false,
     nodePrefix = qs.prefix || '',
@@ -220,6 +221,7 @@ source(function(error, data) {
     diagram
         .width($(window).width())
         .height($(window).height())
+        .layoutAlgorithm(layoutAlgorithm)
         .timeLimit(timeLimit)
         .transitionDuration(transition)
         .tickSize(tickSize)
@@ -307,9 +309,6 @@ source(function(error, data) {
             })
             .attr("autocomplete", "on");
     }
-
-    if(paths)
-        iterate_paths(diagram, paths);
 
     // respond to browser resize (not necessary if width/height is static)
     $(window).resize(function() {
