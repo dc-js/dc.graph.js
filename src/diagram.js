@@ -1394,8 +1394,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
                 break;
             case 'end':
-                if(!_chart.showLayoutSteps())
+                if(!_chart.showLayoutSteps()) {
+                    populate_cola(args.nodes, args.edges);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
+                }
                 else layout_done(true);
                 var do_zoom;
                 switch(_chart.autoZoom()) {
