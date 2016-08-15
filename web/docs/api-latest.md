@@ -77,6 +77,7 @@ chart.width(600)
         * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.child](#dc_graph.diagram+child) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.layoutAlgorithm](#dc_graph.diagram+layoutAlgorithm) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.handleDisconnected](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.render](#dc_graph.diagram+render) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.on](#dc_graph.diagram+on) ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -172,6 +173,7 @@ visualization versus conventional charts.
     * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.child](#dc_graph.diagram+child) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.layoutAlgorithm](#dc_graph.diagram+layoutAlgorithm) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.handleDisconnected](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.render](#dc_graph.diagram+render) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.on](#dc_graph.diagram+on) ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -996,6 +998,25 @@ tip.content(function(d, k) {
   k("This is <em>" + d.orig.value.name + "</em>");
 });
 diagram.child('tip', tip);
+```
+<a name="dc_graph.diagram+layoutAlgorithm"></a>
+
+#### diagram.layoutAlgorithm ⇒ <code>[diagram](#dc_graph.diagram)</code>
+Currently, you can specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it
+will replace the back-end. In the future, there will be subclasses like colaDiagram and
+dagreDiagram with appropriate interfaces for each, but it is not yet clear which features are
+common between them.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [algo] | <code>String</code> | the name of the layout algorithm to use |
+
+**Example**  
+```js
+// use dagre for layout
+diagram.layoutAlgorithm('dagre');
 ```
 <a name="dc_graph.diagram+handleDisconnected"></a>
 
