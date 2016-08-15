@@ -13,9 +13,13 @@ module.exports = function (grunt) {
         pkg: require('./package.json'),
         banner: grunt.file.read('./LICENSE_BANNER'),
         jsFiles: module.exports.jsFiles,
-        jsWorkerFiles: [
+        colaWorkerFiles: [
             'src/generate_objects.js',
-            'src/cola-worker.js'
+            'src/cola.worker.js'
+        ],
+        dagreWorkerFiles: [
+            'src/generate_objects.js',
+            'src/dagre.worker.js'
         ]
     };
 
@@ -32,9 +36,13 @@ module.exports = function (grunt) {
                 src: '<%= conf.jsFiles %>',
                 dest: '<%= conf.pkg.name %>.js'
             },
-            worker: {
-                src: '<%= conf.jsWorkerFiles %>',
-                dest: '<%= conf.pkg.name %>-worker.js'
+            colaWorker: {
+                src: '<%= conf.colaWorkerFiles %>',
+                dest: '<%= conf.pkg.name %>.cola.worker.js'
+            },
+            dagreWorker: {
+                src: '<%= conf.dagreWorkerFiles %>',
+                dest: '<%= conf.pkg.name %>.dagre.worker.js'
             }
         },
         uglify: {
@@ -124,8 +132,10 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.js.map',
                             '<%= conf.pkg.name %>.min.js',
                             '<%= conf.pkg.name %>.min.js.map',
-                            '<%= conf.pkg.name %>-worker.js',
-                            '<%= conf.pkg.name %>-worker.js.map',
+                            '<%= conf.pkg.name %>.cola.worker.js',
+                            '<%= conf.pkg.name %>.cola.worker.js.map',
+                            '<%= conf.pkg.name %>.dagre.worker.js',
+                            '<%= conf.pkg.name %>.dagre.worker.js.map',
                             'd3.flexdivs.js',
                             'dc.graph.tracker.domain.js',
                             'querystring.js',
@@ -135,6 +145,7 @@ module.exports = function (grunt) {
                             'node_modules/jquery/dist/jquery.js',
                             'node_modules/lodash/lodash.js',
                             'node_modules/queue-async/build/queue.js',
+                            'node_modules/dagre/dist/dagre.js',
                             'node_modules/webcola/WebCola/cola.js'
                           ],
                         dest: '<%= conf.web %>/js/'
@@ -257,6 +268,6 @@ module.exports.jsFiles = [
     'src/path_reader.js',
     'src/path_selector.js',
     'src/generate.js',
-    'src/type-graph.js',
+    'src/type_graph.js',
     'src/footer.js'  // NOTE: keep this last
 ];

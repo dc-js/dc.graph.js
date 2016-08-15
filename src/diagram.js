@@ -910,6 +910,22 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart;
     };
 
+    /**
+     * Currently, you can specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it
+     * will replace the back-end. In the future, there will be subclasses like colaDiagram and
+     * dagreDiagram with appropriate interfaces for each, but it is not yet clear which features are
+     * common between them.
+     * @name layoutAlgorithm
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [algo] - the name of the layout algorithm to use
+     * @example
+     * // use dagre for layout
+     * diagram.layoutAlgorithm('dagre');
+     * @return {dc_graph.diagram}
+     **/
+    _chart.layoutAlgorithm = property('cola');
+
     _chart.tickSize = property(1);
 
 
@@ -944,7 +960,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function initLayout() {
         if(!_worker)
-            _worker = new Worker('js/dc.graph-worker.js');
+            _worker = new Worker('js/dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
         _worker.postMessage({
             command: 'init',
             args: {
@@ -1378,8 +1394,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
                 break;
             case 'end':
-                if(!_chart.showLayoutSteps())
+                if(!_chart.showLayoutSteps()) {
+                    populate_cola(args.nodes, args.edges);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
+                }
                 else layout_done(true);
                 var do_zoom;
                 switch(_chart.autoZoom()) {
@@ -1397,7 +1415,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     auto_zoom(node, edge);
                 break;
             case 'start':
-                console.log('COLA START'); // doesn't seem to fire
+                console.log('algo ' + _chart.layoutAlgorithm() + ' started.');
                 _dispatch.start();
             }
         };
@@ -1702,12 +1720,19 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return render_edge_path(when)(e);
                 });
         if(_chart.stageTransitions() === 'insmod') {
-            // d3 seems to have trouble with chained transition of duration 0
-            d3.timer.flush();
             // inserted edges transition twice in insmod mode
-            etrans = etrans.transition()
-                .duration(transition_duration())
-                .attr('d', render_edge_path('new'));
+            if(transition_duration() >= 50) {
+                etrans = etrans.transition()
+                    .duration(transition_duration())
+                    .attr('d', render_edge_path('new'));
+            } else {
+                // if transitions are too short, we run into various problems,
+                // from transitions not completing to objects not found
+                // so don't try to chain in that case
+                // this also helped once: d3.timer.flush();
+                etrans
+                    .attr('d', render_edge_path('new'));
+            }
         }
 
         edge.each(function(d) {
