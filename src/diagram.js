@@ -1720,12 +1720,19 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return render_edge_path(when)(e);
                 });
         if(_chart.stageTransitions() === 'insmod') {
-            // d3 seems to have trouble with chained transition of duration 0
-            d3.timer.flush();
             // inserted edges transition twice in insmod mode
-            etrans = etrans.transition()
-                .duration(transition_duration())
-                .attr('d', render_edge_path('new'));
+            if(transition_duration() >= 50) {
+                etrans = etrans.transition()
+                    .duration(transition_duration())
+                    .attr('d', render_edge_path('new'));
+            } else {
+                // if transitions are too short, we run into various problems,
+                // from transitions not completing to objects not found
+                // so don't try to chain in that case
+                // this also helped once: d3.timer.flush();
+                etrans
+                    .attr('d', render_edge_path('new'));
+            }
         }
 
         edge.each(function(d) {
