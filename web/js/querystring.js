@@ -163,14 +163,17 @@ var querystring = (function() {
                 return b;
             })(window.location.search.substr(1).split('&'));
         },
-        update: function(m) {
-            var base = window.location.protocol + '//' + window.location.host + window.location.pathname;
+        generate: function(m) {
             var parts = [];
             for(var k in m)
                 parts.push(k + '=' + encodeURIComponent(m[k]));
-            var url = base;
-            if(parts.length)
-                url +=  '?' + parts.join('&');
+            return parts.length ? parts.join('&') : '';
+        },
+        update: function(m) {
+            var url = window.location.protocol + '//' + window.location.host + window.location.pathname;
+            var params = this.generate(m);
+            if(params)
+                url += '?' + params;
             window.history.pushState(null, null, url);
             return this;
         },

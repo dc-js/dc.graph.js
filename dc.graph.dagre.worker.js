@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.0
+ *  dc.graph 0.3.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
