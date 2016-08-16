@@ -265,10 +265,10 @@ source(function(error, data) {
 
     var expander = null, expanded;
     if(explore) {
-        // second group on keys so that first will observe it
-        expander = dc_graph.flat_group.another(node_flat.crossfilter, function(d) { return d.name; });
+        // second dimension on keys so that first will observe it
+        expander = node_flat.crossfilter.dimension(function(d) { return d.name; });
         function apply_expander_filter() {
-            expander.dimension.filterFunction(function(key) {
+            expander.filterFunction(function(key) {
                 return expanded.indexOf(key) >= 0;
             });
         }
