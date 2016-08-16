@@ -4,13 +4,11 @@
  observation is either shown or not) but it would have to be cleaned up a bit */
 
 dc_graph.flat_group = (function() {
-    function one_zero_reduce(group) {
-        group.reduce(
-            function(p, v) { return v; },
-            function() { return null; },
-            function() { return null; }
-        );
-    }
+    var reduce_01 = {
+        add: function(p, v) { return v; },
+        remove: function() { return null; },
+        init: function() { return null; }
+    };
     // now we only really want to see the non-null values, so make a fake group
     function non_null(group) {
         return {
@@ -23,11 +21,14 @@ dc_graph.flat_group = (function() {
     }
 
     function dim_group(ndx, id_accessor) {
-        var dimension = ndx.dimension(id_accessor),
-            group = dimension.group();
-
-        one_zero_reduce(group);
-        return {crossfilter: ndx, dimension: dimension, group: non_null(group)};
+        var dimension = ndx.dimension(id_accessor);
+        return {
+            crossfilter: ndx,
+            dimension: dimension,
+            group: non_null(dimension.group().reduce(reduce_01.add,
+                                                     reduce_01.remove,
+                                                     reduce_01.init))
+        };
     }
 
     return {
