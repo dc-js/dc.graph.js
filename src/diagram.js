@@ -616,6 +616,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
+     * This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
+     * now it is separate.
      * @name flowLayout
      * @memberof dc_graph.diagram
      * @instance
@@ -627,6 +629,16 @@ dc_graph.diagram = function (parent, chartGroup) {
      * chart.flowLayout({axis: 'x', minSeparation: 200})
      **/
     _chart.flowLayout = property(null);
+
+    /**
+     * Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
+     * generated from graphviz-style since it is more general.
+     * @name rankdir
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [rankdir]
+     **/
+    _chart.rankdir = property('TB');
 
     /**
      * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
@@ -2012,8 +2024,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _defs = _svg.append('svg:defs');
 
-        if(_chart.mouseZoomable())
+        if(_chart.mouseZoomable()) {
             _svg.call(_zoom = d3.behavior.zoom().on('zoom', doZoom));
+            _svg.on('dblclick.zoom', null);
+        }
 
         return _svg;
     }

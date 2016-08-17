@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.1
+ *  dc.graph 0.3.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.1
+ * @version 0.3.2
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.1',
+    version: '0.3.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1295,6 +1295,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
+     * This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
+     * now it is separate.
      * @name flowLayout
      * @memberof dc_graph.diagram
      * @instance
@@ -1306,6 +1308,16 @@ dc_graph.diagram = function (parent, chartGroup) {
      * chart.flowLayout({axis: 'x', minSeparation: 200})
      **/
     _chart.flowLayout = property(null);
+
+    /**
+     * Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
+     * generated from graphviz-style since it is more general.
+     * @name rankdir
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [rankdir]
+     **/
+    _chart.rankdir = property('TB');
 
     /**
      * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
@@ -2691,8 +2703,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _defs = _svg.append('svg:defs');
 
-        if(_chart.mouseZoomable())
+        if(_chart.mouseZoomable()) {
             _svg.call(_zoom = d3.behavior.zoom().on('zoom', doZoom));
+            _svg.on('dblclick.zoom', null);
+        }
 
         return _svg;
     }
@@ -3503,7 +3517,11 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
 };
 
 
-dc_graph.expand_collapse = function(get_degree, expand, collapse) {
+dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
+    dirs = dirs || ['both'];
+    if(dirs.length > 2)
+        throw new Error('there are only two directions to expand in');
+
     function add_gradient_def(chart) {
         var gradient = chart.addOrRemoveDef('spike-gradient', true, 'linearGradient');
         gradient.attr({
@@ -3527,37 +3545,88 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             });
     }
 
-    function view_degree(chart, edge, key) {
-        return edge.filter(function(e) {
-            return chart.edgeSource.eval(e) === key || chart.edgeTarget.eval(e) === key;
-        }).size();
+    function view_degree(chart, edge, dir, key) {
+        var fil;
+        switch(dir) {
+        case 'out':
+            fil = function(e) {
+                return chart.edgeSource.eval(e) === key;
+            };
+            break;
+        case 'in':
+            fil = function(e) {
+                return chart.edgeTarget.eval(e) === key;
+            };
+            break;
+        case 'both':
+            fil = function(e) {
+                return chart.edgeSource.eval(e) === key || chart.edgeTarget.eval(e) === key;
+            };
+            break;
+        }
+        return edge.filter(fil).size();
+    }
+
+    function spike_directioner(rankdir, dir, n) {
+        if(dir==='both')
+            return function(i) {
+                return Math.PI * (2 * i / n - 0.5);
+            };
+        else {
+            var sweep = (n-1)*Math.PI/n, ofs;
+            switch(rankdir) {
+            case 'LR':
+                ofs = 0;
+                break;
+            case 'TB':
+                ofs = Math.PI/2;
+                break;
+            case 'RL':
+                ofs = Math.PI;
+                break;
+            case 'BT':
+                ofs = -Math.PI;
+                break;
+            }
+            if(dir === 'in')
+                ofs += Math.PI;
+            return function(i) {
+                return ofs + sweep * (-.5 + (n > 1 ? i / (n-1) : 0)); // avoid 0/0
+            };
+        }
     }
 
     function draw_selected(chart, node, edge) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(d) {
-                return (d.dcg_expand_selected && !d.dcg_expanded) ? [d] : [];
+                return (d.dcg_expand_selected &&
+                        (!d.dcg_expanded || !d.dcg_expanded[d.dcg_expand_selected.dir])) ?
+                    [d] : [];
             });
         spike.exit().remove();
         spike
           .enter().insert('g', ':first-child')
-            .classed('spikes', true)
-            .selectAll('rect.spike')
+            .classed('spikes', true);
+        var rect = spike
+          .selectAll('rect.spike')
             .data(function(d) {
                 var key = chart.nodeKey.eval(d);
-                var n = get_degree(key) - view_degree(chart, edge, key),
+                var dir = d.dcg_expand_selected.dir,
+                    n = d.dcg_expand_selected.n,
+                    af = spike_directioner(chart.rankdir(), dir, n),
                     ret = Array(n);
                 for(var i = 0; i<n; ++i) {
-                    var a = Math.PI * (2 * i / n - 0.5);
+                    var a = af(i);
                     ret[i] = {
-                        a: -90 + 360 * i / n,
+                        a: a * 180 / Math.PI,
                         x: Math.cos(a) * d.dcg_rx*.9,
                         y: Math.sin(a) * d.dcg_ry*.9
                     };
                 }
                 return ret;
-            })
+            });
+        rect
           .enter().append('rect')
             .classed('spike', true)
             .attr({
@@ -3572,37 +3641,90 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
                     return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
                 }
             });
+        rect.exit().remove();
     }
 
     function clear_selected(chart, node, edge) {
         node.each(function(n) {
-            n.dcg_expand_selected = false;
+            n.dcg_expand_selected = null;
         });
         draw_selected(chart, node, edge);
     }
 
-    function collapsible(chart, edge, key) {
-        return view_degree(chart, edge, key) === 1;
+    function collapsible(chart, edge, key, dir) {
+        return view_degree(chart, edge, dir, key) === 1;
     }
 
+    function zonedir(chart, event, dirs, d) {
+        if(dirs.length === 1) // we assume it's ['out', 'in']
+            return dirs[0];
+        var bound = chart.root().node().getBoundingClientRect();
+        var x = event.clientX - bound.left,
+            y = event.clientY - bound.top;
+        switch(chart.rankdir()) {
+        case 'TB':
+            return y > d.cola.y ? 'out' : 'in';
+        case 'BT':
+            return y < d.cola.y ? 'out' : 'in';
+        case 'LR':
+            return x > d.cola.x ? 'out' : 'in';
+        case 'RL':
+            return x < d.cola.x ? 'out' : 'in';
+        }
+        throw new Error('unknown rankdir ' + chart.rankdir());
+    }
+
+
     function add_behavior(chart, node, edge) {
-        node
-            .on('mouseover.expand-collapse', function(d) {
+        function mousemove(d) {
+            var dir = zonedir(chart, d3.event, dirs, d);
+            var nk = chart.nodeKey.eval(d);
+            Promise.resolve(get_degree(nk, dir)).then(function(degree) {
+                var spikes = {
+                    dir: dir,
+                    n: degree - view_degree(chart, edge, dir, nk)
+                };
                 node.each(function(n) {
-                    n.dcg_expand_selected = n === d;
+                    n.dcg_expand_selected = n === d ? spikes : null;
                 });
                 draw_selected(chart, node, edge);
-            })
+            });
+        }
+
+        function click(d) {
+            var event = d3.event;
+            console.log(event.type);
+            function action() {
+                var dir = zonedir(chart, event, dirs, d);
+                d.dcg_expanded = d.dcg_expanded || {};
+                if(!d.dcg_expanded[dir]) {
+                    expand(chart.nodeKey.eval(d), dir, event.type === 'dblclick');
+                    d.dcg_expanded[dir] = true;
+                }
+                else {
+                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dir), dir);
+                    d.dcg_expanded[dir] = false;
+                }
+                draw_selected(chart, node, edge);
+                d.dcg_dblclk_timeout = null;
+            }
+            if(d.dcg_dblclk_timeout) {
+                window.clearTimeout(d.dcg_dblclk_timeout);
+                if(event.type === 'dblclick')
+                    action();
+                d.dcg_dblclk_timeout = null;
+            }
+            else d.dcg_dblclk_timeout = window.setTimeout(action, 200);
+        }
+
+        node
+            .on('mouseover.expand-collapse', mousemove)
+            .on('mousemove.expand-collapse', mousemove)
             .on('mouseout.expand-collapse', function(d) {
                 clear_selected(chart, node, edge);
             })
-            .on('click', function(d) {
-                if((d.dcg_expanded = !d.dcg_expanded))
-                    expand(chart.nodeKey.eval(d));
-                else
-                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge));
-                draw_selected(chart, node, edge);
-            });
+            .on('click', click)
+            .on('dblclick', click);
     }
 
     function remove_behavior(chart, node, edge) {
@@ -3802,13 +3924,11 @@ dc_graph.munge_graph = function(data, nodekeyattr, sourceattr, targetattr) {
  observation is either shown or not) but it would have to be cleaned up a bit */
 
 dc_graph.flat_group = (function() {
-    function one_zero_reduce(group) {
-        group.reduce(
-            function(p, v) { return v; },
-            function() { return null; },
-            function() { return null; }
-        );
-    }
+    var reduce_01 = {
+        add: function(p, v) { return v; },
+        remove: function() { return null; },
+        init: function() { return null; }
+    };
     // now we only really want to see the non-null values, so make a fake group
     function non_null(group) {
         return {
@@ -3821,11 +3941,14 @@ dc_graph.flat_group = (function() {
     }
 
     function dim_group(ndx, id_accessor) {
-        var dimension = ndx.dimension(id_accessor),
-            group = dimension.group();
-
-        one_zero_reduce(group);
-        return {crossfilter: ndx, dimension: dimension, group: non_null(group)};
+        var dimension = ndx.dimension(id_accessor);
+        return {
+            crossfilter: ndx,
+            dimension: dimension,
+            group: non_null(dimension.group().reduce(reduce_01.add,
+                                                     reduce_01.remove,
+                                                     reduce_01.init))
+        };
     }
 
     return {
