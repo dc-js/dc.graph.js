@@ -58,12 +58,36 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             .selectAll('rect.spike')
             .data(function(d) {
                 var key = chart.nodeKey.eval(d);
-                var n = d.dcg_expand_selected.n,
+                var dir = d.dcg_expand_selected.dir,
+                    n = d.dcg_expand_selected.n,
                     ret = Array(n);
                 for(var i = 0; i<n; ++i) {
-                    var a = Math.PI * (2 * i / n - 0.5);
+                    var a;
+                    switch(dir) {
+                    case 'out':
+                        var sweep = (n-1)*Math.PI/n, ofs;
+                        switch(chart.rankdir()) {
+                        case 'LR':
+                            ofs = 0;
+                            break;
+                        case 'TD':
+                            ofs = Math.PI/2;
+                            break;
+                        case 'RL':
+                            ofs = Math.PI;
+                            break;
+                        case 'DT':
+                            ofs = -Math.PI;
+                            break;
+                        }
+                        a = ofs + sweep * (-.5 + i / (n-1));
+                        break;
+                    case 'both':
+                        a = Math.PI * (2 * i / n - 0.5);
+                        break;
+                    }
                     ret[i] = {
-                        a: -90 + 360 * i / n,
+                        a: a * 180 / Math.PI,
                         x: Math.cos(a) * d.dcg_rx*.9,
                         y: Math.sin(a) * d.dcg_ry*.9
                     };
@@ -103,7 +127,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 var nk = chart.nodeKey.eval(d);
                 Promise.resolve(get_degree(nk)).then(function(degree) {
                     var spikes = {
-                        zone: 'one',
+                        dir: dirs[0],
                         n: degree - view_degree(chart, edge, dirs[0], nk)
                     };
                     node.each(function(n) {
