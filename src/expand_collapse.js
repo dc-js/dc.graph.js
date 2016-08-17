@@ -88,8 +88,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         spike.exit().remove();
         spike
           .enter().insert('g', ':first-child')
-            .classed('spikes', true)
-            .selectAll('rect.spike')
+            .classed('spikes', true);
+        var rect = spike
+          .selectAll('rect.spike')
             .data(function(d) {
                 var key = chart.nodeKey.eval(d);
                 var dir = d.dcg_expand_selected.dir,
@@ -105,7 +106,8 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                     };
                 }
                 return ret;
-            })
+            });
+        rect
           .enter().append('rect')
             .classed('spike', true)
             .attr({
@@ -120,6 +122,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                     return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
                 }
             });
+        rect.exit().remove();
     }
 
     function clear_selected(chart, node, edge) {
