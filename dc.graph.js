@@ -1295,6 +1295,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     /**
+     * This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
+     * now it is separate.
      * @name flowLayout
      * @memberof dc_graph.diagram
      * @instance
@@ -1306,6 +1308,16 @@ dc_graph.diagram = function (parent, chartGroup) {
      * chart.flowLayout({axis: 'x', minSeparation: 200})
      **/
     _chart.flowLayout = property(null);
+
+    /**
+     * Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
+     * generated from graphviz-style since it is more general.
+     * @name rankdir
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {String} [rankdir]
+     **/
+    _chart.rankdir = property('TB');
 
     /**
      * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
@@ -3503,7 +3515,11 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
 };
 
 
-dc_graph.expand_collapse = function(get_degree, expand, collapse) {
+dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
+    dirs = dirs || ['both'];
+    if(dirs.length > 2)
+        throw new Error('there are only two directions to expand in');
+
     function add_gradient_def(chart) {
         var gradient = chart.addOrRemoveDef('spike-gradient', true, 'linearGradient');
         gradient.attr({
@@ -3527,17 +3543,64 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             });
     }
 
-    function view_degree(chart, edge, key) {
-        return edge.filter(function(e) {
-            return chart.edgeSource.eval(e) === key || chart.edgeTarget.eval(e) === key;
-        }).size();
+    function view_degree(chart, edge, dir, key) {
+        var fil;
+        switch(dir) {
+        case 'out':
+            fil = function(e) {
+                return chart.edgeSource.eval(e) === key;
+            };
+            break;
+        case 'in':
+            fil = function(e) {
+                return chart.edgeTarget.eval(e) === key;
+            };
+            break;
+        case 'both':
+            fil = function(e) {
+                return chart.edgeSource.eval(e) === key || chart.edgeTarget.eval(e) === key;
+            };
+            break;
+        }
+        return edge.filter(fil).size();
+    }
+
+    function spike_directioner(rankdir, dir, n) {
+        if(dir==='both')
+            return function(i) {
+                return Math.PI * (2 * i / n - 0.5);
+            };
+        else {
+            var sweep = (n-1)*Math.PI/n, ofs;
+            switch(rankdir) {
+            case 'LR':
+                ofs = 0;
+                break;
+            case 'TB':
+                ofs = Math.PI/2;
+                break;
+            case 'RL':
+                ofs = Math.PI;
+                break;
+            case 'BT':
+                ofs = -Math.PI;
+                break;
+            }
+            if(dir === 'in')
+                ofs += Math.PI;
+            return function(i) {
+                return ofs + sweep * (-.5 + (n > 1 ? i / (n-1) : 0)); // avoid 0/0
+            };
+        }
     }
 
     function draw_selected(chart, node, edge) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(d) {
-                return (d.dcg_expand_selected && !d.dcg_expanded) ? [d] : [];
+                return (d.dcg_expand_selected &&
+                        (!d.dcg_expanded || !d.dcg_expanded[d.dcg_expand_selected.dir])) ?
+                    [d] : [];
             });
         spike.exit().remove();
         spike
@@ -3546,12 +3609,14 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             .selectAll('rect.spike')
             .data(function(d) {
                 var key = chart.nodeKey.eval(d);
-                var n = get_degree(key) - view_degree(chart, edge, key),
+                var dir = d.dcg_expand_selected.dir,
+                    n = d.dcg_expand_selected.n,
+                    af = spike_directioner(chart.rankdir(), dir, n),
                     ret = Array(n);
                 for(var i = 0; i<n; ++i) {
-                    var a = Math.PI * (2 * i / n - 0.5);
+                    var a = af(i);
                     ret[i] = {
-                        a: -90 + 360 * i / n,
+                        a: a * 180 / Math.PI,
                         x: Math.cos(a) * d.dcg_rx*.9,
                         y: Math.sin(a) * d.dcg_ry*.9
                     };
@@ -3576,31 +3641,68 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
 
     function clear_selected(chart, node, edge) {
         node.each(function(n) {
-            n.dcg_expand_selected = false;
+            n.dcg_expand_selected = null;
         });
         draw_selected(chart, node, edge);
     }
 
-    function collapsible(chart, edge, key) {
-        return view_degree(chart, edge, key) === 1;
+    function collapsible(chart, edge, key, dir) {
+        return view_degree(chart, edge, dir, key) === 1;
+    }
+
+    function zonedir(chart, event, d) {
+        var bound = chart.root().node().getBoundingClientRect();
+        var x = event.clientX - bound.left,
+            y = event.clientY - bound.top;
+        switch(chart.rankdir()) {
+        case 'TB':
+            return y > d.cola.y ? 'out' : 'in';
+        case 'BT':
+            return y < d.cola.y ? 'out' : 'in';
+        case 'LR':
+            return x > d.cola.x ? 'out' : 'in';
+        case 'RL':
+            return x < d.cola.x ? 'out' : 'in';
+        }
+        throw new Error('unknown rankdir ' + chart.rankdir());
     }
 
     function add_behavior(chart, node, edge) {
         node
             .on('mouseover.expand-collapse', function(d) {
-                node.each(function(n) {
-                    n.dcg_expand_selected = n === d;
+                var dir;
+                if(dirs.length === 2) // we assume it's ['out', 'in']
+                    dir = zonedir(chart, d3.event, d);
+                else dir = dirs[0];
+                var nk = chart.nodeKey.eval(d);
+                Promise.resolve(get_degree(nk, dir)).then(function(degree) {
+                    var spikes = {
+                        dir: dir,
+                        n: degree - view_degree(chart, edge, dir, nk)
+                    };
+                    node.each(function(n) {
+                        n.dcg_expand_selected = n === d ? spikes : null;
+                    });
+                    draw_selected(chart, node, edge);
                 });
-                draw_selected(chart, node, edge);
             })
             .on('mouseout.expand-collapse', function(d) {
                 clear_selected(chart, node, edge);
             })
             .on('click', function(d) {
-                if((d.dcg_expanded = !d.dcg_expanded))
-                    expand(chart.nodeKey.eval(d));
-                else
-                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge));
+                var dir;
+                if(dirs.length === 2)
+                    dir = zonedir(chart, d3.event, d);
+                else dir = dirs[0];
+                d.dcg_expanded = d.dcg_expanded || {};
+                if(!d.dcg_expanded[dir]) {
+                    expand(chart.nodeKey.eval(d), dir);
+                    d.dcg_expanded[dir] = true;
+                }
+                else {
+                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dir), dir);
+                    d.dcg_expanded[dir] = false;
+                }
                 draw_selected(chart, node, edge);
             });
     }
@@ -3802,13 +3904,11 @@ dc_graph.munge_graph = function(data, nodekeyattr, sourceattr, targetattr) {
  observation is either shown or not) but it would have to be cleaned up a bit */
 
 dc_graph.flat_group = (function() {
-    function one_zero_reduce(group) {
-        group.reduce(
-            function(p, v) { return v; },
-            function() { return null; },
-            function() { return null; }
-        );
-    }
+    var reduce_01 = {
+        add: function(p, v) { return v; },
+        remove: function() { return null; },
+        init: function() { return null; }
+    };
     // now we only really want to see the non-null values, so make a fake group
     function non_null(group) {
         return {
@@ -3821,11 +3921,14 @@ dc_graph.flat_group = (function() {
     }
 
     function dim_group(ndx, id_accessor) {
-        var dimension = ndx.dimension(id_accessor),
-            group = dimension.group();
-
-        one_zero_reduce(group);
-        return {crossfilter: ndx, dimension: dimension, group: non_null(group)};
+        var dimension = ndx.dimension(id_accessor);
+        return {
+            crossfilter: ndx,
+            dimension: dimension,
+            group: non_null(dimension.group().reduce(reduce_01.add,
+                                                     reduce_01.remove,
+                                                     reduce_01.init))
+        };
     }
 
     return {
