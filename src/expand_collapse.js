@@ -1,4 +1,5 @@
-dc_graph.expand_collapse = function(get_degree, expand, collapse, zones) {
+dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
+    dirs = dirs || ['both'];
     function add_gradient_def(chart) {
         var gradient = chart.addOrRemoveDef('spike-gradient', true, 'linearGradient');
         gradient.attr({
@@ -22,10 +23,26 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, zones) {
             });
     }
 
-    function view_degree(chart, edge, key) {
-        return edge.filter(function(e) {
-            return chart.edgeSource.eval(e) === key || chart.edgeTarget.eval(e) === key;
-        }).size();
+    function view_degree(chart, edge, dir, key) {
+        var fil;
+        switch(dir) {
+        case 'out':
+            fil = function(e) {
+                return chart.edgeSource.eval(e) === key;
+            };
+            break;
+        case 'in':
+            fil = function(e) {
+                return chart.edgeTarget.eval(e) === key;
+            };
+            break;
+        case 'both':
+            fil = function(e) {
+                return chart.edgeSource.eval(e) === key || chart.edgeTarget.eval(e) === key;
+            };
+            break;
+        }
+        return edge.filter(fil).size();
     }
 
     function draw_selected(chart, node, edge) {
@@ -76,8 +93,8 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, zones) {
         draw_selected(chart, node, edge);
     }
 
-    function collapsible(chart, edge, key) {
-        return view_degree(chart, edge, key) === 1;
+    function collapsible(chart, edge, key, dir) {
+        return view_degree(chart, edge, dir, key) === 1;
     }
 
     function add_behavior(chart, node, edge) {
@@ -87,7 +104,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, zones) {
                 Promise.resolve(get_degree(nk)).then(function(degree) {
                     var spikes = {
                         zone: 'one',
-                        n: degree - view_degree(chart, edge, nk)
+                        n: degree - view_degree(chart, edge, dirs[0], nk)
                     };
                     node.each(function(n) {
                         n.dcg_expand_selected = n === d ? spikes : null;
@@ -102,7 +119,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, zones) {
                 if((d.dcg_expanded = !d.dcg_expanded))
                     expand(chart.nodeKey.eval(d));
                 else
-                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge));
+                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dirs[0]));
                 draw_selected(chart, node, edge);
             });
     }
