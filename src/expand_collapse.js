@@ -56,13 +56,13 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             case 'LR':
                 ofs = 0;
                 break;
-            case 'TD':
+            case 'TB':
                 ofs = Math.PI/2;
                 break;
             case 'RL':
                 ofs = Math.PI;
                 break;
-            case 'DT':
+            case 'BT':
                 ofs = -Math.PI;
                 break;
             }

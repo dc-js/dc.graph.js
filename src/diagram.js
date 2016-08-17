@@ -638,7 +638,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @instance
      * @param {String} [rankdir]
      **/
-    _chart.rankdir = property('TD');
+    _chart.rankdir = property('TB');
 
     /**
      * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
