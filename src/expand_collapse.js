@@ -1,5 +1,8 @@
 dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
     dirs = dirs || ['both'];
+    if(dirs.length > 2)
+        throw new Error('there are only two directions to expand in');
+
     function add_gradient_def(chart) {
         var gradient = chart.addOrRemoveDef('spike-gradient', true, 'linearGradient');
         gradient.attr({
@@ -78,7 +81,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(d) {
-                return (d.dcg_expand_selected && !d.dcg_expanded) ? [d] : [];
+                return (d.dcg_expand_selected &&
+                        (!d.dcg_expanded || !d.dcg_expanded[d.dcg_expand_selected.dir])) ?
+                    [d] : [];
             });
         spike.exit().remove();
         spike
@@ -128,14 +133,35 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         return view_degree(chart, edge, dir, key) === 1;
     }
 
+    function zonedir(chart, event, d) {
+        var bound = chart.root().node().getBoundingClientRect();
+        var x = event.clientX - bound.left,
+            y = event.clientY - bound.top;
+        switch(chart.rankdir()) {
+        case 'TB':
+            return y > d.cola.y ? 'out' : 'in';
+        case 'BT':
+            return y < d.cola.y ? 'out' : 'in';
+        case 'LR':
+            return x > d.cola.x ? 'out' : 'in';
+        case 'RL':
+            return x < d.cola.x ? 'out' : 'in';
+        }
+        throw new Error('unknown rankdir ' + chart.rankdir());
+    }
+
     function add_behavior(chart, node, edge) {
         node
             .on('mouseover.expand-collapse', function(d) {
+                var dir;
+                if(dirs.length === 2) // we assume it's ['out', 'in']
+                    dir = zonedir(chart, d3.event, d);
+                else dir = dirs[0];
                 var nk = chart.nodeKey.eval(d);
-                Promise.resolve(get_degree(nk)).then(function(degree) {
+                Promise.resolve(get_degree(nk, dir)).then(function(degree) {
                     var spikes = {
-                        dir: dirs[0],
-                        n: degree - view_degree(chart, edge, dirs[0], nk)
+                        dir: dir,
+                        n: degree - view_degree(chart, edge, dir, nk)
                     };
                     node.each(function(n) {
                         n.dcg_expand_selected = n === d ? spikes : null;
@@ -147,10 +173,19 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 clear_selected(chart, node, edge);
             })
             .on('click', function(d) {
-                if((d.dcg_expanded = !d.dcg_expanded))
-                    expand(chart.nodeKey.eval(d));
-                else
-                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dirs[0]));
+                var dir;
+                if(dirs.length === 2)
+                    dir = zonedir(chart, d3.event, d);
+                else dir = dirs[0];
+                d.dcg_expanded = d.dcg_expanded || {};
+                if(!d.dcg_expanded[dir]) {
+                    expand(chart.nodeKey.eval(d), dir);
+                    d.dcg_expanded[dir] = true;
+                }
+                else {
+                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dir), dir);
+                    d.dcg_expanded[dir] = false;
+                }
                 draw_selected(chart, node, edge);
             });
     }
