@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.1
+ *  dc.graph 0.3.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.1
+ * @version 0.3.2
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.1',
+    version: '0.3.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -2703,8 +2703,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _defs = _svg.append('svg:defs');
 
-        if(_chart.mouseZoomable())
+        if(_chart.mouseZoomable()) {
             _svg.call(_zoom = d3.behavior.zoom().on('zoom', doZoom));
+            _svg.on('dblclick.zoom', null);
+        }
 
         return _svg;
     }
@@ -3605,8 +3607,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         spike.exit().remove();
         spike
           .enter().insert('g', ':first-child')
-            .classed('spikes', true)
-            .selectAll('rect.spike')
+            .classed('spikes', true);
+        var rect = spike
+          .selectAll('rect.spike')
             .data(function(d) {
                 var key = chart.nodeKey.eval(d);
                 var dir = d.dcg_expand_selected.dir,
@@ -3622,7 +3625,8 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                     };
                 }
                 return ret;
-            })
+            });
+        rect
           .enter().append('rect')
             .classed('spike', true)
             .attr({
@@ -3637,6 +3641,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                     return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
                 }
             });
+        rect.exit().remove();
     }
 
     function clear_selected(chart, node, edge) {
@@ -3650,7 +3655,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         return view_degree(chart, edge, dir, key) === 1;
     }
 
-    function zonedir(chart, event, d) {
+    function zonedir(chart, event, dirs, d) {
+        if(dirs.length === 1) // we assume it's ['out', 'in']
+            return dirs[0];
         var bound = chart.root().node().getBoundingClientRect();
         var x = event.clientX - bound.left,
             y = event.clientY - bound.top;
@@ -3667,36 +3674,31 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         throw new Error('unknown rankdir ' + chart.rankdir());
     }
 
+
     function add_behavior(chart, node, edge) {
-        node
-            .on('mouseover.expand-collapse', function(d) {
-                var dir;
-                if(dirs.length === 2) // we assume it's ['out', 'in']
-                    dir = zonedir(chart, d3.event, d);
-                else dir = dirs[0];
-                var nk = chart.nodeKey.eval(d);
-                Promise.resolve(get_degree(nk, dir)).then(function(degree) {
-                    var spikes = {
-                        dir: dir,
-                        n: degree - view_degree(chart, edge, dir, nk)
-                    };
-                    node.each(function(n) {
-                        n.dcg_expand_selected = n === d ? spikes : null;
-                    });
-                    draw_selected(chart, node, edge);
+        function mousemove(d) {
+            var dir = zonedir(chart, d3.event, dirs, d);
+            var nk = chart.nodeKey.eval(d);
+            Promise.resolve(get_degree(nk, dir)).then(function(degree) {
+                var spikes = {
+                    dir: dir,
+                    n: degree - view_degree(chart, edge, dir, nk)
+                };
+                node.each(function(n) {
+                    n.dcg_expand_selected = n === d ? spikes : null;
                 });
-            })
-            .on('mouseout.expand-collapse', function(d) {
-                clear_selected(chart, node, edge);
-            })
-            .on('click', function(d) {
-                var dir;
-                if(dirs.length === 2)
-                    dir = zonedir(chart, d3.event, d);
-                else dir = dirs[0];
+                draw_selected(chart, node, edge);
+            });
+        }
+
+        function click(d) {
+            var event = d3.event;
+            console.log(event.type);
+            function action() {
+                var dir = zonedir(chart, event, dirs, d);
                 d.dcg_expanded = d.dcg_expanded || {};
                 if(!d.dcg_expanded[dir]) {
-                    expand(chart.nodeKey.eval(d), dir);
+                    expand(chart.nodeKey.eval(d), dir, event.type === 'dblclick');
                     d.dcg_expanded[dir] = true;
                 }
                 else {
@@ -3704,7 +3706,25 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                     d.dcg_expanded[dir] = false;
                 }
                 draw_selected(chart, node, edge);
-            });
+                d.dcg_dblclk_timeout = null;
+            }
+            if(d.dcg_dblclk_timeout) {
+                window.clearTimeout(d.dcg_dblclk_timeout);
+                if(event.type === 'dblclick')
+                    action();
+                d.dcg_dblclk_timeout = null;
+            }
+            else d.dcg_dblclk_timeout = window.setTimeout(action, 200);
+        }
+
+        node
+            .on('mouseover.expand-collapse', mousemove)
+            .on('mousemove.expand-collapse', mousemove)
+            .on('mouseout.expand-collapse', function(d) {
+                clear_selected(chart, node, edge);
+            })
+            .on('click', click)
+            .on('dblclick', click);
     }
 
     function remove_behavior(chart, node, edge) {
