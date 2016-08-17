@@ -84,14 +84,16 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, zones) {
         node
             .on('mouseover.expand-collapse', function(d) {
                 var nk = chart.nodeKey.eval(d);
-                var spikes = {
-                    zone: 'one',
-                    n: get_degree(nk) - view_degree(chart, edge, nk)
-                };
-                node.each(function(n) {
-                    n.dcg_expand_selected = n === d ? spikes : null;
+                Promise.resolve(get_degree(nk)).then(function(degree) {
+                    var spikes = {
+                        zone: 'one',
+                        n: degree - view_degree(chart, edge, nk)
+                    };
+                    node.each(function(n) {
+                        n.dcg_expand_selected = n === d ? spikes : null;
+                    });
+                    draw_selected(chart, node, edge);
                 });
-                draw_selected(chart, node, edge);
             })
             .on('mouseout.expand-collapse', function(d) {
                 clear_selected(chart, node, edge);
