@@ -150,25 +150,29 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         throw new Error('unknown rankdir ' + chart.rankdir());
     }
 
+
     function add_behavior(chart, node, edge) {
-        node
-            .on('mouseover.expand-collapse', function(d) {
-                var dir;
-                if(dirs.length === 2) // we assume it's ['out', 'in']
-                    dir = zonedir(chart, d3.event, d);
-                else dir = dirs[0];
-                var nk = chart.nodeKey.eval(d);
-                Promise.resolve(get_degree(nk, dir)).then(function(degree) {
-                    var spikes = {
-                        dir: dir,
-                        n: degree - view_degree(chart, edge, dir, nk)
-                    };
-                    node.each(function(n) {
-                        n.dcg_expand_selected = n === d ? spikes : null;
-                    });
-                    draw_selected(chart, node, edge);
+        function mousemove(d) {
+            var dir;
+            if(dirs.length === 2) // we assume it's ['out', 'in']
+                dir = zonedir(chart, d3.event, d);
+            else dir = dirs[0];
+            var nk = chart.nodeKey.eval(d);
+            Promise.resolve(get_degree(nk, dir)).then(function(degree) {
+                var spikes = {
+                    dir: dir,
+                    n: degree - view_degree(chart, edge, dir, nk)
+                };
+                node.each(function(n) {
+                    n.dcg_expand_selected = n === d ? spikes : null;
                 });
-            })
+                draw_selected(chart, node, edge);
+            });
+        }
+
+        node
+            .on('mouseover.expand-collapse', mousemove)
+            .on('mousemove.expand-collapse', mousemove)
             .on('mouseout.expand-collapse', function(d) {
                 clear_selected(chart, node, edge);
             })
