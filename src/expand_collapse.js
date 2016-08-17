@@ -69,7 +69,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             if(dir === 'in')
                 ofs += Math.PI;
             return function(i) {
-                return ofs + sweep * (-.5 + i / (n-1));
+                return ofs + sweep * (-.5 + (n > 1 ? i / (n-1) : 0)); // avoid 0/0
             };
         }
     }
