@@ -1,4 +1,4 @@
-dc_graph.expand_collapse = function(get_degree, expand, collapse) {
+dc_graph.expand_collapse = function(get_degree, expand, collapse, zones) {
     function add_gradient_def(chart) {
         var gradient = chart.addOrRemoveDef('spike-gradient', true, 'linearGradient');
         gradient.attr({
@@ -41,7 +41,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
             .selectAll('rect.spike')
             .data(function(d) {
                 var key = chart.nodeKey.eval(d);
-                var n = get_degree(key) - view_degree(chart, edge, key),
+                var n = d.dcg_expand_selected.n,
                     ret = Array(n);
                 for(var i = 0; i<n; ++i) {
                     var a = Math.PI * (2 * i / n - 0.5);
@@ -71,7 +71,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
 
     function clear_selected(chart, node, edge) {
         node.each(function(n) {
-            n.dcg_expand_selected = false;
+            n.dcg_expand_selected = null;
         });
         draw_selected(chart, node, edge);
     }
@@ -83,8 +83,13 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse) {
     function add_behavior(chart, node, edge) {
         node
             .on('mouseover.expand-collapse', function(d) {
+                var nk = chart.nodeKey.eval(d);
+                var spikes = {
+                    zone: 'one',
+                    n: get_degree(nk) - view_degree(chart, edge, nk)
+                };
                 node.each(function(n) {
-                    n.dcg_expand_selected = n === d;
+                    n.dcg_expand_selected = n === d ? spikes : null;
                 });
                 draw_selected(chart, node, edge);
             })
