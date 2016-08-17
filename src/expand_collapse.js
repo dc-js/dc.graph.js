@@ -45,6 +45,35 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         return edge.filter(fil).size();
     }
 
+    function spike_directioner(rankdir, dir, n) {
+        if(dir==='both')
+            return function(i) {
+                return Math.PI * (2 * i / n - 0.5);
+            };
+        else {
+            var sweep = (n-1)*Math.PI/n, ofs;
+            switch(rankdir) {
+            case 'LR':
+                ofs = 0;
+                break;
+            case 'TD':
+                ofs = Math.PI/2;
+                break;
+            case 'RL':
+                ofs = Math.PI;
+                break;
+            case 'DT':
+                ofs = -Math.PI;
+                break;
+            }
+            if(dir === 'in')
+                ofs += Math.PI;
+            return function(i) {
+                return ofs + sweep * (-.5 + i / (n-1));
+            };
+        }
+    }
+
     function draw_selected(chart, node, edge) {
         var spike = node
             .selectAll('g.spikes')
@@ -60,32 +89,10 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 var key = chart.nodeKey.eval(d);
                 var dir = d.dcg_expand_selected.dir,
                     n = d.dcg_expand_selected.n,
+                    af = spike_directioner(chart.rankdir(), dir, n),
                     ret = Array(n);
                 for(var i = 0; i<n; ++i) {
-                    var a;
-                    switch(dir) {
-                    case 'out':
-                        var sweep = (n-1)*Math.PI/n, ofs;
-                        switch(chart.rankdir()) {
-                        case 'LR':
-                            ofs = 0;
-                            break;
-                        case 'TD':
-                            ofs = Math.PI/2;
-                            break;
-                        case 'RL':
-                            ofs = Math.PI;
-                            break;
-                        case 'DT':
-                            ofs = -Math.PI;
-                            break;
-                        }
-                        a = ofs + sweep * (-.5 + i / (n-1));
-                        break;
-                    case 'both':
-                        a = Math.PI * (2 * i / n - 0.5);
-                        break;
-                    }
+                    var a = af(i);
                     ret[i] = {
                         a: a * 180 / Math.PI,
                         x: Math.cos(a) * d.dcg_rx*.9,
