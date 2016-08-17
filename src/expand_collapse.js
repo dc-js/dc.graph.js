@@ -136,7 +136,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         return view_degree(chart, edge, dir, key) === 1;
     }
 
-    function zonedir(chart, event, d) {
+    function zonedir(chart, event, dirs, d) {
+        if(dirs.length === 1) // we assume it's ['out', 'in']
+            return dirs[0];
         var bound = chart.root().node().getBoundingClientRect();
         var x = event.clientX - bound.left,
             y = event.clientY - bound.top;
@@ -156,10 +158,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
 
     function add_behavior(chart, node, edge) {
         function mousemove(d) {
-            var dir;
-            if(dirs.length === 2) // we assume it's ['out', 'in']
-                dir = zonedir(chart, d3.event, d);
-            else dir = dirs[0];
+            var dir = zonedir(chart, d3.event, dirs, d);
             var nk = chart.nodeKey.eval(d);
             Promise.resolve(get_degree(nk, dir)).then(function(degree) {
                 var spikes = {
@@ -173,28 +172,28 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             });
         }
 
+        function click(d) {
+            var dir = zonedir(chart, d3.event, dirs, d);
+            d.dcg_expanded = d.dcg_expanded || {};
+            if(!d.dcg_expanded[dir]) {
+                expand(chart.nodeKey.eval(d), dir, d3.event.type === 'dblclick');
+                d.dcg_expanded[dir] = true;
+            }
+            else {
+                collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dir), dir);
+                d.dcg_expanded[dir] = false;
+            }
+            draw_selected(chart, node, edge);
+        }
+
         node
             .on('mouseover.expand-collapse', mousemove)
             .on('mousemove.expand-collapse', mousemove)
             .on('mouseout.expand-collapse', function(d) {
                 clear_selected(chart, node, edge);
             })
-            .on('click', function(d) {
-                var dir;
-                if(dirs.length === 2)
-                    dir = zonedir(chart, d3.event, d);
-                else dir = dirs[0];
-                d.dcg_expanded = d.dcg_expanded || {};
-                if(!d.dcg_expanded[dir]) {
-                    expand(chart.nodeKey.eval(d), dir);
-                    d.dcg_expanded[dir] = true;
-                }
-                else {
-                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dir), dir);
-                    d.dcg_expanded[dir] = false;
-                }
-                draw_selected(chart, node, edge);
-            });
+            .on('click', click)
+            .on('dblclick', click);
     }
 
     function remove_behavior(chart, node, edge) {
