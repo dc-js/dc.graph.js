@@ -173,17 +173,32 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         }
 
         function click(d) {
-            var dir = zonedir(chart, d3.event, dirs, d);
-            d.dcg_expanded = d.dcg_expanded || {};
-            if(!d.dcg_expanded[dir]) {
-                expand(chart.nodeKey.eval(d), dir, d3.event.type === 'dblclick');
-                d.dcg_expanded[dir] = true;
+            var event = d3.event;
+            console.log(event.type);
+            function action() {
+                var dir = zonedir(chart, event, dirs, d);
+                d.dcg_expanded = d.dcg_expanded || {};
+                if(!d.dcg_expanded[dir]) {
+                    expand(chart.nodeKey.eval(d), dir, event.type === 'dblclick');
+                    d.dcg_expanded[dir] = true;
+                }
+                else {
+                    collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dir), dir);
+                    d.dcg_expanded[dir] = false;
+                }
+                draw_selected(chart, node, edge);
+                d.dcg_dblclk_timeout = null;
             }
-            else {
-                collapse(chart.nodeKey.eval(d), collapsible.bind(null, chart, edge, dir), dir);
-                d.dcg_expanded[dir] = false;
+            // distinguish click and double click - kind of fishy but seems to work
+            // basically, wait to see if a click becomes a dblclick - but it's even worse
+            // because you'll receive a second click before the dblclick on most browsers
+            if(d.dcg_dblclk_timeout) {
+                window.clearTimeout(d.dcg_dblclk_timeout);
+                if(event.type === 'dblclick')
+                    action();
+                d.dcg_dblclk_timeout = null;
             }
-            draw_selected(chart, node, edge);
+            else d.dcg_dblclk_timeout = window.setTimeout(action, 200);
         }
 
         node
