@@ -2024,8 +2024,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _defs = _svg.append('svg:defs');
 
-        if(_chart.mouseZoomable())
+        if(_chart.mouseZoomable()) {
             _svg.call(_zoom = d3.behavior.zoom().on('zoom', doZoom));
+            _svg.on('dblclick.zoom', null);
+        }
 
         return _svg;
     }
