@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.2
+ *  dc.graph 0.3.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.2
+ * @version 0.3.3
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.2',
+    version: '0.3.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -706,7 +706,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _children = {}, _arrows = {};
     var _running = false; // for detecting concurrency issues
     var _translate = [0,0], _scale = 1;
-    var _zoom;
+    var _zoom, _xScale, _yScale;
     var _anchor, _chartGroup;
 
     /**
@@ -1082,8 +1082,11 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * The shape to use for drawing each node, specified as an object with at least the field
-     * `shape`: ellipse, polygon
-
+     * `shape`. The names of shapes are mostly taken
+     * [from graphviz](http://www.graphviz.org/doc/info/shapes.html); currently ellipse, egg,
+     * triangle, rectangle, diamond, trapezium, parallelogram, pentagon, hexagon, septagon, octagon,
+     * invtriangle, invtrapezium, square, polygon are supported.
+     *
      * If `shape = polygon`:
      * * `sides`: number of sides for a polygon
      * @name nodeShape
@@ -1092,6 +1095,11 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @param {Function|Object} [nodeShape={shape: 'ellipse'}]
      * @return {Function|Object}
      * @return {dc_graph.diagram}
+     * @example
+     * // set shape to diamond or parallelogram based on flag
+     * diagram.nodeShape(function(kv) {
+     *   return {shape: kv.value.flag ? 'diamond' : 'parallelogram'};
+     * });
      **/
     _chart.nodeShape = property(default_shape);
 
@@ -2704,12 +2712,24 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable()) {
-            _svg.call(_zoom = d3.behavior.zoom().on('zoom', doZoom));
+            _xScale = d3.scale.linear();
+            _yScale = d3.scale.linear();
+            _zoom = d3.behavior.zoom()
+                .on('zoom', doZoom)
+                .x(_xScale).y(_yScale);
+            _svg.call(_zoom);
             _svg.on('dblclick.zoom', null);
         }
 
         return _svg;
     }
+
+    _chart.invertCoord = function(clientCoord) {
+        return [
+            _xScale.invert(clientCoord[0]),
+            _yScale.invert(clientCoord[1])
+        ];
+    };
 
     _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
         marker.append('svg:path')
@@ -3659,8 +3679,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         if(dirs.length === 1) // we assume it's ['out', 'in']
             return dirs[0];
         var bound = chart.root().node().getBoundingClientRect();
-        var x = event.clientX - bound.left,
-            y = event.clientY - bound.top;
+        var invert = chart.invertCoord([event.clientX - bound.left,event.clientY - bound.top]),
+            x = invert[0],
+            y = invert[1];
         switch(chart.rankdir()) {
         case 'TB':
             return y > d.cola.y ? 'out' : 'in';
@@ -3708,6 +3729,10 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 draw_selected(chart, node, edge);
                 d.dcg_dblclk_timeout = null;
             }
+            return action();
+            // distinguish click and double click - kind of fishy but seems to work
+            // basically, wait to see if a click becomes a dblclick - but it's even worse
+            // because you'll receive a second click before the dblclick on most browsers
             if(d.dcg_dblclk_timeout) {
                 window.clearTimeout(d.dcg_dblclk_timeout);
                 if(event.type === 'dblclick')
