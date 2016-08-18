@@ -27,7 +27,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _children = {}, _arrows = {};
     var _running = false; // for detecting concurrency issues
     var _translate = [0,0], _scale = 1;
-    var _zoom;
+    var _zoom, _xScale, _yScale;
     var _anchor, _chartGroup;
 
     /**
@@ -403,8 +403,11 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * The shape to use for drawing each node, specified as an object with at least the field
-     * `shape`: ellipse, polygon
-
+     * `shape`. The names of shapes are mostly taken
+     * [from graphviz](http://www.graphviz.org/doc/info/shapes.html); currently ellipse, egg,
+     * triangle, rectangle, diamond, trapezium, parallelogram, pentagon, hexagon, septagon, octagon,
+     * invtriangle, invtrapezium, square, polygon are supported.
+     *
      * If `shape = polygon`:
      * * `sides`: number of sides for a polygon
      * @name nodeShape
@@ -413,6 +416,11 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @param {Function|Object} [nodeShape={shape: 'ellipse'}]
      * @return {Function|Object}
      * @return {dc_graph.diagram}
+     * @example
+     * // set shape to diamond or parallelogram based on flag
+     * diagram.nodeShape(function(kv) {
+     *   return {shape: kv.value.flag ? 'diamond' : 'parallelogram'};
+     * });
      **/
     _chart.nodeShape = property(default_shape);
 
@@ -2025,12 +2033,24 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable()) {
-            _svg.call(_zoom = d3.behavior.zoom().on('zoom', doZoom));
+            _xScale = d3.scale.linear();
+            _yScale = d3.scale.linear();
+            _zoom = d3.behavior.zoom()
+                .on('zoom', doZoom)
+                .x(_xScale).y(_yScale);
+            _svg.call(_zoom);
             _svg.on('dblclick.zoom', null);
         }
 
         return _svg;
     }
+
+    _chart.invertCoord = function(clientCoord) {
+        return [
+            _xScale.invert(clientCoord[0]),
+            _yScale.invert(clientCoord[1])
+        ];
+    };
 
     _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
         marker.append('svg:path')

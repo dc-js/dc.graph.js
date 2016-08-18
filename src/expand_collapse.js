@@ -140,8 +140,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         if(dirs.length === 1) // we assume it's ['out', 'in']
             return dirs[0];
         var bound = chart.root().node().getBoundingClientRect();
-        var x = event.clientX - bound.left,
-            y = event.clientY - bound.top;
+        var invert = chart.invertCoord([event.clientX - bound.left,event.clientY - bound.top]),
+            x = invert[0],
+            y = invert[1];
         switch(chart.rankdir()) {
         case 'TB':
             return y > d.cola.y ? 'out' : 'in';
@@ -189,6 +190,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 draw_selected(chart, node, edge);
                 d.dcg_dblclk_timeout = null;
             }
+            return action();
             // distinguish click and double click - kind of fishy but seems to work
             // basically, wait to see if a click becomes a dblclick - but it's even worse
             // because you'll receive a second click before the dblclick on most browsers
