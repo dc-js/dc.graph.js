@@ -9,6 +9,7 @@ function timeline(parent) {
     var _width, _height;
     var _root = null, _svg = null, _g = null;
     var _tickwidth = 1;
+    var _minHeight = 20;
     var _dispatch = d3.dispatch('jump');
     // input data is just an array of {key: Date, value: {} or {adds: number, dels: number}}
     var _events = null;
@@ -66,13 +67,20 @@ function timeline(parent) {
         return isNaN(height) ? 3 : _y(0) - _y(height);
     }
 
+    _chart.minHeight = function(h) {
+        if(!arguments.length)
+            return _minHeight;
+        _minHeight = h;
+        return _chart;
+    };
+
     _chart.redraw = function() {
         var bl = baseline();
         if(!_x) _x = d3.time.scale();
         if(!_y) _y = d3.scale.linear();
         _x.domain(d3.extent(_events, function(e) { return e.key; }))
             .range([_timewid, _width]);
-        var max = Math.max(20, d3.max(_events, function(e) {
+        var max = Math.max(_minHeight, d3.max(_events, function(e) {
             return e.value[0].key === 'adds' ? Math.max(e.value[0].height, e.value[1].height) : 0;
         }));
         _y.domain([max, -max]).range([0, bl]);
