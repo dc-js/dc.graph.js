@@ -7,8 +7,9 @@ function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLeng
     _d3cola = cola.d3adaptor()
         .avoidOverlaps(true)
         .size([width, height])
-        .handleDisconnected(handleDisconnected)
-        .tickSize(tickSize);
+        .handleDisconnected(handleDisconnected);
+    if(_d3cola.tickSize) // non-standard
+        _d3cola.tickSize(tickSize);
 
     switch(lengthStrategy) {
         case 'symmetric':
