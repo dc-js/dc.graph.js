@@ -79,7 +79,7 @@ function timeline(parent) {
         if(!_x) _x = d3.time.scale();
         if(!_y) _y = d3.scale.linear();
         _x.domain(d3.extent(_events, function(e) { return e.key; }))
-            .range([_timewid, _width]);
+            .range([_timewid, _width-1]);
         var max = Math.max(_minHeight, d3.max(_events, function(e) {
             return e.value[0].key === 'adds' ? Math.max(e.value[0].height, e.value[1].height) : 0;
         }));
