@@ -276,8 +276,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Set or get the function which will be used to retrieve the radius, in pixels, for each
-     * node. This determines the height of nodes, and the width, if `nodeFitLabel` is
-     * false.
+     * node. This determines the height of nodes,and if `nodeFitLabel` is false, the width too.
      * @name nodeRadius
      * @memberof dc_graph.diagram
      * @instance
