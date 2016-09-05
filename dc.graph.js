@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.6
+ *  dc.graph 0.3.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.6
+ * @version 0.3.7
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.6',
+    version: '0.3.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1922,8 +1922,14 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('startOffset', '50%')
                 .attr('xlink:href', function(d) {
                     var id = _chart.textpathId(d);
-                    _chart.addOrRemoveDef(id, true, 'svg:path');
                     return '#' + id;
+                });
+        var textPaths = _defs.selectAll('path.edge-label-path')
+                .data(wedges, _chart.textpathId);
+        var textPathsEnter = textPaths.enter()
+                .append('svg:path').attr({
+                    class: 'edge-label-path',
+                    id: _chart.textpathId
                 });
         edgeLabels.each(function(d) {
             d.dcg_bbox = null;
@@ -2084,7 +2090,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var elapsed = Date.now() - startTime;
                 populate_cola(args.nodes, args.edges);
                 if(_chart.showLayoutSteps())
-                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
+                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                     console.log('cancelled');
                     _worker.postMessage({
@@ -2095,7 +2101,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             case 'end':
                 if(!_chart.showLayoutSteps()) {
                     populate_cola(args.nodes, args.edges);
-                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter);
+                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 }
                 else layout_done(true);
                 var do_zoom;
@@ -2163,15 +2169,16 @@ dc_graph.diagram = function (parent, chartGroup) {
         _chart._updateNode(node);
     }
 
-    _chart.refresh = function(node, edge, edgeHover, edgeLabels) {
+    _chart.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
         node = node || _nodeLayer.selectAll('.node');
         edge = edge || _edgeLayer.selectAll('.edge');
         _refresh(node, edge);
 
         edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
         edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
+        textPaths = textPaths || _defs.selectAll('path.edge-label-path');
         var nullSel = d3.select(null); // no enters
-        draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel);
+        draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel);
     };
 
 
@@ -2232,6 +2239,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         return function(d) {
             var path = d.ports[age][d.parallel].path;
             return generate_path(path.points, path.bezDegree);
+        };
+    }
+
+    function render_edge_label_path(age) {
+        return function(d) {
+            var path = d.ports[age][d.parallel].path;
+            var points = d.target.cola.x < d.source.cola.x ?
+                    path.points.slice(0).reverse() : path.points;
+            return generate_path(points, path.bezDegree);
         };
     }
 
@@ -2338,7 +2354,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
-    function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter) {
+    function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter) {
         console.assert(edge.data().every(has_source_and_target));
 
         var nodeEntered = {};
@@ -2418,12 +2434,28 @@ dc_graph.diagram = function (parent, chartGroup) {
                             edgeEntered[_chart.edgeKey.eval(e)] ? 'old' : 'new';
                     return render_edge_path(when)(e);
                 });
+        textPathsEnter
+            .attr('d', render_edge_label_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
+        var textTrans = textPaths.transition()
+            .duration(transition_duration())
+            .delay(function(e) {
+                return transition_delay(edgeEntered[_chart.edgeKey.eval(e)]);
+            })
+            .attr('opacity', _chart.edgeOpacity.eval)
+            .attr('d', function(e) {
+                var when = _chart.stageTransitions() === 'insmod' &&
+                        edgeEntered[_chart.edgeKey.eval(e)] ? 'old' : 'new';
+                return render_edge_label_path(when)(e);
+            });
         if(_chart.stageTransitions() === 'insmod') {
             // inserted edges transition twice in insmod mode
             if(transition_duration() >= 50) {
                 etrans = etrans.transition()
                     .duration(transition_duration())
                     .attr('d', render_edge_path('new'));
+                textTrans = textTrans.transition()
+                    .duration(transition_duration())
+                    .attr('d', render_edge_label_path('new'));
             } else {
                 // if transitions are too short, we run into various problems,
                 // from transitions not completing to objects not found
@@ -2431,9 +2463,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                 // this also helped once: d3.timer.flush();
                 etrans
                     .attr('d', render_edge_path('new'));
+                textTrans
+                    .attr('d', render_edge_path('new'));
             }
         }
 
+        /*
         edge.each(function(d) {
             var id = _chart.textpathId(d);
             var path = d.ports.new[d.parallel].path;
@@ -2444,10 +2479,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return generate_path(points, path.bezDegree);
                 });
         });
+         */
         // signal layout done when all transitions complete
         // because otherwise client might start another layout and lock the processor
         if(!_chart.showLayoutSteps())
-            endall([ntrans, etrans], function() { layout_done(true); });
+            endall([ntrans, etrans, textTrans], function() { layout_done(true); });
 
         edgeHover.attr('d', render_edge_path('new'));
     }
