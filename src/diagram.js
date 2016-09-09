@@ -980,17 +980,29 @@ dc_graph.diagram = function (parent, chartGroup) {
     function initLayout() {
         if(!_worker)
             _worker = new Worker('js/dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
-        _worker.postMessage({
-            command: 'init',
-            args: {
-                width: _chart.width(),
-                height: _chart.height(),
+        var args = {
+            width: _chart.width(),
+            height: _chart.height()
+        };
+        // generalize this? class hierarchy, what?
+        switch(_chart.layoutAlgorithm()) {
+        case 'cola':
+            Object.assign(args, {
                 handleDisconnected: _chart.handleDisconnected(),
                 lengthStrategy: _chart.lengthStrategy(),
                 baseLength: _chart.baseLength(),
                 flowLayout: _chart.flowLayout(),
                 tickSize: _chart.tickSize()
-            }
+            });
+            break;
+        case 'dagre':
+            Object.assign(args, {
+                rankdir: _chart.rankdir()
+            });
+        }
+        _worker.postMessage({
+            command: 'init',
+            args: args
         });
     }
 

@@ -2,16 +2,15 @@ importScripts('dagre.js');
 
 var _dagreGraph = null, _tick, _done;
 
-function init_dagre(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize) {
+function init_dagre(width, height, rankdir) {
     // Create a new directed graph
     _dagreGraph = new dagre.graphlib.Graph();
 
     // Set an object for the graph label
-    _dagreGraph.setGraph({});
+    _dagreGraph.setGraph({rankdir: rankdir});
 
     // Default to assigning a new object as a label for each new edge.
     _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
-
 }
 
 // node and edge objects shared with cola.js, preserved from one iteration
@@ -77,9 +76,7 @@ onmessage = function(e) {
     var args = e.data.args;
     switch(e.data.command) {
     case 'init':
-        init_dagre(args.width, args.height, args.handleDisconnected,
-                    args.lengthStrategy, args.baseLength, args.flowLayout,
-                    args.tickSize);
+        init_dagre(args.width, args.height, args.rankdir);
         break;
     case 'data':
         data_dagre(args.nodes, args.edges, args.constraints, args.opts);
