@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.7
+ *  dc.graph 0.3.8
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.7
+ * @version 0.3.8
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.7',
+    version: '0.3.8',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -955,8 +955,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Set or get the function which will be used to retrieve the radius, in pixels, for each
-     * node. This determines the height of nodes, and the width, if `nodeFitLabel` is
-     * false.
+     * node. This determines the height of nodes,and if `nodeFitLabel` is false, the width too.
      * @name nodeRadius
      * @memberof dc_graph.diagram
      * @instance
@@ -1660,17 +1659,29 @@ dc_graph.diagram = function (parent, chartGroup) {
     function initLayout() {
         if(!_worker)
             _worker = new Worker('js/dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
-        _worker.postMessage({
-            command: 'init',
-            args: {
-                width: _chart.width(),
-                height: _chart.height(),
+        var args = {
+            width: _chart.width(),
+            height: _chart.height()
+        };
+        // generalize this? class hierarchy, what?
+        switch(_chart.layoutAlgorithm()) {
+        case 'cola':
+            Object.assign(args, {
                 handleDisconnected: _chart.handleDisconnected(),
                 lengthStrategy: _chart.lengthStrategy(),
                 baseLength: _chart.baseLength(),
                 flowLayout: _chart.flowLayout(),
                 tickSize: _chart.tickSize()
-            }
+            });
+            break;
+        case 'dagre':
+            Object.assign(args, {
+                rankdir: _chart.rankdir()
+            });
+        }
+        _worker.postMessage({
+            command: 'init',
+            args: args
         });
     }
 
@@ -2468,18 +2479,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             }
         }
 
-        /*
-        edge.each(function(d) {
-            var id = _chart.textpathId(d);
-            var path = d.ports.new[d.parallel].path;
-            var points = d.target.cola.x < d.source.cola.x ?
-                    path.points.slice(0).reverse() : path.points;
-            d3.select('#' + id)
-                .attr('d', function(d) {
-                    return generate_path(points, path.bezDegree);
-                });
-        });
-         */
         // signal layout done when all transitions complete
         // because otherwise client might start another layout and lock the processor
         if(!_chart.showLayoutSteps())
