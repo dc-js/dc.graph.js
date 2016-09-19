@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.9
+ *  dc.graph 0.3.10
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -47,7 +47,7 @@ var _dagreGraph = null, _tick, _done;
 
 function init_dagre(width, height, rankdir) {
     // Create a new directed graph
-    _dagreGraph = new dagre.graphlib.Graph();
+    _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
 
     // Set an object for the graph label
     _dagreGraph.setGraph({rankdir: rankdir});
@@ -81,7 +81,7 @@ function data_dagre(nodes, edges, constraints, opts) {
     }, function(k, o, e) {
         _dagreGraph.setEdge(e.dcg_edgeSource, e.dcg_edgeTarget, o);
     }, function(k, e) {
-        _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget);
+        _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget, e.dcg_edgeKey);
     });
 
     function postResponseState(response) {
