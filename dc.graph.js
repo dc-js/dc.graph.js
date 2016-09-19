@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.8
+ *  dc.graph 0.3.9
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.8
+ * @version 0.3.9
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.8',
+    version: '0.3.9',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3374,6 +3374,49 @@ dc_graph.tip.table = function() {
     return gen;
 };
 
+dc_graph.select_nodes = function(props) {
+    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
+    var _selected = [];
+
+    function add_behavior(chart, node, edge) {
+        chart.cascade(50, true, conditional_properties(function(n) {
+            return _selected.indexOf(n.orig.key) >= 0;
+        }, null, props));
+        node.on('click.select-nodes', function(d) {
+            _selected = [chart.nodeKey.eval(d)];
+            chart.refresh(node, edge);
+            select_nodes_group.node_set_changed(_selected);
+            d3.event.stopPropagation();
+        });
+        chart.svg().on('click.select-nodes', function(d) {
+            _selected = [];
+            chart.refresh(node, edge);
+            select_nodes_group.node_set_changed(_selected);
+        });
+    }
+
+    function remove_behavior(chart, node, edge) {
+        node.on('click.select-nodes', null);
+        chart.svg().on('click.select-nodes', null);
+        chart.cascade(50, false, props);
+    }
+
+    return dc_graph.behavior('select-nodes', {
+        add_behavior: add_behavior,
+        remove_behavior: function(chart, node, edge) {
+            remove_behavior(chart, node, edge);
+        }
+    });
+};
+
+dc_graph.select_nodes_group = function(brushgroup) {
+    window.chart_registry.create_type('select-nodes', function() {
+        return d3.dispatch('node_set_changed');
+    });
+
+    return window.chart_registry.create_group('select-nodes', brushgroup);
+};
+
 dc_graph.highlight_neighbors = function(props) {
     function clear_all_highlights(edge) {
         edge.each(function(e) {
@@ -4061,6 +4104,26 @@ dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeT
         return edge;
     })};
 };
+
+dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
+    // adjacenciesAttr, edgeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
+    var edges = Array.prototype.concat.apply([], nodes.map(function(n) {
+        return n[namesIn.adjacencies].map(function(adj) {
+            var e = {};
+            if(namesOut.edgeKey)
+                e[namesOut.edgeKey] = uuid();
+            e[namesOut.edgeSource] = n[namesIn.nodeKey];
+            e[namesOut.edgeTarget] = adj[namesIn.targetKey];
+            e[namesOut.adjacency] = adj;
+            return e;
+        });
+    }));
+    return {
+        nodes: nodes,
+        edges: edges
+    };
+};
+
 
 dc_graph.path_reader = function(pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');

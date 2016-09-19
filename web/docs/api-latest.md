@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.2.0  
+**Version**: 0.3.9  
 **Example**  
 ```js
 // Example chaining
@@ -60,6 +60,7 @@ chart.width(600)
         * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.flowLayout](#dc_graph.diagram+flowLayout)
+        * [.rankdir](#dc_graph.diagram+rankdir)
         * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -156,6 +157,7 @@ visualization versus conventional charts.
     * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.flowLayout](#dc_graph.diagram+flowLayout)
+    * [.rankdir](#dc_graph.diagram+rankdir)
     * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -404,8 +406,7 @@ be displayed. By default, looks for `.value.targetname`.
 
 #### diagram.nodeRadius ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the radius, in pixels, for each
-node. This determines the height of nodes, and the width, if `nodeFitLabel` is
-false.
+node. This determines the height of nodes,and if `nodeFitLabel` is false, the width too.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 
@@ -531,7 +532,11 @@ Whether to fit the node shape around the label
 
 #### diagram.nodeShape ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 The shape to use for drawing each node, specified as an object with at least the field
-`shape`: ellipse, polygon
+`shape`. The names of shapes are mostly taken
+[from graphviz](http://www.graphviz.org/doc/info/shapes.html); currently ellipse, egg,
+triangle, rectangle, diamond, trapezium, parallelogram, pentagon, hexagon, septagon, octagon,
+invtriangle, invtrapezium, square, polygon are supported.
+
 If `shape = polygon`:
 * `sides`: number of sides for a polygon
 
@@ -541,6 +546,13 @@ If `shape = polygon`:
 | --- | --- | --- |
 | [nodeShape] | <code>function</code> &#124; <code>Object</code> | <code>{shape: &#x27;ellipse&#x27;}</code> | 
 
+**Example**  
+```js
+// set shape to diamond or parallelogram based on flag
+diagram.nodeShape(function(kv) {
+  return {shape: kv.value.flag ? 'diamond' : 'parallelogram'};
+});
+```
 <a name="dc_graph.diagram+nodeTitle"></a>
 
 #### diagram.nodeTitle ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -738,6 +750,9 @@ chart.edgeLength(function(kv) {
 <a name="dc_graph.diagram+flowLayout"></a>
 
 #### diagram.flowLayout
+This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
+now it is separate.
+
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 
 | Param | Type |
@@ -751,6 +766,18 @@ chart.flowLayout(null)
 // flow in x with min separation 200
 chart.flowLayout({axis: 'x', minSeparation: 200})
 ```
+<a name="dc_graph.diagram+rankdir"></a>
+
+#### diagram.rankdir
+Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
+generated from graphviz-style since it is more general.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [rankdir] | <code>String</code> | 
+
 <a name="dc_graph.diagram+baseLength"></a>
 
 #### diagram.baseLength ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
