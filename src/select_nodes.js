@@ -1,4 +1,5 @@
 dc_graph.select_nodes = function(props) {
+    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
     var _selected = [];
 
     function add_behavior(chart, node, edge) {
@@ -8,18 +9,19 @@ dc_graph.select_nodes = function(props) {
         node.on('click.select-nodes', function(d) {
             _selected = [chart.nodeKey.eval(d)];
             chart.refresh(node, edge);
+            select_nodes_group.node_set_changed(_selected);
+            d3.event.stopPropagation();
         });
-        /*
         chart.svg().on('click.select-nodes', function(d) {
             _selected = [];
             chart.refresh(node, edge);
+            select_nodes_group.node_set_changed(_selected);
         });
-         */
     }
 
     function remove_behavior(chart, node, edge) {
-        node
-            .on('click.select-nodes', null);
+        node.on('click.select-nodes', null);
+        chart.svg().on('click.select-nodes', null);
         chart.cascade(50, false, props);
     }
 
@@ -31,3 +33,10 @@ dc_graph.select_nodes = function(props) {
     });
 };
 
+dc_graph.select_nodes_group = function(brushgroup) {
+    window.chart_registry.create_type('select-nodes', function() {
+        return d3.dispatch('node_set_changed');
+    });
+
+    return window.chart_registry.create_group('select-nodes', brushgroup);
+};
