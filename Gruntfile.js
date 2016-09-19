@@ -266,7 +266,7 @@ module.exports.jsFiles = [
     'src/load_graph.js',
     'src/munge_graph.js',
     'src/flat_group.js',
-    'src/convert_nest.js',
+    'src/convert.js',
     'src/path_reader.js',
     'src/path_selector.js',
     'src/generate.js',
