@@ -35,3 +35,23 @@ dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeT
         return edge;
     })};
 };
+
+dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
+    // adjacenciesAttr, edgeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
+    var edges = Array.prototype.concat.apply([], nodes.map(function(n) {
+        return n[namesIn.adjacencies].map(function(adj) {
+            var e = {};
+            if(namesOut.edgeKey)
+                e[namesOut.edgeKey] = uuid();
+            e[namesOut.edgeSource] = n[namesIn.nodeKey];
+            e[namesOut.edgeTarget] = adj[namesIn.targetKey];
+            e[namesOut.adjacency] = adj;
+            return e;
+        });
+    }));
+    return {
+        nodes: nodes,
+        edges: edges
+    };
+};
+
