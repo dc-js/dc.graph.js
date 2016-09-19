@@ -4,7 +4,7 @@ var _dagreGraph = null, _tick, _done;
 
 function init_dagre(width, height, rankdir) {
     // Create a new directed graph
-    _dagreGraph = new dagre.graphlib.Graph();
+    _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
 
     // Set an object for the graph label
     _dagreGraph.setGraph({rankdir: rankdir});
@@ -38,7 +38,7 @@ function data_dagre(nodes, edges, constraints, opts) {
     }, function(k, o, e) {
         _dagreGraph.setEdge(e.dcg_edgeSource, e.dcg_edgeTarget, o);
     }, function(k, e) {
-        _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget);
+        _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget, e.dcg_edgeKey);
     });
 
     function postResponseState(response) {
