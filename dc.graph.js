@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.10
+ *  dc.graph 0.3.11
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.10
+ * @version 0.3.11
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.10',
+    version: '0.3.11',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3374,6 +3374,8 @@ dc_graph.tip.table = function() {
     return gen;
 };
 
+// this currently only supports single selection with a click
+// but it can be expanded with modifier-key clicks and rectangular selection etc.
 dc_graph.select_nodes = function(props) {
     var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
     var _selected = [];
@@ -3393,6 +3395,12 @@ dc_graph.select_nodes = function(props) {
             chart.refresh(node, edge);
             select_nodes_group.node_set_changed(_selected);
         });
+        // drop any selected which no longer exist in the diagram
+        var present = node.data().map(function(d) { return d.orig.key; });
+        var nselect = _selected.length;
+        _selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
+        if(_selected.length !== nselect)
+            select_nodes_group.node_set_changed(_selected);
     }
 
     function remove_behavior(chart, node, edge) {
