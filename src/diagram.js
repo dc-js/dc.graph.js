@@ -111,11 +111,16 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @name fitStrategy
      * @memberof dc_graph.diagram
      * @instance
-     * @param {String} [fitStrategy=null]
+     * @param {String} [fitStrategy='default']
      * @return {String}
      * @return {dc_graph.diagram}
      **/
     _chart.fitStrategy = property('default');
+
+    /**
+     * Do not allow panning (scrolling) to push the diagram out of the viewable area, if there
+     * is space for it to be shown. */
+    _chart.restrictPan = property(false);
 
     /**
      * Auto-zoom behavior.
@@ -1642,17 +1647,18 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
     }
 
+    var _bounds;
     function auto_zoom(node, edge) {
-        if(_chart.fitStrategy() && node.size()) {
+        if((_chart.fitStrategy() || _chart.restrictPan()) && node.size()) {
             // assumption: there can be no edges without nodes
-            var bounds = node.data().map(node_bounds).reduce(union_bounds);
-            bounds = edge.data().map(edge_bounds).reduce(union_bounds, bounds);
-            if(!bounds)
+            _bounds = node.data().map(node_bounds).reduce(union_bounds);
+            _bounds = edge.data().map(edge_bounds).reduce(union_bounds, _bounds);
+            if(!_bounds)
                 return;
-            var vwidth = bounds.right - bounds.left, vheight = bounds.bottom - bounds.top,
+            var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
                 swidth =  _chart.width(), sheight = _chart.height();
             if(_chart.DEBUG_BOUNDS)
-                debug_bounds(bounds);
+                debug_bounds(_bounds);
             var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
                 amv; // align margins vertically
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
@@ -1679,7 +1685,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
             _svg.attr({
-                viewBox: [bounds.left, bounds.top, vwidth, vheight].join(' '),
+                viewBox: [_bounds.left, _bounds.top, vwidth, vheight].join(' '),
                 preserveAspectRatio: pAR
             });
             _zoom.translate(translate).scale(scale).event(_svg);
@@ -2051,7 +2057,21 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function doZoom() {
-        globalTransform(d3.event.translate, d3.event.scale);
+        var translate = d3.event.translate;
+        if(_chart.restrictPan()) {
+            var xDomain = _xScale.domain(), yDomain = _yScale.domain();
+            var adjust = false, x, y;
+            // adapted from https://github.com/d3/d3/issues/1084
+            if(_bounds.left < xDomain[0] && _bounds.right < xDomain[1]) {
+                x = translate[0] + Math.min(-_xScale(_bounds.left) + _xScale.range()[0],
+                                            -_xScale(_bounds.right) + _xScale.range()[1]);
+                translate = [x, translate[1]];
+                adjust = false;
+            }
+            if(adjust)
+                _zoom.translate(translate);
+        }
+        globalTransform(translate, d3.event.scale);
     }
 
     function resizeSvg(w, h) {
@@ -2068,8 +2088,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable()) {
-            _xScale = d3.scale.linear();
-            _yScale = d3.scale.linear();
+            // start out with 1:1 zoom
+            _xScale = d3.scale.linear()
+                .domain([0, _chart.width()])
+                .range([0, _chart.width()]);
+            _yScale = d3.scale.linear()
+                .domain([0, _chart.height()])
+                .range([0, _chart.height()]);
             _zoom = d3.behavior.zoom()
                 .on('zoom', doZoom)
                 .x(_xScale).y(_yScale);
