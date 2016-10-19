@@ -66,7 +66,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 ofs = Math.PI;
                 break;
             case 'BT':
-                ofs = -Math.PI;
+                ofs = -Math.PI/2;
                 break;
             }
             if(dir === 'in')
