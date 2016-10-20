@@ -146,8 +146,8 @@ function timeline(parent) {
                 return _x(d.x2) - _x(d.x1);
             },
             height: _height,
-            fill: _region.color || 'blue',
-            opacity: _region.opacity || 0.5
+            fill: _region && _region.color || 'blue',
+            opacity: _region && _region.opacity || 0.5
         });
         region.exit().remove();
 
