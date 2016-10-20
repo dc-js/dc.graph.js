@@ -2,8 +2,6 @@ var data_stats;
 
 var cb_colors = colorbrewer.Paired[12];
 cb_colors[5] = cb_colors[11];
-cb_colors[8] = cb_colors[1];
-cb_colors[1] = 'dimgray';
 
 // arbitrary assigning of shapes as POC
 var shapes = ['invtrapezium', 'ellipse', 'diamond', 'trapezium', 'pentagon', 'hexagon', 'egg',
@@ -728,7 +726,7 @@ function init() {
             .nodeFitLabel(tracker.vals.fit_labels)
             .nodeRadius(function(n) {
                 switch(n.value.ostype) {
-                case 'PRT': return 5;
+                case 'PRT': return 15;
                 default: return 30;
                 }
             })
