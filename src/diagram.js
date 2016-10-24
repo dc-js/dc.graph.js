@@ -1453,8 +1453,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 default:
                     do_zoom = false;
                 }
+                calc_bounds(node, edge);
                 if(do_zoom)
-                    auto_zoom(node, edge);
+                    auto_zoom();
                 break;
             case 'start':
                 console.log('algo ' + _chart.layoutAlgorithm() + ' started.');
@@ -1648,11 +1649,16 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     var _bounds;
-    function auto_zoom(node, edge) {
+    function calc_bounds(node, edge) {
         if((_chart.fitStrategy() || _chart.restrictPan()) && node.size()) {
             // assumption: there can be no edges without nodes
             _bounds = node.data().map(node_bounds).reduce(union_bounds);
             _bounds = edge.data().map(edge_bounds).reduce(union_bounds, _bounds);
+        }
+    }
+
+    function auto_zoom() {
+        if(_chart.fitStrategy()) {
             if(!_bounds)
                 return;
             var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
@@ -2063,11 +2069,20 @@ dc_graph.diagram = function (parent, chartGroup) {
             var adjust = false, x, y;
             // adapted from https://github.com/d3/d3/issues/1084
             if(_bounds.left < xDomain[0] && _bounds.right < xDomain[1]) {
-                x = translate[0] + Math.min(-_xScale(_bounds.left) + _xScale.range()[0],
-                                            -_xScale(_bounds.right) + _xScale.range()[1]);
-                translate = [x, translate[1]];
-                adjust = false;
+                translate[0] = translate[0] - _xScale(_bounds.left) + _xScale.range()[0];
+                adjust = true;
+            } else if(_bounds.left > xDomain[0] && _bounds.right > xDomain[1]) {
+                translate[0] = translate[0] - _xScale(_bounds.right) + _xScale.range()[1];
+                adjust = true;
             }
+            if(_bounds.top < yDomain[0] && _bounds.bottom < yDomain[1]) {
+                translate[1] = translate[1] - _yScale(_bounds.top) + _yScale.range()[0];
+                adjust = true;
+            } else if(_bounds.top > yDomain[0] && _bounds.bottom > yDomain[1]) {
+                translate[1] = translate[1] - _yScale(_bounds.bottom) + _yScale.range()[1];
+                adjust = true;
+            }
+
             if(adjust)
                 _zoom.translate(translate);
         }
