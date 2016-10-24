@@ -140,6 +140,7 @@ module.exports = function (grunt) {
                             'dc.graph.tracker.domain.js',
                             'lysenko-interval-tree.js',
                             'querystring.js',
+                            'chart.registry.js',
                             'timeline.js',
                             'node_modules/crossfilter/crossfilter.js',
                             'node_modules/d3/d3.js',
