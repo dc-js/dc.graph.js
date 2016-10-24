@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.12
+ *  dc.graph 0.3.13
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.12
+ * @version 0.3.13
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.12',
+    version: '0.3.13',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -4121,8 +4121,9 @@ dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
             if(namesOut.edgeKey)
                 e[namesOut.edgeKey] = uuid();
             e[namesOut.edgeSource] = n[namesIn.nodeKey];
-            e[namesOut.edgeTarget] = adj[namesIn.targetKey];
-            e[namesOut.adjacency] = adj;
+            e[namesOut.edgeTarget] = namesIn.targetKey ? adj[namesIn.targetKey] : adj;
+            if(namesOut.adjacency)
+                e[namesOut.adjacency] = adj;
             return e;
         });
     }));
