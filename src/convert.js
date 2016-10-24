@@ -44,8 +44,9 @@ dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
             if(namesOut.edgeKey)
                 e[namesOut.edgeKey] = uuid();
             e[namesOut.edgeSource] = n[namesIn.nodeKey];
-            e[namesOut.edgeTarget] = adj[namesIn.targetKey];
-            e[namesOut.adjacency] = adj;
+            e[namesOut.edgeTarget] = namesIn.targetKey ? adj[namesIn.targetKey] : adj;
+            if(namesOut.adjacency)
+                e[namesOut.adjacency] = adj;
             return e;
         });
     }));
