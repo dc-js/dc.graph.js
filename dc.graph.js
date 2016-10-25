@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.13
+ *  dc.graph 0.3.14
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.13
+ * @version 0.3.14
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.13',
+    version: '0.3.14',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -790,11 +790,16 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @name fitStrategy
      * @memberof dc_graph.diagram
      * @instance
-     * @param {String} [fitStrategy=null]
+     * @param {String} [fitStrategy='default']
      * @return {String}
      * @return {dc_graph.diagram}
      **/
     _chart.fitStrategy = property('default');
+
+    /**
+     * Do not allow panning (scrolling) to push the diagram out of the viewable area, if there
+     * is space for it to be shown. */
+    _chart.restrictPan = property(false);
 
     /**
      * Auto-zoom behavior.
@@ -2127,8 +2132,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 default:
                     do_zoom = false;
                 }
+                calc_bounds(node, edge);
                 if(do_zoom)
-                    auto_zoom(node, edge);
+                    auto_zoom();
                 break;
             case 'start':
                 console.log('algo ' + _chart.layoutAlgorithm() + ' started.');
@@ -2321,17 +2327,23 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
     }
 
-    function auto_zoom(node, edge) {
-        if(_chart.fitStrategy() && node.size()) {
+    var _bounds;
+    function calc_bounds(node, edge) {
+        if((_chart.fitStrategy() || _chart.restrictPan()) && node.size()) {
             // assumption: there can be no edges without nodes
-            var bounds = node.data().map(node_bounds).reduce(union_bounds);
-            bounds = edge.data().map(edge_bounds).reduce(union_bounds, bounds);
-            if(!bounds)
+            _bounds = node.data().map(node_bounds).reduce(union_bounds);
+            _bounds = edge.data().map(edge_bounds).reduce(union_bounds, _bounds);
+        }
+    }
+
+    function auto_zoom() {
+        if(_chart.fitStrategy()) {
+            if(!_bounds)
                 return;
-            var vwidth = bounds.right - bounds.left, vheight = bounds.bottom - bounds.top,
-                swidth =  _chart.width(), sheight = _chart.height();
+            var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
+                swidth =  _chart.width(), sheight = _chart.height(), viewBox;
             if(_chart.DEBUG_BOUNDS)
-                debug_bounds(bounds);
+                debug_bounds(_bounds);
             var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
                 amv; // align margins vertically
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
@@ -2350,17 +2362,52 @@ dc_graph.diagram = function (parent, chartGroup) {
                     (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
                     (swidth - _chart.margins().left - _chart.margins().right) / swidth;
             }
-            else if(typeof fitS === 'function')
-                pAR = fitS(vwidth, vheight, swidth, sheight);
+            else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
+                var sides = fitS.split('_')[1].toLowerCase().split('');
+                if(sides.length > 2)
+                    throw new Error("align_ expecting 0-2 sides, not " + sides.length);
+                var bounds = margined_bounds();
+                translate = _zoom.translate();
+                scale = _zoom.scale();
+                sides.forEach(function(s) {
+                    switch(s) {
+                    case 'l':
+                        translate[0] = align_left(translate, bounds.left);
+                        break;
+                    case 't':
+                        translate[1] = align_top(translate, bounds.top);
+                        break;
+                    case 'r':
+                        translate[0] = align_right(translate, bounds.right);
+                        break;
+                    case 'b':
+                        translate[1] = align_bottom(translate, bounds.bottom);
+                        break;
+                    default:
+                        throw new Error("align_ expecting l t r or b, not '" + s + "'");
+                    }
+                });
+            }
+            else if(typeof fitS === 'function') {
+                var fit = fitS(vwidth, vheight, swidth, sheight);
+                pAR = fit.pAR;
+                translate = fit.translate;
+                scale = fit.scale;
+                viewBox = fit.viewBox;
+            }
             else if(typeof fitS === 'string')
                 pAR = _chart.fitStrategy();
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
-            _svg.attr({
-                viewBox: [bounds.left, bounds.top, vwidth, vheight].join(' '),
-                preserveAspectRatio: pAR
-            });
+            if(pAR !== undefined) {
+                if(!viewBox)
+                    viewBox = [_bounds.left, _bounds.top, vwidth, vheight].join(' ');
+                _svg.attr({
+                    viewBox: viewBox,
+                    preserveAspectRatio: pAR
+                });
+            }
             _zoom.translate(translate).scale(scale).event(_svg);
         }
     }
@@ -2729,8 +2776,84 @@ dc_graph.diagram = function (parent, chartGroup) {
         _g.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
     }
 
+    function margined_bounds() {
+        return {
+            left: _bounds.left - _chart.margins().left,
+            top: _bounds.top - _chart.margins().top,
+            right: _bounds.right + _chart.margins().right,
+            bottom: _bounds.bottom + _chart.margins().bottom
+        };
+    }
+
+    // with thanks to comments in https://github.com/d3/d3/issues/1084
+    function align_left(translate, x) {
+        return translate[0] - _xScale(x) + _xScale.range()[0];
+    }
+    function align_top(translate, y) {
+        return translate[1] - _yScale(y) + _yScale.range()[0];
+    }
+    function align_right(translate, x) {
+        return translate[0] - _xScale(x) + _xScale.range()[1];
+    }
+    function align_bottom(translate, y) {
+        return translate[1] - _yScale(y) + _yScale.range()[1];;
+    }
+
     function doZoom() {
-        globalTransform(d3.event.translate, d3.event.scale);
+        var translate = d3.event.translate;
+        if(_chart.restrictPan()) {
+            var xDomain = _xScale.domain(), yDomain = _yScale.domain();
+            var bounds = margined_bounds();
+            var less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
+                lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
+            var align, nothing = 0;
+            if(less1 && less2)
+                if(lessExt)
+                    align = 'left';
+                else
+                    align = 'right';
+            else if(!less1 && !less2)
+                if(lessExt)
+                    align = 'right';
+                else
+                    align = 'left';
+            switch(align) {
+            case 'left':
+                translate[0] = align_left(translate, bounds.left);
+                break;
+            case 'right':
+                translate[0] = align_right(translate, bounds.right);
+                break;
+            default:
+                ++nothing;
+            }
+            less1 = bounds.top < yDomain[0]; less2 = bounds.bottom < yDomain[1];
+            lessExt = (bounds.bottom - bounds.top) < (yDomain[1] - yDomain[0]);
+            if(less1 && less2)
+                if(lessExt)
+                    align = 'top';
+                else
+                    align = 'bottom';
+            else if(!less1 && !less2)
+                if(lessExt)
+                    align = 'bottom';
+                else
+                    align = 'top';
+            switch(align) {
+            case 'top':
+                translate[1] = align_top(translate, bounds.top);
+                break;
+            case 'bottom':
+                translate[1] = align_bottom(translate, bounds.bottom);
+                break;
+            default:
+                ++nothing;
+            }
+
+            if(nothing<2)
+                _zoom.translate(translate);
+        }
+        globalTransform(translate, d3.event.scale);
     }
 
     function resizeSvg(w, h) {
@@ -2747,8 +2870,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable()) {
-            _xScale = d3.scale.linear();
-            _yScale = d3.scale.linear();
+            // start out with 1:1 zoom
+            _xScale = d3.scale.linear()
+                .domain([0, _chart.width()])
+                .range([0, _chart.width()]);
+            _yScale = d3.scale.linear()
+                .domain([0, _chart.height()])
+                .range([0, _chart.height()]);
             _zoom = d3.behavior.zoom()
                 .on('zoom', doZoom)
                 .x(_xScale).y(_yScale);
