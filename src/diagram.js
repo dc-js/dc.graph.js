@@ -2075,7 +2075,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     align = 'left';
                 else
                     align = 'right';
-            if(!less1 && !less2)
+            else if(!less1 && !less2)
                 if(lessExt)
                     align = 'right';
                 else
@@ -2097,7 +2097,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     align = 'top';
                 else
                     align = 'bottom';
-            if(!less1 && !less2)
+            else if(!less1 && !less2)
                 if(lessExt)
                     align = 'bottom';
                 else
