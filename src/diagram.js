@@ -1721,7 +1721,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
-            if(pAR) {
+            if(pAR !== undefined) {
                 if(!viewBox)
                     viewBox = [_bounds.left, _bounds.top, vwidth, vheight].join(' ');
                 _svg.attr({
