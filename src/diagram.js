@@ -2065,25 +2065,55 @@ dc_graph.diagram = function (parent, chartGroup) {
     function doZoom() {
         var translate = d3.event.translate;
         if(_chart.restrictPan()) {
+            // with thanks to comments in https://github.com/d3/d3/issues/1084
             var xDomain = _xScale.domain(), yDomain = _yScale.domain();
-            var adjust = false, x, y;
-            // adapted from https://github.com/d3/d3/issues/1084
-            if(_bounds.left < xDomain[0] && _bounds.right < xDomain[1]) {
+            var less1 = _bounds.left < xDomain[0], less2 = _bounds.right < xDomain[1],
+                lessExt = (_bounds.right - _bounds.left) < (xDomain[1] - xDomain[0]);
+            var align, nothing = 0;
+            if(less1 && less2)
+                if(lessExt)
+                    align = 'left';
+                else
+                    align = 'right';
+            if(!less1 && !less2)
+                if(lessExt)
+                    align = 'right';
+                else
+                    align = 'left';
+            switch(align) {
+            case 'left':
                 translate[0] = translate[0] - _xScale(_bounds.left) + _xScale.range()[0];
-                adjust = true;
-            } else if(_bounds.left > xDomain[0] && _bounds.right > xDomain[1]) {
+                break;
+            case 'right':
                 translate[0] = translate[0] - _xScale(_bounds.right) + _xScale.range()[1];
-                adjust = true;
+                break;
+            default:
+                ++nothing;
             }
-            if(_bounds.top < yDomain[0] && _bounds.bottom < yDomain[1]) {
+            less1 = _bounds.top < yDomain[0]; less2 = _bounds.bottom < yDomain[1];
+            lessExt = (_bounds.bottom - _bounds.top) < (yDomain[1] - yDomain[0]);
+            if(less1 && less2)
+                if(lessExt)
+                    align = 'top';
+                else
+                    align = 'bottom';
+            if(!less1 && !less2)
+                if(lessExt)
+                    align = 'bottom';
+                else
+                    align = 'top';
+            switch(align) {
+            case 'top':
                 translate[1] = translate[1] - _yScale(_bounds.top) + _yScale.range()[0];
-                adjust = true;
-            } else if(_bounds.top > yDomain[0] && _bounds.bottom > yDomain[1]) {
+                break;
+            case 'bottom':
                 translate[1] = translate[1] - _yScale(_bounds.bottom) + _yScale.range()[1];
-                adjust = true;
+                break;
+            default:
+                ++nothing;
             }
 
-            if(adjust)
+            if(nothing<2)
                 _zoom.translate(translate);
         }
         globalTransform(translate, d3.event.scale);
