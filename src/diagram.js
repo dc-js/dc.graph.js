@@ -1662,7 +1662,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_bounds)
                 return;
             var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
-                swidth =  _chart.width(), sheight = _chart.height();
+                swidth =  _chart.width(), sheight = _chart.height(), viewBox;
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(_bounds);
             var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
@@ -1683,17 +1683,52 @@ dc_graph.diagram = function (parent, chartGroup) {
                     (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
                     (swidth - _chart.margins().left - _chart.margins().right) / swidth;
             }
-            else if(typeof fitS === 'function')
-                pAR = fitS(vwidth, vheight, swidth, sheight);
+            else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
+                var sides = fitS.split('_')[1].toLowerCase().split('');
+                if(sides.length > 2)
+                    throw new Error("align_ expecting 0-2 sides, not " + sides.length);
+                var bounds = margined_bounds();
+                translate = _zoom.translate();
+                scale = _zoom.scale();
+                sides.forEach(function(s) {
+                    switch(s) {
+                    case 'l':
+                        translate[0] = align_left(translate, bounds.left);
+                        break;
+                    case 't':
+                        translate[1] = align_top(translate, bounds.top);
+                        break;
+                    case 'r':
+                        translate[0] = align_right(translate, bounds.right);
+                        break;
+                    case 'b':
+                        translate[1] = align_bottom(translate, bounds.bottom);
+                        break;
+                    default:
+                        throw new Error("align_ expecting l t r or b, not '" + s + "'");
+                    }
+                });
+            }
+            else if(typeof fitS === 'function') {
+                var fit = fitS(vwidth, vheight, swidth, sheight);
+                pAR = fit.pAR;
+                translate = fit.translate;
+                scale = fit.scale;
+                viewBox = fit.viewBox;
+            }
             else if(typeof fitS === 'string')
                 pAR = _chart.fitStrategy();
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
-            _svg.attr({
-                viewBox: [_bounds.left, _bounds.top, vwidth, vheight].join(' '),
-                preserveAspectRatio: pAR
-            });
+            if(pAR) {
+                if(!viewBox)
+                    viewBox = [_bounds.left, _bounds.top, vwidth, vheight].join(' ');
+                _svg.attr({
+                    viewBox: viewBox,
+                    preserveAspectRatio: pAR
+                });
+            }
             _zoom.translate(translate).scale(scale).event(_svg);
         }
     }
@@ -2062,13 +2097,36 @@ dc_graph.diagram = function (parent, chartGroup) {
         _g.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
     }
 
+    function margined_bounds() {
+        return {
+            left: _bounds.left - _chart.margins().left,
+            top: _bounds.top - _chart.margins().top,
+            right: _bounds.right + _chart.margins().right,
+            bottom: _bounds.bottom + _chart.margins().bottom
+        };
+    }
+
+    // with thanks to comments in https://github.com/d3/d3/issues/1084
+    function align_left(translate, x) {
+        return translate[0] - _xScale(x) + _xScale.range()[0];
+    }
+    function align_top(translate, y) {
+        return translate[1] - _yScale(y) + _yScale.range()[0];
+    }
+    function align_right(translate, x) {
+        return translate[0] - _xScale(x) + _xScale.range()[1];
+    }
+    function align_bottom(translate, y) {
+        return translate[1] - _yScale(y) + _yScale.range()[1];;
+    }
+
     function doZoom() {
         var translate = d3.event.translate;
         if(_chart.restrictPan()) {
-            // with thanks to comments in https://github.com/d3/d3/issues/1084
             var xDomain = _xScale.domain(), yDomain = _yScale.domain();
-            var less1 = _bounds.left < xDomain[0], less2 = _bounds.right < xDomain[1],
-                lessExt = (_bounds.right - _bounds.left) < (xDomain[1] - xDomain[0]);
+            var bounds = margined_bounds();
+            var less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
+                lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
             var align, nothing = 0;
             if(less1 && less2)
                 if(lessExt)
@@ -2082,16 +2140,16 @@ dc_graph.diagram = function (parent, chartGroup) {
                     align = 'left';
             switch(align) {
             case 'left':
-                translate[0] = translate[0] - _xScale(_bounds.left) + _xScale.range()[0];
+                translate[0] = align_left(translate, bounds.left);
                 break;
             case 'right':
-                translate[0] = translate[0] - _xScale(_bounds.right) + _xScale.range()[1];
+                translate[0] = align_right(translate, bounds.right);
                 break;
             default:
                 ++nothing;
             }
-            less1 = _bounds.top < yDomain[0]; less2 = _bounds.bottom < yDomain[1];
-            lessExt = (_bounds.bottom - _bounds.top) < (yDomain[1] - yDomain[0]);
+            less1 = bounds.top < yDomain[0]; less2 = bounds.bottom < yDomain[1];
+            lessExt = (bounds.bottom - bounds.top) < (yDomain[1] - yDomain[0]);
             if(less1 && less2)
                 if(lessExt)
                     align = 'top';
@@ -2104,10 +2162,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     align = 'top';
             switch(align) {
             case 'top':
-                translate[1] = translate[1] - _yScale(_bounds.top) + _yScale.range()[0];
+                translate[1] = align_top(translate, bounds.top);
                 break;
             case 'bottom':
-                translate[1] = translate[1] - _yScale(_bounds.bottom) + _yScale.range()[1];
+                translate[1] = align_bottom(translate, bounds.bottom);
                 break;
             default:
                 ++nothing;
