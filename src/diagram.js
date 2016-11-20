@@ -1684,30 +1684,43 @@ dc_graph.diagram = function (parent, chartGroup) {
                     (swidth - _chart.margins().left - _chart.margins().right) / swidth;
             }
             else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
-                var sides = fitS.split('_')[1].toLowerCase().split('');
-                if(sides.length > 2)
-                    throw new Error("align_ expecting 0-2 sides, not " + sides.length);
+                var parts = fitS.toLowerCase().split('_');
+                var sides = parts[1];
+                if(!/[ltrb]{1,3}/.test(sides))
+                    throw new Error("align_ expecting 1-3 sides of l t r or b, not " + sides);
+                var center = parts[2] && parts[2].slice(0, 1) === 'c';
+                if(!center && parts[2])
+                    console.warn("align_ second argument '" + parts[2] + "' ignored (only known option is 'c')");
                 var bounds = margined_bounds();
                 translate = _zoom.translate();
                 scale = _zoom.scale();
-                sides.forEach(function(s) {
-                    switch(s) {
-                    case 'l':
-                        translate[0] = align_left(translate, bounds.left);
-                        break;
-                    case 't':
-                        translate[1] = align_top(translate, bounds.top);
-                        break;
-                    case 'r':
-                        translate[0] = align_right(translate, bounds.right);
-                        break;
-                    case 'b':
-                        translate[1] = align_bottom(translate, bounds.bottom);
-                        break;
-                    default:
-                        throw new Error("align_ expecting l t r or b, not '" + s + "'");
+                sides = sides.split('').reduce(function(p, s) {
+                    p[s] = true;
+                    return p;
+                }, {});
+                if(sides.l && sides.r) {
+                    scale = swidth / (bounds.right - bounds.left);
+                    if(center) {
+                        if(sides.t || sides.b) throw new Error("align_ center with third side makes no sense");
+                        translate[1] = align_vcenter(translate, (bounds.top + bounds.bottom)/2);
                     }
-                });
+                }
+                else if(sides.t && sides.b) {
+                    scale = sheight / (bounds.bottom - bounds.top);
+                    if(center) {
+                        if(sides.l || sides.r) throw new Error("align_ center with third side makes no sense");
+                        translate[0] = align_hcenter(translate, (bounds.left + bounds.right)/2);
+                    }
+                }
+                _zoom.scale(scale);
+                if(sides.l)
+                    translate[0] = align_left(translate, bounds.left);
+                if(sides.t)
+                    translate[1] = align_top(translate, bounds.top);
+                if(sides.r)
+                    translate[0] = align_right(translate, bounds.right);
+                if(sides.b)
+                    translate[1] = align_bottom(translate, bounds.bottom);
             }
             else if(typeof fitS === 'function') {
                 var fit = fitS(vwidth, vheight, swidth, sheight);
@@ -2118,6 +2131,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
     function align_bottom(translate, y) {
         return translate[1] - _yScale(y) + _yScale.range()[1];;
+    }
+    function align_hcenter(translate, x) {
+        return translate[0] - _xScale(x) + (_xScale.range()[0] + _xScale.range()[1])/2;
+    }
+    function align_vcenter(translate, y) {
+        return translate[1] - _yScale(y) + (_yScale.range()[0] + _yScale.range()[1])/2;
     }
 
     function doZoom() {
