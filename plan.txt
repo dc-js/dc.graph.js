@@ -1,0 +1,14 @@
+dc.graph.js where we going
+
+missing dagre features
+  - ranksep, nodesep, (edgesep?)
+  - edge routes
+
+synchronous / non-webworker operation
+  - graphviz backend
+  - choice not to use webworker for dagre/cola
+
+organize code better
+  - derived classes for dagre, cola?
+  - graphviz attributes as lingua franca
+
