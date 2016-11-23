@@ -2197,30 +2197,54 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function resizeSvg(w, h) {
+        w = w || _chart.width();
+        h = h || _chart.height();
         if(_svg) {
-            _svg.attr('width', w || _chart.width())
-                .attr('height', h || _chart.height());
+            var ow = +_svg.attr('width'), oh = +_svg.attr('height');
+            if(ow != w || oh != h) {
+                console.log('xScale', ow, w, _xScale.domain(), _xScale.range(), _g ? _g.attr('transform') : null);
+                console.log('yScale', oh, h, _yScale.domain(), _yScale.range());
+                _svg.attr('width', w)
+                    .attr('height', h);
+                if(_chart.mouseZoomable()) {
+                    var od, os = _zoom.scale(), ot = _zoom.translate();
+                    if(ow) {
+                        od = _xScale.domain();
+                        _xScale.domain([od[0], od[0] + w * (od[1] - od[0])/ow]);
+                    }
+                    _xScale.range([0, w]);
+                    if(oh) {
+                        od = _yScale.domain();
+                        _yScale.domain([od[0], od[0] + h * (od[1] - od[0])/oh]);
+                    }
+                    _yScale.range([0, h]);
+                    _zoom.x(_xScale).y(_yScale).scale(os).translate(ot);
+                    _svg.call(_zoom);
+                    if(_bounds)
+                        _zoom.event(_svg);
+                }
+                console.log('xScale after', _xScale.domain(), _xScale.range(),  _g ? _g.attr('transform') : null);
+                console.log('yScale after', _yScale.domain(), _yScale.range());
+            }
         }
     }
 
     function generateSvg() {
+        if(_chart.mouseZoomable()) {
+            // start out with 1:1 zoom
+            _xScale = d3.scale.linear()
+                .domain([0, _chart.width()]);
+            _yScale = d3.scale.linear()
+                .domain([0, _chart.height()]);
+            _zoom = d3.behavior.zoom()
+                .on('zoom', doZoom);
+        }
         _svg = _chart.root().append('svg');
         resizeSvg();
 
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable()) {
-            // start out with 1:1 zoom
-            _xScale = d3.scale.linear()
-                .domain([0, _chart.width()])
-                .range([0, _chart.width()]);
-            _yScale = d3.scale.linear()
-                .domain([0, _chart.height()])
-                .range([0, _chart.height()]);
-            _zoom = d3.behavior.zoom()
-                .on('zoom', doZoom)
-                .x(_xScale).y(_yScale);
-            _svg.call(_zoom);
             _svg.on('dblclick.zoom', null);
         }
 
