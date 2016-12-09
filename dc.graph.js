@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.14
+ *  dc.graph 0.3.15
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.14
+ * @version 0.3.15
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.14',
+    version: '0.3.15',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -212,11 +212,11 @@ Math.hypot = Math.hypot || function() {
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sibf, pushf, popf, skipf) {
+dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree, place, sib, push, pop, skip, finish}
     return function(diagram, nodes, edges) {
-        initf && initf();
-        if(treef)
-            edges = edges.filter(function(e) { return treef(e.orig); });
+        callbacks.init && callbacks.init();
+        if(callbacks.tree)
+            edges = edges.filter(function(e) { return callbacks.tree(e.orig); });
         var indegree = {};
         var outmap = edges.reduce(function(m, e) {
             var tail = diagram.edgeSource.eval(e),
@@ -232,36 +232,37 @@ dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sib
         function place_tree(n, r) {
             var key = diagram.nodeKey.eval(n);
             if(placed[key]) {
-                skipf && skipf(n, indegree[key]);
+                callbacks.skip && callbacks.skip(n, indegree[key]);
                 return;
             }
             if(!rows[r])
                 rows[r] = [];
-            placef && placef(n, r, rows[r]);
+            callbacks.place && callbacks.place(n, r, rows[r]);
             rows[r].push(n);
             placed[key] = true;
             if(outmap[key])
                 outmap[key].forEach(function(e, ei) {
-                    if(ei && sibf)
-                        sibf(false, outmap[key][ei-1].target, e.target);
-                    pushf && pushf();
+                    if(ei && callbacks.sib)
+                        callbacks.sib(false, outmap[key][ei-1].target, e.target);
+                    callbacks.push && callbacks.push();
                     place_tree(e.target, r+1);
                 });
-            popf && popf(n);
+            callbacks.pop && callbacks.pop(n);
         }
 
         var roots;
-        if(rootf)
-            roots = nodes.filter(function(n) { return rootf(n.orig); });
+        if(callbacks.root)
+            roots = nodes.filter(function(n) { return callbacks.root(n.orig); });
         else {
             roots = nodes.filter(function(n) { return !indegree[diagram.nodeKey.eval(n)]; });
         }
         roots.forEach(function(n, ni) {
-            if(ni && sibf)
-                sibf(true, roots[ni-1], n);
-            pushf && pushf();
-            place_tree(n, rowf ? rowf(n.orig) : 0);
+            if(ni && callbacks.sib)
+                callbacks.sib(true, roots[ni-1], n);
+            callbacks.push && callbacks.push();
+            place_tree(n, callbacks.row ? callbacks.row(n.orig) : 0);
         });
+        callbacks.finish(rows);
     };
 };
 
@@ -3260,22 +3261,27 @@ dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
     return function(diagram, nodes, edges) {
         var constraints = [];
         var x = 0;
-        var dfs = dc_graph.depth_first_traversal(null, rootf, null, treef, function(n, r, row) {
-            if(row.length) {
-                var last = row[row.length-1];
-                constraints.push({
-                    left: diagram.nodeKey.eval(last),
-                    right: diagram.nodeKey.eval(n),
-                    axis: 'x',
-                    gap: x-last.foo_x,
-                    equality: true
-                });
+        var dfs = dc_graph.depth_first_traversal({
+            root: rootf,
+            tree: treef,
+            place: function(n, r, row) {
+                if(row.length) {
+                    var last = row[row.length-1];
+                    constraints.push({
+                        left: diagram.nodeKey.eval(last),
+                        right: diagram.nodeKey.eval(n),
+                        axis: 'x',
+                        gap: x-last.foo_x,
+                        equality: true
+                    });
+                }
+                n.foo_x = x;
+                // n.cola.x = x;
+                // n.cola.y = r*ygap;
+            },
+            sib: function() {
+                x += xgap;
             }
-            n.foo_x = x;
-            // n.cola.x = x;
-            // n.cola.y = r*ygap;
-        }, function() {
-            x += xgap;
         });
         dfs(diagram, nodes, edges);
         return constraints;
@@ -3286,28 +3292,81 @@ dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
 dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
     var x;
     nwidth = d3.functor(nwidth);
-    var dfs = dc_graph.depth_first_traversal(function() {
-        x = ofsx;
-    }, rootf, rowf, treef, function(n, r, row) {
-        if(row.length) {
-            var left = row[row.length-1];
-            var g = (nwidth(left) + nwidth(n)) / 2;
-            x = Math.max(x, left.left_x + g);
+    function best_dist(left, right) {
+        return (nwidth(left) + nwidth(right)) / 2;
+    }
+    var dfs = dc_graph.depth_first_traversal({
+        init: function() {
+            x = ofsx;
+        },
+        root: rootf,
+        row: rowf,
+        tree: treef,
+        place: function(n, r, row) {
+            if(row.length) {
+                var left = row[row.length-1];
+                var g = (nwidth(left) + nwidth(n)) / 2;
+                x = Math.max(x, left.left_x + g);
+            }
+            n.left_x = x;
+            n.hit_ins = 1;
+            n.cola.y = r*ygap + ofsy;
+        },
+        sib: function(isroot, left, right) {
+            var g = best_dist(left, right);
+            if(isroot) g = g*1.5;
+            x += g;
+        },
+        pop: function(n) {
+            n.cola.x = (n.left_x + x)/2;
+        },
+        skip: function(n, indegree) {
+            // rolling average of in-neighbor x positions
+            n.cola.x = (n.hit_ins*n.cola.x + x)/++n.hit_ins;
+            if(n.hit_ins === indegree)
+                delete n.hit_ins;
+        },
+        finish: function(rows) {
+            // this is disgusting. patch up any places where nodes overlap by scanning
+            // right far enough to find the space, then fill from left to right at the
+            // minimum gap
+            rows.forEach(function(row) {
+                var sort = row.sort(function(a, b) { return a.cola.x - b.cola.x; });
+                var badi = null, badl = null, want;
+                for(var i=0; i<sort.length-1; ++i) {
+                    var left = sort[i], right = sort[i+1];
+                    if(!badi) {
+                        if(right.cola.x - left.cola.x < best_dist(left, right)) {
+                            badi = i;
+                            badl = left.cola.x;
+                            want = best_dist(left, right);
+                        } // else still not bad
+                    } else {
+                        want += best_dist(left, right);
+                        if(i < sort.length - 2 && right.cola.x < badl + want)
+                            continue; // still bad
+                        else {
+                            if(badi>0)
+                                --badi; // might want to use more left
+                            var l, limit;
+                            if(i < sort.length - 2) { // found space before right
+                                var extra = right.cola.x - (badl + want);
+                                l = sort[badi].cola.x + extra/2;
+                                limit = i+1;
+                            } else {
+                                l = Math.max(sort[badi].cola.x, badl - best_dist(sort[badi], sort[badi+1]) - (want - right.cola.x + badl)/2);
+                                limit = sort.length;
+                            }
+                            for(var j = badi+1; j<limit; ++j) {
+                                l += best_dist(sort[j-1], sort[j]);
+                                sort[j].cola.x = l;
+                            }
+                            badi = badl = want = null;
+                        }
+                    }
+                }
+            });
         }
-        n.left_x = x;
-        n.hit_ins = 1;
-        n.cola.y = r*ygap + ofsy;
-    }, function(isroot, left, right) {
-        var g = (nwidth(left) + nwidth(right)) / 2;
-        if(isroot) g = g*1.5;
-        x += g;
-    }, null, function(n) {
-        n.cola.x = (n.left_x + x)/2;
-    }, function(n, indegree) {
-        // rolling average of in-neighbor x positions
-        n.cola.x = (n.hit_ins*n.cola.x + x)/++n.hit_ins;
-        if(n.hit_ins === indegree)
-            delete n.hit_ins;
     });
 
     return dfs;
