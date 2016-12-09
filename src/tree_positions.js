@@ -37,6 +37,9 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
                 delete n.hit_ins;
         },
         finish: function(rows) {
+            // this is disgusting. patch up any places where nodes overlap by scanning
+            // right far enough to find the space, then fill from left to right at the
+            // minimum gap
             rows.forEach(function(row) {
                 var sort = row.sort(function(a, b) { return a.cola.x - b.cola.x; });
                 var badi = null, badl = null, want;
@@ -50,13 +53,24 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
                         } // else still not bad
                     } else {
                         want += best_dist(left, right);
-                        if(i === sort.length - 2 || right.cola.x < badl + want)
+                        if(i < sort.length - 2 && right.cola.x < badl + want)
                             continue; // still bad
                         else {
                             if(badi>0)
                                 --badi; // might want to use more left
-                            for(var j = badi+1; j<i+1; ++j)
-                                sort[j].cola.x = sort[j-1].cola.x + best_dist(sort[j-1], sort[j]);
+                            var l, limit;
+                            if(i < sort.length - 2) { // found space before right
+                                var extra = right.cola.x - (badl + want);
+                                l = sort[badi].cola.x + extra/2;
+                                limit = i+1;
+                            } else {
+                                l = Math.max(sort[badi].cola.x, badl - best_dist(sort[badi], sort[badi+1]) - (want - right.cola.x + badl)/2);
+                                limit = sort.length;
+                            }
+                            for(var j = badi+1; j<limit; ++j) {
+                                l += best_dist(sort[j-1], sort[j]);
+                                sort[j].cola.x = l;
+                            }
                             badi = badl = want = null;
                         }
                     }
