@@ -4,7 +4,7 @@
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(callbacks) { // {initf, rootf, rowf, treef, placef, sibf, pushf, popf, skipf}
+dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree, place, sib, push, pop, skip, finish}
     return function(diagram, nodes, edges) {
         callbacks.init && callbacks.init();
         if(callbacks.tree)
@@ -54,5 +54,6 @@ dc_graph.depth_first_traversal = function(callbacks) { // {initf, rootf, rowf, t
             callbacks.push && callbacks.push();
             place_tree(n, callbacks.row ? callbacks.row(n.orig) : 0);
         });
+        callbacks.finish(rows);
     };
 };

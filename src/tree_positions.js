@@ -2,6 +2,9 @@
 dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
     var x;
     nwidth = d3.functor(nwidth);
+    function best_dist(left, right) {
+        return (nwidth(left) + nwidth(right)) / 2;
+    }
     var dfs = dc_graph.depth_first_traversal({
         init: function() {
             x = ofsx;
@@ -20,7 +23,7 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
             n.cola.y = r*ygap + ofsy;
         },
         sib: function(isroot, left, right) {
-            var g = (nwidth(left) + nwidth(right)) / 2;
+            var g = best_dist(left, right);
             if(isroot) g = g*1.5;
             x += g;
         },
@@ -32,6 +35,33 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
             n.cola.x = (n.hit_ins*n.cola.x + x)/++n.hit_ins;
             if(n.hit_ins === indegree)
                 delete n.hit_ins;
+        },
+        finish: function(rows) {
+            rows.forEach(function(row) {
+                var sort = row.sort(function(a, b) { return a.cola.x - b.cola.x; });
+                var badi = null, badl = null, want;
+                for(var i=0; i<sort.length-1; ++i) {
+                    var left = sort[i], right = sort[i+1];
+                    if(!badi) {
+                        if(right.cola.x - left.cola.x < best_dist(left, right)) {
+                            badi = i;
+                            badl = left.cola.x;
+                            want = best_dist(left, right);
+                        } // else still not bad
+                    } else {
+                        want += best_dist(left, right);
+                        if(i === sort.length - 2 || right.cola.x < badl + want)
+                            continue; // still bad
+                        else {
+                            if(badi>0)
+                                --badi; // might want to use more left
+                            for(var j = badi+1; j<i+1; ++j)
+                                sort[j].cola.x = sort[j-1].cola.x + best_dist(sort[j-1], sort[j]);
+                            badi = badl = want = null;
+                        }
+                    }
+                }
+            });
         }
     });
 
