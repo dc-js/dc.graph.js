@@ -4,11 +4,11 @@
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sibf, pushf, popf, skipf) {
+dc_graph.depth_first_traversal = function(callbacks) { // {initf, rootf, rowf, treef, placef, sibf, pushf, popf, skipf}
     return function(diagram, nodes, edges) {
-        initf && initf();
-        if(treef)
-            edges = edges.filter(function(e) { return treef(e.orig); });
+        callbacks.init && callbacks.init();
+        if(callbacks.tree)
+            edges = edges.filter(function(e) { return callbacks.tree(e.orig); });
         var indegree = {};
         var outmap = edges.reduce(function(m, e) {
             var tail = diagram.edgeSource.eval(e),
@@ -24,35 +24,35 @@ dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sib
         function place_tree(n, r) {
             var key = diagram.nodeKey.eval(n);
             if(placed[key]) {
-                skipf && skipf(n, indegree[key]);
+                callbacks.skip && callbacks.skip(n, indegree[key]);
                 return;
             }
             if(!rows[r])
                 rows[r] = [];
-            placef && placef(n, r, rows[r]);
+            callbacks.place && callbacks.place(n, r, rows[r]);
             rows[r].push(n);
             placed[key] = true;
             if(outmap[key])
                 outmap[key].forEach(function(e, ei) {
-                    if(ei && sibf)
-                        sibf(false, outmap[key][ei-1].target, e.target);
-                    pushf && pushf();
+                    if(ei && callbacks.sib)
+                        callbacks.sib(false, outmap[key][ei-1].target, e.target);
+                    callbacks.push && callbacks.push();
                     place_tree(e.target, r+1);
                 });
-            popf && popf(n);
+            callbacks.pop && callbacks.pop(n);
         }
 
         var roots;
-        if(rootf)
-            roots = nodes.filter(function(n) { return rootf(n.orig); });
+        if(callbacks.root)
+            roots = nodes.filter(function(n) { return callbacks.root(n.orig); });
         else {
             roots = nodes.filter(function(n) { return !indegree[diagram.nodeKey.eval(n)]; });
         }
         roots.forEach(function(n, ni) {
-            if(ni && sibf)
-                sibf(true, roots[ni-1], n);
-            pushf && pushf();
-            place_tree(n, rowf ? rowf(n.orig) : 0);
+            if(ni && callbacks.sib)
+                callbacks.sib(true, roots[ni-1], n);
+            callbacks.push && callbacks.push();
+            place_tree(n, callbacks.row ? callbacks.row(n.orig) : 0);
         });
     };
 };
