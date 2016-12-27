@@ -43,11 +43,11 @@ function data_d3cola(nodes, edges, constraints, opts) {
         v1.dcg_nodeKey = v.dcg_nodeKey;
         v1.width = v.width;
         v1.height = v.height;
-        v1.fixed = !!v.dgc_nodeFixed;
+        v1.fixed = !!v.dcg_nodeFixed;
 
-        if(typeof v.dgc_nodeFixed === 'object') {
-            v1.x = v.dgc_nodeFixed.x;
-            v1.y = v.dgc_nodeFixed.y;
+        if(typeof v.dcg_nodeFixed === 'object') {
+            v1.x = v.dcg_nodeFixed.x;
+            v1.y = v.dcg_nodeFixed.y;
         }
         else {
             // should we support e.g. null to unset x,y?
