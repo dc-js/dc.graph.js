@@ -16,7 +16,8 @@ diagram
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
     .edgeSource(function(e) { return e.value.source; })
     .edgeTarget(function(e) { return e.value.target; })
-    .nodeLabel(function(n) { return n.key; })
+    .nodeLabel(function(n) { return n.value.label; })
+    .nodeFixed(function(n) { return n.value.fixedPos; })
     .edgeArrowhead('vee');
 
 
