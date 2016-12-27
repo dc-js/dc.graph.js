@@ -267,6 +267,7 @@ module.exports.jsFiles = [
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',
     'src/expand_collapse.js',
+    'src/draw_graphs.js',
     'src/load_graph.js',
     'src/munge_graph.js',
     'src/flat_group.js',
