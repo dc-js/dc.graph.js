@@ -75,27 +75,17 @@ dc_graph.draw_graphs = function(options) {
                         hintData[0].target = {x: target.cola.x, y: target.cola.y};
                         update_hint();
                     }
-                    d3.event.stopPropagation();
                 }
+                d3.event.stopPropagation();
             })
             .on('mouseup.draw-edge', function(d) {
-                if(source) {
-                    console.assert(target);
+                if(source && target)
                     create_edge(chart, source, target);
-                    d3.event.preventDefault();
-                }
-            })
-            .on('click.draw-edge', function(d) {
                 d3.event.stopPropagation();
             });
         chart.svg()
             .on('mousedown.draw-node', function() {
                 source = null;
-            })
-            .on('click.draw-node', function() {
-                if(source)
-                    return; // this was a drag-edge instead
-                create_node(chart, event_coords(chart));
             })
             .on('mousemove.draw-edge', function() {
                 var data = [];
@@ -107,7 +97,10 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-edge', function() {
-                erase_hint();
+                if(source)
+                    erase_hint(); // this was a drag-edge
+                else
+                    create_node(chart, event_coords(chart));
             });
         if(!edgeLayer)
             edgeLayer = chart.g().append('g').attr('class', 'draw-edge');
