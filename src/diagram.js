@@ -1981,6 +1981,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart;
     };
 
+    _chart.g = function () {
+        if (arguments.length)
+            throw new Error('setting .g() not currently allowed');
+        return _g;
+    };
+
     /**
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
