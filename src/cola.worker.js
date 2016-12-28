@@ -45,7 +45,7 @@ function data_d3cola(nodes, edges, constraints, opts) {
         v1.height = v.height;
         v1.fixed = !!v.dcg_nodeFixed;
 
-        if(typeof v.dcg_nodeFixed === 'object') {
+        if(v1.fixed && typeof v.dcg_nodeFixed === 'object') {
             v1.x = v.dcg_nodeFixed.x;
             v1.y = v.dcg_nodeFixed.y;
         }
