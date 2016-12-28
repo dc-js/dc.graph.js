@@ -18,7 +18,10 @@ dc_graph.draw_graphs = function(options) {
     }
 
     function update_hint() {
-        var line = edgeLayer.selectAll('line.hint-edge').data(hintData);
+        var data = hintData.filter(function(h) {
+            return h.source && h.target;
+        });
+        var line = edgeLayer.selectAll('line.hint-edge').data(data);
         line.exit().remove();
         line.enter().append('line')
             .attr('class', 'hint-edge')
@@ -64,24 +67,30 @@ dc_graph.draw_graphs = function(options) {
     function add_behavior(chart, node, edge, ehover) {
         node
             .on('mousedown.draw-edge', function(d) {
+                d3.event.stopPropagation();
                 source = d;
                 hintData = [{source: {x: source.cola.x, y: source.cola.y}}];
-                d3.event.stopPropagation();
             })
             .on('mousemove.draw-edge', function(d) {
+                d3.event.stopPropagation();
                 if(source) {
-                    if(d !== source && d !== target) {
+                    if(d === source) {
+                        target = null;
+                        hintData[0].target = null;
+                    }
+                    else if(d !== target) {
                         target = d;
                         hintData[0].target = {x: target.cola.x, y: target.cola.y};
-                        update_hint();
                     }
+                    update_hint();
                 }
-                d3.event.stopPropagation();
             })
             .on('mouseup.draw-edge', function(d) {
+                d3.event.stopPropagation();
                 if(source && target)
                     create_edge(chart, source, target);
-                d3.event.stopPropagation();
+                else
+                    erase_hint();
             });
         chart.svg()
             .on('mousedown.draw-node', function() {
