@@ -20,6 +20,8 @@ diagram
     .nodeFixed(function(n) { return n.value.fixedPos; })
     .edgeArrowhead('vee');
 
+diagram.timeLimit(1000);
+
 
 var draw_graphs = dc_graph.draw_graphs({
     nodeCrossfilter: node_flat.crossfilter,
