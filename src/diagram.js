@@ -1869,9 +1869,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_chart.initLayoutOnRedraw())
             initLayout();
         _chart.resetSvg();
-        _g = _svg.append('g');
-        _edgeLayer = _g.append('g');
-        _nodeLayer = _g.append('g');
+        _g = _svg.append('g')
+            .attr('class', 'draw');
+        _edgeLayer = _g.append('g')
+            .attr('class', 'edge');
+        _nodeLayer = _g.append('g')
+            .attr('class', 'node');
 
         if(_chart.legend())
             _chart.legend().render();
