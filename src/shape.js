@@ -124,6 +124,11 @@ var dc_graph_shapes_ = {
     }
 };
 
+dc_graph.available_shapes = function() {
+    var shapes = Object.keys(dc_graph_shapes_);
+    return shapes.slice(0, shapes.length-1);
+};
+
 var default_shape = {shape: 'ellipse'};
 
 function elaborate_shape(def) {
