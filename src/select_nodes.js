@@ -19,6 +19,12 @@ dc_graph.select_nodes = function(props) {
         return a.indexOf(v) >= 0 ? a.filter(function(x) { return x != v; }) : a.concat([v]);
     }
 
+    function selection_changed_listener(chart) {
+        return function(selection) {
+            _selected = selection;
+            chart.refresh();
+        };
+    }
     function add_behavior(chart, node, edge) {
         var condition = _behavior.noneIsAll() ? function(n) {
             return !_selected.length || _selected.indexOf(n.orig.key) >= 0;
@@ -28,24 +34,23 @@ dc_graph.select_nodes = function(props) {
         chart.cascade(50, true, conditional_properties(condition, null, props));
 
         node.on('click.select-nodes', function(d) {
-            var key = chart.nodeKey.eval(d);
+            var key = chart.nodeKey.eval(d), newSelected;
             if(isUnion(d3.event))
-                _selected = add_array(_selected, key);
+                newSelected = add_array(_selected, key);
             else if(isToggle(d3.event))
-                _selected = toggle_array(_selected, key);
+                newSelected = toggle_array(_selected, key);
             else
-                _selected = [key];
-            chart.refresh(node, edge);
-            select_nodes_group.node_set_changed(_selected);
+                newSelected = [key];
+            select_nodes_group.node_set_changed(newSelected);
             d3.event.stopPropagation();
         });
         function brushstart() {
             if(isUnion(d3.event.sourceEvent) || isToggle(d3.event.sourceEvent))
                 _oldSelected = _selected.slice();
-            else
-                _oldSelected = _selected = [];
-            chart.refresh();
-            select_nodes_group.node_set_changed(_selected);
+            else {
+                _oldSelected = [];
+                select_nodes_group.node_set_changed([]);
+            }
         }
         function brushmove() {
             var ext = _brush.extent();
@@ -55,14 +60,14 @@ dc_graph.select_nodes = function(props) {
             }).map(function(n) {
                 return n.orig.key;
             });
+            var newSelected;
             if(isUnion(d3.event.sourceEvent))
-                _selected = rectSelect.reduce(add_array, _oldSelected);
+                newSelected = rectSelect.reduce(add_array, _oldSelected);
             else if(isToggle(d3.event.sourceEvent))
-                _selected = rectSelect.reduce(toggle_array, _oldSelected);
+                newSelected = rectSelect.reduce(toggle_array, _oldSelected);
             else
-                _selected = rectSelect;
-            chart.refresh();
-            select_nodes_group.node_set_changed(_selected);
+                newSelected = rectSelect;
+            select_nodes_group.node_set_changed(newSelected);
         }
         function brushend() {
             gBrush.call(_brush.clear());
@@ -79,10 +84,9 @@ dc_graph.select_nodes = function(props) {
 
         // drop any selected which no longer exist in the diagram
         var present = node.data().map(function(d) { return d.orig.key; });
-        var nselect = _selected.length;
-        _selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
-        if(_selected.length !== nselect)
-            select_nodes_group.node_set_changed(_selected);
+        var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
+        if(_selected.length !== now_selected.length)
+            select_nodes_group.node_set_changed(now_selected);
     }
 
     function remove_behavior(chart, node, edge) {
@@ -95,6 +99,9 @@ dc_graph.select_nodes = function(props) {
         add_behavior: add_behavior,
         remove_behavior: function(chart, node, edge) {
             remove_behavior(chart, node, edge);
+        },
+        parent: function(p) {
+            select_nodes_group.on('node_set_changed.select-nodes', p ? selection_changed_listener(p) : null);
         }
     });
     _behavior.noneIsAll = property(false);
