@@ -3,13 +3,13 @@ dc_graph.draw_graphs = function(options) {
         throw new Error('need nodeCrossfilter');
     if(!options.edgeCrossfilter)
         throw new Error('need edgeCrossfilter');
-    var idTag = options.idTag || 'id',
-        sourceTag = options.sourceTag || 'source',
-        targetTag = options.targetTag || 'target',
-        labelTag = options.labelTag || 'label',
-        fixedPosTag = options.fixedPosTag || 'fixedPos';
+    var _idTag = options.idTag || 'id',
+        _sourceTag = options.sourceTag || 'source',
+        _targetTag = options.targetTag || 'target',
+        _labelTag = options.labelTag || 'label',
+        _fixedPosTag = options.fixedPosTag || 'fixedPos';
 
-    var source = null, target = null, edgeLayer = null, hintData = [];
+    var _sourceDown = null, _targetMove = null, _edgeLayer = null, _hintData = [];
 
     function event_coords(chart) {
         var bound = chart.root().node().getBoundingClientRect();
@@ -18,10 +18,10 @@ dc_graph.draw_graphs = function(options) {
     }
 
     function update_hint() {
-        var data = hintData.filter(function(h) {
+        var data = _hintData.filter(function(h) {
             return h.source && h.target;
         });
-        var line = edgeLayer.selectAll('line.hint-edge').data(data);
+        var line = _edgeLayer.selectAll('line.hint-edge').data(data);
         line.exit().remove();
         line.enter().append('line')
             .attr('class', 'hint-edge')
@@ -39,16 +39,16 @@ dc_graph.draw_graphs = function(options) {
     }
 
     function erase_hint() {
-        hintData = [];
-        source = target = null;
+        _hintData = [];
+        _sourceDown = _targetMove = null;
         update_hint();
     }
 
     function create_node(chart, pos) {
         var node = {};
-        node[idTag] = uuid();
-        node[labelTag] = '';
-        node[fixedPosTag] = {x: pos[0], y: pos[1]};
+        node[_idTag] = uuid();
+        node[_labelTag] = '';
+        node[_fixedPosTag] = {x: pos[0], y: pos[1]};
         options.nodeCrossfilter.add([node]);
         chart.redraw();
     }
@@ -56,10 +56,10 @@ dc_graph.draw_graphs = function(options) {
     function create_edge(chart, source, target) {
         erase_hint();
         var edge = {};
-        edge[idTag] = uuid();
-        edge[sourceTag] = source.orig.key;
-        edge[targetTag] = target.orig.key;
-        source.orig.value[fixedPosTag] = null;
+        edge[_idTag] = uuid();
+        edge[_sourceTag] = source.orig.key;
+        edge[_targetTag] = target.orig.key;
+        source.orig.value[_fixedPosTag] = null;
         options.edgeCrossfilter.add([edge]);
         chart.redraw();
     }
@@ -68,51 +68,51 @@ dc_graph.draw_graphs = function(options) {
         node
             .on('mousedown.draw-graphs', function(d) {
                 d3.event.stopPropagation();
-                source = d;
-                hintData = [{source: {x: source.cola.x, y: source.cola.y}}];
+                _sourceDown = d;
+                _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
             })
             .on('mousemove.draw-graphs', function(d) {
                 d3.event.stopPropagation();
-                if(source) {
-                    if(d === source) {
-                        target = null;
-                        hintData[0].target = null;
+                if(_sourceDown) {
+                    if(d === _sourceDown) {
+                        _targetMove = null;
+                        _hintData[0].target = null;
                     }
-                    else if(d !== target) {
-                        target = d;
-                        hintData[0].target = {x: target.cola.x, y: target.cola.y};
+                    else if(d !== _targetMove) {
+                        _targetMove = d;
+                        _hintData[0].target = {x: _targetMove.cola.x, y: _targetMove.cola.y};
                     }
                     update_hint();
                 }
             })
             .on('mouseup.draw-graphs', function(d) {
                 d3.event.stopPropagation();
-                if(source && target)
-                    create_edge(chart, source, target);
+                if(_sourceDown && _targetMove)
+                    create_edge(chart, _sourceDown, _targetMove);
                 else
                     erase_hint();
             });
         chart.svg()
             .on('mousedown.draw-graphs', function() {
-                source = null;
+                _sourceDown = null;
             })
             .on('mousemove.draw-graphs', function() {
                 var data = [];
-                if(source) { // drawing edge
+                if(_sourceDown) { // drawing edge
                     var coords = event_coords(chart);
-                    target = null;
-                    hintData[0].target = {x: coords[0], y: coords[1]};
+                    _targetMove = null;
+                    _hintData[0].target = {x: coords[0], y: coords[1]};
                     update_hint();
                 }
             })
             .on('mouseup.draw-graphs', function() {
-                if(source)
-                    erase_hint(); // this was a drag-edge
-                else
+                if(_sourceDown) // drag-edge
+                    erase_hint();
+                else // click-node
                     create_node(chart, event_coords(chart));
             });
-        if(!edgeLayer)
-            edgeLayer = chart.g().append('g').attr('class', 'draw-graphs');
+        if(!_edgeLayer)
+            _edgeLayer = chart.g().append('g').attr('class', 'draw-graphs');
     }
 
     function remove_behavior(chart, node, edge, ehover) {
