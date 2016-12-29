@@ -117,11 +117,11 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 rx: 1,
                 ry: 1,
                 x: 0,
-                y: 0,
-                transform: function(d) {
-                    return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
-                }
+                y: 0
             });
+        rect.attr('transform', function(d) {
+            return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
+        });
         rect.exit().remove();
     }
 
