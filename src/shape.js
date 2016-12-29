@@ -179,7 +179,6 @@ function shape_element(chart) {
 function fit_shape(chart) {
     return function(d) {
         var r = chart.nodeRadius.eval(d);
-        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         var bbox;
         if(chart.nodeFitLabel.eval(d))
             bbox = this.getBBox();
@@ -201,6 +200,7 @@ function fit_shape(chart) {
                 d.dcg_rx /= Math.cos(Math.PI/(d.dcg_shape.sides||4));
         }
         else d.dcg_rx = d.dcg_ry = r;
+        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         d.cola.width = Math.max(fitx, rplus);
         d.cola.height = rplus;
     };
