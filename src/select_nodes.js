@@ -25,6 +25,11 @@ dc_graph.select_nodes = function(props) {
             chart.refresh();
         };
     }
+    function background_click_event(chart, v) {
+        chart.svg().on('click.select-nodes', v ? function(d) {
+            select_nodes_group.node_set_changed([]);
+        } : null);
+    }
     function add_behavior(chart, node, edge) {
         var condition = _behavior.noneIsAll() ? function(n) {
             return !_selected.length || _selected.indexOf(n.orig.key) >= 0;
@@ -81,6 +86,7 @@ dc_graph.select_nodes = function(props) {
         var gBrush = chart.g().insert('g', ':first-child')
                 .attr('class', 'brush')
                 .call(_brush);
+        background_click_event(chart, _behavior.clickBackgroundClears());
 
         // drop any selected which no longer exist in the diagram
         var present = node.data().map(function(d) { return d.orig.key; });
@@ -103,6 +109,11 @@ dc_graph.select_nodes = function(props) {
         parent: function(p) {
             select_nodes_group.on('node_set_changed.select-nodes', p ? selection_changed_listener(p) : null);
         }
+    });
+
+    _behavior.clickBackgroundClears = property(true, false).react(function(v) {
+        if(_behavior.parent())
+            background_click_event(_behavior.parent(), v);
     });
     _behavior.noneIsAll = property(false);
     return _behavior;
