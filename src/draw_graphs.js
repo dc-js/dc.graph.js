@@ -28,7 +28,8 @@ dc_graph.draw_graphs = function(options) {
             .attr('class', 'hint-edge')
             .style({
                 fill: 'none',
-                stroke: 'black'
+                stroke: 'black',
+                'pointer-events': 'none'
             });
 
         line.attr({
