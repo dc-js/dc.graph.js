@@ -59,7 +59,9 @@ dc_graph.draw_graphs = function(options) {
         edge[_idTag] = uuid();
         edge[_sourceTag] = source.orig.key;
         edge[_targetTag] = target.orig.key;
+        // changing this data inside crossfilter is okay because it is not indexed data
         source.orig.value[_fixedPosTag] = null;
+        target.orig.value[_fixedPosTag] = null;
         options.edgeCrossfilter.add([edge]);
         chart.redraw();
     }
