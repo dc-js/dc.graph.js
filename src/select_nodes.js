@@ -2,13 +2,18 @@
 // but it can be expanded with modifier-key clicks and rectangular selection etc.
 dc_graph.select_nodes = function(props) {
     var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
-    var _selected = []
+    var _selected = [];
 
     function selection_changed_listener(chart) {
         return function(selection) {
             _selected = selection;
             chart.refresh();
         };
+    }
+    function background_click_event(chart, v) {
+        chart.svg().on('click.select-nodes', v ? function(d) {
+            select_nodes_group.node_set_changed([]);
+        } : null);
     }
     function add_behavior(chart, node, edge) {
         chart.cascade(50, true, conditional_properties(function(n) {
@@ -18,9 +23,7 @@ dc_graph.select_nodes = function(props) {
             select_nodes_group.node_set_changed([chart.nodeKey.eval(d)]);
             d3.event.stopPropagation();
         });
-        chart.svg().on('click.select-nodes', function(d) {
-            select_nodes_group.node_set_changed([]);
-        });
+        background_click_event(chart, _behavior.clickBackgroundClears());
         // drop any selected which no longer exist in the diagram
         var present = node.data().map(function(d) { return d.orig.key; });
         var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
@@ -34,7 +37,7 @@ dc_graph.select_nodes = function(props) {
         chart.cascade(50, false, props);
     }
 
-    return dc_graph.behavior('select-nodes', {
+    var _behavior = dc_graph.behavior('select-nodes', {
         add_behavior: add_behavior,
         remove_behavior: function(chart, node, edge) {
             remove_behavior(chart, node, edge);
@@ -43,6 +46,12 @@ dc_graph.select_nodes = function(props) {
             select_nodes_group.on('node_set_changed.select-nodes', p ? selection_changed_listener(p) : null);
         }
     });
+
+    _behavior.clickBackgroundClears = property(true, false).react(function(v) {
+        if(_behavior.parent())
+            background_click_event(_behavior.parent(), v);
+    });
+    return _behavior;
 };
 
 dc_graph.select_nodes_group = function(brushgroup) {
