@@ -66,12 +66,12 @@ dc_graph.draw_graphs = function(options) {
 
     function add_behavior(chart, node, edge, ehover) {
         node
-            .on('mousedown.draw-edge', function(d) {
+            .on('mousedown.draw-graphs', function(d) {
                 d3.event.stopPropagation();
                 source = d;
                 hintData = [{source: {x: source.cola.x, y: source.cola.y}}];
             })
-            .on('mousemove.draw-edge', function(d) {
+            .on('mousemove.draw-graphs', function(d) {
                 d3.event.stopPropagation();
                 if(source) {
                     if(d === source) {
@@ -85,7 +85,7 @@ dc_graph.draw_graphs = function(options) {
                     update_hint();
                 }
             })
-            .on('mouseup.draw-edge', function(d) {
+            .on('mouseup.draw-graphs', function(d) {
                 d3.event.stopPropagation();
                 if(source && target)
                     create_edge(chart, source, target);
@@ -93,10 +93,10 @@ dc_graph.draw_graphs = function(options) {
                     erase_hint();
             });
         chart.svg()
-            .on('mousedown.draw-node', function() {
+            .on('mousedown.draw-graphs', function() {
                 source = null;
             })
-            .on('mousemove.draw-edge', function() {
+            .on('mousemove.draw-graphs', function() {
                 var data = [];
                 if(source) { // drawing edge
                     var coords = event_coords(chart);
@@ -105,22 +105,25 @@ dc_graph.draw_graphs = function(options) {
                     update_hint();
                 }
             })
-            .on('mouseup.draw-edge', function() {
+            .on('mouseup.draw-graphs', function() {
                 if(source)
                     erase_hint(); // this was a drag-edge
                 else
                     create_node(chart, event_coords(chart));
             });
         if(!edgeLayer)
-            edgeLayer = chart.g().append('g').attr('class', 'draw-edge');
+            edgeLayer = chart.g().append('g').attr('class', 'draw-graphs');
     }
 
     function remove_behavior(chart, node, edge, ehover) {
         node
-            .on('mousedown.draw-edge', null);
+            .on('mousedown.draw-graphs', null)
+            .on('mousemove.draw-graphs', null)
+            .on('mouseup.draw-graphs', null);
         chart.svg()
-            .on('click.draw-node', null)
-            .on('mousemove.draw-edge', null);
+            .on('mousedown.draw-graphs', null)
+            .on('mousemove.draw-graphs', null)
+            .on('mouseup.draw-graphs', null);
     }
 
     var _behavior = dc_graph.behavior('highlight-paths', {
