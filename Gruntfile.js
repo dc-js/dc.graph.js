@@ -263,7 +263,8 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['concat', 'uglify']);
     grunt.registerTask('docs', ['build', 'copy', 'jsdoc', 'jsdoc2md']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
-    grunt.registerTask('server', ['docs', 'connect:server', 'watch:scripts']);
+    grunt.registerTask('server', ['build', 'copy', 'connect:server', 'watch:scripts']);
+    grunt.registerTask('server:docs', ['docs', 'connect:server', 'watch:docs']);
     grunt.registerTask('lint', ['build', 'jshint', 'jscs']);
     grunt.registerTask('default', ['build', 'shell:hooks']);
     grunt.registerTask('doc-debug', ['build', 'jsdoc', 'jsdoc2md', 'connect:server', 'watch:docs']);
