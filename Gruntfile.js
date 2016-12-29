@@ -84,6 +84,10 @@ module.exports = function (grunt) {
         watch: {
             scripts: {
                 files: ['<%= conf.src %>/**/*.js', 'dc.graph.css'],
+                tasks: ['build', 'copy']
+            },
+            docs: {
+                files: ['<%= conf.src %>/**/*.js', 'dc.graph.css'],
                 tasks: ['docs']
             },
             reload: {
@@ -243,7 +247,8 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['concat', 'uglify']);
     grunt.registerTask('docs', ['build', 'copy', 'jsdoc2md']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
-    grunt.registerTask('server', ['docs', 'connect:server', 'watch:scripts']);
+    grunt.registerTask('server', ['build', 'copy', 'connect:server', 'watch:scripts']);
+    grunt.registerTask('server:docs', ['docs', 'connect:server', 'watch:docs']);
     grunt.registerTask('lint', ['build', 'jshint', 'jscs']);
     grunt.registerTask('jsdoc', ['build', 'jsdoc2md', 'watch:jsdoc2md']);
     grunt.registerTask('default', ['build', 'shell:hooks']);
