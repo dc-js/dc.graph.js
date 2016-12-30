@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.12
+ *  dc.graph 0.3.16
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.12
+ * @version 0.3.16
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.12',
+    version: '0.3.16',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -212,11 +212,11 @@ Math.hypot = Math.hypot || function() {
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sibf, pushf, popf, skipf) {
+dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree, place, sib, push, pop, skip, finish}
     return function(diagram, nodes, edges) {
-        initf && initf();
-        if(treef)
-            edges = edges.filter(function(e) { return treef(e.orig); });
+        callbacks.init && callbacks.init();
+        if(callbacks.tree)
+            edges = edges.filter(function(e) { return callbacks.tree(e.orig); });
         var indegree = {};
         var outmap = edges.reduce(function(m, e) {
             var tail = diagram.edgeSource.eval(e),
@@ -232,36 +232,37 @@ dc_graph.depth_first_traversal = function(initf, rootf, rowf, treef, placef, sib
         function place_tree(n, r) {
             var key = diagram.nodeKey.eval(n);
             if(placed[key]) {
-                skipf && skipf(n, indegree[key]);
+                callbacks.skip && callbacks.skip(n, indegree[key]);
                 return;
             }
             if(!rows[r])
                 rows[r] = [];
-            placef && placef(n, r, rows[r]);
+            callbacks.place && callbacks.place(n, r, rows[r]);
             rows[r].push(n);
             placed[key] = true;
             if(outmap[key])
                 outmap[key].forEach(function(e, ei) {
-                    if(ei && sibf)
-                        sibf(false, outmap[key][ei-1].target, e.target);
-                    pushf && pushf();
+                    if(ei && callbacks.sib)
+                        callbacks.sib(false, outmap[key][ei-1].target, e.target);
+                    callbacks.push && callbacks.push();
                     place_tree(e.target, r+1);
                 });
-            popf && popf(n);
+            callbacks.pop && callbacks.pop(n);
         }
 
         var roots;
-        if(rootf)
-            roots = nodes.filter(function(n) { return rootf(n.orig); });
+        if(callbacks.root)
+            roots = nodes.filter(function(n) { return callbacks.root(n.orig); });
         else {
             roots = nodes.filter(function(n) { return !indegree[diagram.nodeKey.eval(n)]; });
         }
         roots.forEach(function(n, ni) {
-            if(ni && sibf)
-                sibf(true, roots[ni-1], n);
-            pushf && pushf();
-            place_tree(n, rowf ? rowf(n.orig) : 0);
+            if(ni && callbacks.sib)
+                callbacks.sib(true, roots[ni-1], n);
+            callbacks.push && callbacks.push();
+            place_tree(n, callbacks.row ? callbacks.row(n.orig) : 0);
         });
+        callbacks.finish(rows);
     };
 };
 
@@ -415,6 +416,11 @@ var dc_graph_shapes_ = {
     }
 };
 
+dc_graph.available_shapes = function() {
+    var shapes = Object.keys(dc_graph_shapes_);
+    return shapes.slice(0, shapes.length-1);
+};
+
 var default_shape = {shape: 'ellipse'};
 
 function elaborate_shape(def) {
@@ -470,7 +476,6 @@ function shape_element(chart) {
 function fit_shape(chart) {
     return function(d) {
         var r = chart.nodeRadius.eval(d);
-        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         var bbox;
         if(chart.nodeFitLabel.eval(d))
             bbox = this.getBBox();
@@ -478,20 +483,26 @@ function fit_shape(chart) {
         if(bbox && bbox.width && bbox.height) {
             // make sure we can fit height in r
             r = Math.max(r, bbox.height/2 + 5);
-            // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-            // http://stackoverflow.com/a/433438/676195
-            var y_over_B = bbox.height/2/r;
-            var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+            var rx;
+            if(d.dcg_shape.shape === 'ellipse') {
+                // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+                // http://stackoverflow.com/a/433438/676195
+                var y_over_B = bbox.height/2/r;
+                rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+                d.dcg_rx = Math.max(rx, r);
+                d.dcg_ry = r;
+            } else {
+                rx = bbox.width/2;
+                // this is cribbed from graphviz but there is much i don't understand
+                // and any errors are mine
+                // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
+                d.dcg_rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
+                d.dcg_ry = r;
+            }
             fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-            d.dcg_rx = Math.max(rx, r);
-            d.dcg_ry = r;
-            // needs extra width for polygons since they cut in a bit
-            // not sure why something so simple works, i looked in graphviz:
-            // https://github.com/ellson/graphviz/blob/master/lib/common/shapes.c#L1989
-            if(d.dcg_shape.shape==='polygon')
-                d.dcg_rx /= Math.cos(Math.PI/(d.dcg_shape.sides||4));
         }
         else d.dcg_rx = d.dcg_ry = r;
+        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         d.cola.width = Math.max(fitx, rplus);
         d.cola.height = rplus;
     };
@@ -513,18 +524,23 @@ function polygon_attrs(chart, d) {
                 distortion = def.distortion || 0,
                 rotation = def.rotation || 0,
                 align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
-                pts = [];
+                angles = [];
             rotation = rotation/360 + 0.25; // start at y axis not x
             for(var i = 0; i<sides; ++i) {
                 var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
-                var x = d.dcg_rx*Math.cos(theta),
-                    y = d.dcg_ry*Math.sin(theta);
+                angles.push({x: Math.cos(theta), y: Math.sin(theta)});
+            }
+            var yext = d3.extent(angles, function(theta) { return theta.y; });
+            var rx = d.dcg_rx,
+                ry = d.dcg_ry / Math.min(-yext[0], yext[1]);
+            d.dcg_points = angles.map(function(theta) {
+                var x = rx*theta.x,
+                    y = ry*theta.y;
                 x *= 1 + distortion*((d.dcg_ry-y)/d.dcg_ry - 1);
                 x -= skew*y/2;
-                pts.push({x: x, y: y});
-            }
-            d.dcg_points = pts;
-            return generate_path(pts, 1, true);
+                return {x: x, y: y};
+            });
+            return generate_path(d.dcg_points, 1, true);
         }
     };
 }
@@ -790,11 +806,16 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @name fitStrategy
      * @memberof dc_graph.diagram
      * @instance
-     * @param {String} [fitStrategy=null]
+     * @param {String} [fitStrategy='default']
      * @return {String}
      * @return {dc_graph.diagram}
      **/
     _chart.fitStrategy = property('default');
+
+    /**
+     * Do not allow panning (scrolling) to push the diagram out of the viewable area, if there
+     * is space for it to be shown. */
+    _chart.restrictPan = property(false);
 
     /**
      * Auto-zoom behavior.
@@ -2127,8 +2148,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 default:
                     do_zoom = false;
                 }
+                calc_bounds(node, edge);
                 if(do_zoom)
-                    auto_zoom(node, edge);
+                    auto_zoom();
                 break;
             case 'start':
                 console.log('algo ' + _chart.layoutAlgorithm() + ' started.');
@@ -2321,17 +2343,23 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
     }
 
-    function auto_zoom(node, edge) {
-        if(_chart.fitStrategy() && node.size()) {
+    var _bounds;
+    function calc_bounds(node, edge) {
+        if((_chart.fitStrategy() || _chart.restrictPan()) && node.size()) {
             // assumption: there can be no edges without nodes
-            var bounds = node.data().map(node_bounds).reduce(union_bounds);
-            bounds = edge.data().map(edge_bounds).reduce(union_bounds, bounds);
-            if(!bounds)
+            _bounds = node.data().map(node_bounds).reduce(union_bounds);
+            _bounds = edge.data().map(edge_bounds).reduce(union_bounds, _bounds);
+        }
+    }
+
+    function auto_zoom() {
+        if(_chart.fitStrategy()) {
+            if(!_bounds)
                 return;
-            var vwidth = bounds.right - bounds.left, vheight = bounds.bottom - bounds.top,
-                swidth =  _chart.width(), sheight = _chart.height();
+            var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
+                swidth =  _chart.width(), sheight = _chart.height(), viewBox;
             if(_chart.DEBUG_BOUNDS)
-                debug_bounds(bounds);
+                debug_bounds(_bounds);
             var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
                 amv; // align margins vertically
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
@@ -2350,17 +2378,52 @@ dc_graph.diagram = function (parent, chartGroup) {
                     (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
                     (swidth - _chart.margins().left - _chart.margins().right) / swidth;
             }
-            else if(typeof fitS === 'function')
-                pAR = fitS(vwidth, vheight, swidth, sheight);
+            else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
+                var sides = fitS.split('_')[1].toLowerCase().split('');
+                if(sides.length > 2)
+                    throw new Error("align_ expecting 0-2 sides, not " + sides.length);
+                var bounds = margined_bounds();
+                translate = _zoom.translate();
+                scale = _zoom.scale();
+                sides.forEach(function(s) {
+                    switch(s) {
+                    case 'l':
+                        translate[0] = align_left(translate, bounds.left);
+                        break;
+                    case 't':
+                        translate[1] = align_top(translate, bounds.top);
+                        break;
+                    case 'r':
+                        translate[0] = align_right(translate, bounds.right);
+                        break;
+                    case 'b':
+                        translate[1] = align_bottom(translate, bounds.bottom);
+                        break;
+                    default:
+                        throw new Error("align_ expecting l t r or b, not '" + s + "'");
+                    }
+                });
+            }
+            else if(typeof fitS === 'function') {
+                var fit = fitS(vwidth, vheight, swidth, sheight);
+                pAR = fit.pAR;
+                translate = fit.translate;
+                scale = fit.scale;
+                viewBox = fit.viewBox;
+            }
             else if(typeof fitS === 'string')
                 pAR = _chart.fitStrategy();
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
-            _svg.attr({
-                viewBox: [bounds.left, bounds.top, vwidth, vheight].join(' '),
-                preserveAspectRatio: pAR
-            });
+            if(pAR !== undefined) {
+                if(!viewBox)
+                    viewBox = [_bounds.left, _bounds.top, vwidth, vheight].join(' ');
+                _svg.attr({
+                    viewBox: viewBox,
+                    preserveAspectRatio: pAR
+                });
+            }
             _zoom.translate(translate).scale(scale).event(_svg);
         }
     }
@@ -2729,8 +2792,84 @@ dc_graph.diagram = function (parent, chartGroup) {
         _g.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
     }
 
+    function margined_bounds() {
+        return {
+            left: _bounds.left - _chart.margins().left,
+            top: _bounds.top - _chart.margins().top,
+            right: _bounds.right + _chart.margins().right,
+            bottom: _bounds.bottom + _chart.margins().bottom
+        };
+    }
+
+    // with thanks to comments in https://github.com/d3/d3/issues/1084
+    function align_left(translate, x) {
+        return translate[0] - _xScale(x) + _xScale.range()[0];
+    }
+    function align_top(translate, y) {
+        return translate[1] - _yScale(y) + _yScale.range()[0];
+    }
+    function align_right(translate, x) {
+        return translate[0] - _xScale(x) + _xScale.range()[1];
+    }
+    function align_bottom(translate, y) {
+        return translate[1] - _yScale(y) + _yScale.range()[1];;
+    }
+
     function doZoom() {
-        globalTransform(d3.event.translate, d3.event.scale);
+        var translate = d3.event.translate;
+        if(_chart.restrictPan()) {
+            var xDomain = _xScale.domain(), yDomain = _yScale.domain();
+            var bounds = margined_bounds();
+            var less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
+                lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
+            var align, nothing = 0;
+            if(less1 && less2)
+                if(lessExt)
+                    align = 'left';
+                else
+                    align = 'right';
+            else if(!less1 && !less2)
+                if(lessExt)
+                    align = 'right';
+                else
+                    align = 'left';
+            switch(align) {
+            case 'left':
+                translate[0] = align_left(translate, bounds.left);
+                break;
+            case 'right':
+                translate[0] = align_right(translate, bounds.right);
+                break;
+            default:
+                ++nothing;
+            }
+            less1 = bounds.top < yDomain[0]; less2 = bounds.bottom < yDomain[1];
+            lessExt = (bounds.bottom - bounds.top) < (yDomain[1] - yDomain[0]);
+            if(less1 && less2)
+                if(lessExt)
+                    align = 'top';
+                else
+                    align = 'bottom';
+            else if(!less1 && !less2)
+                if(lessExt)
+                    align = 'bottom';
+                else
+                    align = 'top';
+            switch(align) {
+            case 'top':
+                translate[1] = align_top(translate, bounds.top);
+                break;
+            case 'bottom':
+                translate[1] = align_bottom(translate, bounds.bottom);
+                break;
+            default:
+                ++nothing;
+            }
+
+            if(nothing<2)
+                _zoom.translate(translate);
+        }
+        globalTransform(translate, d3.event.scale);
     }
 
     function resizeSvg(w, h) {
@@ -2747,8 +2886,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         if(_chart.mouseZoomable()) {
-            _xScale = d3.scale.linear();
-            _yScale = d3.scale.linear();
+            // start out with 1:1 zoom
+            _xScale = d3.scale.linear()
+                .domain([0, _chart.width()])
+                .range([0, _chart.width()]);
+            _yScale = d3.scale.linear()
+                .domain([0, _chart.height()])
+                .range([0, _chart.height()]);
             _zoom = d3.behavior.zoom()
                 .on('zoom', doZoom)
                 .x(_xScale).y(_yScale);
@@ -3132,22 +3276,27 @@ dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
     return function(diagram, nodes, edges) {
         var constraints = [];
         var x = 0;
-        var dfs = dc_graph.depth_first_traversal(null, rootf, null, treef, function(n, r, row) {
-            if(row.length) {
-                var last = row[row.length-1];
-                constraints.push({
-                    left: diagram.nodeKey.eval(last),
-                    right: diagram.nodeKey.eval(n),
-                    axis: 'x',
-                    gap: x-last.foo_x,
-                    equality: true
-                });
+        var dfs = dc_graph.depth_first_traversal({
+            root: rootf,
+            tree: treef,
+            place: function(n, r, row) {
+                if(row.length) {
+                    var last = row[row.length-1];
+                    constraints.push({
+                        left: diagram.nodeKey.eval(last),
+                        right: diagram.nodeKey.eval(n),
+                        axis: 'x',
+                        gap: x-last.foo_x,
+                        equality: true
+                    });
+                }
+                n.foo_x = x;
+                // n.cola.x = x;
+                // n.cola.y = r*ygap;
+            },
+            sib: function() {
+                x += xgap;
             }
-            n.foo_x = x;
-            // n.cola.x = x;
-            // n.cola.y = r*ygap;
-        }, function() {
-            x += xgap;
         });
         dfs(diagram, nodes, edges);
         return constraints;
@@ -3158,28 +3307,81 @@ dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
 dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
     var x;
     nwidth = d3.functor(nwidth);
-    var dfs = dc_graph.depth_first_traversal(function() {
-        x = ofsx;
-    }, rootf, rowf, treef, function(n, r, row) {
-        if(row.length) {
-            var left = row[row.length-1];
-            var g = (nwidth(left) + nwidth(n)) / 2;
-            x = Math.max(x, left.left_x + g);
+    function best_dist(left, right) {
+        return (nwidth(left) + nwidth(right)) / 2;
+    }
+    var dfs = dc_graph.depth_first_traversal({
+        init: function() {
+            x = ofsx;
+        },
+        root: rootf,
+        row: rowf,
+        tree: treef,
+        place: function(n, r, row) {
+            if(row.length) {
+                var left = row[row.length-1];
+                var g = (nwidth(left) + nwidth(n)) / 2;
+                x = Math.max(x, left.left_x + g);
+            }
+            n.left_x = x;
+            n.hit_ins = 1;
+            n.cola.y = r*ygap + ofsy;
+        },
+        sib: function(isroot, left, right) {
+            var g = best_dist(left, right);
+            if(isroot) g = g*1.5;
+            x += g;
+        },
+        pop: function(n) {
+            n.cola.x = (n.left_x + x)/2;
+        },
+        skip: function(n, indegree) {
+            // rolling average of in-neighbor x positions
+            n.cola.x = (n.hit_ins*n.cola.x + x)/++n.hit_ins;
+            if(n.hit_ins === indegree)
+                delete n.hit_ins;
+        },
+        finish: function(rows) {
+            // this is disgusting. patch up any places where nodes overlap by scanning
+            // right far enough to find the space, then fill from left to right at the
+            // minimum gap
+            rows.forEach(function(row) {
+                var sort = row.sort(function(a, b) { return a.cola.x - b.cola.x; });
+                var badi = null, badl = null, want;
+                for(var i=0; i<sort.length-1; ++i) {
+                    var left = sort[i], right = sort[i+1];
+                    if(!badi) {
+                        if(right.cola.x - left.cola.x < best_dist(left, right)) {
+                            badi = i;
+                            badl = left.cola.x;
+                            want = best_dist(left, right);
+                        } // else still not bad
+                    } else {
+                        want += best_dist(left, right);
+                        if(i < sort.length - 2 && right.cola.x < badl + want)
+                            continue; // still bad
+                        else {
+                            if(badi>0)
+                                --badi; // might want to use more left
+                            var l, limit;
+                            if(i < sort.length - 2) { // found space before right
+                                var extra = right.cola.x - (badl + want);
+                                l = sort[badi].cola.x + extra/2;
+                                limit = i+1;
+                            } else {
+                                l = Math.max(sort[badi].cola.x, badl - best_dist(sort[badi], sort[badi+1]) - (want - right.cola.x + badl)/2);
+                                limit = sort.length;
+                            }
+                            for(var j = badi+1; j<limit; ++j) {
+                                l += best_dist(sort[j-1], sort[j]);
+                                sort[j].cola.x = l;
+                            }
+                            badi = badl = want = null;
+                        }
+                    }
+                }
+            });
         }
-        n.left_x = x;
-        n.hit_ins = 1;
-        n.cola.y = r*ygap + ofsy;
-    }, function(isroot, left, right) {
-        var g = (nwidth(left) + nwidth(right)) / 2;
-        if(isroot) g = g*1.5;
-        x += g;
-    }, null, function(n) {
-        n.cola.x = (n.left_x + x)/2;
-    }, function(n, indegree) {
-        // rolling average of in-neighbor x positions
-        n.cola.x = (n.hit_ins*n.cola.x + x)/++n.hit_ins;
-        if(n.hit_ins === indegree)
-            delete n.hit_ins;
     });
 
     return dfs;
@@ -3742,11 +3944,11 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 rx: 1,
                 ry: 1,
                 x: 0,
-                y: 0,
-                transform: function(d) {
-                    return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
-                }
+                y: 0
             });
+        rect.attr('transform', function(d) {
+            return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
+        });
         rect.exit().remove();
     }
 
@@ -3789,7 +3991,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             Promise.resolve(get_degree(nk, dir)).then(function(degree) {
                 var spikes = {
                     dir: dir,
-                    n: degree - view_degree(chart, edge, dir, nk)
+                    n: Math.max(0, degree - view_degree(chart, edge, dir, nk)) // be tolerant of inconsistencies
                 };
                 node.each(function(n) {
                     n.dcg_expand_selected = n === d ? spikes : null;
@@ -4121,8 +4323,9 @@ dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
             if(namesOut.edgeKey)
                 e[namesOut.edgeKey] = uuid();
             e[namesOut.edgeSource] = n[namesIn.nodeKey];
-            e[namesOut.edgeTarget] = adj[namesIn.targetKey];
-            e[namesOut.adjacency] = adj;
+            e[namesOut.edgeTarget] = namesIn.targetKey ? adj[namesIn.targetKey] : adj;
+            if(namesOut.adjacency)
+                e[namesOut.adjacency] = adj;
             return e;
         });
     }));
@@ -4425,6 +4628,31 @@ dc_graph.wheel_edges = function(namef, nindices, R) {
             edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {distance: strutLength}));
     }
     return edges;
+};
+
+dc_graph.line_breaks = function(charexp, max_line_length) {
+    var regexp = new RegExp(charexp, 'g');
+    return function(n) {
+        var s = n.key;
+        var result;
+        var line = '', lines = [], part, i = 0;
+        do {
+            result = regexp.exec(s);
+            if(result)
+                part = s.slice(i, regexp.lastIndex);
+            else
+                part = s.slice(i);
+            if(line.length + part.length > max_line_length && line.length > 0) {
+                lines.push(line);
+                line = '';
+            }
+            line += part;
+            i = regexp.lastIndex;
+        }
+        while(result !== null);
+        lines.push(line);
+        return lines;
+    };
 };
 
 dc_graph.build_type_graph = function(nodes, edges, nkey, ntype, esource, etarget) {
