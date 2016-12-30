@@ -164,7 +164,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             Promise.resolve(get_degree(nk, dir)).then(function(degree) {
                 var spikes = {
                     dir: dir,
-                    n: degree - view_degree(chart, edge, dir, nk)
+                    n: Math.max(0, degree - view_degree(chart, edge, dir, nk)) // be tolerant of inconsistencies
                 };
                 node.each(function(n) {
                     n.dcg_expand_selected = n === d ? spikes : null;
