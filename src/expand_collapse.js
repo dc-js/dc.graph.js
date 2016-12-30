@@ -117,11 +117,11 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 rx: 1,
                 ry: 1,
                 x: 0,
-                y: 0,
-                transform: function(d) {
-                    return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
-                }
+                y: 0
             });
+        rect.attr('transform', function(d) {
+            return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
+        });
         rect.exit().remove();
     }
 
@@ -164,7 +164,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             Promise.resolve(get_degree(nk, dir)).then(function(degree) {
                 var spikes = {
                     dir: dir,
-                    n: degree - view_degree(chart, edge, dir, nk)
+                    n: Math.max(0, degree - view_degree(chart, edge, dir, nk)) // be tolerant of inconsistencies
                 };
                 node.each(function(n) {
                     n.dcg_expand_selected = n === d ? spikes : null;

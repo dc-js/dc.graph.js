@@ -148,7 +148,8 @@ var querystring = (function() {
             listsep_ = s;
             return this;
         },
-        parse: function() {
+        parse: function(opts) {
+            opts = opts || {};
             return (function(a) {
                 if (a == "") return {};
                 var b = {};
@@ -156,7 +157,7 @@ var querystring = (function() {
                 {
                     var p=a[i].split('=', 2);
                     if (p.length == 1)
-                        b[p[0]] = "";
+                        b[p[0]] = opts.boolean ? true : "";
                     else
                         b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
                 }

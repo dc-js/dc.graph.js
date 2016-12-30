@@ -272,6 +272,7 @@ module.exports.jsFiles = [
     'src/path_reader.js',
     'src/path_selector.js',
     'src/generate.js',
+    'src/line_breaks.js',
     'src/type_graph.js',
     'src/footer.js'  // NOTE: keep this last
 ];
