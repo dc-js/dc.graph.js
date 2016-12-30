@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.15
+ *  dc.graph 0.3.16
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.15
+ * @version 0.3.16
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.3.15',
+    version: '0.3.16',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -416,6 +416,11 @@ var dc_graph_shapes_ = {
     }
 };
 
+dc_graph.available_shapes = function() {
+    var shapes = Object.keys(dc_graph_shapes_);
+    return shapes.slice(0, shapes.length-1);
+};
+
 var default_shape = {shape: 'ellipse'};
 
 function elaborate_shape(def) {
@@ -471,7 +476,6 @@ function shape_element(chart) {
 function fit_shape(chart) {
     return function(d) {
         var r = chart.nodeRadius.eval(d);
-        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         var bbox;
         if(chart.nodeFitLabel.eval(d))
             bbox = this.getBBox();
@@ -479,20 +483,26 @@ function fit_shape(chart) {
         if(bbox && bbox.width && bbox.height) {
             // make sure we can fit height in r
             r = Math.max(r, bbox.height/2 + 5);
-            // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-            // http://stackoverflow.com/a/433438/676195
-            var y_over_B = bbox.height/2/r;
-            var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+            var rx;
+            if(d.dcg_shape.shape === 'ellipse') {
+                // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+                // http://stackoverflow.com/a/433438/676195
+                var y_over_B = bbox.height/2/r;
+                rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+                d.dcg_rx = Math.max(rx, r);
+                d.dcg_ry = r;
+            } else {
+                rx = bbox.width/2;
+                // this is cribbed from graphviz but there is much i don't understand
+                // and any errors are mine
+                // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
+                d.dcg_rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
+                d.dcg_ry = r;
+            }
             fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-            d.dcg_rx = Math.max(rx, r);
-            d.dcg_ry = r;
-            // needs extra width for polygons since they cut in a bit
-            // not sure why something so simple works, i looked in graphviz:
-            // https://github.com/ellson/graphviz/blob/master/lib/common/shapes.c#L1989
-            if(d.dcg_shape.shape==='polygon')
-                d.dcg_rx /= Math.cos(Math.PI/(d.dcg_shape.sides||4));
         }
         else d.dcg_rx = d.dcg_ry = r;
+        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         d.cola.width = Math.max(fitx, rplus);
         d.cola.height = rplus;
     };
@@ -514,18 +524,23 @@ function polygon_attrs(chart, d) {
                 distortion = def.distortion || 0,
                 rotation = def.rotation || 0,
                 align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
-                pts = [];
+                angles = [];
             rotation = rotation/360 + 0.25; // start at y axis not x
             for(var i = 0; i<sides; ++i) {
                 var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
-                var x = d.dcg_rx*Math.cos(theta),
-                    y = d.dcg_ry*Math.sin(theta);
+                angles.push({x: Math.cos(theta), y: Math.sin(theta)});
+            }
+            var yext = d3.extent(angles, function(theta) { return theta.y; });
+            var rx = d.dcg_rx,
+                ry = d.dcg_ry / Math.min(-yext[0], yext[1]);
+            d.dcg_points = angles.map(function(theta) {
+                var x = rx*theta.x,
+                    y = ry*theta.y;
                 x *= 1 + distortion*((d.dcg_ry-y)/d.dcg_ry - 1);
                 x -= skew*y/2;
-                pts.push({x: x, y: y});
-            }
-            d.dcg_points = pts;
-            return generate_path(pts, 1, true);
+                return {x: x, y: y};
+            });
+            return generate_path(d.dcg_points, 1, true);
         }
     };
 }
@@ -3929,11 +3944,11 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 rx: 1,
                 ry: 1,
                 x: 0,
-                y: 0,
-                transform: function(d) {
-                    return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
-                }
+                y: 0
             });
+        rect.attr('transform', function(d) {
+            return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
+        });
         rect.exit().remove();
     }
 
@@ -3976,7 +3991,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             Promise.resolve(get_degree(nk, dir)).then(function(degree) {
                 var spikes = {
                     dir: dir,
-                    n: degree - view_degree(chart, edge, dir, nk)
+                    n: Math.max(0, degree - view_degree(chart, edge, dir, nk)) // be tolerant of inconsistencies
                 };
                 node.each(function(n) {
                     n.dcg_expand_selected = n === d ? spikes : null;
@@ -4613,6 +4628,31 @@ dc_graph.wheel_edges = function(namef, nindices, R) {
             edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {distance: strutLength}));
     }
     return edges;
+};
+
+dc_graph.line_breaks = function(charexp, max_line_length) {
+    var regexp = new RegExp(charexp, 'g');
+    return function(n) {
+        var s = n.key;
+        var result;
+        var line = '', lines = [], part, i = 0;
+        do {
+            result = regexp.exec(s);
+            if(result)
+                part = s.slice(i, regexp.lastIndex);
+            else
+                part = s.slice(i);
+            if(line.length + part.length > max_line_length && line.length > 0) {
+                lines.push(line);
+                line = '';
+            }
+            line += part;
+            i = regexp.lastIndex;
+        }
+        while(result !== null);
+        lines.push(line);
+        return lines;
+    };
 };
 
 dc_graph.build_type_graph = function(nodes, edges, nkey, ntype, esource, etarget) {
