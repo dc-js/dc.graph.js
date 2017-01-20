@@ -22,12 +22,18 @@ diagram
 
 diagram.timeLimit(1000);
 
+var select_nodes = dc_graph.select_nodes({
+    nodeFill: '#eeffe0',
+    nodeStrokeWidth: 2
+});
 
 var draw_graphs = dc_graph.draw_graphs({
     nodeCrossfilter: node_flat.crossfilter,
     edgeCrossfilter: edge_flat.crossfilter
 });
 
-diagram.child('draw-graphs', draw_graphs);
+diagram
+    .child('select-nodes', select_nodes)
+    .child('draw-graphs', draw_graphs);
 
 dc.renderAll();
