@@ -24,7 +24,7 @@
     "url": "https://github.com/dc-js/dc.graph.js.git"
   },
   "dependencies": {
-    "crossfilter": "1.x",
+    "crossfilter2": "~1.4.0-alpha.1",
     "dc": "~2.1.0",
     "dagre": "0.7.x",
     "d3": "3.x",
