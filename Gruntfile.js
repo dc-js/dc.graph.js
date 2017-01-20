@@ -147,7 +147,7 @@ module.exports = function (grunt) {
                             'querystring.js',
                             'chart.registry.js',
                             'timeline.js',
-                            'node_modules/crossfilter/crossfilter.js',
+                            'node_modules/crossfilter2/crossfilter.js',
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
                             'node_modules/jquery/dist/jquery.js',
