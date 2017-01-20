@@ -268,6 +268,7 @@ module.exports.jsFiles = [
     'src/behavior.js',
     'src/tip.js',
     'src/select_nodes.js',
+    'src/label_nodes.js',
     'src/highlight_neighbors.js',
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',

@@ -27,6 +27,10 @@ var select_nodes = dc_graph.select_nodes({
     nodeStrokeWidth: 2
 });
 
+var label_nodes = dc_graph.label_nodes({
+    nodeCrossfilter: node_flat.crossfilter
+});
+
 var draw_graphs = dc_graph.draw_graphs({
     nodeCrossfilter: node_flat.crossfilter,
     edgeCrossfilter: edge_flat.crossfilter
@@ -34,6 +38,7 @@ var draw_graphs = dc_graph.draw_graphs({
 
 diagram
     .child('select-nodes', select_nodes)
+    .child('label-nodes', label_nodes)
     .child('draw-graphs', draw_graphs);
 
 dc.renderAll();
