@@ -703,7 +703,7 @@ function init() {
                 return d3.ascending(ostypes[a.key], ostypes[b.key]);
             })
             .multiple(true)
-            .size(12);
+            .numberVisible(12);
         tracker.exert();
 
         // respond to browser resize (not necessary if width/height is static)
