@@ -120,7 +120,8 @@ module.exports = function (grunt) {
                         src: [
                             '<%= conf.pkg.name %>.css',
                             'node_modules/dc/dc.css',
-                            'node_modules/font-awesome/css/font-awesome.css'
+                            'node_modules/font-awesome/css/font-awesome.css',
+                            'node_modules/jquery-ui-dist/jquery-ui.css'
                         ],
                         dest: '<%= conf.web %>/css/'
                     },
@@ -146,6 +147,7 @@ module.exports = function (grunt) {
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
                             'node_modules/jquery/dist/jquery.js',
+                            'node_modules/jquery-ui-dist/jquery-ui.js',
                             'node_modules/lodash/lodash.js',
                             'node_modules/queue-async/build/queue.js',
                             'node_modules/dagre/dist/dagre.js',

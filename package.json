@@ -51,6 +51,7 @@
     "grunt-shell": "~2.1",
     "load-grunt-tasks": "~3.5",
     "jquery": "~3.1.x",
+    "jquery-ui-dist": "~1.12",
     "jsdifflib": "~1.1",
     "marked": "~0.3",
     "time-grunt": "~1.4",
