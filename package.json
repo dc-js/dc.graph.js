@@ -29,12 +29,12 @@
     "dagre": "0.7.x",
     "d3": "3.x",
     "queue-async": "~1.x",
-    "font-awesome": "~4.5",
+    "font-awesome": "~4.7",
     "lodash": "4.x",
     "webcola": "3.3.x"
   },
   "devDependencies": {
-    "d3-tip": "~0.6.7",
+    "d3-tip": "~0.7",
     "grunt": "~1.0",
     "grunt-browserify": "~5.0",
     "grunt-cli": "~1.2",
@@ -49,11 +49,11 @@
     "grunt-jsdoc": "~2.1",
     "grunt-jsdoc-to-markdown": "~2.0",
     "grunt-shell": "~2.1",
-    "load-grunt-tasks": "~3.0.0",
-    "jquery": "~2.1.x",
+    "load-grunt-tasks": "~3.5",
+    "jquery": "~3.1.x",
     "jsdifflib": "~1.1",
     "marked": "~0.3",
-    "time-grunt": "~1.0.0",
+    "time-grunt": "~1.4",
     "uglify-js": "~2.7"
   },
   "scripts": {
