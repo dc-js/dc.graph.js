@@ -205,6 +205,7 @@ var options = {
         default: true,
         query: 'useshape',
         selector: '#use-shapes',
+        needs_relayout: true,
         needs_redraw: true,
         exert: function(val, diagram, filters) {
             if(val) {
@@ -281,7 +282,7 @@ var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
 var timeline = timeline('#timeline');
 var node_inv = null, edge_inv = null;
-var tracker = querystring.option_tracker(options, dcgraph_domain, diagram, filters);
+var tracker = querystring.option_tracker(options, dcgraph_domain(diagram, 'network'), diagram, filters);
 
 var is_running = tracker.vals.play;
 function display_running() {
