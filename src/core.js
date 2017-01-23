@@ -183,3 +183,24 @@ Math.hypot = Math.hypot || function() {
   }
   return Math.sqrt(y);
 };
+
+var script_path = function() {
+    var _path;
+    return function() {
+        if(_path === undefined) {
+            // adapted from http://stackoverflow.com/a/18283141/676195
+            _path = null; // only try once
+            var filename = 'dc.graph.js';
+            var scripts = document.getElementsByTagName('script');
+            if (scripts && scripts.length > 0) {
+                for (var i in scripts) {
+                    if (scripts[i].src && scripts[i].src.match(new RegExp(filename+'$'))) {
+                        _path = scripts[i].src.replace(new RegExp('(.*)'+filename+'$'), '$1');
+                        break;
+                    }
+                }
+            }
+        }
+        return _path;
+    };
+}();

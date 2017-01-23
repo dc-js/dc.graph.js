@@ -984,7 +984,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function initLayout() {
         if(!_worker)
-            _worker = new Worker('js/dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
+            _worker = new Worker(script_path() + 'dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
         var args = {
             width: _chart.width(),
             height: _chart.height()
