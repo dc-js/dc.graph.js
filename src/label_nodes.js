@@ -6,10 +6,13 @@ dc_graph.label_nodes = function(options) {
     var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group'),
         label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
     var _selected = [];
+    var _input_anchor;
 
     function selection_changed_listener(chart) {
         return function(selection) {
             _selected = selection;
+            if(_selected.length)
+                _input_anchor.node().focus();
         };
     }
 
@@ -32,14 +35,13 @@ dc_graph.label_nodes = function(options) {
     }
 
     function add_behavior(chart, node, edge) {
-        var input_anchor = chart.svg().selectAll('a#label-nodes-input').data([1]);
-        input_anchor.enter()
+        _input_anchor = chart.svg().selectAll('a#label-nodes-input').data([1]);
+        _input_anchor.enter()
             .append('a').attr({
                 id: 'label-nodes-input',
                 href: '#'
             });
-        input_anchor.node().focus();
-        input_anchor.on('keyup.label-nodes', function() {
+        _input_anchor.on('keyup.label-nodes', function() {
             if(_selected.length) {
                 // printable characters should start edit
                 if(d3.event.key.length !== 1)
