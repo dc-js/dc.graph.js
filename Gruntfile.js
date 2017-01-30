@@ -267,6 +267,7 @@ module.exports.jsFiles = [
     'src/tree_positions.js',
     'src/behavior.js',
     'src/tip.js',
+    'src/edit_text.js',
     'src/select_nodes.js',
     'src/label_nodes.js',
     'src/highlight_neighbors.js',

@@ -20,7 +20,10 @@ dc_graph.select_nodes = function(props) {
             return _selected.indexOf(n.orig.key) >= 0;
         }, null, props));
         node.on('click.select-nodes', function(d) {
-            select_nodes_group.node_set_changed([chart.nodeKey.eval(d)]);
+            var key = chart.nodeKey.eval(d);
+            if(_selected.length === 1 && _selected[0] === key && _behavior.secondClickEvent())
+                _behavior.secondClickEvent()(d3.select(this));
+            select_nodes_group.node_set_changed([key]);
             d3.event.stopPropagation();
         });
         background_click_event(chart, _behavior.clickBackgroundClears());
@@ -51,6 +54,7 @@ dc_graph.select_nodes = function(props) {
         if(_behavior.parent())
             background_click_event(_behavior.parent(), v);
     });
+    _behavior.secondClickEvent = property(null);
     return _behavior;
 };
 

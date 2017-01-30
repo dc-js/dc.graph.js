@@ -3,12 +3,29 @@ dc_graph.label_nodes = function(options) {
         throw new Error('need nodeCrossfilter');
     var _idTag = options.idTag || 'id',
         _labelTag = options.labelTag || 'label';
-    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
+    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group'),
+        label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
     var _selected = [];
 
     function selection_changed_listener(chart) {
         return function(selection) {
             _selected = selection;
+        };
+    }
+
+    function edit_node_label_listener(chart) {
+        return function(node, text) {
+            dc_graph.edit_text(
+                chart.svg(),
+                node,
+                text || chart.nodeLabel.eval(node.datum()),
+                {
+                    accept: function(text) {
+                        var d = node.datum();
+                        d.orig.value[_labelTag] = text;
+                        chart.redraw();
+                    }
+                });
         };
     }
 
@@ -21,19 +38,22 @@ dc_graph.label_nodes = function(options) {
             });
         input_anchor.node().focus();
         input_anchor.on('keyup.label-nodes', function() {
-            console.log('got input!!!');
             if(_selected.length) {
-                // ok we need a data api
-                var all = options.nodeCrossfilter.all();
-                var n = all.find(function(r) {
-                    return r[_idTag] === _selected[0];
+                // printable characters should start edit
+                if(d3.event.key.length !== 1)
+                    return;
+                var n2 = node.filter(function(d) {
+                    return chart.nodeKey.eval(d) === _selected[0];
                 });
-                if(!n) {
+                if(n2.empty()) {
                     console.error("couldn't find node '" + _selected[0] + "'!");
                     return;
                 }
-                n[_labelTag] = d3.event.key;
-                chart.refresh();
+                if(n2.size()>1) {
+                    console.error("found too many nodes for '" + _selected[0] + "' (" + n2.size() + ")!");
+                    return;
+                }
+                label_nodes_group.edit_node_label(n2, d3.event.key);
             }
         });
     }
@@ -47,7 +67,16 @@ dc_graph.label_nodes = function(options) {
         remove_behavior: remove_behavior,
         parent: function(p) {
             select_nodes_group.on('node_set_changed.label-nodes', p ? selection_changed_listener(p) : null);
+            label_nodes_group.on('edit_node_label.label-nodes', p ? edit_node_label_listener(p) : null);
         }
     });
     return _behavior;
+};
+
+dc_graph.label_nodes_group = function(brushgroup) {
+    window.chart_registry.create_type('label-nodes', function() {
+        return d3.dispatch('edit_node_label');
+    });
+
+    return window.chart_registry.create_group('label-nodes', brushgroup);
 };
