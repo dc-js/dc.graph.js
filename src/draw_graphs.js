@@ -3,7 +3,8 @@ dc_graph.draw_graphs = function(options) {
         throw new Error('need nodeCrossfilter');
     if(!options.edgeCrossfilter)
         throw new Error('need edgeCrossfilter');
-    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
+    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group'),
+        label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
     var _idTag = options.idTag || 'id',
         _sourceTag = options.sourceTag || 'source',
         _targetTag = options.targetTag || 'target',
@@ -72,8 +73,12 @@ dc_graph.draw_graphs = function(options) {
 
     function add_behavior(chart, node, edge, ehover) {
         var select_nodes = chart.child('select-nodes');
-        if(select_nodes)
+        if(select_nodes) {
             select_nodes.clickBackgroundClears(false);
+            select_nodes.secondClickEvent(function(node) {
+                label_nodes_group.edit_node_label(node, null);
+            });
+        }
         node
             .on('mousedown.draw-graphs', function(d) {
                 d3.event.stopPropagation();

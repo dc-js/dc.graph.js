@@ -44,8 +44,11 @@ dc_graph.select_nodes = function(props) {
                 newSelected = add_array(_selected, key);
             else if(isToggle(d3.event))
                 newSelected = toggle_array(_selected, key);
-            else
+            else {
+                if(_selected.length === 1 && _selected[0] === key && _behavior.secondClickEvent())
+                    _behavior.secondClickEvent()(d3.select(this));
                 newSelected = [key];
+            }
             select_nodes_group.node_set_changed(newSelected);
             d3.event.stopPropagation();
         });
@@ -115,6 +118,7 @@ dc_graph.select_nodes = function(props) {
         if(_behavior.parent())
             background_click_event(_behavior.parent(), v);
     });
+    _behavior.secondClickEvent = property(null);
     _behavior.noneIsAll = property(false);
     return _behavior;
 };
