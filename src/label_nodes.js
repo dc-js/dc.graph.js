@@ -14,12 +14,13 @@ dc_graph.label_nodes = function(options) {
     }
 
     function edit_node_label_listener(chart) {
-        return function(node, text) {
+        return function(node, options) {
             dc_graph.edit_text(
                 chart.svg(),
                 node,
-                text || chart.nodeLabel.eval(node.datum()),
                 {
+                    text: options.text || chart.nodeLabel.eval(node.datum()),
+                    selectText: options.selectText,
                     accept: function(text) {
                         var d = node.datum();
                         d.orig.value[_labelTag] = text;
@@ -53,7 +54,7 @@ dc_graph.label_nodes = function(options) {
                     console.error("found too many nodes for '" + _selected[0] + "' (" + n2.size() + ")!");
                     return;
                 }
-                label_nodes_group.edit_node_label(n2, d3.event.key);
+                label_nodes_group.edit_node_label(n2, {text: d3.event.key, selectText: false});
             }
         });
     }

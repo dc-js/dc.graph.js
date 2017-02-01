@@ -76,7 +76,7 @@ dc_graph.draw_graphs = function(options) {
         if(select_nodes) {
             select_nodes.clickBackgroundClears(false);
             select_nodes.secondClickEvent(function(node) {
-                label_nodes_group.edit_node_label(node, null);
+                label_nodes_group.edit_node_label(node, {selectText: true});
             });
         }
         node

@@ -11,10 +11,10 @@ function getlocalmousecoord(svg, evt) {
     return localpoint;
 }
 
-function edittext(localpoint, svg, dest, text, callbacks) {
+function edittext(localpoint, svg, dest, options) {
     var myforeign = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
     var textdiv = document.createElement("div");
-    text = text || "type on me";
+    var text = options.text || "type on me";
     var textnode = document.createTextNode(text);
     textdiv.appendChild(textnode);
     textdiv.setAttribute("contentEditable", "true");
@@ -27,19 +27,13 @@ function edittext(localpoint, svg, dest, text, callbacks) {
     svg.appendChild(myforeign);
     myforeign.appendChild(textdiv);
 
-    var range = document.createRange();
-    range.selectNodeContents(textdiv);
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-
     function accept() {
-        callbacks.accept && callbacks.accept(textdiv.innerText);
+        options.accept && options.accept(textdiv.innerText);
         textdiv.onblur = null;
         myforeign.remove();
     }
     function cancel() {
-        callbacks.cancel && callbacks.cancel();
+        options.cancel && options.cancel();
         textdiv.onblur = null;
         myforeign.remove();
     }
@@ -58,13 +52,24 @@ function edittext(localpoint, svg, dest, text, callbacks) {
     };
     textdiv.onblur = cancel;
     textdiv.focus();
+
+    var range = document.createRange();
+    if(options.selectText) {
+        range.selectNodeContents(textdiv);
+    } else {
+        range.setStart(textdiv, text.length);
+        range.setEnd(textdiv, text.length);
+    }
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
 }
 
-dc_graph.edit_text = function(svg, selection, text, callbacks) {
+dc_graph.edit_text = function(svg, selection, options) {
     var localpoint, dest;
     dest = selection.node();
     localpoint = {x: dest.getAttribute("x"), y: dest.getAttribute("y")};
     // text = dest.childNodes[0].nodeValue;
-    edittext(localpoint, svg.node(), dest, text, callbacks);
+    edittext(localpoint, svg.node(), dest, options);
 };
 
