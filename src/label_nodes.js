@@ -20,6 +20,7 @@ dc_graph.label_nodes = function(options) {
                 node,
                 {
                     text: options.text || chart.nodeLabel.eval(node.datum()),
+                    position: {x: node.datum().cola.x, y: node.datum().cola.y},
                     selectText: options.selectText,
                     accept: function(text) {
                         var d = node.datum();
