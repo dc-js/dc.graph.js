@@ -43,7 +43,7 @@
  * gain more control.
  *
  * Then we'll build back up from the ground up and show how inference works.
- * @name constraint_pattern
+ * @class constraint_pattern
  * @memberof dc_graph
  * @param {dc_graph.diagram} diagram - the diagram to pull attributes from, mostly to determine
  * the keys of nodes and edge sources and targets

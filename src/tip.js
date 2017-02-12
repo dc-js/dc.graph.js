@@ -7,7 +7,7 @@
  * Optional - requires separately loading the d3.tip script and CSS (which are included in
  * dc.graph.js in `web/js/d3-tip/index.js` and `web/css/d3-tip/example-styles.css`)
  *
- * @name tip
+ * @class tip
  * @memberof dc_graph
  * @return {Object}
  **/

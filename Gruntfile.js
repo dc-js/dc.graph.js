@@ -84,6 +84,10 @@ module.exports = function (grunt) {
         watch: {
             scripts: {
                 files: ['<%= conf.src %>/**/*.js', 'dc.graph.css'],
+                tasks: ['build', 'copy']
+            },
+            docs: {
+                files: ['welcome.md', '<%= conf.src %>/**/*.js', 'dc.graph.css'],
                 tasks: ['docs']
             },
             reload: {
@@ -102,6 +106,16 @@ module.exports = function (grunt) {
                 options: {
                     port: 8888,
                     base: '.'
+                }
+            }
+        },
+        jsdoc: {
+            dist: {
+                src: ['welcome.md', '<%= conf.src %>/**/*.js', '!<%= conf.src %>/{banner,footer}.js'],
+                options: {
+                    destination: 'web/docs/html',
+                    template: 'node_modules/ink-docstrap/template',
+                    configure: 'jsdoc.conf.json'
                 }
             }
         },
@@ -241,11 +255,10 @@ module.exports = function (grunt) {
 
     // task aliases
     grunt.registerTask('build', ['concat', 'uglify']);
-    grunt.registerTask('docs', ['build', 'copy', 'jsdoc2md']);
+    grunt.registerTask('docs', ['build', 'copy', 'jsdoc', 'jsdoc2md']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
     grunt.registerTask('server', ['docs', 'connect:server', 'watch:scripts']);
     grunt.registerTask('lint', ['build', 'jshint', 'jscs']);
-    grunt.registerTask('jsdoc', ['build', 'jsdoc2md', 'watch:jsdoc2md']);
     grunt.registerTask('default', ['build', 'shell:hooks']);
 };
 

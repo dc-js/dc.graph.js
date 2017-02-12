@@ -5,7 +5,7 @@
  * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin},
  * but it does not physically derive from it since so much is different about network
  * visualization versus conventional charts.
- * @name diagram
+ * @class diagram
  * @memberof dc_graph
  * @param {String|node} parent - Any valid
  * {@link https://github.com/mbostock/d3/wiki/Selections#selecting-elements d3 single selector}
