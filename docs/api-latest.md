@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.2.0  
+**Version**: 0.3.16  
 **Example**  
 ```js
 // Example chaining
@@ -20,7 +20,8 @@ chart.width(600)
 ```
 
 * [dc_graph](#dc_graph) : <code>object</code>
-    * [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.diagram](#dc_graph.diagram)
+        * [new diagram(parent, [chartGroup])](#new_dc_graph.diagram_new)
         * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -60,6 +61,7 @@ chart.width(600)
         * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.flowLayout](#dc_graph.diagram+flowLayout)
+        * [.rankdir](#dc_graph.diagram+rankdir)
         * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -77,6 +79,7 @@ chart.width(600)
         * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.child](#dc_graph.diagram+child) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+        * [.layoutAlgorithm](#dc_graph.diagram+layoutAlgorithm) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.handleDisconnected](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.render](#dc_graph.diagram+render) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.on](#dc_graph.diagram+on) ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -90,32 +93,25 @@ chart.width(600)
         * [.defineArrow](#dc_graph.diagram+defineArrow) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
-    * [.constraint_pattern](#dc_graph.constraint_pattern) ⇒ <code>function</code>
-    * [.tip](#dc_graph.tip) ⇒ <code>Object</code>
+    * [.constraint_pattern](#dc_graph.constraint_pattern)
+        * [new constraint_pattern(diagram, pattern)](#new_dc_graph.constraint_pattern_new)
+    * [.tip](#dc_graph.tip)
+        * [new tip()](#new_dc_graph.tip_new)
         * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
         * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
         * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
+    * [.flat_group](#dc_graph.flat_group) : <code>object</code>
+        * [.make(vec, id_accessor)](#dc_graph.flat_group.make) ⇒ <code>Object</code>
+        * [.another(ndx, id_accessor)](#dc_graph.flat_group.another) ⇒ <code>Object</code>
 
 <a name="dc_graph.diagram"></a>
 
-### dc_graph.diagram ⇒ <code>[diagram](#dc_graph.diagram)</code>
-`dc_graph.diagram` is a dc.js-compatible network visualization component. It registers in
-the dc.js chart registry and its nodes and edges are generated from crossfilter groups. It
-logically derives from the dc.js
-[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin),
-but it does not physically derive from it since so much is different about network
-visualization versus conventional charts.
+### dc_graph.diagram
+**Kind**: static class of <code>[dc_graph](#dc_graph)</code>  
 
-**Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| parent | <code>String</code> &#124; <code>node</code> | Any valid [d3 single selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom block element such as a div; or a dom element. |
-| [chartGroup] | <code>String</code> | The name of the chart group this chart instance should be placed in. Filter interaction with a chart will only trigger events and redraws within the chart's group. |
-
-
-* [.diagram](#dc_graph.diagram) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+* [.diagram](#dc_graph.diagram)
+    * [new diagram(parent, [chartGroup])](#new_dc_graph.diagram_new)
     * [.width](#dc_graph.diagram+width) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.height](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.root](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -155,6 +151,7 @@ visualization versus conventional charts.
     * [.lengthStrategy](#dc_graph.diagram+lengthStrategy) ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.edgeLength](#dc_graph.diagram+edgeLength) ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.flowLayout](#dc_graph.diagram+flowLayout)
+    * [.rankdir](#dc_graph.diagram+rankdir)
     * [.baseLength](#dc_graph.diagram+baseLength) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.transitionDuration](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.stageTransitions](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -172,6 +169,7 @@ visualization versus conventional charts.
     * [.showLayoutSteps](#dc_graph.diagram+showLayoutSteps) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.legend](#dc_graph.diagram+legend) ⇒ <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.child](#dc_graph.diagram+child) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.layoutAlgorithm](#dc_graph.diagram+layoutAlgorithm) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.handleDisconnected](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.render](#dc_graph.diagram+render) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.on](#dc_graph.diagram+on) ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -185,6 +183,22 @@ visualization versus conventional charts.
     * [.defineArrow](#dc_graph.diagram+defineArrow) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> &#124; <code>node</code> &#124; <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
+
+<a name="new_dc_graph.diagram_new"></a>
+
+#### new diagram(parent, [chartGroup])
+`dc_graph.diagram` is a dc.js-compatible network visualization component. It registers in
+the dc.js chart registry and its nodes and edges are generated from crossfilter groups. It
+logically derives from the dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin),
+but it does not physically derive from it since so much is different about network
+visualization versus conventional charts.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| parent | <code>String</code> &#124; <code>node</code> | Any valid [d3 single selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom block element such as a div; or a dom element. |
+| [chartGroup] | <code>String</code> | The name of the chart group this chart instance should be placed in. Filter interaction with a chart will only trigger events and redraws within the chart's group. |
 
 <a name="dc_graph.diagram+width"></a>
 
@@ -264,7 +278,7 @@ height) and result will be used to set `preserveAspectRatio`.
 
 | Param | Type | Default |
 | --- | --- | --- |
-| [fitStrategy] | <code>String</code> | <code></code> | 
+| [fitStrategy] | <code>String</code> | <code>&#x27;default&#x27;</code> | 
 
 <a name="dc_graph.diagram+autoZoom"></a>
 
@@ -402,8 +416,7 @@ be displayed. By default, looks for `.value.targetname`.
 
 #### diagram.nodeRadius ⇒ <code>function</code> &#124; <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the function which will be used to retrieve the radius, in pixels, for each
-node. This determines the height of nodes, and the width, if `nodeFitLabel` is
-false.
+node. This determines the height of nodes,and if `nodeFitLabel` is false, the width too.
 
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 
@@ -529,7 +542,11 @@ Whether to fit the node shape around the label
 
 #### diagram.nodeShape ⇒ <code>function</code> &#124; <code>Object</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 The shape to use for drawing each node, specified as an object with at least the field
-`shape`: ellipse, polygon
+`shape`. The names of shapes are mostly taken
+[from graphviz](http://www.graphviz.org/doc/info/shapes.html); currently ellipse, egg,
+triangle, rectangle, diamond, trapezium, parallelogram, pentagon, hexagon, septagon, octagon,
+invtriangle, invtrapezium, square, polygon are supported.
+
 If `shape = polygon`:
 * `sides`: number of sides for a polygon
 
@@ -539,6 +556,13 @@ If `shape = polygon`:
 | --- | --- | --- |
 | [nodeShape] | <code>function</code> &#124; <code>Object</code> | <code>{shape: &#x27;ellipse&#x27;}</code> | 
 
+**Example**  
+```js
+// set shape to diamond or parallelogram based on flag
+diagram.nodeShape(function(kv) {
+  return {shape: kv.value.flag ? 'diamond' : 'parallelogram'};
+});
+```
 <a name="dc_graph.diagram+nodeTitle"></a>
 
 #### diagram.nodeTitle ⇒ <code>function</code> &#124; <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -736,6 +760,9 @@ chart.edgeLength(function(kv) {
 <a name="dc_graph.diagram+flowLayout"></a>
 
 #### diagram.flowLayout
+This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
+now it is separate.
+
 **Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
 
 | Param | Type |
@@ -749,6 +776,18 @@ chart.flowLayout(null)
 // flow in x with min separation 200
 chart.flowLayout({axis: 'x', minSeparation: 200})
 ```
+<a name="dc_graph.diagram+rankdir"></a>
+
+#### diagram.rankdir
+Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
+generated from graphviz-style since it is more general.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [rankdir] | <code>String</code> | 
+
 <a name="dc_graph.diagram+baseLength"></a>
 
 #### diagram.baseLength ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -997,6 +1036,25 @@ tip.content(function(d, k) {
 });
 diagram.child('tip', tip);
 ```
+<a name="dc_graph.diagram+layoutAlgorithm"></a>
+
+#### diagram.layoutAlgorithm ⇒ <code>[diagram](#dc_graph.diagram)</code>
+Currently, you can specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it
+will replace the back-end. In the future, there will be subclasses like colaDiagram and
+dagreDiagram with appropriate interfaces for each, but it is not yet clear which features are
+common between them.
+
+**Kind**: instance property of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [algo] | <code>String</code> | the name of the layout algorithm to use |
+
+**Example**  
+```js
+// use dagre for layout
+diagram.layoutAlgorithm('dagre');
+```
 <a name="dc_graph.diagram+handleDisconnected"></a>
 
 #### diagram.handleDisconnected ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -1174,7 +1232,11 @@ Returns the DOM id for the chart's anchored location.
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
 <a name="dc_graph.constraint_pattern"></a>
 
-### dc_graph.constraint_pattern ⇒ <code>function</code>
+### dc_graph.constraint_pattern
+**Kind**: static class of <code>[dc_graph](#dc_graph)</code>  
+<a name="new_dc_graph.constraint_pattern_new"></a>
+
+#### new constraint_pattern(diagram, pattern)
 In cola.js there are three factors which influence the positions of nodes:
 * *edge length* suggestions, controlled by the
 [lengthStrategy](#dc_graph.diagram+lengthStrategy),
@@ -1220,7 +1282,6 @@ gain more control.
 
 Then we'll build back up from the ground up and show how inference works.
 
-**Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1229,7 +1290,19 @@ Then we'll build back up from the ground up and show how inference works.
 
 <a name="dc_graph.tip"></a>
 
-### dc_graph.tip ⇒ <code>Object</code>
+### dc_graph.tip
+**Kind**: static class of <code>[dc_graph](#dc_graph)</code>  
+
+* [.tip](#dc_graph.tip)
+    * [new tip()](#new_dc_graph.tip_new)
+    * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
+    * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
+    * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
+    * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
+
+<a name="new_dc_graph.tip_new"></a>
+
+#### new tip()
 Asynchronous [d3.tip](https://github.com/Caged/d3-tip) support for dc.graph.js
 
 Add tooltips to the nodes and edges of a graph using an asynchronous callback to get
@@ -1237,14 +1310,6 @@ the html to show.
 
 Optional - requires separately loading the d3.tip script and CSS (which are included in
 dc.graph.js in `web/js/d3-tip/index.js` and `web/css/d3-tip/example-styles.css`)
-
-**Kind**: static property of <code>[dc_graph](#dc_graph)</code>  
-
-* [.tip](#dc_graph.tip) ⇒ <code>Object</code>
-    * [.parent](#dc_graph.tip+parent) ⇒ <code>[diagram](#dc_graph.diagram)</code>
-    * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> &#124; <code>[tip](#dc_graph.tip)</code>
-    * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
-    * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
 
 <a name="dc_graph.tip+parent"></a>
 
@@ -1315,3 +1380,68 @@ Note: this interface is not great and is subject to change in the near term.
 var tip = dc_graph.tip();
 tip.content(tip.table());
 ```
+<a name="dc_graph.flat_group"></a>
+
+### dc_graph.flat_group : <code>object</code>
+`dc_graph.flat_group` implements a special ["fake group"](https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups)
+for the special case where you want a group that represents the filtered rows of the crossfilter.
+
+Although `dc_graph` can be used with reduced data, typically the nodes and edges are just rows of
+the corresponding data arrays, and each array has a column which contains the unique identifier
+for the node or edge. In this setup, there are other dimensions and groups which are aggregated
+for the use of dc.js charts, but the graph just shows or does not show the nodes and edges from
+the rows.
+
+This simple class supports that use case in three steps:
+ 1. It creates a dimension keyed on the unique identifier (specified to `flat_group.make`)
+ 2. It creates a group from the dimension with a reduction function that returns the row when the
+ row is filtered in, and `null` when the row is filtered out.
+ 3. It wraps the group in a fake group which filters out the resulting nulls.
+
+The result is a fake group whose `.all()` method returns an array of the currently filtered-in
+`{key, value}` pairs, where the key is that returned by the ID accessor, and the value is the raw
+row object from the data.
+
+This could be a useful crossfilter utility outside of dc.graph. For example, bubble charts and
+scatter plots often use similar functionality because each observation is either shown or not,
+and it is helpful to have the entire row available as reduced data.
+
+But it would need to be generalized and cleaned up. (For example, the way it has to create the
+crossfilter and dimension is kinda dumb.) And there is currently no such crossfilter utility
+library to put it in.
+
+**Kind**: static namespace of <code>[dc_graph](#dc_graph)</code>  
+
+* [.flat_group](#dc_graph.flat_group) : <code>object</code>
+    * [.make(vec, id_accessor)](#dc_graph.flat_group.make) ⇒ <code>Object</code>
+    * [.another(ndx, id_accessor)](#dc_graph.flat_group.another) ⇒ <code>Object</code>
+
+<a name="dc_graph.flat_group.make"></a>
+
+#### flat_group.make(vec, id_accessor) ⇒ <code>Object</code>
+Create a crossfilter, dimension, and flat group, as described in [flat_group](#dc_graph.flat_group).
+Returns an object containing all three.
+
+**Kind**: static method of <code>[flat_group](#dc_graph.flat_group)</code>  
+**Returns**: <code>Object</code> - `{crossfilter, dimension, group}`  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| vec | <code>Array</code> | the data array for crossfilter |
+| id_accessor | <code>function</code> | accessor function taking a row object and returning its unique identifier |
+
+<a name="dc_graph.flat_group.another"></a>
+
+#### flat_group.another(ndx, id_accessor) ⇒ <code>Object</code>
+Create a flat dimension and group from an existing crossfilter.
+
+This is a wretched name for this function.
+
+**Kind**: static method of <code>[flat_group](#dc_graph.flat_group)</code>  
+**Returns**: <code>Object</code> - `{crossfilter, dimension, group}`  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ndx | <code>Object</code> | crossfilter instance |
+| id_accessor | <code>function</code> | accessor function taking a row object and returning its unique identifier |
+

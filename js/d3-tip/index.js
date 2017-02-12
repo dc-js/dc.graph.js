@@ -9,10 +9,8 @@
     define(['d3'], factory)
   } else if (typeof module === 'object' && module.exports) {
     // CommonJS
-    module.exports = function(d3) {
-      d3.tip = factory(d3)
-      return d3.tip
-    }
+    var d3 = require('d3')
+    module.exports = factory(d3)
   } else {
     // Browser global.
     root.d3.tip = factory(root.d3)
@@ -47,31 +45,30 @@
       var content = html.apply(this, args),
           poffset = offset.apply(this, args),
           dir     = direction.apply(this, args),
-          nodel   = d3.select(node),
+          nodel   = getNodeEl(),
           i       = directions.length,
           coords,
           scrollTop  = document.documentElement.scrollTop || document.body.scrollTop,
           scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft
 
       nodel.html(content)
-        .style({ opacity: 1, 'pointer-events': 'all' })
+        .style('opacity', 1).style('pointer-events', 'all')
 
       while(i--) nodel.classed(directions[i], false)
       coords = direction_callbacks.get(dir).apply(this)
-      nodel.classed(dir, true).style({
-        top: (coords.top +  poffset[0]) + scrollTop + 'px',
-        left: (coords.left + poffset[1]) + scrollLeft + 'px'
-      })
+      nodel.classed(dir, true)
+      	.style('top', (coords.top +  poffset[0]) + scrollTop + 'px')
+      	.style('left', (coords.left + poffset[1]) + scrollLeft + 'px')
 
-      return tip
-    }
+      return tip;
+    };
 
     // Public - hide the tooltip
     //
     // Returns a tip
     tip.hide = function() {
-      var nodel = d3.select(node)
-      nodel.style({ opacity: 0, 'pointer-events': 'none' })
+      var nodel = getNodeEl()
+      nodel.style('opacity', 0).style('pointer-events', 'none')
       return tip
     }
 
@@ -83,10 +80,10 @@
     // Returns tip or attribute value
     tip.attr = function(n, v) {
       if (arguments.length < 2 && typeof n === 'string') {
-        return d3.select(node).attr(n)
+        return getNodeEl().attr(n)
       } else {
         var args =  Array.prototype.slice.call(arguments)
-        d3.selection.prototype.attr.apply(d3.select(node), args)
+        d3.selection.prototype.attr.apply(getNodeEl(), args)
       }
 
       return tip
@@ -100,10 +97,10 @@
     // Returns tip or style property value
     tip.style = function(n, v) {
       if (arguments.length < 2 && typeof n === 'string') {
-        return d3.select(node).style(n)
+        return getNodeEl().style(n)
       } else {
-        var args =  Array.prototype.slice.call(arguments)
-        d3.selection.prototype.style.apply(d3.select(node), args)
+        var args = Array.prototype.slice.call(arguments)
+        d3.selection.prototype.style.apply(getNodeEl(), args)
       }
 
       return tip
@@ -117,7 +114,7 @@
     // Returns tip or direction
     tip.direction = function(v) {
       if (!arguments.length) return direction
-      direction = v == null ? v : d3.functor(v)
+      direction = v == null ? v : functor(v)
 
       return tip
     }
@@ -129,7 +126,7 @@
     // Returns offset or
     tip.offset = function(v) {
       if (!arguments.length) return offset
-      offset = v == null ? v : d3.functor(v)
+      offset = v == null ? v : functor(v)
 
       return tip
     }
@@ -141,9 +138,20 @@
     // Returns html value or tip
     tip.html = function(v) {
       if (!arguments.length) return html
-      html = v == null ? v : d3.functor(v)
+      html = v == null ? v : functor(v)
 
       return tip
+    }
+
+    // Public: destroys the tooltip and removes it from the DOM
+    //
+    // Returns a tip
+    tip.destroy = function() {
+      if(node) {
+        getNodeEl().remove();
+        node = null;
+      }
+      return tip;
     }
 
     function d3_tip_direction() { return 'n' }
@@ -228,14 +236,9 @@
     }
 
     function initNode() {
-      var node = d3.select(document.createElement('div'))
-      node.style({
-        position: 'absolute',
-        top: 0,
-        opacity: 0,
-        'pointer-events': 'none',
-        'box-sizing': 'border-box'
-      })
+      var node = d3.select(document.createElement('div'));
+      node.style('position', 'absolute').style('top', 0).style('opacity', 0)
+      	.style('pointer-events', 'none').style('box-sizing', 'border-box')
 
       return node.node()
     }
@@ -246,6 +249,15 @@
         return el
 
       return el.ownerSVGElement
+    }
+
+    function getNodeEl() {
+      if(node === null) {
+        node = initNode();
+        // re-add node to DOM
+        document.body.appendChild(node);
+      };
+      return d3.select(node);
     }
 
     // Private - gets the screen coordinates of a shape
@@ -296,6 +308,13 @@
       bbox.s = point.matrixTransform(matrix)
 
       return bbox
+    }
+    
+    // Private - replace D3JS 3.X d3.functor() function
+    function functor(v) {
+    	return typeof v === "function" ? v : function() {
+        return v
+    	}
     }
 
     return tip

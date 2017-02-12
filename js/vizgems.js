@@ -2,8 +2,6 @@ var data_stats;
 
 var cb_colors = colorbrewer.Paired[12];
 cb_colors[5] = cb_colors[11];
-cb_colors[8] = cb_colors[1];
-cb_colors[1] = 'dimgray';
 
 // arbitrary assigning of shapes as POC
 var shapes = ['invtrapezium', 'ellipse', 'diamond', 'trapezium', 'pentagon', 'hexagon', 'egg',
@@ -207,6 +205,7 @@ var options = {
         default: true,
         query: 'useshape',
         selector: '#use-shapes',
+        needs_relayout: true,
         needs_redraw: true,
         exert: function(val, diagram, filters) {
             if(val) {
@@ -283,7 +282,7 @@ var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
 var timeline = timeline('#timeline');
 var node_inv = null, edge_inv = null;
-var tracker = querystring.option_tracker(options, dcgraph_domain, diagram, filters);
+var tracker = querystring.option_tracker(options, dcgraph_domain(diagram, 'network'), diagram, filters);
 
 var is_running = tracker.vals.play;
 function display_running() {
@@ -705,7 +704,7 @@ function init() {
                 return d3.ascending(ostypes[a.key], ostypes[b.key]);
             })
             .multiple(true)
-            .size(12);
+            .numberVisible(12);
         tracker.exert();
 
         // respond to browser resize (not necessary if width/height is static)
@@ -728,7 +727,7 @@ function init() {
             .nodeFitLabel(tracker.vals.fit_labels)
             .nodeRadius(function(n) {
                 switch(n.value.ostype) {
-                case 'PRT': return 5;
+                case 'PRT': return 15;
                 default: return 30;
                 }
             })

@@ -23,6 +23,7 @@ var steptime = +qs.interval || 1000, // ms per step
     edgeStroke = qs.edgestroke || 'black',
     edgeStrokeWidth = qs.edgestrokewidth || 1,
     edgeOpacity = +qs.opacity || 1,
+    layoutAlgorithm = qs.algo || 'cola',
     appLayout = null,
     useAppLayout = false,
     nodePrefix = qs.prefix || '',
@@ -220,6 +221,7 @@ source(function(error, data) {
     diagram
         .width($(window).width())
         .height($(window).height())
+        .layoutAlgorithm(layoutAlgorithm)
         .timeLimit(timeLimit)
         .transitionDuration(transition)
         .tickSize(tickSize)
@@ -261,13 +263,13 @@ source(function(error, data) {
             .edgeOrdering(function(kv) { return kv.value.order; });
     }
 
-    var expander = null, expanded;
+    var expander = null, expanded = {};
     if(explore) {
-        // second group on keys so that first will observe it
-        expander = dc_graph.flat_group.another(node_flat.crossfilter, function(d) { return d.name; });
+        // second dimension on keys so that first will observe it
+        expander = node_flat.crossfilter.dimension(function(d) { return d.name; });
         function apply_expander_filter() {
-            expander.dimension.filterFunction(function(key) {
-                return expanded.indexOf(key) >= 0;
+            expander.filterFunction(function(key) {
+                return expanded[key];
             });
         }
         function adjacent_edges(key) {
@@ -280,17 +282,20 @@ source(function(error, data) {
                 return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
             });
         }
-        expanded = [];
         apply_expander_filter();
         diagram.child('expand-collapse',
                       dc_graph.expand_collapse(function(key) { // get_degree
                           return adjacent_edges(key).length;
                       }, function(key) { // expand
-                          expanded = _.union(expanded, adjacent_nodes(key));
+                          adjacent_nodes(key).forEach(function(nk) {
+                              expanded[nk] = true;
+                          });
                           apply_expander_filter();
                           run();
                       }, function(key, collapsible) { // collapse
-                          expanded = _.difference(expanded, adjacent_nodes(key).filter(collapsible));
+                          adjacent_nodes(key).filter(collapsible).forEach(function(nk) {
+                              expanded[nk] = false;
+                          });
                           apply_expander_filter();
                           run();
                       }));
@@ -300,16 +305,14 @@ source(function(error, data) {
             .autocomplete({
                 source: nodes.map(function(n) { return n.name; }),
                 select: function(event, ui) {
-                    expanded = [ui.item.value];
+                    expanded = {};
+                    expanded[ui.item.value] = true;
                     apply_expander_filter();
                     run();
                 }
             })
             .attr("autocomplete", "on");
     }
-
-    if(paths)
-        iterate_paths(diagram, paths);
 
     // respond to browser resize (not necessary if width/height is static)
     $(window).resize(function() {

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>dc.graph.js Source: tip.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">dc.graph.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="dc_graph.html">dc_graph</a></li><li><a href="dc_graph.flat_group.html">dc_graph.flat_group</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="dc_graph.constraint_pattern.html">dc_graph.constraint_pattern</a></li><li><a href="dc_graph.diagram.html">dc_graph.diagram</a></li><li><a href="dc_graph.tip.html">dc_graph.tip</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: tip.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">/**
+ * Asynchronous [d3.tip](https://github.com/Caged/d3-tip) support for dc.graph.js
+ *
+ * Add tooltips to the nodes and edges of a graph using an asynchronous callback to get
+ * the html to show.
+ *
+ * Optional - requires separately loading the d3.tip script and CSS (which are included in
+ * dc.graph.js in `web/js/d3-tip/index.js` and `web/css/d3-tip/example-styles.css`)
+ *
+ * @class tip
+ * @memberof dc_graph
+ * @return {Object}
+ **/
+dc_graph.tip = function() {
+    var _tip = {}, _d3tip = null;
+    var _timeout;
+
+    /**
+     * Assigns this tip object to a diagram. It will show tips for nodes in that diagram.
+     * Usually you will not call this function directly. Instead, attach the tip object
+     * using `diagram.child('tip', dc_graph.tip())`
+     * @name parent
+     * @memberof dc_graph.tip
+     * @instance
+     * @param {dc_graph.diagram} [parent]
+     * @return {dc_graph.diagram}
+     **/
+    _tip.parent = property(null)
+        .react(function(p) {
+            if(p)
+                p.on('drawn.tip', function(node, edge, ehover) {
+                    annotate(node, ehover);
+                });
+            else if(_tip.parent())
+                _tip.parent().on('drawn.tip', null);
+        });
+
+    function fetch_and_show_content(fetcher) {
+         return function(d) {
+             var target = d3.event.target,
+                 next = function() {
+                     _tip[fetcher]()(d, function(content) {
+                         _d3tip.show(content, target);
+                     });
+                 };
+
+             if(_tip.delay()) {
+                 clearTimeout(_timeout);
+                 _timeout = setTimeout(next, _tip.delay());
+             }
+             else next();
+         };
+    }
+
+    function hide_tip() {
+        if(_timeout) {
+            clearTimeout(_timeout);
+            _timeout = null;
+        }
+        _d3tip.hide();
+    }
+
+    function annotate(node, ehover) {
+        if(!_d3tip) {
+            _d3tip = d3.tip()
+                .attr('class', 'd3-tip')
+                .html(function(d) { return "&lt;span>" + d + "&lt;/span>"; })
+                .direction(_tip.direction());
+            _tip.parent().svg().call(_d3tip);
+        }
+        node
+            .on('mouseover.tip', fetch_and_show_content('content'))
+            .on('mouseout.tip', hide_tip);
+        ehover
+            .on('mouseover.tip', fetch_and_show_content('content'))
+            .on('mouseout.tip', hide_tip);
+    }
+
+    /**
+     * Specify the direction for tooltips. Currently supports the
+     * [cardinal and intercardinaldirections](https://en.wikipedia.org/wiki/Points_of_the_compass) supported by
+     * [d3.tip.direction](https://github.com/Caged/d3-tip/blob/master/docs/positioning-tooltips.md#tipdirection):
+     * `'n'`, `'ne'`, `'e'`, etc.
+     * @name direction
+     * @memberof dc_graph.tip
+     * @instance
+     * @param {String} [direction='n']
+     * @return {String}
+     * @return {dc_graph.tip}
+     * @example
+     * // show all the attributes and values in the node and edge objects
+     * var tip = dc_graph.tip();
+     * tip.content(tip.table());
+     **/
+    _tip.direction = property('n');
+
+    /**
+     * Specifies the function to generate content for the tooltip. This function has the
+     * signature `function(d, k)`, where `d` is the datum of the node being hovered over,
+     * and `k` is a continuation. The function should fetch the content, asynchronously if
+     * needed, and then pass html forward to `k`.
+     * @name content
+     * @memberof dc_graph.tip
+     * @instance
+     * @param {Function} [content]
+     * @return {Function}
+     * @example
+     * // Default behavior: show title
+     * var tip = dc_graph.tip().content(function(d, k) {
+     *     k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
+     * });
+     **/
+    _tip.content = property(function(d, k) {
+        k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
+    });
+
+    _tip.delay = property(0);
+
+    return _tip;
+};
+
+/**
+ * Generates a handler which can be passed to `tip.content` to produce a table of the
+ * attributes and values of the hovered object.
+ *
+ * Note: this interface is not great and is subject to change in the near term.
+ * @name table
+ * @memberof dc_graph.tip
+ * @instance
+ * @return {Function}
+ * @example
+ * // show all the attributes and values in the node and edge objects
+ * var tip = dc_graph.tip();
+ * tip.content(tip.table());
+ **/
+dc_graph.tip.table = function() {
+    var gen = function(d, k) {
+        d = d.orig.value;
+        var keys = Object.keys(d).filter(d3.functor(gen.filter()))
+                .filter(function(k) {
+                    return d[k];
+                });
+        var table = d3.select(document.createElement('table'));
+        var rows = table.selectAll('tr').data(keys);
+        var rowsEnter = rows.enter().append('tr');
+        rowsEnter.append('td').text(function(k) { return k; });
+        rowsEnter.append('td').text(function(k) { return d[k]; });
+        k(table.node().outerHTML); // optimizing for clarity over speed (?)
+    };
+    gen.filter = property(true);
+    return gen;
+};
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+	<span class="copyright">
+	dc.graph.js Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a>
+	
+		on Sun Feb 12th 2017
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
