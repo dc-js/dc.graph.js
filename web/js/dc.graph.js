@@ -206,6 +206,27 @@ Math.hypot = Math.hypot || function() {
   return Math.sqrt(y);
 };
 
+var script_path = function() {
+    var _path;
+    return function() {
+        if(_path === undefined) {
+            // adapted from http://stackoverflow.com/a/18283141/676195
+            _path = null; // only try once
+            var filename = 'dc.graph.js';
+            var scripts = document.getElementsByTagName('script');
+            if (scripts && scripts.length > 0) {
+                for (var i in scripts) {
+                    if (scripts[i].src && scripts[i].src.match(new RegExp(filename+'$'))) {
+                        _path = scripts[i].src.replace(new RegExp('(.*)'+filename+'$'), '$1');
+                        break;
+                    }
+                }
+            }
+        }
+        return _path;
+    };
+}();
+
 // arguably depth first search is a stupid algorithm to modularize -
 // there are many, many interesting moments to insert a behavior
 // and those end up being almost bigger than the function itself
@@ -700,7 +721,7 @@ function bezier_point(points, t_) {
  * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin},
  * but it does not physically derive from it since so much is different about network
  * visualization versus conventional charts.
- * @name diagram
+ * @class diagram
  * @memberof dc_graph
  * @param {String|node} parent - Any valid
  * {@link https://github.com/mbostock/d3/wiki/Selections#selecting-elements d3 single selector}
@@ -1679,7 +1700,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function initLayout() {
         if(!_worker)
-            _worker = new Worker('js/dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
+            _worker = new Worker(script_path() + 'dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
         var args = {
             width: _chart.width(),
             height: _chart.height()
@@ -3118,7 +3139,7 @@ dc_graph.legend = function() {
  * gain more control.
  *
  * Then we'll build back up from the ground up and show how inference works.
- * @name constraint_pattern
+ * @class constraint_pattern
  * @memberof dc_graph
  * @param {dc_graph.diagram} diagram - the diagram to pull attributes from, mostly to determine
  * the keys of nodes and edge sources and targets
@@ -3432,7 +3453,7 @@ dc_graph.behavior = function(event_namespace, handlers) {
  * Optional - requires separately loading the d3.tip script and CSS (which are included in
  * dc.graph.js in `web/js/d3-tip/index.js` and `web/css/d3-tip/example-styles.css`)
  *
- * @name tip
+ * @class tip
  * @memberof dc_graph
  * @return {Object}
  **/
@@ -4231,10 +4252,38 @@ dc_graph.munge_graph = function(data, nodekeyattr, sourceattr, targetattr) {
     };
 }
 
-/* for the special case where there will be exactly one or zero items in a group,
- a reasonable reduction is just to use the row or null.
- this could be useful outside dc.graph (esp e.g bubble charts, scatter plots where each
- observation is either shown or not) but it would have to be cleaned up a bit */
+/**
+ * `dc_graph.flat_group` implements a special ["fake group"](https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups)
+ * for the special case where you want a group that represents the filtered rows of the crossfilter.
+ *
+ * Although `dc_graph` can be used with reduced data, typically the nodes and edges are just rows of
+ * the corresponding data arrays, and each array has a column which contains the unique identifier
+ * for the node or edge. In this setup, there are other dimensions and groups which are aggregated
+ * for the use of dc.js charts, but the graph just shows or does not show the nodes and edges from
+ * the rows.
+ *
+ * This simple class supports that use case in three steps:
+ *  1. It creates a dimension keyed on the unique identifier (specified to `flat_group.make`)
+ *  2. It creates a group from the dimension with a reduction function that returns the row when the
+ *  row is filtered in, and `null` when the row is filtered out.
+ *  3. It wraps the group in a fake group which filters out the resulting nulls.
+ *
+ * The result is a fake group whose `.all()` method returns an array of the currently filtered-in
+ * `{key, value}` pairs, where the key is that returned by the ID accessor, and the value is the raw
+ * row object from the data.
+ *
+ * This could be a useful crossfilter utility outside of dc.graph. For example, bubble charts and
+ * scatter plots often use similar functionality because each observation is either shown or not,
+ * and it is helpful to have the entire row available as reduced data.
+ *
+ * But it would need to be generalized and cleaned up. (For example, the way it has to create the
+ * crossfilter and dimension is kinda dumb.) And there is currently no such crossfilter utility
+ * library to put it in.
+ *
+ * @namespace flat_group
+ * @memberof dc_graph
+ * @type {{}}
+**/
 
 dc_graph.flat_group = (function() {
     var reduce_01 = {
@@ -4265,11 +4314,34 @@ dc_graph.flat_group = (function() {
     }
 
     return {
+        /**
+         * Create a crossfilter, dimension, and flat group, as described in {@link dc_graph.flat_group flat_group}.
+         * Returns an object containing all three.
+
+         * @method make
+         * @memberof dc_graph.flat_group
+         * @param {Array} vec - the data array for crossfilter
+         * @param {Function} id_accessor - accessor function taking a row object and returning its
+         * unique identifier
+         * @return {Object} `{crossfilter, dimension, group}`
+         **/
         make: function(vec, id_accessor) {
             var ndx = crossfilter(vec);
             return dim_group(ndx, id_accessor);
         },
-        another: function(ndx, id_accessor) { // wretched name
+        /**
+         * Create a flat dimension and group from an existing crossfilter.
+         *
+         * This is a wretched name for this function.
+
+         * @method another
+         * @memberof dc_graph.flat_group
+         * @param {Object} ndx - crossfilter instance
+         * @param {Function} id_accessor - accessor function taking a row object and returning its
+         * unique identifier
+         * @return {Object} `{crossfilter, dimension, group}`
+         **/
+        another: function(ndx, id_accessor) {
             return dim_group(ndx, id_accessor);
         }
     };
