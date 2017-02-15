@@ -31,13 +31,9 @@ onmessage = function(e) {
             .on('start', postResponse('start', args.layoutId))
             .on('end', postResponse('end', args.layoutId))
             .init(args.options);
-        // init_d3cola(args.width, args.height, args.handleDisconnected,
-        //             args.lengthStrategy, args.baseLength, args.flowLayout,
-        //             args.tickSize);
         break;
     case 'data':
         _layouts[args.layoutId].data(args.nodes, args.edges, args.constraints, args.options);
-        // data_d3cola(args.nodes, args.edges, args.constraints, args.opts);
         break;
     case 'start':
         // if(args.initialOnly) {

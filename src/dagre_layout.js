@@ -6,7 +6,7 @@ dc_graph.dagre_layout = function(id) {
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
 
-    function init_dagre(options) {
+    function init(options) {
         // Create a new directed graph
         _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
 
@@ -17,7 +17,7 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
     }
 
-    function data_dagre(nodes, edges, constraints, opts) {
+    function data(nodes, edges, constraints, opts) {
         var wnodes = regenerate_objects(_nodes, nodes, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
@@ -57,7 +57,7 @@ dc_graph.dagre_layout = function(id) {
         };
     }
 
-    function start_dagre(initialUnconstrainedIterations,
+    function start(initialUnconstrainedIterations,
                          initialUserConstraintIterations,
                          initialAllConstraintsIterations,
                          gridSnapIterations) {
@@ -66,7 +66,7 @@ dc_graph.dagre_layout = function(id) {
         _done();
     }
 
-    function stop_dagre() {
+    function stop() {
     }
 
     return {
@@ -84,11 +84,11 @@ dc_graph.dagre_layout = function(id) {
             this.optionNames().forEach(function(option) {
                 options[option] = options[option] || this[option]();
             }.bind(this));
-            init_dagre(options);
+            init(options);
             return this;
         },
         data: function(nodes, edges, constraints, opts) {
-            data_dagre(nodes, edges, constraints, opts);
+            data(nodes, edges, constraints, opts);
         },
         start: function(options) {
             if(options.initialOnly) {
@@ -97,10 +97,10 @@ dc_graph.dagre_layout = function(id) {
                 _done();
             }
             else
-                start_dagre(options);
+                start(options);
         },
         stop: function() {
-            stop_dagre();
+            stop();
         },
         optionNames: function() {
             return ['rankdir'];
@@ -116,31 +116,5 @@ dc_graph.dagre_layout = function(id) {
         rankdir: property('TB')
     };
 }
-
-// onmessage = function(e) {
-//     var args = e.data.args;
-//     switch(e.data.command) {
-//     case 'init':
-//         init_dagre(args.width, args.height, args.rankdir);
-//         break;
-//     case 'data':
-//         data_dagre(args.nodes, args.edges, args.constraints, args.opts);
-//         break;
-//     case 'start':
-//         if(args.initialOnly) {
-//             if(args.showLayoutSteps)
-//                 _tick();
-//             _done();
-//         }
-//         else
-//             start_dagre(args.initialUnconstrainedIterations,
-//                          args.initialUserConstraintIterations,
-//                          args.initialAllConstraintsIterations);
-//         break;
-//     case 'stop':
-//         stop_dagre();
-//         break;
-//     }
-// };
 
 dc_graph.dagre_layout.scripts = ['d3.js', 'dagre.js'];

@@ -6,7 +6,7 @@ dc_graph.cola_layout = function(id) {
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
 
-    function init_d3cola(options) {
+    function init(options) {
         // width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
@@ -35,7 +35,7 @@ dc_graph.cola_layout = function(id) {
         }
     }
 
-    function data_d3cola(nodes, edges, constraints, opts) {
+    function data(nodes, edges, constraints, opts) {
         var wnodes = regenerate_objects(_nodes, nodes, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
@@ -101,14 +101,14 @@ dc_graph.cola_layout = function(id) {
             .groups(groups);
     }
 
-    function start_d3cola(options) {
+    function start(options) {
         _d3cola.start(options.initialUnconstrainedIterations,
                       options.initialUserConstraintIterations,
                       options.initialAllConstraintsIterations,
                       options.gridSnapIterations);
     }
 
-    function stop_d3cola() {
+    function stop() {
         _d3cola.stop();
     }
 
@@ -127,17 +127,17 @@ dc_graph.cola_layout = function(id) {
             this.optionNames().forEach(function(option) {
                 options[option] = options[option] || this[option]();
             }.bind(this));
-            init_d3cola(options);
+            init(options);
             return this;
         },
         data: function(nodes, edges, constraints, opts) {
-            data_d3cola(nodes, edges, constraints, opts);
+            data(nodes, edges, constraints, opts);
         },
         start: function(options) {
-            start_d3cola(options);
+            start(options);
         },
         stop: function() {
-            stop_d3cola();
+            stop();
         },
         optionNames: function() {
             return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize'];
