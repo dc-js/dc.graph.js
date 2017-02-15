@@ -14,12 +14,16 @@ module.exports = function (grunt) {
         banner: grunt.file.read('./LICENSE_BANNER'),
         jsFiles: module.exports.jsFiles,
         colaWorkerFiles: [
+            'src/core.js',
             'src/generate_objects.js',
-            'src/cola.worker.js'
+            'src/cola_layout.js',
+            'src/webworker_message.js'
         ],
         dagreWorkerFiles: [
+            'src/core.js',
             'src/generate_objects.js',
-            'src/dagre.worker.js'
+            'src/dagre_layout.js',
+            'src/webworker_message.js'
         ]
     };
 
@@ -265,10 +269,13 @@ module.exports = function (grunt) {
 module.exports.jsFiles = [
     'src/banner.js',   // NOTE: keep this first
     'src/core.js',
+    'src/utils.js',
     'src/depth_first_traversal.js',
     'src/generate_objects.js',
     'src/shape.js',
     'src/diagram.js',
+    'src/layout_webworker.js',
+    'src/cola_layout.js',
     'src/legend.js',
     'src/constraint_pattern.js',
     'src/tree_constraints.js',

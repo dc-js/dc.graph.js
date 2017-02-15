@@ -19,7 +19,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
     var _chart = dc.marginMixin({});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _worker = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _stats = {};
@@ -29,6 +28,18 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _translate = [0,0], _scale = 1;
     var _zoom, _xScale, _yScale;
     var _anchor, _chartGroup;
+
+    function deprecate_layout_algo_parameter(name) {
+        return function(value) {
+            if(!_chart.layoutEngine())
+                _chart.layoutAlgorithm('cola');
+            console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated. Call the corresponding method on the layout engine instead.');
+            var engine = _chart.layoutEngine();
+            if(engine.getEngine)
+                engine = engine.getEngine();
+            engine[name](value);
+        };
+    }
 
     /**
      * Set or get the width attribute of the diagram. See `.height` below.
@@ -598,6 +609,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      * {@link https://github.com/tgdwyer/WebCola/wiki/link-lengths the cola.js wiki}
      * for more details.
      * 'none' - no edge lengths will be specified
+     *
+     * **Deprecated**: Use {@link dc_graph.cola_layout+lengthStrategy} instead.
      * @name lengthStrategy
      * @memberof dc_graph.diagram
      * @instance
@@ -605,7 +618,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Function|String}
      * @return {dc_graph.diagram}
      **/
-    _chart.lengthStrategy = property('symmetric');
+    _chart.lengthStrategy = deprecate_layout_algo_parameter('lengthStrategy');
 
     /**
      * When the `.lengthStrategy` is 'individual', this accessor will be used to read the
@@ -630,6 +643,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
      * now it is separate.
+     *
+     * **Deprecated**: use {@link dc_graph.cola_layout#flowLayout} instead.
      * @name flowLayout
      * @memberof dc_graph.diagram
      * @instance
@@ -656,6 +671,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
      * 'individual', and the base value to be multiplied for 'symmetric' and 'jaccard' edge
      * lengths.
+     *
+     * **Deprecated**: use {@link dc_graph.cola_layout#baseLength} instead.
      * @name baseLength
      * @memberof dc_graph.diagram
      * @instance
@@ -663,7 +680,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Number}
      * @return {dc_graph.diagram}
      **/
-    _chart.baseLength = property(30);
+    _chart.baseLength = deprecate_layout_algo_parameter('baseLength');
 
     /**
      * Gets or sets the transition duration, the length of time each change to the diagram will
@@ -935,10 +952,11 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
-     * Currently, you can specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it
-     * will replace the back-end. In the future, there will be subclasses like colaDiagram and
-     * dagreDiagram with appropriate interfaces for each, but it is not yet clear which features are
-     * common between them.
+     * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
+     * back-end.
+     *
+     * **Deprecated**: use {@link $dc_graph.diagram+layoutEngine layoutEngine} with the engine
+     * object instead
      * @name layoutAlgorithm
      * @memberof dc_graph.diagram
      * @instance
@@ -948,9 +966,36 @@ dc_graph.diagram = function (parent, chartGroup) {
      * diagram.layoutAlgorithm('dagre');
      * @return {dc_graph.diagram}
      **/
-    _chart.layoutAlgorithm = property('cola');
+    _chart.layoutAlgorithm = property('cola').react(function(value) {
+        console.warn('dc.graph.diagram.layoutAlgorithm is depecrecated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
+        var engine;
+        switch(value) {
+        case 'cola':
+            engine = dc_graph.cola_layout();
+            break;
+        case 'dagre':
+            engine = dc_graph.dagre_layout();
+        }
+        engine = dc_graph.layout_webworker(engine);
+        _chart.layoutEngine(engine);
+        return this;
+    });
 
-    _chart.tickSize = property(1);
+    /**
+     * The layout engine determines how to draw things!
+     * @name layoutEngine
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Object} [engine] - the layout engine to use
+     * @example
+     * // use cola with no webworker
+     * diagram.layoutEngine(dc_graph.cola_layout());
+     * // use dagre with a webworker
+     * diagram.layoutEngine(dca_graph.layout_webworker(dc_graph.dagre_layout()));
+     **/
+    _chart.layoutEngine = property(null);
+
+    _chart.tickSize = deprecate_layout_algo_parameter('tickSize');
 
 
     _chart.edgeId = function(d) {
@@ -972,7 +1017,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
-     * Instructs cola.js to fit the connected components. Default: true
+     * Instructs cola.js to fit the connected components.
+     *
+     * **Deprecated**: Use
+     * {@link dc_graph.cola_layout+handleDisconnected cola_layout.handleDisconnected} instead.
      * @name handleDisconnected
      * @memberof dc_graph.diagram
      * @instance
@@ -980,34 +1028,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Boolean}
      * @return {dc_graph.diagram}
      **/
-    _chart.handleDisconnected = property(true);
+    _chart.handleDisconnected = deprecate_layout_algo_parameter('handleDisconnected');
 
     function initLayout() {
-        if(!_worker)
-            _worker = new Worker(script_path() + 'dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
-        var args = {
+        if(!_chart.layoutEngine())
+            _chart.layoutAlgorithm('cola');
+        _chart.layoutEngine().init({
             width: _chart.width(),
             height: _chart.height()
-        };
-        // generalize this? class hierarchy, what?
-        switch(_chart.layoutAlgorithm()) {
-        case 'cola':
-            Object.assign(args, {
-                handleDisconnected: _chart.handleDisconnected(),
-                lengthStrategy: _chart.lengthStrategy(),
-                baseLength: _chart.baseLength(),
-                flowLayout: _chart.flowLayout(),
-                tickSize: _chart.tickSize()
-            });
-            break;
-        case 'dagre':
-            Object.assign(args, {
-                rankdir: _chart.rankdir()
-            });
-        }
-        _worker.postMessage({
-            command: 'init',
-            args: args
         });
     }
 
@@ -1117,8 +1145,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        if(_worker)
-            _worker.postMessage({command: 'stop'});
+        _chart.layoutEngine().stop();
 
         if(_chart.initLayoutOnRedraw())
             initLayout();
@@ -1420,24 +1447,20 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var e = _edges[re.dcg_edgeKey];
             });
         }
-        _worker.onmessage = function(e) {
-            var args = e.data.args;
-            switch(e.data.response) {
-            case 'tick':
+        _chart.layoutEngine()
+            .on('tick', function(nodes, edges) {
                 var elapsed = Date.now() - startTime;
-                populate_cola(args.nodes, args.edges);
+                populate_cola(nodes, edges);
                 if(_chart.showLayoutSteps())
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                     console.log('cancelled');
-                    _worker.postMessage({
-                        command: 'stop'
-                    });
+                    _chart.layoutEngine().stop();
                 }
-                break;
-            case 'end':
+            })
+            .on('end', function(nodes, edges) {
                 if(!_chart.showLayoutSteps()) {
-                    populate_cola(args.nodes, args.edges);
+                    populate_cola(nodes, edges);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 }
                 else layout_done(true);
@@ -1456,31 +1479,25 @@ dc_graph.diagram = function (parent, chartGroup) {
                 calc_bounds(node, edge);
                 if(do_zoom)
                     auto_zoom();
-                break;
-            case 'start':
+            })
+            .on('start', function() {
                 console.log('algo ' + _chart.layoutAlgorithm() + ' started.');
                 _dispatch.start();
-            }
-        };
+            });
+
         _dispatch.start(); // cola doesn't seem to fire this itself?
-        _worker.postMessage({
-            command: 'data',
-            args: {
-                nodes: wnodes.map(function(v) { return v.cola; }),
-                edges: layout_edges.map(function(v) { return v.cola; }),
-                constraints: constraints,
-                opts: {groupConnected: _chart.groupConnected()}
-            }
-        });
-        _worker.postMessage({
-            command: 'start',
-            args: {
-                initialUnconstrainedIterations: 10,
-                initialUserConstraintIterations: 20,
-                initialAllConstraintsIterations: 20,
-                initialOnly: _chart.initialOnly(),
-                showLayoutSteps: _chart.showLayoutSteps()
-            }
+        _chart.layoutEngine().data(
+                wnodes.map(function(v) { return v.cola; }),
+                layout_edges.map(function(v) { return v.cola; }),
+                constraints,
+                {groupConnected: _chart.groupConnected()}
+        );
+        _chart.layoutEngine().start({
+            initialUnconstrainedIterations: 10,
+            initialUserConstraintIterations: 20,
+            initialAllConstraintsIterations: 20,
+            initialOnly: _chart.initialOnly(),
+            showLayoutSteps: _chart.showLayoutSteps()
         });
         return this;
     };

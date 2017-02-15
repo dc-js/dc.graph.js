@@ -90,8 +90,7 @@ onmessage = function(e) {
         else
             start_dagre(args.initialUnconstrainedIterations,
                          args.initialUserConstraintIterations,
-                         args.initialAllConstraintsIterations,
-                         args.gridSnapIterationse);
+                         args.initialAllConstraintsIterations);
         break;
     case 'stop':
         stop_dagre();
