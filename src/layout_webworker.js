@@ -6,21 +6,10 @@ function create_worker(layoutAlgorithm) {
             layouts: {}
         };
         worker.worker.onmessage = function(e) {
-            var layoutId = e.data.layoutId,
-                state = e.data.state;
+            var layoutId = e.data.layoutId;
             if(!worker.layouts[layoutId])
                 throw new Error('layoutId "' + layoutId + '" unknown!');
-            switch(e.data.response) {
-            case 'tick':
-                worker.layouts[layoutId].dispatch().tick(state.nodes, state.edges);
-                break;
-            case 'end':
-                worker.layouts[layoutId].dispatch().end(state.nodes, state.edges);
-                break;
-            case 'stop':
-                worker.layouts[layoutId].dispatch().stop();
-                break;
-            }
+            worker.layouts[layoutId].dispatch()[e.data.response].apply(null, e.data.args);
         };
     }
     return _workers[layoutAlgorithm];

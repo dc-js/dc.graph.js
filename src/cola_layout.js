@@ -81,12 +81,12 @@ dc_graph.cola_layout = function(id) {
         }
 
         function dispatchState(event) {
-            _dispatch[event]({
-                nodes: wnodes,
-                edges: wedges.map(function(e) {
+            _dispatch[event](
+                wnodes,
+                wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
                 })
-            });
+            );
         }
         _d3cola.on('tick', /* _tick = */ function() {
             dispatchState('tick');
@@ -124,6 +124,9 @@ dc_graph.cola_layout = function(id) {
             return this;
         },
         init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
             init_d3cola(options);
             return this;
         },

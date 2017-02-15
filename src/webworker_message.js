@@ -1,13 +1,12 @@
 var _layouts;
 
 function postResponse(event, layoutId) {
-    return function(state) {
+    return function() {
         var message = {
             response: event,
             layoutId: layoutId
         };
-        if(state)
-            message.state = state;
+        message.args = Array.prototype.slice.call(arguments);
         postMessage(message);
     };
 }
