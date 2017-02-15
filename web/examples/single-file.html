@@ -35,13 +35,11 @@
 
   <script type="text/javascript">
 
-    var file = "process.json";
     var diagram = dc_graph.diagram('#graph');
 
     var qs = querystring.parse();
-    var draw_arrows = qs.arrows==='true'; // example of using query string parameter
 
-    dc_graph.load_graph(file, function(error, data) {
+    dc_graph.load_graph(qs.file || 'process.json', function(error, data) {
         if(error) {
             console.log(error);
             return;
@@ -52,7 +50,20 @@
         }),
             nodes = dc_graph.flat_group.make(data.nodes, function(d) { return d.name; });
 
+        var engine;
+        switch(qs.layout) {
+        case 'dagre':
+            engine = dc_graph.dagre_layout();
+            break;
+        case 'cola':
+        default:
+            engine = dc_graph.cola_layout();
+            break;
+        }
+        if(qs.worker !== 'false')
+            engine = dc_graph.layout_webworker(engine);
         diagram
+            .layoutEngine(engine)
             .width($(window).width())
             .height($(window).height())
             .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
@@ -65,7 +76,7 @@
             })
             .nodeLabelFillAccessor('white')
             .nodeTitleAccessor(null) // deactivate basic tooltips
-            .edgeArrowheadAccessor(draw_arrows ? 'vee' : null);
+            .edgeArrowheadAccessor(qs.arrows ? 'vee' : null);
 
 
         // add tooltips using d3-tip
