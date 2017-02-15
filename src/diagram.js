@@ -660,12 +660,14 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
      * generated from graphviz-style since it is more general.
+     *
+     * **Deprecated**: use {@link dc_graph.dagre_layout#rankdir} instead.
      * @name rankdir
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [rankdir]
      **/
-    _chart.rankdir = property('TB');
+    _chart.rankdir = deprecate_layout_algo_parameter('rankdir');
 
     /**
      * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is

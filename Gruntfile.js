@@ -276,6 +276,7 @@ module.exports.jsFiles = [
     'src/diagram.js',
     'src/layout_webworker.js',
     'src/cola_layout.js',
+    'src/dagre_layout.js',
     'src/legend.js',
     'src/constraint_pattern.js',
     'src/tree_constraints.js',

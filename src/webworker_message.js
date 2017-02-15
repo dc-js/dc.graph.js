@@ -15,12 +15,18 @@ onmessage = function(e) {
     var args = e.data.args;
     switch(e.data.command) {
     case 'init':
+        // find a function under dc_graph that has `scripts`
+        var layout_name;
+        for(var name in dc_graph) {
+            if(typeof dc_graph[name] === 'function' && dc_graph[name].scripts)
+                layout_name = name;
+        }
         if(!_layouts) {
             _layouts = {};
-            importScripts.apply(null, dc_graph.cola_layout.scripts);
+            importScripts.apply(null, dc_graph[layout_name].scripts);
         }
 
-        _layouts[args.layoutId] = dc_graph.cola_layout()
+        _layouts[args.layoutId] = dc_graph[layout_name]()
             .on('tick', postResponse('tick', args.layoutId))
             .on('start', postResponse('start', args.layoutId))
             .on('end', postResponse('end', args.layoutId))
