@@ -51,16 +51,22 @@
         }),
             nodes = dc_graph.flat_group.make(data.nodes, function(d) { return d.name; });
 
-        var engine;
+        var engine, params;
         switch(qs.layout) {
         case 'dagre':
             engine = dc_graph.dagre_layout();
+            params = ['rankdir'];
             break;
         case 'cola':
         default:
             engine = dc_graph.cola_layout();
+            params = ['lengthStrategy'];
             break;
         }
+        params.forEach(function(p) {
+            if(qs[p])
+                engine[p](qs[p]);
+        });
         if(qs.worker !== 'false')
             engine = dc_graph.layout_webworker(engine);
         diagram
