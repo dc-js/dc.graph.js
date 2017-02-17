@@ -62,6 +62,10 @@
             engine = dc_graph.dagre_layout();
             params = ['rankdir'];
             break;
+        case 'tree':
+            engine = dc_graph.tree_layout();
+            params = [];
+            break;
         case 'cola':
         default:
             engine = dc_graph.cola_layout();
