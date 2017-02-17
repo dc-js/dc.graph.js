@@ -24,7 +24,7 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
     }
 
-    function data(nodes, edges, constraints, opts) {
+    function data(nodes, edges, constraints, options) {
         var wnodes = regenerate_objects(_nodes, nodes, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
@@ -64,10 +64,7 @@ dc_graph.dagre_layout = function(id) {
         };
     }
 
-    function start(initialUnconstrainedIterations,
-                         initialUserConstraintIterations,
-                         initialAllConstraintsIterations,
-                         gridSnapIterations) {
+    function start(options) {
         _dispatch.start();
         dagre.layout(_dagreGraph);
         _done();
@@ -94,17 +91,11 @@ dc_graph.dagre_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, opts) {
-            data(nodes, edges, constraints, opts);
+        data: function(nodes, edges, constraints, options) {
+            data(nodes, edges, constraints, options);
         },
         start: function(options) {
-            if(options.initialOnly) {
-                if(options.showLayoutSteps)
-                    _tick();
-                _done();
-            }
-            else
-                start(options);
+            start(options);
         },
         stop: function() {
             stop();

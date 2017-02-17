@@ -21,21 +21,6 @@ dc_graph.layout_webworker = function(layoutEngine) {
     var engine = {};
     _worker.layouts[layoutEngine.layoutId()] = engine;
 
-    // switch(_chart.layoutAlgorithm()) {
-    // case 'cola':
-    //     Object.assign(args, {
-    //         handleDisconnected: _chart.handleDisconnected(),
-    //         lengthStrategy: _chart.lengthStrategy(),
-    //         baseLength: _chart.baseLength(),
-    //         flowLayout: _chart.flowLayout(),
-    //         tickSize: _chart.tickSize()
-    //     });
-    //     break;
-    // case 'dagre':
-    //     Object.assign(args, {
-    //         rankdir: _chart.rankdir()
-    //     });
-    // }
     engine.init = function(options) {
         options = layoutEngine.optionNames().reduce(
             function(options, option) {

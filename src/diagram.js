@@ -1493,17 +1493,15 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _dispatch.start(); // cola doesn't seem to fire this itself?
         _chart.layoutEngine().data(
-                wnodes.map(function(v) { return v.cola; }),
-                layout_edges.map(function(v) { return v.cola; }),
-                constraints,
-                {groupConnected: _chart.groupConnected()}
+            wnodes.map(function(v) { return v.cola; }),
+            layout_edges.map(function(v) { return v.cola; }),
+            constraints,
+            {groupConnected: _chart.groupConnected()}
         );
         _chart.layoutEngine().start({
             initialUnconstrainedIterations: 10,
             initialUserConstraintIterations: 20,
-            initialAllConstraintsIterations: 20,
-            initialOnly: _chart.initialOnly(),
-            showLayoutSteps: _chart.showLayoutSteps()
+            initialAllConstraintsIterations: 20
         });
         return this;
     };

@@ -42,7 +42,7 @@ dc_graph.cola_layout = function(id) {
         }
     }
 
-    function data(nodes, edges, constraints, opts) {
+    function data(nodes, edges, constraints, options) {
         var wnodes = regenerate_objects(_nodes, nodes, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
@@ -80,7 +80,7 @@ dc_graph.cola_layout = function(id) {
         });
 
         var groups = null;
-        if(opts.groupConnected) {
+        if(options.groupConnected) {
             var components = cola.separateGraphs(wnodes, wedges);
             groups = components.map(function(g) {
                 return {leaves: g.array.map(function(n) { return n.index; })};
@@ -137,8 +137,8 @@ dc_graph.cola_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, opts) {
-            data(nodes, edges, constraints, opts);
+        data: function(nodes, edges, constraints, options) {
+            data(nodes, edges, constraints, options);
         },
         start: function(options) {
             start(options);
