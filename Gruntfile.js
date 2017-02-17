@@ -264,6 +264,7 @@ module.exports = function (grunt) {
     grunt.registerTask('server', ['docs', 'connect:server', 'watch:scripts']);
     grunt.registerTask('lint', ['build', 'jshint', 'jscs']);
     grunt.registerTask('default', ['build', 'shell:hooks']);
+    grunt.registerTask('doc-debug', ['build', 'jsdoc', 'jsdoc2md', 'connect:server', 'watch:docs']);
 };
 
 module.exports.jsFiles = [
