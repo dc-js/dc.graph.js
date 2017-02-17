@@ -38,6 +38,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(engine.getEngine)
                 engine = engine.getEngine();
             engine[name](value);
+            return this;
         };
     }
 
