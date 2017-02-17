@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Randomly build a graph</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="../css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="../css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="../css/d3-tip/example-styles.css"/>
+
+  <script type="text/javascript" src="../js/d3.js"></script>
+  <script type="text/javascript" src="../js/crossfilter.js"></script>
+  <script type="text/javascript" src="../js/dc.js"></script>
+  <script type="text/javascript" src="../js/d3-tip/index.js"></script>
+
+  <script type="text/javascript" src="../js/jquery.js"></script>
+  <script type="text/javascript" src="../js/lodash.js"></script>
+
+  <script type="text/javascript" src="../js/cola.js"></script>
+  <script type="text/javascript" src="../js/dagre.js"></script>
+  <script type="text/javascript" src="../js/dc.graph.js"></script>
+
+  <script type="text/javascript" src="../js/querystring.js"></script>
+
+  <style type="text/css">
+    body {
+      overflow: hidden;
+    }
+  </style>
+
+</head>
+
+
+<body>
+
+  <div id="graph" class="chart"></div>
+
+  <script type="text/javascript">
+
+    (function() {
+        function build_data(nodes, edges) {
+            // build crossfilters from scratch
+            return {
+                edgef: dc_graph.flat_group.make(edges, function(d) {
+                    return d.id;
+                }),
+                nodef: dc_graph.flat_group.make(nodes, function(d) {
+                    return d.id;
+                })
+            };
+        }
+
+        var qs = querystring.parse();
+        var nodes = [], edges = [];
+        var newNodeProb = +qs.newnode || 0.9;
+
+        function random_node() {
+            return nodes[Math.floor(Math.random()*nodes.length)];
+        }
+        var engine, params;
+        switch(qs.layout) {
+        case 'dagre':
+            engine = dc_graph.dagre_layout();
+            params = ['rankdir'];
+            break;
+        case 'cola':
+        default:
+            engine = dc_graph.cola_layout();
+            params = ['lengthStrategy'];
+            break;
+        }
+        params.forEach(function(p) {
+            if(qs[p])
+                engine[p](qs[p]);
+        });
+        if(qs.worker !== 'false')
+            engine = dc_graph.layout_webworker(engine);
+
+        var diagram = dc_graph.diagram('#graph');
+        var data = build_data(nodes, edges);
+        diagram
+            .layoutEngine(engine)
+            .width($(window).width())
+            .height($(window).height())
+            .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
+            .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
+            .nodeStrokeWidth(0) // turn off outlines
+            .nodeLabel(function(kv) { return kv.key; })
+            .nodeLabelFill(function(n) {
+                var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
+                    // https://www.w3.org/TR/AERT#color-contrast
+                    brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                return brightness > 127 ? 'black' : 'ghostwhite';
+            })
+            .nodeFill(function(kv) {
+                return kv.value.color;
+            })
+            .nodeFillScale(d3.scale.ordinal().range(
+                ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
+                 '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
+            .nodeTitle(null) // deactivate basic tooltips
+            .edgeArrowhead(qs.arrows ? 'vee' : null)
+            .render();
+
+        window.setInterval(function() {
+            var choice = Math.random();
+            var n1 = random_node(), n2;
+            if(choice < newNodeProb)
+                nodes.push(n2 = {id: 'n' + nodes.length, color: Math.floor(Math.random()*12)});
+            else
+                n2 = random_node();
+            if(n1)
+                edges.push({id: 'e' + edges.length, sourcename: n1.id, targetname: n2.id});
+            data = build_data(nodes, edges);
+            diagram
+                .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
+                .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
+                .redraw();
+        }, qs.interval || 2000);
+    })();
+</script>
+</body>
