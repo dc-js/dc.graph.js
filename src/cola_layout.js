@@ -1,3 +1,10 @@
+/**
+ * `dc_graph.cola_layout` is an adaptor for cola.js layouts in dc.graph.js
+ * @class cola_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.cola_layout}
+ **/
 dc_graph.cola_layout = function(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
@@ -144,12 +151,12 @@ dc_graph.cola_layout = function(id) {
         },
         /**
          * Instructs cola.js to fit the connected components.
-         * @name handleDisconnected
+         * @method handleDisconnected
          * @memberof dc_graph.cola_layout
          * @instance
          * @param {Boolean} [handleDisconnected=true]
          * @return {Boolean}
-         * @return {dc_graph.diagram}
+         * @return {dc_graph.cola_layout}
          **/
         handleDisconnected: property(true),
         /**
@@ -161,33 +168,33 @@ dc_graph.cola_layout = function(id) {
          * {@link https://github.com/tgdwyer/WebCola/wiki/link-lengths the cola.js wiki}
          * for more details.
          * 'none' - no edge lengths will be specified
-         * @name lengthStrategy
-         * @memberof dc_graph.diagram
+         * @method lengthStrategy
+         * @memberof dc_graph.cola_layout
          * @instance
          * @param {Function|String} [lengthStrategy='symmetric']
          * @return {Function|String}
-         * @return {dc_graph.diagram}
+         * @return {dc_graph.cola_layout}
          **/
         lengthStrategy: property('symmetric'),
         /**
          * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
          * 'individual', and the base value to be multiplied for 'symmetric' and 'jaccard' edge
          * lengths.
-         * @name baseLength
-         * @memberof dc_graph.diagram
+         * @method baseLength
+         * @memberof dc_graph.cola_layout
          * @instance
-         * @param {Number} [baseLength]
+         * @param {Number} [baseLength=30]
          * @return {Number}
-         * @return {dc_graph.diagram}
+         * @return {dc_graph.cola_layout}
          **/
         baseLength: property(30),
         /**
          * This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
          * now it is separate.
-         * @name flowLayout
-         * @memberof dc_graph.diagram
+         * @method flowLayout
+         * @memberof dc_graph.cola_layout
          * @instance
-         * @param {Object} [flowLayout]
+         * @param {Object} [flowLayout=null]
          * @example
          * // No flow (default)
          * chart.flowLayout(null)
