@@ -13,9 +13,9 @@ dc_graph.tree_layout = function(id) {
 
     function init(options) {
         var x;
-        var nwidth = d3.functor(options.nwidth);
+        var nodeWidth = d3.functor(options.nodeWidth);
         function best_dist(left, right) {
-            return (nwidth(left) + nwidth(right)) / 2;
+            return (nodeWidth(left) + nodeWidth(right)) / 2;
         }
         _dfs = dc_graph.depth_first_traversal({
             nodeid: function(n) {
@@ -36,7 +36,7 @@ dc_graph.tree_layout = function(id) {
             place: function(n, r, row) {
                 if(row.length) {
                     var left = row[row.length-1];
-                    var g = (nwidth(left) + nwidth(n)) / 2;
+                    var g = (nodeWidth(left) + nodeWidth(n)) / 2;
                     x = Math.max(x, left.left_x + g);
                 }
                 n.left_x = x;
@@ -143,10 +143,11 @@ dc_graph.tree_layout = function(id) {
             stop();
         },
         optionNames: function() {
-            return ['offsetX', 'offsetY', 'rootFunction', 'rowFunction', 'treeFunction', 'rootFunction', 'gapY'];
+            return ['nodeWidth', 'offsetX', 'offsetY', 'rootFunction', 'rowFunction', 'treeFunction', 'rootFunction', 'gapY'];
         },
-        offsetX: property(10),
-        offsetY: property(20),
+        nodeWidth: property(function(n) { return n.width; }),
+        offsetX: property(30),
+        offsetY: property(30),
         rootFunction: property(null),
         rowFunction: property(null),
         treeFunction: property(null),
@@ -154,6 +155,6 @@ dc_graph.tree_layout = function(id) {
         gapY: property(100)
     };
     return layout;
-}
+};
 
 dc_graph.tree_layout.scripts = [];

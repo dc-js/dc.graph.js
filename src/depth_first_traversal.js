@@ -41,7 +41,7 @@ dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree
                 outmap[key].forEach(function(e, ei) {
                     var target = nmap[callbacks.targetid(e)];
                     if(ei && callbacks.sib)
-                        callbacks.sib(false, outmap[key][ei-1].target, target);
+                        callbacks.sib(false, nmap[callbacks.targetid(outmap[key][ei-1])], target);
                     callbacks.push && callbacks.push();
                     place_tree(target, r+1);
                 });
@@ -53,6 +53,8 @@ dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree
             roots = nodes.filter(function(n) { return callbacks.root(n.orig); });
         else {
             roots = nodes.filter(function(n) { return !indegree[callbacks.nodeid(n)]; });
+            if(nodes.length && !roots.length) // all nodes are in a cycle
+                roots = [nodes[0]];
         }
         roots.forEach(function(n, ni) {
             if(ni && callbacks.sib)
