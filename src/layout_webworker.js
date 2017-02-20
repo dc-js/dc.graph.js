@@ -70,6 +70,9 @@ dc_graph.layout_webworker = function(layoutEngine) {
     engine.getEngine = function() {
         return layoutEngine;
     };
+    engine.layoutAlgorithm = function() {
+        return layoutEngine.layoutAlgorithm();
+    };
     engine.on = function(event, f) {
         _dispatch.on(event, f);
         return this;

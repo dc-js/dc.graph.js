@@ -84,6 +84,22 @@ var property = function (defaultValue, unwrap) {
     return ret;
 };
 
+function deprecated_property(message, defaultValue) {
+    var prop = property(defaultValue);
+    var ret = function() {
+        if(arguments.length) {
+            console.warn(message);
+            prop.apply(property, arguments);
+            return this;
+        }
+        return prop();
+    };
+    ['cascade', '_eval', 'eval', 'react'].forEach(function(method) {
+        ret[method] = prop[method];
+    });
+    return ret;
+}
+
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 function uuid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

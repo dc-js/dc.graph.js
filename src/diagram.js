@@ -32,7 +32,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     function deprecate_layout_algo_parameter(name) {
         return function(value) {
             if(!_chart.layoutEngine())
-                _chart.layoutAlgorithm('cola');
+                _chart.layoutAlgorithm('cola', true);
             console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated. Call the corresponding method on the layout engine instead.');
             var engine = _chart.layoutEngine();
             if(engine.getEngine)
@@ -871,6 +871,13 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Function to call to generate an initial layout. Takes (diagram, nodes, edges)
+     *
+     * **Deprecated**: The only layout that was using this was `tree_positions` and it never
+     * worked as an initialization step for cola, as was originally intended. Now that
+     * `tree_layout` is a layout algorithm, this should go away.
+     *
+     * In the future, there will be support for chaining layout algorithms. But that will be a
+     * matter of composing them into a super-algorithm, not a special step like this was.
      * @method initialLayout
      * @memberof dc_graph.diagram
      * @instance
@@ -878,9 +885,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
-    _chart.initialLayout = property(null);
+    _chart.initialLayout = deprecated_property('initialLayout is deprecated - use layout algorithms instead', null);
 
-    _chart.initialOnly = property(false);
+    _chart.initialOnly = deprecated_property('initialOnly is deprecated - see the initialLayout deprecation notice in the documentation', false);
 
     /**
      * By default, all nodes are included, and edges are only included if both end-nodes are
@@ -972,8 +979,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      * diagram.layoutAlgorithm('dagre');
      * @return {dc_graph.diagram}
      **/
-    _chart.layoutAlgorithm = property('cola').react(function(value) {
-        console.warn('dc.graph.diagram.layoutAlgorithm is depecrecated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
+    _chart.layoutAlgorithm = function(value, skipWarning) {
+        if(!arguments.length)
+            return _chart.layoutEngine() ? _chart.layoutEngine().layoutAlgorithm() : 'cola';
+        if(!skipWarning)
+            console.warn('dc.graph.diagram.layoutAlgorithm is depecrated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
+
         var engine;
         switch(value) {
         case 'cola':
@@ -985,7 +996,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         engine = dc_graph.layout_webworker(engine);
         _chart.layoutEngine(engine);
         return this;
-    });
+    };
 
     /**
      * The layout engine determines how to draw things!
@@ -1038,7 +1049,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function initLayout() {
         if(!_chart.layoutEngine())
-            _chart.layoutAlgorithm('cola');
+            _chart.layoutAlgorithm('cola', true);
         _chart.layoutEngine().init({
             width: _chart.width(),
             height: _chart.height()
@@ -1456,7 +1467,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         _chart.layoutEngine()
             .on('tick', function(nodes, edges) {
                 var elapsed = Date.now() - startTime;
-                populate_cola(nodes, edges);
+                if(!_chart.initialOnly())
+                    populate_cola(nodes, edges);
                 if(_chart.showLayoutSteps())
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
@@ -1466,7 +1478,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .on('end', function(nodes, edges) {
                 if(!_chart.showLayoutSteps()) {
-                    populate_cola(nodes, edges);
+                    if(!_chart.initialOnly())
+                        populate_cola(nodes, edges);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 }
                 else layout_done(true);
@@ -1487,22 +1500,26 @@ dc_graph.diagram = function (parent, chartGroup) {
                     auto_zoom();
             })
             .on('start', function() {
-                console.log('algo ' + _chart.layoutAlgorithm() + ' started.');
+                console.log('algo ' + _chart.layoutEngine().layoutAlgorithm() + ' started.');
                 _dispatch.start();
             });
 
-        _dispatch.start(); // cola doesn't seem to fire this itself?
-        _chart.layoutEngine().data(
-            wnodes.map(function(v) { return v.cola; }),
-            layout_edges.map(function(v) { return v.cola; }),
-            constraints,
-            {groupConnected: _chart.groupConnected()}
-        );
-        _chart.layoutEngine().start({
-            initialUnconstrainedIterations: 10,
-            initialUserConstraintIterations: 20,
-            initialAllConstraintsIterations: 20
-        });
+        if(_chart.initialOnly())
+            _chart.layoutEngine().dispatch().end(wnodes, wedges);
+        else {
+            _dispatch.start(); // cola doesn't seem to fire this itself?
+            _chart.layoutEngine().data(
+                wnodes.map(function(v) { return v.cola; }),
+                layout_edges.map(function(v) { return v.cola; }),
+                constraints,
+                {groupConnected: _chart.groupConnected()}
+            );
+            _chart.layoutEngine().start({
+                initialUnconstrainedIterations: 10,
+                initialUserConstraintIterations: 20,
+                initialAllConstraintsIterations: 20
+            });
+        }
         return this;
     };
 

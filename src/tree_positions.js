@@ -1,5 +1,6 @@
 // this naive tree-drawer is paraphrased from memory from dot
 dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
+    console.warn('dc_graph.tree_positions is deprecated; use the layout engine tree_layout instead');
     var x;
     nwidth = d3.functor(nwidth);
     function best_dist(left, right) {

@@ -1,5 +1,6 @@
 // this naive tree-drawer is paraphrased from memory from dot
 dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
+    console.warn('dc_graph.tree_constraints is deprecated - it never worked right and may not be a good idea');
     return function(diagram, nodes, edges) {
         var constraints = [];
         var x = 0;
