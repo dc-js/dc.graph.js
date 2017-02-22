@@ -15,7 +15,7 @@ function create_worker(layoutAlgorithm) {
     return _workers[layoutAlgorithm];
 }
 
-dc_graph.layout_webworker = function(layoutEngine) {
+dc_graph.webworker_layout = function(layoutEngine) {
     var _tick, _done, _dispatch = d3.dispatch('init', 'start', 'tick', 'end');
     var _worker = create_worker(layoutEngine.layoutAlgorithm());
     var engine = {};

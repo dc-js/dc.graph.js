@@ -993,7 +993,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         case 'dagre':
             engine = dc_graph.dagre_layout();
         }
-        engine = dc_graph.layout_webworker(engine);
+        engine = dc_graph.webworker_layout(engine);
         _chart.layoutEngine(engine);
         return this;
     };
@@ -1008,7 +1008,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * // use cola with no webworker
      * diagram.layoutEngine(dc_graph.cola_layout());
      * // use dagre with a webworker
-     * diagram.layoutEngine(dca_graph.layout_webworker(dc_graph.dagre_layout()));
+     * diagram.layoutEngine(dc_graph.webworker_layout(dc_graph.dagre_layout()));
      **/
     _chart.layoutEngine = property(null);
 
