@@ -22,7 +22,9 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
         init: function() {
             x = ofsx;
         },
-        row: rowf,
+        row: function(n) {
+            return rowf(n.orig);
+        },
         place: function(n, r, row) {
             if(row.length) {
                 var left = row[row.length-1];

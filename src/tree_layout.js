@@ -30,7 +30,9 @@ dc_graph.tree_layout = function(id) {
             init: function() {
                 x = options.offsetX;
             },
-            row: options.rowFunction,
+            row: function(n) {
+                return n.dcg_rank;
+            },
             place: function(n, r, row) {
                 if(row.length) {
                     var left = row[row.length-1];

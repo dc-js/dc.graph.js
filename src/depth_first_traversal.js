@@ -50,7 +50,7 @@ dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree
 
         var roots;
         if(callbacks.root)
-            roots = nodes.filter(function(n) { return callbacks.root(n.orig); });
+            roots = nodes.filter(function(n) { return callbacks.root(n); });
         else {
             roots = nodes.filter(function(n) { return !indegree[callbacks.nodeid(n)]; });
             if(nodes.length && !roots.length) // all nodes are in a cycle
@@ -60,7 +60,7 @@ dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree
             if(ni && callbacks.sib)
                 callbacks.sib(true, roots[ni-1], n);
             callbacks.push && callbacks.push();
-            place_tree(n, callbacks.row ? callbacks.row(n.orig) : 0);
+            place_tree(n, callbacks.row ? callbacks.row(n) : 0);
         });
         callbacks.finish(rows);
     };
