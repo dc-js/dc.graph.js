@@ -141,20 +141,17 @@ dc_graph.tree_layout = function(id) {
             stop();
         },
         optionNames: function() {
-            return ['nodeWidth', 'offsetX', 'offsetY', 'rootFunction', 'rowFunction', 'treeFunction', 'rootFunction', 'gapY'];
+            return ['nodeWidth', 'offsetX', 'offsetY', 'rowFunction', 'gapY'];
         },
-        nodeWidth: property(function(n) { return n.width; }),
-        offsetX: property(30),
         populateLayoutNode: function(layout, node) {
             if(this.rowFunction())
                 layout.dcg_rank = this.rowFunction.eval(node);
         },
         populateLayoutEdge: function() {},
+        nodeWidth: property(function(n) { return n.width; }),
+        offsetX: property(30),
         offsetY: property(30),
-        rootFunction: property(null),
         rowFunction: property(null),
-        treeFunction: property(null),
-        rootFunction: property(null),
         gapY: property(100)
     };
     return layout;
