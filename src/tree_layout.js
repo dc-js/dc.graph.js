@@ -145,6 +145,11 @@ dc_graph.tree_layout = function(id) {
         },
         nodeWidth: property(function(n) { return n.width; }),
         offsetX: property(30),
+        populateLayoutNode: function(layout, node) {
+            if(this.rowFunction())
+                layout.dcg_rank = this.rowFunction.eval(node);
+        },
+        populateLayoutEdge: function() {},
         offsetY: property(30),
         rootFunction: property(null),
         rowFunction: property(null),

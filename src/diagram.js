@@ -1183,6 +1183,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.cola.dcg_nodeKey = _chart.nodeKey.eval(v1);
             if(_chart.nodeFixed())
                 v1.cola.dcg_nodeFixed = _chart.nodeFixed.eval(v1);
+            _chart.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
         var wedges = regenerate_objects(_edges, edges, function(e) {
             return _chart.edgeKey()(e);
@@ -1195,6 +1196,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             e1.source = _nodes[e1.cola.dcg_edgeSource];
             e1.target = _nodes[e1.cola.dcg_edgeTarget];
             e1.cola.dcg_edgeLength = _chart.edgeLength.eval(e1);
+            _chart.layoutEngine().populateLayoutEdge(e1.cola, e1);
         });
 
         // remove edges that don't have both end nodes

@@ -73,6 +73,12 @@ dc_graph.layout_webworker = function(layoutEngine) {
     engine.layoutAlgorithm = function() {
         return layoutEngine.layoutAlgorithm();
     };
+    engine.populateLayoutNode = function() {
+        return layoutEngine.populateLayoutNode.apply(layoutEngine, arguments);
+    };
+    engine.populateLayoutEdge = function() {
+        return layoutEngine.populateLayoutEdge.apply(layoutEngine, arguments);
+    };
     engine.on = function(event, f) {
         _dispatch.on(event, f);
         return this;

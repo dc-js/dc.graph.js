@@ -149,6 +149,8 @@ dc_graph.cola_layout = function(id) {
         optionNames: function() {
             return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize'];
         },
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {},
         /**
          * Instructs cola.js to fit the connected components.
          * @method handleDisconnected

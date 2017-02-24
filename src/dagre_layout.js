@@ -103,6 +103,8 @@ dc_graph.dagre_layout = function(id) {
         optionNames: function() {
             return ['rankdir'];
         },
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {},
         /**
          * Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
          * generated from graphviz-style since it is more general.
