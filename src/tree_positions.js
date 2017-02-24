@@ -1,18 +1,28 @@
 // this naive tree-drawer is paraphrased from memory from dot
 dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
     console.warn('dc_graph.tree_positions is deprecated; use the layout engine tree_layout instead');
+    if(rootf || treef) {
+        console.warn('dc_graph.tree_positions: rootf and treef are ignored');
+    }
     var x;
     nwidth = d3.functor(nwidth);
     function best_dist(left, right) {
         return (nwidth(left) + nwidth(right)) / 2;
     }
     var dfs = dc_graph.depth_first_traversal({
+        nodeid: function(n) {
+            return n.cola.dcg_nodeKey;
+        },
+        sourceid: function(n) {
+            return n.cola.dcg_edgeSource;
+        },
+        targetid: function(n) {
+            return n.cola.dcg_edgeTarget;
+        },
         init: function() {
             x = ofsx;
         },
-        root: rootf,
         row: rowf,
-        tree: treef,
         place: function(n, r, row) {
             if(row.length) {
                 var left = row[row.length-1];
@@ -80,6 +90,8 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
         }
     });
 
-    return dfs;
+    return function(diagram, nodes, edges) {
+        return dfs(nodes, edges);
+    };
 };
 
