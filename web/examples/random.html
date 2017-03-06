@@ -77,7 +77,7 @@
                 engine[p](qs[p]);
         });
         if(qs.worker !== 'false')
-            engine = dc_graph.layout_webworker(engine);
+            engine = dc_graph.webworker_layout(engine);
 
         var diagram = dc_graph.diagram('#graph');
         var data = build_data(nodes, edges);
