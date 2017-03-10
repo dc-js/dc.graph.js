@@ -21,6 +21,10 @@ dc_graph.webworker_layout = function(layoutEngine) {
     var engine = {};
     _worker.layouts[layoutEngine.layoutId()] = engine;
 
+    engine.parent = function(parent) {
+        if(layoutEngine.parent)
+            layoutEngine.parent(parent);
+    };
     engine.init = function(options) {
         options = layoutEngine.optionNames().reduce(
             function(options, option) {
@@ -70,15 +74,14 @@ dc_graph.webworker_layout = function(layoutEngine) {
     engine.getEngine = function() {
         return layoutEngine;
     };
-    engine.layoutAlgorithm = function() {
-        return layoutEngine.layoutAlgorithm();
-    };
-    engine.populateLayoutNode = function() {
-        return layoutEngine.populateLayoutNode.apply(layoutEngine, arguments);
-    };
-    engine.populateLayoutEdge = function() {
-        return layoutEngine.populateLayoutEdge.apply(layoutEngine, arguments);
-    };
+    // somewhat sketchy - do we want this object to be transparent or not?
+    var passthroughs = ['layoutAlgorithm', 'populateLayoutNode', 'populateLayoutEdge', 'rankdir', 'ranksep'];
+    passthroughs.forEach(function(name) {
+        engine[name] = function() {
+            var ret = layoutEngine[name].apply(layoutEngine, arguments);
+            return arguments.length ? this : ret;
+        };
+    });
     engine.on = function(event, f) {
         _dispatch.on(event, f);
         return this;

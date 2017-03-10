@@ -9,6 +9,7 @@ dc_graph.cola_layout = function(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _flowLayout;
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
@@ -119,13 +120,17 @@ dc_graph.cola_layout = function(id) {
         _d3cola.stop();
     }
 
-    return {
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    graphviz.rankdir(null);
+
+    var engine = Object.assign(graphviz, {
         layoutAlgorithm: function() {
             return 'cola';
         },
         layoutId: function() {
             return _layoutId;
         },
+        parent: property(null),
         on: function(event, f) {
             _dispatch.on(event, f);
             return this;
@@ -147,7 +152,8 @@ dc_graph.cola_layout = function(id) {
             stop();
         },
         optionNames: function() {
-            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize'];
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize']
+                .concat(graphviz_keys);
         },
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
@@ -191,8 +197,11 @@ dc_graph.cola_layout = function(id) {
          **/
         baseLength: property(30),
         /**
-         * This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
-         * now it is separate.
+         * If `flowLayout` is set, it determines the axis and separation for
+         * {@link http://marvl.infotech.monash.edu/webcola/doc/classes/cola.layout.html#flowlayout cola flow layout}.
+         * If it is not set, `flowLayout` will be calculated from the {@link dc_graph.graphviz_attrs#rankdir rankdir}
+         * and {@link dc_graph.graphviz_attrs#ranksep ranksep}; if `rankdir` is also null (the
+         * default for cola layout), then there will be no flow.
          * @method flowLayout
          * @memberof dc_graph.cola_layout
          * @instance
@@ -203,9 +212,25 @@ dc_graph.cola_layout = function(id) {
          * // flow in x with min separation 200
          * chart.flowLayout({axis: 'x', minSeparation: 200})
          **/
-        flowLayout: property(null),
+        flowLayout: function(flow) {
+            if(!arguments.length) {
+                if(_flowLayout)
+                    return _flowLayout;
+                var dir = engine.rankdir();
+                if(!dir)
+                    return null;
+                var axis = (dir === 'LR' || dir === 'RL') ? 'x' : 'y';
+                return {
+                    axis: axis,
+                    minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2
+                };
+            }
+            _flowLayout = flow;
+            return this;
+        },
         tickSize: property(1)
-    };
+    });
+    return engine;
 };
 
 dc_graph.cola_layout.scripts = ['d3.js', 'cola.js'];

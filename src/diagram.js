@@ -1010,7 +1010,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * // use dagre with a webworker
      * diagram.layoutEngine(dc_graph.webworker_layout(dc_graph.dagre_layout()));
      **/
-    _chart.layoutEngine = property(null);
+    _chart.layoutEngine = property(null).react(function(val) {
+        if(val && val.parent)
+            val.parent(_chart);
+    });
 
     _chart.tickSize = deprecate_layout_algo_parameter('tickSize');
 

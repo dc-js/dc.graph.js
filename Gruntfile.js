@@ -16,12 +16,14 @@ module.exports = function (grunt) {
         colaWorkerFiles: [
             'src/core.js',
             'src/generate_objects.js',
+            'src/graphviz_attrs.js',
             'src/cola_layout.js',
             'src/webworker_message.js'
         ],
         dagreWorkerFiles: [
             'src/core.js',
             'src/generate_objects.js',
+            'src/graphviz_attrs.js',
             'src/dagre_layout.js',
             'src/webworker_message.js'
         ]
@@ -276,6 +278,7 @@ module.exports.jsFiles = [
     'src/shape.js',
     'src/diagram.js',
     'src/webworker_layout.js',
+    'src/graphviz_attrs.js',
     'src/cola_layout.js',
     'src/dagre_layout.js',
     'src/tree_layout.js',

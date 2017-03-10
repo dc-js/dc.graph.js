@@ -1,5 +1,8 @@
 /**
  * `dc_graph.dagre_layout` is an adaptor for dagre.js layouts in dc.graph.js
+ *
+ * In addition to the below layout attributes, `dagre_layout` also implements the attributes from
+ * {@link dc_graph.graphviz_attrs graphviz_attrs}
  * @class dagre_layout
  * @memberof dc_graph
  * @param {String} [id=uuid()] - Unique identifier
@@ -73,7 +76,8 @@ dc_graph.dagre_layout = function(id) {
     function stop() {
     }
 
-    return {
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    return Object.assign(graphviz, {
         layoutAlgorithm: function() {
             return 'dagre';
         },
@@ -101,20 +105,11 @@ dc_graph.dagre_layout = function(id) {
             stop();
         },
         optionNames: function() {
-            return ['rankdir'];
+            return graphviz_keys;
         },
         populateLayoutNode: function() {},
-        populateLayoutEdge: function() {},
-        /**
-         * Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
-         * generated from graphviz-style since it is more general.
-         * @method rankdir
-         * @memberof dc_graph.dagre_layout
-         * @instance
-         * @param {String} [rankdir='TB'] 'TB', 'LR', 'BT', or 'RL'
-         **/
-        rankdir: property('TB')
-    };
+        populateLayoutEdge: function() {}
+    });
 }
 
 dc_graph.dagre_layout.scripts = ['d3.js', 'dagre.js'];
