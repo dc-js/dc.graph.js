@@ -33,7 +33,9 @@ var convert_tree_helper = function(data, attrs, options, parent, level, inherit)
                 edges: Array.prototype.concat.apply(edges, children.map(dc.pluck('edges')))};
     }
     else return {nodes: data.map(function(v) {
-        v._level = level+1;
+        v = Object.assign({}, v);
+        if(options.level)
+            v[options.level] = level+1;
         return v;
     }), edges: data.map(function(v) {
         var edge = {};
