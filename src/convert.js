@@ -1,4 +1,4 @@
-var convert_nest_helper = function(data, attrs, options, parent, level, inherit) {
+var convert_tree_helper = function(data, attrs, options, parent, level, inherit) {
     level = level || 0;
     if(attrs.length) {
         var attr = attrs.shift();
@@ -13,7 +13,6 @@ var convert_nest_helper = function(data, attrs, options, parent, level, inherit)
                     inherit[attr] = key;
                 node = Object.assign({}, inherit);
             } else node = {};
-            node._level = level;
             node[options.nodeKey] = childKey;
             if(options.label && options.labelFun)
                 node[options.label] = options.labelFun(key, attr, v);
@@ -26,7 +25,7 @@ var convert_nest_helper = function(data, attrs, options, parent, level, inherit)
                 edge[options.edgeTarget] = childKey;
                 edges.push(edge);
             }
-            var recurse = convert_nest_helper(v.values, attrs.slice(0), options,
+            var recurse = convert_tree_helper(v.values, attrs.slice(0), options,
                                               childKey, level+1, Object.assign({}, inherit));
             return recurse;
         });
@@ -44,7 +43,7 @@ var convert_nest_helper = function(data, attrs, options, parent, level, inherit)
     })};
 };
 
-dc_graph.convert_nest = function(data, attrs, options) {
+dc_graph.convert_tree = function(data, attrs, options) {
     options = Object.assign({
         nodeKey: 'key',
         edgeKey: 'key',
@@ -53,11 +52,25 @@ dc_graph.convert_nest = function(data, attrs, options) {
         nestKey: 'key'
     }, options);
     if(Array.isArray(data))
-        return convert_nest_helper(data, attrs, options);
+        return convert_tree_helper(data, attrs, options, options.root, 0, options.inherit);
     else {
         attrs = [''].concat(attrs);
-        return convert_nest_helper([data], attrs, options);
+        return convert_tree_helper([data], attrs, options, options.root, 0, options.inherit);
     }
+};
+
+dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
+    return dc_graph.convert_tree(nest, attrs, {
+        nodeKey: nodeKeyAttr,
+        edgeSource: edgeSourceAttr,
+        edgeTarget: edgeTargetAttr,
+        root: parent,
+        inherit: inherit,
+        ancestorKeys: true,
+        label: 'name',
+        labelFun: function(key, attr, v) { return attr + ':' + key; },
+        level: '_level'
+    });
 };
 
 dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
