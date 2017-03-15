@@ -1,6 +1,6 @@
 var convert_tree_helper = function(data, attrs, options, parent, level, inherit) {
     level = level || 0;
-    if(attrs.length) {
+    if(attrs.length > (options.valuesByAttr ? 1 : 0)) {
         var attr = attrs.shift();
         var nodes = [], edges = [];
         var children = data.map(function(v) {
@@ -25,7 +25,8 @@ var convert_tree_helper = function(data, attrs, options, parent, level, inherit)
                 edge[options.edgeTarget] = childKey;
                 edges.push(edge);
             }
-            var recurse = convert_tree_helper(v.values, attrs.slice(0), options,
+            var children = options.valuesByAttr ? v[attrs[0]] : v.values;
+            var recurse = convert_tree_helper(children, attrs.slice(0), options,
                                               childKey, level+1, Object.assign({}, inherit));
             return recurse;
         });
