@@ -16,6 +16,7 @@
   <script type="text/javascript" src="../js/lodash.js"></script>
 
   <script type="text/javascript" src="../js/cola.js"></script>
+  <script type="text/javascript" src="../js/dagre.js"></script>
   <script type="text/javascript" src="../js/dc.graph.js"></script>
 
   <script type="text/javascript" src="../js/querystring.js"></script>
@@ -35,13 +36,11 @@
 
   <script type="text/javascript">
 
-    var file = "process.json";
     var diagram = dc_graph.diagram('#graph');
 
     var qs = querystring.parse();
-    var draw_arrows = qs.arrows==='true'; // example of using query string parameter
 
-    dc_graph.load_graph(file, function(error, data) {
+    dc_graph.load_graph(qs.file || 'process.json', function(error, data) {
         if(error) {
             console.log(error);
             return;
@@ -52,7 +51,26 @@
         }),
             nodes = dc_graph.flat_group.make(data.nodes, function(d) { return d.name; });
 
+        var engine, params;
+        switch(qs.layout) {
+        case 'dagre':
+            engine = dc_graph.dagre_layout();
+            params = ['rankdir'];
+            break;
+        case 'cola':
+        default:
+            engine = dc_graph.cola_layout();
+            params = ['lengthStrategy'];
+            break;
+        }
+        params.forEach(function(p) {
+            if(qs[p])
+                engine[p](qs[p]);
+        });
+        if(qs.worker !== 'false')
+            engine = dc_graph.layout_webworker(engine);
         diagram
+            .layoutEngine(engine)
             .width($(window).width())
             .height($(window).height())
             .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
@@ -65,7 +83,7 @@
             })
             .nodeLabelFillAccessor('white')
             .nodeTitleAccessor(null) // deactivate basic tooltips
-            .edgeArrowheadAccessor(draw_arrows ? 'vee' : null);
+            .edgeArrowheadAccessor(qs.arrows ? 'vee' : null);
 
 
         // add tooltips using d3-tip

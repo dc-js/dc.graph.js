@@ -14,12 +14,18 @@ module.exports = function (grunt) {
         banner: grunt.file.read('./LICENSE_BANNER'),
         jsFiles: module.exports.jsFiles,
         colaWorkerFiles: [
+            'src/core.js',
             'src/generate_objects.js',
-            'src/cola.worker.js'
+            'src/graphviz_attrs.js',
+            'src/cola_layout.js',
+            'src/webworker_message.js'
         ],
         dagreWorkerFiles: [
+            'src/core.js',
             'src/generate_objects.js',
-            'src/dagre.worker.js'
+            'src/graphviz_attrs.js',
+            'src/dagre_layout.js',
+            'src/webworker_message.js'
         ]
     };
 
@@ -260,19 +266,26 @@ module.exports = function (grunt) {
     grunt.registerTask('server', ['docs', 'connect:server', 'watch:scripts']);
     grunt.registerTask('lint', ['build', 'jshint', 'jscs']);
     grunt.registerTask('default', ['build', 'shell:hooks']);
+    grunt.registerTask('doc-debug', ['build', 'jsdoc', 'jsdoc2md', 'connect:server', 'watch:docs']);
 };
 
 module.exports.jsFiles = [
     'src/banner.js',   // NOTE: keep this first
     'src/core.js',
+    'src/utils.js',
     'src/depth_first_traversal.js',
     'src/generate_objects.js',
     'src/shape.js',
     'src/diagram.js',
+    'src/webworker_layout.js',
+    'src/graphviz_attrs.js',
+    'src/cola_layout.js',
+    'src/dagre_layout.js',
+    'src/tree_layout.js',
     'src/legend.js',
     'src/constraint_pattern.js',
-    'src/tree_constraints.js',
     'src/tree_positions.js',
+    'src/tree_constraints.js',
     'src/behavior.js',
     'src/tip.js',
     'src/select_nodes.js',
