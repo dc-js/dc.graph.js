@@ -6,24 +6,26 @@ var convert_tree_helper = function(data, attrs, options, parent, level, inherit)
         var children = data.map(function(v) {
             var key = v[options.nestKey];
             var childKey = options.nestKeysUnique ? key : uuid();
-            var node;
-            if(options.ancestorKeys) {
-                inherit = inherit || {};
-                if(attr)
-                    inherit[attr] = key;
-                node = Object.assign({}, inherit);
-            } else node = {};
-            node[options.nodeKey] = childKey;
-            if(options.label && options.labelFun)
-                node[options.label] = options.labelFun(key, attr, v);
-            if(options.level)
-                node[options.level] = level+1;
-            nodes.push(node);
-            if(parent) {
-                var edge = {};
-                edge[options.edgeSource] = parent;
-                edge[options.edgeTarget] = childKey;
-                edges.push(edge);
+            if(childKey) {
+                var node;
+                if(options.ancestorKeys) {
+                    inherit = inherit || {};
+                    if(attr)
+                        inherit[attr] = key;
+                    node = Object.assign({}, inherit);
+                } else node = {};
+                node[options.nodeKey] = childKey;
+                if(options.label && options.labelFun)
+                    node[options.label] = options.labelFun(key, attr, v);
+                if(options.level)
+                    node[options.level] = level+1;
+                nodes.push(node);
+                if(parent) {
+                    var edge = {};
+                    edge[options.edgeSource] = parent;
+                    edge[options.edgeTarget] = childKey;
+                    edges.push(edge);
+                }
             }
             var children = options.valuesByAttr ? v[attrs[0]] : v.values;
             var recurse = convert_tree_helper(children, attrs.slice(0), options,
