@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.16
+ *  dc.graph 0.4.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.3.16
+ * @version 0.4.0
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,10 +38,18 @@
  */
 
 var dc_graph = {
-    version: '0.3.16',
+    version: '0.4.0',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
+};
+
+function get_original(x) {
+    return x.orig;
+}
+
+function identity(x) {
+    return x;
 };
 
 var property = function (defaultValue, unwrap) {
@@ -98,6 +106,30 @@ var property = function (defaultValue, unwrap) {
     return ret;
 };
 
+function deprecated_property(message, defaultValue) {
+    var prop = property(defaultValue);
+    var ret = function() {
+        if(arguments.length) {
+            console.warn(message);
+            prop.apply(property, arguments);
+            return this;
+        }
+        return prop();
+    };
+    ['cascade', '_eval', 'eval', 'react'].forEach(function(method) {
+        ret[method] = prop[method];
+    });
+    return ret;
+}
+
+// http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+}
+
 // i'm sure there's a word for this in haskell
 function conditional_properties(npred, epred, props) {
     function _if(pred, curr) {
@@ -120,7 +152,6 @@ function conditional_properties(npred, epred, props) {
     return props2;
 }
 
-var identity = function(x) { return x; };
 function compose(f, g) {
     return function() {
         return f(g.apply(null, arguments));
@@ -140,10 +171,6 @@ dc_graph.functor_wrap = function (v, wrap) {
     };
 };
 
-function get_original(x) {
-    return x.orig;
-}
-
 // we want to allow either values or functions to be passed to specify parameters.
 // if a function, the function needs a preprocessor to extract the original key/value
 // pair from the wrapper object we put it in.
@@ -160,14 +187,6 @@ function clone(obj) {
         }
     }
     return target;
-}
-
-// http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-function uuid() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-        return v.toString(16);
-    });
 }
 
 // because i don't think we need to bind edge point data (yet!)
@@ -233,25 +252,30 @@ var script_path = function() {
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree, place, sib, push, pop, skip, finish}
-    return function(diagram, nodes, edges) {
+dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree, place, sib, push, pop, skip, finish, nodeid, sourceid, targetid}
+    return function(nodes, edges) {
         callbacks.init && callbacks.init();
         if(callbacks.tree)
-            edges = edges.filter(function(e) { return callbacks.tree(e.orig); });
+            edges = edges.filter(function(e) { return callbacks.tree(e); });
         var indegree = {};
         var outmap = edges.reduce(function(m, e) {
-            var tail = diagram.edgeSource.eval(e),
-                head = diagram.edgeTarget.eval(e);
+            var tail = callbacks.sourceid(e),
+                head = callbacks.targetid(e);
             if(!m[tail]) m[tail] = [];
             m[tail].push(e);
             indegree[head] = (indegree[head] || 0) + 1;
+            return m;
+        }, {});
+        var nmap = nodes.reduce(function(m, n) {
+            var key = callbacks.nodeid(n);
+            m[key] = n;
             return m;
         }, {});
 
         var rows = [];
         var placed = {};
         function place_tree(n, r) {
-            var key = diagram.nodeKey.eval(n);
+            var key = callbacks.nodeid(n);
             if(placed[key]) {
                 callbacks.skip && callbacks.skip(n, indegree[key]);
                 return;
@@ -263,25 +287,28 @@ dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree
             placed[key] = true;
             if(outmap[key])
                 outmap[key].forEach(function(e, ei) {
+                    var target = nmap[callbacks.targetid(e)];
                     if(ei && callbacks.sib)
-                        callbacks.sib(false, outmap[key][ei-1].target, e.target);
+                        callbacks.sib(false, nmap[callbacks.targetid(outmap[key][ei-1])], target);
                     callbacks.push && callbacks.push();
-                    place_tree(e.target, r+1);
+                    place_tree(target, r+1);
                 });
             callbacks.pop && callbacks.pop(n);
         }
 
         var roots;
         if(callbacks.root)
-            roots = nodes.filter(function(n) { return callbacks.root(n.orig); });
+            roots = nodes.filter(function(n) { return callbacks.root(n); });
         else {
-            roots = nodes.filter(function(n) { return !indegree[diagram.nodeKey.eval(n)]; });
+            roots = nodes.filter(function(n) { return !indegree[callbacks.nodeid(n)]; });
+            if(nodes.length && !roots.length) // all nodes are in a cycle
+                roots = [nodes[0]];
         }
         roots.forEach(function(n, ni) {
             if(ni && callbacks.sib)
                 callbacks.sib(true, roots[ni-1], n);
             callbacks.push && callbacks.push();
-            place_tree(n, callbacks.row ? callbacks.row(n.orig) : 0);
+            place_tree(n, callbacks.row ? callbacks.row(n) : 0);
         });
         callbacks.finish(rows);
     };
@@ -735,7 +762,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     // different enough from regular dc charts that we don't use bases
     var _chart = dc.marginMixin({});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _worker = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _stats = {};
@@ -746,9 +772,22 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _zoom, _xScale, _yScale;
     var _anchor, _chartGroup;
 
+    function deprecate_layout_algo_parameter(name) {
+        return function(value) {
+            if(!_chart.layoutEngine())
+                _chart.layoutAlgorithm('cola', true);
+            console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated. Call the corresponding method on the layout engine instead.');
+            var engine = _chart.layoutEngine();
+            if(engine.getEngine)
+                engine = engine.getEngine();
+            engine[name](value);
+            return this;
+        };
+    }
+
     /**
      * Set or get the width attribute of the diagram. See `.height` below.
-     * @name width
+     * @method width
      * @memberof dc_graph.diagram
      * @instance
      * @param {Number} [width=200]
@@ -764,7 +803,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * SVG element generated by the diagram when rendered. If a value is given, then the
      * diagram is returned for method chaining. If no value is given, then the current value of
      * the height attribute will be returned. Default: 200
-     * @name height
+     * @method height
      * @memberof dc_graph.diagram
      * @instance
      * @param {Number} [height=200]
@@ -778,10 +817,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Get or set the root element, which is usually the parent div. Normally the root is set
      * when the diagram is constructed; setting it later may have unexpected consequences.
-     * @name root
+     * @method root
      * @memberof dc_graph.diagram
      * @instance
-     * @param {node} [root]
+     * @param {node} [root=null]
      * @return {node}
      * @return {dc_graph.diagram}
      **/
@@ -793,7 +832,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Get or set whether mouse wheel rotation or touchpad gestures will zoom the diagram, and
      * whether dragging on the background pans the diagram.
-     * @name mouseZoomable
+     * @method mouseZoomable
      * @memberof dc_graph.diagram
      * @instance
      * @param {Boolean} [mouseZoomable=true]
@@ -824,7 +863,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * * another string - sets the `viewBox` and uses the string for `preserveAspectRatio`.
      * * function - will be called with (viewport width, viewport height, canvas width, canvas
      * height) and result will be used to set `preserveAspectRatio`.
-     * @name fitStrategy
+     * @method fitStrategy
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [fitStrategy='default']
@@ -843,7 +882,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * * `'always'` - zoom every time layout happens
      * * `'once'` - zoom the first time layout happens
      * * `null` - manual, call `zoomToFit` to fit
-     * @name autoZoom
+     * @method autoZoom
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [autoZoom=null]
@@ -867,7 +906,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * *The node dimension currently does nothing, but once selection is supported, it will be
      * used for filtering other charts on the same crossfilter instance based on the nodes
      * selected.*
-     * @name nodeDimension
+     * @method nodeDimension
      * @memberof dc_graph.diagram
      * @instance
      * @param {crossfilter.dimension} [nodeDimension]
@@ -887,7 +926,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
      * It is possible to pass another object with the same `.all()` interface instead of a
      * crossfilter group.
-     * @name nodeGroup
+     * @method nodeGroup
      * @memberof dc_graph.diagram
      * @instance
      * @param {crossfilter.group} [nodeGroup]
@@ -905,7 +944,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * used for filtering other charts on the same crossfilter instance based on the edges
      * selected.*
 
-     * @name edgeDimension
+     * @method edgeDimension
      * @memberof dc_graph.diagram
      * @instance
      * @param {crossfilter.dimension} [edgeDimension]
@@ -919,10 +958,11 @@ dc_graph.diagram = function (parent, chartGroup) {
      * diagram. See `.nodeGroup` above for the way data is loaded from a crossfilter group.
 
      * The values in the key/value pairs returned by `diagram.edgeGroup().all()` need to
-     * support, at a minimum, the `nodeSource` and `nodeTarget`, which should return the same
-     * keys as the `nodeKey`
+     * support, at a minimum, the {@link dc_graph.diagram#nodeSource nodeSource} and
+     * {@link dc_graph.diagram#nodeTarget nodeTarget}, which should return the same
+     * keys as the {@link dc_graph.diagram#nodeKey nodeKey}
 
-     * @name edgeGroup
+     * @method edgeGroup
      * @memberof dc_graph.diagram
      * @instance
      * @param {crossfilter.group} [edgeGroup]
@@ -934,12 +974,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the unique key for each node. By
      * default, this accesses the `key` field of the object passed to it. The keys should match
-     * the keys returned by the `.edgeSource` and `.edgeTarget`.
+     * the keys returned by the {@link dc_graph.diagram#edgeSource edgeSource} and
+     * {@link dc_graph.diagram#edgeTarget edgeTarget}.
 
-     * @name nodeKey
+     * @method nodeKey
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Function} [nodeKey]
+     * @param {Function} [nodeKey=function(kv) { return kv.key }]
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
@@ -951,10 +992,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Set or get the function which will be used to retrieve the unique key for each edge. By
      * default, this accesses the `key` field of the object passed to it.
 
-     * @name edgeKey
+     * @method edgeKey
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Function} [edgeKey]
+     * @param {Function} [edgeKey=function(kv) { return kv.key }]
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
@@ -968,10 +1009,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * nodes; if it does not, or if the node is currently filtered out, the edge will not be
      * displayed. By default, looks for `.value.sourcename`.
 
-     * @name edgeSource
+     * @method edgeSource
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Function} [edgeSource]
+     * @param {Function} [edgeSource=function(kv) { return kv.value.sourcename; }]
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
@@ -981,13 +1022,14 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Set or get the function which will be used to retrieve the target (destination/head) key
-     * of the edge objects.  The key must equal the key returned by the `.nodeKey` for one of
-     * the nodes; if it does not, or if the node is currently filtered out, the edge will not
-     * be displayed. By default, looks for `.value.targetname`.
-     * @name edgeTarget
+     * of the edge objects.  The key must equal the key returned by the
+     * {@link dc_graph.diagram#nodeKey nodeKey} for one of the nodes; if it does not, or if the node
+     * is currently filtered out, the edge will not be displayed. By default, looks for
+     * `.value.targetname`.
+     * @method edgeTarget
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Function} [edgeTarget]
+     * @param {Function} [edgeTarget=function(kv) { return kv.value.targetname; }]
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
@@ -998,7 +1040,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the radius, in pixels, for each
      * node. This determines the height of nodes,and if `nodeFitLabel` is false, the width too.
-     * @name nodeRadius
+     * @method nodeRadius
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [nodeRadius=25]
@@ -1011,7 +1053,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Set or get the function which will be used to retrieve the stroke width, in pixels, for
      * drawing the outline of each node. According to the SVG specification, the outline will
      * be drawn half on top of the fill, and half outside. Default: 1
-     * @name nodeStrokeWidth
+     * @method nodeStrokeWidth
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [nodeStrokeWidth=1]
@@ -1023,7 +1065,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the stroke color for the outline
      * of each node.
-     * @name nodeStroke
+     * @method nodeStroke
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [nodeStroke='black']
@@ -1036,7 +1078,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * If set, the value returned from `nodeFill` will be processed through this
      * {@link https://github.com/mbostock/d3/wiki/Scales d3.scale}
      * to return the fill color. If falsy, uses the identity function (no scale).
-     * @name nodeFillScale
+     * @method nodeFillScale
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|d3.scale} [nodeFillScale]
@@ -1048,7 +1090,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the fill color for the body of each
      * node.
-     * @name nodeFill
+     * @method nodeFill
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [nodeFill='white']
@@ -1059,7 +1101,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Set or get the function which will be used to retrieve the opacity of each node.
-     * @name nodeOpacity
+     * @method nodeOpacity
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [nodeOpacity=1]
@@ -1071,7 +1113,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the padding or minimum distance, in pixels, for a node. (Will be distributed
      * to both sides of the node.)
-     * @name nodePadding
+     * @method nodePadding
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [nodePadding=6]
@@ -1083,7 +1125,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the label text to display in each
      * node. By default, looks for a field `label` or `name` inside the `value` field.
-     * @name nodeLabel
+     * @method nodeLabel
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [nodeLabel]
@@ -1101,7 +1143,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Set or get the function which will be used to retrieve the label fill color. Default: null
-     * @name nodeLabelFill
+     * @method nodeLabelFill
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [nodeLabelFill=null]
@@ -1112,7 +1154,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Whether to fit the node shape around the label
-     * @name nodeFitLabel
+     * @method nodeFitLabel
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Boolean} [nodeFitLabel=true]
@@ -1130,7 +1172,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      *
      * If `shape = polygon`:
      * * `sides`: number of sides for a polygon
-     * @name nodeShape
+     * @method nodeShape
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Object} [nodeShape={shape: 'ellipse'}]
@@ -1147,7 +1189,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the node title, usually rendered
      * as a tooltip. By default, uses the key of the node.
-     * @name nodeTitle
+     * @method nodeTitle
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [nodeTitle]
@@ -1168,10 +1210,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * them. If specified, `.nodeOrdering` provides an accessor that returns a key to sort the
      * nodes on.  *It would be better not to rely on ordering to affect layout, but it may
      * affect the layout in some cases.*
-     * @name nodeOrdering
+     * @method nodeOrdering
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Function} [nodeOrdering]
+     * @param {Function} [nodeOrdering=null]
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
@@ -1181,10 +1223,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Specify an accessor that returns an {x,y} coordinate for a node that should be
      * {@link https://github.com/tgdwyer/WebCola/wiki/Fixed-Node-Positions fixed in place},
      * and returns falsy for other nodes.
-     * @name nodeFixed
+     * @method nodeFixed
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Function|Object} [nodeFixed]
+     * @param {Function|Object} [nodeFixed=null]
      * @return {Function|Object}
      * @return {dc_graph.diagram}
      **/
@@ -1193,7 +1235,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Set or get the function which will be used to retrieve the stroke color for the edges.
-     * @name edgeStroke
+     * @method edgeStroke
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [edgeStroke='black']
@@ -1204,7 +1246,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Set or get the function which will be used to retrieve the stroke width for the edges.
-     * @name edgeStrokeWidth
+     * @method edgeStrokeWidth
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [edgeStrokeWidth=1]
@@ -1216,7 +1258,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the edge opacity, a number from 0
      * to 1.
-     * @name edgeOpacity
+     * @method edgeOpacity
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [edgeOpacity=1]
@@ -1228,7 +1270,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the edge label text. The label is
      * displayed when an edge is hovered over. By default, uses the `edgeKey`.
-     * @name edgeLabel
+     * @method edgeLabel
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [edgeLabel]
@@ -1248,7 +1290,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Set or get the function which will be used to retrieve the name of the arrowhead to use
      * for the target/ head/destination of the edge. Arrow symbols can be specified with
      * `.defineArrow()`. Return null to display no arrowhead.
-     * @name edgeArrowhead
+     * @method edgeArrowhead
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [edgeArrowhead='vee']
@@ -1261,7 +1303,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Set or get the function which will be used to retrieve the name of the arrow tail to use
      * for the tail/source of the edge. Arrow symbols can be specified with
      * `.defineArrow()`. Return null to display no arrowtail.
-     * @name edgeArrowtail
+     * @method edgeArrowtail
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [edgeArrowtail=null]
@@ -1272,7 +1314,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Multiplier for arrow size.
-     * @name edgeArrowSize
+     * @method edgeArrowSize
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [edgeArrowSize=1]
@@ -1285,7 +1327,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * To draw an edge but not have it affect the layout, specify a function which returns
      * false for that edge.  By default, will return false if the `notLayout` field of the edge
      * value is truthy, true otherwise.
-     * @name edgeIsLayout
+     * @method edgeIsLayout
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Boolean} [edgeIsLayout]
@@ -1314,20 +1356,22 @@ dc_graph.diagram = function (parent, chartGroup) {
      * {@link https://github.com/tgdwyer/WebCola/wiki/link-lengths the cola.js wiki}
      * for more details.
      * 'none' - no edge lengths will be specified
-     * @name lengthStrategy
+     *
+     * **Deprecated**: Use {@link dc_graph.cola_layout#lengthStrategy cola_layout.lengthStrategy} instead.
+     * @method lengthStrategy
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|String} [lengthStrategy='symmetric']
      * @return {Function|String}
      * @return {dc_graph.diagram}
      **/
-    _chart.lengthStrategy = property('symmetric');
+    _chart.lengthStrategy = deprecate_layout_algo_parameter('lengthStrategy');
 
     /**
      * When the `.lengthStrategy` is 'individual', this accessor will be used to read the
      * length of each edge.  By default, reads the `distance` field of the edge. If the
      * distance is falsy, uses the `baseLength`.
-     * @name edgeLength
+     * @method edgeLength
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [edgeLength]
@@ -1346,7 +1390,9 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
      * now it is separate.
-     * @name flowLayout
+     *
+     * **Deprecated**: use {@link dc_graph.cola_layout#flowLayout cola_layout.flowLayout} instead.
+     * @method flowLayout
      * @memberof dc_graph.diagram
      * @instance
      * @param {Object} [flowLayout]
@@ -1356,38 +1402,42 @@ dc_graph.diagram = function (parent, chartGroup) {
      * // flow in x with min separation 200
      * chart.flowLayout({axis: 'x', minSeparation: 200})
      **/
-    _chart.flowLayout = property(null);
+    _chart.flowLayout = deprecate_layout_algo_parameter('flowLayout');
 
     /**
      * Direction to draw ranks. Currently for dagre and expand_collapse, but I think cola could be
      * generated from graphviz-style since it is more general.
-     * @name rankdir
+     *
+     * **Deprecated**: use {@link dc_graph.dagre_layout#rankdir dagre_layout.rankdir} instead.
+     * @method rankdir
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [rankdir]
      **/
-    _chart.rankdir = property('TB');
+    _chart.rankdir = deprecate_layout_algo_parameter('rankdir');
 
     /**
      * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
      * 'individual', and the base value to be multiplied for 'symmetric' and 'jaccard' edge
      * lengths.
-     * @name baseLength
+     *
+     * **Deprecated**: use {@link dc_graph.cola_layout#baseLength cola_layout.baseLength} instead.
+     * @method baseLength
      * @memberof dc_graph.diagram
      * @instance
      * @param {Number} [baseLength]
      * @return {Number}
      * @return {dc_graph.diagram}
      **/
-    _chart.baseLength = property(30);
+    _chart.baseLength = deprecate_layout_algo_parameter('baseLength');
 
     /**
      * Gets or sets the transition duration, the length of time each change to the diagram will
      * be animated.
-     * @name transitionDuration
+     * @method transitionDuration
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Number} [transitionDuration]
+     * @param {Number} [transitionDuration=500]
      * @return {Number}
      * @return {dc_graph.diagram}
      **/
@@ -1401,10 +1451,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * * `insmod`: insert operations happen before modifies
      *
      * Deletions always happen before/during layout computation.
-     * @name stageTransitions
+     * @method stageTransitions
      * @memberof dc_graph.diagram
      * @instance
-     * @param {String} [stageTransitions]
+     * @param {String} [stageTransitions='none']
      * @return {String}
      * @return {dc_graph.diagram}
      **/
@@ -1414,10 +1464,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * The delete transition happens simultaneously with layout, which can take longer
      * than the transition duration. Delaying it can bring it closer to the other
      * staged transitions.
-     * @name deleteDelay
+     * @method deleteDelay
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Number} [deleteDelay]
+     * @param {Number} [deleteDelay=0]
      * @return {Number}
      * @return {dc_graph.diagram}
      **/
@@ -1425,10 +1475,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Whether to put connected components each in their own group, to stabilize layout.
-     * @name groupConnected
+     * @method groupConnected
      * @memberof dc_graph.diagram
      * @instance
-     * @param {String} [stageTransitions]
+     * @param {String} [stageTransitions=false]
      * @return {String}
      * @return {dc_graph.diagram}
      **/
@@ -1437,7 +1487,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for no
      * limit.
-     * @name timeLimit
+     * @method timeLimit
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function|Number} [timeLimit=0]
@@ -1472,7 +1522,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Because it is tedious to write code to generate constraints for a graph, **dc.graph.js**
      * also includes a {@link #dc_graph+constraint_pattern constraint generator} to produce
      * this constrain function, specifying the constraints themselves in a graph.
-     * @name constrain
+     * @method constrain
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function} [constrain]
@@ -1486,7 +1536,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * If there are multiple edges between the same two nodes, start them this many pixels away
      * from the original so they don't overlap.
-     * @name parallelEdgeOffset
+     * @method parallelEdgeOffset
      * @memberof dc_graph.diagram
      * @instance
      * @param {Number} [parallelEdgeOffset=10]
@@ -1503,10 +1553,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * *It would be better not to rely on ordering to affect layout, but it may affect the
      * layout in some cases. (Probably less than node ordering, but it does affect which
      * parallel edge is which.)*
-     * @name edgeOrdering
+     * @method edgeOrdering
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Function} [edgeOrdering]
+     * @param {Function} [edgeOrdering=null]
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
@@ -1528,7 +1578,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * This flag can be set true to construct a new cola layout object on each redraw. However,
      * layout seems to be more stable if this is set false, so hopefully this will be fixed
      * soon.
-     * @name initLayoutOnRedraw
+     * @method initLayoutOnRedraw
      * @memberof dc_graph.diagram
      * @instance
      * @param {Boolean} [initLayoutOnRedraw=false]
@@ -1539,7 +1589,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Whether to perform layout when the data is unchanged from the last redraw.
-     * @name layoutUnchanged
+     * @method layoutUnchanged
      * @memberof dc_graph.diagram
      * @instance
      * @param {Boolean} [layoutUnchanged=false]
@@ -1552,7 +1602,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * When `layoutUnchanged` is false, this will force layout to happen again. This may be needed
      * when changing a parameter but not changing the topology of the graph. (Yes, probably should
      * not be necessary.)
-     * @name relayout
+     * @method relayout
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
@@ -1564,22 +1614,29 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     /**
      * Function to call to generate an initial layout. Takes (diagram, nodes, edges)
-     * @name initialLayout
+     *
+     * **Deprecated**: The only layout that was using this was `tree_positions` and it never
+     * worked as an initialization step for cola, as was originally intended. Now that
+     * `tree_layout` is a layout algorithm, this should go away.
+     *
+     * In the future, there will be support for chaining layout algorithms. But that will be a
+     * matter of composing them into a super-algorithm, not a special step like this was.
+     * @method initialLayout
      * @memberof dc_graph.diagram
      * @instance
      * @param {Function} [initialLayout=null]
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
-    _chart.initialLayout = property(null);
+    _chart.initialLayout = deprecated_property('initialLayout is deprecated - use layout algorithms instead', null);
 
-    _chart.initialOnly = property(false);
+    _chart.initialOnly = deprecated_property('initialOnly is deprecated - see the initialLayout deprecation notice in the documentation', false);
 
     /**
      * By default, all nodes are included, and edges are only included if both end-nodes are
      * visible.  If `.induceNodes` is set, then only nodes which have at least one edge will be
      * shown.
-     * @name induceNodes
+     * @method induceNodes
      * @memberof dc_graph.diagram
      * @instance
      * @param {Boolean} [induceNodes=false]
@@ -1592,7 +1649,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * If this flag is true, the positions of nodes and will be updated while layout is
      * iterating. If false, the positions will only be updated once layout has
      * stabilized. Note: this may not be compatible with transitionDuration.
-     * @name showLayoutSteps
+     * @method showLayoutSteps
      * @memberof dc_graph.diagram
      * @instance
      * @param {Boolean} [showLayoutSteps=false]
@@ -1604,10 +1661,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Assigns a legend object which will be displayed within the same SVG element and
      * according to the visual encoding of this diagram.
-     * @name legend
+     * @method legend
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Object} [legend]
+     * @param {Object} [legend=null]
      * @return {Object}
      * @return {dc_graph.diagram}
      **/
@@ -1620,7 +1677,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * be used to display tooltips on nodes using `dc_graph.tip`.
 
      * The child needs to support a `parent` method, the diagram to modify.
-     * @name child
+     * @method child
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [id] - the name of the child to modify or add
@@ -1651,22 +1708,57 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
-     * Currently, you can specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it
-     * will replace the back-end. In the future, there will be subclasses like colaDiagram and
-     * dagreDiagram with appropriate interfaces for each, but it is not yet clear which features are
-     * common between them.
-     * @name layoutAlgorithm
+     * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
+     * back-end.
+     *
+     * **Deprecated**: use {@link dc_graph.diagram#layoutEngine diagram.layoutEngine} with the engine
+     * object instead
+     * @method layoutAlgorithm
      * @memberof dc_graph.diagram
      * @instance
-     * @param {String} [algo] - the name of the layout algorithm to use
+     * @param {String} [algo='cola'] - the name of the layout algorithm to use
      * @example
      * // use dagre for layout
      * diagram.layoutAlgorithm('dagre');
      * @return {dc_graph.diagram}
      **/
-    _chart.layoutAlgorithm = property('cola');
+    _chart.layoutAlgorithm = function(value, skipWarning) {
+        if(!arguments.length)
+            return _chart.layoutEngine() ? _chart.layoutEngine().layoutAlgorithm() : 'cola';
+        if(!skipWarning)
+            console.warn('dc.graph.diagram.layoutAlgorithm is depecrated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
 
-    _chart.tickSize = property(1);
+        var engine;
+        switch(value) {
+        case 'cola':
+            engine = dc_graph.cola_layout();
+            break;
+        case 'dagre':
+            engine = dc_graph.dagre_layout();
+        }
+        engine = dc_graph.webworker_layout(engine);
+        _chart.layoutEngine(engine);
+        return this;
+    };
+
+    /**
+     * The layout engine determines how to draw things!
+     * @method layoutEngine
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Object} [engine=null] - the layout engine to use
+     * @example
+     * // use cola with no webworker
+     * diagram.layoutEngine(dc_graph.cola_layout());
+     * // use dagre with a webworker
+     * diagram.layoutEngine(dc_graph.webworker_layout(dc_graph.dagre_layout()));
+     **/
+    _chart.layoutEngine = property(null).react(function(val) {
+        if(val && val.parent)
+            val.parent(_chart);
+    });
+
+    _chart.tickSize = deprecate_layout_algo_parameter('tickSize');
 
 
     _chart.edgeId = function(d) {
@@ -1688,42 +1780,25 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
-     * Instructs cola.js to fit the connected components. Default: true
-     * @name handleDisconnected
+     * Instructs cola.js to fit the connected components.
+     *
+     * **Deprecated**: Use
+     * {@link dc_graph.cola_layout#handleDisconnected cola_layout.handleDisconnected} instead.
+     * @method handleDisconnected
      * @memberof dc_graph.diagram
      * @instance
      * @param {Boolean} [handleDisconnected=true]
      * @return {Boolean}
      * @return {dc_graph.diagram}
      **/
-    _chart.handleDisconnected = property(true);
+    _chart.handleDisconnected = deprecate_layout_algo_parameter('handleDisconnected');
 
     function initLayout() {
-        if(!_worker)
-            _worker = new Worker(script_path() + 'dc.graph.' + _chart.layoutAlgorithm() + '.worker.js');
-        var args = {
+        if(!_chart.layoutEngine())
+            _chart.layoutAlgorithm('cola', true);
+        _chart.layoutEngine().init({
             width: _chart.width(),
             height: _chart.height()
-        };
-        // generalize this? class hierarchy, what?
-        switch(_chart.layoutAlgorithm()) {
-        case 'cola':
-            Object.assign(args, {
-                handleDisconnected: _chart.handleDisconnected(),
-                lengthStrategy: _chart.lengthStrategy(),
-                baseLength: _chart.baseLength(),
-                flowLayout: _chart.flowLayout(),
-                tickSize: _chart.tickSize()
-            });
-            break;
-        case 'dagre':
-            Object.assign(args, {
-                rankdir: _chart.rankdir()
-            });
-        }
-        _worker.postMessage({
-            command: 'init',
-            args: args
         });
     }
 
@@ -1833,8 +1908,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        if(_worker)
-            _worker.postMessage({command: 'stop'});
+        _chart.layoutEngine().stop();
 
         if(_chart.initLayoutOnRedraw())
             initLayout();
@@ -1855,6 +1929,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.cola.dcg_nodeKey = _chart.nodeKey.eval(v1);
             if(_chart.nodeFixed())
                 v1.cola.dcg_nodeFixed = _chart.nodeFixed.eval(v1);
+            _chart.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
         var wedges = regenerate_objects(_edges, edges, function(e) {
             return _chart.edgeKey()(e);
@@ -1867,6 +1942,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             e1.source = _nodes[e1.cola.dcg_edgeSource];
             e1.target = _nodes[e1.cola.dcg_edgeTarget];
             e1.cola.dcg_edgeLength = _chart.edgeLength.eval(e1);
+            _chart.layoutEngine().populateLayoutEdge(e1.cola, e1);
         });
 
         // remove edges that don't have both end nodes
@@ -2136,24 +2212,22 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var e = _edges[re.dcg_edgeKey];
             });
         }
-        _worker.onmessage = function(e) {
-            var args = e.data.args;
-            switch(e.data.response) {
-            case 'tick':
+        _chart.layoutEngine()
+            .on('tick', function(nodes, edges) {
                 var elapsed = Date.now() - startTime;
-                populate_cola(args.nodes, args.edges);
+                if(!_chart.initialOnly())
+                    populate_cola(nodes, edges);
                 if(_chart.showLayoutSteps())
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                     console.log('cancelled');
-                    _worker.postMessage({
-                        command: 'stop'
-                    });
+                    _chart.layoutEngine().stop();
                 }
-                break;
-            case 'end':
+            })
+            .on('end', function(nodes, edges) {
                 if(!_chart.showLayoutSteps()) {
-                    populate_cola(args.nodes, args.edges);
+                    if(!_chart.initialOnly())
+                        populate_cola(nodes, edges);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 }
                 else layout_done(true);
@@ -2172,32 +2246,28 @@ dc_graph.diagram = function (parent, chartGroup) {
                 calc_bounds(node, edge);
                 if(do_zoom)
                     auto_zoom();
-                break;
-            case 'start':
-                console.log('algo ' + _chart.layoutAlgorithm() + ' started.');
+            })
+            .on('start', function() {
+                console.log('algo ' + _chart.layoutEngine().layoutAlgorithm() + ' started.');
                 _dispatch.start();
-            }
-        };
-        _dispatch.start(); // cola doesn't seem to fire this itself?
-        _worker.postMessage({
-            command: 'data',
-            args: {
-                nodes: wnodes.map(function(v) { return v.cola; }),
-                edges: layout_edges.map(function(v) { return v.cola; }),
-                constraints: constraints,
-                opts: {groupConnected: _chart.groupConnected()}
-            }
-        });
-        _worker.postMessage({
-            command: 'start',
-            args: {
+            });
+
+        if(_chart.initialOnly())
+            _chart.layoutEngine().dispatch().end(wnodes, wedges);
+        else {
+            _dispatch.start(); // cola doesn't seem to fire this itself?
+            _chart.layoutEngine().data(
+                wnodes.map(function(v) { return v.cola; }),
+                layout_edges.map(function(v) { return v.cola; }),
+                constraints,
+                {groupConnected: _chart.groupConnected()}
+            );
+            _chart.layoutEngine().start({
                 initialUnconstrainedIterations: 10,
                 initialUserConstraintIterations: 20,
-                initialAllConstraintsIterations: 20,
-                initialOnly: _chart.initialOnly(),
-                showLayoutSteps: _chart.showLayoutSteps()
-            }
-        });
+                initialAllConstraintsIterations: 20
+            });
+        }
         return this;
     };
 
@@ -2576,7 +2646,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Erases any existing SVG elements and draws the diagram from scratch. `.render()`
      * must be called the first time, and `.redraw()` can be called after that.
-     * @name render
+     * @method render
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
@@ -2602,7 +2672,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * * `drawn(nodes, edges)` - the node and edge elements have been rendered to the screen
      * and can be modified through the passed d3 selections.
      * * `end()` - diagram layout has completed.
-     * @name on
+     * @method on
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [event] - the event to subscribe to
@@ -2618,7 +2688,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Returns an object with current statistics on graph layout.
      * * `nnodes` - number of nodes displayed
      * * `nedges` - number of edges displayed
-     * @name getStats
+     * @method getStats
      * @memberof dc_graph.diagram
      * @instance
      * @return {}
@@ -2639,7 +2709,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * ```
      * Since this function returns a d3 selection, it is not chainable. (However, d3 selection
      * calls can be chained after it.)
-     * @name select
+     * @method select
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [selector]
@@ -2662,7 +2732,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
      * Since this function returns a d3 selection, it is not chainable. (However, d3 selection
      * calls can be chained after it.)
-     * @name selectAll
+     * @method selectAll
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [selector]
@@ -2678,7 +2748,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Returns the top svg element for this specific chart. You can also pass in a new
      * svg element, but setting the svg element on a diagram may have unexpected consequences.
-     * @name svg
+     * @method svg
      * @memberof dc_graph.diagram
      * @instance
      * @param {d3.selection} [selection]
@@ -2699,7 +2769,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Remove the diagram's SVG elements from the dom and recreate the container SVG
      * element.
-     * @name resetSvg
+     * @method resetSvg
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
@@ -2713,7 +2783,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Causes all charts in the chart group to be redrawn.
-     * @name redrawGroup
+     * @method redrawGroup
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
@@ -2726,7 +2796,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Causes all charts in the chart group to be rendered.
-     * @name renderGroup
+     * @method renderGroup
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
@@ -2743,7 +2813,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
      * (If further customization is required, it is possible to append other `svg:defs` to
      * `chart.svg()` and use refer to them by `id`.)
-     * @name defineArrow
+     * @method defineArrow
      * @memberof dc_graph.diagram
      * @instance
      * @param {Number} name - the identifier to give the marker, to be used with
@@ -2998,6 +3068,646 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     return _chart.anchor(parent, chartGroup);
 };
+
+var _workers = {};
+function create_worker(layoutAlgorithm) {
+    if(!_workers[layoutAlgorithm]) {
+        var worker = _workers[layoutAlgorithm] = {
+            worker: new Worker(script_path() + 'dc.graph.' + layoutAlgorithm + '.worker.js'),
+            layouts: {}
+        };
+        worker.worker.onmessage = function(e) {
+            var layoutId = e.data.layoutId;
+            if(!worker.layouts[layoutId])
+                throw new Error('layoutId "' + layoutId + '" unknown!');
+            worker.layouts[layoutId].dispatch()[e.data.response].apply(null, e.data.args);
+        };
+    }
+    return _workers[layoutAlgorithm];
+}
+
+dc_graph.webworker_layout = function(layoutEngine) {
+    var _tick, _done, _dispatch = d3.dispatch('init', 'start', 'tick', 'end');
+    var _worker = create_worker(layoutEngine.layoutAlgorithm());
+    var engine = {};
+    _worker.layouts[layoutEngine.layoutId()] = engine;
+
+    engine.parent = function(parent) {
+        if(layoutEngine.parent)
+            layoutEngine.parent(parent);
+    };
+    engine.init = function(options) {
+        options = layoutEngine.optionNames().reduce(
+            function(options, option) {
+                options[option] = layoutEngine[option]();
+                return options;
+            }, options);
+        _worker.worker.postMessage({
+            command: 'init',
+            args: {
+                layoutId: layoutEngine.layoutId(),
+                options: options
+            }
+        });
+        return this;
+    };
+    engine.data = function(nodes, edges, constraints, options) {
+        _worker.worker.postMessage({
+            command: 'data',
+            args: {
+                layoutId: layoutEngine.layoutId(),
+                nodes: nodes,
+                edges: edges,
+                constraints: constraints,
+                options: options
+            }
+        });
+    };
+    engine.start = function(options) {
+        _worker.worker.postMessage({
+            command: 'start',
+            args: {
+                layoutId: layoutEngine.layoutId(),
+                options: options
+            }
+        });
+    };
+    engine.stop = function() {
+        _worker.worker.postMessage({
+            command: 'stop',
+            args: {
+                layoutId: layoutEngine.layoutId()
+            }
+        });
+        return this;
+    };
+    // stopgap while layout options are still on diagram
+    engine.getEngine = function() {
+        return layoutEngine;
+    };
+    // somewhat sketchy - do we want this object to be transparent or not?
+    var passthroughs = ['layoutAlgorithm', 'populateLayoutNode', 'populateLayoutEdge', 'rankdir', 'ranksep'];
+    passthroughs.forEach(function(name) {
+        engine[name] = function() {
+            var ret = layoutEngine[name].apply(layoutEngine, arguments);
+            return arguments.length ? this : ret;
+        };
+    });
+    engine.on = function(event, f) {
+        _dispatch.on(event, f);
+        return this;
+    };
+    engine.dispatch = function() {
+        return _dispatch;
+    };
+    return engine;
+};
+
+/**
+ * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
+ * implement - although these are not // required, they make it easier for clients and
+ * behaviors (like expand_collapse) to work with // multiple layout engines // these
+ * attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
+ * @class graphviz_attrs
+ * @memberof dc_graph
+ * @return {Object}
+ **/
+dc_graph.graphviz_attrs = function() {
+    return {
+        /**
+         * Direction to draw ranks.
+         * @method rankdir
+         * @memberof dc_graph.graphviz_attrs
+         * @instance
+         * @param {String} [rankdir='TB'] 'TB', 'LR', 'BT', or 'RL'
+         **/
+        rankdir: property('TB'),
+        /**
+         * Spacing in between ranks.
+         * @method ranksep
+         * @memberof dc_graph.graphviz_attrs
+         * @instnace
+         * @param {String} [ranksep=40]
+         **/
+        ranksep: property(40)
+    };
+};
+
+/**
+ * `dc_graph.cola_layout` is an adaptor for cola.js layouts in dc.graph.js
+ * @class cola_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.cola_layout}
+ **/
+dc_graph.cola_layout = function(id) {
+    var _layoutId = id || uuid();
+    var _d3cola = null;
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _flowLayout;
+    // node and edge objects shared with cola.js, preserved from one iteration
+    // to the next (as long as the object is still in the layout)
+    var _nodes = {}, _edges = {};
+
+    function init(options) {
+        // width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize
+        _d3cola = cola.d3adaptor()
+            .avoidOverlaps(true)
+            .size([options.width, options.height])
+            .handleDisconnected(options.handleDisconnected);
+        if(_d3cola.tickSize) // non-standard
+            _d3cola.tickSize(options.tickSize);
+
+        switch(options.lengthStrategy) {
+        case 'symmetric':
+            _d3cola.symmetricDiffLinkLengths(options.baseLength);
+            break;
+        case 'jaccard':
+            _d3cola.jaccardLinkLengths(options.baseLength);
+            break;
+        case 'individual':
+            _d3cola.linkDistance(function(e) {
+                return e.dcg_edgeLength || options.baseLength;
+            });
+            break;
+        case 'none':
+        default:
+        }
+        if(options.flowLayout) {
+            _d3cola.flowLayout(options.flowLayout.axis, options.flowLayout.minSeparation);
+        }
+    }
+
+    function data(nodes, edges, constraints, options) {
+        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+            return v.dcg_nodeKey;
+        }, function(v1, v) {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.width = v.width;
+            v1.height = v.height;
+            v1.fixed = !!v.dgc_nodeFixed;
+
+            if(typeof v.dgc_nodeFixed === 'object') {
+                v1.x = v.dgc_nodeFixed.x;
+                v1.y = v.dgc_nodeFixed.y;
+            }
+            else {
+                // should we support e.g. null to unset x,y?
+                if(v.x !== undefined)
+                    v1.x = v.x;
+                if(v.y !== undefined)
+                    v1.y = v.y;
+            }
+        });
+        var wedges = regenerate_objects(_edges, edges, function(e) {
+            return e.dcg_edgeKey;
+        }, function(e1, e) {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            // cola edges can work with indices or with object references
+            // but it will replace indices with object references
+            e1.source = _nodes[e.dcg_edgeSource];
+            e1.target = _nodes[e.dcg_edgeTarget];
+            e1.dcg_edgeLength = e.dcg_edgeLength;
+        });
+
+        // cola needs each node object to have an index property
+        wnodes.forEach(function(v, i) {
+            v.index = i;
+        });
+
+        var groups = null;
+        if(options.groupConnected) {
+            var components = cola.separateGraphs(wnodes, wedges);
+            groups = components.map(function(g) {
+                return {leaves: g.array.map(function(n) { return n.index; })};
+            });
+        }
+
+        function dispatchState(event) {
+            _dispatch[event](
+                wnodes,
+                wedges.map(function(e) {
+                    return {dcg_edgeKey: e.dcg_edgeKey};
+                })
+            );
+        }
+        _d3cola.on('tick', /* _tick = */ function() {
+            dispatchState('tick');
+        }).on('start', function() {
+            _dispatch.start();
+        }).on('end', /* _done = */ function() {
+            dispatchState('end');
+        });
+        _d3cola.nodes(wnodes)
+            .links(wedges)
+            .constraints(constraints)
+            .groups(groups);
+    }
+
+    function start(options) {
+        _d3cola.start(options.initialUnconstrainedIterations,
+                      options.initialUserConstraintIterations,
+                      options.initialAllConstraintsIterations,
+                      options.gridSnapIterations);
+    }
+
+    function stop() {
+        _d3cola.stop();
+    }
+
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    graphviz.rankdir(null);
+
+    var engine = Object.assign(graphviz, {
+        layoutAlgorithm: function() {
+            return 'cola';
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        parent: property(null),
+        on: function(event, f) {
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(nodes, edges, constraints, options) {
+            data(nodes, edges, constraints, options);
+        },
+        start: function(options) {
+            start(options);
+        },
+        stop: function() {
+            stop();
+        },
+        optionNames: function() {
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize']
+                .concat(graphviz_keys);
+        },
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {},
+        /**
+         * Instructs cola.js to fit the connected components.
+         * @method handleDisconnected
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Boolean} [handleDisconnected=true]
+         * @return {Boolean}
+         * @return {dc_graph.cola_layout}
+         **/
+        handleDisconnected: property(true),
+        /**
+         * Currently, three strategies are supported for specifying the lengths of edges:
+         * * 'individual' - uses the `edgeLength` for each edge. If it returns falsy, uses the
+         * `baseLength`
+         * * 'symmetric', 'jaccard' - compute the edge length based on the graph structure around
+         * the edge. See
+         * {@link https://github.com/tgdwyer/WebCola/wiki/link-lengths the cola.js wiki}
+         * for more details.
+         * 'none' - no edge lengths will be specified
+         * @method lengthStrategy
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Function|String} [lengthStrategy='symmetric']
+         * @return {Function|String}
+         * @return {dc_graph.cola_layout}
+         **/
+        lengthStrategy: property('symmetric'),
+        /**
+         * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
+         * 'individual', and the base value to be multiplied for 'symmetric' and 'jaccard' edge
+         * lengths.
+         * @method baseLength
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Number} [baseLength=30]
+         * @return {Number}
+         * @return {dc_graph.cola_layout}
+         **/
+        baseLength: property(30),
+        /**
+         * If `flowLayout` is set, it determines the axis and separation for
+         * {@link http://marvl.infotech.monash.edu/webcola/doc/classes/cola.layout.html#flowlayout cola flow layout}.
+         * If it is not set, `flowLayout` will be calculated from the {@link dc_graph.graphviz_attrs#rankdir rankdir}
+         * and {@link dc_graph.graphviz_attrs#ranksep ranksep}; if `rankdir` is also null (the
+         * default for cola layout), then there will be no flow.
+         * @method flowLayout
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Object} [flowLayout=null]
+         * @example
+         * // No flow (default)
+         * chart.flowLayout(null)
+         * // flow in x with min separation 200
+         * chart.flowLayout({axis: 'x', minSeparation: 200})
+         **/
+        flowLayout: function(flow) {
+            if(!arguments.length) {
+                if(_flowLayout)
+                    return _flowLayout;
+                var dir = engine.rankdir();
+                if(!dir)
+                    return null;
+                var axis = (dir === 'LR' || dir === 'RL') ? 'x' : 'y';
+                return {
+                    axis: axis,
+                    minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2
+                };
+            }
+            _flowLayout = flow;
+            return this;
+        },
+        tickSize: property(1)
+    });
+    return engine;
+};
+
+dc_graph.cola_layout.scripts = ['d3.js', 'cola.js'];
+
+/**
+ * `dc_graph.dagre_layout` is an adaptor for dagre.js layouts in dc.graph.js
+ *
+ * In addition to the below layout attributes, `dagre_layout` also implements the attributes from
+ * {@link dc_graph.graphviz_attrs graphviz_attrs}
+ * @class dagre_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.dagre_layout}
+ **/
+dc_graph.dagre_layout = function(id) {
+    var _layoutId = id || uuid();
+    var _dagreGraph = null, _tick, _done;
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    // node and edge objects preserved from one iteration
+    // to the next (as long as the object is still in the layout)
+    var _nodes = {}, _edges = {};
+
+    function init(options) {
+        // Create a new directed graph
+        _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
+
+        // Set an object for the graph label
+        _dagreGraph.setGraph({rankdir: options.rankdir});
+
+        // Default to assigning a new object as a label for each new edge.
+        _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
+    }
+
+    function data(nodes, edges, constraints, options) {
+        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+            return v.dcg_nodeKey;
+        }, function(v1, v) {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.width = v.width;
+            v1.height = v.height;
+        }, function(k, o) {
+            _dagreGraph.setNode(k, o);
+        }, function(k) {
+            _dagreGraph.removeNode(k);
+        });
+        var wedges = regenerate_objects(_edges, edges, function(e) {
+            return e.dcg_edgeKey;
+        }, function(e1, e) {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            e1.dcg_edgeSource = e.dcg_edgeSource;
+            e1.dcg_edgeTarget = e.dcg_edgeTarget;
+        }, function(k, o, e) {
+            _dagreGraph.setEdge(e.dcg_edgeSource, e.dcg_edgeTarget, o);
+        }, function(k, e) {
+            _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget, e.dcg_edgeKey);
+        });
+
+        function dispatchState(event) {
+            _dispatch[event](
+                wnodes,
+                wedges.map(function(e) {
+                    return {dcg_edgeKey: e.dcg_edgeKey};
+                })
+            );
+        }
+        _tick = function() {
+            dispatchState('tick');
+        };
+        _done = function() {
+            dispatchState('end');
+        };
+    }
+
+    function start(options) {
+        _dispatch.start();
+        dagre.layout(_dagreGraph);
+        _done();
+    }
+
+    function stop() {
+    }
+
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    return Object.assign(graphviz, {
+        layoutAlgorithm: function() {
+            return 'dagre';
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        on: function(event, f) {
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(nodes, edges, constraints, options) {
+            data(nodes, edges, constraints, options);
+        },
+        start: function(options) {
+            start(options);
+        },
+        stop: function() {
+            stop();
+        },
+        optionNames: function() {
+            return graphviz_keys;
+        },
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {}
+    });
+}
+
+dc_graph.dagre_layout.scripts = ['d3.js', 'dagre.js'];
+
+/**
+ * `dc_graph.tree_layout` is a very simple and not very bright tree layout. It can draw any DAG, but
+ * tries to position the nodes as a tree.
+ * @class tree_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.tree_layout}
+ **/
+dc_graph.tree_layout = function(id) {
+    var _layoutId = id || uuid();
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dfs;
+
+    function init(options) {
+        var x;
+        var nodeWidth = d3.functor(options.nodeWidth);
+        function best_dist(left, right) {
+            return (nodeWidth(left) + nodeWidth(right)) / 2;
+        }
+        _dfs = dc_graph.depth_first_traversal({
+            nodeid: function(n) {
+                return n.dcg_nodeKey;
+            },
+            sourceid: function(n) {
+                return n.dcg_edgeSource;
+            },
+            targetid: function(n) {
+                return n.dcg_edgeTarget;
+            },
+            init: function() {
+                x = options.offsetX;
+            },
+            row: function(n) {
+                return n.dcg_rank;
+            },
+            place: function(n, r, row) {
+                if(row.length) {
+                    var left = row[row.length-1];
+                    var g = (nodeWidth(left) + nodeWidth(n)) / 2;
+                    x = Math.max(x, left.left_x + g);
+                }
+                n.left_x = x;
+                n.hit_ins = 1;
+                n.y = r*options.gapY + options.offsetY;
+            },
+            sib: function(isroot, left, right) {
+                var g = best_dist(left, right);
+                if(isroot) g = g*1.5;
+                x += g;
+            },
+            pop: function(n) {
+                n.x = (n.left_x + x)/2;
+            },
+            skip: function(n, indegree) {
+                // rolling average of in-neighbor x positions
+                n.x = (n.hit_ins*n.x + x)/++n.hit_ins;
+                if(n.hit_ins === indegree)
+                    delete n.hit_ins;
+            },
+            finish: function(rows) {
+                // this is disgusting. patch up any places where nodes overlap by scanning
+                // right far enough to find the space, then fill from left to right at the
+                // minimum gap
+                rows.forEach(function(row) {
+                    var sort = row.sort(function(a, b) { return a.x - b.x; });
+                    var badi = null, badl = null, want;
+                    for(var i=0; i<sort.length-1; ++i) {
+                        var left = sort[i], right = sort[i+1];
+                        if(!badi) {
+                            if(right.x - left.x < best_dist(left, right)) {
+                                badi = i;
+                                badl = left.x;
+                                want = best_dist(left, right);
+                            } // else still not bad
+                        } else {
+                            want += best_dist(left, right);
+                            if(i < sort.length - 2 && right.x < badl + want)
+                                continue; // still bad
+                            else {
+                                if(badi>0)
+                                    --badi; // might want to use more left
+                                var l, limit;
+                                if(i < sort.length - 2) { // found space before right
+                                    var extra = right.x - (badl + want);
+                                    l = sort[badi].x + extra/2;
+                                    limit = i+1;
+                                } else {
+                                    l = Math.max(sort[badi].x, badl - best_dist(sort[badi], sort[badi+1]) - (want - right.x + badl)/2);
+                                    limit = sort.length;
+                                }
+                                for(var j = badi+1; j<limit; ++j) {
+                                    l += best_dist(sort[j-1], sort[j]);
+                                    sort[j].x = l;
+                                }
+                                badi = badl = want = null;
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    var _nodes, _edges;
+    function data(nodes, edges, constraints, options) {
+        _nodes = nodes;
+        _edges = edges;
+    }
+
+    function start(options) {
+        _dfs(_nodes, _edges);
+        _dispatch.end(_nodes, _edges);
+    }
+
+    function stop() {
+    }
+
+    var layout = {
+        layoutAlgorithm: function() {
+            return 'tree';
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        on: function(event, f) {
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(nodes, edges, constraints, opts) {
+            data(nodes, edges, constraints, opts);
+        },
+        start: function(options) {
+            start(options);
+        },
+        stop: function() {
+            stop();
+        },
+        optionNames: function() {
+            return ['nodeWidth', 'offsetX', 'offsetY', 'rowFunction', 'gapY'];
+        },
+        populateLayoutNode: function(layout, node) {
+            if(this.rowFunction())
+                layout.dcg_rank = this.rowFunction.eval(node);
+        },
+        populateLayoutEdge: function() {},
+        nodeWidth: property(function(n) { return n.width; }),
+        offsetX: property(30),
+        offsetY: property(30),
+        rowFunction: property(null),
+        gapY: property(100)
+    };
+    return layout;
+};
+
+dc_graph.tree_layout.scripts = [];
 
 /**
 ## Legend
@@ -3293,51 +4003,32 @@ dc_graph.order_y = function(gap, ordering) {
 };
 
 // this naive tree-drawer is paraphrased from memory from dot
-dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
-    return function(diagram, nodes, edges) {
-        var constraints = [];
-        var x = 0;
-        var dfs = dc_graph.depth_first_traversal({
-            root: rootf,
-            tree: treef,
-            place: function(n, r, row) {
-                if(row.length) {
-                    var last = row[row.length-1];
-                    constraints.push({
-                        left: diagram.nodeKey.eval(last),
-                        right: diagram.nodeKey.eval(n),
-                        axis: 'x',
-                        gap: x-last.foo_x,
-                        equality: true
-                    });
-                }
-                n.foo_x = x;
-                // n.cola.x = x;
-                // n.cola.y = r*ygap;
-            },
-            sib: function() {
-                x += xgap;
-            }
-        });
-        dfs(diagram, nodes, edges);
-        return constraints;
-    };
-};
-
-// this naive tree-drawer is paraphrased from memory from dot
 dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
+    console.warn('dc_graph.tree_positions is deprecated; use the layout engine tree_layout instead');
+    if(rootf || treef) {
+        console.warn('dc_graph.tree_positions: rootf and treef are ignored');
+    }
     var x;
     nwidth = d3.functor(nwidth);
     function best_dist(left, right) {
         return (nwidth(left) + nwidth(right)) / 2;
     }
     var dfs = dc_graph.depth_first_traversal({
+        nodeid: function(n) {
+            return n.cola.dcg_nodeKey;
+        },
+        sourceid: function(n) {
+            return n.cola.dcg_edgeSource;
+        },
+        targetid: function(n) {
+            return n.cola.dcg_edgeTarget;
+        },
         init: function() {
             x = ofsx;
         },
-        root: rootf,
-        row: rowf,
-        tree: treef,
+        row: function(n) {
+            return rowf(n.orig);
+        },
         place: function(n, r, row) {
             if(row.length) {
                 var left = row[row.length-1];
@@ -3405,9 +4096,44 @@ dc_graph.tree_positions = function(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap)
         }
     });
 
-    return dfs;
+    return function(diagram, nodes, edges) {
+        return dfs(nodes, edges);
+    };
 };
 
+
+// this naive tree-drawer is paraphrased from memory from dot
+dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
+    console.warn('dc_graph.tree_constraints is deprecated - it never worked right and may not be a good idea');
+    return function(diagram, nodes, edges) {
+        var constraints = [];
+        var x = 0;
+        var dfs = dc_graph.depth_first_traversal({
+            root: rootf,
+            tree: treef,
+            place: function(n, r, row) {
+                if(row.length) {
+                    var last = row[row.length-1];
+                    constraints.push({
+                        left: diagram.nodeKey.eval(last),
+                        right: diagram.nodeKey.eval(n),
+                        axis: 'x',
+                        gap: x-last.foo_x,
+                        equality: true
+                    });
+                }
+                n.foo_x = x;
+                // n.cola.x = x;
+                // n.cola.y = r*ygap;
+            },
+            sib: function() {
+                x += xgap;
+            }
+        });
+        dfs(diagram, nodes, edges);
+        return constraints;
+    };
+};
 
 dc_graph.behavior = function(event_namespace, handlers) {
     var _behavior = {};
@@ -3943,7 +4669,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 var key = chart.nodeKey.eval(d);
                 var dir = d.dcg_expand_selected.dir,
                     n = d.dcg_expand_selected.n,
-                    af = spike_directioner(chart.rankdir(), dir, n),
+                    af = spike_directioner(chart.layoutEngine().rankdir(), dir, n),
                     ret = Array(n);
                 for(var i = 0; i<n; ++i) {
                     var a = af(i);
@@ -3991,7 +4717,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         var invert = chart.invertCoord([event.clientX - bound.left,event.clientY - bound.top]),
             x = invert[0],
             y = invert[1];
-        switch(chart.rankdir()) {
+        switch(chart.layoutEngine().rankdir()) {
         case 'TB':
             return y > d.cola.y ? 'out' : 'in';
         case 'BT':
@@ -4001,7 +4727,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         case 'RL':
             return x < d.cola.x ? 'out' : 'in';
         }
-        throw new Error('unknown rankdir ' + chart.rankdir());
+        throw new Error('unknown rankdir ' + chart.layoutEngine().rankdir());
     }
 
 
@@ -4349,42 +5075,84 @@ dc_graph.flat_group = (function() {
 
 
 
-// make crossfilter-suitable data from d3.nest {key, values} format
-dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
-    inherit = inherit || {};
-    var level = Object.keys(inherit).length;
-    if(attrs.length) {
+var convert_tree_helper = function(data, attrs, options, parent, level, inherit) {
+    level = level || 0;
+    if(attrs.length > (options.valuesByAttr ? 1 : 0)) {
         var attr = attrs.shift();
         var nodes = [], edges = [];
-        var children = nest.map(function(v) {
-            inherit[attr] = v.key;
-            var child = uuid();
-            var node = clone(inherit);
-            node[nodeKeyAttr] = child;
-            node.name = attr + ':' + v.key;
-            node._level = level+1;
-            nodes.push(node);
-            if(parent) {
-                var edge = {};
-                edge[edgeSourceAttr] = parent;
-                edge[edgeTargetAttr] = child;
-                edges.push(edge);
+        var children = data.map(function(v) {
+            var key = v[options.nestKey];
+            var childKey = options.nestKeysUnique ? key : uuid();
+            if(childKey) {
+                var node;
+                if(options.ancestorKeys) {
+                    inherit = inherit || {};
+                    if(attr)
+                        inherit[attr] = key;
+                    node = Object.assign({}, inherit);
+                } else node = {};
+                node[options.nodeKey] = childKey;
+                if(options.label && options.labelFun)
+                    node[options.label] = options.labelFun(key, attr, v);
+                if(options.level)
+                    node[options.level] = level+1;
+                nodes.push(node);
+                if(parent) {
+                    var edge = {};
+                    edge[options.edgeSource] = parent;
+                    edge[options.edgeTarget] = childKey;
+                    edges.push(edge);
+                }
             }
-            var recurse = dc_graph.convert_nest(v.values, attrs.slice(0), nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, child, clone(inherit));
+            var children = options.valuesByAttr ? v[attrs[0]] : v.values;
+            var recurse = convert_tree_helper(children, attrs.slice(0), options,
+                                              childKey, level+1, Object.assign({}, inherit));
             return recurse;
         });
         return {nodes: Array.prototype.concat.apply(nodes, children.map(dc.pluck('nodes'))),
                 edges: Array.prototype.concat.apply(edges, children.map(dc.pluck('edges')))};
     }
-    else return {nodes: nest.map(function(v) {
-        v._level = level+1;
+    else return {nodes: data.map(function(v) {
+        v = Object.assign({}, v);
+        if(options.level)
+            v[options.level] = level+1;
         return v;
-    }), edges: nest.map(function(v) {
+    }), edges: data.map(function(v) {
         var edge = {};
-        edge[edgeSourceAttr] = parent;
-        edge[edgeTargetAttr] = v[nodeKeyAttr];
+        edge[options.edgeSource] = parent;
+        edge[options.edgeTarget] = v[options.nodeKey];
         return edge;
     })};
+};
+
+dc_graph.convert_tree = function(data, attrs, options) {
+    options = Object.assign({
+        nodeKey: 'key',
+        edgeKey: 'key',
+        edgeSource: 'sourcename',
+        edgeTarget: 'targetname',
+        nestKey: 'key'
+    }, options);
+    if(Array.isArray(data))
+        return convert_tree_helper(data, attrs, options, options.root, 0, options.inherit);
+    else {
+        attrs = [''].concat(attrs);
+        return convert_tree_helper([data], attrs, options, options.root, 0, options.inherit);
+    }
+};
+
+dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
+    return dc_graph.convert_tree(nest, attrs, {
+        nodeKey: nodeKeyAttr,
+        edgeSource: edgeSourceAttr,
+        edgeTarget: edgeTargetAttr,
+        root: parent,
+        inherit: inherit,
+        ancestorKeys: true,
+        label: 'name',
+        labelFun: function(key, attr, v) { return attr + ':' + key; },
+        level: '_level'
+    });
 };
 
 dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {

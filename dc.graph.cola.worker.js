@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.3.16
+ *  dc.graph 0.4.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -17,6 +17,116 @@
  *  limitations under the License.
  *
  */
+/**
+ * The entire dc.graph.js library is scoped under the **dc_graph** name space. It does not introduce
+ * anything else into the global name space.
+ *
+ * Like in dc.js and most libraries built on d3, most `dc_graph` functions are designed to allow function chaining, meaning they return the current chart
+ * instance whenever it is appropriate.  The getter forms of functions do not participate in function
+ * chaining because they return values that are not the chart.
+ * @namespace dc_graph
+ * @version 0.4.0
+ * @example
+ * // Example chaining
+ * chart.width(600)
+ *      .height(400)
+ *      .nodeDimension(nodeDim)
+ *      .nodeGroup(nodeGroup);
+ */
+
+var dc_graph = {
+    version: '0.4.0',
+    constants: {
+        CHART_CLASS: 'dc-graph'
+    }
+};
+
+function get_original(x) {
+    return x.orig;
+}
+
+function identity(x) {
+    return x;
+};
+
+var property = function (defaultValue, unwrap) {
+    if(unwrap === undefined)
+        unwrap = get_original;
+    else if(unwrap === false)
+        unwrap = identity;
+    var value = defaultValue, react = null;
+    var cascade = [];
+    var ret = function (_) {
+        if (!arguments.length) {
+            return value;
+        }
+        if(react)
+            react(_);
+        value = _;
+        return this;
+    };
+    ret.cascade = function (n, f) {
+        for(var i = 0; i<cascade.length; ++i) {
+            if(cascade[i].n === n) {
+                if(f)
+                    cascade[i].f = f;
+                else delete cascade[i];
+                return ret;
+            } else if(cascade[i].n > n) {
+                cascade.splice(i, 0, {n: n, f: f});
+                return ret;
+            }
+        }
+        cascade.push({n: n, f: f});
+        return ret;
+    };
+    ret._eval = function(o, n) {
+        if(n===0 || !cascade.length)
+            return dc_graph.functor_wrap(ret(), unwrap)(o);
+        else {
+            var last = cascade[n-1];
+            return last.f(o, function() {
+                return ret._eval(o, n-1);
+            });
+        }
+    };
+    ret.eval = function(o) {
+        return ret._eval(o, cascade.length);
+    };
+    ret.react = function(_) {
+        if (!arguments.length) {
+            return react;
+        }
+        react = _;
+        return this;
+    };
+    return ret;
+};
+
+function deprecated_property(message, defaultValue) {
+    var prop = property(defaultValue);
+    var ret = function() {
+        if(arguments.length) {
+            console.warn(message);
+            prop.apply(property, arguments);
+            return this;
+        }
+        return prop();
+    };
+    ['cascade', '_eval', 'eval', 'react'].forEach(function(method) {
+        ret[method] = prop[method];
+    });
+    return ret;
+}
+
+// http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+}
+
 // create or re-use objects in a map, delete the ones that were not reused
 function regenerate_objects(preserved, list, key, assign, create, destroy) {
     if(!create) create = function(k, o) { };
@@ -41,152 +151,323 @@ function regenerate_objects(preserved, list, key, assign, create, destroy) {
     return wlist;
 }
 
-importScripts('cola.js');
-importScripts('d3.js');
+/**
+ * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
+ * implement - although these are not // required, they make it easier for clients and
+ * behaviors (like expand_collapse) to work with // multiple layout engines // these
+ * attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
+ * @class graphviz_attrs
+ * @memberof dc_graph
+ * @return {Object}
+ **/
+dc_graph.graphviz_attrs = function() {
+    return {
+        /**
+         * Direction to draw ranks.
+         * @method rankdir
+         * @memberof dc_graph.graphviz_attrs
+         * @instance
+         * @param {String} [rankdir='TB'] 'TB', 'LR', 'BT', or 'RL'
+         **/
+        rankdir: property('TB'),
+        /**
+         * Spacing in between ranks.
+         * @method ranksep
+         * @memberof dc_graph.graphviz_attrs
+         * @instnace
+         * @param {String} [ranksep=40]
+         **/
+        ranksep: property(40)
+    };
+};
 
-var _d3cola = null, _tick, _stop;
+/**
+ * `dc_graph.cola_layout` is an adaptor for cola.js layouts in dc.graph.js
+ * @class cola_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.cola_layout}
+ **/
+dc_graph.cola_layout = function(id) {
+    var _layoutId = id || uuid();
+    var _d3cola = null;
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _flowLayout;
+    // node and edge objects shared with cola.js, preserved from one iteration
+    // to the next (as long as the object is still in the layout)
+    var _nodes = {}, _edges = {};
 
-function init_d3cola(width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize) {
-    _d3cola = cola.d3adaptor()
-        .avoidOverlaps(true)
-        .size([width, height])
-        .handleDisconnected(handleDisconnected);
-    if(_d3cola.tickSize) // non-standard
-        _d3cola.tickSize(tickSize);
+    function init(options) {
+        // width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize
+        _d3cola = cola.d3adaptor()
+            .avoidOverlaps(true)
+            .size([options.width, options.height])
+            .handleDisconnected(options.handleDisconnected);
+        if(_d3cola.tickSize) // non-standard
+            _d3cola.tickSize(options.tickSize);
 
-    switch(lengthStrategy) {
+        switch(options.lengthStrategy) {
         case 'symmetric':
-            _d3cola.symmetricDiffLinkLengths(baseLength);
+            _d3cola.symmetricDiffLinkLengths(options.baseLength);
             break;
         case 'jaccard':
-            _d3cola.jaccardLinkLengths(baseLength);
+            _d3cola.jaccardLinkLengths(options.baseLength);
             break;
         case 'individual':
             _d3cola.linkDistance(function(e) {
-                return e.dcg_edgeLength || baseLength;
+                return e.dcg_edgeLength || options.baseLength;
             });
             break;
         case 'none':
         default:
-    }
-    if(flowLayout) {
-        _d3cola.flowLayout(flowLayout.axis, flowLayout.minSeparation);
-    }
-
-}
-
-// node and edge objects shared with cola.js, preserved from one iteration
-// to the next (as long as the object is still in the layout)
-var _nodes = {}, _edges = {};
-
-function data_d3cola(nodes, edges, constraints, opts) {
-    var wnodes = regenerate_objects(_nodes, nodes, function(v) {
-        return v.dcg_nodeKey;
-    }, function(v1, v) {
-        v1.dcg_nodeKey = v.dcg_nodeKey;
-        v1.width = v.width;
-        v1.height = v.height;
-        v1.fixed = !!v.dgc_nodeFixed;
-
-        if(typeof v.dgc_nodeFixed === 'object') {
-            v1.x = v.dgc_nodeFixed.x;
-            v1.y = v.dgc_nodeFixed.y;
         }
-        else {
-            // should we support e.g. null to unset x,y?
-            if(v.x !== undefined)
-                v1.x = v.x;
-            if(v.y !== undefined)
-                v1.y = v.y;
+        if(options.flowLayout) {
+            _d3cola.flowLayout(options.flowLayout.axis, options.flowLayout.minSeparation);
         }
-    });
-    var wedges = regenerate_objects(_edges, edges, function(e) {
-        return e.dcg_edgeKey;
-    }, function(e1, e) {
-        e1.dcg_edgeKey = e.dcg_edgeKey;
-        // cola edges can work with indices or with object references
-        // but it will replace indices with object references
-        e1.source = _nodes[e.dcg_edgeSource];
-        e1.target = _nodes[e.dcg_edgeTarget];
-        e1.dcg_edgeLength = e.dcg_edgeLength;
-    });
-
-    // cola needs each node object to have an index property
-    wnodes.forEach(function(v, i) {
-        v.index = i;
-    });
-
-    var groups = null;
-    if(opts.groupConnected) {
-        var components = cola.separateGraphs(wnodes, wedges);
-        groups = components.map(function(g) {
-            return {leaves: g.array.map(function(n) { return n.index; })};
-        });
     }
 
-    function postResponseState(response) {
-        postMessage({
-            response: response,
-            args: {
-                nodes: wnodes,
-                edges: wedges.map(function(e) {
-                    return {dcg_edgeKey: e.dcg_edgeKey};
-                })
+    function data(nodes, edges, constraints, options) {
+        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+            return v.dcg_nodeKey;
+        }, function(v1, v) {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.width = v.width;
+            v1.height = v.height;
+            v1.fixed = !!v.dgc_nodeFixed;
+
+            if(typeof v.dgc_nodeFixed === 'object') {
+                v1.x = v.dgc_nodeFixed.x;
+                v1.y = v.dgc_nodeFixed.y;
+            }
+            else {
+                // should we support e.g. null to unset x,y?
+                if(v.x !== undefined)
+                    v1.x = v.x;
+                if(v.y !== undefined)
+                    v1.y = v.y;
             }
         });
+        var wedges = regenerate_objects(_edges, edges, function(e) {
+            return e.dcg_edgeKey;
+        }, function(e1, e) {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            // cola edges can work with indices or with object references
+            // but it will replace indices with object references
+            e1.source = _nodes[e.dcg_edgeSource];
+            e1.target = _nodes[e.dcg_edgeTarget];
+            e1.dcg_edgeLength = e.dcg_edgeLength;
+        });
+
+        // cola needs each node object to have an index property
+        wnodes.forEach(function(v, i) {
+            v.index = i;
+        });
+
+        var groups = null;
+        if(options.groupConnected) {
+            var components = cola.separateGraphs(wnodes, wedges);
+            groups = components.map(function(g) {
+                return {leaves: g.array.map(function(n) { return n.index; })};
+            });
+        }
+
+        function dispatchState(event) {
+            _dispatch[event](
+                wnodes,
+                wedges.map(function(e) {
+                    return {dcg_edgeKey: e.dcg_edgeKey};
+                })
+            );
+        }
+        _d3cola.on('tick', /* _tick = */ function() {
+            dispatchState('tick');
+        }).on('start', function() {
+            _dispatch.start();
+        }).on('end', /* _done = */ function() {
+            dispatchState('end');
+        });
+        _d3cola.nodes(wnodes)
+            .links(wedges)
+            .constraints(constraints)
+            .groups(groups);
     }
-    _d3cola.on('tick', _tick = function() {
-        postResponseState('tick');
-    }).on('start', function() {
-        postMessage({response: 'start'});
-    }).on('end', _stop = function() {
-        postResponseState('end');
+
+    function start(options) {
+        _d3cola.start(options.initialUnconstrainedIterations,
+                      options.initialUserConstraintIterations,
+                      options.initialAllConstraintsIterations,
+                      options.gridSnapIterations);
+    }
+
+    function stop() {
+        _d3cola.stop();
+    }
+
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    graphviz.rankdir(null);
+
+    var engine = Object.assign(graphviz, {
+        layoutAlgorithm: function() {
+            return 'cola';
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        parent: property(null),
+        on: function(event, f) {
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(nodes, edges, constraints, options) {
+            data(nodes, edges, constraints, options);
+        },
+        start: function(options) {
+            start(options);
+        },
+        stop: function() {
+            stop();
+        },
+        optionNames: function() {
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize']
+                .concat(graphviz_keys);
+        },
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {},
+        /**
+         * Instructs cola.js to fit the connected components.
+         * @method handleDisconnected
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Boolean} [handleDisconnected=true]
+         * @return {Boolean}
+         * @return {dc_graph.cola_layout}
+         **/
+        handleDisconnected: property(true),
+        /**
+         * Currently, three strategies are supported for specifying the lengths of edges:
+         * * 'individual' - uses the `edgeLength` for each edge. If it returns falsy, uses the
+         * `baseLength`
+         * * 'symmetric', 'jaccard' - compute the edge length based on the graph structure around
+         * the edge. See
+         * {@link https://github.com/tgdwyer/WebCola/wiki/link-lengths the cola.js wiki}
+         * for more details.
+         * 'none' - no edge lengths will be specified
+         * @method lengthStrategy
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Function|String} [lengthStrategy='symmetric']
+         * @return {Function|String}
+         * @return {dc_graph.cola_layout}
+         **/
+        lengthStrategy: property('symmetric'),
+        /**
+         * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
+         * 'individual', and the base value to be multiplied for 'symmetric' and 'jaccard' edge
+         * lengths.
+         * @method baseLength
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Number} [baseLength=30]
+         * @return {Number}
+         * @return {dc_graph.cola_layout}
+         **/
+        baseLength: property(30),
+        /**
+         * If `flowLayout` is set, it determines the axis and separation for
+         * {@link http://marvl.infotech.monash.edu/webcola/doc/classes/cola.layout.html#flowlayout cola flow layout}.
+         * If it is not set, `flowLayout` will be calculated from the {@link dc_graph.graphviz_attrs#rankdir rankdir}
+         * and {@link dc_graph.graphviz_attrs#ranksep ranksep}; if `rankdir` is also null (the
+         * default for cola layout), then there will be no flow.
+         * @method flowLayout
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Object} [flowLayout=null]
+         * @example
+         * // No flow (default)
+         * chart.flowLayout(null)
+         * // flow in x with min separation 200
+         * chart.flowLayout({axis: 'x', minSeparation: 200})
+         **/
+        flowLayout: function(flow) {
+            if(!arguments.length) {
+                if(_flowLayout)
+                    return _flowLayout;
+                var dir = engine.rankdir();
+                if(!dir)
+                    return null;
+                var axis = (dir === 'LR' || dir === 'RL') ? 'x' : 'y';
+                return {
+                    axis: axis,
+                    minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2
+                };
+            }
+            _flowLayout = flow;
+            return this;
+        },
+        tickSize: property(1)
     });
-    _d3cola.nodes(wnodes)
-        .links(wedges)
-        .constraints(constraints)
-        .groups(groups);
-}
+    return engine;
+};
 
-function start_d3cola(initialUnconstrainedIterations,
-                      initialUserConstraintIterations,
-                      initialAllConstraintsIterations,
-                      gridSnapIterations) {
-    _d3cola.start(initialUnconstrainedIterations,
-                  initialUserConstraintIterations,
-                  initialAllConstraintsIterations,
-                  gridSnapIterations);
-}
+dc_graph.cola_layout.scripts = ['d3.js', 'cola.js'];
 
-function stop_d3cola() {
-    _d3cola.stop();
+var _layouts;
+
+function postResponse(event, layoutId) {
+    return function() {
+        var message = {
+            response: event,
+            layoutId: layoutId
+        };
+        message.args = Array.prototype.slice.call(arguments);
+        postMessage(message);
+    };
 }
 
 onmessage = function(e) {
     var args = e.data.args;
     switch(e.data.command) {
     case 'init':
-        init_d3cola(args.width, args.height, args.handleDisconnected,
-                    args.lengthStrategy, args.baseLength, args.flowLayout,
-                    args.tickSize);
+        // find a function under dc_graph that has `scripts`
+        var layout_name;
+        for(var name in dc_graph) {
+            if(typeof dc_graph[name] === 'function' && dc_graph[name].scripts)
+                layout_name = name;
+        }
+        if(!_layouts) {
+            _layouts = {};
+            importScripts.apply(null, dc_graph[layout_name].scripts);
+        }
+
+        _layouts[args.layoutId] = dc_graph[layout_name]()
+            .on('tick', postResponse('tick', args.layoutId))
+            .on('start', postResponse('start', args.layoutId))
+            .on('end', postResponse('end', args.layoutId))
+            .init(args.options);
         break;
     case 'data':
-        data_d3cola(args.nodes, args.edges, args.constraints, args.opts);
+        if(_layouts)
+            _layouts[args.layoutId].data(args.nodes, args.edges, args.constraints, args.options);
         break;
     case 'start':
-        if(args.initialOnly) {
-            if(args.showLayoutSteps)
-                _tick();
-            _stop();
-        }
-        else
-            start_d3cola(args.initialUnconstrainedIterations,
-                         args.initialUserConstraintIterations,
-                         args.initialAllConstraintsIterations,
-                         args.gridSnapIterationse);
+        // if(args.initialOnly) {
+        //     if(args.showLayoutSteps)
+        //         _tick();
+        //     _done();
+        // }
+        // else
+        _layouts[args.layoutId].start(args.options);
         break;
     case 'stop':
-        stop_d3cola();
+        if(_layouts)
+            _layouts[args.layoutId].stop();
         break;
     }
 };
