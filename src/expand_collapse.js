@@ -95,7 +95,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 var key = chart.nodeKey.eval(d);
                 var dir = d.dcg_expand_selected.dir,
                     n = d.dcg_expand_selected.n,
-                    af = spike_directioner(chart.rankdir(), dir, n),
+                    af = spike_directioner(chart.layoutEngine().rankdir(), dir, n),
                     ret = Array(n);
                 for(var i = 0; i<n; ++i) {
                     var a = af(i);
@@ -143,7 +143,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         var invert = chart.invertCoord([event.clientX - bound.left,event.clientY - bound.top]),
             x = invert[0],
             y = invert[1];
-        switch(chart.rankdir()) {
+        switch(chart.layoutEngine().rankdir()) {
         case 'TB':
             return y > d.cola.y ? 'out' : 'in';
         case 'BT':
@@ -153,7 +153,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         case 'RL':
             return x < d.cola.x ? 'out' : 'in';
         }
-        throw new Error('unknown rankdir ' + chart.rankdir());
+        throw new Error('unknown rankdir ' + chart.layoutEngine().rankdir());
     }
 
 

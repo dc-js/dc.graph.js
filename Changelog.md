@@ -1,3 +1,13 @@
+## 0.4.0
+* layout engines are proper objects. all layout parameters are moved to the layout objects and
+  deprecated on the diagram object
+* `cola`, `dagre`, `tree` `_layout` are the current layout engines, and it should be possible to
+  plug in others without modifying dc.graph.js
+* using a webworker is optional for layout engines - wrap an engine in `webworker_layout` to use it
+  with a webworker. the only restriction is that all layout parameters must be serializable - so for
+  example the tree layout is not currently webworkable because it takes a bunch of functions.
+* [HTML documentation](http://dc-js.github.io/dc.graph.js/docs/html/)
+
 ## 0.3.16
 * line breaking `dc.line_breaks` function, for `nodeLabel` (which has supported returning an array
   of lines for some time).

@@ -4,25 +4,30 @@
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree, place, sib, push, pop, skip, finish}
-    return function(diagram, nodes, edges) {
+dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree, place, sib, push, pop, skip, finish, nodeid, sourceid, targetid}
+    return function(nodes, edges) {
         callbacks.init && callbacks.init();
         if(callbacks.tree)
-            edges = edges.filter(function(e) { return callbacks.tree(e.orig); });
+            edges = edges.filter(function(e) { return callbacks.tree(e); });
         var indegree = {};
         var outmap = edges.reduce(function(m, e) {
-            var tail = diagram.edgeSource.eval(e),
-                head = diagram.edgeTarget.eval(e);
+            var tail = callbacks.sourceid(e),
+                head = callbacks.targetid(e);
             if(!m[tail]) m[tail] = [];
             m[tail].push(e);
             indegree[head] = (indegree[head] || 0) + 1;
+            return m;
+        }, {});
+        var nmap = nodes.reduce(function(m, n) {
+            var key = callbacks.nodeid(n);
+            m[key] = n;
             return m;
         }, {});
 
         var rows = [];
         var placed = {};
         function place_tree(n, r) {
-            var key = diagram.nodeKey.eval(n);
+            var key = callbacks.nodeid(n);
             if(placed[key]) {
                 callbacks.skip && callbacks.skip(n, indegree[key]);
                 return;
@@ -34,25 +39,28 @@ dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree
             placed[key] = true;
             if(outmap[key])
                 outmap[key].forEach(function(e, ei) {
+                    var target = nmap[callbacks.targetid(e)];
                     if(ei && callbacks.sib)
-                        callbacks.sib(false, outmap[key][ei-1].target, e.target);
+                        callbacks.sib(false, nmap[callbacks.targetid(outmap[key][ei-1])], target);
                     callbacks.push && callbacks.push();
-                    place_tree(e.target, r+1);
+                    place_tree(target, r+1);
                 });
             callbacks.pop && callbacks.pop(n);
         }
 
         var roots;
         if(callbacks.root)
-            roots = nodes.filter(function(n) { return callbacks.root(n.orig); });
+            roots = nodes.filter(function(n) { return callbacks.root(n); });
         else {
-            roots = nodes.filter(function(n) { return !indegree[diagram.nodeKey.eval(n)]; });
+            roots = nodes.filter(function(n) { return !indegree[callbacks.nodeid(n)]; });
+            if(nodes.length && !roots.length) // all nodes are in a cycle
+                roots = [nodes[0]];
         }
         roots.forEach(function(n, ni) {
             if(ni && callbacks.sib)
                 callbacks.sib(true, roots[ni-1], n);
             callbacks.push && callbacks.push();
-            place_tree(n, callbacks.row ? callbacks.row(n.orig) : 0);
+            place_tree(n, callbacks.row ? callbacks.row(n) : 0);
         });
         callbacks.finish(rows);
     };
