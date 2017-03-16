@@ -4,7 +4,7 @@
   deprecated on the diagram object
 * `cola`, `dagre`, `tree` `_layout` are the current layout engines, and it should be possible to
   plug in others without modifying dc.graph.js
-* [graphviz_attrs](http://dc-js.github.io/dc.graph.js/docs/html/graphviz_attrs.html) is the "base
+* [graphviz_attrs](http://dc-js.github.io/dc.graph.js/docs/html/dc_graph.graphviz_attrs.html) is the "base
   class" for layout engines that want to support the
   [common attributes of graphviz](http://www.graphviz.org/doc/info/attrs.html). currently these are
   just `rankdir` and `ranksep`.
