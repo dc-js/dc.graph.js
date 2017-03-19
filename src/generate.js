@@ -84,3 +84,54 @@ dc_graph.wheel_edges = function(namef, nindices, R) {
     }
     return edges;
 };
+
+dc_graph.random_graph = function(options) {
+    options = Object.assign({
+        ncolors: 5,
+        nodeKey: 'key',
+        edgeKey: 'key',
+        sourceKey: 'sourcename',
+        targetKey: 'targetname',
+        colorTag: 'color',
+        nodeKeyGen: function(i) { return 'n' + i; },
+        edgeKeyGen: function(i) { return 'e' + i; },
+        newNodeProb: 0.9
+    }, options);
+    if(isNaN(options.newNodeProb))
+        options.newNodeProb = 0.9;
+    if(options.newNodProb <= 0)
+        options.newNodeProb = 0.1;
+    var _nodes = [], _edges = [];
+    function random_node() {
+        return _nodes[Math.floor(Math.random()*_nodes.length)];
+    }
+    return {
+        nodes: function() {
+            return _nodes;
+        },
+        edges: function() {
+            return _edges;
+        },
+        generate: function(N) {
+            while(N-- > 0) {
+                var choice = Math.random();
+                var n1 = random_node(), n2;
+                if(!_nodes.length || choice < options.newNodeProb) {
+                    n2 = {};
+                    n2[options.nodeKey] = options.nodeKeyGen(_nodes.length);
+                    n2[options.colorTag] = Math.floor(Math.random()*12);
+                    _nodes.push(n2);
+                }
+                else
+                    n2 = random_node();
+                if(n1) {
+                    var edge = {};
+                    edge[options.edgeKey] = options.edgeKeyGen(_edges.length);
+                    edge[options.sourceKey] = n1[options.nodeKey];
+                    edge[options.targetKey] = n2[options.nodeKey];
+                    _edges.push(edge);
+                }
+            }
+        }
+    };
+};

@@ -46,12 +46,12 @@
         }
 
         var qs = querystring.parse();
-        var nodes = [], edges = [];
-        var newNodeProb = +qs.newnode || 0.9;
+        var random = dc_graph.random_graph({
+            nodeKey: 'id', edgeKey: 'id',
+            ncolors: 12,
+            newNodeProb: +qs.newnode
+        });
 
-        function random_node() {
-            return nodes[Math.floor(Math.random()*nodes.length)];
-        }
         var engine, params;
         switch(qs.layout) {
         case 'dagre':
@@ -76,7 +76,7 @@
             engine = dc_graph.webworker_layout(engine);
 
         var diagram = dc_graph.diagram('#graph');
-        var data = build_data(nodes, edges);
+        var data = build_data(random.nodes(), random.edges());
         diagram
             .layoutEngine(engine)
             .width(document.documentElement.clientWidth)
@@ -102,15 +102,8 @@
             .render();
 
         window.setInterval(function() {
-            var choice = Math.random();
-            var n1 = random_node(), n2;
-            if(choice < newNodeProb)
-                nodes.push(n2 = {id: 'n' + nodes.length, color: Math.floor(Math.random()*12)});
-            else
-                n2 = random_node();
-            if(n1)
-                edges.push({id: 'e' + edges.length, sourcename: n1.id, targetname: n2.id});
-            data = build_data(nodes, edges);
+            random.generate(1);
+            data = build_data(random.nodes(), random.edges());
             diagram
                 .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
                 .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
