@@ -119,7 +119,7 @@ dc_graph.random_graph = function(options) {
                 if(!_nodes.length || choice < options.newNodeProb) {
                     n2 = {};
                     n2[options.nodeKey] = options.nodeKeyGen(_nodes.length);
-                    n2[options.colorTag] = Math.floor(Math.random()*12);
+                    n2[options.colorTag] = Math.floor(Math.random()*options.ncolors);
                     _nodes.push(n2);
                 }
                 else
