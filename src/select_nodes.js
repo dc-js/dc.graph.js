@@ -109,9 +109,7 @@ dc_graph.select_nodes = function(props) {
 
     var _behavior = dc_graph.behavior('select-nodes', {
         add_behavior: add_behavior,
-        remove_behavior: function(chart, node, edge) {
-            remove_behavior(chart, node, edge);
-        },
+        remove_behavior: remove_behavior,
         parent: function(p) {
             select_nodes_group.on('node_set_changed.select-nodes', p ? selection_changed_listener(p) : null);
         }
