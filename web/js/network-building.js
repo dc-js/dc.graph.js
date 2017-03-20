@@ -25,7 +25,7 @@ diagram.timeLimit(1000);
 var select_nodes = dc_graph.select_nodes({
     nodeFill: '#eeffe0',
     nodeStrokeWidth: 2
-});
+}).multipleSelect(false);
 
 var label_nodes = dc_graph.label_nodes({
     nodeCrossfilter: node_flat.crossfilter

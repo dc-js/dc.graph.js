@@ -80,16 +80,19 @@ dc_graph.select_nodes = function(props) {
         function brushend() {
             gBrush.call(_brush.clear());
         }
-        _brush = d3.svg.brush()
-            .x(chart.x()).y(chart.y())
-            .on('brushstart', brushstart)
-            .on('brush', brushmove)
-            .on('brushend', brushend);
+        if(_behavior.multipleSelect()) {
+            _brush = d3.svg.brush()
+                .x(chart.x()).y(chart.y())
+                .on('brushstart', brushstart)
+                .on('brush', brushmove)
+                .on('brushend', brushend);
 
-        var gBrush = chart.g().insert('g', ':first-child')
-                .attr('class', 'brush')
-                .call(_brush);
-        background_click_event(chart, _behavior.clickBackgroundClears());
+            var gBrush = chart.g().insert('g', ':first-child')
+                    .attr('class', 'brush')
+                    .call(_brush);
+        }
+        else
+            background_click_event(chart, _behavior.clickBackgroundClears());
 
         // drop any selected which no longer exist in the diagram
         var present = node.data().map(function(d) { return d.orig.key; });
@@ -114,8 +117,9 @@ dc_graph.select_nodes = function(props) {
         }
     });
 
+    _behavior.multipleSelect = property(true);
     _behavior.clickBackgroundClears = property(true, false).react(function(v) {
-        if(_behavior.parent())
+        if(!_behavior.multipleSelect() && _behavior.parent())
             background_click_event(_behavior.parent(), v);
     });
     _behavior.secondClickEvent = property(null);
