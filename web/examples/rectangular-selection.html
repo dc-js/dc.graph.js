@@ -100,6 +100,7 @@
                 nodeOpacity: 1
             }
         ).noneIsAll(true));
+        diagram.child('filter-selection', dc_graph.filter_selection());
 
         var colorDimension = data.nodef.crossfilter.dimension(function(n) {
             return n.color;
