@@ -13,6 +13,7 @@
   <script type="text/javascript" src="../js/cola.js"></script>
   <script type="text/javascript" src="../js/dagre.js"></script>
   <script type="text/javascript" src="../js/dc.graph.js"></script>
+  <script type="text/javascript" src="../js/chart.registry.js"></script>
 
   <script type="text/javascript" src="../js/querystring.js"></script>
 
@@ -20,6 +21,7 @@
     body {
       overflow: hidden;
       margin: 0;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     }
     #graph {
         position: absolute;
@@ -30,8 +32,8 @@
     }
     #pie {
         position: absolute;
-        right: 0;
-        top: 0;
+        right: 2em;
+        top: 2em;
     }
   </style>
 
@@ -45,6 +47,7 @@
 
   <script type="text/javascript">
 
+    var diagram, pie;
     (function() {
         function build_data(nodes, edges) {
             // build crossfilters from scratch
@@ -64,12 +67,14 @@
         });
 
         var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
-        var diagram = dc_graph.diagram('#graph');
+        diagram = dc_graph.diagram('#graph');
         random.generate(qs.n || 100);
         var data = build_data(random.nodes(), random.edges());
+        var colors = ['red', 'blue', 'green'];
         diagram
             .layoutEngine(engine)
             .timeLimit(5000)
+            .mouseZoomable(false)
             .width(document.documentElement.clientWidth)
             .height(document.documentElement.clientHeight)
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
@@ -85,19 +90,30 @@
             .nodeFill(function(kv) {
                 return kv.value.color;
             })
-            .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(['red', 'blue', 'green']))
+            .nodeOpacity(0.25)
+            .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(colors))
             .nodeTitle(null) // deactivate basic tooltips
             .edgeArrowhead(qs.arrows ? 'vee' : null);
+
+        diagram.child('select-nodes', dc_graph.select_nodes(
+            {
+                nodeOpacity: 1
+            }
+        ).noneIsAll(true));
 
         var colorDimension = data.nodef.crossfilter.dimension(function(n) {
             return n.color;
         }),
             colorGroup = colorDimension.group();
-        var pie = dc.pieChart('#pie')
+        pie = dc.pieChart('#pie')
             .width(200).height(200)
+            .radius(90)
             .dimension(colorDimension)
             .group(colorGroup)
-            .ordinalColors(['red', 'blue', 'green']);
+            .ordinalColors(colors)
+            .label(function(kv) {
+                return colors[kv.key];
+            });
 
         dc.renderAll();
     })();
