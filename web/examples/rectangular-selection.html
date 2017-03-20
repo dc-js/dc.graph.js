@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Randomly build a graph</title>
+  <title>Rectangular selection of nodes</title>
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="../css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="../css/dc.css"/>
@@ -13,6 +13,7 @@
   <script type="text/javascript" src="../js/cola.js"></script>
   <script type="text/javascript" src="../js/dagre.js"></script>
   <script type="text/javascript" src="../js/dc.graph.js"></script>
+  <script type="text/javascript" src="../js/chart.registry.js"></script>
 
   <script type="text/javascript" src="../js/querystring.js"></script>
 
@@ -20,6 +21,19 @@
     body {
       overflow: hidden;
       margin: 0;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    #graph {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+    #pie {
+        position: absolute;
+        right: 2em;
+        top: 2em;
     }
   </style>
 
@@ -29,34 +43,38 @@
 <body>
 
   <div id="graph" class="chart"></div>
+  <div id="pie"></div>
 
   <script type="text/javascript">
 
+    var diagram, pie;
     (function() {
         function build_data(nodes, edges) {
             // build crossfilters from scratch
             return {
                 edgef: dc_graph.flat_group.make(edges, function(d) {
-                    return d.id;
+                    return d.key;
                 }),
                 nodef: dc_graph.flat_group.make(nodes, function(d) {
-                    return d.id;
+                    return d.key;
                 })
             };
         }
 
         var qs = querystring.parse();
         var random = dc_graph.random_graph({
-            nodeKey: 'id', edgeKey: 'id',
-            ncolors: 12,
-            newNodeProb: +qs.newnode
+            ncolors: 3
         });
 
         var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
-        var diagram = dc_graph.diagram('#graph');
+        diagram = dc_graph.diagram('#graph');
+        random.generate(qs.n || 100);
         var data = build_data(random.nodes(), random.edges());
+        var colors = ['red', 'blue', 'green'];
         diagram
             .layoutEngine(engine)
+            .timeLimit(5000)
+            .mouseZoomable(false)
             .width(document.documentElement.clientWidth)
             .height(document.documentElement.clientHeight)
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
@@ -72,21 +90,32 @@
             .nodeFill(function(kv) {
                 return kv.value.color;
             })
-            .nodeFillScale(d3.scale.ordinal().range(
-                ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
-                 '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
+            .nodeOpacity(0.25)
+            .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(colors))
             .nodeTitle(null) // deactivate basic tooltips
-            .edgeArrowhead(qs.arrows ? 'vee' : null)
-            .render();
+            .edgeArrowhead(qs.arrows ? 'vee' : null);
 
-        window.setInterval(function() {
-            random.generate(1);
-            data = build_data(random.nodes(), random.edges());
-            diagram
-                .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
-                .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
-                .redraw();
-        }, qs.interval || 2000);
+        diagram.child('select-nodes', dc_graph.select_nodes(
+            {
+                nodeOpacity: 1
+            }
+        ).noneIsAll(true));
+
+        var colorDimension = data.nodef.crossfilter.dimension(function(n) {
+            return n.color;
+        }),
+            colorGroup = colorDimension.group();
+        pie = dc.pieChart('#pie')
+            .width(200).height(200)
+            .radius(90)
+            .dimension(colorDimension)
+            .group(colorGroup)
+            .ordinalColors(colors)
+            .label(function(kv) {
+                return colors[kv.key];
+            });
+
+        dc.renderAll();
     })();
 </script>
 </body>

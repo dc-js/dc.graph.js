@@ -277,6 +277,7 @@ module.exports.jsFiles = [
     'src/generate_objects.js',
     'src/shape.js',
     'src/diagram.js',
+    'src/engine.js',
     'src/webworker_layout.js',
     'src/graphviz_attrs.js',
     'src/cola_layout.js',
