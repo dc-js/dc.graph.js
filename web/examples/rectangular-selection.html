@@ -63,12 +63,13 @@
             ncolors: 3
         });
 
-        var engine = dc_graph.webworker_layout(dc_graph.cola_layout());
+        var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
         var diagram = dc_graph.diagram('#graph');
         random.generate(qs.n || 100);
         var data = build_data(random.nodes(), random.edges());
         diagram
             .layoutEngine(engine)
+            .timeLimit(5000)
             .width(document.documentElement.clientWidth)
             .height(document.documentElement.clientHeight)
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
@@ -84,8 +85,7 @@
             .nodeFill(function(kv) {
                 return kv.value.color;
             })
-            .nodeFillScale(d3.scale.ordinal().range(
-                ['red', 'blue', 'green']))
+            .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(['red', 'blue', 'green']))
             .nodeTitle(null) // deactivate basic tooltips
             .edgeArrowhead(qs.arrows ? 'vee' : null);
 

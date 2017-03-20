@@ -52,29 +52,7 @@
             newNodeProb: +qs.newnode
         });
 
-        var engine, params;
-        switch(qs.layout) {
-        case 'dagre':
-            engine = dc_graph.dagre_layout();
-            params = ['rankdir'];
-            break;
-        case 'tree':
-            engine = dc_graph.tree_layout();
-            params = [];
-            break;
-        case 'cola':
-        default:
-            engine = dc_graph.cola_layout();
-            params = ['lengthStrategy'];
-            break;
-        }
-        params.forEach(function(p) {
-            if(qs[p])
-                engine[p](qs[p]);
-        });
-        if(qs.worker !== 'false')
-            engine = dc_graph.webworker_layout(engine);
-
+        var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
         var diagram = dc_graph.diagram('#graph');
         var data = build_data(random.nodes(), random.edges());
         diagram
