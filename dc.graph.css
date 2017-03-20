@@ -9,6 +9,7 @@
     font: bold 14px verdana, san-serif;
     text-anchor: middle;
     pointer-events: none;
+    user-select: none;
 }
 
 .dc-graph text.edge-label {
