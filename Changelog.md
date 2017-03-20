@@ -1,3 +1,9 @@
+## 0.4.1
+* multiple selection in `select_nodes` behavior (with brush and modifier keys), w/ example
+* `draw_graphs` behavior for simple click, type, drag assembling of graphs
+* `random_graph` utility abstracted from the example - it's not particularly sophisticated but it's
+  helpful for testing behaviors
+
 ## 0.4.0
 * new `convert_tree` data import function is slightly more general than the old `convert_nest`
 * layout engines are proper objects. all layout parameters are moved to the layout objects and
