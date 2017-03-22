@@ -2006,7 +2006,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
-     * method. Gets or sets the x scale. Currently will be initialized 
+     * method. Gets or sets the x scale.
      * @method x
      * @memberof dc_graph.diagram
      * @instance
