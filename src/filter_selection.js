@@ -3,7 +3,6 @@ dc_graph.filter_selection = function() {
 
     function selection_changed(chart) {
         return function(selection) {
-            console.log(selection);
             if(selection.length) {
                 var set = d3.set(selection);
                 chart.nodeDimension().filterFunction(function(k) {
