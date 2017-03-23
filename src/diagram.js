@@ -2292,12 +2292,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         _defs = _svg.append('svg:defs');
 
         // start out with 1:1 zoom
-        _chart.x(d3.scale.linear()
-                 .domain([0, _chart.width()])
-                 .range([0, _chart.width()]));
-        _chart.y(d3.scale.linear()
-                 .domain([0, _chart.height()])
-                 .range([0, _chart.height()]));
+        if(!_chart.x())
+            _chart.x(d3.scale.linear()
+                     .domain([0, _chart.width()])
+                     .range([0, _chart.width()]));
+        if(!_chart.y())
+            _chart.y(d3.scale.linear()
+                     .domain([0, _chart.height()])
+                     .range([0, _chart.height()]));
         if(_chart.mouseZoomable()) {
             _zoom = d3.behavior.zoom()
                 .on('zoom', doZoom)
