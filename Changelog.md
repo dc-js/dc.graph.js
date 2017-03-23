@@ -1,8 +1,11 @@
 ## 0.4.1
-* multiple selection in `select_nodes` behavior (with brush and modifier keys), w/ example
-* `draw_graphs` behavior for simple click, type, drag assembling of graphs
+* `select_nodes` behavior now supports multiple selection with rectangular brush and modifier
+  keys. check out
+  [the example](http://dc-js.github.io/dc.graph.js/examples/rectangular-selection.html?layout=dagre).
+* build graphs in the browser with simple `draw_graphs`
+  behavior. [example](http://dc-js.github.io/dc.graph.js/examples/network-building.html).
 * `random_graph` utility abstracted from the example - it's not particularly sophisticated but it's
-  helpful for testing behaviors
+  helpful for writing examples.
 
 ## 0.4.0
 * new `convert_tree` data import function is slightly more general than the old `convert_nest`
