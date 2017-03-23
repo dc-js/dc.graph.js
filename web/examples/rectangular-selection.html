@@ -80,7 +80,7 @@
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
             .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
             .nodeStrokeWidth(0) // turn off outlines
-            .nodeLabel(function(kv) { return kv.key; })
+            .nodeLabel('')
             .nodeLabelFill(function(n) {
                 var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
                     // https://www.w3.org/TR/AERT#color-contrast
@@ -92,7 +92,7 @@
             })
             .nodeOpacity(0.25)
             .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(colors))
-            .nodeTitle(null) // deactivate basic tooltips
+            .nodeTitle(dc.pluck('key'))
             .edgeArrowhead(qs.arrows ? 'vee' : null);
 
         diagram.child('select-nodes', dc_graph.select_nodes(
@@ -112,8 +112,9 @@
             .dimension(colorDimension)
             .group(colorGroup)
             .ordinalColors(colors)
-            .label(function(kv) {
-                return colors[kv.key];
+            .label(function() { return ''; })
+            .title(function(kv) {
+                return colors[kv.key] + ' nodes (' + kv.value + ')';
             });
 
         dc.renderAll();
