@@ -19,7 +19,7 @@ dc_graph.select_nodes = function(props) {
         return a.indexOf(v) >= 0 ? a.filter(function(x) { return x != v; }) : a.concat([v]);
     }
 
-    function selection_changed_listener(chart) {
+    function selection_changed(chart) {
         return function(selection) {
             _selected = selection;
             chart.refresh();
@@ -111,7 +111,7 @@ dc_graph.select_nodes = function(props) {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
-            select_nodes_group.on('node_set_changed.select-nodes', p ? selection_changed_listener(p) : null);
+            select_nodes_group.on('node_set_changed.select-nodes', p ? selection_changed(p) : null);
         }
     });
 
