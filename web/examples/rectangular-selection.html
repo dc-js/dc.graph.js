@@ -74,7 +74,9 @@
         diagram
             .layoutEngine(engine)
             .timeLimit(5000)
-            .mouseZoomable(false)
+            //.fitStrategy('horizontal')
+            //.autoZoom('always')
+            .altKeyZoom(true)
             .width(document.documentElement.clientWidth)
             .height(document.documentElement.clientHeight)
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
