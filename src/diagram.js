@@ -99,6 +99,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.mouseZoomable = property(true);
 
     /**
+     * Whether zooming should only be enabled when the alt key is pressed.
+     * @method altKeyZoom
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Boolean} [altKeyZoom=true]
+     * @return {Boolean}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.altKeyZoom = property(false);
+
+    /**
      * Set or get the fitting strategy for the canvas, which affects how the
      * [viewBox](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox) and
      * [preserveAspectRatio](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio)
@@ -2279,6 +2290,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
+    function enableZoom() {
+        _svg.call(_zoom);
+        _svg.on('dblclick.zoom', null);
+    }
+    function disableZoom() {
+        _svg.on('.zoom', null);
+    }
+
     function generateSvg() {
         _svg = _chart.root().append('svg');
         resizeSvg();
@@ -2298,8 +2317,19 @@ dc_graph.diagram = function (parent, chartGroup) {
             _zoom = d3.behavior.zoom()
                 .on('zoom', doZoom)
                 .x(_chart.x()).y(_chart.y());
-            _svg.call(_zoom);
-            _svg.on('dblclick.zoom', null);
+
+            if(_chart.altKeyZoom()) {
+                d3.select(document)
+                    .on('keydown', function() {
+                        if(d3.event.key === 'Alt')
+                            enableZoom();
+                    })
+                    .on('keyup', function() {
+                        if(d3.event.key === 'Alt')
+                            disableZoom();
+                    });
+            }
+            else enableZoom();
         }
 
         return _svg;
