@@ -113,7 +113,7 @@
             .radius(45)
             .dimension(colorDimension)
             .group(colorGroup)
-            .ordinalColors(colors)
+            .colors(d3.scale.ordinal().domain([0,1,2]).range(colors))
             .label(function() { return ''; })
             .title(function(kv) {
                 return colors[kv.key] + ' nodes (' + kv.value + ')';
