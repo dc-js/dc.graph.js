@@ -95,6 +95,7 @@ dc_graph.random_graph = function(options) {
         colorTag: 'color',
         nodeKeyGen: function(i) { return 'n' + i; },
         edgeKeyGen: function(i) { return 'e' + i; },
+        newComponentProb: 0.1,
         newNodeProb: 0.9
     }, options);
     if(isNaN(options.newNodeProb))
@@ -102,6 +103,13 @@ dc_graph.random_graph = function(options) {
     if(options.newNodProb <= 0)
         options.newNodeProb = 0.1;
     var _nodes = [], _edges = [];
+    function new_node() {
+        var n = {};
+        n[options.nodeKey] = options.nodeKeyGen(_nodes.length);
+        n[options.colorTag] = Math.floor(Math.random()*options.ncolors);
+        _nodes.push(n);
+        return n;
+    }
     function random_node() {
         return _nodes[Math.floor(Math.random()*_nodes.length)];
     }
@@ -115,16 +123,16 @@ dc_graph.random_graph = function(options) {
         generate: function(N) {
             while(N-- > 0) {
                 var choice = Math.random();
-                var n1 = random_node(), n2;
-                if(!_nodes.length || choice < options.newNodeProb) {
-                    n2 = {};
-                    n2[options.nodeKey] = options.nodeKeyGen(_nodes.length);
-                    n2[options.colorTag] = Math.floor(Math.random()*options.ncolors);
-                    _nodes.push(n2);
-                }
+                var n1, n2;
+                if(!_nodes.length || choice < options.newComponentProb)
+                    n1 = new_node();
+                else
+                    n1 = random_node();
+                if(choice < options.newNodeProb)
+                    n2 = new_node();
                 else
                     n2 = random_node();
-                if(n1) {
+                if(n1 && n2) {
                     var edge = {};
                     edge[options.edgeKey] = options.edgeKeyGen(_edges.length);
                     edge[options.sourceKey] = n1[options.nodeKey];
