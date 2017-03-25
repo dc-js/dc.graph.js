@@ -60,7 +60,7 @@ dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree
             if(ni && callbacks.sib)
                 callbacks.sib(true, roots[ni-1], n);
             callbacks.push && callbacks.push();
-            place_tree(n, callbacks.row ? callbacks.row(n) : 0);
+            place_tree(n, callbacks.row && callbacks.row(n) || 0);
         });
         callbacks.finish(rows);
     };
