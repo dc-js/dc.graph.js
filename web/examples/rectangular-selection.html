@@ -70,7 +70,7 @@
         diagram = dc_graph.diagram('#graph');
         random.generate(qs.n || 100);
         var data = build_data(random.nodes(), random.edges());
-        var colors = ['rgb(0,146,146)', 'rgb(182,109,255)', 'rgb(219,209,0)'];
+        var colors = ['#1b9e77', '#d95f02', '#7570b3'];
         diagram
             .layoutEngine(engine)
             .timeLimit(5000)
