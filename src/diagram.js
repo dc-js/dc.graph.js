@@ -2314,11 +2314,10 @@ dc_graph.diagram = function (parent, chartGroup) {
             _chart.y(d3.scale.linear()
                      .domain([0, _chart.height()])
                      .range([0, _chart.height()]));
+        _zoom = d3.behavior.zoom()
+            .on('zoom', doZoom)
+            .x(_chart.x()).y(_chart.y());
         if(_chart.mouseZoomable()) {
-            _zoom = d3.behavior.zoom()
-                .on('zoom', doZoom)
-                .x(_chart.x()).y(_chart.y());
-
             if(_chart.altKeyZoom()) {
                 d3.select(document)
                     .on('keydown', function() {
