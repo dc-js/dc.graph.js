@@ -1927,9 +1927,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         _g = _svg.append('g')
             .attr('class', 'draw');
         _edgeLayer = _g.append('g')
-            .attr('class', 'edge');
+            .attr('class', 'edge-layer');
         _nodeLayer = _g.append('g')
-            .attr('class', 'node');
+            .attr('class', 'node-layer');
 
         if(_chart.legend())
             _chart.legend().render();
