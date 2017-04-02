@@ -16,8 +16,10 @@
  * @return {dc_graph.diagram}
  **/
 dc_graph.diagram = function (parent, chartGroup) {
-    // different enough from regular dc charts that we don't use bases
+    // different enough from regular dc charts that we don't use dc.baseMixin
+    // but attempt to implement most of that interface, copying some of the most basic stuff
     var _chart = dc.marginMixin({});
+    _chart.__dcFlag__ = dc.utils.uniqueId();
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
@@ -1029,16 +1031,19 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.tickSize = deprecate_layout_algo_parameter('tickSize');
 
 
+    _chart.uniqueId = function() {
+        return _chart.anchorName().replace(/[ .#=\[\]"]/g, '-');
+    };
+
     _chart.edgeId = function(d) {
         return 'edge-' + _chart.edgeKey.eval(d).replace(/[^\w-_]/g, '-');
     };
 
     _chart.arrowId = function(d, kind) {
-        return 'arrow-' + kind + '-' + _chart.edgeId(d);
+        return 'arrow-' + kind + '-' + _chart.uniqueId() + '-'  + _chart.edgeId(d);
     };
-
     _chart.textpathId = function(d) {
-        return 'textpath-' + _chart.edgeId(d);
+        return 'textpath-' + _chart.uniqueId() + '-' + _chart.edgeId(d);
     };
 
     // this kind of begs a (meta)graph ADT
@@ -2387,6 +2392,17 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _chartGroup = chartGroup;
         return _chart;
+    };
+
+    /**
+     * Returns the internal numeric ID of the chart.
+     * @method chartID
+     * @memberof dc.baseMixin
+     * @instance
+     * @returns {String}
+     */
+    _chart.chartID = function () {
+        return _chart.__dcFlag__;
     };
 
     /**
