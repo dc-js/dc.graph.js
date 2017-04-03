@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.4.0  
+**Version**: 0.4.1  
 **Example**  
 ```js
 // Example chaining
@@ -26,6 +26,7 @@ chart.width(600)
         * [.height([height])](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.root([root])](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.mouseZoomable([mouseZoomable])](#dc_graph.diagram+mouseZoomable) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.altKeyZoom([altKeyZoom])](#dc_graph.diagram+altKeyZoom) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.fitStrategy([fitStrategy])](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.autoZoom([autoZoom])](#dc_graph.diagram+autoZoom) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.nodeDimension([nodeDimension])](#dc_graph.diagram+nodeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -87,7 +88,10 @@ chart.width(600)
         * [.getStats()](#dc_graph.diagram+getStats) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.select([selector])](#dc_graph.diagram+select) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.selectAll([selector])](#dc_graph.diagram+selectAll) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.svg([selection])](#dc_graph.diagram+svg) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+        * [.g([selection])](#dc_graph.diagram+g) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
         * [.resetSvg()](#dc_graph.diagram+resetSvg) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.redrawGroup()](#dc_graph.diagram+redrawGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
         * [.renderGroup()](#dc_graph.diagram+renderGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -133,6 +137,7 @@ chart.width(600)
     * [.height([height])](#dc_graph.diagram+height) ⇒ <code>Number</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.root([root])](#dc_graph.diagram+root) ⇒ <code>node</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.mouseZoomable([mouseZoomable])](#dc_graph.diagram+mouseZoomable) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.altKeyZoom([altKeyZoom])](#dc_graph.diagram+altKeyZoom) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.fitStrategy([fitStrategy])](#dc_graph.diagram+fitStrategy) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.autoZoom([autoZoom])](#dc_graph.diagram+autoZoom) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.nodeDimension([nodeDimension])](#dc_graph.diagram+nodeDimension) ⇒ <code>crossfilter.dimension</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
@@ -194,7 +199,10 @@ chart.width(600)
     * [.getStats()](#dc_graph.diagram+getStats) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.select([selector])](#dc_graph.diagram+select) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.selectAll([selector])](#dc_graph.diagram+selectAll) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.svg([selection])](#dc_graph.diagram+svg) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+    * [.g([selection])](#dc_graph.diagram+g) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
     * [.resetSvg()](#dc_graph.diagram+resetSvg) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.redrawGroup()](#dc_graph.diagram+redrawGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
     * [.renderGroup()](#dc_graph.diagram+renderGroup) ⇒ <code>[diagram](#dc_graph.diagram)</code>
@@ -266,6 +274,17 @@ whether dragging on the background pans the diagram.
 | Param | Type | Default |
 | --- | --- | --- |
 | [mouseZoomable] | <code>Boolean</code> | <code>true</code> | 
+
+<a name="dc_graph.diagram+altKeyZoom"></a>
+
+#### diagram.altKeyZoom([altKeyZoom]) ⇒ <code>Boolean</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Whether zooming should only be enabled when the alt key is pressed.
+
+**Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [altKeyZoom] | <code>Boolean</code> | <code>true</code> | 
 
 <a name="dc_graph.diagram+fitStrategy"></a>
 
@@ -1197,13 +1216,53 @@ calls can be chained after it.)
 | --- | --- |
 | [selector] | <code>String</code> | 
 
+<a name="dc_graph.diagram+x"></a>
+
+#### diagram.x([scale]) ⇒ <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Standard dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
+method. Gets or sets the x scale.
+
+**Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [scale] | <code>d3.scale</code> | 
+
+<a name="dc_graph.diagram+x"></a>
+
+#### diagram.x([scale]) ⇒ <code>d3.scale</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Standard dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
+method. Gets or sets the y scale.
+
+**Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [scale] | <code>d3.scale</code> | 
+
 <a name="dc_graph.diagram+svg"></a>
 
 #### diagram.svg([selection]) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
-method. Returns the top svg element for this specific chart. You can also pass in a new
+method. Returns the top `svg` element for this specific chart. You can also pass in a new
 svg element, but setting the svg element on a diagram may have unexpected consequences.
+
+**Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
+
+| Param | Type |
+| --- | --- |
+| [selection] | <code>d3.selection</code> | 
+
+<a name="dc_graph.diagram+g"></a>
+
+#### diagram.g([selection]) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
+Returns the top `g` element for this specific chart. This method is usually used to
+retrieve the g element in order to overlay custom svg drawing
+programatically. **Caution**: The root g element is usually generated internally, and
+resetting it might produce unpredictable results.
 
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
 

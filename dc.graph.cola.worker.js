@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.0
+ *  dc.graph 0.4.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.0
+ * @version 0.4.1
  * @example
  * // Example chaining
  * chart.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.0',
+    version: '0.4.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -233,11 +233,11 @@ dc_graph.cola_layout = function(id) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
-            v1.fixed = !!v.dgc_nodeFixed;
+            v1.fixed = !!v.dcg_nodeFixed;
 
-            if(typeof v.dgc_nodeFixed === 'object') {
-                v1.x = v.dgc_nodeFixed.x;
-                v1.y = v.dgc_nodeFixed.y;
+            if(v1.fixed && typeof v.dcg_nodeFixed === 'object') {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
             }
             else {
                 // should we support e.g. null to unset x,y?
