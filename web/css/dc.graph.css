@@ -9,6 +9,7 @@
     font: bold 14px verdana, san-serif;
     text-anchor: middle;
     pointer-events: none;
+    user-select: none;
 }
 
 .dc-graph text.edge-label {
@@ -19,6 +20,11 @@
 .dc-graph-legend text.legend-label {
     font: bold 14px verdana, san-serif;
     pointer-events: none;
+}
+
+.dc-graph g.brush rect.extent {
+    fill: #4682b4;
+    fill-opacity: 0.125;
 }
 
 .dc-graph > svg {
