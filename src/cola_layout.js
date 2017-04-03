@@ -50,11 +50,11 @@ dc_graph.cola_layout = function(id) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
-            v1.fixed = !!v.dgc_nodeFixed;
+            v1.fixed = !!v.dcg_nodeFixed;
 
-            if(typeof v.dgc_nodeFixed === 'object') {
-                v1.x = v.dgc_nodeFixed.x;
-                v1.y = v.dgc_nodeFixed.y;
+            if(v1.fixed && typeof v.dcg_nodeFixed === 'object') {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
             }
             else {
                 // should we support e.g. null to unset x,y?

@@ -16,17 +16,19 @@
  * @return {dc_graph.diagram}
  **/
 dc_graph.diagram = function (parent, chartGroup) {
-    // different enough from regular dc charts that we don't use bases
+    // different enough from regular dc charts that we don't use dc.baseMixin
+    // but attempt to implement most of that interface, copying some of the most basic stuff
     var _chart = dc.marginMixin({});
+    _chart.__dcFlag__ = dc.utils.uniqueId();
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _dispatch = d3.dispatch('end', 'start', 'drawn');
+    var _dispatch = d3.dispatch('end', 'start', 'drawn', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
     var _children = {}, _arrows = {};
     var _running = false; // for detecting concurrency issues
     var _translate = [0,0], _scale = 1;
-    var _zoom, _xScale, _yScale;
+    var _zoom;
     var _anchor, _chartGroup;
 
     function deprecate_layout_algo_parameter(name) {
@@ -97,6 +99,17 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _chart.mouseZoomable = property(true);
+
+    /**
+     * Whether zooming should only be enabled when the alt key is pressed.
+     * @method altKeyZoom
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Boolean} [altKeyZoom=true]
+     * @return {Boolean}
+     * @return {dc_graph.diagram}
+     **/
+    _chart.altKeyZoom = property(false);
 
     /**
      * Set or get the fitting strategy for the canvas, which affects how the
@@ -1018,16 +1031,19 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.tickSize = deprecate_layout_algo_parameter('tickSize');
 
 
+    _chart.uniqueId = function() {
+        return _chart.anchorName().replace(/[ .#=\[\]"]/g, '-');
+    };
+
     _chart.edgeId = function(d) {
         return 'edge-' + _chart.edgeKey.eval(d).replace(/[^\w-_]/g, '-');
     };
 
     _chart.arrowId = function(d, kind) {
-        return 'arrow-' + kind + '-' + _chart.edgeId(d);
+        return 'arrow-' + kind + '-' + _chart.uniqueId() + '-'  + _chart.edgeId(d);
     };
-
     _chart.textpathId = function(d) {
-        return 'textpath-' + _chart.edgeId(d);
+        return 'textpath-' + _chart.uniqueId() + '-' + _chart.edgeId(d);
     };
 
     // this kind of begs a (meta)graph ADT
@@ -1773,6 +1789,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 });
             }
             _zoom.translate(translate).scale(scale).event(_svg);
+            _dispatch.zoomed(translate, scale);
         }
     }
 
@@ -1912,9 +1929,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_chart.initLayoutOnRedraw())
             initLayout();
         _chart.resetSvg();
-        _g = _svg.append('g');
-        _edgeLayer = _g.append('g');
-        _nodeLayer = _g.append('g');
+        _g = _svg.append('g')
+            .attr('class', 'draw');
+        _edgeLayer = _g.append('g')
+            .attr('class', 'edge-layer');
+        _nodeLayer = _g.append('g')
+            .attr('class', 'node-layer');
 
         if(_chart.legend())
             _chart.legend().render();
@@ -2003,7 +2023,35 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
-     * method. Returns the top svg element for this specific chart. You can also pass in a new
+     * method. Gets or sets the x scale.
+     * @method x
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {d3.scale} [scale]
+     * @return {d3.scale}
+     * @return {dc_graph.diagram}
+
+     **/
+    _chart.x = property(null);
+
+    /**
+     * Standard dc.js
+     * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
+     * method. Gets or sets the y scale.
+     * @method x
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {d3.scale} [scale]
+     * @return {d3.scale}
+     * @return {dc_graph.diagram}
+
+     **/
+    _chart.y = property(null);
+
+    /**
+     * Standard dc.js
+     * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
+     * method. Returns the top `svg` element for this specific chart. You can also pass in a new
      * svg element, but setting the svg element on a diagram may have unexpected consequences.
      * @method svg
      * @memberof dc_graph.diagram
@@ -2018,6 +2066,27 @@ dc_graph.diagram = function (parent, chartGroup) {
             return _svg;
         }
         _svg = _;
+        return _chart;
+    };
+
+    /**
+     * Returns the top `g` element for this specific chart. This method is usually used to
+     * retrieve the g element in order to overlay custom svg drawing
+     * programatically. **Caution**: The root g element is usually generated internally, and
+     * resetting it might produce unpredictable results.
+     * @method g
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {d3.selection} [selection]
+     * @return {d3.selection}
+     * @return {dc_graph.diagram}
+
+     **/
+    _chart.g = function (_) {
+        if (!arguments.length) {
+            return _g;
+        }
+        _g = _;
         return _chart;
     };
 
@@ -2151,22 +2220,22 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     // with thanks to comments in https://github.com/d3/d3/issues/1084
     function align_left(translate, x) {
-        return translate[0] - _xScale(x) + _xScale.range()[0];
+        return translate[0] - _chart.x()(x) + _chart.x().range()[0];
     }
     function align_top(translate, y) {
-        return translate[1] - _yScale(y) + _yScale.range()[0];
+        return translate[1] - _chart.y()(y) + _chart.y().range()[0];
     }
     function align_right(translate, x) {
-        return translate[0] - _xScale(x) + _xScale.range()[1];
+        return translate[0] - _chart.x()(x) + _chart.x().range()[1];
     }
     function align_bottom(translate, y) {
-        return translate[1] - _yScale(y) + _yScale.range()[1];;
+        return translate[1] - _chart.y()(y) + _chart.y().range()[1];;
     }
 
     function doZoom() {
         var translate = d3.event.translate;
         if(_chart.restrictPan()) {
-            var xDomain = _xScale.domain(), yDomain = _yScale.domain();
+            var xDomain = _chart.x().domain(), yDomain = _chart.y().domain();
             var bounds = margined_bounds();
             var less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
                 lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
@@ -2227,25 +2296,45 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
+    function enableZoom() {
+        _svg.call(_zoom);
+        _svg.on('dblclick.zoom', null);
+    }
+    function disableZoom() {
+        _svg.on('.zoom', null);
+    }
+
     function generateSvg() {
         _svg = _chart.root().append('svg');
         resizeSvg();
 
         _defs = _svg.append('svg:defs');
 
+        // start out with 1:1 zoom
+        if(!_chart.x())
+            _chart.x(d3.scale.linear()
+                     .domain([0, _chart.width()])
+                     .range([0, _chart.width()]));
+        if(!_chart.y())
+            _chart.y(d3.scale.linear()
+                     .domain([0, _chart.height()])
+                     .range([0, _chart.height()]));
+        _zoom = d3.behavior.zoom()
+            .on('zoom', doZoom)
+            .x(_chart.x()).y(_chart.y());
         if(_chart.mouseZoomable()) {
-            // start out with 1:1 zoom
-            _xScale = d3.scale.linear()
-                .domain([0, _chart.width()])
-                .range([0, _chart.width()]);
-            _yScale = d3.scale.linear()
-                .domain([0, _chart.height()])
-                .range([0, _chart.height()]);
-            _zoom = d3.behavior.zoom()
-                .on('zoom', doZoom)
-                .x(_xScale).y(_yScale);
-            _svg.call(_zoom);
-            _svg.on('dblclick.zoom', null);
+            if(_chart.altKeyZoom()) {
+                d3.select(document)
+                    .on('keydown', function() {
+                        if(d3.event.key === 'Alt')
+                            enableZoom();
+                    })
+                    .on('keyup', function() {
+                        if(d3.event.key === 'Alt')
+                            disableZoom();
+                    });
+            }
+            else enableZoom();
         }
 
         return _svg;
@@ -2253,8 +2342,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.invertCoord = function(clientCoord) {
         return [
-            _xScale.invert(clientCoord[0]),
-            _yScale.invert(clientCoord[1])
+            _chart.x().invert(clientCoord[0]),
+            _chart.y().invert(clientCoord[1])
         ];
     };
 
@@ -2303,6 +2392,17 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _chartGroup = chartGroup;
         return _chart;
+    };
+
+    /**
+     * Returns the internal numeric ID of the chart.
+     * @method chartID
+     * @memberof dc.baseMixin
+     * @instance
+     * @returns {String}
+     */
+    _chart.chartID = function () {
+        return _chart.__dcFlag__;
     };
 
     /**

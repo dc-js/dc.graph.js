@@ -163,7 +163,7 @@ module.exports = function (grunt) {
                             'querystring.js',
                             'chart.registry.js',
                             'timeline.js',
-                            'node_modules/crossfilter/crossfilter.js',
+                            'node_modules/crossfilter2/crossfilter.js',
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
                             'node_modules/jquery/dist/jquery.js',
@@ -263,7 +263,8 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['concat', 'uglify']);
     grunt.registerTask('docs', ['build', 'copy', 'jsdoc', 'jsdoc2md']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
-    grunt.registerTask('server', ['docs', 'connect:server', 'watch:scripts']);
+    grunt.registerTask('server', ['build', 'copy', 'connect:server', 'watch:scripts']);
+    grunt.registerTask('server:docs', ['docs', 'connect:server', 'watch:docs']);
     grunt.registerTask('lint', ['build', 'jshint', 'jscs']);
     grunt.registerTask('default', ['build', 'shell:hooks']);
     grunt.registerTask('doc-debug', ['build', 'jsdoc', 'jsdoc2md', 'connect:server', 'watch:docs']);
@@ -277,6 +278,7 @@ module.exports.jsFiles = [
     'src/generate_objects.js',
     'src/shape.js',
     'src/diagram.js',
+    'src/engine.js',
     'src/webworker_layout.js',
     'src/graphviz_attrs.js',
     'src/cola_layout.js',
@@ -288,11 +290,15 @@ module.exports.jsFiles = [
     'src/tree_constraints.js',
     'src/behavior.js',
     'src/tip.js',
+    'src/edit_text.js',
     'src/select_nodes.js',
+    'src/filter_selection.js',
+    'src/label_nodes.js',
     'src/highlight_neighbors.js',
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',
     'src/expand_collapse.js',
+    'src/draw_graphs.js',
     'src/load_graph.js',
     'src/munge_graph.js',
     'src/flat_group.js',

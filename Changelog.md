@@ -1,3 +1,16 @@
+## 0.4.1
+* `select_nodes` behavior now supports multiple selection with rectangular brush and modifier
+  keys. check out
+  [the example](http://dc-js.github.io/dc.graph.js/examples/rectangular-selection.html?layout=dagre).
+* build graphs in the browser with simple `draw_graphs`
+  behavior. [example](http://dc-js.github.io/dc.graph.js/examples/network-building.html).
+* `random_graph` utility abstracted from the example - it's not particularly sophisticated but it's
+  helpful for writing examples.
+* arrow and textPath id's could get cross-linked when there were multiple dc.graphs in a page. (SVG
+  IDs need to be unique across the whole page.)
+* option to enable zoom only when alt-key pressed. (hopefully in the near future zoom will be a
+  mode/behavior and we'll activate modes based on modifier keys.)
+
 ## 0.4.0
 * new `convert_tree` data import function is slightly more general than the old `convert_nest`
 * layout engines are proper objects. all layout parameters are moved to the layout objects and
