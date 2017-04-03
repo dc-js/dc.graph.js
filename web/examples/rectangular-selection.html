@@ -70,17 +70,19 @@
         diagram = dc_graph.diagram('#graph');
         random.generate(qs.n || 100);
         var data = build_data(random.nodes(), random.edges());
-        var colors = ['red', 'blue', 'green'];
+        var colors = ['#1b9e77', '#d95f02', '#7570b3'];
         diagram
             .layoutEngine(engine)
             .timeLimit(5000)
-            .mouseZoomable(false)
+            //.fitStrategy('horizontal')
+            //.autoZoom('always')
+            .altKeyZoom(true)
             .width(document.documentElement.clientWidth)
             .height(document.documentElement.clientHeight)
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
             .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
             .nodeStrokeWidth(0) // turn off outlines
-            .nodeLabel(function(kv) { return kv.key; })
+            .nodeLabel('')
             .nodeLabelFill(function(n) {
                 var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
                     // https://www.w3.org/TR/AERT#color-contrast
@@ -92,7 +94,7 @@
             })
             .nodeOpacity(0.25)
             .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(colors))
-            .nodeTitle(null) // deactivate basic tooltips
+            .nodeTitle(dc.pluck('key'))
             .edgeArrowhead(qs.arrows ? 'vee' : null);
 
         diagram.child('select-nodes', dc_graph.select_nodes(
@@ -100,19 +102,21 @@
                 nodeOpacity: 1
             }
         ).noneIsAll(true));
+        diagram.child('filter-selection', dc_graph.filter_selection());
 
         var colorDimension = data.nodef.crossfilter.dimension(function(n) {
             return n.color;
         }),
             colorGroup = colorDimension.group();
         pie = dc.pieChart('#pie')
-            .width(200).height(200)
-            .radius(90)
+            .width(100).height(100)
+            .radius(45)
             .dimension(colorDimension)
             .group(colorGroup)
-            .ordinalColors(colors)
-            .label(function(kv) {
-                return colors[kv.key];
+            .colors(d3.scale.ordinal().domain([0,1,2]).range(colors))
+            .label(function() { return ''; })
+            .title(function(kv) {
+                return colors[kv.key] + ' nodes (' + kv.value + ')';
             });
 
         dc.renderAll();

@@ -1,7 +1,7 @@
 dc_graph.select_nodes = function(props) {
     var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
     var _selected = [], _oldSelected;
-    var _brush;
+    var _brush, _gBrush;
 
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
     var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
@@ -19,7 +19,7 @@ dc_graph.select_nodes = function(props) {
         return a.indexOf(v) >= 0 ? a.filter(function(x) { return x != v; }) : a.concat([v]);
     }
 
-    function selection_changed_listener(chart) {
+    function selection_changed(chart) {
         return function(selection) {
             _selected = selection;
             chart.refresh();
@@ -29,6 +29,47 @@ dc_graph.select_nodes = function(props) {
         chart.svg().on('click.select-nodes', v ? function(d) {
             select_nodes_group.node_set_changed([]);
         } : null);
+    }
+    function brushstart() {
+        if(isUnion(d3.event.sourceEvent) || isToggle(d3.event.sourceEvent))
+            _oldSelected = _selected.slice();
+        else {
+            _oldSelected = [];
+            select_nodes_group.node_set_changed([]);
+        }
+    }
+    function brushmove() {
+        var ext = _brush.extent();
+        var rectSelect = _behavior.parent().selectAll('g.node').data().filter(function(n) {
+            return n && ext[0][0] < n.cola.x && n.cola.x < ext[1][0] &&
+                ext[0][1] < n.cola.y && n.cola.y < ext[1][1];
+        }).map(function(n) {
+            return n.orig.key;
+        });
+        var newSelected;
+        if(isUnion(d3.event.sourceEvent))
+            newSelected = rectSelect.reduce(add_array, _oldSelected);
+        else if(isToggle(d3.event.sourceEvent))
+            newSelected = rectSelect.reduce(toggle_array, _oldSelected);
+        else
+            newSelected = rectSelect;
+        select_nodes_group.node_set_changed(newSelected);
+    }
+    function brushend() {
+        _gBrush.call(_brush.clear());
+    }
+    function install_brush(chart) {
+        if(_brush)
+            return;
+        _brush = d3.svg.brush()
+            .x(chart.x()).y(chart.y())
+            .on('brushstart', brushstart)
+            .on('brush', brushmove)
+            .on('brushend', brushend);
+
+        _gBrush = chart.svg().insert('g', ':first-child')
+                .attr('class', 'brush')
+                .call(_brush);
     }
     function add_behavior(chart, node, edge) {
         var condition = _behavior.noneIsAll() ? function(n) {
@@ -52,45 +93,9 @@ dc_graph.select_nodes = function(props) {
             select_nodes_group.node_set_changed(newSelected);
             d3.event.stopPropagation();
         });
-        function brushstart() {
-            if(isUnion(d3.event.sourceEvent) || isToggle(d3.event.sourceEvent))
-                _oldSelected = _selected.slice();
-            else {
-                _oldSelected = [];
-                select_nodes_group.node_set_changed([]);
-            }
-        }
-        function brushmove() {
-            var ext = _brush.extent();
-            var rectSelect = node.data().filter(function(n) {
-                return ext[0][0] < n.cola.x && n.cola.x < ext[1][0] &&
-                    ext[0][1] < n.cola.y && n.cola.y < ext[1][1];
-            }).map(function(n) {
-                return n.orig.key;
-            });
-            var newSelected;
-            if(isUnion(d3.event.sourceEvent))
-                newSelected = rectSelect.reduce(add_array, _oldSelected);
-            else if(isToggle(d3.event.sourceEvent))
-                newSelected = rectSelect.reduce(toggle_array, _oldSelected);
-            else
-                newSelected = rectSelect;
-            select_nodes_group.node_set_changed(newSelected);
-        }
-        function brushend() {
-            gBrush.call(_brush.clear());
-        }
-        if(_behavior.multipleSelect()) {
-            _brush = d3.svg.brush()
-                .x(chart.x()).y(chart.y())
-                .on('brushstart', brushstart)
-                .on('brush', brushmove)
-                .on('brushend', brushend);
 
-            var gBrush = chart.g().insert('g', ':first-child')
-                    .attr('class', 'brush')
-                    .call(_brush);
-        }
+        if(_behavior.multipleSelect())
+            install_brush(chart);
         else
             background_click_event(chart, _behavior.clickBackgroundClears());
 
@@ -111,7 +116,7 @@ dc_graph.select_nodes = function(props) {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
-            select_nodes_group.on('node_set_changed.select-nodes', p ? selection_changed_listener(p) : null);
+            select_nodes_group.on('node_set_changed.select-nodes', p ? selection_changed(p) : null);
         }
     });
 

@@ -46,13 +46,27 @@
         }
 
         var qs = querystring.parse();
+        var options = Object.assign({
+            layout: 'cola',
+            worker: true,
+            newnode: 0.9,
+            newcomp: 0.1,
+            interval: 1000
+        }, qs);
+
+        var engine = dc_graph.spawn_engine(options.layout, qs, options.worker != 'false');
+        // don't do multiple components for cola unless user specified
+        // layout is that unstable
+        if(engine.layoutAlgorithm()==='cola')
+            if(typeof options.newcomp !== 'string')
+                options.newcomp = 0;
+
         var random = dc_graph.random_graph({
             nodeKey: 'id', edgeKey: 'id',
             ncolors: 12,
-            newNodeProb: +qs.newnode
+            newNodeProb: +options.newnode,
+            newComponentProb: +options.newcomp
         });
-
-        var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
         var diagram = dc_graph.diagram('#graph');
         var data = build_data(random.nodes(), random.edges());
         diagram
@@ -76,7 +90,8 @@
                 ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
                  '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
             .nodeTitle(null) // deactivate basic tooltips
-            .edgeArrowhead(qs.arrows ? 'vee' : null)
+            .edgeArrowhead(options.arrows ? 'vee' : null)
+            .timeLimit(options.interval - 100)
             .render();
 
         window.setInterval(function() {
@@ -86,7 +101,7 @@
                 .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
                 .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
                 .redraw();
-        }, qs.interval || 2000);
+        }, +options.interval);
     })();
 </script>
 </body>

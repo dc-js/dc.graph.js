@@ -292,6 +292,7 @@ module.exports.jsFiles = [
     'src/tip.js',
     'src/edit_text.js',
     'src/select_nodes.js',
+    'src/filter_selection.js',
     'src/label_nodes.js',
     'src/highlight_neighbors.js',
     'src/highlight_paths_group.js',
