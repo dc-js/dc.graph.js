@@ -1333,9 +1333,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     class: 'edge-label-path',
                     id: _chart.textpathId
                 });
-        edgeLabels.each(function(d) {
-            d.dcg_bbox = null;
-        })
+        edgeLabels
           .selectAll('textPath')
             .text(function(d){
                 return _chart.edgeLabel.eval(d);
