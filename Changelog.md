@@ -1,3 +1,9 @@
+## 0.4.2
+* fix a crash when filtering a graph externally and it already has an internal filter
+* `select_nodes.autoCropSelection` option - when using a dc.graph like a dc.js chart, filtering it
+  among other charts, it makes sense to preserve the current selection even when some of the nodes
+  have disappeared (false). by default (true), the selection will be cropped when the data changes.
+
 ## 0.4.1
 * `select_nodes` behavior now supports multiple selection with rectangular brush and modifier
   keys. check out
