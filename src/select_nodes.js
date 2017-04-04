@@ -99,11 +99,13 @@ dc_graph.select_nodes = function(props) {
         else
             background_click_event(chart, _behavior.clickBackgroundClears());
 
-        // drop any selected which no longer exist in the diagram
-        var present = node.data().map(function(d) { return d.orig.key; });
-        var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
-        if(_selected.length !== now_selected.length)
-            select_nodes_group.node_set_changed(now_selected);
+        if(_behavior.autoCropSelection()) {
+            // drop any selected which no longer exist in the diagram
+            var present = node.data().map(function(d) { return d.orig.key; });
+            var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
+            if(_selected.length !== now_selected.length)
+                select_nodes_group.node_set_changed(now_selected);
+        }
     }
 
     function remove_behavior(chart, node, edge) {
@@ -127,6 +129,10 @@ dc_graph.select_nodes = function(props) {
     });
     _behavior.secondClickEvent = property(null);
     _behavior.noneIsAll = property(false);
+    // if you're replacing the data, you probably want the selection not to be preserved when a node
+    // with the same key re-appears later (true). however, if you're filtering dc.js-style, you
+    // probably want filters to be independent between charts (false)
+    _behavior.autoCropSelection = property(true);
     return _behavior;
 };
 

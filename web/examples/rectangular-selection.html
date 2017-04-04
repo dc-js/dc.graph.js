@@ -103,8 +103,8 @@
         diagram.child('select-nodes', dc_graph.select_nodes(
             {
                 nodeOpacity: 1
-            }
-        ).noneIsAll(true));
+            }).noneIsAll(true)
+              .autoCropSelection(false));
         diagram.child('filter-selection', dc_graph.filter_selection());
 
         var colorDimension = data.nodef.crossfilter.dimension(function(n) {
