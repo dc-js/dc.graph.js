@@ -40,7 +40,7 @@ dc_graph.select_nodes = function(props) {
     }
     function brushmove() {
         var ext = _brush.extent();
-        var rectSelect = _behavior.parent().selectAll('g.node').data().filter(function(n) {
+        var rectSelect = _behavior.parent().selectAllNodes().data().filter(function(n) {
             return n && ext[0][0] < n.cola.x && n.cola.x < ext[1][0] &&
                 ext[0][1] < n.cola.y && n.cola.y < ext[1][1];
         }).map(function(n) {

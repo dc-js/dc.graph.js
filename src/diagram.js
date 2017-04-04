@@ -163,8 +163,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.zoomToFit = function() {
         if(!(_nodeLayer && _edgeLayer))
             return;
-        var node = _nodeLayer.selectAll('.node'),
-            edge = _edgeLayer.selectAll('.edge');
+        var node = _chart.selectAllNodes(),
+            edge = _chart.selectAllEdges();
         auto_zoom(node, edge);
     };
 
@@ -1140,6 +1140,26 @@ dc_graph.diagram = function (parent, chartGroup) {
             _chart.transitionDuration() / 2;
     }
 
+    _chart.selectAllNodes = function(selector) {
+        selector = selector || '.node';
+        return _nodeLayer.selectAll(selector).filter(function(d) {
+            return !d.deleted;
+        });
+    };
+
+    _chart.selectAllEdges = function(selector) {
+        selector = selector || '.edge';
+        return _edgeLayer.selectAll(selector).filter(function(d) {
+            return !d.deleted;
+        });
+    };
+
+    _chart.selectAllDefs = function(selector) {
+        return _defs.selectAll(selector).filter(function(d) {
+            return !d.deleted;
+        });
+    };
+
     _chart.isRunning = function() {
         return _running;
     };
@@ -1281,7 +1301,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                     opacity: 0
                 });
 
-        edge.exit().transition()
+        edge.exit().each(function(d) {
+            d.deleted = true;
+        }).transition()
             .duration(transition_duration())
             .delay(_chart.deleteDelay())
             .attr('opacity', 0)
@@ -1353,7 +1375,9 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _chart._enterNode(nodeEnter);
 
-        node.exit().transition()
+        node.exit().each(function(d) {
+            d.deleted = true;
+        }).transition()
             .duration(transition_duration())
             .delay(_chart.deleteDelay())
             .attr('opacity', 0)
@@ -1565,13 +1589,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     _chart.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
-        node = node || _nodeLayer.selectAll('.node');
-        edge = edge || _edgeLayer.selectAll('.edge');
+        node = node || _chart.selectAllNodes();
+        edge = edge || _chart.selectAllEdges();
         _refresh(node, edge);
 
-        edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
-        edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
-        textPaths = textPaths || _defs.selectAll('path.edge-label-path');
+        edgeHover = edgeHover || _chart.selectAllEdges('.edge-hover');
+        edgeLabels = edgeLabels || _chart.selectAllEdges('.edge-label');
+        textPaths = textPaths || _chart.selectAllDefs('path.edge-label-path');
         var nullSel = d3.select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel);
     };
