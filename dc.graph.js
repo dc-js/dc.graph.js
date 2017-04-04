@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.1
+ *  dc.graph 0.4.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.1
+ * @version 0.4.2
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.1',
+    version: '0.4.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -906,8 +906,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.zoomToFit = function() {
         if(!(_nodeLayer && _edgeLayer))
             return;
-        var node = _nodeLayer.selectAll('.node'),
-            edge = _edgeLayer.selectAll('.edge');
+        var node = _chart.selectAllNodes(),
+            edge = _chart.selectAllEdges();
         auto_zoom(node, edge);
     };
 
@@ -1883,6 +1883,26 @@ dc_graph.diagram = function (parent, chartGroup) {
             _chart.transitionDuration() / 2;
     }
 
+    _chart.selectAllNodes = function(selector) {
+        selector = selector || '.node';
+        return _nodeLayer.selectAll(selector).filter(function(d) {
+            return !d.deleted;
+        });
+    };
+
+    _chart.selectAllEdges = function(selector) {
+        selector = selector || '.edge';
+        return _edgeLayer.selectAll(selector).filter(function(d) {
+            return !d.deleted;
+        });
+    };
+
+    _chart.selectAllDefs = function(selector) {
+        return _defs.selectAll(selector).filter(function(d) {
+            return !d.deleted;
+        });
+    };
+
     _chart.isRunning = function() {
         return _running;
     };
@@ -2024,7 +2044,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                     opacity: 0
                 });
 
-        edge.exit().transition()
+        edge.exit().each(function(d) {
+            d.deleted = true;
+        }).transition()
             .duration(transition_duration())
             .delay(_chart.deleteDelay())
             .attr('opacity', 0)
@@ -2076,9 +2098,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     class: 'edge-label-path',
                     id: _chart.textpathId
                 });
-        edgeLabels.each(function(d) {
-            d.dcg_bbox = null;
-        })
+        edgeLabels
           .selectAll('textPath')
             .text(function(d){
                 return _chart.edgeLabel.eval(d);
@@ -2098,7 +2118,9 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _chart._enterNode(nodeEnter);
 
-        node.exit().transition()
+        node.exit().each(function(d) {
+            d.deleted = true;
+        }).transition()
             .duration(transition_duration())
             .delay(_chart.deleteDelay())
             .attr('opacity', 0)
@@ -2310,13 +2332,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     _chart.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
-        node = node || _nodeLayer.selectAll('.node');
-        edge = edge || _edgeLayer.selectAll('.edge');
+        node = node || _chart.selectAllNodes();
+        edge = edge || _chart.selectAllEdges();
         _refresh(node, edge);
 
-        edgeHover = edgeHover || _edgeLayer.selectAll('.edge-hover');
-        edgeLabels = edgeLabels || _edgeLayer.selectAll('.edge-label');
-        textPaths = textPaths || _defs.selectAll('path.edge-label-path');
+        edgeHover = edgeHover || _chart.selectAllEdges('.edge-hover');
+        edgeLabels = edgeLabels || _chart.selectAllEdges('.edge-label');
+        textPaths = textPaths || _chart.selectAllDefs('path.edge-label-path');
         var nullSel = d3.select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel);
     };
@@ -4556,7 +4578,7 @@ dc_graph.select_nodes = function(props) {
     }
     function brushmove() {
         var ext = _brush.extent();
-        var rectSelect = _behavior.parent().selectAll('g.node').data().filter(function(n) {
+        var rectSelect = _behavior.parent().selectAllNodes().data().filter(function(n) {
             return n && ext[0][0] < n.cola.x && n.cola.x < ext[1][0] &&
                 ext[0][1] < n.cola.y && n.cola.y < ext[1][1];
         }).map(function(n) {
@@ -4615,11 +4637,13 @@ dc_graph.select_nodes = function(props) {
         else
             background_click_event(chart, _behavior.clickBackgroundClears());
 
-        // drop any selected which no longer exist in the diagram
-        var present = node.data().map(function(d) { return d.orig.key; });
-        var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
-        if(_selected.length !== now_selected.length)
-            select_nodes_group.node_set_changed(now_selected);
+        if(_behavior.autoCropSelection()) {
+            // drop any selected which no longer exist in the diagram
+            var present = node.data().map(function(d) { return d.orig.key; });
+            var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
+            if(_selected.length !== now_selected.length)
+                select_nodes_group.node_set_changed(now_selected);
+        }
     }
 
     function remove_behavior(chart, node, edge) {
@@ -4643,6 +4667,10 @@ dc_graph.select_nodes = function(props) {
     });
     _behavior.secondClickEvent = property(null);
     _behavior.noneIsAll = property(false);
+    // if you're replacing the data, you probably want the selection not to be preserved when a node
+    // with the same key re-appears later (true). however, if you're filtering dc.js-style, you
+    // probably want filters to be independent between charts (false)
+    _behavior.autoCropSelection = property(true);
     return _behavior;
 };
 
