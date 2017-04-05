@@ -1,3 +1,7 @@
+## 0.4.3
+* tweaks to the timeline widget - ticks are shown full height, and the region is adjusted to include
+  the tick width
+
 ## 0.4.2
 * fix a crash when filtering a graph externally and it already has an internal filter
 * `select_nodes.autoCropSelection` option - when using a dc.graph like a dc.js chart, filtering it

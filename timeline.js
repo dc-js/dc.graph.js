@@ -123,7 +123,7 @@ function timeline(parent) {
         var max = Math.max(_minHeight, d3.max(_events, function(e) {
             return e.value[0].key === 'adds' ? Math.max(e.value[0].height, e.value[1].height) : 0;
         }));
-        _y.domain([max, -max]).range([0, bl]);
+        _y.domain([max, -max]).range([0, _height]);
 
         var axis = _g.selectAll('rect.timeline').data([0]);
         axis.enter().append('rect').attr('class', 'timeline');
@@ -143,7 +143,7 @@ function timeline(parent) {
             },
             y: 0,
             width: function(d) {
-                return _x(d.x2) - _x(d.x1);
+                return _x(d.x2) - _x(d.x1) + _tickWidth;
             },
             height: _height,
             fill: _region && _region.color || 'blue',
