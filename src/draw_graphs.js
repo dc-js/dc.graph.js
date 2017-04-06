@@ -52,6 +52,8 @@ dc_graph.draw_graphs = function(options) {
         node[_idTag] = uuid();
         node[_labelTag] = '';
         node[_fixedPosTag] = {x: pos[0], y: pos[1]};
+        if(_behavior.addNode())
+            _behavior.addNode()(node);
         options.nodeCrossfilter.add([node]);
         chart.redrawGroup();
         select_nodes_group.node_set_changed([node[_idTag]]);
@@ -63,6 +65,8 @@ dc_graph.draw_graphs = function(options) {
         edge[_idTag] = uuid();
         edge[_sourceTag] = source.orig.key;
         edge[_targetTag] = target.orig.key;
+        if(_behavior.addEdge())
+            _behavior.addEdge()(edge);
         // changing this data inside crossfilter is okay because it is not indexed data
         source.orig.value[_fixedPosTag] = null;
         target.orig.value[_fixedPosTag] = null;
@@ -144,6 +148,10 @@ dc_graph.draw_graphs = function(options) {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior
     });
+
+    // callbacks to modify data as it's being added
+    _behavior.addNode = property(null);
+    _behavior.addEdge = property(null);
 
     // whether to do relayout & redraw (true) or just refresh (false)
     _behavior.doRedraw = property(false);
