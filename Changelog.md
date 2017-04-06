@@ -1,3 +1,8 @@
+## 0.4.5
+* `nodesep` and `ranksep` for dagre.
+* restore new polygon text fitting calculation, fix some very obvious bugs there. width and height
+  of polygonal nodes are still pretty far off, but conservative.
+
 ## 0.4.4
 * revert new polygon text fitting algorithm. it only fit the text better in some cases, and caused
   collisions between nodes, sometimes completely obscuring nodes. will have to revisit this in the
