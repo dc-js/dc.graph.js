@@ -34,6 +34,7 @@
     "webcola": "3.3.x"
   },
   "devDependencies": {
+    "bootstrap": "~3.3",
     "d3-tip": "~0.7",
     "grunt": "~1.0",
     "grunt-browserify": "~5.0",

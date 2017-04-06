@@ -135,10 +135,12 @@ module.exports = function (grunt) {
             'dc-to-gh': {
                 files: [
                     {
+                        nonull: true,
                         expand: true,
                         flatten: true,
                         src: [
                             '<%= conf.pkg.name %>.css',
+                            'node_modules/bootstrap/dist/css/bootstrap.css',
                             'node_modules/dc/dc.css',
                             'node_modules/font-awesome/css/font-awesome.css',
                             'node_modules/jquery-ui-dist/jquery-ui.css'
@@ -146,6 +148,7 @@ module.exports = function (grunt) {
                         dest: '<%= conf.web %>/css/'
                     },
                     {
+                        nonull: true,
                         expand: true,
                         flatten: true,
                         src: [
@@ -163,6 +166,7 @@ module.exports = function (grunt) {
                             'querystring.js',
                             'chart.registry.js',
                             'timeline.js',
+                            'node_modules/bootstrap/dist/js/bootstrap.js',
                             'node_modules/crossfilter2/crossfilter.js',
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
