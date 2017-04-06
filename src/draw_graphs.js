@@ -53,7 +53,7 @@ dc_graph.draw_graphs = function(options) {
         node[_labelTag] = '';
         node[_fixedPosTag] = {x: pos[0], y: pos[1]};
         options.nodeCrossfilter.add([node]);
-        chart.redraw();
+        chart.redrawGroup();
         select_nodes_group.node_set_changed([node[_idTag]]);
     }
 
@@ -67,7 +67,7 @@ dc_graph.draw_graphs = function(options) {
         source.orig.value[_fixedPosTag] = null;
         target.orig.value[_fixedPosTag] = null;
         options.edgeCrossfilter.add([edge]);
-        chart.redraw();
+        chart.redrawGroup();
         select_nodes_group.node_set_changed([]);
     }
 

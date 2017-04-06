@@ -28,7 +28,7 @@ dc_graph.label_nodes = function(options) {
                     accept: function(text) {
                         var d = node.datum();
                         d.orig.value[_labelTag] = text;
-                        chart.redraw();
+                        chart.redrawGroup();
                     }
                 });
         };
