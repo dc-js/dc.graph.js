@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.4
+ *  dc.graph 0.4.5
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.4
+ * @version 0.4.5
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.4',
+    version: '0.4.5',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -531,20 +531,24 @@ function fit_shape(chart) {
         if(bbox && bbox.width && bbox.height) {
             // make sure we can fit height in r
             r = Math.max(r, bbox.height/2 + 5);
-            // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-            // http://stackoverflow.com/a/433438/676195
-            var y_over_B = bbox.height/2/r;
-            var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
+            var rx = bbox.width/2;
+            if(d.dcg_shape.shape === 'ellipse') {
+                // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+                // http://stackoverflow.com/a/433438/676195
+                var y_over_B = bbox.height/2/r;
+                rx = rx/Math.sqrt(1 - y_over_B*y_over_B);
+                rx = Math.max(rx, r);
+            } else {
+                // this is cribbed from graphviz but there is much i don't understand
+                // and any errors are mine
+                // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
+                rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
+            }
+            d.dcg_rx = rx;
             fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-            d.dcg_rx = Math.max(rx, r);
-            d.dcg_ry = r;
-            // needs extra width for polygons since they cut in a bit
-            // not sure why something so simple works, i looked in graphviz:
-            // https://github.com/ellson/graphviz/blob/master/lib/common/shapes.c#L1989
-            if(d.dcg_shape.shape==='polygon')
-                d.dcg_rx /= Math.cos(Math.PI/(d.dcg_shape.sides||4));
         }
-        else d.dcg_rx = d.dcg_ry = r;
+        else d.dcg_rx = r;
+        d.dcg_ry = r;
         var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         d.cola.width = Math.max(fitx, rplus);
         d.cola.height = rplus;
@@ -567,18 +571,23 @@ function polygon_attrs(chart, d) {
                 distortion = def.distortion || 0,
                 rotation = def.rotation || 0,
                 align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
-                pts = [];
+                angles = [];
             rotation = rotation/360 + 0.25; // start at y axis not x
             for(var i = 0; i<sides; ++i) {
                 var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
-                var x = d.dcg_rx*Math.cos(theta),
-                    y = d.dcg_ry*Math.sin(theta);
+                angles.push({x: Math.cos(theta), y: Math.sin(theta)});
+            }
+            var yext = d3.extent(angles, function(theta) { return theta.y; });
+            var rx = d.dcg_rx,
+                ry = d.dcg_ry / Math.min(-yext[0], yext[1]);
+            d.dcg_points = angles.map(function(theta) {
+                var x = rx*theta.x,
+                    y = ry*theta.y;
                 x *= 1 + distortion*((d.dcg_ry-y)/d.dcg_ry - 1);
                 x -= skew*y/2;
-                pts.push({x: x, y: y});
-            }
-            d.dcg_points = pts;
-            return generate_path(pts, 1, true);
+                return {x: x, y: y};
+            });
+            return generate_path(d.dcg_points, 1, true);
         }
     };
 }
@@ -3305,9 +3314,10 @@ dc_graph.webworker_layout = function(layoutEngine) {
 
 /**
  * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
- * implement - although these are not // required, they make it easier for clients and
- * behaviors (like expand_collapse) to work with // multiple layout engines // these
- * attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
+ * implement - although these are not required, they make it easier for clients and
+ * behaviors (like expand_collapse) to work with multiple layout engines.
+ *
+ * these attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
  * @class graphviz_attrs
  * @memberof dc_graph
  * @return {Object}
@@ -3323,10 +3333,18 @@ dc_graph.graphviz_attrs = function() {
          **/
         rankdir: property('TB'),
         /**
+         * Spacing in between nodes in the same rank.
+         * @method nodesep
+         * @memberof dc_graph.graphviz_attrs
+         * @instance
+         * @param {String} [nodesep=40]
+         **/
+        nodesep: property(40),
+        /**
          * Spacing in between ranks.
          * @method ranksep
          * @memberof dc_graph.graphviz_attrs
-         * @instnace
+         * @instance
          * @param {String} [ranksep=40]
          **/
         ranksep: property(40)
@@ -3593,7 +3611,7 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
 
         // Set an object for the graph label
-        _dagreGraph.setGraph({rankdir: options.rankdir});
+        _dagreGraph.setGraph({rankdir: options.rankdir, nodesep: options.nodesep, ranksep: options.ranksep});
 
         // Default to assigning a new object as a label for each new edge.
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });

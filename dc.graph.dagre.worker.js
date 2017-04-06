@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.4
+ *  dc.graph 0.4.5
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.4
+ * @version 0.4.5
  * @example
  * // Example chaining
  * chart.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.4',
+    version: '0.4.5',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -153,9 +153,10 @@ function regenerate_objects(preserved, list, key, assign, create, destroy) {
 
 /**
  * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
- * implement - although these are not // required, they make it easier for clients and
- * behaviors (like expand_collapse) to work with // multiple layout engines // these
- * attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
+ * implement - although these are not required, they make it easier for clients and
+ * behaviors (like expand_collapse) to work with multiple layout engines.
+ *
+ * these attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
  * @class graphviz_attrs
  * @memberof dc_graph
  * @return {Object}
@@ -171,10 +172,18 @@ dc_graph.graphviz_attrs = function() {
          **/
         rankdir: property('TB'),
         /**
+         * Spacing in between nodes in the same rank.
+         * @method nodesep
+         * @memberof dc_graph.graphviz_attrs
+         * @instance
+         * @param {String} [nodesep=40]
+         **/
+        nodesep: property(40),
+        /**
          * Spacing in between ranks.
          * @method ranksep
          * @memberof dc_graph.graphviz_attrs
-         * @instnace
+         * @instance
          * @param {String} [ranksep=40]
          **/
         ranksep: property(40)
@@ -204,7 +213,7 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
 
         // Set an object for the graph label
-        _dagreGraph.setGraph({rankdir: options.rankdir});
+        _dagreGraph.setGraph({rankdir: options.rankdir, nodesep: options.nodesep, ranksep: options.ranksep});
 
         // Default to assigning a new object as a label for each new edge.
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
