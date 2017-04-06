@@ -1,3 +1,8 @@
+## 0.4.4
+* revert new polygon text fitting algorithm. it only fit the text better in some cases, and caused
+  collisions between nodes, sometimes completely obscuring nodes. will have to revisit this in the
+  future - this is truly a black art.
+
 ## 0.4.3
 * tweaks to the timeline widget - ticks are shown full height, and the region is adjusted to include
   the tick width
