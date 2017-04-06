@@ -21,7 +21,7 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
 
         // Set an object for the graph label
-        _dagreGraph.setGraph({rankdir: options.rankdir});
+        _dagreGraph.setGraph({rankdir: options.rankdir, nodesep: options.nodesep, ranksep: options.ranksep});
 
         // Default to assigning a new object as a label for each new edge.
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
