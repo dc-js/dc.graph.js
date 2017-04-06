@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.2
+ *  dc.graph 0.4.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.2
+ * @version 0.4.3
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.2',
+    version: '0.4.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -531,23 +531,18 @@ function fit_shape(chart) {
         if(bbox && bbox.width && bbox.height) {
             // make sure we can fit height in r
             r = Math.max(r, bbox.height/2 + 5);
-            var rx;
-            if(d.dcg_shape.shape === 'ellipse') {
-                // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-                // http://stackoverflow.com/a/433438/676195
-                var y_over_B = bbox.height/2/r;
-                rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
-                d.dcg_rx = Math.max(rx, r);
-                d.dcg_ry = r;
-            } else {
-                rx = bbox.width/2;
-                // this is cribbed from graphviz but there is much i don't understand
-                // and any errors are mine
-                // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
-                d.dcg_rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
-                d.dcg_ry = r;
-            }
+            // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+            // http://stackoverflow.com/a/433438/676195
+            var y_over_B = bbox.height/2/r;
+            var rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
             fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
+            d.dcg_rx = Math.max(rx, r);
+            d.dcg_ry = r;
+            // needs extra width for polygons since they cut in a bit
+            // not sure why something so simple works, i looked in graphviz:
+            // https://github.com/ellson/graphviz/blob/master/lib/common/shapes.c#L1989
+            if(d.dcg_shape.shape==='polygon')
+                d.dcg_rx /= Math.cos(Math.PI/(d.dcg_shape.sides||4));
         }
         else d.dcg_rx = d.dcg_ry = r;
         var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
@@ -572,23 +567,18 @@ function polygon_attrs(chart, d) {
                 distortion = def.distortion || 0,
                 rotation = def.rotation || 0,
                 align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
-                angles = [];
+                pts = [];
             rotation = rotation/360 + 0.25; // start at y axis not x
             for(var i = 0; i<sides; ++i) {
                 var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
-                angles.push({x: Math.cos(theta), y: Math.sin(theta)});
-            }
-            var yext = d3.extent(angles, function(theta) { return theta.y; });
-            var rx = d.dcg_rx,
-                ry = d.dcg_ry / Math.min(-yext[0], yext[1]);
-            d.dcg_points = angles.map(function(theta) {
-                var x = rx*theta.x,
-                    y = ry*theta.y;
+                var x = d.dcg_rx*Math.cos(theta),
+                    y = d.dcg_ry*Math.sin(theta);
                 x *= 1 + distortion*((d.dcg_ry-y)/d.dcg_ry - 1);
                 x -= skew*y/2;
-                return {x: x, y: y};
-            });
-            return generate_path(d.dcg_points, 1, true);
+                pts.push({x: x, y: y});
+            }
+            d.dcg_points = pts;
+            return generate_path(pts, 1, true);
         }
     };
 }
