@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.5
+ *  dc.graph 0.4.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.5
+ * @version 0.4.6
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.5',
+    version: '0.4.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -4743,7 +4743,7 @@ dc_graph.label_nodes = function(options) {
                     accept: function(text) {
                         var d = node.datum();
                         d.orig.value[_labelTag] = text;
-                        chart.redraw();
+                        chart.redrawGroup();
                     }
                 });
         };
@@ -5281,8 +5281,10 @@ dc_graph.draw_graphs = function(options) {
         node[_idTag] = uuid();
         node[_labelTag] = '';
         node[_fixedPosTag] = {x: pos[0], y: pos[1]};
+        if(_behavior.addNode())
+            _behavior.addNode()(node);
         options.nodeCrossfilter.add([node]);
-        chart.redraw();
+        chart.redrawGroup();
         select_nodes_group.node_set_changed([node[_idTag]]);
     }
 
@@ -5292,11 +5294,13 @@ dc_graph.draw_graphs = function(options) {
         edge[_idTag] = uuid();
         edge[_sourceTag] = source.orig.key;
         edge[_targetTag] = target.orig.key;
+        if(_behavior.addEdge())
+            _behavior.addEdge()(edge);
         // changing this data inside crossfilter is okay because it is not indexed data
         source.orig.value[_fixedPosTag] = null;
         target.orig.value[_fixedPosTag] = null;
         options.edgeCrossfilter.add([edge]);
-        chart.redraw();
+        chart.redrawGroup();
         select_nodes_group.node_set_changed([]);
     }
 
@@ -5373,6 +5377,10 @@ dc_graph.draw_graphs = function(options) {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior
     });
+
+    // callbacks to modify data as it's being added
+    _behavior.addNode = property(null);
+    _behavior.addEdge = property(null);
 
     // whether to do relayout & redraw (true) or just refresh (false)
     _behavior.doRedraw = property(false);
