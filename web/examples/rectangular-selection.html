@@ -112,8 +112,8 @@
         }),
             colorGroup = colorDimension.group();
         pie = dc.pieChart('#pie')
-            .width(100).height(100)
-            .radius(45)
+            .width(150).height(150)
+            .radius(75)
             .dimension(colorDimension)
             .group(colorGroup)
             .colors(d3.scale.ordinal().domain([0,1,2]).range(colors))
