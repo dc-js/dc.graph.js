@@ -1,3 +1,9 @@
+## 0.4.6
+* improved network building example with dataTables showing the data created
+* drawing behaviors call `redrawGroup` instead of just `redraw`
+* `draw_graphs` behavior has callbacks to modify the created data (e.g. to add timestamp sorting, as
+  we're doing here
+
 ## 0.4.5
 * `nodesep` and `ranksep` for dagre.
 * restore new polygon text fitting calculation, fix some very obvious bugs there. width and height
