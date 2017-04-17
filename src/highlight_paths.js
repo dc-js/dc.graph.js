@@ -13,9 +13,13 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     }
 
     function paths_changed(nop, eop) {
+        selected = hoverpaths = null;
+        // it would be difficult to check if no change, but at least check if changing from empty to empty
+        if(Object.keys(node_on_paths).length === 0 && Object.keys(nop).length === 0 &&
+           Object.keys(edge_on_paths).length === 0 && Object.keys(eop).length === 0)
+            return;
         node_on_paths = nop;
         edge_on_paths = eop;
-        selected = hoverpaths = null;
         refresh();
     }
 
