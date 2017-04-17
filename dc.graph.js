@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.6
+ *  dc.graph 0.4.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.6
+ * @version 0.4.7
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.6',
+    version: '0.4.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1355,9 +1355,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return !kv.value.notLayout;
     });
 
-    // conversely, you could have an edge but not want to draw it - not documenting this
-    // yet because it seems like it maybe should be combined with edgeIsLayout
-    _chart.edgeIsShown = _chart.edgeIsLayoutAccessor = property(true);
+    // if false, don't draw or layout the edge. this is not documented because it seems like
+    // the interface could be better and this combined with edgeIsLayout. (currently there is
+    // no way to layout but not draw an edge.)
+    _chart.edgeIsShown = property(true);
 
     /**
      * Currently, three strategies are supported for specifying the lengths of edges:
@@ -4855,6 +4856,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     hoverprops = hoverprops || {};
     selectprops = selectprops || {};
     var node_on_paths = {}, edge_on_paths = {}, selected = null, hoverpaths = null;
+    var _anchor;
 
     function refresh() {
         if(_behavior.doRedraw())
@@ -4864,9 +4866,13 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     }
 
     function paths_changed(nop, eop) {
+        selected = hoverpaths = null;
+        // it would be difficult to check if no change, but at least check if changing from empty to empty
+        if(Object.keys(node_on_paths).length === 0 && Object.keys(nop).length === 0 &&
+           Object.keys(edge_on_paths).length === 0 && Object.keys(eop).length === 0)
+            return;
         node_on_paths = nop;
         edge_on_paths = eop;
-        selected = hoverpaths = null;
         refresh();
     }
 
@@ -4984,15 +4990,17 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             return this;
         },
         parent: function(p) {
-            var anchor = p.anchorName();
-            highlight_paths_group.on('paths_changed.' + anchor, p ? paths_changed : null);
-            highlight_paths_group.on('hover_changed.' + anchor, p ? hover_changed : null);
-            highlight_paths_group.on('select_changed.' + anchor, p ? select_changed : null);
+            if(p)
+                _anchor = p.anchorName();
+            // else we should have received anchor earlier
+            highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
+            highlight_paths_group.on('hover_changed.' + _anchor, p ? hover_changed : null);
+            highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
         }
     });
 
-        // whether to do relayout & redraw (true) or just refresh (false)
-        _behavior.doRedraw = property(false);
+    // whether to do relayout & redraw (true) or just refresh (false)
+    _behavior.doRedraw = property(false);
 
     return _behavior;
 };

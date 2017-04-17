@@ -613,9 +613,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return !kv.value.notLayout;
     });
 
-    // conversely, you could have an edge but not want to draw it - not documenting this
-    // yet because it seems like it maybe should be combined with edgeIsLayout
-    _chart.edgeIsShown = _chart.edgeIsLayoutAccessor = property(true);
+    // if false, don't draw or layout the edge. this is not documented because it seems like
+    // the interface could be better and this combined with edgeIsLayout. (currently there is
+    // no way to layout but not draw an edge.)
+    _chart.edgeIsShown = property(true);
 
     /**
      * Currently, three strategies are supported for specifying the lengths of edges:

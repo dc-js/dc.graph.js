@@ -1,3 +1,8 @@
+## 0.4.7
+* `highlight_paths` behavior would crash when removed from the diagram
+* `highlight_paths` now won't force a redraw if the paths changed event is from empty to empty
+* `edgeIsShown` was mistakenly overwriting the `edgeIsLayoutAccessor`
+
 ## 0.4.6
 * improved network building example with dataTables showing the data created
 * drawing behaviors call `redrawGroup` instead of just `redraw`

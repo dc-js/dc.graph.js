@@ -4,6 +4,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     hoverprops = hoverprops || {};
     selectprops = selectprops || {};
     var node_on_paths = {}, edge_on_paths = {}, selected = null, hoverpaths = null;
+    var _anchor;
 
     function refresh() {
         if(_behavior.doRedraw())
@@ -13,9 +14,13 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     }
 
     function paths_changed(nop, eop) {
+        selected = hoverpaths = null;
+        // it would be difficult to check if no change, but at least check if changing from empty to empty
+        if(Object.keys(node_on_paths).length === 0 && Object.keys(nop).length === 0 &&
+           Object.keys(edge_on_paths).length === 0 && Object.keys(eop).length === 0)
+            return;
         node_on_paths = nop;
         edge_on_paths = eop;
-        selected = hoverpaths = null;
         refresh();
     }
 
@@ -133,15 +138,17 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             return this;
         },
         parent: function(p) {
-            var anchor = p.anchorName();
-            highlight_paths_group.on('paths_changed.' + anchor, p ? paths_changed : null);
-            highlight_paths_group.on('hover_changed.' + anchor, p ? hover_changed : null);
-            highlight_paths_group.on('select_changed.' + anchor, p ? select_changed : null);
+            if(p)
+                _anchor = p.anchorName();
+            // else we should have received anchor earlier
+            highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
+            highlight_paths_group.on('hover_changed.' + _anchor, p ? hover_changed : null);
+            highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
         }
     });
 
-        // whether to do relayout & redraw (true) or just refresh (false)
-        _behavior.doRedraw = property(false);
+    // whether to do relayout & redraw (true) or just refresh (false)
+    _behavior.doRedraw = property(false);
 
     return _behavior;
 };
