@@ -38,13 +38,18 @@
     .dc-chart .selected path, .dc-chart .selected circle {
         stroke-width: 0
     }
+    p#hint {
+        position: absolute;
+        left: 1em;
+        top: 0.5em;
+    }
 </style>
 
 </head>
 
 
 <body>
-
+  <p id="hint">(use <kbd>alt</kbd> key to pan and zoom)</p>
   <div id="graph" class="chart"></div>
   <div id="pie"></div>
 
