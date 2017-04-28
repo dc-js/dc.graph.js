@@ -1,3 +1,10 @@
+## 0.4.8
+* support for .psv and .csv files in `load_graph` and thus `single-file.html`
+* `single-file.html` is less silly. it displays the data in a table and does not randomize the
+  colors. (would be nice to be able to assign attributes programmatically, but how to squeeze
+  expressions into a query string?) highlights neighboring edges too.
+* <kbd>alt</kbd> hint in `rectangular-selection.html`
+
 ## 0.4.7
 * `highlight_paths` behavior would crash when removed from the diagram
 * `highlight_paths` now won't force a redraw if the paths changed event is from empty to empty
