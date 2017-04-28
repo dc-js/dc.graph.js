@@ -93,7 +93,8 @@
         //     k(d.orig.value.name);
         // });
         tip.content(dc_graph.tip.table());
-        diagram.child('tip', tip);
+        diagram.child('tip', tip)
+            .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
 
         diagram.render();
 
