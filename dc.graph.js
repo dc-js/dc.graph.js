@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.7
+ *  dc.graph 0.4.8
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.7
+ * @version 0.4.8
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.7',
+    version: '0.4.8',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -4462,7 +4462,7 @@ dc_graph.tip = function() {
  * @example
  * // show all the attributes and values in the node and edge objects
  * var tip = dc_graph.tip();
- * tip.content(tip.table());
+ * tip.content(dc_graph.tip.table());
  **/
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
@@ -5397,6 +5397,60 @@ dc_graph.draw_graphs = function(options) {
 };
 
 
+function process_dot(callback, error, text) {
+    if(error) {
+        callback(error, null);
+        return;
+    }
+    var digraph = graphlibDot.parse(text);
+
+    var nodeNames = digraph.nodes();
+    var nodes = new Array(nodeNames.length);
+    nodeNames.forEach(function (name, i) {
+        var node = nodes[i] = digraph._nodes[nodeNames[i]];
+        node.id = i;
+        node.name = name;
+    });
+
+    var edgeNames = digraph.edges();
+    var edges = [];
+    edgeNames.forEach(function(e) {
+        var edge = digraph._edges[e];
+        edges.push({
+            source: digraph._nodes[edge.u].id,
+            target: digraph._nodes[edge.v].id,
+            sourcename: edge.u,
+            targetname: edge.v
+        });
+    });
+    var graph = {nodes: nodes, links: edges};
+    callback(null, graph);
+}
+
+function process_dsv(callback, error, data) {
+    if(error) {
+        callback(error, null);
+        return;
+    }
+    var keys = Object.keys(data[0]);
+    var source = keys[0], target = keys[1];
+    var nodes = d3.set(data.map(function(r) { return r[source]; }));
+    data.forEach(function(r) {
+        nodes.add(r[target]);
+    });
+    nodes = nodes.values().map(function(k) { return {name: k}; });
+    callback(null, {
+        nodes: nodes,
+        links: data.map(function(r, i) {
+            return {
+                key: i,
+                sourcename: r[source],
+                targetname: r[target]
+            };
+        })
+    });
+}
+
 // load a graph from various formats and return the data in consistent {nodes, links} format
 dc_graph.load_graph = function() {
     // ignore any query parameters for checking extension
@@ -5431,35 +5485,11 @@ dc_graph.load_graph = function() {
     else if(/\.json$/.test(ignore_query(file1)))
         d3.json(file1, callback);
     else if(/\.gv|\.dot$/.test(ignore_query(file1)))
-        d3.text(file1, function (error, f) {
-            if(error) {
-                callback(error, null);
-                return;
-            }
-            var digraph = graphlibDot.parse(f);
-
-            var nodeNames = digraph.nodes();
-            var nodes = new Array(nodeNames.length);
-            nodeNames.forEach(function (name, i) {
-                var node = nodes[i] = digraph._nodes[nodeNames[i]];
-                node.id = i;
-                node.name = name;
-            });
-
-            var edgeNames = digraph.edges();
-            var edges = [];
-            edgeNames.forEach(function(e) {
-                var edge = digraph._edges[e];
-                edges.push({
-                    source: digraph._nodes[edge.u].id,
-                    target: digraph._nodes[edge.v].id,
-                    sourcename: edge.u,
-                    targetname: edge.v
-                });
-            });
-            var graph = {nodes: nodes, links: edges};
-            callback(null, graph);
-        });
+        d3.text(file1, process_dot.bind(null, callback));
+    else if(/\.psv$/.test(ignore_query(file1)))
+        d3.dsv('|', 'text/plain')(file1, process_dsv.bind(null, callback));
+    else if(/\.csv$/.test(ignore_query(file1)))
+        d3.csv(file1, process_dsv.bind(null, callback));
 };
 
 function can_get_graph_from_this(data) {
