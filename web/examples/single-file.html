@@ -78,8 +78,7 @@
         // aesthetics
             .nodeStrokeWidthAccessor(0) // turn off outlines
             .nodeFillAccessor(function(kv) {
-                // calculate colors from kv.value somehow
-                return kv.value.name.length%2 ? '#2E54A2' : '#ED3F00';
+                return '#2E54A2';
             })
             .nodeLabelFillAccessor('white')
             .nodeTitleAccessor(null) // deactivate basic tooltips
