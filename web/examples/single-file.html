@@ -87,11 +87,12 @@
 
         // add tooltips using d3-tip
         var tip = dc_graph.tip()
-        tip.content(function(d, k) {
-            // you can do an asynchronous call here, e.g. d3.json, if you need
-            // to fetch data to show the tooltip - just call k() with the content
-            k("This is <em>" + d.orig.value.name + "</em>");
-        });
+        // tip.content(function(d, k) {
+        //     // you can do an asynchronous call here, e.g. d3.json, if you need
+        //     // to fetch data to show the tooltip - just call k() with the content
+        //     k(d.orig.value.name);
+        // });
+        tip.content(dc_graph.tip.table());
         diagram.child('tip', tip);
 
         diagram.render();
