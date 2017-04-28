@@ -131,7 +131,7 @@ dc_graph.tip = function() {
  * @example
  * // show all the attributes and values in the node and edge objects
  * var tip = dc_graph.tip();
- * tip.content(tip.table());
+ * tip.content(dc_graph.tip.table());
  **/
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
