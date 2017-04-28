@@ -68,7 +68,7 @@
                 engine[p](qs[p]);
         });
         if(qs.worker !== 'false')
-            engine = dc_graph.layout_webworker(engine);
+            engine = dc_graph.webworker_layout(engine);
         diagram
             .layoutEngine(engine)
             .width($(window).width())
