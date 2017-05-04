@@ -110,6 +110,6 @@ dc_graph.dagre_layout = function(id) {
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {}
     });
-}
+};
 
 dc_graph.dagre_layout.scripts = ['d3.js', 'dagre.js'];
