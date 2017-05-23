@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.4.2  
+**Version**: 0.4.9  
 **Example**  
 ```js
 // Example chaining
@@ -100,10 +100,9 @@ chart.width(600)
         * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
     * [.graphviz_attrs](#dc_graph.graphviz_attrs)
         * [new graphviz_attrs()](#new_dc_graph.graphviz_attrs_new)
-        * _instance_
-            * [.rankdir([rankdir])](#dc_graph.graphviz_attrs+rankdir)
-        * _static_
-            * [.ranksep([ranksep])](#dc_graph.graphviz_attrs.ranksep)
+        * [.rankdir([rankdir])](#dc_graph.graphviz_attrs+rankdir)
+        * [.nodesep([nodesep])](#dc_graph.graphviz_attrs+nodesep)
+        * [.ranksep([ranksep])](#dc_graph.graphviz_attrs+ranksep)
     * [.cola_layout](#dc_graph.cola_layout)
         * [new cola_layout([id])](#new_dc_graph.cola_layout_new)
         * [.handleDisconnected([handleDisconnected])](#dc_graph.cola_layout+handleDisconnected) ⇒ <code>Boolean</code> &#124; <code>[cola_layout](#dc_graph.cola_layout)</code>
@@ -1354,18 +1353,18 @@ Returns the DOM id for the chart's anchored location.
 
 * [.graphviz_attrs](#dc_graph.graphviz_attrs)
     * [new graphviz_attrs()](#new_dc_graph.graphviz_attrs_new)
-    * _instance_
-        * [.rankdir([rankdir])](#dc_graph.graphviz_attrs+rankdir)
-    * _static_
-        * [.ranksep([ranksep])](#dc_graph.graphviz_attrs.ranksep)
+    * [.rankdir([rankdir])](#dc_graph.graphviz_attrs+rankdir)
+    * [.nodesep([nodesep])](#dc_graph.graphviz_attrs+nodesep)
+    * [.ranksep([ranksep])](#dc_graph.graphviz_attrs+ranksep)
 
 <a name="new_dc_graph.graphviz_attrs_new"></a>
 
 #### new graphviz_attrs()
 `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
-implement - although these are not // required, they make it easier for clients and
-behaviors (like expand_collapse) to work with // multiple layout engines // these
-attributes are [from graphviz](http://www.graphviz.org/doc/info/attrs.html)
+implement - although these are not required, they make it easier for clients and
+behaviors (like expand_collapse) to work with multiple layout engines.
+
+these attributes are [from graphviz](http://www.graphviz.org/doc/info/attrs.html)
 
 <a name="dc_graph.graphviz_attrs+rankdir"></a>
 
@@ -1378,13 +1377,23 @@ Direction to draw ranks.
 | --- | --- | --- | --- |
 | [rankdir] | <code>String</code> | <code>&#x27;TB&#x27;</code> | 'TB', 'LR', 'BT', or 'RL' |
 
-<a name="dc_graph.graphviz_attrs.ranksep"></a>
+<a name="dc_graph.graphviz_attrs+nodesep"></a>
+
+#### graphviz_attrs.nodesep([nodesep])
+Spacing in between nodes in the same rank.
+
+**Kind**: instance method of <code>[graphviz_attrs](#dc_graph.graphviz_attrs)</code>  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [nodesep] | <code>String</code> | <code>40</code> | 
+
+<a name="dc_graph.graphviz_attrs+ranksep"></a>
 
 #### graphviz_attrs.ranksep([ranksep])
 Spacing in between ranks.
 
-**Kind**: static method of <code>[graphviz_attrs](#dc_graph.graphviz_attrs)</code>  
-**Instnace**:   
+**Kind**: instance method of <code>[graphviz_attrs](#dc_graph.graphviz_attrs)</code>  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1460,7 +1469,7 @@ lengths.
 If `flowLayout` is set, it determines the axis and separation for
 [cola flow layout](http://marvl.infotech.monash.edu/webcola/doc/classes/cola.layout.html#flowlayout).
 If it is not set, `flowLayout` will be calculated from the [rankdir](#dc_graph.graphviz_attrs+rankdir)
-and [ranksep](dc_graph.graphviz_attrs#ranksep); if `rankdir` is also null (the
+and [ranksep](#dc_graph.graphviz_attrs+ranksep); if `rankdir` is also null (the
 default for cola layout), then there will be no flow.
 
 **Kind**: instance method of <code>[cola_layout](#dc_graph.cola_layout)</code>  
@@ -1656,7 +1665,7 @@ Note: this interface is not great and is subject to change in the near term.
 ```js
 // show all the attributes and values in the node and edge objects
 var tip = dc_graph.tip();
-tip.content(tip.table());
+tip.content(dc_graph.tip.table());
 ```
 <a name="dc_graph.flat_group"></a>
 
