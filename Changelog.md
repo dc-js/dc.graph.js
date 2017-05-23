@@ -1,3 +1,6 @@
+## 0.4.9
+* `?layout=...` in [network-building.html](http://dc-js.github.io/dc.graph.js/network-building.html)
+
 ## 0.4.8
 * support for .psv and .csv files in `load_graph` and thus `single-file.html`
 * `single-file.html` is less silly. it displays the data in a table and does not randomize the
