@@ -68,7 +68,7 @@
                 engine[p](qs[p]);
         });
         if(qs.worker !== 'false')
-            engine = dc_graph.layout_webworker(engine);
+            engine = dc_graph.webworker_layout(engine);
         diagram
             .layoutEngine(engine)
             .width($(window).width())
@@ -78,8 +78,7 @@
         // aesthetics
             .nodeStrokeWidthAccessor(0) // turn off outlines
             .nodeFillAccessor(function(kv) {
-                // calculate colors from kv.value somehow
-                return kv.value.name.length%2 ? '#2E54A2' : '#ED3F00';
+                return '#2E54A2';
             })
             .nodeLabelFillAccessor('white')
             .nodeTitleAccessor(null) // deactivate basic tooltips
@@ -88,12 +87,14 @@
 
         // add tooltips using d3-tip
         var tip = dc_graph.tip()
-        tip.content(function(d, k) {
-            // you can do an asynchronous call here, e.g. d3.json, if you need
-            // to fetch data to show the tooltip - just call k() with the content
-            k("This is <em>" + d.orig.value.name + "</em>");
-        });
-        diagram.child('tip', tip);
+        // tip.content(function(d, k) {
+        //     // you can do an asynchronous call here, e.g. d3.json, if you need
+        //     // to fetch data to show the tooltip - just call k() with the content
+        //     k(d.orig.value.name);
+        // });
+        tip.content(dc_graph.tip.table());
+        diagram.child('tip', tip)
+            .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
 
         diagram.render();
 

@@ -6,6 +6,7 @@
   <link rel="icon" href="img/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
@@ -21,6 +22,21 @@
   <script type="text/javascript" src="js/querystring.js"></script>
 
   <style>
+    table {
+      border-collapse: collapse;
+    }
+    tr {
+      border: 1px solid black;
+      table-layout: fixed;
+      width: 200px;
+    }
+    .dc-table-head, .dc-table-column {
+        width: 75px;
+    }
+    th {
+        text-align: left;
+    }
+
     #graph {
       position: absolute;
       left: 0;
@@ -28,12 +44,33 @@
       right: 0;
       bottom: 0;
     }
+
+    #output-nodes {
+        position: absolute;
+        right: 2in;
+        top: 1em;
+    }
+
+    #output-edges {
+        position: absolute;
+        right: 1em;
+        top: 1em;
+    }
   </style>
 </head>
 
 <body>
 
   <div id="graph" class="chart"></div>
+
+  <div id="output-nodes">
+    <h4>Nodes</h4>
+    <table id="output-nodes-table"></table>
+  </div>
+  <div id="output-edges">
+    <h4>Edges</h4>
+    <table id="output-edges-table"></table>
+  </div>
 
 <script type="text/javascript" src="js/network-building.js"></script>
 </body>

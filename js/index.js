@@ -253,7 +253,7 @@ source(function(error, data) {
             runner.endStep();
             show_stats({totnodes: nodes.length, totedges: edges.length}, diagram.getStats());
         })
-        .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orange', edgeStrokeWidth: 3}));
+        .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
 
     appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
     if(linkLength)

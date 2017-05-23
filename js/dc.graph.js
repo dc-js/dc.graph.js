@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.2
+ *  dc.graph 0.4.9
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.2
+ * @version 0.4.9
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.2',
+    version: '0.4.9',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -531,25 +531,24 @@ function fit_shape(chart) {
         if(bbox && bbox.width && bbox.height) {
             // make sure we can fit height in r
             r = Math.max(r, bbox.height/2 + 5);
-            var rx;
+            var rx = bbox.width/2;
             if(d.dcg_shape.shape === 'ellipse') {
                 // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
                 // http://stackoverflow.com/a/433438/676195
                 var y_over_B = bbox.height/2/r;
-                rx = bbox.width/2/Math.sqrt(1 - y_over_B*y_over_B);
-                d.dcg_rx = Math.max(rx, r);
-                d.dcg_ry = r;
+                rx = rx/Math.sqrt(1 - y_over_B*y_over_B);
+                rx = Math.max(rx, r);
             } else {
-                rx = bbox.width/2;
                 // this is cribbed from graphviz but there is much i don't understand
                 // and any errors are mine
                 // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
-                d.dcg_rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
-                d.dcg_ry = r;
+                rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
             }
+            d.dcg_rx = rx;
             fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         }
-        else d.dcg_rx = d.dcg_ry = r;
+        else d.dcg_rx = r;
+        d.dcg_ry = r;
         var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         d.cola.width = Math.max(fitx, rplus);
         d.cola.height = rplus;
@@ -1356,9 +1355,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return !kv.value.notLayout;
     });
 
-    // conversely, you could have an edge but not want to draw it - not documenting this
-    // yet because it seems like it maybe should be combined with edgeIsLayout
-    _chart.edgeIsShown = _chart.edgeIsLayoutAccessor = property(true);
+    // if false, don't draw or layout the edge. this is not documented because it seems like
+    // the interface could be better and this combined with edgeIsLayout. (currently there is
+    // no way to layout but not draw an edge.)
+    _chart.edgeIsShown = property(true);
 
     /**
      * Currently, three strategies are supported for specifying the lengths of edges:
@@ -3315,9 +3315,10 @@ dc_graph.webworker_layout = function(layoutEngine) {
 
 /**
  * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
- * implement - although these are not // required, they make it easier for clients and
- * behaviors (like expand_collapse) to work with // multiple layout engines // these
- * attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
+ * implement - although these are not required, they make it easier for clients and
+ * behaviors (like expand_collapse) to work with multiple layout engines.
+ *
+ * these attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
  * @class graphviz_attrs
  * @memberof dc_graph
  * @return {Object}
@@ -3333,10 +3334,18 @@ dc_graph.graphviz_attrs = function() {
          **/
         rankdir: property('TB'),
         /**
+         * Spacing in between nodes in the same rank.
+         * @method nodesep
+         * @memberof dc_graph.graphviz_attrs
+         * @instance
+         * @param {String} [nodesep=40]
+         **/
+        nodesep: property(40),
+        /**
          * Spacing in between ranks.
          * @method ranksep
          * @memberof dc_graph.graphviz_attrs
-         * @instnace
+         * @instance
          * @param {String} [ranksep=40]
          **/
         ranksep: property(40)
@@ -3603,7 +3612,7 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
 
         // Set an object for the graph label
-        _dagreGraph.setGraph({rankdir: options.rankdir});
+        _dagreGraph.setGraph({rankdir: options.rankdir, nodesep: options.nodesep, ranksep: options.ranksep});
 
         // Default to assigning a new object as a label for each new edge.
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
@@ -4453,7 +4462,7 @@ dc_graph.tip = function() {
  * @example
  * // show all the attributes and values in the node and edge objects
  * var tip = dc_graph.tip();
- * tip.content(tip.table());
+ * tip.content(dc_graph.tip.table());
  **/
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
@@ -4735,7 +4744,7 @@ dc_graph.label_nodes = function(options) {
                     accept: function(text) {
                         var d = node.datum();
                         d.orig.value[_labelTag] = text;
-                        chart.redraw();
+                        chart.redrawGroup();
                     }
                 });
         };
@@ -4847,6 +4856,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     hoverprops = hoverprops || {};
     selectprops = selectprops || {};
     var node_on_paths = {}, edge_on_paths = {}, selected = null, hoverpaths = null;
+    var _anchor;
 
     function refresh() {
         if(_behavior.doRedraw())
@@ -4856,9 +4866,13 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     }
 
     function paths_changed(nop, eop) {
+        selected = hoverpaths = null;
+        // it would be difficult to check if no change, but at least check if changing from empty to empty
+        if(Object.keys(node_on_paths).length === 0 && Object.keys(nop).length === 0 &&
+           Object.keys(edge_on_paths).length === 0 && Object.keys(eop).length === 0)
+            return;
         node_on_paths = nop;
         edge_on_paths = eop;
-        selected = hoverpaths = null;
         refresh();
     }
 
@@ -4976,15 +4990,17 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             return this;
         },
         parent: function(p) {
-            var anchor = p.anchorName();
-            highlight_paths_group.on('paths_changed.' + anchor, p ? paths_changed : null);
-            highlight_paths_group.on('hover_changed.' + anchor, p ? hover_changed : null);
-            highlight_paths_group.on('select_changed.' + anchor, p ? select_changed : null);
+            if(p)
+                _anchor = p.anchorName();
+            // else we should have received anchor earlier
+            highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
+            highlight_paths_group.on('hover_changed.' + _anchor, p ? hover_changed : null);
+            highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
         }
     });
 
-        // whether to do relayout & redraw (true) or just refresh (false)
-        _behavior.doRedraw = property(false);
+    // whether to do relayout & redraw (true) or just refresh (false)
+    _behavior.doRedraw = property(false);
 
     return _behavior;
 };
@@ -5273,8 +5289,10 @@ dc_graph.draw_graphs = function(options) {
         node[_idTag] = uuid();
         node[_labelTag] = '';
         node[_fixedPosTag] = {x: pos[0], y: pos[1]};
+        if(_behavior.addNode())
+            _behavior.addNode()(node);
         options.nodeCrossfilter.add([node]);
-        chart.redraw();
+        chart.redrawGroup();
         select_nodes_group.node_set_changed([node[_idTag]]);
     }
 
@@ -5284,11 +5302,13 @@ dc_graph.draw_graphs = function(options) {
         edge[_idTag] = uuid();
         edge[_sourceTag] = source.orig.key;
         edge[_targetTag] = target.orig.key;
+        if(_behavior.addEdge())
+            _behavior.addEdge()(edge);
         // changing this data inside crossfilter is okay because it is not indexed data
         source.orig.value[_fixedPosTag] = null;
         target.orig.value[_fixedPosTag] = null;
         options.edgeCrossfilter.add([edge]);
-        chart.redraw();
+        chart.redrawGroup();
         select_nodes_group.node_set_changed([]);
     }
 
@@ -5366,12 +5386,70 @@ dc_graph.draw_graphs = function(options) {
         remove_behavior: remove_behavior
     });
 
+    // callbacks to modify data as it's being added
+    _behavior.addNode = property(null);
+    _behavior.addEdge = property(null);
+
     // whether to do relayout & redraw (true) or just refresh (false)
     _behavior.doRedraw = property(false);
 
     return _behavior;
 };
 
+
+function process_dot(callback, error, text) {
+    if(error) {
+        callback(error, null);
+        return;
+    }
+    var digraph = graphlibDot.parse(text);
+
+    var nodeNames = digraph.nodes();
+    var nodes = new Array(nodeNames.length);
+    nodeNames.forEach(function (name, i) {
+        var node = nodes[i] = digraph._nodes[nodeNames[i]];
+        node.id = i;
+        node.name = name;
+    });
+
+    var edgeNames = digraph.edges();
+    var edges = [];
+    edgeNames.forEach(function(e) {
+        var edge = digraph._edges[e];
+        edges.push({
+            source: digraph._nodes[edge.u].id,
+            target: digraph._nodes[edge.v].id,
+            sourcename: edge.u,
+            targetname: edge.v
+        });
+    });
+    var graph = {nodes: nodes, links: edges};
+    callback(null, graph);
+}
+
+function process_dsv(callback, error, data) {
+    if(error) {
+        callback(error, null);
+        return;
+    }
+    var keys = Object.keys(data[0]);
+    var source = keys[0], target = keys[1];
+    var nodes = d3.set(data.map(function(r) { return r[source]; }));
+    data.forEach(function(r) {
+        nodes.add(r[target]);
+    });
+    nodes = nodes.values().map(function(k) { return {name: k}; });
+    callback(null, {
+        nodes: nodes,
+        links: data.map(function(r, i) {
+            return {
+                key: i,
+                sourcename: r[source],
+                targetname: r[target]
+            };
+        })
+    });
+}
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
 dc_graph.load_graph = function() {
@@ -5407,35 +5485,11 @@ dc_graph.load_graph = function() {
     else if(/\.json$/.test(ignore_query(file1)))
         d3.json(file1, callback);
     else if(/\.gv|\.dot$/.test(ignore_query(file1)))
-        d3.text(file1, function (error, f) {
-            if(error) {
-                callback(error, null);
-                return;
-            }
-            var digraph = graphlibDot.parse(f);
-
-            var nodeNames = digraph.nodes();
-            var nodes = new Array(nodeNames.length);
-            nodeNames.forEach(function (name, i) {
-                var node = nodes[i] = digraph._nodes[nodeNames[i]];
-                node.id = i;
-                node.name = name;
-            });
-
-            var edgeNames = digraph.edges();
-            var edges = [];
-            edgeNames.forEach(function(e) {
-                var edge = digraph._edges[e];
-                edges.push({
-                    source: digraph._nodes[edge.u].id,
-                    target: digraph._nodes[edge.v].id,
-                    sourcename: edge.u,
-                    targetname: edge.v
-                });
-            });
-            var graph = {nodes: nodes, links: edges};
-            callback(null, graph);
-        });
+        d3.text(file1, process_dot.bind(null, callback));
+    else if(/\.psv$/.test(ignore_query(file1)))
+        d3.dsv('|', 'text/plain')(file1, process_dsv.bind(null, callback));
+    else if(/\.csv$/.test(ignore_query(file1)))
+        d3.csv(file1, process_dsv.bind(null, callback));
 };
 
 function can_get_graph_from_this(data) {
