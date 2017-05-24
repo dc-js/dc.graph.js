@@ -50,33 +50,43 @@ diagram
 var nodeDim = node_flat.crossfilter.dimension(function(d) { return d.timestamp; });
 var outnodes = dc.dataTable('#output-nodes')
         .dimension(nodeDim)
+        .size(Infinity)
         .group(function() { return ''; })
+        .sortBy(function(v) { return  v.timestamp; })
         .showGroups(false)
         .columns(['label']);
 
-function find_node_label(id) {
-    var n = node_flat.dimension.top(Infinity).find(function(d) {
-        return d.id === id;
-    });
-    return n ? n.label : '';
+var node_labels = {};
+function update_node_labels() {
+    node_labels = node_flat.dimension.top(Infinity).reduce(
+        function(p, v) {
+            p[v.id] = v.label;
+            return p;
+        }, {});
 }
 
 var edgeDim = edge_flat.crossfilter.dimension(function(d) { return d.timestamp; });
 var outedges = dc.dataTable('#output-edges')
         .dimension(edgeDim)
+        .size(Infinity)
         .group(function() { return ''; })
+        .sortBy(function(e) {
+            return node_labels[e.source] + ',' + node_labels[e.target];
+        })
         .showGroups(false)
+        .on('preRender', update_node_labels)
+        .on('preRedraw', update_node_labels)
         .columns([
             {
                 label: 'Source',
                 format: function(d) {
-                    return find_node_label(d.source);
+                    return node_labels[d.source];
                 }
             },
             {
                 label: 'Target',
                 format: function(d) {
-                    return find_node_label(d.target);
+                    return node_labels[d.target];
                 }
             }
         ]);
