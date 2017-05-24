@@ -1,3 +1,6 @@
+## 0.4.10
+* improved table sorting in network-building.html
+
 ## 0.4.9
 * `?layout=...` in [network-building.html](http://dc-js.github.io/dc.graph.js/network-building.html)
 
