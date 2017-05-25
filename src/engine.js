@@ -11,6 +11,14 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         params = [];
         allow_webworker = false;
         break;
+    case "circo":
+    case "dot":
+    case "neato":
+    case "osage":
+    case "twopi":
+        engine = dc_graph.graphviz_layout(null, layout);
+        params = [];
+        break;
     case 'cola':
     default:
         engine = dc_graph.cola_layout();
@@ -21,7 +29,7 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         if(args[p])
             engine[p](args[p]);
     });
-    if(allow_webworker && worker !== 'false')
+    if(allow_webworker && worker)
         engine = dc_graph.webworker_layout(engine);
     return engine;
 };

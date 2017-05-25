@@ -1501,11 +1501,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         function populate_cola(rnodes, redges) {
             rnodes.forEach(function(rn) {
                 var n = _nodes[rn.dcg_nodeKey];
+                if(!n) {
+                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send');
+                    return;
+                }
                 n.cola.x = rn.x;
                 n.cola.y = rn.y;
             });
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
+                if(!e) {
+                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
+                    return;
+                }
             });
         }
         _chart.layoutEngine()
