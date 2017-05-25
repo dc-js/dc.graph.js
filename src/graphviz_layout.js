@@ -23,7 +23,8 @@ dc_graph.graphviz_layout = function(id, layout) {
             return '  "' + v.dcg_nodeKey + '"';
         }));
         lines = lines.concat(edges.map(function(e) {
-            return '  "' + e.dcg_edgeSource + '" -> "' + e.dcg_edgeTarget + '"';
+            return '  "' + e.dcg_edgeSource + '" -> "' +
+                e.dcg_edgeTarget + '" [id="' + e.dcg_edgeKey + '"]';
         }));
         lines.push('}');
         lines.push('');
@@ -35,9 +36,16 @@ dc_graph.graphviz_layout = function(id, layout) {
         _dispatch.start();
         result = JSON.parse(result);
         var nodes = result.objects.map(function(n) {
-            
+            var pos = n.pos.split(',');
             return {
-                
+                dcg_nodeKey: n.name,
+                x: +pos[0],
+                y: +pos[1]
+            };
+        });
+        var edges = result.edges.map(function(e) {
+            return {
+                dcg_edgeKey: e.id
             };
         });
         _dispatch.end(nodes, edges);
