@@ -16,15 +16,21 @@ dc_graph.graphviz_layout = function(id, layout) {
     function init(options) {
     }
 
+    function encode_name(name) {
+        return name.replace(/^%/, '&#37;');
+    }
+    function decode_name(name) {
+        return name.replace(/^&#37;/, '%');
+    }
     function data(nodes, edges, constraints, options) {
         var lines = [];
         lines.push((layout === 'neato' ? 'graph' : 'digraph') + ' g {');
         lines = lines.concat(nodes.map(function(v) {
-            return '  "' + v.dcg_nodeKey + '"';
+            return '  "' + encode_name(v.dcg_nodeKey) + '"';
         }));
         lines = lines.concat(edges.map(function(e) {
-            return '  "' + e.dcg_edgeSource + '" -> "' +
-                e.dcg_edgeTarget + '" [id="' + e.dcg_edgeKey + '"]';
+            return '  "' + encode_name(e.dcg_edgeSource) + '" -> "' +
+                encode_name(e.dcg_edgeTarget) + '" [id="' + encode_name(e.dcg_edgeKey) + '"]';
         }));
         lines.push('}');
         lines.push('');
@@ -38,14 +44,14 @@ dc_graph.graphviz_layout = function(id, layout) {
         var nodes = result.objects.map(function(n) {
             var pos = n.pos.split(',');
             return {
-                dcg_nodeKey: n.name,
+                dcg_nodeKey: decode_name(n.name),
                 x: +pos[0],
                 y: +pos[1]
             };
         });
         var edges = result.edges.map(function(e) {
             return {
-                dcg_edgeKey: e.id
+                dcg_edgeKey: decode_name(e.id)
             };
         });
         _dispatch.end(nodes, edges);
