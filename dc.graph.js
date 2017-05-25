@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.5.0
+ *  dc.graph 0.5.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.5.0
+ * @version 0.5.1
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.5.0',
+    version: '0.5.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3935,7 +3935,7 @@ dc_graph.graphviz_layout = function(id, layout) {
         var result = Viz(_dotString, {format: 'json', engine: layout});
         _dispatch.start();
         result = JSON.parse(result);
-        var nodes = result.objects.map(function(n) {
+        var nodes = (result.objects || []).map(function(n) {
             var pos = n.pos.split(',');
             return {
                 dcg_nodeKey: decode_name(n.name),
@@ -3943,7 +3943,7 @@ dc_graph.graphviz_layout = function(id, layout) {
                 y: +pos[1]
             };
         });
-        var edges = result.edges.map(function(e) {
+        var edges = (result.edges || []).map(function(e) {
             return {
                 dcg_edgeKey: decode_name(e.id)
             };
