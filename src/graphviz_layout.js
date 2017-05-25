@@ -24,12 +24,13 @@ dc_graph.graphviz_layout = function(id, layout) {
     }
     function data(nodes, edges, constraints, options) {
         var lines = [];
-        lines.push((layout === 'neato' ? 'graph' : 'digraph') + ' g {');
+        var directed = layout !== 'neato';
+        lines.push((directed ? 'digraph' : 'graph') + ' g {');
         lines = lines.concat(nodes.map(function(v) {
             return '  "' + encode_name(v.dcg_nodeKey) + '"';
         }));
         lines = lines.concat(edges.map(function(e) {
-            return '  "' + encode_name(e.dcg_edgeSource) + '" -> "' +
+            return '  "' + encode_name(e.dcg_edgeSource) + (directed ? '" -> "' : '" -- "') +
                 encode_name(e.dcg_edgeTarget) + '" [id="' + encode_name(e.dcg_edgeKey) + '"]';
         }));
         lines.push('}');
