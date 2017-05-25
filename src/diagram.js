@@ -1501,6 +1501,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         function populate_cola(rnodes, redges) {
             rnodes.forEach(function(rn) {
                 var n = _nodes[rn.dcg_nodeKey];
+                if(!n) {
+                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send');
+                    return;
+                }
                 n.cola.x = rn.x;
                 n.cola.y = rn.y;
             });
