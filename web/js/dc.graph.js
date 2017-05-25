@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.10
+ *  dc.graph 0.5.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.10
+ * @version 0.5.0
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.10',
+    version: '0.5.0',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -2243,11 +2243,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         function populate_cola(rnodes, redges) {
             rnodes.forEach(function(rn) {
                 var n = _nodes[rn.dcg_nodeKey];
+                if(!n) {
+                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send');
+                    return;
+                }
                 n.cola.x = rn.x;
                 n.cola.y = rn.y;
             });
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
+                if(!e) {
+                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
+                    return;
+                }
             });
         }
         _chart.layoutEngine()
@@ -3204,6 +3212,14 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         params = [];
         allow_webworker = false;
         break;
+    case "circo":
+    case "dot":
+    case "neato":
+    case "osage":
+    case "twopi":
+        engine = dc_graph.graphviz_layout(null, layout);
+        params = [];
+        break;
     case 'cola':
     default:
         engine = dc_graph.cola_layout();
@@ -3214,7 +3230,7 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         if(args[p])
             engine[p](args[p]);
     });
-    if(allow_webworker && worker !== 'false')
+    if(allow_webworker && worker)
         engine = dc_graph.webworker_layout(engine);
     return engine;
 };
@@ -3625,6 +3641,13 @@ dc_graph.dagre_layout = function(id) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
+            /*
+              dagre does not seem to accept input positions
+              if(v.dcg_nodeFixed) {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+              }
+             */
         }, function(k, o) {
             _dagreGraph.setNode(k, o);
         }, function(k) {
@@ -3701,7 +3724,7 @@ dc_graph.dagre_layout = function(id) {
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {}
     });
-}
+};
 
 dc_graph.dagre_layout.scripts = ['d3.js', 'dagre.js'];
 
@@ -3867,6 +3890,106 @@ dc_graph.tree_layout = function(id) {
 };
 
 dc_graph.tree_layout.scripts = [];
+
+/**
+ * `dc_graph.graphviz_layout` is an adaptor for viz.js (graphviz) layouts in dc.graph.js
+ *
+ * In addition to the below layout attributes, `graphviz_layout` also implements the attributes from
+ * {@link dc_graph.graphviz_attrs graphviz_attrs}
+ * @class graphviz_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.graphviz_layout}
+ **/
+dc_graph.graphviz_layout = function(id, layout) {
+    var _layoutId = id || uuid();
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dotString;
+
+    function init(options) {
+    }
+
+    function encode_name(name) {
+        return name.replace(/^%/, '&#37;');
+    }
+    function decode_name(name) {
+        return name.replace(/^&#37;/, '%');
+    }
+    function data(nodes, edges, constraints, options) {
+        var lines = [];
+        var directed = layout !== 'neato';
+        lines.push((directed ? 'digraph' : 'graph') + ' g {');
+        lines = lines.concat(nodes.map(function(v) {
+            return '  "' + encode_name(v.dcg_nodeKey) + '"';
+        }));
+        lines = lines.concat(edges.map(function(e) {
+            return '  "' + encode_name(e.dcg_edgeSource) + (directed ? '" -> "' : '" -- "') +
+                encode_name(e.dcg_edgeTarget) + '" [id="' + encode_name(e.dcg_edgeKey) + '"]';
+        }));
+        lines.push('}');
+        lines.push('');
+        _dotString = lines.join('\n');
+    }
+
+    function start(options) {
+        var result = Viz(_dotString, {format: 'json', engine: layout});
+        _dispatch.start();
+        result = JSON.parse(result);
+        var nodes = result.objects.map(function(n) {
+            var pos = n.pos.split(',');
+            return {
+                dcg_nodeKey: decode_name(n.name),
+                x: +pos[0],
+                y: +pos[1]
+            };
+        });
+        var edges = result.edges.map(function(e) {
+            return {
+                dcg_edgeKey: decode_name(e.id)
+            };
+        });
+        _dispatch.end(nodes, edges);
+    }
+
+    function stop() {
+    }
+
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    return Object.assign(graphviz, {
+        layoutAlgorithm: function() {
+            return layout;
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        on: function(event, f) {
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(nodes, edges, constraints, options) {
+            data(nodes, edges, constraints, options);
+        },
+        start: function(options) {
+            start(options);
+        },
+        stop: function() {
+            stop();
+        },
+        optionNames: function() {
+            return graphviz_keys;
+        },
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {}
+    });
+}
+
 
 /**
 ## Legend
