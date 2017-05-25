@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.4.10  
+**Version**: 0.5.0  
 **Example**  
 ```js
 // Example chaining
@@ -113,6 +113,8 @@ chart.width(600)
         * [new dagre_layout([id])](#new_dc_graph.dagre_layout_new)
     * [.tree_layout](#dc_graph.tree_layout)
         * [new tree_layout([id])](#new_dc_graph.tree_layout_new)
+    * [.graphviz_layout](#dc_graph.graphviz_layout)
+        * [new graphviz_layout([id])](#new_dc_graph.graphviz_layout_new)
     * [.constraint_pattern](#dc_graph.constraint_pattern)
         * [new constraint_pattern(diagram, pattern)](#new_dc_graph.constraint_pattern_new)
     * [.tip](#dc_graph.tip)
@@ -1511,6 +1513,23 @@ In addition to the below layout attributes, `dagre_layout` also implements the a
 #### new tree_layout([id])
 `dc_graph.tree_layout` is a very simple and not very bright tree layout. It can draw any DAG, but
 tries to position the nodes as a tree.
+
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [id] | <code>String</code> | <code>uuid()</code> | Unique identifier |
+
+<a name="dc_graph.graphviz_layout"></a>
+
+### dc_graph.graphviz_layout
+**Kind**: static class of <code>[dc_graph](#dc_graph)</code>  
+<a name="new_dc_graph.graphviz_layout_new"></a>
+
+#### new graphviz_layout([id])
+`dc_graph.graphviz_layout` is an adaptor for viz.js (graphviz) layouts in dc.graph.js
+
+In addition to the below layout attributes, `graphviz_layout` also implements the attributes from
+[graphviz_attrs](#dc_graph.graphviz_attrs)
 
 
 | Param | Type | Default | Description |

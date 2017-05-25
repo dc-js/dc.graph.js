@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>dc.graph.js Source: dagre_layout.js</title>
+	<title>dc.graph.js Source: graphviz_layout.js</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -72,91 +72,69 @@
 		<div id="main">
 			
 
-		<h1 class="page-title">Source: dagre_layout.js</h1>
+		<h1 class="page-title">Source: graphviz_layout.js</h1>
     
 <section>
     <article>
         <pre
             class="sunlight-highlight-javascript linenums">/**
- * `dc_graph.dagre_layout` is an adaptor for dagre.js layouts in dc.graph.js
+ * `dc_graph.graphviz_layout` is an adaptor for viz.js (graphviz) layouts in dc.graph.js
  *
- * In addition to the below layout attributes, `dagre_layout` also implements the attributes from
+ * In addition to the below layout attributes, `graphviz_layout` also implements the attributes from
  * {@link dc_graph.graphviz_attrs graphviz_attrs}
- * @class dagre_layout
+ * @class graphviz_layout
  * @memberof dc_graph
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.dagre_layout}
+ * @return {dc_graph.graphviz_layout}
  **/
-dc_graph.dagre_layout = function(id) {
+dc_graph.graphviz_layout = function(id, layout) {
     var _layoutId = id || uuid();
-    var _dagreGraph = null, _tick, _done;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
-    // node and edge objects preserved from one iteration
-    // to the next (as long as the object is still in the layout)
-    var _nodes = {}, _edges = {};
+    var _dotString;
 
     function init(options) {
-        // Create a new directed graph
-        _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
-
-        // Set an object for the graph label
-        _dagreGraph.setGraph({rankdir: options.rankdir, nodesep: options.nodesep, ranksep: options.ranksep});
-
-        // Default to assigning a new object as a label for each new edge.
-        _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
     }
 
+    function encode_name(name) {
+        return name.replace(/^%/, '&amp;#37;');
+    }
+    function decode_name(name) {
+        return name.replace(/^&amp;#37;/, '%');
+    }
     function data(nodes, edges, constraints, options) {
-        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
-            return v.dcg_nodeKey;
-        }, function(v1, v) {
-            v1.dcg_nodeKey = v.dcg_nodeKey;
-            v1.width = v.width;
-            v1.height = v.height;
-            /*
-              dagre does not seem to accept input positions
-              if(v.dcg_nodeFixed) {
-                v1.x = v.dcg_nodeFixed.x;
-                v1.y = v.dcg_nodeFixed.y;
-              }
-             */
-        }, function(k, o) {
-            _dagreGraph.setNode(k, o);
-        }, function(k) {
-            _dagreGraph.removeNode(k);
-        });
-        var wedges = regenerate_objects(_edges, edges, function(e) {
-            return e.dcg_edgeKey;
-        }, function(e1, e) {
-            e1.dcg_edgeKey = e.dcg_edgeKey;
-            e1.dcg_edgeSource = e.dcg_edgeSource;
-            e1.dcg_edgeTarget = e.dcg_edgeTarget;
-        }, function(k, o, e) {
-            _dagreGraph.setEdge(e.dcg_edgeSource, e.dcg_edgeTarget, o);
-        }, function(k, e) {
-            _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget, e.dcg_edgeKey);
-        });
-
-        function dispatchState(event) {
-            _dispatch[event](
-                wnodes,
-                wedges.map(function(e) {
-                    return {dcg_edgeKey: e.dcg_edgeKey};
-                })
-            );
-        }
-        _tick = function() {
-            dispatchState('tick');
-        };
-        _done = function() {
-            dispatchState('end');
-        };
+        var lines = [];
+        var directed = layout !== 'neato';
+        lines.push((directed ? 'digraph' : 'graph') + ' g {');
+        lines = lines.concat(nodes.map(function(v) {
+            return '  "' + encode_name(v.dcg_nodeKey) + '"';
+        }));
+        lines = lines.concat(edges.map(function(e) {
+            return '  "' + encode_name(e.dcg_edgeSource) + (directed ? '" -> "' : '" -- "') +
+                encode_name(e.dcg_edgeTarget) + '" [id="' + encode_name(e.dcg_edgeKey) + '"]';
+        }));
+        lines.push('}');
+        lines.push('');
+        _dotString = lines.join('\n');
     }
 
     function start(options) {
+        var result = Viz(_dotString, {format: 'json', engine: layout});
         _dispatch.start();
-        dagre.layout(_dagreGraph);
-        _done();
+        result = JSON.parse(result);
+        var nodes = result.objects.map(function(n) {
+            var pos = n.pos.split(',');
+            return {
+                dcg_nodeKey: decode_name(n.name),
+                x: +pos[0],
+                y: +pos[1]
+            };
+        });
+        var edges = result.edges.map(function(e) {
+            return {
+                dcg_edgeKey: decode_name(e.id)
+            };
+        });
+        _dispatch.end(nodes, edges);
     }
 
     function stop() {
@@ -165,7 +143,7 @@ dc_graph.dagre_layout = function(id) {
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
     return Object.assign(graphviz, {
         layoutAlgorithm: function() {
-            return 'dagre';
+            return layout;
         },
         layoutId: function() {
             return _layoutId;
@@ -196,9 +174,8 @@ dc_graph.dagre_layout = function(id) {
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {}
     });
-};
+}
 
-dc_graph.dagre_layout.scripts = ['d3.js', 'dagre.js'];
 </pre>
     </article>
 </section>
