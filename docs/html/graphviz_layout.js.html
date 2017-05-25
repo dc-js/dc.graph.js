@@ -121,7 +121,7 @@ dc_graph.graphviz_layout = function(id, layout) {
         var result = Viz(_dotString, {format: 'json', engine: layout});
         _dispatch.start();
         result = JSON.parse(result);
-        var nodes = result.objects.map(function(n) {
+        var nodes = (result.objects || []).map(function(n) {
             var pos = n.pos.split(',');
             return {
                 dcg_nodeKey: decode_name(n.name),
@@ -129,7 +129,7 @@ dc_graph.graphviz_layout = function(id, layout) {
                 y: +pos[1]
             };
         });
-        var edges = result.edges.map(function(e) {
+        var edges = (result.edges || []).map(function(e) {
             return {
                 dcg_edgeKey: decode_name(e.id)
             };
