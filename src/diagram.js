@@ -1510,6 +1510,10 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
+                if(!e) {
+                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
+                    return;
+                }
             });
         }
         _chart.layoutEngine()
