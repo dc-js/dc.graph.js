@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.4.10
+ *  dc.graph 0.5.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.4.10
+ * @version 0.5.0
  * @example
  * // Example chaining
  * chart.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.4.10',
+    version: '0.5.0',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -226,6 +226,13 @@ dc_graph.dagre_layout = function(id) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
+            /*
+              dagre does not seem to accept input positions
+              if(v.dcg_nodeFixed) {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+              }
+             */
         }, function(k, o) {
             _dagreGraph.setNode(k, o);
         }, function(k) {
@@ -302,7 +309,7 @@ dc_graph.dagre_layout = function(id) {
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {}
     });
-}
+};
 
 dc_graph.dagre_layout.scripts = ['d3.js', 'dagre.js'];
 
