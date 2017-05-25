@@ -34,6 +34,13 @@ dc_graph.dagre_layout = function(id) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
+            /*
+              dagre does not seem to accept input positions
+              if(v.dcg_nodeFixed) {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+              }
+             */
         }, function(k, o) {
             _dagreGraph.setNode(k, o);
         }, function(k) {
