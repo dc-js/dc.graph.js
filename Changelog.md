@@ -1,3 +1,7 @@
+## 0.5.1
+* graphviz layout don't crash on empty graph
+* support for graphviz in [network-building.html](http://dc-js.github.io/dc.graph.js/network-building.html)
+
 ## 0.5.0
 * basic support for graphviz layouts via [viz.js](https://github.com/mdaines/viz.js/). so far this
   only does node positions because dc.graph.js doesn't support bent edges yet. dot, neato, osage, twopi
