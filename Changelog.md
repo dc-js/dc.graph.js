@@ -1,3 +1,8 @@
+## 0.5.0
+* basic support for graphviz layouts via [viz.js](https://github.com/mdaines/viz.js/). so far this
+  only does node positions because dc.graph.js doesn't support bent edges yet. dot, neato, osage, twopi
+  layouts all work. webworkers are not supported yet (but it's fast!).
+
 ## 0.4.10
 * improved table sorting in network-building.html
 
