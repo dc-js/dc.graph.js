@@ -8,7 +8,7 @@
  * @param {String} [id=uuid()] - Unique identifier
  * @return {dc_graph.graphviz_layout}
  **/
-dc_graph.graphviz_layout = function(id, layout) {
+dc_graph.graphviz_layout = function(id, layout, server) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _dotString;
@@ -52,10 +52,8 @@ dc_graph.graphviz_layout = function(id, layout) {
         _dotString = lines.join('\n');
     }
 
-    function start(options) {
-        var result = Viz(_dotString, {format: 'json', engine: layout});
+    function process_response(error, result) {
         _dispatch.start();
-        result = JSON.parse(result);
         var nodes = (result.objects || []).map(function(n) {
             var pos = n.pos.split(',');
             return {
@@ -70,6 +68,19 @@ dc_graph.graphviz_layout = function(id, layout) {
             };
         });
         _dispatch.end(nodes, edges);
+    }
+
+    function start(options) {
+        if(server) {
+            d3.json(server)
+                .header("Content-type", "application/x-www-form-urlencoded")
+                .post('layouttool=' + layout + '&' + encodeURIComponent(_dotString), process_response);
+        }
+        else {
+            var result = Viz(_dotString, {format: 'json', engine: layout});
+            result = JSON.parse(result);
+            process_response(null, result);
+        }
     }
 
     function stop() {

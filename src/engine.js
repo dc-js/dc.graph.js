@@ -16,7 +16,7 @@ dc_graph.spawn_engine = function(layout, args, worker) {
     case "neato":
     case "osage":
     case "twopi":
-        engine = dc_graph.graphviz_layout(null, layout);
+        engine = dc_graph.graphviz_layout(null, layout, args.server);
         params = [];
         break;
     case 'cola':
