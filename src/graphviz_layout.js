@@ -22,16 +22,30 @@ dc_graph.graphviz_layout = function(id, layout) {
     function decode_name(name) {
         return name.replace(/^&#37;/, '%');
     }
+    function stringize_property(prop, value) {
+        return [prop, '"' + value + '"'].join('=');
+    }
+    function stringize_properties(props) {
+        return '[' + props.join(', ') + ']';
+    }
     function data(nodes, edges, constraints, options) {
         var lines = [];
         var directed = layout !== 'neato';
         lines.push((directed ? 'digraph' : 'graph') + ' g {');
         lines = lines.concat(nodes.map(function(v) {
-            return '  "' + encode_name(v.dcg_nodeKey) + '"';
+            var props = [];
+            if(v.dcg_nodeFixed)
+                props.push(stringize_property('pos', [
+                    v.dcg_nodeFixed.x,
+                    v.dcg_nodeFixed.y
+                ].join(',')));
+            return '  "' + encode_name(v.dcg_nodeKey) + '" ' + stringize_properties(props);
         }));
         lines = lines.concat(edges.map(function(e) {
             return '  "' + encode_name(e.dcg_edgeSource) + (directed ? '" -> "' : '" -- "') +
-                encode_name(e.dcg_edgeTarget) + '" [id="' + encode_name(e.dcg_edgeKey) + '"]';
+                encode_name(e.dcg_edgeTarget) + '" ' + stringize_properties([
+                    stringize_property('id', encode_name(e.dcg_edgeKey))
+                ]);
         }));
         lines.push('}');
         lines.push('');
