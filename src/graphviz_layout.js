@@ -73,9 +73,14 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             };
         });
         var edges = (result.edges || []).map(function(e) {
-            return {
+            var e2 = {
                 dcg_edgeKey: decode_name(e.id)
             };
+            if(e._draw_) {
+                var directive = e._draw_.find(function(d) { return d.op && d.points; });
+                e2.points = directive.points;
+            }
+            return e2;
         });
         _dispatch.end(nodes, edges);
     }

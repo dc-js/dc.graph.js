@@ -1512,6 +1512,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
                     return;
                 }
+                //e.cola.points = re.points;
             });
         }
         _chart.layoutEngine()
@@ -1621,6 +1622,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function calc_edge_path(d, age, sx, sy, tx, ty) {
+        // if(d.cola.points)
+        //     return d.cola.points;
         if(!d.pos[age]) {
             var parallel = d.parallel;
             var source = d.source, target = d.target;
