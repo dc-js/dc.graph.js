@@ -762,7 +762,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     // but attempt to implement most of that interface, copying some of the most basic stuff
     var _chart = dc.marginMixin({});
     _chart.__dcFlag__ = dc.utils.uniqueId();
-    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
+    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null, _splineLayer = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _stats = {};
@@ -1795,6 +1795,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _nodes[id] ? _nodes[id].orig : null;
     };
 
+    _chart.getNodeAllInfo = function(id) {
+        return _nodes[id] ? _nodes[id] : null;
+    };
+
     /**
      * Instructs cola.js to fit the connected components.
      *
@@ -2688,6 +2692,42 @@ dc_graph.diagram = function (parent, chartGroup) {
         edgeHover.attr('d', render_edge_path('new'));
     }
 
+    // draw the spline for paths
+    _chart.drawSpline = function (paths, pathprops) {
+        var _getNodePosition = function(path) {
+            var plist = [];
+            for(var i = 0; i < path.element_list.length; i ++) {
+                var uid = path.element_list[i].property_map.ecomp_uid;
+                var node = _chart.getNodeAllInfo(uid);
+                if(node !== null) {
+                    plist.push({'x': node.cola.x, 'y': node.cola.y});
+                }
+            }
+            return plist;
+        };
+
+        var _drawSpline = function(path, i, array) {
+            var plist = _getNodePosition(path);
+            if(plist.length > 0) {
+
+                var line = d3.svg.line()
+                    .interpolate("cardinal")
+                    .x(function(d) { return d.x; })
+                    .y(function(d) { return d.y; });
+
+                _splineLayer.append("svg:path")
+                    .attr('class', 'edge')
+                    .attr('d', line.tension(0)(plist))
+                    .attr('stroke', pathprops.edgeStroke || _chart.edgeStroke())
+                    .attr('stroke-width', pathprops.edgeStrokeWidth || _chart.edgeStrokeWidth())
+                    .attr('opacity', pathprops.edgeOpacity || 1)
+                    .attr('fill', 'none');
+            }
+        };
+
+        paths.forEach(_drawSpline);
+    };
+
     /**
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
@@ -2708,6 +2748,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('class', 'edge-layer');
         _nodeLayer = _g.append('g')
             .attr('class', 'node-layer');
+        _splineLayer = _g.append('g')
+            .attr('class', 'spline-layer');
 
         if(_chart.legend())
             _chart.legend().render();
@@ -5119,6 +5161,165 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
             highlight_paths_group.on('hover_changed.' + _anchor, p ? hover_changed : null);
             highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
+        }
+    });
+
+    // whether to do relayout & redraw (true) or just refresh (false)
+    _behavior.doRedraw = property(false);
+
+    return _behavior;
+};
+
+
+dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, pathsgroup) {
+    var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
+    pathprops = pathprops || {};
+    hoverprops = hoverprops || {};
+    selectprops = selectprops || {};
+    var node_on_paths = {}, edge_on_paths = {}, selected = null, hoverpaths = null;
+    var _anchor;
+
+    function refresh() {
+        if(_behavior.doRedraw())
+            _behavior.parent().relayout().redraw();
+        else
+            _behavior.parent().refresh();
+    }
+
+    function paths_changed(nop, eop, paths) {
+        selected = hoverpaths = null;
+        // it would be difficult to check if no change, but at least check if changing from empty to empty
+        if(Object.keys(node_on_paths).length === 0 && Object.keys(nop).length === 0 &&
+           Object.keys(edge_on_paths).length === 0 && Object.keys(eop).length === 0)
+            return;
+        node_on_paths = nop;
+        edge_on_paths = eop;
+
+        //refresh();
+        _behavior.parent().drawSpline(paths, pathprops);
+    }
+
+    function hover_changed(hp) {
+        if(hp !== hoverpaths) {
+            hoverpaths = hp;
+            refresh();
+        }
+    }
+
+    function select_changed(sp) {
+        if(sp !== selected) {
+            selected = sp;
+            refresh();
+        }
+    }
+
+    function clear_all_highlights() {
+        node_on_paths = {};
+        edge_on_paths = {};
+    }
+
+    function contains_path(paths) {
+        return function(path) {
+            return paths.indexOf(path)>=0;
+        };
+    }
+
+    // sigh
+    function doesnt_contain_path(paths) {
+        var cp = contains_path(paths);
+        return function(path) {
+            return !cp(path);
+        };
+    }
+
+    function intersect_paths(pathsA, pathsB) {
+        if(!pathsA || !pathsB)
+            return false;
+        return pathsA.some(contains_path(pathsB));
+    }
+
+    function toggle_paths(pathsA, pathsB) {
+        if(!pathsA)
+            return pathsB;
+        else if(!pathsB)
+            return pathsA;
+        if(pathsB.every(contains_path(pathsA)))
+            return pathsA.filter(doesnt_contain_path(pathsB));
+        else return pathsA.concat(pathsB.filter(doesnt_contain_path(pathsA)));
+    }
+
+    function add_behavior(chart, node, edge, ehover) {
+        chart
+            .cascade(200, true, conditional_properties(function(n) {
+                return !!node_on_paths[chart.nodeKey.eval(n)];
+            }, function(e) {
+                return !!edge_on_paths[chart.edgeKey.eval(e)];
+            }, pathprops))
+            .cascade(300, true, conditional_properties(function(n) {
+                return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], selected);
+            }, function(e) {
+                return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], selected);
+            }, selectprops))
+            .cascade(400, true, conditional_properties(function(n) {
+                return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], hoverpaths);
+            }, function(e) {
+                return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], hoverpaths);
+            }, hoverprops));
+
+        node
+            .on('mouseover.highlight-paths', function(n) {
+                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(n)] || null);
+            })
+            .on('mouseout.highlight-paths', function(n) {
+                highlight_paths_group.hover_changed(null);
+            })
+            .on('click.highlight-paths', function(n) {
+                highlight_paths_group.select_changed(toggle_paths(selected, node_on_paths[chart.nodeKey.eval(n)]));
+            });
+
+
+        //ehover
+            //.on('mouseover.highlight-paths', function(e) {
+                //highlight_paths_group.hover_changed(edge_on_paths[chart.edgeKey.eval(e)] || null);
+            //})
+            //.on('mouseout.highlight-paths', function(e) {
+                //highlight_paths_group.hover_changed(null);
+            //})
+            //.on('click.highlight-paths', function(n) {
+                //highlight_paths_group.select_changed(toggle_paths(selected, edge_on_paths[chart.nodeKey.eval(n)]));
+            //});
+
+    }
+
+    function remove_behavior(chart, node, edge, ehover) {
+        node
+            .on('mouseover.highlight-paths', null)
+            .on('mouseout.highlight-paths', null)
+            .on('click.highlight-paths', null);
+        //ehover
+            //.on('mouseover.highlight-paths', null)
+            //.on('mouseout.highlight-paths', null)
+            //.on('click.highlight-paths', null);
+        clear_all_highlights();
+        chart
+            .cascade(200, false, pathprops)
+            .cascade(300, false, selectprops)
+            .cascade(400, false, hoverprops);
+    }
+
+    var _behavior = dc_graph.behavior('highlight-paths', {
+        add_behavior: add_behavior,
+        remove_behavior: function(chart, node, edge, ehover) {
+            remove_behavior(chart, node, edge, ehover);
+            return this;
+        },
+        parent: function(p) {
+            if(p)
+                _anchor = p.anchorName();
+            // else we should have received anchor earlier
+            highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
+            //highlight_paths_group.on('hover_changed.' + _anchor, p ? hover_changed : null);
+            //highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
         }
     });
 
