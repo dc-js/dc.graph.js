@@ -218,15 +218,14 @@ source(function(error, data) {
         return Array.prototype.concat.apply([], constraintses);
     }
 
+    var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
     diagram
         .width($(window).width())
         .height($(window).height())
-        .layoutAlgorithm(layoutAlgorithm)
+        .layoutEngine(engine)
         .timeLimit(timeLimit)
         .transitionDuration(transition)
-        .tickSize(tickSize)
         .stageTransitions(stage)
-        .showLayoutSteps(showSteps)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
@@ -239,9 +238,6 @@ source(function(error, data) {
         .nodeStrokeWidth(nodeStrokeWidth)
         .nodeFixed(appLayout && app_layouts[appLayout].node_fixed)
         .constrain(constrain)
-        .lengthStrategy(generate ? 'individual' :
-                        useAppLayout ? app_layouts[appLayout].lengthStrategy || 'none' :
-                        'symmetric')
         .edgeArrowhead(function(kv) {
             return kv.value.undirected ? null : 'vee';
         })
@@ -255,9 +251,17 @@ source(function(error, data) {
         })
         .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
 
+    if(engine.layoutAlgorithm() === 'cola') {
+        engine
+            .showLayoutSteps(showSteps)
+            .tickSize(tickSize)
+            .lengthStrategy(generate ? 'individual' :
+                            useAppLayout ? app_layouts[appLayout].lengthStrategy || 'none' :
+                            'symmetric');
+        if(linkLength)
+            engine.baseLength(linkLength);
+    }
     appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
-    if(linkLength)
-        diagram.baseLength(linkLength);
     if(randomize) {
         diagram.nodeOrdering(function(kv) { return kv.value.order; })
             .edgeOrdering(function(kv) { return kv.value.order; });
