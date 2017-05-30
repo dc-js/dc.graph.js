@@ -32,13 +32,20 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         var lines = [];
         var directed = layout !== 'neato';
         lines.push((directed ? 'digraph' : 'graph') + ' g {');
+        lines.push('graph ' + stringize_properties([
+            stringize_property('nodesep', graphviz.nodesep()/72),
+            stringize_property('ranksep', graphviz.ranksep()/72),
+            stringize_property('rankdir', graphviz.rankdir())
+        ]));
         lines = lines.concat(nodes.map(function(v) {
             var props = [];
             if(v.dcg_nodeFixed)
                 props.push(stringize_property('pos', [
                     v.dcg_nodeFixed.x,
-                    v.dcg_nodeFixed.y
+                    1000-v.dcg_nodeFixed.y
                 ].join(',')));
+            props.push(stringize_property('width', v.width/72));
+            props.push(stringize_property('height', v.height/72));
             return '  "' + encode_name(v.dcg_nodeKey) + '" ' + stringize_properties(props);
         }));
         lines = lines.concat(edges.map(function(e) {
@@ -54,12 +61,13 @@ dc_graph.graphviz_layout = function(id, layout, server) {
 
     function process_response(error, result) {
         _dispatch.start();
+        var bb = result.bb.split(',').map(function(x) { return +x; });
         var nodes = (result.objects || []).map(function(n) {
             var pos = n.pos.split(',');
             return {
                 dcg_nodeKey: decode_name(n.name),
                 x: +pos[0],
-                y: +pos[1]
+                y: bb[3] - pos[1]
             };
         });
         var edges = (result.edges || []).map(function(e) {
