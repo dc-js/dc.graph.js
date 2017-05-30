@@ -1269,27 +1269,20 @@ dc_graph.diagram = function (parent, chartGroup) {
         // annotate parallel edges so we can draw them specially
         if(_chart.parallelEdgeOffset()) {
             var em = new Array(wnodes.length);
-            for(var i = 0; i < em.length; ++i) {
-                em[i] = new Array(em.length); // technically could be diagonal array
-                for(var j = 0; j < em.length; ++j)
+            for(var i = 0; i < wnodes.length; ++i) {
+                em[i] = new Array(wnodes.length); // technically could be diagonal array
+                for(var j = 0; j < wnodes.length; ++j)
                     em[i][j] = {
-                        n: 0,
-                        ports: {
-                            rev: []
-                        }
+                        rev: []
                     };
             }
             wedges.forEach(function(e) {
                 var min = Math.min(e.source.index, e.target.index),
                     max = Math.max(e.source.index, e.target.index);
-                e.parallel = em[min][max].n++;
-                e.ports = em[min][max].ports;
+                e.parallel = em[min][max].rev.length;
+                e.ports = em[min][max];
                 e.ports.rev.push(min !== e.source.index);
             });
-            for(i = 0; i < em.length; ++i)
-                for(j = 0; j < em.length; ++j)
-                    if(em[i][j].n)
-                        em[i][j].ports.n = em[i][j].n;
         }
 
         // create edge SVG elements
@@ -1630,7 +1623,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _chart.nodeStrokeWidth.eval(d.target) / 2;
             d.ports[age] = new Array(d.ports.n);
             var reversedness = d.ports.rev[d.parallel];
-            for(var p = 0; p < d.ports.n; ++p) {
+            for(var p = 0; p < d.ports.rev.length; ++p) {
                 // alternate parallel edges over, then under
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
