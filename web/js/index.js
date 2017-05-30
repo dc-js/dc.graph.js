@@ -252,8 +252,9 @@ source(function(error, data) {
         .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
 
     if(engine.layoutAlgorithm() === 'cola') {
+        diagram
+            .showLayoutSteps(showSteps);
         engine
-            .showLayoutSteps(showSteps)
             .tickSize(tickSize)
             .lengthStrategy(generate ? 'individual' :
                             useAppLayout ? app_layouts[appLayout].lengthStrategy || 'none' :
