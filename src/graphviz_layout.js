@@ -38,14 +38,16 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             stringize_property('rankdir', graphviz.rankdir())
         ]));
         lines = lines.concat(nodes.map(function(v) {
-            var props = [];
+            var props = [
+                stringize_property('width', v.width/72),
+                stringize_property('height', v.height/72),
+                stringize_property('fixedsize', true)
+            ];
             if(v.dcg_nodeFixed)
                 props.push(stringize_property('pos', [
                     v.dcg_nodeFixed.x,
                     1000-v.dcg_nodeFixed.y
                 ].join(',')));
-            props.push(stringize_property('width', v.width/72));
-            props.push(stringize_property('height', v.height/72));
             return '  "' + encode_name(v.dcg_nodeKey) + '" ' + stringize_properties(props);
         }));
         lines = lines.concat(edges.map(function(e) {
