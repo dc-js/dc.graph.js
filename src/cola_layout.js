@@ -217,13 +217,11 @@ dc_graph.cola_layout = function(id) {
                 if(_flowLayout)
                     return _flowLayout;
                 var dir = engine.rankdir();
-                if(!dir)
-                    return null;
-                var axis = (dir === 'LR' || dir === 'RL') ? 'x' : 'y';
-                return {
-                    axis: axis,
-                    minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2
-                };
+                switch(dir) {
+                case 'LR': return {axis: 'x', minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2};
+                case 'TB': return {axis: 'y', minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2};
+                default: return null; // RL, BT do not appear to be possible (negative separation) (?)
+                }
             }
             _flowLayout = flow;
             return this;
