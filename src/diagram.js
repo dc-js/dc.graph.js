@@ -20,7 +20,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     // but attempt to implement most of that interface, copying some of the most basic stuff
     var _chart = dc.marginMixin({});
     _chart.__dcFlag__ = dc.utils.uniqueId();
-    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
+    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null, _splineLayer = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _stats = {};
@@ -1053,6 +1053,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _nodes[id] ? _nodes[id].orig : null;
     };
 
+    _chart.getNodeAllInfo = function(id) {
+        return _nodes[id] ? _nodes[id] : null;
+    };
+
     /**
      * Instructs cola.js to fit the connected components.
      *
@@ -1946,6 +1950,42 @@ dc_graph.diagram = function (parent, chartGroup) {
         edgeHover.attr('d', render_edge_path('new'));
     }
 
+    // draw the spline for paths
+    _chart.drawSpline = function (paths, pathprops) {
+        var _getNodePosition = function(path) {
+            var plist = [];
+            for(var i = 0; i < path.element_list.length; i ++) {
+                var uid = path.element_list[i].property_map.ecomp_uid;
+                var node = _chart.getNodeAllInfo(uid);
+                if(node !== null) {
+                    plist.push({'x': node.cola.x, 'y': node.cola.y});
+                }
+            }
+            return plist;
+        };
+
+        var _drawSpline = function(path, i, array) {
+            var plist = _getNodePosition(path);
+            if(plist.length > 0) {
+
+                var line = d3.svg.line()
+                    .interpolate("cardinal")
+                    .x(function(d) { return d.x; })
+                    .y(function(d) { return d.y; });
+
+                _splineLayer.append("svg:path")
+                    .attr('class', 'edge')
+                    .attr('d', line.tension(0)(plist))
+                    .attr('stroke', pathprops.edgeStroke || _chart.edgeStroke())
+                    .attr('stroke-width', pathprops.edgeStrokeWidth || _chart.edgeStrokeWidth())
+                    .attr('opacity', pathprops.edgeOpacity || 1)
+                    .attr('fill', 'none');
+            }
+        };
+
+        paths.forEach(_drawSpline);
+    };
+
     /**
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
@@ -1966,6 +2006,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('class', 'edge-layer');
         _nodeLayer = _g.append('g')
             .attr('class', 'node-layer');
+        _splineLayer = _g.append('g')
+            .attr('class', 'spline-layer');
 
         if(_chart.legend())
             _chart.legend().render();
