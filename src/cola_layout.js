@@ -130,6 +130,9 @@ dc_graph.cola_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
             _dispatch.on(event, f);

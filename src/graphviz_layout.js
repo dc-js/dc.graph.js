@@ -104,6 +104,9 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return false;
+        },
         on: function(event, f) {
             _dispatch.on(event, f);
             return this;
