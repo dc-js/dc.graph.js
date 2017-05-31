@@ -78,7 +78,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             };
             if(e._draw_) {
                 var directive = e._draw_.find(function(d) { return d.op && d.points; });
-                e2.points = directive.points;
+                e2.points = directive.points.map(function(p) { return {x: p[0], y: bb[3] - p[1]}; });
             }
             return e2;
         });
