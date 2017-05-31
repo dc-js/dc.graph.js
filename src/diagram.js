@@ -1512,7 +1512,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
                     return;
                 }
-                //e.cola.points = re.points;
+                if(re.points)
+                    e.cola.points = re.points;
             });
         }
         _chart.layoutEngine()
@@ -1621,10 +1622,25 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
+    function calculate_arrowhead_orientation(points) {
+        var spos = points[0], tpos = points[points.length-1];
+        var near = bezier_point(points, 0.75);
+        return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
+    }
+
     function calc_edge_path(d, age, sx, sy, tx, ty) {
-        // if(d.cola.points)
-        //     return d.cola.points;
-        if(!d.pos[age]) {
+        if(d.cola.points) {
+            if(d.pos.new)
+                d.pos.old = d.pos.new;
+            d.pos.new = d.pos.old = {
+                path: {
+                    points: d.cola.points,
+                    bezDegree: 3
+                },
+                orient: calculate_arrowhead_orientation(d.cola.points)
+            };
+        }
+        else if(!d.pos[age]) {
             var parallel = d.parallel;
             var source = d.source, target = d.target;
             if(d.source.index > d.target.index) {
@@ -1648,11 +1664,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                                               );
                 if(parallel.rev[p])
                     path.points.reverse();
-                var spos = path.points[0], tpos = path.points[path.points.length-1];
-                var near = bezier_point(path.points, 0.75);
                 parallel.edges[p].pos[age] = {
                     path: path,
-                    orient: Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad'
+                    orient: calculate_arrowhead_orientation(path.points)
                 };
             }
         }
