@@ -1,5 +1,4 @@
 dc_graph.spawn_engine = function(layout, args, worker) {
-    var allow_webworker = true;
     var engine, params;
     switch(layout) {
     case 'dagre':
@@ -9,7 +8,6 @@ dc_graph.spawn_engine = function(layout, args, worker) {
     case 'tree':
         engine = dc_graph.tree_layout();
         params = [];
-        allow_webworker = false;
         break;
     case "circo":
     case "dot":
@@ -29,7 +27,7 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         if(args[p])
             engine[p](args[p]);
     });
-    if(allow_webworker && worker)
+    if(engine.supportsWebworker() && worker)
         engine = dc_graph.webworker_layout(engine);
     return engine;
 };

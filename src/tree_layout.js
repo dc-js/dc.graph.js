@@ -122,6 +122,9 @@ dc_graph.tree_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return false;
+        },
         on: function(event, f) {
             _dispatch.on(event, f);
             return this;
