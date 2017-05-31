@@ -35,11 +35,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         return function(value) {
             if(!_chart.layoutEngine())
                 _chart.layoutAlgorithm('cola', true);
-            console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated. Call the corresponding method on the layout engine instead.');
             var engine = _chart.layoutEngine();
             if(engine.getEngine)
                 engine = engine.getEngine();
-            engine[name](value);
+            if(engine[name]) {
+                console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated. Call the corresponding method on the layout engine instead.');
+                engine[name](value);
+            } else
+                console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated, and it is not supported for the "' + engine.layoutAlgorithm() + '" layout algorithm: ignored.');
             return this;
         };
     }
