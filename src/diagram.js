@@ -20,7 +20,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     // but attempt to implement most of that interface, copying some of the most basic stuff
     var _diagram = dc.marginMixin({});
     _diagram.__dcFlag__ = dc.utils.uniqueId();
-    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
+    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null, _splineLayer = null;
     var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
@@ -2311,14 +2311,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         _g = _svg.append('g')
             .attr('class', 'draw');
 
-        var layers = ['edge-layer', 'node-layer'];
+        var layers = ['edge-layer', 'node-layer', 'spline-layer'];
         if(_diagram.edgesInFront())
-            layers.reverse();
+            layers ['node-layer', 'edge-layer', 'spline-layer'];
         _g.selectAll('g').data(layers)
           .enter().append('g')
             .attr('class', function(l) { return l; });
         _edgeLayer = _g.selectAll('g.edge-layer');
         _nodeLayer = _g.selectAll('g.node-layer');
+        _splineLayer = _g.selectAll('g.spline-layer');
 
         if(_diagram.legend())
             _diagram.legend().render();
