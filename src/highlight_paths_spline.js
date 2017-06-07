@@ -27,7 +27,8 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
     }
 
     // convert original path data into <d>
-    function parsePath(p) {
+    function parsePath(p, lineTension) {
+        lineTension = lineTension || 0.6;
         var _chart = _behavior.parent();
 
         function _getNodePosition(path) {
@@ -48,7 +49,7 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
             .interpolate("cardinal")
             .x(function(d) { return d.x; })
             .y(function(d) { return d.y; })
-            .tension(0);
+            .tension(lineTension);
 
         return line(path_coord);
     }
@@ -64,7 +65,7 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
         var edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
             .attr('id', function(d, i) { return "spline-path-"+i; })
-            .attr('d', function(d) { return parsePath(d); })
+            .attr('d', function(d) { return parsePath(d, pathprops.lineTension); })
             .attr('stroke', _chart.edgeStroke() || 'black')
             .attr('stroke-width', _chart.edgeStrokeWidth() || 1)
             .attr('opacity', pathprops.edgeOpacity || 1)
