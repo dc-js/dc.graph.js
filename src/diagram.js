@@ -2262,11 +2262,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function margined_bounds() {
+        var bounds = _bounds || {left: 0, top: 0, right: 0, bottom: 0};
         return {
-            left: _bounds.left - _chart.margins().left,
-            top: _bounds.top - _chart.margins().top,
-            right: _bounds.right + _chart.margins().right,
-            bottom: _bounds.bottom + _chart.margins().bottom
+            left: bounds.left - _chart.margins().left,
+            top: bounds.top - _chart.margins().top,
+            right: bounds.right + _chart.margins().right,
+            bottom: bounds.bottom + _chart.margins().bottom
         };
     }
 
