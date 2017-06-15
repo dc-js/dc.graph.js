@@ -95,13 +95,20 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
         edgeHover.exit().remove();
     };
 
+    d3.selection.prototype.moveToFront = function() {
+        return this.each(function() {
+            this.parentNode.appendChild(this);
+        });
+    };
+
     function draw_hovered() {
         if(hoverpaths === null) {
             d3.selectAll('.spline-edge').attr('stroke', 'black');
         } else {
             for(var i = 0; i < hoverpaths.length; i ++) {
                 var path_id = pathsAll.indexOf(hoverpaths[i])
-                d3.select("#spline-path-"+path_id).attr('stroke', hoverprops.edgeStroke);
+                var sel_path = d3.select("#spline-path-"+path_id).attr('stroke', hoverprops.edgeStroke);
+                sel_path.moveToFront();
             }
         }
     }
