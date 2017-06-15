@@ -43,7 +43,85 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
             return plist;
         };
 
+        function _distance(node1, node2) {
+            return Math.sqrt(Math.pow((node1.x-node2.x),2) + Math.pow((node1.y-node2.y),2));
+        }
+
         var path_coord = _getNodePosition(p);
+
+        // insert fake nodes to avoid sharp turns
+        var new_path_coord = [];
+        for(var i = 0; i < path_coord.length; i ++) {
+            if (i-1 >= 0 && i+1 < path_coord.length) {
+                if (path_coord[i-1].x === path_coord[i+1].x &&
+                    path_coord[i-1].y === path_coord[i+1].y ) {
+                    // insert node when the previous and next nodes are the same
+                    var x1 = path_coord[i-1].x, y1 = path_coord[i-1].y;
+                    var x2 = path_coord[i].x, y2 = path_coord[i].y;
+                    var dx = x1 - x2, dy = y1 - y2;
+
+                    var v1 = dy / Math.sqrt(dx*dx + dy*dy);
+                    var v2 = - dx / Math.sqrt(dx*dx + dy*dy);
+
+                    var insert_p1 = {'x': null, 'y': null};
+                    var insert_p2 = {'x': null, 'y': null};
+
+                    var offset = 10;
+
+                    insert_p1.x = (x1+x2)/2.0 + offset*v1;
+                    insert_p1.y = (y1+y2)/2.0 + offset*v2;
+
+                    insert_p2.x = (x1+x2)/2.0 - offset*v1;
+                    insert_p2.y = (y1+y2)/2.0 - offset*v2;
+
+                    new_path_coord.push(insert_p1);
+                    new_path_coord.push(path_coord[i]);
+                    new_path_coord.push(insert_p2);
+                } else if (_distance(path_coord[i-1], path_coord[i+1]) < 20){
+                    // insert node when the previous and next nodes are very close
+                    // first node
+                    var x1 = path_coord[i-1].x, y1 = path_coord[i-1].y;
+                    var x2 = path_coord[i].x, y2 = path_coord[i].y;
+                    var dx = x1 - x2, dy = y1 - y2;
+
+                    var v1 = dy / Math.sqrt(dx*dx + dy*dy);
+                    var v2 = - dx / Math.sqrt(dx*dx + dy*dy);
+
+                    var insert_p1 = {'x': null, 'y': null};
+
+                    var offset = 10;
+
+                    insert_p1.x = (x1+x2)/2.0 + offset*v1;
+                    insert_p1.y = (y1+y2)/2.0 + offset*v2;
+
+                    // second node
+                    x1 = path_coord[i].x
+                    y1 = path_coord[i].y;
+                    x2 = path_coord[i+1].x
+                    y2 = path_coord[i+1].y;
+                    dx = x1 - x2;
+                    dy = y1 - y2;
+
+                    v1 = dy / Math.sqrt(dx*dx + dy*dy);
+                    v2 = - dx / Math.sqrt(dx*dx + dy*dy);
+
+                    var insert_p2 = {'x': null, 'y': null};
+
+                    insert_p2.x = (x1+x2)/2.0 + offset*v1;
+                    insert_p2.y = (y1+y2)/2.0 + offset*v2;
+
+                    new_path_coord.push(insert_p1);
+                    new_path_coord.push(path_coord[i]);
+                    new_path_coord.push(insert_p2);
+
+                }
+                else {
+                    new_path_coord.push(path_coord[i]);
+                }
+            } else {
+                new_path_coord.push(path_coord[i]);
+            }
+        }
 
         var line = d3.svg.line()
             .interpolate("cardinal")
@@ -51,7 +129,7 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
             .y(function(d) { return d.y; })
             .tension(lineTension);
 
-        return line(path_coord);
+        return line(new_path_coord);
     }
 
     // draw the spline for paths
