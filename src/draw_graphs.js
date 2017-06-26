@@ -92,8 +92,10 @@ dc_graph.draw_graphs = function(options) {
         node
             .on('mousedown.draw-graphs', function(d) {
                 d3.event.stopPropagation();
-                _sourceDown = d;
-                _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
+                if(_behavior.dragCreatesEdges()) {
+                    _sourceDown = d;
+                    _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
+                }
             })
             .on('mousemove.draw-graphs', function(d) {
                 d3.event.stopPropagation();
@@ -163,6 +165,7 @@ dc_graph.draw_graphs = function(options) {
 
     // behavioral options
     _behavior.clickCreatesNodes = property(true);
+    _behavior.dragCreatesEdges = property(true);
 
     // callbacks to modify data as it's being added
     _behavior.addNode = property(null);
