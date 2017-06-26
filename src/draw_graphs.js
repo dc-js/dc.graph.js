@@ -132,8 +132,10 @@ dc_graph.draw_graphs = function(options) {
             .on('mouseup.draw-graphs', function() {
                 if(_sourceDown) // drag-edge
                     erase_hint();
-                else // click-node
-                    create_node(chart, event_coords(chart));
+                else { // click-node
+                    if(_behavior.clickCreatesNodes())
+                        create_node(chart, event_coords(chart));
+                }
             });
         if(!_edgeLayer)
             _edgeLayer = chart.g().append('g').attr('class', 'draw-graphs');
@@ -155,9 +157,12 @@ dc_graph.draw_graphs = function(options) {
         remove_behavior: remove_behavior
     });
 
-    // update options
+    // update the data source/destination
     _behavior.nodeCrossfilter = property(options.nodeCrossfilter);
     _behavior.edgeCrossfilter = property(options.edgeCrossfilter);
+
+    // behavioral options
+    _behavior.clickCreatesNodes = property(true);
 
     // callbacks to modify data as it's being added
     _behavior.addNode = property(null);
@@ -165,9 +170,6 @@ dc_graph.draw_graphs = function(options) {
     _behavior.createNode = function(pos, data) {
         create_node(_behavior.parent(), pos, data);
     };
-
-    // whether to do relayout & redraw (true) or just refresh (false)
-    _behavior.doRedraw = property(false);
 
     return _behavior;
 };
