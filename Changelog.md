@@ -1,3 +1,15 @@
+## 0.5.2
+* graphviz edge routing
+* warn, don't die, if deprecated engine parameter called on diagram and engine doesn't support it
+* most examples now support all layout engines
+* wheel example generates half of parallel edges in opposite direction
+* cola was overinterpreting rankdir - now only LR and TB are valid & handled
+* parallel edge code somewhat more comprehensible
+* graphviz y coord output properly inverted w.r.t. bounding box
+* graph `nodesep`, `ranksep`, `rankdir` attributes work for graphviz. node `width`, `height` are set from shapes, and `fixedsize` is specified. `arrowhead` and `arrowtail` are set to `none` because dc.graph draws those. however, edges still don't quite meet the nodes.
+* set position "hints" for graphviz (doesn't seem to work - probably coordinate systems problems)
+* graphviz via http
+
 ## 0.5.1
 * graphviz layout don't crash on empty graph
 * support for graphviz in [network-building.html](http://dc-js.github.io/dc.graph.js/network-building.html)
