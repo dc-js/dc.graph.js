@@ -81,7 +81,9 @@ dc_graph.select_nodes = function(props) {
 
         node.on('click.select-nodes', function(d) {
             var key = chart.nodeKey.eval(d), newSelected;
-            if(isUnion(d3.event))
+            if(!_behavior.multipleSelect())
+                newSelected = [key];
+            else if(isUnion(d3.event))
                 newSelected = add_array(_selected, key);
             else if(isToggle(d3.event))
                 newSelected = toggle_array(_selected, key);
