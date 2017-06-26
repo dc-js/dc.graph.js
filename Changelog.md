@@ -1,3 +1,6 @@
+## 0.5.3
+* `select_nodes` mode also disable modifier keys when `multipleSelect` is disabled
+
 ## 0.5.2
 * graphviz edge routing
 * warn, don't die, if deprecated engine parameter called on diagram and engine doesn't support it
