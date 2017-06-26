@@ -1,8 +1,4 @@
 dc_graph.draw_graphs = function(options) {
-    if(!options.nodeCrossfilter)
-        throw new Error('need nodeCrossfilter');
-    if(!options.edgeCrossfilter)
-        throw new Error('need edgeCrossfilter');
     var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group'),
         label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
     var _idTag = options.idTag || 'id',
@@ -60,7 +56,9 @@ dc_graph.draw_graphs = function(options) {
             node[_fixedPosTag] = {x: pos[0], y: pos[1]};
         if(_behavior.addNode())
             _behavior.addNode()(node);
-        options.nodeCrossfilter.add([node]);
+        if(!_behavior.nodeCrossfilter())
+            throw new Error('need nodeCrossfilter');
+        _behavior.nodeCrossfilter().add([node]);
         chart.redrawGroup();
         select_nodes_group.node_set_changed([node[_idTag]]);
     }
@@ -76,7 +74,9 @@ dc_graph.draw_graphs = function(options) {
         // changing this data inside crossfilter is okay because it is not indexed data
         source.orig.value[_fixedPosTag] = null;
         target.orig.value[_fixedPosTag] = null;
-        options.edgeCrossfilter.add([edge]);
+        if(!_behavior.edgeCrossfilter())
+            throw new Error('need edgeCrossfilter');
+        _behavior.edgeCrossfilter().add([edge]);
         chart.redrawGroup();
         select_nodes_group.node_set_changed([]);
     }
@@ -154,6 +154,10 @@ dc_graph.draw_graphs = function(options) {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior
     });
+
+    // update options
+    _behavior.nodeCrossfilter = property(options.nodeCrossfilter);
+    _behavior.edgeCrossfilter = property(options.edgeCrossfilter);
 
     // callbacks to modify data as it's being added
     _behavior.addNode = property(null);
