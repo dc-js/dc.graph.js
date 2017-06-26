@@ -76,7 +76,7 @@ dc_graph.webworker_layout = function(layoutEngine) {
     };
     // somewhat sketchy - do we want this object to be transparent or not?
     var passthroughs = ['layoutAlgorithm', 'populateLayoutNode', 'populateLayoutEdge', 'rankdir', 'ranksep'];
-    passthroughs.forEach(function(name) {
+    passthroughs.concat(layoutEngine.optionNames()).forEach(function(name) {
         engine[name] = function() {
             var ret = layoutEngine[name].apply(layoutEngine, arguments);
             return arguments.length ? this : ret;

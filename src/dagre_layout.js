@@ -91,6 +91,9 @@ dc_graph.dagre_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return true;
+        },
         on: function(event, f) {
             _dispatch.on(event, f);
             return this;

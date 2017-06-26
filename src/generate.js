@@ -59,8 +59,15 @@ dc_graph.generate = function(type, args, env, callback) {
         edges = dc_graph.wheel_edges(namef, _.range(N), N*linkLength/2);
         var rimLength = edges[0].distance;
         for(i = 0; i < args[1]; ++i)
-            for(j = 0; j < N; ++j)
-                edges.push(dc_graph.edge_object(namef, j, (j+1)%N, {distance: rimLength, par: i+2}));
+            for(j = 0; j < N; ++j) {
+                var a = j, b = (j+1)%N, t;
+                if(i%2 === 1) {
+                    t = a;
+                    a = b;
+                    b = t;
+                }
+                edges.push(dc_graph.edge_object(namef, a, b, {distance: rimLength, par: i+2}));
+            }
         break;
     default:
         throw new Error("unknown generation type "+type);
