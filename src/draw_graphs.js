@@ -1,8 +1,4 @@
 dc_graph.draw_graphs = function(options) {
-    if(!options.nodeCrossfilter)
-        throw new Error('need nodeCrossfilter');
-    if(!options.edgeCrossfilter)
-        throw new Error('need edgeCrossfilter');
     var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group'),
         label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
     var _idTag = options.idTag || 'id',
@@ -47,14 +43,22 @@ dc_graph.draw_graphs = function(options) {
         update_hint();
     }
 
-    function create_node(chart, pos) {
-        var node = {};
-        node[_idTag] = uuid();
-        node[_labelTag] = '';
-        node[_fixedPosTag] = {x: pos[0], y: pos[1]};
+    function create_node(chart, pos, data) {
+        var node;
+        if(data)
+            node = data;
+        else {
+            node = {};
+            node[_idTag] = uuid();
+            node[_labelTag] = '';
+        }
+        if(pos)
+            node[_fixedPosTag] = {x: pos[0], y: pos[1]};
         if(_behavior.addNode())
             _behavior.addNode()(node);
-        options.nodeCrossfilter.add([node]);
+        if(!_behavior.nodeCrossfilter())
+            throw new Error('need nodeCrossfilter');
+        _behavior.nodeCrossfilter().add([node]);
         chart.redrawGroup();
         select_nodes_group.node_set_changed([node[_idTag]]);
     }
@@ -70,7 +74,9 @@ dc_graph.draw_graphs = function(options) {
         // changing this data inside crossfilter is okay because it is not indexed data
         source.orig.value[_fixedPosTag] = null;
         target.orig.value[_fixedPosTag] = null;
-        options.edgeCrossfilter.add([edge]);
+        if(!_behavior.edgeCrossfilter())
+            throw new Error('need edgeCrossfilter');
+        _behavior.edgeCrossfilter().add([edge]);
         chart.redrawGroup();
         select_nodes_group.node_set_changed([]);
     }
@@ -86,8 +92,10 @@ dc_graph.draw_graphs = function(options) {
         node
             .on('mousedown.draw-graphs', function(d) {
                 d3.event.stopPropagation();
-                _sourceDown = d;
-                _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
+                if(_behavior.dragCreatesEdges()) {
+                    _sourceDown = d;
+                    _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
+                }
             })
             .on('mousemove.draw-graphs', function(d) {
                 d3.event.stopPropagation();
@@ -126,8 +134,10 @@ dc_graph.draw_graphs = function(options) {
             .on('mouseup.draw-graphs', function() {
                 if(_sourceDown) // drag-edge
                     erase_hint();
-                else // click-node
-                    create_node(chart, event_coords(chart));
+                else { // click-node
+                    if(_behavior.clickCreatesNodes())
+                        create_node(chart, event_coords(chart));
+                }
             });
         if(!_edgeLayer)
             _edgeLayer = chart.g().append('g').attr('class', 'draw-graphs');
@@ -149,12 +159,20 @@ dc_graph.draw_graphs = function(options) {
         remove_behavior: remove_behavior
     });
 
+    // update the data source/destination
+    _behavior.nodeCrossfilter = property(options.nodeCrossfilter);
+    _behavior.edgeCrossfilter = property(options.edgeCrossfilter);
+
+    // behavioral options
+    _behavior.clickCreatesNodes = property(true);
+    _behavior.dragCreatesEdges = property(true);
+
     // callbacks to modify data as it's being added
     _behavior.addNode = property(null);
     _behavior.addEdge = property(null);
-
-    // whether to do relayout & redraw (true) or just refresh (false)
-    _behavior.doRedraw = property(false);
+    _behavior.createNode = function(pos, data) {
+        create_node(_behavior.parent(), pos, data);
+    };
 
     return _behavior;
 };
