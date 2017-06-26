@@ -47,11 +47,17 @@ dc_graph.draw_graphs = function(options) {
         update_hint();
     }
 
-    function create_node(chart, pos) {
-        var node = {};
-        node[_idTag] = uuid();
-        node[_labelTag] = '';
-        node[_fixedPosTag] = {x: pos[0], y: pos[1]};
+    function create_node(chart, pos, data) {
+        var node;
+        if(data)
+            node = data;
+        else {
+            node = {};
+            node[_idTag] = uuid();
+            node[_labelTag] = '';
+        }
+        if(pos)
+            node[_fixedPosTag] = {x: pos[0], y: pos[1]};
         if(_behavior.addNode())
             _behavior.addNode()(node);
         options.nodeCrossfilter.add([node]);
@@ -152,6 +158,9 @@ dc_graph.draw_graphs = function(options) {
     // callbacks to modify data as it's being added
     _behavior.addNode = property(null);
     _behavior.addEdge = property(null);
+    _behavior.createNode = function(pos, data) {
+        create_node(_behavior.parent(), pos, data);
+    };
 
     // whether to do relayout & redraw (true) or just refresh (false)
     _behavior.doRedraw = property(false);
