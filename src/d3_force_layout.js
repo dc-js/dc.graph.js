@@ -9,6 +9,7 @@ dc_graph.d3_force_layout = function(id) {
     var _layoutId = id || uuid();
     var _simulation = null; // d3-force simulation
     var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var relayoutPathFlag = false;
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
@@ -58,6 +59,9 @@ dc_graph.d3_force_layout = function(id) {
             );
         }
         _simulation.on('tick', /* _tick = */ function() {
+            if(relayoutPathFlag) {
+                applyRelayoutPathForces(wnodes, wedges);
+            }
             dispatchState('tick');
         }).on('start', function() {
             _dispatch.start();
@@ -70,14 +74,24 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function start(options) {
+        runSimulation();
+    }
+
+    function stop() {
+        _simulation.stop();
+    }
+
+    function relayoutPath(nop, eop) {
+        relayoutPathFlag = true;
+        runSimulation();
+        relayoutPathFlag = false;
+    };
+
+    function runSimulation() {
         _simulation.start();
         for (var i = 0; i < 300; ++i) {
             _simulation.tick();
         }
-        _simulation.stop();
-    }
-
-    function stop() {
         _simulation.stop();
     }
 
@@ -111,6 +125,9 @@ dc_graph.d3_force_layout = function(id) {
         stop: function() {
             stop();
         },
+        relayoutPath: function(nop, eop) {
+            relayoutPath(nop, eop);
+        },
         optionNames: function() {
             return ['lengthStrategy', 'baseLength']
                 .concat(graphviz_keys);
@@ -121,6 +138,40 @@ dc_graph.d3_force_layout = function(id) {
         populateLayoutEdge: function() {},
     });
     return engine;
+
+    function applyRelayoutPathForces(wnodes, wedges) {
+        wnodes.forEach(collide(wnodes, 0.5));
+    }
+
+    // Resolve collisions between nodes.
+    function collide(nodes, alpha) {
+        var quadtree = d3.geom.quadtree(nodes);
+        var padding = 6;
+        return function(d) {
+            var r = d.radius + padding,
+                nx1 = d.x - r,
+                nx2 = d.x + r,
+                ny1 = d.y - r,
+                ny2 = d.y + r;
+            quadtree.visit(function(quad, x1, y1, x2, y2) {
+                if (quad.point && (quad.point !== d)) {
+                    var x = d.x - quad.point.x,
+                        y = d.y - quad.point.y,
+                        l = Math.sqrt(x * x + y * y),
+                        r = d.radius + quad.point.radius + (d.color !== quad.point.color) * padding;
+                    if (l < r) {
+                        l = (l - r) / l * alpha;
+                        d.x -= x *= l;
+                        d.y -= y *= l;
+                        quad.point.x += x;
+                        quad.point.y += y;
+                    }
+                }
+                return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+            });
+        };
+    }
+
 };
 
 dc_graph.d3_force_layout.scripts = ['d3.js'];
