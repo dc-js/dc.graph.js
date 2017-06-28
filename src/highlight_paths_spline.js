@@ -13,6 +13,10 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
             _behavior.parent().refresh();
     }
 
+    function relayoutPath(nop, eop) {
+        _behavior.parent().relayoutPath();
+    }
+
     function paths_changed(nop, eop, paths) {
         selected = hoverpaths = null;
         // it would be difficult to check if no change, but at least check if changing from empty to empty
@@ -23,31 +27,44 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
         edge_on_paths = eop;
         pathsAll = paths;
 
-        drawSpline(paths, pathprops);
+        // check if path exits on current chart
+        if(pathExists(paths) > 0) {
+            console.log('path exits');
+            relayoutPath(nop, eop);
+            drawSpline(paths, pathprops);
+        }
     }
+
+    function pathExists(paths) {
+        var nodesCount = 0;
+        paths.forEach(function(d) {
+            nodesCount += getNodePosition(d).length;
+        });
+        return nodesCount > 0;
+    }
+
+    function getNodePosition(path) {
+        var _chart = _behavior.parent();
+        var plist = [];
+        for(var i = 0; i < path.element_list.length; i ++) {
+            var uid = path.element_list[i].property_map.ecomp_uid;
+            var node = _chart.getNodeAllInfo(uid);
+            if(node !== null) {
+                plist.push({'x': node.cola.x, 'y': node.cola.y});
+            }
+        }
+        return plist;
+    };
 
     // convert original path data into <d>
     function parsePath(p, lineTension) {
         lineTension = lineTension || 0.6;
-        var _chart = _behavior.parent();
-
-        function _getNodePosition(path) {
-            var plist = [];
-            for(var i = 0; i < path.element_list.length; i ++) {
-                var uid = path.element_list[i].property_map.ecomp_uid;
-                var node = _chart.getNodeAllInfo(uid);
-                if(node !== null) {
-                    plist.push({'x': node.cola.x, 'y': node.cola.y});
-                }
-            }
-            return plist;
-        };
 
         function _distance(node1, node2) {
             return Math.sqrt(Math.pow((node1.x-node2.x),2) + Math.pow((node1.y-node2.y),2));
         }
 
-        var path_coord = _getNodePosition(p);
+        var path_coord = getNodePosition(p);
 
         // insert fake nodes to avoid sharp turns
         var new_path_coord = [];
