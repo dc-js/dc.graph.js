@@ -13,6 +13,7 @@ dc_graph.d3_force_layout = function(id) {
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
+    var wnodes = null, wedges = null;
 
     function init(options) {
         _simulation = d3.layout.force()
@@ -27,7 +28,7 @@ dc_graph.d3_force_layout = function(id) {
             nodeIDs[d.dcg_nodeKey] = i;
         });
 
-        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+        wnodes = regenerate_objects(_nodes, nodes, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -37,7 +38,7 @@ dc_graph.d3_force_layout = function(id) {
         });
 
 
-        var wedges = regenerate_objects(_edges, edges, function(e) {
+        wedges = regenerate_objects(_edges, edges, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -60,7 +61,9 @@ dc_graph.d3_force_layout = function(id) {
         }
         _simulation.on('tick', /* _tick = */ function() {
             if(relayoutPathFlag) {
-                applyRelayoutPathForces(wnodes, wedges);
+                // apply custom force as a function modifying node positions
+                // at each tick
+                applyRelayoutPathForces();
             }
             dispatchState('tick');
         }).on('start', function() {
@@ -81,8 +84,23 @@ dc_graph.d3_force_layout = function(id) {
         _simulation.stop();
     }
 
-    function relayoutPath(nop, eop) {
+    function relayoutPath(paths) {
         relayoutPathFlag = true;
+        // make change to global forces
+        var nodeIDs = [];
+        paths.forEach(function(path) {
+            path.element_list.forEach(function(d) {
+                if( d.element_type === 'node') {
+                    nodeIDs.push(d.property_map.ecomp_uid);
+                }
+            });
+        });
+        wnodes.forEach(function(d) {
+            if(!nodeIDs.includes(d.dcg_nodeKey)) {
+                d.fixed = true;
+            }
+        });
+        _simulation.charge(-600);
         runSimulation();
         relayoutPathFlag = false;
     };
@@ -125,8 +143,8 @@ dc_graph.d3_force_layout = function(id) {
         stop: function() {
             stop();
         },
-        relayoutPath: function(nop, eop) {
-            relayoutPath(nop, eop);
+        relayoutPath: function(paths) {
+            relayoutPath(paths);
         },
         optionNames: function() {
             return ['lengthStrategy', 'baseLength']
@@ -139,8 +157,9 @@ dc_graph.d3_force_layout = function(id) {
     });
     return engine;
 
-    function applyRelayoutPathForces(wnodes, wedges) {
-        wnodes.forEach(collide(wnodes, 0.5));
+    function applyRelayoutPathForces() {
+        // TODO design forces
+        //wnodes.forEach(collide(wnodes, 0.5));
     }
 
     // Resolve collisions between nodes.
