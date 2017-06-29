@@ -1613,10 +1613,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel);
     };
 
-    _chart.relayoutPath = function(nop, eop) {
+    _chart.relayoutPath = function(paths) {
         var algoName = _chart.layoutEngine().layoutAlgorithm();
         if(algoName === "d3-force") {
-            _chart.layoutEngine().relayoutPath(nop, eop);
+            _chart.layoutEngine().relayoutPath(paths);
         } else {
             console.log('relayoutPath not supported by layout engine ' + algoName);
         }
