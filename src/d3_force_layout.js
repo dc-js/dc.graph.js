@@ -13,12 +13,34 @@ dc_graph.d3_force_layout = function(id) {
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
-    var wnodes = null, wedges = null;
+    var wnodes = [], wedges = [];
 
     function init(options) {
         _simulation = d3.layout.force()
-            .size([options.width, options.height])
-            .gravity(1.0)
+            .size([options.width, options.height]);
+
+        resetSim(_simulation);
+    }
+
+    function resetSim(sim) {
+        function dispatchState(event) {
+            _dispatch[event](
+                wnodes,
+                wedges.map(function(e) {
+                    return {dcg_edgeKey: e.dcg_edgeKey};
+                })
+            );
+        }
+
+        sim.on('tick', /* _tick = */ function() {
+            dispatchState('tick');
+        }).on('start', function() {
+            _dispatch.start();
+        }).on('end', /* _done = */ function() {
+            dispatchState('end');
+        });
+
+        sim.gravity(1.0)
             .charge(-300);
     }
 
@@ -37,7 +59,6 @@ dc_graph.d3_force_layout = function(id) {
             v1.id = v.dcg_nodeKey;
         });
 
-
         wedges = regenerate_objects(_edges, edges, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
@@ -49,27 +70,6 @@ dc_graph.d3_force_layout = function(id) {
             e1.target = _nodes[e.dcg_edgeTarget];
             e1.target.id = nodeIDs[e1.target.dcg_nodeKey];
             e1.dcg_edgeLength = e.dcg_edgeLength;
-        });
-
-        function dispatchState(event) {
-            _dispatch[event](
-                wnodes,
-                wedges.map(function(e) {
-                    return {dcg_edgeKey: e.dcg_edgeKey};
-                })
-            );
-        }
-        _simulation.on('tick', /* _tick = */ function() {
-            if(relayoutPathFlag) {
-                // apply custom force as a function modifying node positions
-                // at each tick
-                applyRelayoutPathForces();
-            }
-            dispatchState('tick');
-        }).on('start', function() {
-            _dispatch.start();
-        }).on('end', /* _done = */ function() {
-            dispatchState('end');
         });
 
         _simulation.nodes(wnodes);
@@ -85,9 +85,7 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function relayoutPath(paths) {
-        relayoutPathFlag = true;
-        // make change to global forces
-        var nodeIDs = [];
+        var nodeIDs = []; // nodes on path
         paths.forEach(function(path) {
             path.element_list.forEach(function(d) {
                 if( d.element_type === 'node') {
@@ -95,14 +93,25 @@ dc_graph.d3_force_layout = function(id) {
                 }
             });
         });
-        wnodes.forEach(function(d) {
-            if(!nodeIDs.includes(d.dcg_nodeKey)) {
-                d.fixed = true;
+
+        // fix nodes not on paths
+        Object.keys(_nodes).forEach(function(key) {
+            if(!nodeIDs.includes(key)) {
+                _nodes[key].fixed = true;
             }
         });
-        _simulation.charge(-600);
+
+        // enlarge charge force to seperate nodes on paths
+        _simulation.charge(-800);
+
+        // change tick function to apply custom force
+        _simulation.on('tick', function() {
+            applyRelayoutPathForces(paths);
+        });
+
         runSimulation();
-        relayoutPathFlag = false;
+
+        resetSim(_simulation);
     };
 
     function runSimulation() {
@@ -111,6 +120,64 @@ dc_graph.d3_force_layout = function(id) {
             _simulation.tick();
         }
         _simulation.stop();
+    }
+
+    function applyRelayoutPathForces(paths) {
+
+        function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
+        function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
+        function _angle(v1, v2) {
+            var a = _dot(v1,v2) / (_len(v1)*_len(v2));
+            a = Math.min(a, 1);
+            a = Math.max(a, -1);
+            return Math.acos(a);
+        };
+        // perpendicular unit length vector
+        function _pVec(v) {
+            var xx = -v.y/v.x, yy = 1;
+            var length = _len({'x':xx, 'y':yy});
+            return {'x': xx/length, 'y': yy/length};
+        };
+
+        function updateNode(node, angle, pVec, alpha) {
+            node.x += pVec.x*(Math.PI-angle)*alpha;
+            node.y += pVec.y*(Math.PI-angle)*alpha;
+        }
+
+        paths.forEach(function(path) {
+            if(path.element_list.length < 5) return; // at leaset 3 nodes and 2 edges:  A->B->C
+            for(var i = 2; i < path.element_list.length-2; i += 2) {
+                var current = _nodes[path.element_list[i].property_map.ecomp_uid];
+                var prev = _nodes[path.element_list[i-2].property_map.ecomp_uid];
+                var next = _nodes[path.element_list[i+2].property_map.ecomp_uid];
+
+                // calculate the angle
+                var vPrev = {'x': prev.x - current.x, 'y': prev.y - current.y};
+                var vNext = {'x': next.x - current.x, 'y': next.y - current.y};
+
+                var angle = _angle(vPrev, vNext); // angle in [0, PI]
+
+                var pvecPrev = _pVec(vPrev);
+                var pvecNext = _pVec(vNext);
+
+                // make sure the perpendicular vector is in the
+                // direction that makes the angle more towards 180 degree
+                // 1. calculate the middle point of node 'prev' and 'next'
+                var mid = {'x': (prev.x+next.x)/2.0, 'y': (prev.y+next.y)/2.0 };
+                // 2. calculate the vectors: 'prev' pointing to 'mid', 'next' pointing to 'mid'
+                var prev_mid = {'x': mid.x-prev.x, 'y': mid.y-prev.y};
+                var next_mid = {'x': mid.x-next.x, 'y': mid.y-next.y};
+                // 3. the 'correct' vector: the angle between pvec and prev_mid(next_mid) should
+                //    be an obtuse angle
+                pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {'x': -pvecPrev.x, 'y': -pvecPrev.x};
+                pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {'x': -pvecNext.x, 'y': -pvecNext.x};
+
+                // modify positions of prev and next
+                updateNode(prev, angle, pvecPrev, 0.01);
+                updateNode(next, angle, pvecNext, 0.01);
+            }
+
+        });
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
@@ -156,41 +223,6 @@ dc_graph.d3_force_layout = function(id) {
         populateLayoutEdge: function() {},
     });
     return engine;
-
-    function applyRelayoutPathForces() {
-        // TODO design forces
-        //wnodes.forEach(collide(wnodes, 0.5));
-    }
-
-    // Resolve collisions between nodes.
-    function collide(nodes, alpha) {
-        var quadtree = d3.geom.quadtree(nodes);
-        var padding = 6;
-        return function(d) {
-            var r = d.radius + padding,
-                nx1 = d.x - r,
-                nx2 = d.x + r,
-                ny1 = d.y - r,
-                ny2 = d.y + r;
-            quadtree.visit(function(quad, x1, y1, x2, y2) {
-                if (quad.point && (quad.point !== d)) {
-                    var x = d.x - quad.point.x,
-                        y = d.y - quad.point.y,
-                        l = Math.sqrt(x * x + y * y),
-                        r = d.radius + quad.point.radius + (d.color !== quad.point.color) * padding;
-                    if (l < r) {
-                        l = (l - r) / l * alpha;
-                        d.x -= x *= l;
-                        d.y -= y *= l;
-                        quad.point.x += x;
-                        quad.point.y += y;
-                    }
-                }
-                return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
-            });
-        };
-    }
-
 };
 
 dc_graph.d3_force_layout.scripts = ['d3.js'];
