@@ -16,32 +16,34 @@ dc_graph.d3_force_layout = function(id) {
     var wnodes = [], wedges = [];
 
     function init(options) {
-        _simulation = d3.layout.force()
-            .size([options.width, options.height]);
+        _simulation = d3v4.forceSimulation()
+            .force("link", d3v4.forceLink())
+            .force("center", d3v4.forceCenter(options.width / 2, options.height / 2))
+            .force('gravityX', d3v4.forceX(options.width / 2))
+            .force('gravityY', d3v4.forceY(options.height / 2))
+            .stop();
 
-        resetSim(_simulation);
-    }
-
-    function resetSim(sim) {
-        function dispatchState(event) {
-            _dispatch[event](
-                wnodes,
-                wedges.map(function(e) {
-                    return {dcg_edgeKey: e.dcg_edgeKey};
-                })
-            );
-        }
-
-        sim.on('tick', /* _tick = */ function() {
+        _simulation.on('tick', /* _tick = */ function() {
             dispatchState('tick');
-        }).on('start', function() {
-            _dispatch.start();
         }).on('end', /* _done = */ function() {
             dispatchState('end');
         });
 
-        sim.gravity(1.0)
-            .charge(-300);
+        resetSim(_simulation);
+    }
+
+    function dispatchState(event) {
+        _dispatch[event](
+            wnodes,
+            wedges.map(function(e) {
+                return {dcg_edgeKey: e.dcg_edgeKey};
+            })
+        );
+    }
+
+    function resetSim(sim) {
+        sim.force("charge", d3v4.forceManyBody(-600));
+        sim.force('collision', d3v4.forceCollide(8));
     }
 
     function data(nodes, edges, constraints, options) {
@@ -63,25 +65,24 @@ dc_graph.d3_force_layout = function(id) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
-            // cola edges can work with indices or with object references
-            // but it will replace indices with object references
-            e1.source = _nodes[e.dcg_edgeSource];
-            e1.source.id = nodeIDs[e1.source.dcg_nodeKey];
-            e1.target = _nodes[e.dcg_edgeTarget];
-            e1.target.id = nodeIDs[e1.target.dcg_nodeKey];
+            e1.source = nodeIDs[_nodes[e.dcg_edgeSource].dcg_nodeKey];
+            e1.target= nodeIDs[_nodes[e.dcg_edgeTarget].dcg_nodeKey];
             e1.dcg_edgeLength = e.dcg_edgeLength;
         });
 
         _simulation.nodes(wnodes);
-        _simulation.links(wedges);
+        _simulation.force('link').links(wedges);
     }
 
     function start(options) {
+        _dispatch.start();
         runSimulation();
+        stop();
     }
 
     function stop() {
         _simulation.stop();
+        dispatchState('end');
     }
 
     function relayoutPath(paths) {
@@ -97,17 +98,14 @@ dc_graph.d3_force_layout = function(id) {
         // fix nodes not on paths
         Object.keys(_nodes).forEach(function(key) {
             if(!nodeIDs.includes(key)) {
-                _nodes[key].fixed = true;
+                _nodes[key].fx = _nodes[key].x;
+                _nodes[key].fy = _nodes[key].y;
             }
         });
 
         // enlarge charge force to seperate nodes on paths
-        _simulation.charge(-800);
-
-        // change tick function to apply custom force
-        _simulation.on('tick', function() {
-            applyRelayoutPathForces(paths);
-        });
+        _simulation
+            .force('angle', function(alpha) { applyRelayoutPathForces(alpha, paths)});
 
         runSimulation();
 
@@ -115,14 +113,13 @@ dc_graph.d3_force_layout = function(id) {
     };
 
     function runSimulation() {
-        _simulation.start();
         for (var i = 0; i < 300; ++i) {
             _simulation.tick();
         }
-        _simulation.stop();
+        stop();
     }
 
-    function applyRelayoutPathForces(paths) {
+    function applyRelayoutPathForces(alpha, paths) {
 
         function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
         function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
