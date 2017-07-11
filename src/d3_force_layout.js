@@ -42,7 +42,7 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function resetSim(sim) {
-        sim.force("charge", d3v4.forceManyBody(-600));
+        sim.force("charge", d3v4.forceManyBody(-100));
         sim.force('collision', d3v4.forceCollide(8));
     }
 
@@ -170,8 +170,8 @@ dc_graph.d3_force_layout = function(id) {
                 pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {'x': -pvecNext.x, 'y': -pvecNext.x};
 
                 // modify positions of prev and next
-                updateNode(prev, angle, pvecPrev, 0.01);
-                updateNode(next, angle, pvecNext, 0.01);
+                updateNode(prev, angle, pvecPrev, 0.002);
+                updateNode(next, angle, pvecNext, 0.002);
             }
 
         });
