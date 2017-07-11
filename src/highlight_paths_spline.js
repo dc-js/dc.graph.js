@@ -27,6 +27,12 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
         edge_on_paths = eop;
         pathsAll = paths;
 
+        var _chart = _behavior.parent();
+
+        //clear old paths
+        _chart.selectAll('.spline-edge').remove();
+        _chart.selectAll('.spline-edge-hover').remove();
+
         // check if path exits on current chart
         if(pathExists(paths) > 0) {
             console.log('path exits');
@@ -35,6 +41,7 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
         }
     }
 
+    // check if path exists in current view
     function pathExists(paths) {
         var nodesCount = 0;
         paths.forEach(function(d) {
@@ -165,8 +172,6 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
             .attr('stroke-width', _chart.edgeStrokeWidth() || 1)
             .attr('opacity', pathprops.edgeOpacity || 1)
             .attr('fill', 'none');
-        edge.exit().remove();
-
 
         // another wider copy of the edge just for hover events
         var edgeHover = _splineLayer.selectAll('.spline-edge-hover')
@@ -187,7 +192,6 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
             .on('click', function(d, i) {
                 highlight_paths_group.select_changed([paths[i]]);
              });
-        edgeHover.exit().remove();
     };
 
     d3.selection.prototype.moveToFront = function() {
