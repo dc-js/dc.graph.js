@@ -9,7 +9,6 @@ dc_graph.d3_force_layout = function(id) {
     var _layoutId = id || uuid();
     var _simulation = null; // d3-force simulation
     var _dispatch = d3.dispatch('tick', 'start', 'end');
-    var relayoutPathFlag = false;
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
@@ -29,7 +28,7 @@ dc_graph.d3_force_layout = function(id) {
             dispatchState('end');
         });
 
-        resetSim(_simulation);
+        resetSim();
     }
 
     function dispatchState(event) {
@@ -41,9 +40,10 @@ dc_graph.d3_force_layout = function(id) {
         );
     }
 
-    function resetSim(sim) {
-        sim.force("charge", d3v4.forceManyBody(-100));
-        sim.force('collision', d3v4.forceCollide(8));
+    function resetSim() {
+        _simulation.force("charge", d3v4.forceManyBody().strength(-100));
+        _simulation.force('collision', d3v4.forceCollide(8));
+        _simulation.force('angle', null);
     }
 
     function data(nodes, edges, constraints, options) {
@@ -77,7 +77,6 @@ dc_graph.d3_force_layout = function(id) {
     function start(options) {
         _dispatch.start();
         runSimulation();
-        stop();
     }
 
     function stop() {
@@ -100,16 +99,16 @@ dc_graph.d3_force_layout = function(id) {
             if(!nodeIDs.includes(key)) {
                 _nodes[key].fx = _nodes[key].x;
                 _nodes[key].fy = _nodes[key].y;
+            } else {
+                _nodes[key].fx = null;
+                _nodes[key].fy = null;
             }
         });
 
-        // enlarge charge force to seperate nodes on paths
-        _simulation
-            .force('angle', function(alpha) { applyRelayoutPathForces(alpha, paths)});
+        _simulation.force('angle', function(alpha) { applyRelayoutPathForces(alpha, paths)});
 
         runSimulation();
-
-        resetSim(_simulation);
+        resetSim();
     };
 
     function runSimulation() {
@@ -209,6 +208,9 @@ dc_graph.d3_force_layout = function(id) {
         },
         relayoutPath: function(paths) {
             relayoutPath(paths);
+        },
+        resetGraph: function() {
+            resetGraph();
         },
         optionNames: function() {
             return ['lengthStrategy', 'baseLength']
