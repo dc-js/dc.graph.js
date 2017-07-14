@@ -13,6 +13,7 @@ dc_graph.d3_force_layout = function(id) {
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
     var wnodes = [], wedges = [];
+    var _originalNodesPosition = {};
 
     function init(options) {
         _simulation = d3v4.forceSimulation()
@@ -77,6 +78,11 @@ dc_graph.d3_force_layout = function(id) {
     function start(options) {
         _dispatch.start();
         runSimulation();
+
+        //store original positions
+        Object.keys(_nodes).forEach(function(key) {
+            _originalNodesPosition[key] = {'x': _nodes[key].x, 'y': _nodes[key].y};
+        });
     }
 
     function stop() {
@@ -85,35 +91,44 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function relayoutPath(paths) {
-        var nodeIDs = []; // nodes on path
-        paths.forEach(function(path) {
-            path.element_list.forEach(function(d) {
-                if( d.element_type === 'node') {
-                    nodeIDs.push(d.property_map.ecomp_uid);
+        if(paths === null) {
+            Object.keys(_nodes).forEach(function(key) {
+                _nodes[key].fx = _originalNodesPosition[key].x;
+                _nodes[key].fy = _originalNodesPosition[key].y;
+            });
+            runSimulation(1);
+        } else {
+            var nodeIDs = []; // nodes on path
+            paths.forEach(function(path) {
+                path.element_list.forEach(function(d) {
+                    if( d.element_type === 'node') {
+                        nodeIDs.push(d.property_map.ecomp_uid);
+                    }
+                });
+            });
+
+            // fix nodes not on paths
+            Object.keys(_nodes).forEach(function(key) {
+                if(!nodeIDs.includes(key)) {
+                    _nodes[key].fx = _originalNodesPosition[key].x;
+                    _nodes[key].fy = _originalNodesPosition[key].y;
+                } else {
+                    _nodes[key].fx = null;
+                    _nodes[key].fy = null;
                 }
             });
-        });
 
-        // fix nodes not on paths
-        Object.keys(_nodes).forEach(function(key) {
-            if(!nodeIDs.includes(key)) {
-                _nodes[key].fx = _nodes[key].x;
-                _nodes[key].fy = _nodes[key].y;
-            } else {
-                _nodes[key].fx = null;
-                _nodes[key].fy = null;
-            }
-        });
+            //_simulation.force("charge", d3v4.forceManyBody().strength(-300));
+            _simulation.force('angle', function(alpha) { angleForces(alpha, paths, 0.002)});
+            runSimulation();
+        }
 
-        //_simulation.force("charge", d3v4.forceManyBody().strength(-300));
-        _simulation.force('angle', function(alpha) { angleForces(alpha, paths, 0.002)});
-
-        runSimulation();
         resetSim();
     };
 
-    function runSimulation() {
-        for (var i = 0; i < 300; ++i) {
+    function runSimulation(iterations) {
+        iterations = iterations || 300;
+        for (var i = 0; i < iterations; ++i) {
             _simulation.tick();
         }
         stop();
