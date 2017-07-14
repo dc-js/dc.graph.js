@@ -18,8 +18,8 @@ dc_graph.d3_force_layout = function(id) {
         _simulation = d3v4.forceSimulation()
             .force("link", d3v4.forceLink())
             .force("center", d3v4.forceCenter(options.width / 2, options.height / 2))
-            .force('gravityX', d3v4.forceX(options.width / 2))
-            .force('gravityY', d3v4.forceY(options.height / 2))
+            .force('gravityX', d3v4.forceX(options.width / 2).strength(0.3))
+            .force('gravityY', d3v4.forceY(options.height / 2).strength(0.3))
             .stop();
 
         _simulation.on('tick', /* _tick = */ function() {
@@ -105,7 +105,8 @@ dc_graph.d3_force_layout = function(id) {
             }
         });
 
-        _simulation.force('angle', function(alpha) { applyRelayoutPathForces(alpha, paths)});
+        //_simulation.force("charge", d3v4.forceManyBody().strength(-300));
+        _simulation.force('angle', function(alpha) { angleForces(alpha, paths, 0.002)});
 
         runSimulation();
         resetSim();
@@ -118,7 +119,7 @@ dc_graph.d3_force_layout = function(id) {
         stop();
     }
 
-    function applyRelayoutPathForces(alpha, paths) {
+    function angleForces(alpha, paths, k) {
 
         function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
         function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
@@ -135,9 +136,9 @@ dc_graph.d3_force_layout = function(id) {
             return {'x': xx/length, 'y': yy/length};
         };
 
-        function updateNode(node, angle, pVec, alpha) {
-            node.x += pVec.x*(Math.PI-angle)*alpha;
-            node.y += pVec.y*(Math.PI-angle)*alpha;
+        function updateNode(node, angle, pVec, k) {
+            node.x += pVec.x*(Math.PI-angle)*k;
+            node.y += pVec.y*(Math.PI-angle)*k;
         }
 
         paths.forEach(function(path) {
@@ -169,8 +170,8 @@ dc_graph.d3_force_layout = function(id) {
                 pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {'x': -pvecNext.x, 'y': -pvecNext.x};
 
                 // modify positions of prev and next
-                updateNode(prev, angle, pvecPrev, 0.002);
-                updateNode(next, angle, pvecNext, 0.002);
+                updateNode(prev, angle, pvecPrev, k);
+                updateNode(next, angle, pvecNext, k);
             }
 
         });
