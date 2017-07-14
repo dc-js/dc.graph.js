@@ -34,10 +34,11 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
         _chart.selectAll('.spline-edge-hover').remove();
 
         // check if path exits on current chart
-        if(pathExists(paths) > 0) {
-            console.log('path exits');
+        if(pathExists(paths) === true) {
             relayoutPath(paths);
             drawSpline(paths, pathprops);
+        } else {
+            relayoutPath(null);
         }
     }
 
