@@ -1,5 +1,5 @@
 // create or re-use objects in a map, delete the ones that were not reused
-function regenerate_objects(preserved, list, key, assign, create, destroy) {
+function regenerate_objects(preserved, list, need, key, assign, create, destroy) {
     if(!create) create = function(k, o) { };
     if(!destroy) destroy = function(k) { };
     var keep = {};
@@ -13,6 +13,13 @@ function regenerate_objects(preserved, list, key, assign, create, destroy) {
         return o1;
     }
     var wlist = list.map(wrap);
+    if(need)
+        need.forEach(function(k) {
+            if(!preserved[k])
+                create(k, preserved[k] = {}, null);
+            keep[k] = true;
+            wlist.push(preserved[k]);
+        });
     // delete any objects from last round that are no longer used
     for(var k in preserved)
         if(!keep[k]) {
