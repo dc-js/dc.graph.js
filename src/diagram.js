@@ -1218,7 +1218,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             edges = crossfilter.quicksort.by(_chart.edgeOrdering())(edges.slice(0), 0, edges.length);
         }
 
-        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+        var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return _chart.nodeKey()(v);
         }, function(v1, v) {
             v1.orig = v;
@@ -1228,7 +1228,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 v1.cola.dcg_nodeFixed = _chart.nodeFixed.eval(v1);
             _chart.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
-        var wedges = regenerate_objects(_edges, edges, function(e) {
+        var wedges = regenerate_objects(_edges, edges, null, function(e) {
             return _chart.edgeKey()(e);
         }, function(e1, e) {
             e1.orig = e;
