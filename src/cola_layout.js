@@ -133,6 +133,9 @@ dc_graph.cola_layout = function(id) {
         supportsWebworker: function() {
             return true;
         },
+        needsStage: function(stage) { // stopgap until we have engine chaining
+            return stage === 'ports' || stage === 'edgepos';
+        },
         parent: property(null),
         on: function(event, f) {
             _dispatch.on(event, f);
