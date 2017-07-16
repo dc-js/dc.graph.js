@@ -1601,6 +1601,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!_chart.initialOnly())
                     populate_cola(nodes, edges);
                 if(_chart.showLayoutSteps()) {
+                    if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
+                        dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     var nodePorts;
                     // what's the relation between this and the 'data' event?
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
@@ -1620,6 +1622,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     if(!_chart.initialOnly())
                         populate_cola(nodes, edges);
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
+                        dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                         nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                     if(nodePorts)
