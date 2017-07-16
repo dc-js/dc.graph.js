@@ -26,7 +26,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _ports = {}; // id = node|edge/id/name
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
-    var _children = {}, _arrows = {};
+    var _children = {}, _arrows = {}, _portStyles = {};
     var _running = false; // for detecting concurrency issues
     var _translate = [0,0], _scale = 1;
     var _zoom;
@@ -316,6 +316,22 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.portNodeKey = property(null);
     _chart.portEdgeKey = property(null);
     _chart.portName = property(null);
+    _chart.portStyleName = property(null);
+
+    _chart.portStyle = function(id, style) {
+        if(arguments.length === 1)
+            return _portStyles[id];
+        // do not notify unnecessarily
+        if(_portStyles[id] === style)
+            return _chart;
+        if(_portStyles[id])
+            _portStyles[id].parent(null);
+        _portStyles[id] = style;
+        if(style)
+            style.parent(_chart);
+        return _chart;
+    };
+
     _chart.edgeSourcePortName = property(null);
     _chart.edgeTargetPortName = property(null);
 
@@ -1283,12 +1299,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(parse.nodeKey) {
                 p.node = _nodes[parse.nodeKey];
                 p.edges = [];
+                p.named = true;
             }
             else {
                 var e = _edges[parse.edgeKey];
                 p.node = e[parse.name];
                 p.edges = [e];
+                p.named = false;
             }
+            p.name = parse.name;
         });
         // find all edges for named ports
         wedges.forEach(function(e) {
@@ -1572,9 +1591,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!_chart.initialOnly())
                     populate_cola(nodes, edges);
                 if(_chart.showLayoutSteps()) {
+                    var nodePorts;
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
-                        dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
+                        nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
+                    if(nodePorts)
+                        draw_ports(nodePorts, node);
                 }
                 if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                     console.log('cancelled');
@@ -1583,11 +1605,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .on('end', function(nodes, edges) {
                 if(!_chart.showLayoutSteps()) {
+                    var nodePorts;
                     if(!_chart.initialOnly())
                         populate_cola(nodes, edges);
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
-                        dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
+                        nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
+                    if(nodePorts)
+                        draw_ports(nodePorts, node);
                 }
                 else layout_done(true);
                 var do_zoom;
@@ -2020,6 +2045,17 @@ dc_graph.diagram = function (parent, chartGroup) {
             endall([ntrans, etrans, textTrans], function() { layout_done(true); });
 
         edgeHover.attr('d', render_edge_path('new'));
+    }
+
+    function draw_ports(nodePorts, node) {
+        for(var style in _portStyles) {
+            var nodePorts2 = {};
+            for(var nid in nodePorts)
+                nodePorts2[nid] = nodePorts[nid].filter(function(p) {
+                    return _chart.portStyleName.eval(p) === style;
+                });
+            _portStyles[style].drawPorts(nodePorts2, node);
+        }
     }
 
     /**
