@@ -61,5 +61,5 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         e.targetPort.pos = name ? ports[port_name(diagram.nodeKey.eval(e.target), null, name)].pos :
             ports[port_name(null, diagram.edgeKey.eval(e), 'target')].pos;
     });
-
+    return node_ports;
 };
