@@ -51,7 +51,8 @@
             worker: true,
             newnode: 0.9,
             newcomp: 0.1,
-            interval: 1000
+            interval: 1000,
+            opacity: 1
         }, qs);
 
         var engine = dc_graph.spawn_engine(options.layout, qs, options.worker != 'false');
@@ -65,7 +66,8 @@
             nodeKey: 'id', edgeKey: 'id',
             ncolors: 12,
             newNodeProb: +options.newnode,
-            newComponentProb: +options.newcomp
+            newComponentProb: +options.newcomp,
+            log: options.log && options.log !== 'false'
         });
         var diagram = dc_graph.diagram('#graph');
         var data = build_data(random.nodes(), random.edges());
@@ -89,6 +91,7 @@
             .nodeFillScale(d3.scale.ordinal().range(
                 ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
                  '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
+            .nodeOpacity(+options.opacity)
             .nodeTitle(null) // deactivate basic tooltips
             .edgeArrowhead(options.arrows ? 'vee' : null)
             .timeLimit(options.interval - 100)
