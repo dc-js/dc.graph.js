@@ -1140,18 +1140,18 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     // three stages: delete before layout, and modify & insert split the transitionDuration
-    function transition_duration() {
+    _chart.stagedDuration = function() {
         return (_chart.stageTransitions() !== 'none') ?
             _chart.transitionDuration() / 2 :
             _chart.transitionDuration();
-    }
+    };
 
-    function transition_delay(is_enter) {
+    _chart.stagedDelay = function(is_enter) {
         return _chart.stageTransitions() === 'none' ||
             _chart.stageTransitions() === 'modins' === !is_enter ?
             0 :
             _chart.transitionDuration() / 2;
-    }
+    };
 
     _chart.selectAllNodes = function(selector) {
         selector = selector || '.node';
@@ -1353,7 +1353,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edge.exit().each(function(d) {
             d.deleted = true;
         }).transition()
-            .duration(transition_duration())
+            .duration(_chart.stagedDuration())
             .delay(_chart.deleteDelay())
             .attr('opacity', 0)
             .each(function(d) {
@@ -1410,7 +1410,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return _chart.edgeLabel.eval(d);
             });
         edgeLabels.exit().transition()
-            .duration(transition_duration())
+            .duration(_chart.stagedDuration())
             .delay(_chart.deleteDelay())
             .attr('opacity', 0).remove();
 
@@ -1427,7 +1427,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         node.exit().each(function(d) {
             d.deleted = true;
         }).transition()
-            .duration(transition_duration())
+            .duration(_chart.stagedDuration())
             .delay(_chart.deleteDelay())
             .attr('opacity', 0)
             .remove();
@@ -1914,9 +1914,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         var ntrans = node
                 .transition()
-                .duration(transition_duration())
+                .duration(_chart.stagedDuration())
                 .delay(function(n) {
-                    return transition_delay(nodeEntered[_chart.nodeKey.eval(n)]);
+                    return _chart.stagedDelay(nodeEntered[_chart.nodeKey.eval(n)]);
                 })
                 .attr('opacity', _chart.nodeOpacity.eval)
                 .attr('transform', function (d) {
@@ -1962,17 +1962,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .each(function(e) {
                     if(_chart.edgeArrowhead.eval(e)) {
                         d3.select('#' + _chart.arrowId(e, 'head'))
-                            .transition().duration(transition_duration())
-                            .delay(transition_delay(false))
+                            .transition().duration(_chart.stagedDuration())
+                            .delay(_chart.stagedDelay(false))
                             .attr('orient', function() {
                                 return e.pos.new.orient;
                             });
                     }
                 })
               .transition()
-                .duration(transition_duration())
+                .duration(_chart.stagedDuration())
                 .delay(function(e) {
-                    return transition_delay(edgeEntered[_chart.edgeKey.eval(e)]);
+                    return _chart.stagedDelay(edgeEntered[_chart.edgeKey.eval(e)]);
                 })
                 .attr('opacity', _chart.edgeOpacity.eval)
                 .attr('d', function(e) {
@@ -1983,9 +1983,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         textPathsEnter
             .attr('d', render_edge_label_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
         var textTrans = textPaths.transition()
-            .duration(transition_duration())
+            .duration(_chart.stagedDuration())
             .delay(function(e) {
-                return transition_delay(edgeEntered[_chart.edgeKey.eval(e)]);
+                return _chart.stagedDelay(edgeEntered[_chart.edgeKey.eval(e)]);
             })
             .attr('opacity', _chart.edgeOpacity.eval)
             .attr('d', function(e) {
@@ -1995,12 +1995,12 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         if(_chart.stageTransitions() === 'insmod') {
             // inserted edges transition twice in insmod mode
-            if(transition_duration() >= 50) {
+            if(_chart.stagedDuration() >= 50) {
                 etrans = etrans.transition()
-                    .duration(transition_duration())
+                    .duration(_chart.stagedDuration())
                     .attr('d', render_edge_path('new'));
                 textTrans = textTrans.transition()
-                    .duration(transition_duration())
+                    .duration(_chart.stagedDuration())
                     .attr('d', render_edge_label_path('new'));
             } else {
                 // if transitions are too short, we run into various problems,
