@@ -103,7 +103,8 @@ dc_graph.random_graph = function(options) {
         nodeKeyGen: function(i) { return 'n' + i; },
         edgeKeyGen: function(i) { return 'e' + i; },
         newComponentProb: 0.1,
-        newNodeProb: 0.9
+        newNodeProb: 0.9,
+        log: false
     }, options);
     if(isNaN(options.newNodeProb))
         options.newNodeProb = 0.9;
@@ -144,6 +145,8 @@ dc_graph.random_graph = function(options) {
                     edge[options.edgeKey] = options.edgeKeyGen(_edges.length);
                     edge[options.sourceKey] = n1[options.nodeKey];
                     edge[options.targetKey] = n2[options.nodeKey];
+                    if(options.log)
+                        console.log(n1[options.nodeKey] + ' -> ' + n2[options.nodeKey]);
                     _edges.push(edge);
                 }
             }
