@@ -287,18 +287,22 @@ function binary_search(f, a, b) {
     }
 }
 
-function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
+function draw_edge_to_shapes(chart, e, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
         sp, tp, points, bezDegree,
         headAng, retPath;
     if(!neighbor) {
-        deltaX = tx - sx;
-        deltaY = ty - sy;
-        sp = point_on_shape(chart, source, deltaX, deltaY);
-        tp = point_on_shape(chart, target, -deltaX, -deltaY);
-        if(!sp) sp = {x: 0, y: 0};
-        if(!tp) tp = {x: 0, y: 0};
+        sp = e.sourcePort.pos;
+        tp = e.targetPort.pos;
+        console.assert(sp);
+        console.assert(tp);
+        // deltaX = tx - sx;
+        // deltaY = ty - sy;
+        // sp = point_on_shape(chart, e.source, deltaX, deltaY);
+        // tp = point_on_shape(chart, e.target, -deltaX, -deltaY);
+        // if(!sp) sp = {x: 0, y: 0};
+        // if(!tp) tp = {x: 0, y: 0};
         points = [{
             x: sx + sp.x,
             y: sy + sp.y
@@ -335,14 +339,14 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
 
         // don't like this but throwing is unacceptable
         try {
-            bss = binary_search(compare_dist(source, neighbor.sourcePort, offset),
+            bss = binary_search(compare_dist(e.source, neighbor.sourcePort, offset),
                                 srcang, srcang + 2 * dir * offset / source_padding);
         }
         catch(x) {
             bss = {ang: srcang, port: neighbor.sourcePort};
         }
         try {
-            bst = binary_search(compare_dist(target, neighbor.targetPort, offset),
+            bst = binary_search(compare_dist(e.target, neighbor.targetPort, offset),
                                 tarang, tarang - 2 * dir * offset / source_padding);
         }
         catch(x) {
