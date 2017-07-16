@@ -23,6 +23,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
+    var _ports = {}; // id = node|edge/id/name
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
     var _children = {}, _arrows = {};
@@ -309,6 +310,14 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.edgeTarget = _chart.targetAccessor = property(function(kv) {
         return kv.value.targetname;
     });
+
+    _chart.portDimension = property(null);
+    _chart.portGroup = property(null);
+    _chart.portNodeKey = property(null);
+    _chart.portEdgeKey = property(null);
+    _chart.portName = property(null);
+    _chart.edgeSourcePortName = property(null);
+    _chart.edgeTargetPortName = property(null);
 
     /**
      * Set or get the function which will be used to retrieve the radius, in pixels, for each
@@ -1200,6 +1209,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.startLayout = function () {
         var nodes = _chart.nodeGroup().all();
         var edges = _chart.edgeGroup().all();
+        var ports = _chart.portGroup() ? _chart.portGroup().all() : [];
         if(_running) {
             throw new Error('dc_graph.diagram.redraw already running!');
         }
@@ -1239,6 +1249,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             e1.source = _nodes[e1.cola.dcg_edgeSource];
             e1.target = _nodes[e1.cola.dcg_edgeTarget];
             e1.cola.dcg_edgeLength = _chart.edgeLength.eval(e1);
+            e1.sourcePort = e1.sourcePort || {};
+            e1.targetPort = e1.targetPort || {};
             _chart.layoutEngine().populateLayoutEdge(e1.cola, e1);
         });
 
@@ -1250,7 +1262,45 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         wedges = wedges.filter(_chart.edgeIsShown.eval);
 
-        // and optionally, nodes that have no edges
+        // now we know which ports should exist
+        var needports = wedges.map(function(e) {
+            if(_chart.edgeSourcePortName.eval(e))
+                return port_name(_chart.edgeSource.eval(e), null, _chart.edgeSourcePortName.eval(e));
+            else return port_name(null, _chart.edgeKey.eval(e), 'source');
+        });
+        needports = needports.concat(wedges.map(function(e) {
+            if(_chart.edgeTargetPortName.eval(e))
+                return port_name(_chart.edgeTarget.eval(e), null, _chart.edgeTargetPortName.eval(e));
+            else return port_name(null, _chart.edgeKey.eval(e), 'target');
+        }));
+        var wports = regenerate_objects(_ports, ports, needports, function(p) {
+            return port_name(_chart.portNodeKey.eval(p), _chart.portEdgeKey.eval(p), _chart.portName.eval(p));
+        }, function(p1, p) {
+            p1.orig = p;
+        }, function(k, p) {
+            // this is dumb. as usual, i blame the lack of metagraphs
+            var parse = split_port_name(k);
+            if(parse.nodeKey) {
+                p.node = _nodes[parse.nodeKey];
+                p.edges = [];
+            }
+            else {
+                var e = _edges[parse.edgeKey];
+                p.node = e[parse.name];
+                p.edges = [e];
+            }
+        });
+        // find all edges for named ports
+        wedges.forEach(function(e) {
+            var name = _chart.edgeSourcePortName.eval(e);
+            if(name)
+                ports[port_name(_chart.nodeKey.eval(e.source), null, name)].edges.push(e);
+            name = _chart.edgeTargetPortName.eval(e);
+            if(name)
+                ports[port_name(_chart.nodeKey.eval(e.target), null, name)].edges.push(e);
+        });
+
+        // optionally, delete nodes that have no edges
         if(_chart.induceNodes()) {
             var keeps = {};
             wedges.forEach(function(e) {
@@ -1521,8 +1571,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var elapsed = Date.now() - startTime;
                 if(!_chart.initialOnly())
                     populate_cola(nodes, edges);
-                if(_chart.showLayoutSteps())
+                if(_chart.showLayoutSteps()) {
+                    if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
+                        dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
+                }
                 if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                     console.log('cancelled');
                     _chart.layoutEngine().stop();
@@ -1532,6 +1585,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!_chart.showLayoutSteps()) {
                     if(!_chart.initialOnly())
                         populate_cola(nodes, edges);
+                    if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
+                        dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                 }
                 else layout_done(true);
@@ -1643,7 +1698,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         else if(!d.pos[age]) {
             var parallel = d.parallel;
             var source = d.source, target = d.target;
-            if(d.source.index > d.target.index) {
+            if(parallel.edges.length > 1 && d.source.index > d.target.index) {
                 var t;
                 t = target; target = source; source = t;
                 t = tx; tx = sx; sx = t;
@@ -1658,7 +1713,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
                     last = port > 0 ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
-                var path = draw_edge_to_shapes(_chart, source, target, sx, sy, tx, ty,
+                var path = draw_edge_to_shapes(_chart, d, sx, sy, tx, ty,
                                               last, dir, _chart.parallelEdgeOffset(),
                                               source_padding, target_padding
                                               );
