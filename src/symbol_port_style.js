@@ -40,7 +40,7 @@ dc_graph.symbol_port_style = function() {
     _style.drawPorts = function(nodePorts, node) {
         var port = node.selectAll('g.port').data(function(n) {
             return nodePorts[_style.parent().nodeKey.eval(n)] || [];
-        });
+        }, name_or_edge);
         port.exit().remove();
         var portEnter = port.enter().append('g')
             .attr({
