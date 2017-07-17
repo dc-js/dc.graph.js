@@ -314,6 +314,7 @@ module.exports.jsFiles = [
     'src/tree_layout.js',
     'src/graphviz_layout.js',
     'src/d3_force_layout.js',
+    'src/d3v4_force_layout.js',
     'src/flexbox_layout.js',
     'src/manual_layout.js',
     'src/place_ports.js',
