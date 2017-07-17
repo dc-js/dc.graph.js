@@ -11,10 +11,15 @@ dc_graph.symbol_port_style = function() {
     }
     _style.portSymbol = property(name_or_edge);
     _style.portColor = property(name_or_edge);
-    _style.portRadius = property(d3.functor(10));
+    _style.portRadius = property(d3.functor(6));
+    _style.portHoverNodeRadius = property(d3.functor(8));
+    _style.portHoverPortRadius = property(d3.functor(10));
     _style.portDisplacement = property(d3.functor(2));
     _style.portBackground = property(d3.functor(true));
     _style.portPadding = property(d3.functor(2));
+    _style.portText = property(function(p) {
+        return p.name;
+    });
 
     function port_fill(d) {
         return _style.colorScale()(_style.portColor()(d));
@@ -31,6 +36,15 @@ dc_graph.symbol_port_style = function() {
             .type(_style.symbolScale()(_style.portSymbol()(d))) // why no eval here (does that system make sense?)
             .size(size*size)
         ();
+    }
+    function is_left(d) {
+        return Math.abs(d.theta) > Math.PI/2;
+    }
+    function hover_radius(d, activePort) {
+        if(activePort)
+            return d === activePort ? _style.portHoverPortRadius()(d) : _style.portRadius()(d);
+        else
+            return _style.portHoverNodeRadius()(d);
     }
     // yuk but correct
     function node_fill() {
@@ -93,6 +107,86 @@ dc_graph.symbol_port_style = function() {
                     return port_symbol(d, _style.portRadius()(d));
                 }
             });
+
+        var label = port.selectAll('text.port').data(function(p) {
+            return _style.portText()(p) ? [p] : [];
+        });
+        label.exit().remove();
+        label.enter().append('text')
+            .attr({
+                class: 'port',
+                'alignment-baseline': 'middle',
+                'pointer-events': 'none',
+                cursor: 'default',
+                opacity: 0
+            });
+        label
+            .attr({
+                'text-anchor': function(d) {
+                    return is_left(d) ? 'end' : 'start';
+                },
+                transform: function(d) {
+                    return 'translate(' + (is_left(d) ? -1 : 1) * (_style.portRadius()(d) + _style.portPadding()(d)) + ',0)';
+                }
+            })
+            .text(_style.portText());
+
+        // this doesn't really belong here but not sure where else to put it
+        node.on('mouseover.grow-ports', function() {
+            var parent = d3.select(d3.event.target.parentNode), activePort = null;
+            if(d3.event.target.parentNode.tagName === 'g' && parent.classed('port'))
+                activePort = parent.datum();
+            d3.select(this).selectAll('circle.port')
+                .transition()
+                .duration(250)
+                .attr({
+                    r: function(d) {
+                        return hover_radius(d, activePort) + _style.portPadding()(d);
+                    }
+                });
+            d3.select(this).selectAll('path.port')
+                .transition()
+                .duration(250)
+                .attr({
+                    d: function(d) {
+                        return port_symbol(d, hover_radius(d, activePort));
+                    }
+                });
+            d3.select(this).selectAll('text.port')
+                .transition()
+                .duration(250)
+                .attr({
+                    opacity: function(d) {
+                        return !activePort || activePort === d ? 1 : 0;
+                    },
+                    'pointer-events': 'auto'
+                });
+        });
+        node.on('mouseout.grow-ports', function() {
+            d3.select(this).selectAll('circle.port')
+                .transition()
+                .duration(250)
+                .attr({
+                    r: function(d) {
+                        return _style.portRadius()(d) + _style.portPadding()(d);
+                    }
+                });
+            d3.select(this).selectAll('path.port')
+                .transition()
+                .duration(250)
+                .attr({
+                    d: function(d) {
+                        return port_symbol(d, _style.portRadius()(d));
+                    }
+                });
+            d3.select(this).selectAll('text.port')
+                .transition()
+                .duration(250)
+                .attr({
+                    opacity: 0,
+                    'pointer-events': 'auto'
+                });
+        });
         return _style;
     };
 
