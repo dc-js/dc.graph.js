@@ -1317,10 +1317,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         wedges.forEach(function(e) {
             var name = _chart.edgeSourcePortName.eval(e);
             if(name)
-                ports[port_name(_chart.nodeKey.eval(e.source), null, name)].edges.push(e);
+                _ports[port_name(_chart.nodeKey.eval(e.source), null, name)].edges.push(e);
             name = _chart.edgeTargetPortName.eval(e);
             if(name)
-                ports[port_name(_chart.nodeKey.eval(e.target), null, name)].edges.push(e);
+                _ports[port_name(_chart.nodeKey.eval(e.target), null, name)].edges.push(e);
         });
 
         // optionally, delete nodes that have no edges
