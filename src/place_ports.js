@@ -42,6 +42,13 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             theta -= 2*Math.PI;
         return theta;
     }
+    function normalize_angle_delta(theta) {
+        while(theta < 0)
+            theta += 2*Math.PI;
+        while(theta > 2*Math.PI)
+            theta -= 2*Math.PI;
+        return theta;
+    }
     function between_angles(theta, a, b) {
         if(a < b)
             return a <= theta && theta < b;
@@ -87,42 +94,17 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         inside.sort(function(a,b) {
             return d3.ascending(a.theta, b.theta);
         });
-        var gaps;
-        if(inside.length === 1)
-            gaps = [2*Math.PI];
-        else
-            gaps = inside.map(function(p, i) {
-                if(i > 0)
-                    return p.theta - inside[i-1].theta;
-                else
-                    return normalize_angle(p.theta - inside[inside.length-1].theta);
-            });
-        // okay this isn't even decent, put each port in the middle of the biggest space :-P
+        // place the rest randomly within their bounds
         unplaced.forEach(function(p) {
-            if(!inside.length) {
-                if(p.bounds)
-                    p.theta = normalize_angle((p.bounds[1] + p.bounds[0])/2);
-                else
-                    p.theta = 0; // parameterize?
-                inside = [p];
-                gaps = [2*Math.PI];
+            var low, high;
+            if(p.bounds) {
+                low = p.bounds[0];
+                high = p.bounds[1];
+            } else {
+                low = -Math.PI;
+                high = Math.PI;
             }
-            var bigi;
-            for(var i = 0; i < gaps.length; ++i) {
-                if(!between_angles(inside[i].theta, p.bounds[0], p.bounds[1]) &&
-                   !between_angles(inside[(i+inside.length-1)%inside.length].theta, p.bounds[0], p.bounds[1]))
-                    continue;
-                if(bigi === undefined || gaps[i] > gaps[bigi])
-                    bigi = i;
-            }
-            var a = inside[(bigi+inside.length-1)%inside.length].theta, b = inside[bigi].theta;
-            var theta = normalize_angle((a + b) / 2);
-            if(p.bounds)
-                if(!between_angles(theta, p.bounds[0], p.bounds[1]))
-                    theta = clip_angle(theta, p.bounds[0], p.bounds[1]);
-            gaps.splice(bigi, 0, normalize_angle(theta - a));
-            gaps[bigi+1] = normalize_angle(b - theta);
-            inside.splice(bigi, 0, p);
+            p.theta = normalize_angle(low + Math.random()*normalize_angle_delta(high-low));
         });
         nports.forEach(function(p) {
             p.pos = point_on_shape(diagram, nodes[nid], Math.cos(p.theta)*1000, Math.sin(p.theta)*1000);
