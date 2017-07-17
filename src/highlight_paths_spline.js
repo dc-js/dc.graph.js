@@ -5,6 +5,7 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
     selectprops = selectprops || {};
     var node_on_paths = {}, edge_on_paths = {}, pathsAll = null, selected = null, hoverpaths = null;
     var _anchor;
+    var _layer = null;
 
     function refresh() {
         if(_behavior.doRedraw())
@@ -18,6 +19,11 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
     }
 
     function paths_changed(nop, eop, paths) {
+        // create the layer if it's null
+        if(_layer === null) {
+            _layer = _behavior.parent().select('g.draw').append('g').attr('class', 'spline-layer');
+        }
+
         selected = hoverpaths = null;
         // it would be difficult to check if no change, but at least check if changing from empty to empty
         if(Object.keys(node_on_paths).length === 0 && Object.keys(nop).length === 0 &&
@@ -27,11 +33,9 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
         edge_on_paths = eop;
         pathsAll = paths;
 
-        var _chart = _behavior.parent();
-
         //clear old paths
-        _chart.selectAll('.spline-edge').remove();
-        _chart.selectAll('.spline-edge-hover').remove();
+        _layer.selectAll('.spline-edge').remove();
+        _layer.selectAll('.spline-edge-hover').remove();
 
         // check if path exits on current chart
         if(pathExists(paths) === true) {
@@ -159,12 +163,10 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
 
     // draw the spline for paths
     function drawSpline(paths, pathprops) {
+        // draw spline edge
         var _chart = _behavior.parent();
 
-        // draw spline edge
-        var _splineLayer = _chart.select(".spline-layer");
-
-        var edge = _splineLayer.selectAll(".spline-edge").data(paths);
+        var edge = _layer.selectAll(".spline-edge").data(paths);
         var edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
             .attr('id', function(d, i) { return "spline-path-"+i; })
@@ -175,7 +177,7 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
             .attr('fill', 'none');
 
         // another wider copy of the edge just for hover events
-        var edgeHover = _splineLayer.selectAll('.spline-edge-hover')
+        var edgeHover = _layer.selectAll('.spline-edge-hover')
             .data(paths);
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
