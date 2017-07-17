@@ -1290,7 +1290,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             else return port_name(null, _chart.edgeKey.eval(e), 'target');
         }));
         var wports = regenerate_objects(_ports, ports, needports, function(p) {
-            return port_name(_chart.portNodeKey.eval(p), _chart.portEdgeKey.eval(p), _chart.portName.eval(p));
+            return port_name(_chart.portNodeKey()(p),
+                             _chart.portEdgeKey() && _chart.portEdgeKey(p),
+                             _chart.portName()(p));
         }, function(p1, p) {
             p1.orig = p;
         }, function(k, p) {
