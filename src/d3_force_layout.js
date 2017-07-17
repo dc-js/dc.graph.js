@@ -93,7 +93,7 @@ dc_graph.d3_force_layout = function(id) {
         dispatchState('end');
     }
 
-    function relayoutPath(paths) {
+    function relayout(paths) {
         if(paths === null) {
             Object.keys(_nodes).forEach(function(key) {
                 _nodes[key].fx = _originalNodesPosition[key].x;
@@ -227,11 +227,8 @@ dc_graph.d3_force_layout = function(id) {
         stop: function() {
             stop();
         },
-        relayoutPath: function(paths) {
-            relayoutPath(paths);
-        },
-        resetGraph: function() {
-            resetGraph();
+        paths: function(paths) {
+            relayout(paths);
         },
         optionNames: function() {
             return ['angleForce', 'chargeForce', 'gravityStrength', 'collisionRadius',
