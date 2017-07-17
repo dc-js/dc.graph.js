@@ -20,7 +20,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     // but attempt to implement most of that interface, copying some of the most basic stuff
     var _chart = dc.marginMixin({});
     _chart.__dcFlag__ = dc.utils.uniqueId();
-    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null, _splineLayer = null;
+    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _dispatch = d3.dispatch('end', 'start', 'drawn', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _stats = {};
@@ -2010,8 +2010,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('class', 'edge-layer');
         _nodeLayer = _g.append('g')
             .attr('class', 'node-layer');
-        _splineLayer = _g.append('g')
-            .attr('class', 'spline-layer');
 
         if(_chart.legend())
             _chart.legend().render();
