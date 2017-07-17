@@ -14,13 +14,16 @@ dc_graph.d3_force_layout = function(id) {
     var _nodes = {}, _edges = {};
     var wnodes = [], wedges = [];
     var _originalNodesPosition = {};
+    var _options = null;
 
     function init(options) {
+        _options = options;
+
         _simulation = d3v4.forceSimulation()
             .force("link", d3v4.forceLink())
             .force("center", d3v4.forceCenter(options.width / 2, options.height / 2))
-            .force('gravityX', d3v4.forceX(options.width / 2).strength(0.3))
-            .force('gravityY', d3v4.forceY(options.height / 2).strength(0.3))
+            .force('gravityX', d3v4.forceX(options.width / 2).strength(_options.gravityStrength))
+            .force('gravityY', d3v4.forceY(options.height / 2).strength(_options.gravityStrength))
             .stop();
 
         _simulation.on('tick', /* _tick = */ function() {
@@ -42,8 +45,8 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function resetSim() {
-        _simulation.force("charge", d3v4.forceManyBody().strength(-100));
-        _simulation.force('collision', d3v4.forceCollide(8));
+        _simulation.force("charge", d3v4.forceManyBody().strength(_options.initialCharge));
+        _simulation.force('collision', d3v4.forceCollide(_options.collisionRadius));
         _simulation.force('angle', null);
     }
 
@@ -118,8 +121,10 @@ dc_graph.d3_force_layout = function(id) {
                 }
             });
 
-            //_simulation.force("charge", d3v4.forceManyBody().strength(-300));
-            _simulation.force('angle', function(alpha) { angleForces(alpha, paths, 0.002)});
+            _simulation.force("charge", d3v4.forceManyBody().strength(_options.chargeForce));
+            _simulation.force('angle', function(alpha) {
+                angleForces(alpha, paths, _options.angleForce)
+            });
             runSimulation();
         }
 
@@ -229,11 +234,15 @@ dc_graph.d3_force_layout = function(id) {
             resetGraph();
         },
         optionNames: function() {
-            return ['lengthStrategy', 'baseLength']
+            return ['angleForce', 'chargeForce', 'gravityStrength', 'collisionRadius',
+                    'initialCharge']
                 .concat(graphviz_keys);
         },
-        lengthStrategy: property('symmetric'),
-        baseLength: property(30),
+        angleForce: property(0.002),
+        chargeForce: property(-600),
+        gravityStrength: property(0.3),
+        collisionRadius: property(8),
+        initialCharge: property(-100),
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
     });
