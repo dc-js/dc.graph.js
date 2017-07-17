@@ -14,10 +14,6 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
             _behavior.parent().refresh();
     }
 
-    function relayoutPath(paths) {
-        _behavior.parent().relayoutPath(paths);
-    }
-
     function paths_changed(nop, eop, paths) {
         // create the layer if it's null
         if(_layer === null) {
@@ -39,10 +35,11 @@ dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, p
 
         // check if path exits on current chart
         if(pathExists(paths) === true) {
-            relayoutPath(paths);
+            //relayoutPath(paths);
+            _behavior.parent().layoutEngine().paths(paths);
             drawSpline(paths, pathprops);
         } else {
-            relayoutPath(null);
+            _behavior.parent().layoutEngine().paths(null);
         }
     }
 
