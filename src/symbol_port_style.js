@@ -1,10 +1,10 @@
 dc_graph.symbol_port_style = function() {
     var _style = {};
 
-    _style.symbolScale = property(d3.scale.ordinal().range(d3.svg.symbolTypes));
+    _style.symbolScale = property(d3.shuffle(d3.scale.ordinal().range(d3.svg.symbolTypes)));
     _style.colorScale = property(d3.scale.ordinal().range(
-                ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
-                 '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'])); // colorbrewer
+        d3.shuffle(['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
+                    '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))); // colorbrewer
 
     function name_or_edge(p) {
         return p.named ? p.name : _style.parent().edgeKey.eval(p.edges[0]);
