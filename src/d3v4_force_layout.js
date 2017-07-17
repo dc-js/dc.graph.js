@@ -1,15 +1,15 @@
 /**
- * `dc_graph.cola_layout` is an adaptor for cola.js layouts in dc.graph.js
- * @class cola_layout
+ * `dc_graph.d3v4_force_layout` is an adaptor for d3-force version 4 layouts in dc.graph.js
+ * @class d3v4_force_layout
  * @memberof dc_graph
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.cola_layout}
+ * @return {dc_graph.d3v4_force_layout}
  **/
-dc_graph.d3_force_layout = function(id) {
+dc_graph.d3v4_force_layout = function(id) {
     var _layoutId = id || uuid();
     var _simulation = null; // d3-force simulation
     var _dispatch = d3.dispatch('tick', 'start', 'end');
-    // node and edge objects shared with cola.js, preserved from one iteration
+    // node and edge objects shared with d3-force, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
     var wnodes = [], wedges = [];
@@ -132,7 +132,7 @@ dc_graph.d3_force_layout = function(id) {
     };
 
     function runSimulation(iterations) {
-        iterations = iterations || 300;
+        var iterations = iterations || 300;
         for (var i = 0; i < iterations; ++i) {
             _simulation.tick();
         }
@@ -246,4 +246,4 @@ dc_graph.d3_force_layout = function(id) {
     return engine;
 };
 
-dc_graph.d3_force_layout.scripts = ['d3.js'];
+dc_graph.d3v4_force_layout.scripts = ['d3.js'];
