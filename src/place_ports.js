@@ -62,7 +62,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             nports = node_ports[nid];
         nports.forEach(function(p) {
             var angs = p.edges.map(angle.bind(null, n));
-            p.theta = angs.length ? d3.sum(angs)/angs.length : undefined;
+            p.theta = angs.length ? d3.sum(angs)/angs.length : p.theta || undefined;
             if(p.orig) { // only specified ports have bounds
                 var bounds = diagram.portBounds.eval(p);
                 if(bounds)
