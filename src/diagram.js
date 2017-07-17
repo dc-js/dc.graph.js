@@ -332,6 +332,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _chart;
     };
 
+    _chart.portBounds = property(null); // position limits, in radians
+
     _chart.edgeSourcePortName = property(null);
     _chart.edgeTargetPortName = property(null);
 
