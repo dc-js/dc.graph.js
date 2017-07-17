@@ -73,7 +73,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         nports.forEach(function(p) {
             if(p.theta === undefined)
                 unplaced.push(p);
-            if(p.bounds && !between_angles(p.theta, p.bounds[0], p.bounds[1]))
+            else if(p.bounds && !between_angles(p.theta, p.bounds[0], p.bounds[1]))
                outside.push(p);
             else
                 inside.push(p);
