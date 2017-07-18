@@ -72,7 +72,24 @@ dc_graph.symbol_port_style = function() {
                     return hover_radius(d) + _style.portPadding()(d);
                 }
             });
-        node.selectAll('path.port')
+        var symbol = node.selectAll('path.port');
+        var shimmer = symbol.filter(function(p) { return p.state === 'shimmer'; });
+        repeat();
+
+        function repeat() {
+            shimmer
+              .transition()
+                .duration(1000)
+                .ease("bounce")
+                .attr('r',  _style.portHoverPortRadius())
+              .transition()
+                .duration(1000)
+                .ease("bounce")
+                .attr('r',  _style.portRadius())
+                .each("end", repeat);
+        }
+
+        symbol.filter(function(p) { return p.state !== 'shimmer'; })
             .transition()
             .duration(250)
             .attr({
