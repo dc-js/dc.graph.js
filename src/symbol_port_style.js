@@ -1,5 +1,6 @@
 dc_graph.symbol_port_style = function() {
     var _style = {};
+    var _nodePorts, _node;
 
     _style.symbolScale = property(d3.shuffle(d3.scale.ordinal().range(d3.svg.symbolTypes)));
     _style.colorScale = property(d3.scale.ordinal().range(
@@ -40,18 +41,59 @@ dc_graph.symbol_port_style = function() {
     function is_left(d) {
         return Math.abs(d.theta) > Math.PI/2;
     }
-    function hover_radius(d, activePort) {
-        if(activePort)
-            return d === activePort ? _style.portHoverPortRadius()(d) : _style.portRadius()(d);
-        else
+    function hover_radius(d) {
+        switch(d.state) {
+        case 'hovered':
+            return _style.portHoverPortRadius()(d);
+        case 'node-hovered':
             return _style.portHoverNodeRadius()(d);
+        case 'sibling-hovered':
+        case 'inactive':
+        default:
+            return _style.portRadius()(d);
+        }
     }
     // yuk but correct
     function node_fill() {
         var scale = _style.parent().nodeFillScale() || identity;
         return scale(_style.parent().nodeFill.eval(d3.select(this.parentNode.parentNode).datum()));
     }
+    _style.animateNodes = function(nids) {
+        var setn = d3.set(nids);
+        var node = _node
+                .filter(function(d) {
+                    return setn.has(_style.parent().nodeKey.eval(d));
+                });
+        node.selectAll('circle.port')
+            .transition()
+            .duration(250)
+            .attr({
+                r: function(d) {
+                    return hover_radius(d) + _style.portPadding()(d);
+                }
+            });
+        node.selectAll('path.port')
+            .transition()
+            .duration(250)
+            .attr({
+                d: function(d) {
+                    return port_symbol(d, hover_radius(d));
+                }
+            });
+        node.selectAll('text.port')
+            .transition()
+            .duration(250)
+            .attr({
+                opacity: function(d) {
+                    return d.state === 'hovered' || d.state === 'node-hovered' ? 1 : 0;
+                },
+                'pointer-events': function(d) {
+                    return d.state === 'hovered' || d.state === 'node-hovered' ? 'auto' : 'none';
+                }
+            });
+    };
     _style.drawPorts = function(nodePorts, node) {
+        _nodePorts = nodePorts; _node = node;
         var port = node.selectAll('g.port').data(function(n) {
             return nodePorts[_style.parent().nodeKey.eval(n)] || [];
         }, name_or_edge);
@@ -131,61 +173,22 @@ dc_graph.symbol_port_style = function() {
             })
             .text(_style.portText());
 
-        // this doesn't really belong here but not sure where else to put it
-        node.on('mouseover.grow-ports', function() {
+        node.on('mouseover.grow-ports', function(d) {
+            var nid = _style.parent().nodeKey.eval(d);
             var parent = d3.select(d3.event.target.parentNode), activePort = null;
             if(d3.event.target.parentNode.tagName === 'g' && parent.classed('port'))
                 activePort = parent.datum();
-            d3.select(this).selectAll('circle.port')
-                .transition()
-                .duration(250)
-                .attr({
-                    r: function(d) {
-                        return hover_radius(d, activePort) + _style.portPadding()(d);
-                    }
-                });
-            d3.select(this).selectAll('path.port')
-                .transition()
-                .duration(250)
-                .attr({
-                    d: function(d) {
-                        return port_symbol(d, hover_radius(d, activePort));
-                    }
-                });
-            d3.select(this).selectAll('text.port')
-                .transition()
-                .duration(250)
-                .attr({
-                    opacity: function(d) {
-                        return !activePort || activePort === d ? 1 : 0;
-                    },
-                    'pointer-events': 'auto'
-                });
+            nodePorts[nid].forEach(function(p) {
+                p.state = p === activePort ? 'hovered' : activePort ? 'sibling-hovered' : 'node-hovered';
+            });
+            _style.animateNodes([nid]);
         });
-        node.on('mouseout.grow-ports', function() {
-            d3.select(this).selectAll('circle.port')
-                .transition()
-                .duration(250)
-                .attr({
-                    r: function(d) {
-                        return _style.portRadius()(d) + _style.portPadding()(d);
-                    }
-                });
-            d3.select(this).selectAll('path.port')
-                .transition()
-                .duration(250)
-                .attr({
-                    d: function(d) {
-                        return port_symbol(d, _style.portRadius()(d));
-                    }
-                });
-            d3.select(this).selectAll('text.port')
-                .transition()
-                .duration(250)
-                .attr({
-                    opacity: 0,
-                    'pointer-events': 'auto'
-                });
+        node.on('mouseout.grow-ports', function(d) {
+            var nid = _style.parent().nodeKey.eval(d);
+            nodePorts[nid].forEach(function(p) {
+                p.state = 'inactive';
+            });
+            _style.animateNodes([nid]);
         });
         return _style;
     };
