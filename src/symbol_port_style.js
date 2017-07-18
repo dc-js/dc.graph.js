@@ -92,6 +92,12 @@ dc_graph.symbol_port_style = function() {
                 }
             });
     };
+    _style.eventPort = function() {
+        var parent = d3.select(d3.event.target.parentNode);
+        if(d3.event.target.parentNode.tagName === 'g' && parent.classed('port'))
+            return parent.datum();
+        return null;
+    };
     _style.drawPorts = function(nodePorts, node) {
         _nodePorts = nodePorts; _node = node;
         var port = node.selectAll('g.port').data(function(n) {
@@ -175,9 +181,7 @@ dc_graph.symbol_port_style = function() {
 
         node.on('mouseover.grow-ports', function(d) {
             var nid = _style.parent().nodeKey.eval(d);
-            var parent = d3.select(d3.event.target.parentNode), activePort = null;
-            if(d3.event.target.parentNode.tagName === 'g' && parent.classed('port'))
-                activePort = parent.datum();
+            var activePort = _style.eventPort();
             nodePorts[nid].forEach(function(p) {
                 p.state = p === activePort ? 'hovered' : activePort ? 'sibling-hovered' : 'node-hovered';
             });
