@@ -11,9 +11,9 @@ dc_graph.symbol_port_style = function() {
     }
     _style.portSymbol = property(name_or_edge);
     _style.portColor = property(name_or_edge);
-    _style.portRadius = property(d3.functor(6));
-    _style.portHoverNodeRadius = property(d3.functor(8));
-    _style.portHoverPortRadius = property(d3.functor(10));
+    _style.portRadius = property(d3.functor(7));
+    _style.portHoverNodeRadius = property(d3.functor(10));
+    _style.portHoverPortRadius = property(d3.functor(14));
     _style.portDisplacement = property(d3.functor(2));
     _style.portBackground = property(d3.functor(true));
     _style.portPadding = property(d3.functor(2));
