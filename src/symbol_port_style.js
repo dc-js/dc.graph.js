@@ -126,7 +126,7 @@ dc_graph.symbol_port_style = function() {
                     return is_left(d) ? 'end' : 'start';
                 },
                 transform: function(d) {
-                    return 'translate(' + (is_left(d) ? -1 : 1) * (_style.portRadius()(d) + _style.portPadding()(d)) + ',0)';
+                    return 'translate(' + (is_left(d) ? -1 : 1) * (_style.portHoverPortRadius()(d) + _style.portPadding()(d)) + ',0)';
                 }
             })
             .text(_style.portText());
