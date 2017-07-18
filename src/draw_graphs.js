@@ -67,13 +67,13 @@ dc_graph.draw_graphs = function(options) {
         erase_hint();
         var edge = {};
         edge[_idTag] = uuid();
-        edge[_sourceTag] = source.orig.key;
-        edge[_targetTag] = target.orig.key;
+        edge[_sourceTag] = source.node.orig.key;
+        edge[_targetTag] = target.node.orig.key;
         if(_behavior.addEdge())
-            _behavior.addEdge()(edge);
+            _behavior.addEdge()(edge, source.port, target.port);
         // changing this data inside crossfilter is okay because it is not indexed data
-        source.orig.value[_fixedPosTag] = null;
-        target.orig.value[_fixedPosTag] = null;
+        source.node.orig.value[_fixedPosTag] = null;
+        target.node.orig.value[_fixedPosTag] = null;
         if(!_behavior.edgeCrossfilter())
             throw new Error('need edgeCrossfilter');
         _behavior.edgeCrossfilter().add([edge]);
@@ -92,21 +92,40 @@ dc_graph.draw_graphs = function(options) {
         node
             .on('mousedown.draw-graphs', function(d) {
                 d3.event.stopPropagation();
-                if(_behavior.dragCreatesEdges()) {
-                    _sourceDown = d;
+                if(!_behavior.dragCreatesEdges())
+                    return;
+                if(_behavior.usePorts()) {
+                    var activePort = _behavior.usePorts().eventPort();
+                    if(!activePort)
+                        return;
+                    _sourceDown = {node: d, port: activePort};
+                    _hintData = [{source: {x: d.cola.x + activePort.pos.x, y: d.cola.y + activePort.pos.y}}];
+                } else {
+                    _sourceDown = {node: d};
                     _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
                 }
             })
             .on('mousemove.draw-graphs', function(d) {
                 d3.event.stopPropagation();
                 if(_sourceDown) {
-                    if(d === _sourceDown) {
+                    if(d === _sourceDown.node) {
                         _targetMove = null;
                         _hintData[0].target = null;
                     }
-                    else if(d !== _targetMove) {
-                        _targetMove = d;
-                        _hintData[0].target = {x: _targetMove.cola.x, y: _targetMove.cola.y};
+                    else if(_behavior.usePorts()) {
+                        var activePort =  _behavior.usePorts().eventPort();
+                        if(activePort) {
+                            _targetMove = {node: d, port: activePort};
+                            _hintData[0].target = {x: d.cola.x + activePort.pos.x, y: d.cola.y + activePort.pos.y};
+                        }
+                        else {
+                            var coords = event_coords(chart);
+                            _targetMove = null;
+                            _hintData[0].target = {x: coords[0], y: coords[1]};
+                        }
+                    } else if(!_targetMove || d !== _targetMove.node) {
+                        _targetMove = {node: d};
+                        _hintData[0].target = {x: d.cola.x, y: d.cola.y};
                     }
                     update_hint();
                 }
@@ -164,6 +183,7 @@ dc_graph.draw_graphs = function(options) {
     _behavior.edgeCrossfilter = property(options.edgeCrossfilter);
 
     // behavioral options
+    _behavior.usePorts = property(null);
     _behavior.clickCreatesNodes = property(true);
     _behavior.dragCreatesEdges = property(true);
 
