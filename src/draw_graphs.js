@@ -77,8 +77,8 @@ dc_graph.draw_graphs = function(options) {
         if(!_behavior.edgeCrossfilter())
             throw new Error('need edgeCrossfilter');
         _behavior.edgeCrossfilter().add([edge]);
+        select_nodes_group.node_set_changed([], false);
         chart.redrawGroup();
-        select_nodes_group.node_set_changed([]);
     }
 
     function add_behavior(chart, node, edge, ehover) {

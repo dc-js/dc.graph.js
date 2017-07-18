@@ -1,7 +1,7 @@
 dc_graph.select_nodes = function(props) {
     var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
     var _selected = [], _oldSelected;
-    var _brush, _gBrush, _noRefresh;
+    var _brush, _gBrush;
 
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
     var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
@@ -20,9 +20,11 @@ dc_graph.select_nodes = function(props) {
     }
 
     function selection_changed(chart) {
-        return function(selection) {
+        return function(selection, refresh) {
+            if(refresh === undefined)
+                refresh = true;
             _selected = selection;
-            if(!_noRefresh)
+            if(refresh)
                 chart.refresh();
         };
     }
@@ -106,11 +108,8 @@ dc_graph.select_nodes = function(props) {
             // drop any selected which no longer exist in the diagram
             var present = node.data().map(function(d) { return d.orig.key; });
             var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
-            if(_selected.length !== now_selected.length) {
-                _noRefresh = true; // I hate these event processing flags, but we're in a draw and shouldn't trigger another
-                select_nodes_group.node_set_changed(now_selected);
-                _noRefresh = false;
-            }
+            if(_selected.length !== now_selected.length)
+                select_nodes_group.node_set_changed(now_selected, false);
         }
     }
 
