@@ -344,7 +344,7 @@ module.exports.jsFiles = [
     'src/highlight_neighbors.js',
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',
-    'src/highlight_paths_spline.js',
+    'src/draw_spline_paths.js',
     'src/expand_collapse.js',
     'src/draw_graphs.js',
     'src/match_ports.js',

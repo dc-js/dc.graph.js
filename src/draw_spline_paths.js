@@ -1,4 +1,4 @@
-dc_graph.highlight_paths_spline = function(pathprops, hoverprops, selectprops, pathsgroup) {
+dc_graph.draw_spline_paths = function(pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
