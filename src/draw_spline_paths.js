@@ -8,11 +8,6 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     var _layer = null;
 
     function paths_changed(nop, eop, paths) {
-        // create the layer if it's null
-        if(_layer === null) {
-            _layer = _behavior.parent().select('g.draw').append('g').attr('class', 'spline-layer');
-        }
-
         pathsAll = paths;
 
         //clear old paths
@@ -211,6 +206,13 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     }
 
     function add_behavior(chart, node, edge, ehover) {
+        // create the layer if it's null
+        if(_layer === null) {
+            _layer = _behavior.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
+            _layer.enter().append('g').attr('class', 'spline-layer');
+        }
+
+
 
     }
 
