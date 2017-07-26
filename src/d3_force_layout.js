@@ -237,10 +237,10 @@ dc_graph.d3_force_layout = function(id) {
             return ['angleForce', 'chargeForce', 'gravityStrength', 'initialCharge']
                 .concat(graphviz_keys);
         },
-        angleForce: property(0.01),
+        angleForce: property(0.02),
         chargeForce: property(-500),
         gravityStrength: property(1.0),
-        initialCharge: property(-300),
+        initialCharge: property(-400),
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
     });
