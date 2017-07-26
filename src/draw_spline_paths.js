@@ -3,16 +3,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
     selectprops = selectprops || {};
-    var node_on_paths = {}, edge_on_paths = {}, pathsAll = null, selected = null, hoverpaths = null;
+    var pathsAll = null;
     var _anchor;
     var _layer = null;
-
-    function refresh() {
-        if(_behavior.doRedraw())
-            _behavior.parent().relayout().redraw();
-        else
-            _behavior.parent().refresh();
-    }
 
     function paths_changed(nop, eop, paths) {
         // create the layer if it's null
@@ -20,13 +13,6 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             _layer = _behavior.parent().select('g.draw').append('g').attr('class', 'spline-layer');
         }
 
-        selected = hoverpaths = null;
-        // it would be difficult to check if no change, but at least check if changing from empty to empty
-        if(Object.keys(node_on_paths).length === 0 && Object.keys(nop).length === 0 &&
-           Object.keys(edge_on_paths).length === 0 && Object.keys(eop).length === 0)
-            return;
-        node_on_paths = nop;
-        edge_on_paths = eop;
         pathsAll = paths;
 
         //clear old paths
@@ -212,108 +198,31 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         });
     };
 
-    function draw_hovered() {
-        if(hoverpaths === null) {
+    function draw_hovered(hoversplines) {
+        if(hoversplines === null) {
             d3.selectAll('.spline-edge').attr('stroke', 'black');
         } else {
-            for(var i = 0; i < hoverpaths.length; i ++) {
-                var path_id = pathsAll.indexOf(hoverpaths[i])
+            for(var i = 0; i < hoversplines.length; i ++) {
+                var path_id = pathsAll.indexOf(hoversplines[i])
                 var sel_path = d3.select("#spline-path-"+path_id).attr('stroke', hoverprops.edgeStroke);
                 sel_path.moveToFront();
             }
         }
     }
 
-    function hover_changed(hp) {
-        if(hp !== hoverpaths) {
-            hoverpaths = hp;
-            refresh();
-        }
-    }
-
-    function select_changed(sp) {
-        if(sp !== selected) {
-            selected = sp;
-            refresh();
-        }
-    }
-
-    function clear_all_highlights() {
-        node_on_paths = {};
-        edge_on_paths = {};
-    }
-
-    function contains_path(paths) {
-        return function(path) {
-            return paths.indexOf(path)>=0;
-        };
-    }
-
-    // sigh
-    function doesnt_contain_path(paths) {
-        var cp = contains_path(paths);
-        return function(path) {
-            return !cp(path);
-        };
-    }
-
-    function intersect_paths(pathsA, pathsB) {
-        if(!pathsA || !pathsB)
-            return false;
-        return pathsA.some(contains_path(pathsB));
-    }
-
-    function toggle_paths(pathsA, pathsB) {
-        if(!pathsA)
-            return pathsB;
-        else if(!pathsB)
-            return pathsA;
-        if(pathsB.every(contains_path(pathsA)))
-            return pathsA.filter(doesnt_contain_path(pathsB));
-        else return pathsA.concat(pathsB.filter(doesnt_contain_path(pathsA)));
-    }
-
     function add_behavior(chart, node, edge, ehover) {
-        chart
-            .cascade(300, true, conditional_properties(function(n) {
-                return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], selected);
-            }, function(e) {
-                return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], selected);
-            }, selectprops));
-
-        node
-            .on('mouseover.highlight-paths', function(n) {
-                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(n)] || null);
-            })
-            .on('mouseout.highlight-paths', function(n) {
-                highlight_paths_group.hover_changed(null);
-            })
-            .on('click.highlight-paths', function(n) {
-                highlight_paths_group.select_changed(toggle_paths(selected, node_on_paths[chart.nodeKey.eval(n)]));
-            });
 
     }
 
     function remove_behavior(chart, node, edge, ehover) {
-        node
-            .on('mouseover.highlight-paths', null)
-            .on('mouseout.highlight-paths', null)
-            .on('click.highlight-paths', null);
-        clear_all_highlights();
-        chart
-            .cascade(300, false, selectprops)
-            .cascade(400, false, hoverprops);
     }
 
     highlight_paths_group
-        .on('hover_changed.highlight-paths-spline', function(hpaths) {
-            if(hoverpaths !== hpaths) {
-                hoverpaths = hpaths;
-                draw_hovered();
-            }
+        .on('hover_changed.draw-spline-paths', function(hpaths) {
+            draw_hovered(hpaths);
         });
 
-    var _behavior = dc_graph.behavior('highlight-paths-spline', {
+    var _behavior = dc_graph.behavior('draw-spline-paths', {
         add_behavior: add_behavior,
         remove_behavior: function(chart, node, edge, ehover) {
             remove_behavior(chart, node, edge, ehover);
@@ -322,14 +231,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         parent: function(p) {
             if(p)
                 _anchor = p.anchorName();
-            // else we should have received anchor earlier
             highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
-            highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
         }
     });
-
-    // whether to do relayout & redraw (true) or just refresh (false)
-    _behavior.doRedraw = property(false);
 
     return _behavior;
 };
