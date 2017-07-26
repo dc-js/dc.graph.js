@@ -1,4 +1,4 @@
-dc_graph.draw_spline_paths = function(pathprops, hoverprops, selectprops, pathsgroup) {
+dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
@@ -55,13 +55,22 @@ dc_graph.draw_spline_paths = function(pathprops, hoverprops, selectprops, pathsg
     function getNodePosition(path) {
         var _chart = _behavior.parent();
         var plist = [];
-        for(var i = 0; i < path.element_list.length; i ++) {
-            var uid = path.element_list[i].property_map.ecomp_uid;
-            var node = _chart.getNodeAllInfo(uid);
-            if(node !== null) {
-                plist.push({'x': node.cola.x, 'y': node.cola.y});
+
+        pathreader.elementList.eval(path).forEach(function(element) {
+            var key, node;
+            switch(pathreader.elementType.eval(element)) {
+            case 'node':
+                key = pathreader.nodeKey.eval(element);
+                node = _chart.getNodeAllInfo(key);
+                if(node !== null) {
+                    plist.push({'x': node.cola.x, 'y': node.cola.y});
+                }
+                break;
+            case 'edge':
+                break;
             }
-        }
+        });
+
         return plist;
     };
 
