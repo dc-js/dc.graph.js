@@ -112,15 +112,21 @@ dc_graph.d3v4_force_layout = function(id) {
 
             // fix nodes not on paths
             Object.keys(_nodes).forEach(function(key) {
-                if(!nodeIDs.includes(key)) {
-                    _nodes[key].fx = _originalNodesPosition[key].x;
-                    _nodes[key].fy = _originalNodesPosition[key].y;
-                } else {
-                    _nodes[key].fx = null;
-                    _nodes[key].fy = null;
-                }
+                //if(!nodeIDs.includes(key)) {
+                    //_nodes[key].fx = _originalNodesPosition[key].x;
+                    //_nodes[key].fy = _originalNodesPosition[key].y;
+                //} else {
+                    //_nodes[key].fx = null;
+                    //_nodes[key].fy = null;
+                //}
+                _nodes[key].fx = null;
+                _nodes[key].fy = null;
             });
 
+            _simulation.force("link", d3v4.forceLink())
+            .force("center", d3v4.forceCenter(_options.width / 2, _options.height / 2))
+            .force('gravityX', d3v4.forceX(_options.width / 2).strength(_options.gravityStrength))
+            .force('gravityY', d3v4.forceY(_options.height / 2).strength(_options.gravityStrength));
             _simulation.force("charge", d3v4.forceManyBody().strength(_options.chargeForce));
             _simulation.force('angle', function(alpha) {
                 angleForces(alpha, paths, _options.angleForce)
@@ -235,7 +241,7 @@ dc_graph.d3v4_force_layout = function(id) {
                     'initialCharge']
                 .concat(graphviz_keys);
         },
-        angleForce: property(0.002),
+        angleForce: property(0.01),
         chargeForce: property(-600),
         gravityStrength: property(0.3),
         collisionRadius: property(8),
