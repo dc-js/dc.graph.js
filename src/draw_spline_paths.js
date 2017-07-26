@@ -8,20 +8,19 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     var _layer = null;
 
     function paths_changed(nop, eop, paths) {
-        pathsAll = paths;
 
         //clear old paths
         _layer.selectAll('.spline-edge').remove();
         _layer.selectAll('.spline-edge-hover').remove();
 
+        pathsAll = paths;
         // check if path exits on current chart
         if(pathExists(paths) === true) {
-            //relayoutPath(paths);
             _behavior.parent().layoutEngine().paths(paths);
-            drawSpline(paths, pathprops);
         } else {
             _behavior.parent().layoutEngine().paths(null);
         }
+        _behavior.parent().redraw();
     }
 
     // check if path exists in current view
@@ -212,7 +211,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             _layer.enter().append('g').attr('class', 'spline-layer');
         }
 
-
+        if(pathsAll !== null) {
+            drawSpline(pathsAll, pathprops);
+        }
 
     }
 
