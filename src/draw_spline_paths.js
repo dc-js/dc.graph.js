@@ -179,6 +179,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .attr('class', 'spline-edge-hover')
             .attr('d', function(d) { return genPath(d); })
             .attr('opacity', 0)
+            .attr('stroke', 'green')
             .attr('stroke-width', hoverprops.edgeStrokeWidth || 5)
             .attr('fill', 'none')
             .on('mouseover', function(d, i) {
@@ -238,7 +239,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         parent: function(p) {
             if(p)
                 _anchor = p.anchorName();
-            highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
+            highlight_paths_group.on('paths_changed.spline-' + _anchor, p ? paths_changed : null);
         }
     });
 
