@@ -64,7 +64,6 @@ dc_graph.draw_graphs = function(options) {
     }
 
     function create_edge(chart, source, target) {
-        erase_hint();
         var edge = {};
         edge[_idTag] = uuid();
         edge[_sourceTag] = source.node.orig.key;
@@ -104,10 +103,15 @@ dc_graph.draw_graphs = function(options) {
                     _sourceDown = {node: d};
                     _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
                 }
+                if(_behavior.startDragEdge()) {
+                    if(!_behavior.startDragEdge()(_sourceDown))
+                        erase_hint();
+                }
             })
             .on('mousemove.draw-graphs', function(d) {
                 d3.event.stopPropagation();
                 if(_sourceDown) {
+                    var oldTarget = _targetMove;
                     if(d === _sourceDown.node) {
                         _targetMove = null;
                         _hintData[0].target = null;
@@ -127,15 +131,30 @@ dc_graph.draw_graphs = function(options) {
                         _targetMove = {node: d};
                         _hintData[0].target = {x: d.cola.x, y: d.cola.y};
                     }
+                    if(_behavior.changeDragTarget() &&
+                       (!!oldTarget ^ !!_targetMove ||
+                        (oldTarget && _targetMove &&
+                         (oldTarget.node !== _targetMove.node ||
+                          oldTarget.port !== _targetMove.port)))) {
+                        if(!_behavior.changeDragTarget()(_sourceDown, _targetMove))
+                            _targetMove = null;
+                    }
                     update_hint();
                 }
             })
             .on('mouseup.draw-graphs', function(d) {
                 d3.event.stopPropagation();
-                if(_sourceDown && _targetMove)
+                if(_sourceDown && _targetMove) {
+                    if(_behavior.finishDragEdge())
+                        if(!_behavior.finishDragEdge()(_sourceDown, _targetMove))
+                            return;
                     create_edge(chart, _sourceDown, _targetMove);
-                else
-                    erase_hint();
+                }
+                else if(_sourceDown) {
+                    if(_behavior.cancelDragEdge())
+                        _behavior.cancelDragEdge()();
+                }
+                erase_hint();
             });
         chart.svg()
             .on('mousedown.draw-graphs', function() {
@@ -151,9 +170,11 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function() {
-                if(_sourceDown) // drag-edge
+                if(_sourceDown) { // drag-edge
+                    if(_behavior.cancelDragEdge())
+                        _behavior.cancelDragEdge()();
                     erase_hint();
-                else { // click-node
+                } else { // click-node
                     if(_behavior.clickCreatesNodes())
                         create_node(chart, event_coords(chart));
                 }
@@ -186,6 +207,12 @@ dc_graph.draw_graphs = function(options) {
     _behavior.usePorts = property(null);
     _behavior.clickCreatesNodes = property(true);
     _behavior.dragCreatesEdges = property(true);
+
+    // callbacks to provide additional feedback or reject edge drags as they happen
+    _behavior.startDragEdge = property(null);
+    _behavior.changeDragTarget = property(null);
+    _behavior.finishDragEdge = property(null);
+    _behavior.cancelDragEdge = property(null);
 
     // callbacks to modify data as it's being added
     _behavior.addNode = property(null);
