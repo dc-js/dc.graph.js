@@ -140,7 +140,9 @@ dc_graph.symbol_port_style = function() {
         background.enter().append('circle')
             .attr({
                 class: 'port',
-                r: 0,
+                r: function(d) {
+                    return _style.portRadius()(d) + _style.portPadding()(d);
+                },
                 fill: node_fill,
                 nodeStrokeWidth: 0
             });
@@ -159,7 +161,7 @@ dc_graph.symbol_port_style = function() {
                     class: 'port',
                     fill: port_fill,
                     d: function(d) {
-                        return port_symbol(d, 0);
+                        return port_symbol(d,  _style.portRadius()(d));
                     }
                 });
         var symbol = port.select('path.port');
