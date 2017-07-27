@@ -1,8 +1,7 @@
-dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
+dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
-    selectprops = selectprops || {};
     var pathsAll = null;
     var _anchor;
     var _layer = null;
@@ -168,8 +167,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             .attr('class', 'spline-edge')
             .attr('id', function(d, i) { return "spline-path-"+i; })
             .attr('d', function(d) { return genPath(d, pathprops.lineTension); })
-            .attr('stroke', _chart.edgeStroke() || 'black')
-            .attr('stroke-width', _chart.edgeStrokeWidth() || 1)
+            .attr('stroke', pathprops.edgeStroke || 'black')
+            .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
             .attr('opacity', pathprops.edgeOpacity || 1)
             .attr('fill', 'none');
 
@@ -180,8 +179,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             .attr('class', 'spline-edge-hover')
             .attr('d', function(d) { return genPath(d); })
             .attr('opacity', 0)
-            .attr('stroke', 'green')
-            .attr('stroke-width', 5)
+            .attr('stroke-width', hoverprops.edgeStrokeWidth || 5)
             .attr('fill', 'none')
             .on('mouseover', function(d, i) {
                 highlight_paths_group.hover_changed([paths[i]]);
