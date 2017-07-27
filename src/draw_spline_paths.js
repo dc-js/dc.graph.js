@@ -158,6 +158,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
 
     // draw the spline for paths
     function drawSpline(paths, pathprops) {
+        if(paths === null) return;
+
         // draw spline edge
         var _chart = _behavior.parent();
 
@@ -217,9 +219,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             _layer.enter().append('g').attr('class', 'spline-layer');
         }
 
-        if(pathsAll !== null) {
-            drawSpline(pathsAll, pathprops);
-        }
+        drawSpline(pathsAll, pathprops);
 
     }
 
