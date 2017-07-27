@@ -1083,6 +1083,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _nodes[id] ? _nodes[id].orig : null;
     };
 
+    // again, awful, we need an ADT
+    _chart.getPort = function(nid, eid, name) {
+        return _ports[port_name(nid, eid, name)];
+    };
+
     /**
      * Instructs cola.js to fit the connected components.
      *
