@@ -1208,6 +1208,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _chart.layoutEngine().stop();
 
+        if(_chart.layoutEngine().relayout) {
+            _chart.layoutEngine().relayout();
+        }
+
         if(_chart.initLayoutOnRedraw())
             initLayout();
 

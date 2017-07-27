@@ -15,6 +15,8 @@ dc_graph.d3_force_layout = function(id) {
     var wnodes = [], wedges = [];
     var _originalNodesPosition = {};
     var _options = null;
+    var pathsData = null;
+    var initialized = false;
 
     function init(options) {
         _options = options;
@@ -82,6 +84,7 @@ dc_graph.d3_force_layout = function(id) {
     function start(options) {
         runSimulation();
 
+        initialized = true;
         //store original positions
         Object.keys(_nodes).forEach(function(key) {
             _originalNodesPosition[key] = {'x': _nodes[key].x, 'y': _nodes[key].y};
@@ -94,11 +97,13 @@ dc_graph.d3_force_layout = function(id) {
 
     function relayout(paths) {
         if(paths === null) {
-            Object.keys(_nodes).forEach(function(key) {
-                _nodes[key].fixed = false;
-                _nodes[key].x = _originalNodesPosition[key].x;
-                _nodes[key].y = _originalNodesPosition[key].y;
-            });
+            if(initialized) {
+                Object.keys(_nodes).forEach(function(key) {
+                    _nodes[key].fixed = false;
+                    _nodes[key].x = _originalNodesPosition[key].x;
+                    _nodes[key].y = _originalNodesPosition[key].y;
+                });
+            }
             dispatchState('end');
         } else {
             var nodeIDs = []; // nodes on path
@@ -230,8 +235,11 @@ dc_graph.d3_force_layout = function(id) {
         stop: function() {
             stop();
         },
+        relayout: function() {
+            relayout(pathsData);
+        },
         paths: function(paths) {
-            relayout(paths);
+            pathsData = paths;
         },
         optionNames: function() {
             return ['angleForce', 'chargeForce', 'gravityStrength', 'initialCharge']
