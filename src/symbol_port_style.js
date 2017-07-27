@@ -74,10 +74,12 @@ dc_graph.symbol_port_style = function() {
             });
         var symbol = node.selectAll('path.port');
         var shimmer = symbol.filter(function(p) { return p.state === 'shimmer'; });
-        repeat();
+        console.log('shims', node.size(), shimmer.size());
+        if(shimmer.size())
+            repeat();
 
         function repeat() {
-            shimmer
+            shimmer.selectAll('circle.port')
               .transition()
                 .duration(1000)
                 .ease("bounce")
