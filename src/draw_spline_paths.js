@@ -193,12 +193,6 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
              });
     };
 
-    d3.selection.prototype.moveToFront = function() {
-        return this.each(function() {
-            this.parentNode.appendChild(this);
-        });
-    };
-
     function draw_hovered(hoversplines) {
         if(hoversplines === null) {
             d3.selectAll('.spline-edge').attr('stroke', 'black');
@@ -206,7 +200,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             for(var i = 0; i < hoversplines.length; i ++) {
                 var path_id = pathsAll.indexOf(hoversplines[i])
                 var sel_path = d3.select("#spline-path-"+path_id).attr('stroke', hoverprops.edgeStroke);
-                sel_path.moveToFront();
+                sel_path.each(function() {this.parentNode.appendChild(this);});
             }
         }
     }
