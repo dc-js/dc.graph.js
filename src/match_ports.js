@@ -11,8 +11,8 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         });
     }
     function reset_ports(source) {
-        var nids = change_state(_validTargets, 'inactive');
-        source.port.state = 'inactive';
+        var nids = change_state(_validTargets, 'small');
+        source.port.state = 'small';
         nids.push(diagram.portNodeKey.eval(source.port));
         symbolPorts.animateNodes(nids);
     }
@@ -25,7 +25,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             _validTargets = _wports.filter(_behavior.isValid().bind(null, source.port));
             var nids = change_state(_validTargets, 'shimmer');
             if(_validTargets.length) {
-                source.port.state = 'hovered';
+                source.port.state = 'large';
                 nids.push(diagram.portNodeKey.eval(source.port));
                 symbolPorts.animateNodes(nids);
             }
@@ -35,8 +35,8 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         changeDragTarget: function(source, target) {
             var nids, valid = target && _behavior.isValid()(source.port, target.port);
             if(valid) {
-                nids = change_state(_validTargets, 'inactive');
-                target.port.state = 'hovered'; // it's one of the valid
+                nids = change_state(_validTargets, 'small');
+                target.port.state = 'large'; // it's one of the valid
             }
             else nids = change_state(_validTargets, 'shimmer');
             symbolPorts.animateNodes(nids);
