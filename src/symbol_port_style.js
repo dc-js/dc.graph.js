@@ -64,7 +64,44 @@ dc_graph.symbol_port_style = function() {
                 .filter(function(d) {
                     return setn.has(_style.parent().nodeKey.eval(d));
                 });
-        node.selectAll('circle.port')
+        var symbol = node.selectAll('g.port');
+        var shimmer = symbol.filter(function(p) { return p.state === 'shimmer'; }),
+            nonshimmer = symbol.filter(function(p) { return p.state !== 'shimmer'; });
+        console.log('shimmer', shimmer.size(), 'nonshimmer', nonshimmer.size());
+        if(shimmer.size())
+            repeat();
+
+        function repeat() {
+            var shimin = shimmer.transition()
+                    .duration(1000)
+                    .ease("bounce");
+            shimin.selectAll('circle.port')
+                .attr('r', function(d) {
+                    return _style.portHoverPortRadius()(d) + _style.portPadding()(d);
+                });
+            shimin.selectAll('path.port')
+                .attr({
+                    d: function(d) {
+                        return port_symbol(d, _style.portHoverPortRadius()(d));
+                    }
+                });
+            var shimout = shimin.transition()
+                    .duration(1000)
+                    .ease('sin');
+            shimout.selectAll('circle.port')
+                .attr('r', function(d) {
+                    return _style.portRadius()(d) + _style.portPadding()(d);
+                });
+            shimout.selectAll('path.port')
+                .attr({
+                    d: function(d) {
+                        return port_symbol(d, _style.portRadius()(d));
+                    }
+                });
+            shimout.each("end", repeat);
+        }
+
+        nonshimmer.selectAll('circle.port')
             .transition()
             .duration(250)
             .attr({
@@ -72,26 +109,7 @@ dc_graph.symbol_port_style = function() {
                     return hover_radius(d) + _style.portPadding()(d);
                 }
             });
-        var symbol = node.selectAll('path.port');
-        var shimmer = symbol.filter(function(p) { return p.state === 'shimmer'; });
-        console.log('shims', node.size(), shimmer.size());
-        if(shimmer.size())
-            repeat();
-
-        function repeat() {
-            shimmer.selectAll('circle.port')
-              .transition()
-                .duration(1000)
-                .ease("bounce")
-                .attr('r',  _style.portHoverPortRadius())
-              .transition()
-                .duration(1000)
-                .ease("bounce")
-                .attr('r',  _style.portRadius())
-                .each("end", repeat);
-        }
-
-        symbol.filter(function(p) { return p.state !== 'shimmer'; })
+        nonshimmer.selectAll('path.port')
             .transition()
             .duration(250)
             .attr({
