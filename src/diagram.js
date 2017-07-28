@@ -21,7 +21,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _chart = dc.marginMixin({});
     _chart.__dcFlag__ = dc.utils.uniqueId();
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _dispatch = d3.dispatch('end', 'start', 'drawn', 'zoomed');
+    var _dispatch = d3.dispatch('data', 'end', 'start', 'drawn', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
     var _stats = {};
@@ -1345,6 +1345,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v.index = i;
         });
 
+        _dispatch.data(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
         _stats = {nnodes: wnodes.length, nedges: wedges.length};
 
         // annotate parallel edges so we can draw them specially
@@ -1601,6 +1602,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     populate_cola(nodes, edges);
                 if(_chart.showLayoutSteps()) {
                     var nodePorts;
+                    // what's the relation between this and the 'data' event?
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
                         nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
