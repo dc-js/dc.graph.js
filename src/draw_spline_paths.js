@@ -138,7 +138,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // convert original path data into <d>
-    function genPath(p, lineTension) {
+    function genPath(p, lineTension, useOld) {
         lineTension = lineTension || 0.6;
 
         var path_coord = getNodePosition(p);
@@ -148,8 +148,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
         var line = d3.svg.line()
             .interpolate("cardinal")
-            .x(function(d) { return d.x; })
-            .y(function(d) { return d.y; })
+            .x(function(d) { return useOld ? d.prevX : d.x; })
+            .y(function(d) { return useOld ? d.prevY : d.y; })
             .tension(lineTension);
 
         return line(path_coord);
@@ -166,7 +166,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         var edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
             .attr('id', function(d, i) { return "spline-path-"+i; })
-            .attr('d', function(d) { return genPath(d, pathprops.lineTension); })
+            .attr('d', function(d) { return genPath(d, pathprops.lineTension, true); })
             .attr('stroke', pathprops.edgeStroke || 'black')
             .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
             .attr('opacity', pathprops.edgeOpacity || 1)
@@ -177,7 +177,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .data(paths);
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
-            .attr('d', function(d) { return genPath(d); })
+            .attr('d', function(d) { return genPath(d, pathprops.lineTension, true); })
             .attr('opacity', 0)
             .attr('stroke', 'green')
             .attr('stroke-width', hoverprops.edgeStrokeWidth || 5)
@@ -191,6 +191,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .on('click', function(d, i) {
                 highlight_paths_group.select_changed([paths[i]]);
              });
+        edgeEnter
+            .transition().duration(+_behavior.parent().transitionDuration())
+            .attr('d', function(d) { return genPath(d, pathprops.lineTension, false); });
     };
 
     function draw_hovered(hoversplines) {
