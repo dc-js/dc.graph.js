@@ -173,6 +173,8 @@ dc_graph.draw_graphs = function(options) {
             .on('mousemove.draw-graphs', function() {
                 var data = [];
                 if(_sourceDown) { // drawing edge
+                    if(_behavior.conduct().changeDragTarget)
+                        _behavior.conduct().changeDragTarget(_sourceDown, null);
                     var coords = event_coords(chart);
                     _targetMove = null;
                     _hintData[0].target = {x: coords[0], y: coords[1]};
