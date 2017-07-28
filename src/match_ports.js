@@ -1,20 +1,19 @@
 dc_graph.match_ports = function(diagram, symbolPorts) {
-    var _ports, _wports;
+    var _ports, _wports, _validTargets;
     diagram.on('data', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         _ports = ports;
         _wports = wports;
     });
-    function reset_all_ports() {
-        var shimmering = _wports.filter(function(p) {
-            return p.state === 'shimmer';
+    function change_state(ports, state) {
+        return ports.map(function(p) {
+            p.state = state;
+            return diagram.portNodeKey.eval(p);
         });
-        if(!shimmering.length)
-            return;
-        var nids = [];
-        shimmering.forEach(function(p) {
-            p.state = 'inactive';
-            nids.push(diagram.portNodeKey.eval(p));
-        });
+    }
+    function reset_ports(source) {
+        var nids = change_state(_validTargets, 'inactive');
+        source.port.state = 'inactive';
+        nids.push(diagram.portNodeKey.eval(source.port));
         symbolPorts.animateNodes(nids);
     }
     var _behavior = {
@@ -23,28 +22,34 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         }),
         startDragEdge: function(source) {
             symbolPorts.enableHover(false);
-            var validTargets = _wports.filter(_behavior.isValid().bind(null, source.port));
-            var nids = [];
-            validTargets.forEach(function(p) {
-                p.state = 'shimmer';
-                nids.push(diagram.portNodeKey.eval(p));
-            });
-            if(validTargets.length)
+            _validTargets = _wports.filter(_behavior.isValid().bind(null, source.port));
+            var nids = change_state(_validTargets, 'shimmer');
+            if(_validTargets.length) {
+                source.port.state = 'hovered';
+                nids.push(diagram.portNodeKey.eval(source.port));
                 symbolPorts.animateNodes(nids);
+            }
             console.log('valid targets', nids);
-            return validTargets.length !== 0;
+            return _validTargets.length !== 0;
         },
         changeDragTarget: function(source, target) {
-            return target && _behavior.isValid()(source.port, target.port);
+            var nids, valid = target && _behavior.isValid()(source.port, target.port);
+            if(valid) {
+                nids = change_state(_validTargets, 'inactive');
+                target.port.state = 'hovered'; // it's one of the valid
+            }
+            else nids = change_state(_validTargets, 'shimmer');
+            symbolPorts.animateNodes(nids);
+            return valid;
         },
         finishDragEdge: function(source, target) {
             symbolPorts.enableHover(true);
-            reset_all_ports();
+            reset_ports(source);
             return _behavior.isValid()(source.port, target.port);
         },
-        cancelDragEdge: function() {
+        cancelDragEdge: function(source) {
             symbolPorts.enableHover(true);
-            reset_all_ports();
+            reset_ports(source);
             return true;
         }
     };
