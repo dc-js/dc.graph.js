@@ -57,7 +57,7 @@ dc_graph.symbol_port_style = function() {
         var scale = _style.parent().nodeFillScale() || identity;
         return scale(_style.parent().nodeFill.eval(d3.select(this.parentNode.parentNode).datum()));
     }
-    _style.animateNodes = function(nids) {
+    _style.animateNodes = function(nids, before) {
         var setn = d3.set(nids);
         var node = _node
                 .filter(function(d) {
@@ -67,8 +67,11 @@ dc_graph.symbol_port_style = function() {
         var shimmer = symbol.filter(function(p) { return p.state === 'shimmer'; }),
             nonshimmer = symbol.filter(function(p) { return p.state !== 'shimmer'; });
         console.log('shimmer', shimmer.size(), 'nonshimmer', nonshimmer.size());
-        if(shimmer.size())
-            repeat();
+        if(shimmer.size()) {
+            if(before)
+                before.each('end', repeat);
+            else repeat();
+        }
 
         function repeat() {
             var shimin = shimmer.transition()
@@ -126,6 +129,7 @@ dc_graph.symbol_port_style = function() {
                     return d.state === 'large' || d.state === 'medium' ? 'auto' : 'none';
                 }
             });
+        return trans;
     };
     _style.eventPort = function() {
         var parent = d3.select(d3.event.target.parentNode);

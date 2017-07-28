@@ -33,13 +33,17 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             return _validTargets.length !== 0;
         },
         changeDragTarget: function(source, target) {
-            var nids, valid = target && _behavior.isValid()(source.port, target.port);
+            var nids, valid = target && _behavior.isValid()(source.port, target.port), before;
             if(valid) {
                 nids = change_state(_validTargets, 'small');
                 target.port.state = 'large'; // it's one of the valid
             }
-            else nids = change_state(_validTargets, 'shimmer');
-            symbolPorts.animateNodes(nids);
+            else {
+                nids = change_state(_validTargets, 'small');
+                before = symbolPorts.animateNodes(nids);
+                nids = change_state(_validTargets, 'shimmer');
+            }
+            symbolPorts.animateNodes(nids, before);
             return valid;
         },
         finishDragEdge: function(source, target) {
