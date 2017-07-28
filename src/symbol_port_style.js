@@ -101,22 +101,21 @@ dc_graph.symbol_port_style = function() {
             shimout.each("end", repeat);
         }
 
-        nonshimmer.selectAll('circle.port')
-            .transition()
-            .duration(250)
+        var trans = nonshimmer.transition()
+                .duration(250);
+        trans.selectAll('circle.port')
             .attr({
                 r: function(d) {
                     return hover_radius(d) + _style.portPadding()(d);
                 }
             });
-        nonshimmer.selectAll('path.port')
-            .transition()
-            .duration(250)
+        trans.selectAll('path.port')
             .attr({
                 d: function(d) {
                     return port_symbol(d, hover_radius(d));
                 }
             });
+
         node.selectAll('text.port')
             .transition()
             .duration(250)
