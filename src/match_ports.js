@@ -22,6 +22,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
         }),
         startDragEdge: function(source) {
+            symbolPorts.enableHover(false);
             var validTargets = _wports.filter(_behavior.isValid().bind(null, source.port));
             var nids = [];
             validTargets.forEach(function(p) {
@@ -37,10 +38,12 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             return target && _behavior.isValid()(source.port, target.port);
         },
         finishDragEdge: function(source, target) {
+            symbolPorts.enableHover(true);
             reset_all_ports();
             return _behavior.isValid()(source.port, target.port);
         },
         cancelDragEdge: function() {
+            symbolPorts.enableHover(true);
             reset_all_ports();
             return true;
         }

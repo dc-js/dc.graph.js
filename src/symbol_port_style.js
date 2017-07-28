@@ -216,23 +216,31 @@ dc_graph.symbol_port_style = function() {
                 }
             })
             .text(_style.portText());
-
-        node.on('mouseover.grow-ports', function(d) {
-            var nid = _style.parent().nodeKey.eval(d);
-            var activePort = _style.eventPort();
-            nodePorts[nid].forEach(function(p) {
-                p.state = p === activePort ? 'hovered' : activePort ? 'sibling-hovered' : 'node-hovered';
-            });
-            _style.animateNodes([nid]);
-        });
-        node.on('mouseout.grow-ports', function(d) {
-            var nid = _style.parent().nodeKey.eval(d);
-            nodePorts[nid].forEach(function(p) {
-                p.state = 'inactive';
-            });
-            _style.animateNodes([nid]);
-        });
+        _style.enableHover(true);
         return _style;
+    };
+
+    _style.enableHover = function(whether) {
+        if(whether) {
+            _node.on('mouseover.grow-ports', function(d) {
+                var nid = _style.parent().nodeKey.eval(d);
+                var activePort = _style.eventPort();
+                _nodePorts[nid].forEach(function(p) {
+                    p.state = p === activePort ? 'hovered' : activePort ? 'sibling-hovered' : 'node-hovered';
+                });
+                _style.animateNodes([nid]);
+            });
+            _node.on('mouseout.grow-ports', function(d) {
+                var nid = _style.parent().nodeKey.eval(d);
+                _nodePorts[nid].forEach(function(p) {
+                    p.state = 'inactive';
+                });
+                _style.animateNodes([nid]);
+            });
+        } else {
+            _node.on('mouseover.grow-ports', null);
+            _node.on('mouseout.grow-ports', null);
+        }
     };
 
     _style.parent = property(null);
