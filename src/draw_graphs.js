@@ -125,12 +125,18 @@ dc_graph.draw_graphs = function(options) {
                     } else if(!_targetMove || d !== _targetMove.node) {
                         _targetMove = {node: d};
                     }
-                    if(_behavior.conduct().changeDragTarget &&
-                       (!!oldTarget ^ !!_targetMove ||
-                        (oldTarget && _targetMove &&
-                         (oldTarget.node !== _targetMove.node ||
-                          oldTarget.port !== _targetMove.port)))) {
-                        if(!_behavior.conduct().changeDragTarget(_sourceDown, _targetMove))
+                    if(_behavior.conduct().changeDragTarget) {
+                        var change;
+                        if(_behavior.usePorts()) {
+                            var oldPort = oldTarget && oldTarget.port,
+                                newPort = _targetMove && _targetMove.port;
+                            change = oldPort !== newPort;
+                        } else {
+                            var oldNode = oldTarget && oldTarget.node,
+                                newNode = _targetMove && _targetMove.node;
+                             change = oldNode !== newNode;
+                        }
+                        if(change && !_behavior.conduct().changeDragTarget(_sourceDown, _targetMove))
                             _targetMove = null;
                     }
                     if(_targetMove) {
