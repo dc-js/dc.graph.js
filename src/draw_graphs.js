@@ -103,8 +103,8 @@ dc_graph.draw_graphs = function(options) {
                     _sourceDown = {node: d};
                     _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
                 }
-                if(_behavior.startDragEdge()) {
-                    if(!_behavior.startDragEdge()(_sourceDown))
+                if(_behavior.conduct().startDragEdge) {
+                    if(!_behavior.conduct().startDragEdge(_sourceDown))
                         erase_hint();
                 }
             })
@@ -131,12 +131,12 @@ dc_graph.draw_graphs = function(options) {
                         _targetMove = {node: d};
                         _hintData[0].target = {x: d.cola.x, y: d.cola.y};
                     }
-                    if(_behavior.changeDragTarget() &&
+                    if(_behavior.conduct().changeDragTarget &&
                        (!!oldTarget ^ !!_targetMove ||
                         (oldTarget && _targetMove &&
                          (oldTarget.node !== _targetMove.node ||
                           oldTarget.port !== _targetMove.port)))) {
-                        if(!_behavior.changeDragTarget()(_sourceDown, _targetMove))
+                        if(!_behavior.conduct().changeDragTarget(_sourceDown, _targetMove))
                             _targetMove = null;
                     }
                     update_hint();
@@ -145,14 +145,14 @@ dc_graph.draw_graphs = function(options) {
             .on('mouseup.draw-graphs', function(d) {
                 d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
-                    if(_behavior.finishDragEdge())
-                        if(!_behavior.finishDragEdge()(_sourceDown, _targetMove))
+                    if(_behavior.conduct().finishDragEdge)
+                        if(!_behavior.conduct().finishDragEdge(_sourceDown, _targetMove))
                             return;
                     create_edge(chart, _sourceDown, _targetMove);
                 }
                 else if(_sourceDown) {
-                    if(_behavior.cancelDragEdge())
-                        _behavior.cancelDragEdge()();
+                    if(_behavior.conduct().cancelDragEdge)
+                        _behavior.conduct().cancelDragEdge();
                 }
                 erase_hint();
             });
@@ -171,8 +171,8 @@ dc_graph.draw_graphs = function(options) {
             })
             .on('mouseup.draw-graphs', function() {
                 if(_sourceDown) { // drag-edge
-                    if(_behavior.cancelDragEdge())
-                        _behavior.cancelDragEdge()();
+                    if(_behavior.conduct().cancelDragEdge)
+                        _behavior.conduct().cancelDragEdge();
                     erase_hint();
                 } else { // click-node
                     if(_behavior.clickCreatesNodes())
@@ -208,11 +208,9 @@ dc_graph.draw_graphs = function(options) {
     _behavior.clickCreatesNodes = property(true);
     _behavior.dragCreatesEdges = property(true);
 
-    // callbacks to provide additional feedback or reject edge drags as they happen
-    _behavior.startDragEdge = property(null);
-    _behavior.changeDragTarget = property(null);
-    _behavior.finishDragEdge = property(null);
-    _behavior.cancelDragEdge = property(null);
+    // really this is a behavior, and what we've been calling behaviors are modes
+    // but i'm on a deadline
+    _behavior.conduct = property({});
 
     // callbacks to modify data as it's being added
     _behavior.addNode = property(null);
