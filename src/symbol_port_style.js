@@ -43,12 +43,11 @@ dc_graph.symbol_port_style = function() {
     }
     function hover_radius(d) {
         switch(d.state) {
-        case 'hovered':
+        case 'large':
             return _style.portHoverPortRadius()(d);
-        case 'node-hovered':
+        case 'medium':
             return _style.portHoverNodeRadius()(d);
-        case 'sibling-hovered':
-        case 'inactive':
+        case 'small':
         default:
             return _style.portRadius()(d);
         }
@@ -121,10 +120,10 @@ dc_graph.symbol_port_style = function() {
             .duration(250)
             .attr({
                 opacity: function(d) {
-                    return d.state === 'hovered' || d.state === 'node-hovered' ? 1 : 0;
+                    return d.state === 'large' || d.state === 'medium' ? 1 : 0;
                 },
                 'pointer-events': function(d) {
-                    return d.state === 'hovered' || d.state === 'node-hovered' ? 'auto' : 'none';
+                    return d.state === 'large' || d.state === 'medium' ? 'auto' : 'none';
                 }
             });
     };
@@ -226,14 +225,14 @@ dc_graph.symbol_port_style = function() {
                 var nid = _style.parent().nodeKey.eval(d);
                 var activePort = _style.eventPort();
                 _nodePorts[nid].forEach(function(p) {
-                    p.state = p === activePort ? 'hovered' : activePort ? 'sibling-hovered' : 'node-hovered';
+                    p.state = p === activePort ? 'large' : activePort ? 'small' : 'medium';
                 });
                 _style.animateNodes([nid]);
             });
             _node.on('mouseout.grow-ports', function(d) {
                 var nid = _style.parent().nodeKey.eval(d);
                 _nodePorts[nid].forEach(function(p) {
-                    p.state = 'inactive';
+                    p.state = 'small';
                 });
                 _style.animateNodes([nid]);
             });
