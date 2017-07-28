@@ -118,18 +118,12 @@ dc_graph.draw_graphs = function(options) {
                     }
                     else if(_behavior.usePorts()) {
                         var activePort =  _behavior.usePorts().eventPort();
-                        if(activePort) {
+                        if(activePort)
                             _targetMove = {node: d, port: activePort};
-                            _hintData[0].target = {x: d.cola.x + activePort.pos.x, y: d.cola.y + activePort.pos.y};
-                        }
-                        else {
-                            var coords = event_coords(chart);
+                        else
                             _targetMove = null;
-                            _hintData[0].target = {x: coords[0], y: coords[1]};
-                        }
                     } else if(!_targetMove || d !== _targetMove.node) {
                         _targetMove = {node: d};
-                        _hintData[0].target = {x: d.cola.x, y: d.cola.y};
                     }
                     if(_behavior.conduct().changeDragTarget &&
                        (!!oldTarget ^ !!_targetMove ||
@@ -138,6 +132,16 @@ dc_graph.draw_graphs = function(options) {
                           oldTarget.port !== _targetMove.port)))) {
                         if(!_behavior.conduct().changeDragTarget(_sourceDown, _targetMove))
                             _targetMove = null;
+                    }
+                    if(_targetMove) {
+                        if(_targetMove.port)
+                            _hintData[0].target = {x: d.cola.x + activePort.pos.x, y: d.cola.y + activePort.pos.y};
+                        else
+                            _hintData[0].target = {x: d.cola.x, y: d.cola.y};
+                    }
+                    else {
+                        var coords = event_coords(chart);
+                        _hintData[0].target = {x: coords[0], y: coords[1]};
                     }
                     update_hint();
                 }

@@ -34,11 +34,11 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             return validTargets.length !== 0;
         },
         changeDragTarget: function(source, target) {
-            return true;
+            return target && _behavior.isValid()(source.port, target.port);
         },
         finishDragEdge: function(source, target) {
             reset_all_ports();
-            return true;
+            return _behavior.isValid()(source.port, target.port);
         },
         cancelDragEdge: function() {
             reset_all_ports();
