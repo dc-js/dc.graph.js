@@ -162,7 +162,7 @@ dc_graph.draw_graphs = function(options) {
                 }
                 else if(_sourceDown) {
                     if(_behavior.conduct().cancelDragEdge)
-                        _behavior.conduct().cancelDragEdge();
+                        _behavior.conduct().cancelDragEdge(_sourceDown);
                 }
                 erase_hint();
             });
@@ -182,7 +182,7 @@ dc_graph.draw_graphs = function(options) {
             .on('mouseup.draw-graphs', function() {
                 if(_sourceDown) { // drag-edge
                     if(_behavior.conduct().cancelDragEdge)
-                        _behavior.conduct().cancelDragEdge();
+                        _behavior.conduct().cancelDragEdge(_sourceDown);
                     erase_hint();
                 } else { // click-node
                     if(_behavior.clickCreatesNodes())
