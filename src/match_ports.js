@@ -21,10 +21,10 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
         }),
         startDragEdge: function(source) {
-            symbolPorts.enableHover(false);
             _validTargets = _wports.filter(_behavior.isValid().bind(null, source.port));
             var nids = change_state(_validTargets, 'shimmer');
             if(_validTargets.length) {
+                symbolPorts.enableHover(false);
                 source.port.state = 'large';
                 nids.push(diagram.portNodeKey.eval(source.port));
                 symbolPorts.animateNodes(nids);
