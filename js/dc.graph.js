@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.5.1
+ *  dc.graph 0.5.4
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.5.1
+ * @version 0.5.4
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.5.1',
+    version: '0.5.4',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -777,11 +777,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         return function(value) {
             if(!_chart.layoutEngine())
                 _chart.layoutAlgorithm('cola', true);
-            console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated. Call the corresponding method on the layout engine instead.');
             var engine = _chart.layoutEngine();
             if(engine.getEngine)
                 engine = engine.getEngine();
-            engine[name](value);
+            if(engine[name]) {
+                console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated. Call the corresponding method on the layout engine instead.');
+                engine[name](value);
+            } else
+                console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated, and it is not supported for the "' + engine.layoutAlgorithm() + '" layout algorithm: ignored.');
             return this;
         };
     }
@@ -2011,27 +2014,22 @@ dc_graph.diagram = function (parent, chartGroup) {
         // annotate parallel edges so we can draw them specially
         if(_chart.parallelEdgeOffset()) {
             var em = new Array(wnodes.length);
-            for(var i = 0; i < em.length; ++i) {
-                em[i] = new Array(em.length); // technically could be diagonal array
-                for(var j = 0; j < em.length; ++j)
+            for(var i = 0; i < wnodes.length; ++i) {
+                em[i] = new Array(wnodes.length); // technically could be diagonal array
+                for(var j = 0; j < wnodes.length; ++j)
                     em[i][j] = {
-                        n: 0,
-                        ports: {
-                            rev: []
-                        }
+                        rev: [],
+                        edges: []
                     };
             }
             wedges.forEach(function(e) {
+                e.pos = {};
                 var min = Math.min(e.source.index, e.target.index),
                     max = Math.max(e.source.index, e.target.index);
-                e.parallel = em[min][max].n++;
-                e.ports = em[min][max].ports;
-                e.ports.rev.push(min !== e.source.index);
+                e.parallel = em[min][max];
+                e.parallel.edges.push(e);
+                e.parallel.rev.push(min !== e.source.index);
             });
-            for(i = 0; i < em.length; ++i)
-                for(j = 0; j < em.length; ++j)
-                    if(em[i][j].n)
-                        em[i][j].ports.n = em[i][j].n;
         }
 
         // create edge SVG elements
@@ -2256,6 +2254,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
                     return;
                 }
+                if(re.points)
+                    e.cola.points = re.points;
             });
         }
         _chart.layoutEngine()
@@ -2364,34 +2364,55 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
+    function calculate_arrowhead_orientation(points) {
+        var spos = points[0], tpos = points[points.length-1];
+        var near = bezier_point(points, 0.75);
+        return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
+    }
+
     function calc_edge_path(d, age, sx, sy, tx, ty) {
-        if(!d.ports[age]) {
-            var source_padding = d.source.dcg_ry +
-                    _chart.nodeStrokeWidth.eval(d.source) / 2,
-                target_padding = d.target.dcg_ry +
-                    _chart.nodeStrokeWidth.eval(d.target) / 2;
-            d.ports[age] = new Array(d.ports.n);
-            var reversedness = d.ports.rev[d.parallel];
-            for(var p = 0; p < d.ports.n; ++p) {
+        if(d.cola.points) {
+            // just to be clear, this is not a great way to populate old/new
+            // part of the problem is that currently we clear edges at start of draw
+            d.pos.new = d.pos.old = {
+                path: {
+                    points: d.cola.points,
+                    bezDegree: 3
+                },
+                orient: calculate_arrowhead_orientation(d.cola.points)
+            };
+        }
+        else if(!d.pos[age]) {
+            var parallel = d.parallel;
+            var source = d.source, target = d.target;
+            if(d.source.index > d.target.index) {
+                var t;
+                t = target; target = source; source = t;
+                t = tx; tx = sx; sx = t;
+                t = ty; ty = sy; sy = t;
+            }
+            var source_padding = source.dcg_ry +
+                    _chart.nodeStrokeWidth.eval(source) / 2,
+                target_padding = target.dcg_ry +
+                    _chart.nodeStrokeWidth.eval(target) / 2;
+            for(var p = 0; p < parallel.edges.length; ++p) {
                 // alternate parallel edges over, then under
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
-                    last = port ? d.ports[age][p > 2 ? p - 2 : 0].path : null;
-                var path = draw_edge_to_shapes(_chart, d.source, d.target, sx, sy, tx, ty,
+                    last = port > 0 ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
+                var path = draw_edge_to_shapes(_chart, source, target, sx, sy, tx, ty,
                                               last, dir, _chart.parallelEdgeOffset(),
                                               source_padding, target_padding
                                               );
-                if(d.ports.rev[p] !== reversedness)
+                if(parallel.rev[p])
                     path.points.reverse();
-                var spos = path.points[0], tpos = path.points[path.points.length-1];
-                var near = bezier_point(path.points, 0.75);
-                d.ports[age][p] = {
+                parallel.edges[p].pos[age] = {
                     path: path,
-                    orient: Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad'
+                    orient: calculate_arrowhead_orientation(path.points)
                 };
             }
         }
-        return d.ports[age][d.parallel].path;
+        return d.pos[age].path;
     }
 
     function calc_old_edge_path(d) {
@@ -2407,14 +2428,14 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function render_edge_path(age) {
         return function(d) {
-            var path = d.ports[age][d.parallel].path;
+            var path = d.pos[age].path;
             return generate_path(path.points, path.bezDegree);
         };
     }
 
     function render_edge_label_path(age) {
         return function(d) {
-            var path = d.ports[age][d.parallel].path;
+            var path = d.pos[age].path;
             var points = d.target.cola.x < d.source.cola.x ?
                     path.points.slice(0).reverse() : path.points;
             return generate_path(points, path.bezDegree);
@@ -2459,7 +2480,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function edge_bounds(e) {
         // assumption: edge must have some points
-        var points = e.ports.new[e.parallel].path.points;
+        var points = e.pos.new.path.points;
         return points.map(point_to_bounds).reduce(union_bounds);
     }
 
@@ -2595,8 +2616,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // reset edge ports
         edge.each(function(d) {
-            d.ports.new = null;
-            d.ports.old = null;
+            d.pos.new = null;
+            d.pos.old = null;
         });
 
         var edgeEntered = {};
@@ -2619,7 +2640,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(_chart.edgeArrowhead.eval(e))
                     d3.select('#' + _chart.arrowId(e, 'head'))
                     .attr('orient', function() {
-                        return e.ports[age][e.parallel].orient;
+                        return e.pos[age].orient;
                     });
             })
             .attr('d', render_edge_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
@@ -2631,7 +2652,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                             .transition().duration(transition_duration())
                             .delay(transition_delay(false))
                             .attr('orient', function() {
-                                return e.ports.new[e.parallel].orient;
+                                return e.pos.new.orient;
                             });
                     }
                 })
@@ -2983,11 +3004,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function margined_bounds() {
+        var bounds = _bounds || {left: 0, top: 0, right: 0, bottom: 0};
         return {
-            left: _bounds.left - _chart.margins().left,
-            top: _bounds.top - _chart.margins().top,
-            right: _bounds.right + _chart.margins().right,
-            bottom: _bounds.bottom + _chart.margins().bottom
+            left: bounds.left - _chart.margins().left,
+            top: bounds.top - _chart.margins().top,
+            right: bounds.right + _chart.margins().right,
+            bottom: bounds.bottom + _chart.margins().bottom
         };
     }
 
@@ -3200,7 +3222,6 @@ dc_graph.diagram = function (parent, chartGroup) {
 };
 
 dc_graph.spawn_engine = function(layout, args, worker) {
-    var allow_webworker = true;
     var engine, params;
     switch(layout) {
     case 'dagre':
@@ -3210,14 +3231,13 @@ dc_graph.spawn_engine = function(layout, args, worker) {
     case 'tree':
         engine = dc_graph.tree_layout();
         params = [];
-        allow_webworker = false;
         break;
     case "circo":
     case "dot":
     case "neato":
     case "osage":
     case "twopi":
-        engine = dc_graph.graphviz_layout(null, layout);
+        engine = dc_graph.graphviz_layout(null, layout, args.server);
         params = [];
         break;
     case 'cola':
@@ -3230,7 +3250,7 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         if(args[p])
             engine[p](args[p]);
     });
-    if(allow_webworker && worker)
+    if(engine.supportsWebworker() && worker)
         engine = dc_graph.webworker_layout(engine);
     return engine;
 };
@@ -3313,7 +3333,7 @@ dc_graph.webworker_layout = function(layoutEngine) {
     };
     // somewhat sketchy - do we want this object to be transparent or not?
     var passthroughs = ['layoutAlgorithm', 'populateLayoutNode', 'populateLayoutEdge', 'rankdir', 'ranksep'];
-    passthroughs.forEach(function(name) {
+    passthroughs.concat(layoutEngine.optionNames()).forEach(function(name) {
         engine[name] = function() {
             var ret = layoutEngine[name].apply(layoutEngine, arguments);
             return arguments.length ? this : ret;
@@ -3500,6 +3520,9 @@ dc_graph.cola_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
             _dispatch.on(event, f);
@@ -3587,13 +3610,11 @@ dc_graph.cola_layout = function(id) {
                 if(_flowLayout)
                     return _flowLayout;
                 var dir = engine.rankdir();
-                if(!dir)
-                    return null;
-                var axis = (dir === 'LR' || dir === 'RL') ? 'x' : 'y';
-                return {
-                    axis: axis,
-                    minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2
-                };
+                switch(dir) {
+                case 'LR': return {axis: 'x', minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2};
+                case 'TB': return {axis: 'y', minSeparation: engine.ranksep() + engine.parent().nodeRadius()*2};
+                default: return null; // RL, BT do not appear to be possible (negative separation) (?)
+                }
             }
             _flowLayout = flow;
             return this;
@@ -3697,6 +3718,9 @@ dc_graph.dagre_layout = function(id) {
         },
         layoutId: function() {
             return _layoutId;
+        },
+        supportsWebworker: function() {
+            return true;
         },
         on: function(event, f) {
             _dispatch.on(event, f);
@@ -3852,6 +3876,9 @@ dc_graph.tree_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return false;
+        },
         on: function(event, f) {
             _dispatch.on(event, f);
             return this;
@@ -3901,7 +3928,7 @@ dc_graph.tree_layout.scripts = [];
  * @param {String} [id=uuid()] - Unique identifier
  * @return {dc_graph.graphviz_layout}
  **/
-dc_graph.graphviz_layout = function(id, layout) {
+dc_graph.graphviz_layout = function(id, layout, server) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _dotString;
@@ -3915,40 +3942,82 @@ dc_graph.graphviz_layout = function(id, layout) {
     function decode_name(name) {
         return name.replace(/^&#37;/, '%');
     }
+    function stringize_property(prop, value) {
+        return [prop, '"' + value + '"'].join('=');
+    }
+    function stringize_properties(props) {
+        return '[' + props.join(', ') + ']';
+    }
     function data(nodes, edges, constraints, options) {
         var lines = [];
         var directed = layout !== 'neato';
         lines.push((directed ? 'digraph' : 'graph') + ' g {');
+        lines.push('graph ' + stringize_properties([
+            stringize_property('nodesep', graphviz.nodesep()/72),
+            stringize_property('ranksep', graphviz.ranksep()/72),
+            stringize_property('rankdir', graphviz.rankdir())
+        ]));
         lines = lines.concat(nodes.map(function(v) {
-            return '  "' + encode_name(v.dcg_nodeKey) + '"';
+            var props = [
+                stringize_property('width', v.width/72),
+                stringize_property('height', v.height/72),
+                stringize_property('fixedsize', 'true')
+            ];
+            if(v.dcg_nodeFixed)
+                props.push(stringize_property('pos', [
+                    v.dcg_nodeFixed.x,
+                    1000-v.dcg_nodeFixed.y
+                ].join(',')));
+            return '  "' + encode_name(v.dcg_nodeKey) + '" ' + stringize_properties(props);
         }));
         lines = lines.concat(edges.map(function(e) {
             return '  "' + encode_name(e.dcg_edgeSource) + (directed ? '" -> "' : '" -- "') +
-                encode_name(e.dcg_edgeTarget) + '" [id="' + encode_name(e.dcg_edgeKey) + '"]';
+                encode_name(e.dcg_edgeTarget) + '" ' + stringize_properties([
+                    stringize_property('id', encode_name(e.dcg_edgeKey)),
+                stringize_property('arrowhead', 'none'),
+                stringize_property('arrowtail', 'none')
+                ]);
         }));
         lines.push('}');
         lines.push('');
         _dotString = lines.join('\n');
     }
 
-    function start(options) {
-        var result = Viz(_dotString, {format: 'json', engine: layout});
+    function process_response(error, result) {
         _dispatch.start();
-        result = JSON.parse(result);
+        var bb = result.bb.split(',').map(function(x) { return +x; });
         var nodes = (result.objects || []).map(function(n) {
             var pos = n.pos.split(',');
             return {
                 dcg_nodeKey: decode_name(n.name),
                 x: +pos[0],
-                y: +pos[1]
+                y: bb[3] - pos[1]
             };
         });
         var edges = (result.edges || []).map(function(e) {
-            return {
+            var e2 = {
                 dcg_edgeKey: decode_name(e.id)
             };
+            if(e._draw_) {
+                var directive = e._draw_.find(function(d) { return d.op && d.points; });
+                e2.points = directive.points.map(function(p) { return {x: p[0], y: bb[3] - p[1]}; });
+            }
+            return e2;
         });
         _dispatch.end(nodes, edges);
+    }
+
+    function start(options) {
+        if(server) {
+            d3.json(server)
+                .header("Content-type", "application/x-www-form-urlencoded")
+                .post('layouttool=' + layout + '&' + encodeURIComponent(_dotString), process_response);
+        }
+        else {
+            var result = Viz(_dotString, {format: 'json', engine: layout});
+            result = JSON.parse(result);
+            process_response(null, result);
+        }
     }
 
     function stop() {
@@ -3961,6 +4030,9 @@ dc_graph.graphviz_layout = function(id, layout) {
         },
         layoutId: function() {
             return _layoutId;
+        },
+        supportsWebworker: function() {
+            return false;
         },
         on: function(event, f) {
             _dispatch.on(event, f);
@@ -4751,7 +4823,9 @@ dc_graph.select_nodes = function(props) {
 
         node.on('click.select-nodes', function(d) {
             var key = chart.nodeKey.eval(d), newSelected;
-            if(isUnion(d3.event))
+            if(!_behavior.multipleSelect())
+                newSelected = [key];
+            else if(isUnion(d3.event))
                 newSelected = add_array(_selected, key);
             else if(isToggle(d3.event))
                 newSelected = toggle_array(_selected, key);
@@ -5359,10 +5433,6 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
 };
 
 dc_graph.draw_graphs = function(options) {
-    if(!options.nodeCrossfilter)
-        throw new Error('need nodeCrossfilter');
-    if(!options.edgeCrossfilter)
-        throw new Error('need edgeCrossfilter');
     var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group'),
         label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
     var _idTag = options.idTag || 'id',
@@ -5407,14 +5477,22 @@ dc_graph.draw_graphs = function(options) {
         update_hint();
     }
 
-    function create_node(chart, pos) {
-        var node = {};
-        node[_idTag] = uuid();
-        node[_labelTag] = '';
-        node[_fixedPosTag] = {x: pos[0], y: pos[1]};
+    function create_node(chart, pos, data) {
+        var node;
+        if(data)
+            node = data;
+        else {
+            node = {};
+            node[_idTag] = uuid();
+            node[_labelTag] = '';
+        }
+        if(pos)
+            node[_fixedPosTag] = {x: pos[0], y: pos[1]};
         if(_behavior.addNode())
             _behavior.addNode()(node);
-        options.nodeCrossfilter.add([node]);
+        if(!_behavior.nodeCrossfilter())
+            throw new Error('need nodeCrossfilter');
+        _behavior.nodeCrossfilter().add([node]);
         chart.redrawGroup();
         select_nodes_group.node_set_changed([node[_idTag]]);
     }
@@ -5430,7 +5508,9 @@ dc_graph.draw_graphs = function(options) {
         // changing this data inside crossfilter is okay because it is not indexed data
         source.orig.value[_fixedPosTag] = null;
         target.orig.value[_fixedPosTag] = null;
-        options.edgeCrossfilter.add([edge]);
+        if(!_behavior.edgeCrossfilter())
+            throw new Error('need edgeCrossfilter');
+        _behavior.edgeCrossfilter().add([edge]);
         chart.redrawGroup();
         select_nodes_group.node_set_changed([]);
     }
@@ -5446,8 +5526,10 @@ dc_graph.draw_graphs = function(options) {
         node
             .on('mousedown.draw-graphs', function(d) {
                 d3.event.stopPropagation();
-                _sourceDown = d;
-                _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
+                if(_behavior.dragCreatesEdges()) {
+                    _sourceDown = d;
+                    _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
+                }
             })
             .on('mousemove.draw-graphs', function(d) {
                 d3.event.stopPropagation();
@@ -5486,8 +5568,10 @@ dc_graph.draw_graphs = function(options) {
             .on('mouseup.draw-graphs', function() {
                 if(_sourceDown) // drag-edge
                     erase_hint();
-                else // click-node
-                    create_node(chart, event_coords(chart));
+                else { // click-node
+                    if(_behavior.clickCreatesNodes())
+                        create_node(chart, event_coords(chart));
+                }
             });
         if(!_edgeLayer)
             _edgeLayer = chart.g().append('g').attr('class', 'draw-graphs');
@@ -5509,12 +5593,20 @@ dc_graph.draw_graphs = function(options) {
         remove_behavior: remove_behavior
     });
 
+    // update the data source/destination
+    _behavior.nodeCrossfilter = property(options.nodeCrossfilter);
+    _behavior.edgeCrossfilter = property(options.edgeCrossfilter);
+
+    // behavioral options
+    _behavior.clickCreatesNodes = property(true);
+    _behavior.dragCreatesEdges = property(true);
+
     // callbacks to modify data as it's being added
     _behavior.addNode = property(null);
     _behavior.addEdge = property(null);
-
-    // whether to do relayout & redraw (true) or just refresh (false)
-    _behavior.doRedraw = property(false);
+    _behavior.createNode = function(pos, data) {
+        create_node(_behavior.parent(), pos, data);
+    };
 
     return _behavior;
 };
@@ -6193,8 +6285,15 @@ dc_graph.generate = function(type, args, env, callback) {
         edges = dc_graph.wheel_edges(namef, _.range(N), N*linkLength/2);
         var rimLength = edges[0].distance;
         for(i = 0; i < args[1]; ++i)
-            for(j = 0; j < N; ++j)
-                edges.push(dc_graph.edge_object(namef, j, (j+1)%N, {distance: rimLength, par: i+2}));
+            for(j = 0; j < N; ++j) {
+                var a = j, b = (j+1)%N, t;
+                if(i%2 === 1) {
+                    t = a;
+                    a = b;
+                    b = t;
+                }
+                edges.push(dc_graph.edge_object(namef, a, b, {distance: rimLength, par: i+2}));
+            }
         break;
     default:
         throw new Error("unknown generation type "+type);

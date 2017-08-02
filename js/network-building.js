@@ -1,15 +1,19 @@
 var qs = querystring.parse();
+var options = Object.assign({
+    rankdir: 'TB'
+}, qs);
 
 var node_flat = dc_graph.flat_group.make([], function(d) { return d.id; }),
     edge_flat = dc_graph.flat_group.make([], function(d) { return d.source + '-' + d.target; });
 
 var diagram = dc_graph.diagram('#graph');
-var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
+var engine = dc_graph.spawn_engine(options.layout, options, options.worker != 'false');
 
 diagram
     .width(window.innerWidth)
     .height(window.innerHeight)
     .layoutEngine(engine)
+    .rankdir(options.rankdir)
     .transitionDuration(500)
     .stageTransitions('insmod')
     .showLayoutSteps(false)

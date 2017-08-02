@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>dc.graph.js Class: graphviz_attrs</title>
+	<title>dc.graph.js Class: d3v4_force_layout</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -40,7 +40,7 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="dc_graph.cola_layout.html">dc_graph.cola_layout</a></li><li><a href="dc_graph.constraint_pattern.html">dc_graph.constraint_pattern</a></li><li><a href="dc_graph.dagre_layout.html">dc_graph.dagre_layout</a></li><li><a href="dc_graph.diagram.html">dc_graph.diagram</a></li><li><a href="dc_graph.graphviz_attrs.html">dc_graph.graphviz_attrs</a></li><li><a href="dc_graph.graphviz_layout.html">dc_graph.graphviz_layout</a></li><li><a href="dc_graph.tip.html">dc_graph.tip</a></li><li><a href="dc_graph.tree_layout.html">dc_graph.tree_layout</a></li>
+					<li><a href="dc_graph.cola_layout.html">dc_graph.cola_layout</a></li><li><a href="dc_graph.constraint_pattern.html">dc_graph.constraint_pattern</a></li><li><a href="dc_graph.d3_force_layout.html">dc_graph.d3_force_layout</a></li><li><a href="dc_graph.d3v4_force_layout.html">dc_graph.d3v4_force_layout</a></li><li><a href="dc_graph.dagre_layout.html">dc_graph.dagre_layout</a></li><li><a href="dc_graph.diagram.html">dc_graph.diagram</a></li><li><a href="dc_graph.graphviz_attrs.html">dc_graph.graphviz_attrs</a></li><li><a href="dc_graph.graphviz_layout.html">dc_graph.graphviz_layout</a></li><li><a href="dc_graph.tip.html">dc_graph.tip</a></li><li><a href="dc_graph.tree_layout.html">dc_graph.tree_layout</a></li>
 				</ul>
 			</li>
 			
@@ -72,7 +72,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: graphviz_attrs</h1>
+	<h1 class="page-title">Class: d3v4_force_layout</h1>
 <section>
 
 <header>
@@ -80,7 +80,7 @@
         <h2>
             <span class="ancestors"><a href="dc_graph.html">dc_graph</a>.</span>
         
-        graphviz_attrs
+        d3v4_force_layout
         </h2>
         
     
@@ -93,7 +93,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="graphviz_attrs"><span class="type-signature"></span>new graphviz_attrs()</h4>
+    <h4 class="name" id="d3v4_force_layout"><span class="type-signature"></span>new d3v4_force_layout( [id])</h4>
     
     
 </dt>
@@ -101,10 +101,7 @@
 
     
     <div class="description">
-        <p>`dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
-implement - although these are not required, they make it easier for clients and
-behaviors (like expand_collapse) to work with multiple layout engines.</p>
-<p>these attributes are <a href="http://www.graphviz.org/doc/info/attrs.html">from graphviz</a></p>
+        <p><code>dc_graph.d3v4_force_layout</code> is an adaptor for d3-force version 4 layouts in dc.graph.js</p>
     </div>
     
 
@@ -113,6 +110,76 @@ behaviors (like expand_collapse) to work with multiple layout engines.</p>
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    uuid()
+                
+                </td>
+            
+
+            <td class="description last"><p>Unique identifier</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -150,8 +217,8 @@ behaviors (like expand_collapse) to work with multiple layout engines.</p>
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="graphviz_attrs.js.html">graphviz_attrs.js</a>,
-				 <a href="graphviz_attrs.js.html#sunlight-1-line-1">line 1</a>
+				<a href="d3v4_force_layout.js.html">d3v4_force_layout.js</a>,
+				 <a href="d3v4_force_layout.js.html#sunlight-1-line-1">line 1</a>
 			</li>
 		</ul>
 	</dd>
@@ -187,7 +254,7 @@ behaviors (like expand_collapse) to work with multiple layout engines.</p>
     </dt>
     <dd>
         
-<span class="param-type">Object</span>
+<span class="param-type"><a href="dc_graph.d3v4_force_layout.html">dc_graph.d3v4_force_layout</a></span>
 
 
 
@@ -215,484 +282,6 @@ behaviors (like expand_collapse) to work with multiple layout engines.</p>
 
     
 
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        <dl>
-            
-<hr>
-<dt>
-    <h4 class="name" id="nodesep"><span class="type-signature"></span>nodesep( [nodesep])</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Spacing in between nodes in the same rank.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Argument</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>nodesep</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    40
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="graphviz_attrs.js.html">graphviz_attrs.js</a>,
-				 <a href="graphviz_attrs.js.html#sunlight-1-line-21">line 21</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="rankdir"><span class="type-signature"></span>rankdir( [rankdir])</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Direction to draw ranks.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Argument</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>rankdir</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    'TB'
-                
-                </td>
-            
-
-            <td class="description last"><p>'TB', 'LR', 'BT', or 'RL'</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="graphviz_attrs.js.html">graphviz_attrs.js</a>,
-				 <a href="graphviz_attrs.js.html#sunlight-1-line-13">line 13</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="ranksep"><span class="type-signature"></span>ranksep( [ranksep])</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Spacing in between ranks.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Argument</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>ranksep</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    40
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="graphviz_attrs.js.html">graphviz_attrs.js</a>,
-				 <a href="graphviz_attrs.js.html#sunlight-1-line-29">line 29</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        </dl>
     
 
     
@@ -746,7 +335,7 @@ behaviors (like expand_collapse) to work with multiple layout engines.</p>
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a>
 	
-		on Wed Aug 2nd 2017
+		on Fri Jul 28th 2017
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
