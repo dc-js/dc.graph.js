@@ -1,3 +1,6 @@
+## 0.5.4
+* fix apparent chrome optimization bug - the result of `Math.floor` should never be undefined
+
 ## 0.5.3
 * `select_nodes` mode also disable modifier keys when `multipleSelect` is disabled
 
