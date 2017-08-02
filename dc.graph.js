@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.5.3
+ *  dc.graph 0.5.4
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.5.3
+ * @version 0.5.4
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.5.3',
+    version: '0.5.4',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -2399,7 +2399,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 // alternate parallel edges over, then under
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
-                    last = port ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
+                    last = port > 0 ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
                 var path = draw_edge_to_shapes(_chart, source, target, sx, sy, tx, ty,
                                               last, dir, _chart.parallelEdgeOffset(),
                                               source_padding, target_padding
