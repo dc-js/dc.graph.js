@@ -185,8 +185,12 @@ function fit_shape(chart) {
     return function(d) {
         var r = chart.nodeRadius.eval(d);
         var bbox;
-        if(chart.nodeFitLabel.eval(d))
+        if(chart.nodeFitLabel.eval(d)) {
             bbox = this.getBBox();
+            var padding = chart.nodeLabelPadding.eval(d);
+            bbox.width += 2*padding.x;
+            bbox.height += 2*padding.y;
+        }
         var fitx = 0;
         if(bbox && bbox.width && bbox.height) {
             // make sure we can fit height in r
@@ -204,12 +208,10 @@ function fit_shape(chart) {
                 // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
                 rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
             }
-            rx += chart.nodeLabelPadding.eval(d).x;
             d.dcg_rx = rx;
             fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         }
         else d.dcg_rx = r;
-        r += chart.nodeLabelPadding.eval(d).y;
         d.dcg_ry = r;
         var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
         d.cola.width = Math.max(fitx, rplus);
