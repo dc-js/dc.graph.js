@@ -422,6 +422,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.nodePadding = property(6);
 
+    _chart.nodeLabelPadding = property({x: 0, y: 0});
     /**
      * Set or get the function which will be used to retrieve the label text to display in each
      * node. By default, looks for a field `label` or `name` inside the `value` field.
