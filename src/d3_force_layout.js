@@ -12,11 +12,11 @@ dc_graph.d3_force_layout = function(id) {
     // node and edge objects shared with d3-force, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
-    var wnodes = [], wedges = [];
+    var _wnodes = [], _wedges = [];
     var _originalNodesPosition = {};
     var _options = null;
-    var pathsData = null;
-    var initialized = false;
+    var _paths = null;
+    var _initialized = false;
 
     function init(options) {
         _options = options;
@@ -29,8 +29,8 @@ dc_graph.d3_force_layout = function(id) {
 
     function dispatchState(event) {
         _dispatch[event](
-            wnodes,
-            wedges.map(function(e) {
+            _wnodes,
+            _wedges.map(function(e) {
                 return {dcg_edgeKey: e.dcg_edgeKey};
             })
         );
@@ -55,7 +55,7 @@ dc_graph.d3_force_layout = function(id) {
             nodeIDs[d.dcg_nodeKey] = i;
         });
 
-        wnodes = regenerate_objects(_nodes, nodes, function(v) {
+        _wnodes = regenerate_objects(_nodes, nodes, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -64,7 +64,7 @@ dc_graph.d3_force_layout = function(id) {
             v1.id = v.dcg_nodeKey;
         });
 
-        wedges = regenerate_objects(_edges, edges, function(e) {
+        _wedges = regenerate_objects(_edges, edges, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -77,14 +77,14 @@ dc_graph.d3_force_layout = function(id) {
             e1.dcg_edgeLength = e.dcg_edgeLength;
         });
 
-        _simulation.nodes(wnodes);
-        _simulation.links(wedges);
+        _simulation.nodes(_wnodes);
+        _simulation.links(_wedges);
     }
 
     function start(options) {
         runSimulation();
 
-        initialized = true;
+        _initialized = true;
         //store original positions
         Object.keys(_nodes).forEach(function(key) {
             _originalNodesPosition[key] = {'x': _nodes[key].x, 'y': _nodes[key].y};
@@ -97,7 +97,7 @@ dc_graph.d3_force_layout = function(id) {
 
     function relayout(paths) {
         if(paths === null) {
-            if(initialized) {
+            if(_initialized) {
                 Object.keys(_nodes).forEach(function(key) {
                     _nodes[key].fixed = false;
                     _nodes[key].x = _originalNodesPosition[key].x;
@@ -236,10 +236,10 @@ dc_graph.d3_force_layout = function(id) {
             stop();
         },
         relayout: function() {
-            relayout(pathsData);
+            relayout(_paths);
         },
         paths: function(paths) {
-            pathsData = paths;
+            _paths = paths;
         },
         optionNames: function() {
             return ['angleForce', 'chargeForce', 'gravityStrength', 'initialCharge']
@@ -250,7 +250,7 @@ dc_graph.d3_force_layout = function(id) {
         gravityStrength: property(1.0),
         initialCharge: property(-400),
         populateLayoutNode: function() {},
-        populateLayoutEdge: function() {},
+        populateLayoutEdge: function() {}
     });
     return engine;
 };
