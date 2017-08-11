@@ -11,7 +11,8 @@
 dc_graph.graphviz_layout = function(id, layout, server) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
-    var _dotString;
+    var _dotInput, _dotString;
+    var _clusters; // hack to get cluster data out
 
     function init(options) {
     }
@@ -29,6 +30,10 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         return '[' + props.join(', ') + ']';
     }
     function data(nodes, edges, constraints, options) {
+        if(_dotInput) {
+            _dotString = _dotInput;
+            return;
+        }
         var lines = [];
         var directed = layout !== 'neato';
         lines.push((directed ? 'digraph' : 'graph') + ' g {');
@@ -66,7 +71,9 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     function process_response(error, result) {
         _dispatch.start();
         var bb = result.bb.split(',').map(function(x) { return +x; });
-        var nodes = (result.objects || []).map(function(n) {
+        var nodes = (result.objects || []).filter(function(n) {
+            return n.pos; // remove non-nodes like clusters
+        }).map(function(n) {
             var pos = n.pos.split(',');
             return {
                 dcg_nodeKey: decode_name(n.name),
@@ -74,9 +81,19 @@ dc_graph.graphviz_layout = function(id, layout, server) {
                 y: bb[3] - pos[1]
             };
         });
+        _clusters = (result.objects || []).filter(function(n) {
+            return /^cluster/.test(n.name);
+        });
+        _clusters.forEach(function(c) {
+            // annotate with flipped cluster coords for convenience
+            c.bbflip = c.bb.split(',').map(function(s) { return +s; });
+            var t = bb[3] - c.bbflip[1];
+            c.bbflip[1] = bb[3] - c.bbflip[3];
+            c.bbflip[3] = t;
+        });
         var edges = (result.edges || []).map(function(e) {
             var e2 = {
-                dcg_edgeKey: decode_name(e.id)
+                dcg_edgeKey: decode_name(e.id || 'n' + e._gvid)
             };
             if(e._draw_) {
                 var directive = e._draw_.find(function(d) { return d.op && d.points; });
@@ -127,6 +144,14 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         },
         data: function(nodes, edges, constraints, options) {
             data(nodes, edges, constraints, options);
+        },
+        dotInput: function(text) {
+            _dotInput = text;
+            return this;
+        },
+        clusters: function() {
+            // filter out clusters and return them separately, because dc.graph doesn't know how to draw them
+            return _clusters;
         },
         start: function(options) {
             start(options);
