@@ -2,7 +2,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
-    var pathsAll = null;
+    var _paths = null;
     var _anchor;
     var _layer = null;
 
@@ -12,7 +12,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         _layer.selectAll('.spline-edge').remove();
         _layer.selectAll('.spline-edge-hover').remove();
 
-        pathsAll = paths;
+        _paths = paths;
         // check if path exits on current chart
         if(pathExists(paths) === true) {
             _behavior.parent().layoutEngine().paths(paths);
@@ -107,9 +107,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
                     insert_p1.y = (y1+y2)/2.0 + offset*v2;
 
                     // second node
-                    x1 = path_coord[i].x
+                    x1 = path_coord[i].x;
                     y1 = path_coord[i].y;
-                    x2 = path_coord[i+1].x
+                    x2 = path_coord[i+1].x;
                     y2 = path_coord[i+1].y;
                     dx = x1 - x2;
                     dy = y1 - y2;
@@ -198,7 +198,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             d3.selectAll('.spline-edge').attr('stroke', 'black');
         } else {
             for(var i = 0; i < hoversplines.length; i ++) {
-                var path_id = pathsAll.indexOf(hoversplines[i])
+                var path_id = _paths.indexOf(hoversplines[i]);
                 var sel_path = d3.select("#spline-path-"+path_id).attr('stroke', hoverprops.edgeStroke);
                 sel_path.each(function() {this.parentNode.appendChild(this);});
             }
@@ -212,7 +212,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             _layer.enter().append('g').attr('class', 'spline-layer');
         }
 
-        drawSpline(pathsAll, pathprops);
+        drawSpline(_paths, pathprops);
 
     }
 
