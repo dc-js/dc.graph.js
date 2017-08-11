@@ -1056,6 +1056,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _nodes[id] ? _nodes[id].orig : null;
     };
 
+    _chart.getNodeAllInfo = function(id) {
+        return _nodes[id] ? _nodes[id] : null;
+    };
+
     /**
      * Instructs cola.js to fit the connected components.
      *
@@ -1206,6 +1210,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         _running = true;
 
         _chart.layoutEngine().stop();
+
+        if(_chart.layoutEngine().relayout) {
+            _chart.layoutEngine().relayout();
+        }
 
         if(_chart.initLayoutOnRedraw())
             initLayout();
@@ -1608,7 +1616,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nullSel = d3.select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel);
     };
-
 
     function layout_done(happens) {
         _dispatch.end(happens);
