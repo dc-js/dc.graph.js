@@ -1,3 +1,7 @@
+## 0.5.5
+* hacks to allow passing clustered gv-format data to graphviz, and get the clusters back out
+* support graphlib-dot 0.6 for reading graphs. looks like this is older than the version we are distributing but it's the one available on npm.
+
 ## 0.5.4
 * fix apparent chrome optimization bug - the result of `Math.floor` should never be undefined
 
