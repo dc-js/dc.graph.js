@@ -3,27 +3,50 @@ function process_dot(callback, error, text) {
         callback(error, null);
         return;
     }
-    var digraph = graphlibDot.parse(text);
+    var nodes, edges;
+    if(graphlibDot.parse) { // graphlib-dot 1.1.0 (where did i get it from?)
+        var digraph = graphlibDot.parse(text);
 
-    var nodeNames = digraph.nodes();
-    var nodes = new Array(nodeNames.length);
-    nodeNames.forEach(function (name, i) {
-        var node = nodes[i] = digraph._nodes[nodeNames[i]];
-        node.id = i;
-        node.name = name;
-    });
-
-    var edgeNames = digraph.edges();
-    var edges = [];
-    edgeNames.forEach(function(e) {
-        var edge = digraph._edges[e];
-        edges.push({
-            source: digraph._nodes[edge.u].id,
-            target: digraph._nodes[edge.v].id,
-            sourcename: edge.u,
-            targetname: edge.v
+        var nodeNames = digraph.nodes();
+        nodes = new Array(nodeNames.length);
+        nodeNames.forEach(function (name, i) {
+            var node = nodes[i] = digraph._nodes[nodeNames[i]];
+            node.id = i;
+            node.name = name;
         });
-    });
+
+        var edgeNames = digraph.edges();
+        edges = [];
+        edgeNames.forEach(function(e) {
+            var edge = digraph._edges[e];
+            edges.push({
+                source: digraph._nodes[edge.u].id,
+                target: digraph._nodes[edge.v].id,
+                sourcename: edge.u,
+                targetname: edge.v
+            });
+        });
+    } else { // graphlib-dot 0.6
+        digraph = graphlibDot.read(text);
+
+        nodeNames = digraph.nodes();
+        nodes = new Array(nodeNames.length);
+        nodeNames.forEach(function (name, i) {
+            var node = nodes[i] = digraph._nodes[nodeNames[i]];
+            node.id = i;
+            node.name = name;
+        });
+
+        edges = [];
+        digraph.edges().forEach(function(e) {
+            edges.push({
+                source: digraph._nodes[e.v].id,
+                target: digraph._nodes[e.w].id,
+                sourcename: e.v,
+                targetname: e.w
+            });
+        });
+    }
     var graph = {nodes: nodes, links: edges};
     callback(null, graph);
 }
