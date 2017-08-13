@@ -107,7 +107,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             p.theta = normalize_angle(low + Math.random()*normalize_angle_delta(high-low));
         });
         nports.forEach(function(p) {
-            p.pos = point_on_shape(diagram, nodes[nid], Math.cos(p.theta)*1000, Math.sin(p.theta)*1000);
+            p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, Math.cos(p.theta)*1000, Math.sin(p.theta)*1000);
         });
     }
 

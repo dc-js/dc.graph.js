@@ -59,15 +59,6 @@ function point_on_polygon(points, x0, y0, x1, y1) {
     return null;
 }
 
-function point_on_shape(chart, d, deltaX, deltaY) {
-    switch(d.dcg_shape.shape) {
-    case 'ellipse':
-        return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
-    case 'polygon':
-        return point_on_polygon(d.dcg_points, 0, 0, deltaX, deltaY);
-    }
-}
-
 // as many as we can get from
 // http://www.graphviz.org/doc/info/shapes.html
 var dc_graph_shapes_ = {
@@ -131,21 +122,23 @@ dc_graph.available_shapes = function() {
 
 var default_shape = {shape: 'ellipse'};
 
-function elaborate_shape(def) {
+function elaborate_shape(chart, def) {
     var shape = def.shape;
     if(def.shape === 'random') {
-        var available = dc_graph.available_shapes();
+        var available = dc_graph.available_shapes(); // could include chart.shape !== ellipse, polygon
         shape = available[Math.floor(Math.random()*available.length)];
     }
+    else if(chart.shape.enum().indexOf(def.shape) !== -1)
+        return chart.shape(def.shape).elaborate(def);
     if(!dc_graph_shapes_[shape])
         throw new Error('unknown shape ' + shape);
-    return dc_graph_shapes_[shape];
+    return dc_graph_shapes_[shape](def);
 }
 
 function infer_shape(chart) {
     return function(d) {
         var def = chart.nodeShape.eval(d) || default_shape;
-        d.dcg_shape = elaborate_shape(def);
+        d.dcg_shape = elaborate_shape(chart, def);
         d.dcg_shape.abstract = def;
     };
 }
@@ -164,62 +157,33 @@ function shape_changed(chart) {
     };
 }
 
-function shape_element(chart) {
-    return function(d) {
-        var shape = d.dcg_shape.shape, elem;
-        switch(shape) {
-        case 'ellipse':
-            elem = 'ellipse';
-            break;
-        case 'polygon':
-            elem = 'path';
-            break;
-        default:
-            throw new Error('unknown shape ' + shape);
-        }
-        return document.createElementNS("http://www.w3.org/2000/svg", elem);
-    };
-}
-
-function fit_shape(chart) {
-    return function(d) {
-        var r = chart.nodeRadius.eval(d);
-        var bbox;
-        if(chart.nodeFitLabel.eval(d)) {
-            bbox = this.getBBox();
-            var padding = chart.nodeLabelPadding.eval(d);
-            bbox.width += 2*padding.x;
-            bbox.height += 2*padding.y;
-        }
-        var fitx = 0;
-        if(bbox && bbox.width && bbox.height) {
-            // make sure we can fit height in r
-            r = Math.max(r, bbox.height/2 + 5);
-            var rx = bbox.width/2;
-            if(d.dcg_shape.shape === 'ellipse') {
-                // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-                // http://stackoverflow.com/a/433438/676195
-                var y_over_B = bbox.height/2/r;
-                rx = rx/Math.sqrt(1 - y_over_B*y_over_B);
-                rx = Math.max(rx, r);
-            } else {
-                // this is cribbed from graphviz but there is much i don't understand
-                // and any errors are mine
-                // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
-                rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
+function fit_shape(shape, chart) {
+    return function(text) {
+        text.each(function(d) {
+            var bbox;
+            if(chart.nodeFitLabel.eval(d)) {
+                bbox = this.getBBox();
+                var padding = chart.nodeLabelPadding.eval(d);
+                bbox.width += 2*padding.x;
+                bbox.height += 2*padding.y;
             }
-            d.dcg_rx = rx;
-            fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-        }
-        else d.dcg_rx = r;
-        d.dcg_ry = r;
-        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-        d.cola.width = Math.max(fitx, rplus);
-        d.cola.height = rplus;
+            var fitx = 0;
+            if(bbox && bbox.width && bbox.height) {
+                var r = chart.nodeRadius.eval(d);
+                var radii = shape.calc_radii(d, r, bbox);
+                d.dcg_rx = radii.rx;
+                d.dcg_ry = radii.ry;
+                fitx = radii.rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
+            } else
+                d.dcg_rx = d.dcg_ry = chart.nodeRadius.eval(d);
+            var rplus = d.dcg_ry*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
+            d.cola.width = Math.max(fitx, rplus);
+            d.cola.height = rplus;
+        });
     };
 }
 
-function ellipse_attrs(chart, d) {
+function ellipse_attrs(chart) {
     return {
         rx: function(d) { return d.dcg_rx; },
         ry: function(d) { return d.dcg_ry; }
@@ -256,21 +220,6 @@ function polygon_attrs(chart, d) {
     };
 }
 
-function shape_attrs(chart) {
-    return function(d) {
-        var sel = d3.select(this);
-        switch(d.dcg_shape.shape) {
-        case 'ellipse':
-            sel.attr(ellipse_attrs(chart, d));
-            break;
-        case 'polygon':
-            sel.attr(polygon_attrs(chart, d));
-            break;
-        default: throw new Error('unknown shape ' + d.dcg_shape.shape);
-        }
-    };
-}
-
 function binary_search(f, a, b) {
     var patience = 100;
     if(f(a).val >= 0)
@@ -303,8 +252,8 @@ function draw_edge_to_shapes(chart, e, sx, sy, tx, ty,
         console.assert(tp);
         // deltaX = tx - sx;
         // deltaY = ty - sy;
-        // sp = point_on_shape(chart, e.source, deltaX, deltaY);
-        // tp = point_on_shape(chart, e.target, -deltaX, -deltaY);
+        // sp = chart.shape(e.source.dcg_shape.shape).intersect_vec(e.source, deltaX, deltaY);
+        // tp = chart.shape(e.target.dcg_shape.shape).intersect_vec(e.target, -deltaX, -deltaY);
         // if(!sp) sp = {x: 0, y: 0};
         // if(!tp) tp = {x: 0, y: 0};
         points = [{
@@ -318,7 +267,7 @@ function draw_edge_to_shapes(chart, e, sx, sy, tx, ty,
     }
     else {
         var p_on_s = function(node, ang) {
-            return point_on_shape(chart, node, Math.cos(ang)*1000, Math.sin(ang)*1000);
+            return chart.shape(node.dcg_shape.shape).intersect_vec(node, Math.cos(ang)*1000, Math.sin(ang)*1000);
         };
         var compare_dist = function(node, port0, goal) {
             return function(ang) {
@@ -407,3 +356,84 @@ function bezier_point(points, t_) {
     var q = getLevels(points, t_);
     return q[q.length-1][0];
 }
+
+dc_graph.ellipse_shape = function() {
+    var _shape = {
+        parent: property(null),
+        elaborate: function(def) {
+            return dc_graph_shapes_.ellipse(def);
+        },
+        intersect_vec: function(d, deltaX, deltaY) {
+            return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
+        },
+        calc_radii: function(d, ry, bbox) {
+            // make sure we can fit height in r
+            ry = Math.max(ry, bbox.height/2 + 5);
+            var rx = bbox.width/2;
+
+            // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+            // http://stackoverflow.com/a/433438/676195
+            var y_over_B = bbox.height/2/ry;
+            rx = rx/Math.sqrt(1 - y_over_B*y_over_B);
+            rx = Math.max(rx, ry);
+
+            return {rx: rx, ry: ry};
+        },
+        create: function(nodeEnter) {
+            nodeEnter.append('ellipse')
+                .attr('class', 'node-shape');
+            nodeEnter.append('text')
+                .attr('class', 'node-label');
+        },
+        replace: function(nodeChanged) {
+            nodeChanged.select('.node-shape').remove();
+            nodeChanged.insert('ellipse', ':first-child')
+                .attr('class', 'node-shape');
+        },
+        update: function(node) {
+            node.select('.node-shape')
+                .attr(ellipse_attrs(_shape.parent()));
+        }
+    };
+    return _shape;
+};
+
+dc_graph.polygon_shape = function() {
+    var _shape = {
+        parent: property(null),
+        elaborate: function(def) {
+            return dc_graph_shapes_.polygon(def);
+        },
+        intersect_vec: function(d, deltaX, deltaY) {
+            return point_on_polygon(d.dcg_points, 0, 0, deltaX, deltaY);
+        },
+        calc_radii: function(d, ry, bbox) {
+            // make sure we can fit height in r
+            ry = Math.max(ry, bbox.height/2 + 5);
+            var rx = bbox.width/2;
+
+            // this is cribbed from graphviz but there is much i don't understand
+            // and any errors are mine
+            // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
+            rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
+
+            return {rx: rx, ry: ry};
+        },
+        create: function(nodeEnter) {
+            nodeEnter.append('path')
+                .attr('class', 'node-shape');
+            nodeEnter.append('text')
+                .attr('class', 'node-label');
+        },
+        replace: function(nodeChanged) {
+            nodeChanged.select('.node-shape').remove();
+            nodeChanged.insert('path', ':first-child')
+                .attr('class', 'node-shape');
+        },
+        update: function(node) {
+            node.select('.node-shape')
+                .attr(polygon_attrs(_shape.parent()));
+        }
+    };
+    return _shape;
+};
