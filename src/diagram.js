@@ -26,7 +26,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _ports = {}; // id = node|edge/id/name
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
-    var _children = {}, _arrows = {}, _portStyles = {};
+    var _arrows = {};
     var _running = false; // for detecting concurrency issues
     var _translate = [0,0], _scale = 1;
     var _zoom;
@@ -318,19 +318,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.portName = property(null);
     _chart.portStyleName = property(null);
 
-    _chart.portStyle = function(id, style) {
-        if(arguments.length === 1)
-            return _portStyles[id];
-        // do not notify unnecessarily
-        if(_portStyles[id] === style)
-            return _chart;
-        if(_portStyles[id])
-            _portStyles[id].parent(null);
-        _portStyles[id] = style;
-        if(style)
-            style.parent(_chart);
-        return _chart;
-    };
+    _chart.portStyle = named_children();
 
     _chart.portBounds = property(null); // position limits, in radians
 
@@ -995,19 +983,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * diagram.child('tip', tip);
      * @return {dc_graph.diagram}
      **/
-    _chart.child = function(id, object) {
-        if(arguments.length === 1)
-            return _children[id];
-        // do not notify unnecessarily
-        if(_children[id] === object)
-            return _chart;
-        if(_children[id])
-            _children[id].parent(null);
-        _children[id] = object;
-        if(object)
-            object.parent(_chart);
-        return _chart;
-    };
+    _chart.mode = _chart.child = named_children();
 
     /**
      * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
@@ -2060,14 +2036,14 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function draw_ports(nodePorts, node) {
-        for(var style in _portStyles) {
+        _chart.portStyle.enum().forEach(function(style) {
             var nodePorts2 = {};
             for(var nid in nodePorts)
                 nodePorts2[nid] = nodePorts[nid].filter(function(p) {
                     return _chart.portStyleName.eval(p) === style;
                 });
-            _portStyles[style].drawPorts(nodePorts2, node);
-        }
+            _chart.portStyle(style).drawPorts(nodePorts2, node);
+        });
     }
 
     /**

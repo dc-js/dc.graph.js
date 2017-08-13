@@ -84,6 +84,27 @@ var property = function (defaultValue, unwrap) {
     return ret;
 };
 
+function named_children() {
+    var _children = {};
+    var f = function(id, object) {
+        if(arguments.length === 1)
+            return _children[id];
+        // do not notify unnecessarily
+        if(_children[id] === object)
+            return this;
+        if(_children[id])
+            _children[id].parent(null);
+        _children[id] = object;
+        if(object)
+            object.parent(this);
+        return this;
+    };
+    f.enum = function() {
+        return Object.keys(_children);
+    };
+    return f;
+}
+
 function deprecated_property(message, defaultValue) {
     var prop = property(defaultValue);
     var ret = function() {
