@@ -135,11 +135,11 @@ function elaborate_shape(def) {
     var shape = def.shape;
     if(def.shape === 'random') {
         var keys = Object.keys(dc_graph_shapes_);
-        shape = def._shape = keys[Math.floor(Math.random()*keys.length)];
+        shape = keys[Math.floor(Math.random()*keys.length)];
     }
-    return (dc_graph_shapes_[shape] || function() {
-        throw new Error('unknown shape ' + def.shape);
-    })(def);
+    if(!dc_graph_shapes_[shape])
+        throw new Error('unknown shape ' + shape);
+    return dc_graph_shapes_[shape];
 }
 
 function infer_shape(chart) {
