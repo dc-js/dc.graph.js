@@ -134,8 +134,8 @@ var default_shape = {shape: 'ellipse'};
 function elaborate_shape(def) {
     var shape = def.shape;
     if(def.shape === 'random') {
-        var keys = Object.keys(dc_graph_shapes_);
-        shape = keys[Math.floor(Math.random()*keys.length)];
+        var available = dc_graph.available_shapes();
+        shape = available[Math.floor(Math.random()*available.length)];
     }
     if(!dc_graph_shapes_[shape])
         throw new Error('unknown shape ' + shape);
