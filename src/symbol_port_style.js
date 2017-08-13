@@ -57,7 +57,7 @@ dc_graph.symbol_port_style = function() {
             return _style.portRadius()(d);
         }
     }
-    // yuk but correct
+    // yuk but correct, fill the port the same way node <g> is
     function node_fill() {
         var scale = _style.parent().nodeFillScale() || identity;
         return scale(_style.parent().nodeFill.eval(d3.select(this.parentNode.parentNode).datum()));
