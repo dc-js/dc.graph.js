@@ -475,6 +475,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.nodeShape = property(default_shape);
 
+    // for defining custom (and standard) shapes
+    _chart.shape = named_children();
+
+    _chart.shape('ellipse', dc_graph.ellipse_shape());
+    _chart.shape('polygon', dc_graph.polygon_shape());
+
     /**
      * Set or get the function which will be used to retrieve the node title, usually rendered
      * as a tooltip. By default, uses the key of the node.
@@ -1088,23 +1094,32 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
     }
 
-    _chart._enterNode = function(nodeEnter) {
+    _chart.forEachShape = function(node, f) {
+        _chart.shape.enum().forEach(function(shape) {
+            f(_chart.shape(shape),
+              node.filter(function(d) { return d.dcg_shape.shape === shape; }));
+        });
+    };
+    _chart.renderNode = _chart._enterNode = function(nodeEnter) {
         if(_chart.nodeTitle())
             nodeEnter.append('title');
         nodeEnter.each(infer_shape(_chart));
-        nodeEnter.append(shape_element(_chart))
-            .attr('class', 'node-shape');
-        nodeEnter.append('text')
-            .attr('class', 'node-label');
+        _chart.forEachShape(nodeEnter, function(shape, node) {
+            node.call(shape.create);
+        });
         return _chart;
     };
+    _chart.redrawNode = function(node) {
+    };
 
-    _chart._updateNode = function(node) {
+    _chart.redrawNode = _chart._updateNode = function(node) {
         var changedShape = node.filter(shape_changed(_chart));
-        changedShape.select('.node-shape').remove();
         changedShape.each(infer_shape(_chart));
-        changedShape.insert(shape_element(_chart), ':first-child')
-            .attr('class', 'node-shape');
+        _chart.forEachShape(changedShape, function(shape, node) {
+            // this is imperfect: old shape should remove itself,
+            // and perhaps create and replace merged (although they are append vs insert)
+            node.call(shape.replace);
+        });
         node.select('title')
             .text(_chart.nodeTitle.eval);
         var text = node.select('text.node-label');
@@ -1123,10 +1138,14 @@ dc_graph.diagram = function (parent, chartGroup) {
         tspan.text(function(d) { return d.line; });
         tspan.exit().remove();
         text
-            .attr('fill', _chart.nodeLabelFill.eval)
-            .each(fit_shape(_chart));
+            .attr('fill', _chart.nodeLabelFill.eval);
+        _chart.forEachShape(text, function(shape, text) {
+            text.call(fit_shape(shape, _chart));
+        });
+        _chart.forEachShape(node, function(shape, node) {
+            node.call(shape.update);
+        });
         node.select('.node-shape')
-            .each(shape_attrs(_chart))
             .attr({
                 stroke: _chart.nodeStroke.eval,
                 'stroke-width': _chart.nodeStrokeWidth.eval,
