@@ -384,12 +384,12 @@ dc_graph.ellipse_shape = function() {
                 .attr('class', 'node-shape');
         },
         replace: function(nodeChanged) {
-            nodeChanged.select('.node-shape').remove();
+            nodeChanged.select('ellipse.node-shape').remove();
             nodeChanged.insert('ellipse', ':first-child')
                 .attr('class', 'node-shape');
         },
         update: function(node) {
-            node.select('.node-shape')
+            node.select('ellipse.node-shape')
                 .attr(ellipse_attrs(_shape.parent()));
         }
     };
@@ -422,14 +422,79 @@ dc_graph.polygon_shape = function() {
                 .attr('class', 'node-shape');
         },
         replace: function(nodeChanged) {
-            nodeChanged.select('.node-shape').remove();
+            nodeChanged.select('path.node-shape').remove();
             nodeChanged.insert('path', ':first-child')
                 .attr('class', 'node-shape');
         },
         update: function(node) {
-            node.select('.node-shape')
+            node.select('path.node-shape')
                 .attr(polygon_attrs(_shape.parent()));
         }
     };
     return _shape;
 };
+
+dc_graph.rounded_rectangle_shape = function() {
+    var _polygon = dc_graph.polygon_shape();
+    var _shape = {
+        parent: property(null),
+        elaborate: function(def) {
+            return {
+                shape: def.shape,
+                rx: def.rx || 10,
+                ry: def.ry || 10
+            };
+        },
+        intersect_vec: function(d, deltaX, deltaY) {
+            var points = [
+                {x:  d.dcg_rx, y:  d.dcg_ry},
+                {x:  d.dcg_rx, y: -d.dcg_ry},
+                {x: -d.dcg_rx, y: -d.dcg_ry},
+                {x: -d.dcg_rx, y:  d.dcg_ry}
+            ];
+            return point_on_polygon(points, 0, 0, deltaX, deltaY); // not rounded
+        },
+        calc_radii: function(d, ry, bbox) {
+            // use default sides === 4, smelly
+            // _polygon.calc_radii(d, ry, bbox);
+            return {
+                rx: bbox.width / 2,
+                ry: Math.max(ry, bbox.height/2 + 5)
+            };
+        },
+        create: function(nodeEnter) {
+            nodeEnter.append('rect')
+                .attr('class', 'node-shape');
+        },
+        replace: function(nodeChanged) {
+            nodeChanged.select('rect.node-shape').remove();
+            nodeChanged.insert('rect', ':first-child')
+                .attr('class', 'node-shape');
+        },
+        update: function(node) {
+            node.select('rect.node-shape')
+                .attr({
+                    x: function(d) {
+                        return -d.dcg_rx;
+                    },
+                    y: function(d) {
+                        return -d.dcg_ry;
+                    },
+                    width: function(d) {
+                        return 2*d.dcg_rx;
+                    },
+                    height: function(d) {
+                        return 2*d.dcg_ry;
+                    },
+                    rx: function(d) {
+                        return d.dcg_shape.rx + 'px';
+                    },
+                    ry: function(d) {
+                        return d.dcg_shape.ry + 'px';
+                    }
+                });
+        }
+    };
+    return _shape;
+};
+

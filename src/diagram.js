@@ -480,6 +480,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.shape('ellipse', dc_graph.ellipse_shape());
     _chart.shape('polygon', dc_graph.polygon_shape());
+    _chart.shape('rounded-rect', dc_graph.rounded_rectangle_shape());
 
     _chart.nodeContent = property('text');
     _chart.content = named_children();
