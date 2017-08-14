@@ -163,9 +163,19 @@ function fit_shape(shape, chart) {
             var bbox;
             if(chart.nodeFitLabel.eval(d)) {
                 bbox = this.getBBox();
-                var padding = chart.nodeLabelPadding.eval(d);
-                bbox.width += 2*padding.x;
-                bbox.height += 2*padding.y;
+                var padding;
+                var content = chart.nodeContent.eval(d);
+                if(content && chart.content(content).padding)
+                    padding = chart.content(content).padding(d);
+                else {
+                    var padding2 = chart.nodeLabelPadding.eval(d);
+                    padding = {
+                        x: padding2.x*2,
+                        y: padding2.y*2
+                    };
+                }
+                bbox.width += padding.x;
+                bbox.height += padding.y;
             }
             var fitx = 0;
             if(bbox && bbox.width && bbox.height) {
