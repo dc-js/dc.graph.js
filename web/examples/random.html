@@ -54,7 +54,9 @@
             interval: 1000,
             opacity: 1,
             ports: false,
-            shape: 'ellipse'
+            shape: 'ellipse',
+            content: 'text',
+            icon: null
         }, qs);
 
         var engine = dc_graph.spawn_engine(options.layout, qs, options.worker != 'false');
@@ -80,6 +82,8 @@
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
             .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
             .nodeShape({shape: options.shape})
+            .nodeContent(options.content)
+            .nodeIcon(options.icon)
             .nodeStrokeWidth(0) // turn off outlines
             .nodeLabel(function(kv) { return kv.key; })
             .nodeLabelFill(function(n) {
