@@ -35,6 +35,13 @@ dc_graph.with_icon_contents = function(contents, width, height) {
         parent: property(null).react(function(parent) {
             contents.parent(parent);
         }),
+        padding: function(d) {
+            var padding = _contents.parent().nodeLabelPadding.eval(d);
+            return {
+                x: padding.x * 3,
+                y: padding.y * 3
+            };
+        },
         update: function(container) {
             var g = container.selectAll('g.with-icon')
                     .data(function(d) { return [d]; });
