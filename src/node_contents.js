@@ -55,7 +55,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
             g.selectAll('image.icon').attr({
                 href: _contents.parent().nodeIcon.eval,
                 x: function(d) {
-                    return -d.__foo/2;
+                    return -d.__foo/2 - _contents.parent().nodeLabelPadding.eval(d).x;
                 },
                 y: -height/2
             });
