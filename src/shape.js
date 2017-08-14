@@ -382,8 +382,6 @@ dc_graph.ellipse_shape = function() {
         create: function(nodeEnter) {
             nodeEnter.append('ellipse')
                 .attr('class', 'node-shape');
-            nodeEnter.append('text')
-                .attr('class', 'node-label');
         },
         replace: function(nodeChanged) {
             nodeChanged.select('.node-shape').remove();
@@ -422,8 +420,6 @@ dc_graph.polygon_shape = function() {
         create: function(nodeEnter) {
             nodeEnter.append('path')
                 .attr('class', 'node-shape');
-            nodeEnter.append('text')
-                .attr('class', 'node-label');
         },
         replace: function(nodeChanged) {
             nodeChanged.select('.node-shape').remove();
