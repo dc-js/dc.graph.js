@@ -484,7 +484,6 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.nodeContent = property('text');
     _chart.content = named_children();
     _chart.content('text', dc_graph.text_contents());
-    _chart.content('text-with-icon', dc_graph.with_icon_contents(dc_graph.text_contents(), 100, 66));
 
     // really looks like these should reside in an open namespace - this used only by an extension
     // but it's no less real than any other computed property
