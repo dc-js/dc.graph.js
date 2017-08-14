@@ -481,6 +481,15 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.shape('ellipse', dc_graph.ellipse_shape());
     _chart.shape('polygon', dc_graph.polygon_shape());
 
+    _chart.nodeContent = property('text');
+    _chart.content = named_children();
+    _chart.content('text', dc_graph.text_contents());
+    _chart.content('text-with-icon', dc_graph.with_icon_contents(dc_graph.text_contents(), 100, 66));
+
+    // really looks like these should reside in an open namespace - this used only by an extension
+    // but it's no less real than any other computed property
+    _chart.nodeIcon = property(null);
+
     /**
      * Set or get the function which will be used to retrieve the node title, usually rendered
      * as a tooltip. By default, uses the key of the node.
@@ -1094,11 +1103,17 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
     }
 
-    _chart.forEachShape = function(node, f) {
-        _chart.shape.enum().forEach(function(shape) {
-            f(_chart.shape(shape),
-              node.filter(function(d) { return d.dcg_shape.shape === shape; }));
+    _chart.forEachChild = function(node, children, idf, f) {
+        children.enum().forEach(function(key) {
+            f(children(key),
+              node.filter(function(d) { return idf(d) === key; }));
         });
+    };
+    _chart.forEachShape = function(node, f) {
+        _chart.forEachChild(node, _chart.shape, function(d) { return d.dcg_shape.shape; }, f);
+    };
+    _chart.forEachContent = function(node, f) {
+        _chart.forEachChild(node, _chart.content, _chart.nodeContent.eval, f);
     };
     _chart.renderNode = _chart._enterNode = function(nodeEnter) {
         if(_chart.nodeTitle())
@@ -1109,9 +1124,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         return _chart;
     };
-    _chart.redrawNode = function(node) {
-    };
-
     _chart.redrawNode = _chart._updateNode = function(node) {
         var changedShape = node.filter(shape_changed(_chart));
         changedShape.each(infer_shape(_chart));
@@ -1122,25 +1134,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         node.select('title')
             .text(_chart.nodeTitle.eval);
-        var text = node.select('text.node-label');
-        var tspan = text.selectAll('tspan').data(function(n) {
-            var lines = _chart.nodeLabel.eval(n);
-            if(!lines)
-                return [];
-            else if(typeof lines === 'string')
-                lines = [lines];
-            var first = lines.length%2 ? 0.3 - (lines.length-1)/2 : 1-lines.length/2;
-            return lines.map(function(line, i) { return {line: line, ofs: (i==0 ? first : 1) + 'em'}; });
-        });
-        tspan.enter().append('tspan')
-            .attr('x', 0)
-            .attr('dy', function(d) { return d.ofs; });
-        tspan.text(function(d) { return d.line; });
-        tspan.exit().remove();
-        text
-            .attr('fill', _chart.nodeLabelFill.eval);
-        _chart.forEachShape(text, function(shape, text) {
-            text.call(fit_shape(shape, _chart));
+        _chart.forEachContent(node, function(content, node) {
+            node.call(content.update);
+            _chart.forEachShape(content.select(node), function(shape, node) {
+                node
+                    .call(fit_shape(shape, _chart));
+            });
         });
         _chart.forEachShape(node, function(shape, node) {
             node.call(shape.update);
