@@ -71,7 +71,6 @@ dc_graph.symbol_port_style = function() {
         var symbol = node.selectAll('g.port');
         var shimmer = symbol.filter(function(p) { return p.state === 'shimmer'; }),
             nonshimmer = symbol.filter(function(p) { return p.state !== 'shimmer'; });
-        console.log('shimmer', shimmer.size(), 'nonshimmer', nonshimmer.size());
         if(shimmer.size()) {
             if(before)
                 before.each('end', repeat);
