@@ -101,7 +101,7 @@ dc_graph.draw_graphs = function(options) {
                     _hintData = [{source: {x: d.cola.x + activePort.pos.x, y: d.cola.y + activePort.pos.y}}];
                 } else {
                     _sourceDown = {node: d};
-                    _hintData = [{source: {x: _sourceDown.cola.x, y: _sourceDown.cola.y}}];
+                    _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
                 }
                 if(_behavior.conduct().startDragEdge) {
                     if(!_behavior.conduct().startDragEdge(_sourceDown))
