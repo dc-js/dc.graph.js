@@ -43,8 +43,14 @@ dc_graph.draw_graphs = function(options) {
         update_hint();
     }
 
+    function promise_identity(x) {
+        return Promise.resolve(x);
+    }
+
     function create_node(chart, pos, data) {
-        var node;
+        if(!_behavior.nodeCrossfilter())
+            throw new Error('need nodeCrossfilter');
+        var node, callback = _behavior.addNode() || promise_identity;
         if(data)
             node = data;
         else {
@@ -54,30 +60,32 @@ dc_graph.draw_graphs = function(options) {
         }
         if(pos)
             node[_fixedPosTag] = {x: pos[0], y: pos[1]};
-        if(_behavior.addNode())
-            _behavior.addNode()(node);
-        if(!_behavior.nodeCrossfilter())
-            throw new Error('need nodeCrossfilter');
-        _behavior.nodeCrossfilter().add([node]);
-        chart.redrawGroup();
-        select_nodes_group.node_set_changed([node[_idTag]]);
+        callback(node).then(function(node2) {
+            if(!node2)
+                return;
+            _behavior.nodeCrossfilter().add([node2]);
+            chart.redrawGroup();
+            select_nodes_group.node_set_changed([node2[_idTag]]);
+        });
     }
 
     function create_edge(chart, source, target) {
-        var edge = {};
+        if(!_behavior.edgeCrossfilter())
+            throw new Error('need edgeCrossfilter');
+        var edge = {}, callback = _behavior.addEdge() || promise_identity;
         edge[_idTag] = uuid();
         edge[_sourceTag] = source.node.orig.key;
         edge[_targetTag] = target.node.orig.key;
-        if(_behavior.addEdge())
-            _behavior.addEdge()(edge, source.port, target.port);
-        // changing this data inside crossfilter is okay because it is not indexed data
-        source.node.orig.value[_fixedPosTag] = null;
-        target.node.orig.value[_fixedPosTag] = null;
-        if(!_behavior.edgeCrossfilter())
-            throw new Error('need edgeCrossfilter');
-        _behavior.edgeCrossfilter().add([edge]);
-        select_nodes_group.node_set_changed([], false);
-        chart.redrawGroup();
+        callback(edge, source.port, target.port).then(function(edge2) {
+            if(!edge2)
+                return;
+            // changing this data inside crossfilter is okay because it is not indexed data
+            source.node.orig.value[_fixedPosTag] = null;
+            target.node.orig.value[_fixedPosTag] = null;
+            _behavior.edgeCrossfilter().add([edge2]);
+            select_nodes_group.node_set_changed([], false);
+            chart.redrawGroup();
+        });
     }
 
     function add_behavior(chart, node, edge, ehover) {
@@ -225,8 +233,11 @@ dc_graph.draw_graphs = function(options) {
     _behavior.conduct = property({});
 
     // callbacks to modify data as it's being added
-    _behavior.addNode = property(null);
-    _behavior.addEdge = property(null);
+    // as of 0.6, function returns a promise of the new data
+    _behavior.addNode = property(null); // node -> promise(node2)
+    _behavior.addEdge = property(null); // edge, sourceport, targetport -> promise(edge2)
+
+    // or, if you want to drive..
     _behavior.createNode = function(pos, data) {
         create_node(_behavior.parent(), pos, data);
     };

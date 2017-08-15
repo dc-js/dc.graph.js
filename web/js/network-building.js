@@ -39,6 +39,7 @@ var label_nodes = dc_graph.label_nodes({
 var timestamp = 0;
 function add_object(d) {
     d.timestamp = timestamp++;
+    return Promise.resolve(d);
 }
 
 var draw_graphs = dc_graph.draw_graphs({
