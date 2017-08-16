@@ -122,17 +122,23 @@ dc_graph.symbol_port_style = function() {
                 }
             });
 
-        node.selectAll('text.port')
-            .transition()
-            .duration(250)
+        function text_showing(d) {
+            return d.state === 'large' || d.state === 'medium';
+        }
+        trans.selectAll('text.port')
             .attr({
                 opacity: function(d) {
-                    return d.state === 'large' || d.state === 'medium' ? 1 : 0;
+                    return text_showing(d) ? 1 : 0;
                 },
                 'pointer-events': function(d) {
-                    return d.state === 'large' || d.state === 'medium' ? 'auto' : 'none';
+                    return text_showing(d) ? 'auto' : 'none';
                 }
             });
+        trans.selectAll('rect.port')
+            .attr('opacity', function(p) {
+                return text_showing(p) ? 0.85 : 0;
+            });
+
         return trans;
     };
     _style.eventPort = function() {
@@ -205,7 +211,10 @@ dc_graph.symbol_port_style = function() {
             return _style.portText()(p) ? [p] : [];
         });
         label.exit().remove();
-        label.enter().append('text')
+        var labelEnter = label.enter();
+        labelEnter.append('rect')
+            .attr('class', 'port');
+        labelEnter.append('text')
             .attr({
                 class: 'port',
                 'alignment-baseline': 'middle',
@@ -214,15 +223,38 @@ dc_graph.symbol_port_style = function() {
                 opacity: 0
             });
         label
+            .each(function(p) {
+                p.offset = (is_left(p) ? -1 : 1) * (_style.portHoverPortRadius()(p) + _style.portPadding()(p));
+            })
             .attr({
                 'text-anchor': function(d) {
                     return is_left(d) ? 'end' : 'start';
                 },
-                transform: function(d) {
-                    return 'translate(' + (is_left(d) ? -1 : 1) * (_style.portHoverPortRadius()(d) + _style.portPadding()(d)) + ',0)';
+                transform: function(p) {
+                    return 'translate(' + p.offset + ',0)';
                 }
             })
-            .text(_style.portText());
+            .text(_style.portText())
+            .each(function(p) {
+                p.bbox = this.getBBox();
+            });
+        port.selectAll('rect.port')
+            .attr({
+                x: function(p) {
+                    return p.offset < 0 ? p.offset - p.bbox.width : p.offset;
+                },
+                y: function(p) {
+                    return -p.bbox.height/2;
+                },
+                width: function(p) {
+                    return p.bbox.width;
+                },
+                height: function(p) {
+                    return p.bbox.height;
+                },
+                fill: 'white',
+                opacity: 0
+            });
         _style.enableHover(true);
         return _style;
     };
