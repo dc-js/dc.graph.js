@@ -15,7 +15,7 @@ dc_graph.filter_selection = function() {
 
     var _behavior = {
         parent: property(null).react(function(p) {
-            select_nodes_group.on('node_set_changed.filter-selection', p ? selection_changed(p) : null);
+            select_nodes_group.on('set_changed.filter-selection', p ? selection_changed(p) : null);
         })
     };
     return _behavior;

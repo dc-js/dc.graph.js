@@ -299,6 +299,8 @@ module.exports.jsFiles = [
     'src/behavior.js',
     'src/tip.js',
     'src/edit_text.js',
+    'src/brush.js',
+    'src/select_things.js',
     'src/select_nodes.js',
     'src/filter_selection.js',
     'src/label_nodes.js',
