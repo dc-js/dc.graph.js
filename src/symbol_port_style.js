@@ -136,7 +136,7 @@ dc_graph.symbol_port_style = function() {
             });
         trans.selectAll('rect.port')
             .attr('opacity', function(p) {
-                return text_showing(p) ? 0.85 : 0;
+                return text_showing(p) ? 1 : 0;
             });
 
         return trans;
