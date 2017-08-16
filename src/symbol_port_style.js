@@ -26,6 +26,7 @@ dc_graph.symbol_port_style = function() {
     _style.portLabel = _style.portText = property(function(p) {
         return p.name;
     });
+    _style.portLabelPadding = property({x: 5, y: 5});
 
     function port_fill(d) {
         return _style.colorScale()(_style.portColor()(d));
@@ -138,6 +139,12 @@ dc_graph.symbol_port_style = function() {
             .attr('opacity', function(p) {
                 return text_showing(p) ? 1 : 0;
             });
+        // bring all nodes which have labels showing to the front
+        _node.filter(function(n) {
+            return _nodePorts[_style.parent().nodeKey.eval(n)].some(text_showing);
+        }).each(function(){
+            this.parentNode.appendChild(this);
+        });
 
         return trans;
     };
@@ -213,7 +220,10 @@ dc_graph.symbol_port_style = function() {
         label.exit().remove();
         var labelEnter = label.enter();
         labelEnter.append('rect')
-            .attr('class', 'port');
+            .attr({
+                class: 'port',
+                'pointer-events': 'none'
+            });
         labelEnter.append('text')
             .attr({
                 class: 'port',
@@ -241,16 +251,16 @@ dc_graph.symbol_port_style = function() {
         port.selectAll('rect.port')
             .attr({
                 x: function(p) {
-                    return p.offset < 0 ? p.offset - p.bbox.width : p.offset;
+                    return (p.offset < 0 ? p.offset - p.bbox.width : p.offset) - _style.portLabelPadding.eval(p).x;
                 },
                 y: function(p) {
-                    return -p.bbox.height/2;
+                    return -p.bbox.height/2 - _style.portLabelPadding.eval(p).y;
                 },
                 width: function(p) {
-                    return p.bbox.width;
+                    return p.bbox.width + 2*_style.portLabelPadding.eval(p).x;
                 },
                 height: function(p) {
-                    return p.bbox.height;
+                    return p.bbox.height + 2*_style.portLabelPadding.eval(p).y;
                 },
                 fill: 'white',
                 opacity: 0
