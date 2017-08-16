@@ -23,7 +23,7 @@ dc_graph.symbol_port_style = function() {
     _style.portDisplacement = property(d3.functor(2));
     _style.portBackground = property(d3.functor(true));
     _style.portPadding = property(d3.functor(2));
-    _style.portText = property(function(p) {
+    _style.portLabel = _style.portText = property(function(p) {
         return p.name;
     });
 
