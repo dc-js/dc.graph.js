@@ -27,12 +27,20 @@ dc_graph.move_nodes = function(sourceprops, moveprops) {
         }, null, sourceprops));
 
         node.on('mousedown.move-nodes', function(d) {
+            _moving = true;
+        });
+        node.on('mousemove.move-nodes', function(d) {
+        });
+        node.on('mouseup.move-nodes', function(d) {
+            _moving = false;
         });
     }
 
     function remove_behavior(chart, node, edge) {
         node.on('mousedown.move-nodes', null);
-        chart.cascade(50, false, props);
+        node.on('mousemove.move-nodes', null);
+        node.on('mouseup.move-nodes', null);
+        chart.cascade(50, false, sourceprops);
     }
 
     var _behavior = dc_graph.behavior('move-nodes', {

@@ -65,7 +65,7 @@ dc_graph.draw_graphs = function(options) {
                 return;
             _behavior.nodeCrossfilter().add([node2]);
             chart.redrawGroup();
-            select_nodes_group.node_set_changed([node2[_idTag]]);
+            select_nodes_group.set_changed([node2[_idTag]]);
         });
     }
 
@@ -83,7 +83,7 @@ dc_graph.draw_graphs = function(options) {
             source.node.orig.value[_fixedPosTag] = null;
             target.node.orig.value[_fixedPosTag] = null;
             _behavior.edgeCrossfilter().add([edge2]);
-            select_nodes_group.node_set_changed([], false);
+            select_nodes_group.set_changed([], false);
             chart.redrawGroup();
         });
     }

@@ -70,7 +70,7 @@ dc_graph.label_nodes = function(options) {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
-            select_nodes_group.on('node_set_changed.label-nodes', p ? selection_changed_listener(p) : null);
+            select_nodes_group.on('set_changed.label-nodes', p ? selection_changed_listener(p) : null);
             label_nodes_group.on('edit_node_label.label-nodes', p ? edit_node_label_listener(p) : null);
         }
     });

@@ -1,9 +1,5 @@
-dc_graph.select_nodes = function(props) {
-    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
-    return dc_graph.select_things(select_nodes_group, 'select-nodes', props);
-
+dc_graph.select_things = function(things_group, things_name, props) {
     var _selected = [], _oldSelected;
-    var _brush, _gBrush;
 
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
     var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
@@ -31,8 +27,8 @@ dc_graph.select_nodes = function(props) {
         };
     }
     function background_click_event(chart, v) {
-        chart.svg().on('click.select-nodes', v ? function(d) {
-            select_nodes_group.set_changed([]);
+        chart.svg().on('click.' + things_name, v ? function(d) {
+            things_group.set_changed([]);
         } : null);
     }
     function brushstart() {
@@ -40,11 +36,10 @@ dc_graph.select_nodes = function(props) {
             _oldSelected = _selected.slice();
         else {
             _oldSelected = [];
-            select_nodes_group.set_changed([]);
+            things_group.set_changed([]);
         }
     }
-    function brushmove() {
-        var ext = _brush.extent();
+    function brushmove(ext) {
         var rectSelect = _behavior.parent().selectAllNodes().data().filter(function(n) {
             return n && ext[0][0] < n.cola.x && n.cola.x < ext[1][0] &&
                 ext[0][1] < n.cola.y && n.cola.y < ext[1][1];
@@ -58,24 +53,9 @@ dc_graph.select_nodes = function(props) {
             newSelected = rectSelect.reduce(toggle_array, _oldSelected);
         else
             newSelected = rectSelect;
-        select_nodes_group.set_changed(newSelected);
+        things_group.set_changed(newSelected);
     }
-    function brushend() {
-        _gBrush.call(_brush.clear());
-    }
-    function install_brush(chart) {
-        if(_brush)
-            return;
-        _brush = d3.svg.brush()
-            .x(chart.x()).y(chart.y())
-            .on('brushstart', brushstart)
-            .on('brush', brushmove)
-            .on('brushend', brushend);
 
-        _gBrush = chart.svg().insert('g', ':first-child')
-                .attr('class', 'brush')
-                .call(_brush);
-    }
     function add_behavior(chart, node, edge) {
         var condition = _behavior.noneIsAll() ? function(n) {
             return !_selected.length || _selected.indexOf(n.orig.key) >= 0;
@@ -84,7 +64,7 @@ dc_graph.select_nodes = function(props) {
         };
         chart.cascade(50, true, conditional_properties(condition, null, props));
 
-        node.on('click.select-nodes', function(d) {
+        node.on('click.' + things_name, function(d) {
             var key = chart.nodeKey.eval(d), newSelected;
             if(!_behavior.multipleSelect())
                 newSelected = [key];
@@ -97,12 +77,17 @@ dc_graph.select_nodes = function(props) {
                     _behavior.secondClickEvent()(d3.select(this));
                 newSelected = [key];
             }
-            select_nodes_group.set_changed(newSelected);
+            things_group.set_changed(newSelected);
             d3.event.stopPropagation();
         });
 
-        if(_behavior.multipleSelect())
-            install_brush(chart);
+        if(_behavior.multipleSelect()) {
+            var brush_mode = chart.child('brush');
+            brush_mode
+                .on('brushstart.' + things_name, brushstart)
+                .on('brushmove.' + things_name, brushmove);
+            brush_mode.activate();
+        }
         else
             background_click_event(chart, _behavior.clickBackgroundClears());
 
@@ -111,19 +96,27 @@ dc_graph.select_nodes = function(props) {
             var present = node.data().map(function(d) { return d.orig.key; });
             var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
             if(_selected.length !== now_selected.length)
-                select_nodes_group.set_changed(now_selected, false);
+                things_group.set_changed(now_selected, false);
         }
     }
 
     function remove_behavior(chart, node, edge) {
-        node.on('click.select-nodes', null);
-        chart.svg().on('click.select-nodes', null);
+        node.on('click.' + things_name, null);
+        chart.svg().on('click.' + things_name, null);
         chart.cascade(50, false, props);
     }
 
-    var _behavior = dc_graph.behavior('select-nodes', {
+    var _behavior = dc_graph.behavior(things_name, {
         add_behavior: add_behavior,
-        remove_behavior: remove_behavior
+        remove_behavior: remove_behavior,
+        parent: function(p) {
+            things_group.on('set_changed.' + things_name, p ? selection_changed(p) : null);
+            var brush_mode = p.child('brush');
+            if(!brush_mode) {
+                brush_mode = dc_graph.brush();
+                p.child('brush', brush_mode);
+            }
+        }
     });
 
     _behavior.multipleSelect = property(true);
@@ -138,12 +131,4 @@ dc_graph.select_nodes = function(props) {
     // probably want filters to be independent between charts (false)
     _behavior.autoCropSelection = property(true);
     return _behavior;
-};
-
-dc_graph.select_nodes_group = function(brushgroup) {
-    window.chart_registry.create_type('select-nodes', function() {
-        return d3.dispatch('set_changed');
-    });
-
-    return window.chart_registry.create_group('select-nodes', brushgroup);
 };
