@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Rectangular selection of nodes</title>
+  <title>Rectangular selection of nodes and edges</title>
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="../css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="../css/dc.css"/>
@@ -111,6 +111,13 @@
             }).noneIsAll(true)
               .autoCropSelection(false));
         diagram.child('filter-selection', dc_graph.filter_selection());
+
+        diagram.child('select-edges', dc_graph.select_edges(
+            {
+                edgeStrokeWidth: 3
+            }).noneIsAll(true)
+              .autoCropSelection(false));
+        //diagram.child('filter-selection', dc_graph.filter_selection());
 
         var colorDimension = data.nodef.crossfilter.dimension(function(n) {
             return n.color;
