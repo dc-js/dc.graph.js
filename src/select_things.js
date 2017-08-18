@@ -1,4 +1,4 @@
-dc_graph.select_things = function(things_group, things_name, props) {
+dc_graph.select_things = function(things_group, things_name, props, thinginess) {
     var _selected = [], _oldSelected;
 
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
@@ -40,12 +40,7 @@ dc_graph.select_things = function(things_group, things_name, props) {
         }
     }
     function brushmove(ext) {
-        var rectSelect = _behavior.parent().selectAllNodes().data().filter(function(n) {
-            return n && ext[0][0] < n.cola.x && n.cola.x < ext[1][0] &&
-                ext[0][1] < n.cola.y && n.cola.y < ext[1][1];
-        }).map(function(n) {
-            return n.orig.key;
-        });
+        var rectSelect = thinginess.intersectRect(ext);
         var newSelected;
         if(isUnion(d3.event.sourceEvent))
             newSelected = rectSelect.reduce(add_array, _oldSelected);
@@ -64,8 +59,8 @@ dc_graph.select_things = function(things_group, things_name, props) {
         };
         chart.cascade(50, true, conditional_properties(condition, null, props));
 
-        node.on('click.' + things_name, function(d) {
-            var key = chart.nodeKey.eval(d), newSelected;
+        thinginess.clickables(chart, node, edge).on('click.' + things_name, function(d) {
+            var key = thinginess.key(d), newSelected;
             if(!_behavior.multipleSelect())
                 newSelected = [key];
             else if(isUnion(d3.event))
@@ -93,7 +88,7 @@ dc_graph.select_things = function(things_group, things_name, props) {
 
         if(_behavior.autoCropSelection()) {
             // drop any selected which no longer exist in the diagram
-            var present = node.data().map(function(d) { return d.orig.key; });
+            var present = thinginess.clickables(chart, node, edge).data().map(thinginess.key);
             var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
             if(_selected.length !== now_selected.length)
                 things_group.set_changed(now_selected, false);
@@ -101,7 +96,7 @@ dc_graph.select_things = function(things_group, things_name, props) {
     }
 
     function remove_behavior(chart, node, edge) {
-        node.on('click.' + things_name, null);
+        thinginess.clickables(chart, node, edge).on('click.' + things_name, null);
         chart.svg().on('click.' + things_name, null);
         chart.cascade(50, false, props);
     }
@@ -126,7 +121,7 @@ dc_graph.select_things = function(things_group, things_name, props) {
     });
     _behavior.secondClickEvent = property(null);
     _behavior.noneIsAll = property(false);
-    // if you're replacing the data, you probably want the selection not to be preserved when a node
+    // if you're replacing the data, you probably want the selection not to be preserved when a thing
     // with the same key re-appears later (true). however, if you're filtering dc.js-style, you
     // probably want filters to be independent between charts (false)
     _behavior.autoCropSelection = property(true);
