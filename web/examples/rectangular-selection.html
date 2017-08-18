@@ -35,6 +35,11 @@
         right: 2em;
         top: 2em;
     }
+    #row {
+        position: absolute;
+        right: 2in;
+        top: 2em;
+    }
     .dc-chart .selected path, .dc-chart .selected circle {
         stroke-width: 0
     }
@@ -52,10 +57,11 @@
   <p id="hint">(use <kbd>alt</kbd> key to pan and zoom)</p>
   <div id="graph" class="chart"></div>
   <div id="pie"></div>
+  <div id="row"></div>
 
   <script type="text/javascript">
 
-    var diagram, pie;
+    var diagram, pie, row;
     (function() {
         function build_data(nodes, edges) {
             // build crossfilters from scratch
@@ -79,6 +85,12 @@
         random.generate(qs.n || 100);
         var data = build_data(random.nodes(), random.edges());
         var colors = ['#1b9e77', '#d95f02', '#7570b3'];
+        var dasheses = [
+            {name: 'solid', ray: null},
+            {name: 'dash', ray: [5,5]},
+            {name: 'dot', ray: [1,5]},
+            {name: 'dot-dash', ray: [15,10,5,10]}
+        ];
         diagram
             .layoutEngine(engine)
             .timeLimit(5000)
@@ -101,8 +113,12 @@
                 return kv.value.color;
             })
             .nodeOpacity(0.25)
+            .edgeOpacity(0.25)
             .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(colors))
             .nodeTitle(dc.pluck('key'))
+            .edgeStrokeDashArray(function(e) {
+                return dasheses[e.value.dash].ray;
+            })
             .edgeArrowhead(qs.arrows ? 'vee' : null);
 
         diagram.child('select-nodes', dc_graph.select_nodes(
@@ -110,14 +126,17 @@
                 nodeOpacity: 1
             }).noneIsAll(true)
               .autoCropSelection(false));
-        diagram.child('filter-selection', dc_graph.filter_selection());
+        diagram.child('filter-selection-nodes', dc_graph.filter_selection('select-nodes-group', 'select-nodes'));
 
         diagram.child('select-edges', dc_graph.select_edges(
             {
-                edgeStrokeWidth: 3
+                edgeStrokeWidth: 2,
+                edgeOpacity: 1
             }).noneIsAll(true)
               .autoCropSelection(false));
-        //diagram.child('filter-selection', dc_graph.filter_selection());
+        diagram.child('filter-selection-edges',
+                      dc_graph.filter_selection('select-edges-group', 'select-edges')
+                      .dimensionAccessor(c => c.edgeDimension()));
 
         var colorDimension = data.nodef.crossfilter.dimension(function(n) {
             return n.color;
@@ -132,6 +151,18 @@
             .label(function() { return ''; })
             .title(function(kv) {
                 return colors[kv.key] + ' nodes (' + kv.value + ')';
+            });
+
+        var dashDimension = data.edgef.crossfilter.dimension(function(e) {
+            return e.dash;
+        }),
+            dashGroup = dashDimension.group();
+        row = dc.rowChart('#row')
+            .width(300).height(150)
+            .dimension(dashDimension)
+            .group(dashGroup)
+            .label(function(kv) {
+                return dasheses[kv.key].name;
             });
 
         dc.renderAll();
