@@ -95,11 +95,13 @@ dc_graph.wheel_edges = function(namef, nindices, R) {
 dc_graph.random_graph = function(options) {
     options = Object.assign({
         ncolors: 5,
+        ndashes: 4,
         nodeKey: 'key',
         edgeKey: 'key',
         sourceKey: 'sourcename',
         targetKey: 'targetname',
         colorTag: 'color',
+        dashTag: 'dash',
         nodeKeyGen: function(i) { return 'n' + i; },
         edgeKeyGen: function(i) { return 'e' + i; },
         newComponentProb: 0.1,
@@ -145,6 +147,7 @@ dc_graph.random_graph = function(options) {
                     edge[options.edgeKey] = options.edgeKeyGen(_edges.length);
                     edge[options.sourceKey] = n1[options.nodeKey];
                     edge[options.targetKey] = n2[options.nodeKey];
+                    edge[options.dashTag] = Math.floor(Math.random()*options.ndashes);
                     if(options.log)
                         console.log(n1[options.nodeKey] + ' -> ' + n2[options.nodeKey]);
                     _edges.push(edge);
