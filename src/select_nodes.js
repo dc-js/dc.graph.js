@@ -1,5 +1,5 @@
 dc_graph.select_nodes = function(props) {
-    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
+    var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
     return dc_graph.select_things(select_nodes_group, 'select-nodes', props);
 
     var _selected = [], _oldSelected;

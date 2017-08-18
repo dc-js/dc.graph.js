@@ -132,3 +132,11 @@ dc_graph.select_things = function(things_group, things_name, props) {
     _behavior.autoCropSelection = property(true);
     return _behavior;
 };
+
+dc_graph.select_things_group = function(brushgroup, type) {
+    window.chart_registry.create_type(type, function() {
+        return d3.dispatch('set_changed');
+    });
+
+    return window.chart_registry.create_group(type, brushgroup);
+};

@@ -1,5 +1,5 @@
 dc_graph.move_nodes = function(sourceprops, moveprops) {
-    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
+    var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
     var _selected = [], _moving;
 
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin

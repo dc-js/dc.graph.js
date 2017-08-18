@@ -1,5 +1,5 @@
 dc_graph.filter_selection = function() {
-    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
+    var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
 
     function selection_changed(chart) {
         return function(selection) {
