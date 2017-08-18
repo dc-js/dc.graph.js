@@ -559,6 +559,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.edgeStrokeWidth = _chart.edgeStrokeWidthAccessor = property(1);
 
+    _chart.edgeStrokeDashArray = property(null);
+
     /**
      * Set or get the function which will be used to retrieve the edge opacity, a number from 0
      * to 1.
@@ -1665,6 +1667,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edge
             .attr('stroke', _chart.edgeStroke.eval)
             .attr('stroke-width', _chart.edgeStrokeWidth.eval)
+            .attr('stroke-dasharray', _chart.edgeStrokeDashArray.eval)
             .attr('marker-end', function(d) {
                 var name = _chart.edgeArrowhead.eval(d),
                     id = edgeArrow(d, 'head', name);
