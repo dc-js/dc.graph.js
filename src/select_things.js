@@ -1,4 +1,4 @@
-dc_graph.select_things = function(things_group, things_name, props, thinginess) {
+dc_graph.select_things = function(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;
 
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
@@ -40,6 +40,7 @@ dc_graph.select_things = function(things_group, things_name, props, thinginess) 
         }
     }
     function brushmove(ext) {
+        console.log('brushmove', things_name);
         var rectSelect = thinginess.intersectRect(ext);
         var newSelected;
         if(isUnion(d3.event.sourceEvent))
@@ -52,12 +53,12 @@ dc_graph.select_things = function(things_group, things_name, props, thinginess) 
     }
 
     function add_behavior(chart, node, edge) {
-        var condition = _behavior.noneIsAll() ? function(n) {
-            return !_selected.length || _selected.indexOf(n.orig.key) >= 0;
-        } : function(n) {
-            return _selected.indexOf(n.orig.key) >= 0;
+        var condition = _behavior.noneIsAll() ? function(t) {
+            return !_selected.length || _selected.indexOf(thinginess.key(t)) >= 0;
+        } : function(t) {
+            return _selected.indexOf(thinginess.key(t)) >= 0;
         };
-        chart.cascade(50, true, conditional_properties(condition, null, props));
+        thinginess.applyStyles(condition);
 
         thinginess.clickables(chart, node, edge).on('click.' + things_name, function(d) {
             var key = thinginess.key(d), newSelected;
@@ -78,9 +79,6 @@ dc_graph.select_things = function(things_group, things_name, props, thinginess) 
 
         if(_behavior.multipleSelect()) {
             var brush_mode = chart.child('brush');
-            brush_mode
-                .on('brushstart.' + things_name, brushstart)
-                .on('brushmove.' + things_name, brushmove);
             brush_mode.activate();
         }
         else
@@ -98,7 +96,7 @@ dc_graph.select_things = function(things_group, things_name, props, thinginess) 
     function remove_behavior(chart, node, edge) {
         thinginess.clickables(chart, node, edge).on('click.' + things_name, null);
         chart.svg().on('click.' + things_name, null);
-        chart.cascade(50, false, props);
+        thinginess.removeStyles();
     }
 
     var _behavior = dc_graph.behavior(things_name, {
@@ -111,6 +109,9 @@ dc_graph.select_things = function(things_group, things_name, props, thinginess) 
                 brush_mode = dc_graph.brush();
                 p.child('brush', brush_mode);
             }
+            brush_mode
+                .on('brushstart.' + things_name, brushstart)
+                .on('brushmove.' + things_name, brushmove);
         }
     });
 
