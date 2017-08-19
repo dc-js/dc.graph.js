@@ -32,9 +32,24 @@ var select_nodes = dc_graph.select_nodes({
     nodeStrokeWidth: 2
 }).multipleSelect(false);
 
+var select_edges = dc_graph.select_edges({
+    edgeStroke: 'darkgreen',
+    edgeStrokeWidth: 2
+}).multipleSelect(false);
+
 var label_nodes = dc_graph.label_nodes({
     nodeCrossfilter: node_flat.crossfilter
 });
+
+var delete_nodes = dc_graph.delete_things(
+    node_flat.crossfilter, node_flat.dimension,
+    dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
+    'delete-nodes');
+
+var delete_edges = dc_graph.delete_things(
+    edge_flat.crossfilter, edge_flat.dimension,
+    dc_graph.select_things_group('select-edges-group', 'select-edges'),
+    'delete-edges');
 
 var timestamp = 0;
 function add_object(d) {
@@ -49,8 +64,11 @@ var draw_graphs = dc_graph.draw_graphs({
 
 diagram
     .child('select-nodes', select_nodes)
+    .child('select-edges', select_edges)
     .child('label-nodes', label_nodes)
-    .child('draw-graphs', draw_graphs);
+    .child('draw-graphs', draw_graphs)
+    .child('delete-nodes', delete_nodes)
+    .child('delete-edges', delete_edges);
 
 var nodeDim = node_flat.crossfilter.dimension(function(d) { return d.timestamp; });
 var outnodes = dc.dataTable('#output-nodes')
