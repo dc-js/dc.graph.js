@@ -65,9 +65,11 @@ dc_graph.label_nodes = function(options) {
         parent: function(p) {
             select_nodes_group.on('set_changed.label-nodes', p ? selection_changed_listener(p) : null);
             label_nodes_group.on('edit_node_label.label-nodes', p ? edit_node_label_listener(p) : null);
-            _keyboard = p.child('keyboard');
-            if(!_keyboard)
-                p.child('keyboard', _keyboard = dc_graph.keyboard());
+            if(p) {
+                _keyboard = p.child('keyboard');
+                if(!_keyboard)
+                    p.child('keyboard', _keyboard = dc_graph.keyboard());
+            }
         }
     });
     return _behavior;
