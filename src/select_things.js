@@ -104,14 +104,16 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         remove_behavior: remove_behavior,
         parent: function(p) {
             things_group.on('set_changed.' + things_name, p ? selection_changed(p) : null);
-            var brush_mode = p.child('brush');
-            if(!brush_mode) {
-                brush_mode = dc_graph.brush();
-                p.child('brush', brush_mode);
+            if(p) {
+                var brush_mode = p.child('brush');
+                if(!brush_mode) {
+                    brush_mode = dc_graph.brush();
+                    p.child('brush', brush_mode);
+                }
+                brush_mode
+                    .on('brushstart.' + things_name, brushstart)
+                    .on('brushmove.' + things_name, brushmove);
             }
-            brush_mode
-                .on('brushstart.' + things_name, brushstart)
-                .on('brushmove.' + things_name, brushmove);
         }
     });
 
