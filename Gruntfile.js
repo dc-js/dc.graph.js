@@ -298,6 +298,7 @@ module.exports.jsFiles = [
     'src/tree_constraints.js',
     'src/behavior.js',
     'src/tip.js',
+    'src/keyboard.js',
     'src/edit_text.js',
     'src/brush.js',
     'src/select_things.js',
