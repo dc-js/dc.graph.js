@@ -6,13 +6,11 @@ dc_graph.label_nodes = function(options) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
         label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
     var _selected = [];
-    var _input_anchor;
+    var _keyboard;
 
     function selection_changed_listener(chart) {
         return function(selection) {
             _selected = selection;
-            if(_selected.length)
-                _input_anchor.node().focus();
         };
     }
 
@@ -29,19 +27,14 @@ dc_graph.label_nodes = function(options) {
                         var d = node.datum();
                         d.orig.value[_labelTag] = text;
                         chart.redrawGroup();
+                        _keyboard.focus();
                     }
                 });
         };
     }
 
     function add_behavior(chart, node, edge) {
-        _input_anchor = chart.svg().selectAll('a#label-nodes-input').data([1]);
-        _input_anchor.enter()
-            .append('a').attr({
-                id: 'label-nodes-input',
-                href: '#'
-            });
-        _input_anchor.on('keyup.label-nodes', function() {
+        _keyboard.on('keyup.label-nodes', function() {
             if(_selected.length) {
                 // printable characters should start edit
                 if(d3.event.key.length !== 1)
@@ -72,6 +65,9 @@ dc_graph.label_nodes = function(options) {
         parent: function(p) {
             select_nodes_group.on('set_changed.label-nodes', p ? selection_changed_listener(p) : null);
             label_nodes_group.on('edit_node_label.label-nodes', p ? edit_node_label_listener(p) : null);
+            _keyboard = p.child('keyboard');
+            if(!_keyboard)
+                p.child('keyboard', _keyboard = dc_graph.keyboard());
         }
     });
     return _behavior;
