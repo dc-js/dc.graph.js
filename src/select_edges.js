@@ -34,11 +34,3 @@ dc_graph.select_edges = function(props) {
     var _behavior = dc_graph.select_things(select_edges_group, 'select-edges', thinginess);
     return _behavior;
 };
-
-dc_graph.select_edges_group = function(brushgroup) {
-    window.chart_registry.create_type('select-edges', function() {
-        return d3.dispatch('set_changed');
-    });
-
-    return window.chart_registry.create_group('select-edges', brushgroup);
-};

@@ -23,11 +23,3 @@ dc_graph.select_nodes = function(props) {
     var _behavior = dc_graph.select_things(select_nodes_group, 'select-nodes', thinginess);
     return _behavior;
 };
-
-dc_graph.select_nodes_group = function(brushgroup) {
-    window.chart_registry.create_type('select-nodes', function() {
-        return d3.dispatch('set_changed');
-    });
-
-    return window.chart_registry.create_group('select-nodes', brushgroup);
-};
