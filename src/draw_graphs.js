@@ -195,7 +195,7 @@ dc_graph.draw_graphs = function(options) {
                         _behavior.conduct().cancelDragEdge(_sourceDown);
                     erase_hint();
                 } else { // click-node
-                    if(_behavior.clickCreatesNodes())
+                    if(d3.event.target === this && _behavior.clickCreatesNodes())
                         create_node(chart, event_coords(chart));
                 }
             });
