@@ -28,7 +28,8 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
     }
     function background_click_event(chart, v) {
         chart.svg().on('click.' + things_name, v ? function(d) {
-            things_group.set_changed([]);
+            if(d3.event.target === this)
+                things_group.set_changed([]);
         } : null);
     }
     function brushstart() {
@@ -74,7 +75,6 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 newSelected = [key];
             }
             things_group.set_changed(newSelected);
-            d3.event.stopPropagation();
         });
 
         if(_behavior.multipleSelect()) {
