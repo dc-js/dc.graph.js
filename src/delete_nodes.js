@@ -3,7 +3,7 @@ dc_graph.delete_nodes = function() {
     var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
     var _behavior = dc_graph.delete_things(select_nodes_group, 'delete-nodes');
 
-    _behavior.afterAuth(function(nodes) {
+    _behavior.preDelete(function(nodes) {
         // request a delete of all attached edges, using the delete edges mode
         // kind of horrible
         var diagram = _behavior.parent();
