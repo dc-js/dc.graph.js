@@ -8,6 +8,8 @@ dc_graph.delete_things = function(things_group, mode_name) {
             throw new Error('need crossfilterAccessor');
         if(!_behavior.dimensionAccessor())
             throw new Error('need dimensionAccessor');
+        if(_selected.length === 0)
+            return Promise.resolve([]);
         var promise = _behavior.preDelete() ? _behavior.preDelete()(_selected) : Promise.resolve(_selected);
         if(_behavior.onDelete())
             promise = promise.then(_behavior.onDelete());
