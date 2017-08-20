@@ -91,7 +91,8 @@ dc_graph.draw_graphs = function(options) {
     function add_behavior(chart, node, edge, ehover) {
         var select_nodes = chart.child('select-nodes');
         if(select_nodes) {
-            select_nodes.clickBackgroundClears(false);
+            if(_behavior.clickCreatesNodes())
+                select_nodes.clickBackgroundClears(false);
             select_nodes.secondClickEvent(function(node) {
                 label_nodes_group.edit_node_label(node, {selectText: true});
             });
