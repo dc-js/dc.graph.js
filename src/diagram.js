@@ -1077,6 +1077,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _nodes[id] ? _nodes[id].orig : null;
     };
 
+    _chart.getEdge = function(id) {
+        return _edges[id] ? _edges[id].orig : null;
+    };
+
     // again, awful, we need an ADT
     _chart.getPort = function(nid, eid, name) {
         return _ports[port_name(nid, eid, name)];
