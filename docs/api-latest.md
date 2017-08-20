@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the chart.
 
 **Kind**: global namespace  
-**Version**: 0.5.4  
+**Version**: 0.5.6  
 **Example**  
 ```js
 // Example chaining
