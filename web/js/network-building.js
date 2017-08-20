@@ -42,9 +42,7 @@ var label_nodes = dc_graph.label_nodes({
 });
 
 
-var delete_nodes = dc_graph.delete_things(
-    dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
-    'delete-nodes')
+var delete_nodes = dc_graph.delete_nodes()
         .crossfilterAccessor(function(chart) {
             return node_flat.crossfilter;
         })
