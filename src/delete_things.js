@@ -8,8 +8,10 @@ dc_graph.delete_things = function(things_group, mode_name) {
             throw new Error('need crossfilterAccessor');
         if(!_behavior.dimensionAccessor())
             throw new Error('need dimensionAccessor');
-        var authorize = _behavior.onDelete() ? _behavior.onDelete()(_selected) : Promise.resolve(_selected);
-        authorize.then(function(selection) {
+        var promise = _behavior.onDelete() ? _behavior.onDelete()(_selected) : Promise.resolve(_selected);
+        if(_behavior.afterAuth())
+            promise = promise.then(_behavior.afterAuth());
+        return promise.then(function(selection) {
             if(selection && selection.length) {
                 var crossfilter = _behavior.crossfilterAccessor()(_behavior.parent()),
                     dimension = _behavior.dimensionAccessor()(_behavior.parent());
@@ -43,7 +45,9 @@ dc_graph.delete_things = function(things_group, mode_name) {
         }
     });
     _behavior.onDelete = property(null);
+    _behavior.afterAuth = property(null);
     _behavior.crossfilterAccessor = property(null);
     _behavior.dimensionAccessor = property(null);
+    _behavior.deleteSelection = delete_selection;
     return _behavior;
 };
