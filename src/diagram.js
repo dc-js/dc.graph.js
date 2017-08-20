@@ -1303,12 +1303,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                              _chart.portName()(p));
         }, function(p1, p) {
             p1.orig = p;
+            if(p1.named)
+                p1.edges = [];
         }, function(k, p) {
             // this is dumb. as usual, i blame the lack of metagraphs
             var parse = split_port_name(k);
             if(parse.nodeKey) {
                 p.node = _nodes[parse.nodeKey];
-                p.edges = [];
                 p.named = true;
             }
             else {
