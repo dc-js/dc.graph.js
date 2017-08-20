@@ -41,15 +41,26 @@ var label_nodes = dc_graph.label_nodes({
     nodeCrossfilter: node_flat.crossfilter
 });
 
+
 var delete_nodes = dc_graph.delete_things(
-    node_flat.crossfilter, node_flat.dimension,
     dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
-    'delete-nodes');
+    'delete-nodes')
+        .crossfilterAccessor(function(chart) {
+            return node_flat.crossfilter;
+        })
+        .dimensionAccessor(function(chart) {
+            return node_flat.dimension;
+        });
 
 var delete_edges = dc_graph.delete_things(
-    edge_flat.crossfilter, edge_flat.dimension,
     dc_graph.select_things_group('select-edges-group', 'select-edges'),
-    'delete-edges');
+    'delete-edges')
+        .crossfilterAccessor(function(chart) {
+            return edge_flat.crossfilter;
+        })
+        .dimensionAccessor(function(chart) {
+            return edge_flat.dimension;
+        });
 
 var timestamp = 0;
 function add_object(d) {
