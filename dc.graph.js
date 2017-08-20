@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.5.5
+ *  dc.graph 0.5.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.5.5
+ * @version 0.5.6
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.5.5',
+    version: '0.5.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1947,10 +1947,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        _chart.layoutEngine().stop();
-
         if(_chart.initLayoutOnRedraw())
             initLayout();
+
+        _chart.layoutEngine().stop();
 
         // ordering shouldn't matter, but we support ordering in case it does
         if(_chart.nodeOrdering()) {
