@@ -2,6 +2,7 @@ dc_graph.draw_graphs = function(options) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
         label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
     var _idTag = options.idTag || 'id',
+        _edgeIdTag = options.edgeIdTag || _idTag,
         _sourceTag = options.sourceTag || 'source',
         _targetTag = options.targetTag || 'target',
         _labelTag = options.labelTag || 'label',
@@ -73,7 +74,7 @@ dc_graph.draw_graphs = function(options) {
         if(!_behavior.edgeCrossfilter())
             throw new Error('need edgeCrossfilter');
         var edge = {}, callback = _behavior.addEdge() || promise_identity;
-        edge[_idTag] = uuid();
+        edge[_edgeIdTag] = uuid();
         edge[_sourceTag] = source.node.orig.key;
         edge[_targetTag] = target.node.orig.key;
         callback(edge, source.port, target.port).then(function(edge2) {
