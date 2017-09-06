@@ -12,7 +12,6 @@ function edittext(svg, position, options) {
     textdiv.setAttribute("style", "display: inline-block; background-color: white; padding: 2px"); //to make div fit text
     foreign.setAttribute("width", "100%");
     foreign.setAttribute("height", "100%");
-    foreign.setAttribute("style", "text-align: left"); //to make div fit text
     foreign.setAttributeNS(null, "transform", "translate(" + position.x + " " + position.y + ")");
     svg.appendChild(foreign);
     foreign.appendChild(textdiv);
