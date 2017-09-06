@@ -165,7 +165,7 @@ dc_graph.symbol_port_style = function() {
                 class: 'port',
                 transform: port_transform
             });
-        port.transition()
+        port.transition('port-position')
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr({
