@@ -2,7 +2,7 @@
 // http://stackoverflow.com/questions/9308938/inline-text-editing-in-svg/#26644652
 
 function edittext(svg, position, options) {
-    var myforeign = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+    var foreign = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
     var textdiv = document.createElement("div");
     var text = options.text || "type on me";
     var textnode = document.createTextNode(text);
@@ -10,22 +10,22 @@ function edittext(svg, position, options) {
     textdiv.setAttribute("contentEditable", "true");
     textdiv.setAttribute("width", "auto");
     textdiv.setAttribute("style", "display: inline-block; background-color: white; padding: 2px"); //to make div fit text
-    myforeign.setAttribute("width", "100%");
-    myforeign.setAttribute("height", "100%");
-    myforeign.setAttribute("style", "text-align: left"); //to make div fit text
-    myforeign.setAttributeNS(null, "transform", "translate(" + position.x + " " + position.y + ")");
-    svg.appendChild(myforeign);
-    myforeign.appendChild(textdiv);
+    foreign.setAttribute("width", "100%");
+    foreign.setAttribute("height", "100%");
+    foreign.setAttribute("style", "text-align: left"); //to make div fit text
+    foreign.setAttributeNS(null, "transform", "translate(" + position.x + " " + position.y + ")");
+    svg.appendChild(foreign);
+    foreign.appendChild(textdiv);
 
     function accept() {
         options.accept && options.accept(textdiv.innerText);
         textdiv.onblur = null;
-        myforeign.remove();
+        foreign.remove();
     }
     function cancel() {
         options.cancel && options.cancel();
         textdiv.onblur = null;
-        myforeign.remove();
+        foreign.remove();
     }
 
     textdiv.onkeydown = function(event) {
