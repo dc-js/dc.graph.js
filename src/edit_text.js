@@ -55,7 +55,13 @@ function edittext(svg, position, options) {
 }
 
 dc_graph.edit_text = function(svg, selection, options) {
-    var position = options.position || {x: 0, y: 0};
+    var position;
+    if(selection && selection.size()) {
+        var bbox = selection.node().getBBox();
+        position = {x: options.position.x + bbox.x + bbox.width / 2, y: options.position.y + bbox.y + bbox.height / 2};
+    }
+    if(!position)
+        position = options.position || {x: 0, y: 0};
     edittext(svg, position, options);
 };
 
