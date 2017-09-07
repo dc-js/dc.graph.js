@@ -3,10 +3,14 @@
 
 function edittext(svg, position, options) {
     var foreign = svg.append('foreignObject').attr({
-        width: '100%',
-        height: '100%',
-        transform: 'translate(' + position.x + ' ' + position.y + ')'
+        width: '100%'//, // don't wrap
+        //transform: 'translate(' + position.x + ' ' + position.y + ')'
     });
+    function recenter() {
+        foreign.attr('transform',
+                     'translate(' + (position.x - textdiv.node().offsetWidth/2) + ' ' +
+                     (position.y - textdiv.node().offsetHeight/2) + ')');
+    }
     var textdiv = foreign.append('xhtml:div');
     var text = options.text || "type on me";
     textdiv.text(text).attr({
@@ -39,7 +43,9 @@ function edittext(svg, position, options) {
         } else if(d3.event.keyCode===27) {
             cancel();
         }
+        recenter();
     }).on('blur.edittext', cancel);
+    recenter();
     textdiv.node().focus();
 
     var range = document.createRange();
