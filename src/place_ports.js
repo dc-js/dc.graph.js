@@ -24,90 +24,81 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         np.push(p);
     });
 
-    function dpos(n, e) {
+    function norm(v) {
+        var len = Math.hypot(v[0], v[1]);
+        return [v[0]/len, v[1]/len];
+    }
+    function edge_vec(n, e) {
         var dy = e.target.cola.y - e.source.cola.y,
             dx = e.target.cola.x - e.source.cola.x;
         if(e.source !== n)
             dy = -dy, dx = -dx;
-        return {dy: dy, dx: dx};
+        return norm([dx, dy]);
     }
-    function angle(n, e) {
-        var dp = dpos(n, e);
-        return Math.atan2(dp.dy, dp.dx);
+    function is_ccw(u, v) {
+        return u[0]*v[1] - u[1]*v[0] > 0;
     }
-    function normalize_angle(theta) {
-        while(theta < -Math.PI)
-            theta += 2*Math.PI;
-        while(theta > Math.PI)
-            theta -= 2*Math.PI;
-        return theta;
+    function in_bounds(v, bounds) {
+        // assume bounds are ccw
+        return is_ccw(bounds[0], v) && is_ccw(v, bounds[1]);
     }
-    function normalize_angle_delta(theta) {
-        while(theta < 0)
-            theta += 2*Math.PI;
-        while(theta > 2*Math.PI)
-            theta -= 2*Math.PI;
-        return theta;
+    function clip(v, bounds) {
+        if(is_ccw(v, bounds[0]))
+            return bounds[0];
+        else if(is_ccw(bounds[1], v))
+            return bounds[1];
+        else return v;
     }
-    function between_angles(theta, a, b) {
-        if(a < b)
-            return a <= theta && theta < b;
-        else
-            return a <= theta || theta < b;
+    function a_to_v(a) {
+        return [Math.cos(a), Math.sin(a)];
     }
-    function clip_angle(theta, a, b) {
-        if(Math.abs(normalize_angle(theta - a)) <
-           Math.abs(normalize_angle(theta - b)))
-            return a;
-        else
-            return b;
+    function v_to_a(v) {
+        return Math.atan2(v[1], v[0]);
     }
-
     // calculate port positions (currently very stupid)
     for(var nid in node_ports) {
         var n = nodes[nid],
             nports = node_ports[nid];
         nports.forEach(function(p) {
-            var angs = p.edges.map(angle.bind(null, n));
-            p.theta = angs.length ? d3.sum(angs)/angs.length : p.theta || undefined;
+            if(p.edges.length) {
+                var vecs = p.edges.map(edge_vec.bind(null, n));
+                p.vec = [
+                    d3.sum(vecs, function(v) { return v[0]; })/vecs.length,
+                    d3.sum(vecs, function(v) { return v[1]; })/vecs.length
+                ];
+            } else p.vec = p.vec || undefined;
             if(p.orig) { // only specified ports have bounds
                 var bounds = diagram.portBounds.eval(p);
-                if(bounds)
-                    p.bounds = bounds.map(normalize_angle);
+                if(Array.isArray(bounds[0]))
+                    p.bounds = bounds;
+                else p.bounds = bounds.map(a_to_v);
             }
         });
         var inside = [], outside = [], unplaced = [];
         nports.forEach(function(p) {
-            if(p.theta === undefined)
+            if(!p.vec)
                 unplaced.push(p);
-            else if(p.bounds && !between_angles(p.theta, p.bounds[0], p.bounds[1]))
+            else if(p.bounds && !in_bounds(p.vec, p.bounds))
                outside.push(p);
             else
                 inside.push(p);
         });
+
         // for now, just shunt outside ports into their bounds and then place unplaced
         // would like to use 1D force directed here
         outside.forEach(function(p) {
-            p.theta = clip_angle(p.theta, p.bounds[0], p.bounds[1]);
+            p.vec = clip(p.vec, p.bounds);
             inside.push(p);
-        });
-        inside.sort(function(a,b) {
-            return d3.ascending(a.theta, b.theta);
         });
         // place the rest randomly within their bounds
         unplaced.forEach(function(p) {
-            var low, high;
-            if(p.bounds) {
-                low = p.bounds[0];
-                high = p.bounds[1];
-            } else {
-                low = -Math.PI;
-                high = Math.PI;
-            }
-            p.theta = normalize_angle(low + Math.random()*normalize_angle_delta(high-low));
+            var bang = p.bounds.map(v_to_a);
+            if(bang[0] > bang[1])
+                bang[1] += 2*Math.PI;
+            p.vec = a_to_v(bang[0] + Math.random()*(bang[1] - bang[0]));
         });
         nports.forEach(function(p) {
-            p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, Math.cos(p.theta)*1000, Math.sin(p.theta)*1000);
+            p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
         });
     }
 

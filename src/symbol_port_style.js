@@ -44,8 +44,8 @@ dc_graph.symbol_port_style = function() {
             .size(size*size)
         ();
     }
-    function is_left(d) {
-        return Math.abs(d.theta) > Math.PI/2;
+    function is_left(p) {
+        return p.vec[0] < 0;
     }
     function hover_radius(d) {
         switch(d.state) {
