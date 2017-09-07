@@ -63,15 +63,17 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
 
         thinginess.clickables(chart, node, edge).on('click.' + things_name, function(d) {
             var key = thinginess.key(d), newSelected;
-            if(!_behavior.multipleSelect())
-                newSelected = [key];
-            else if(isUnion(d3.event))
-                newSelected = add_array(_selected, key);
-            else if(isToggle(d3.event))
-                newSelected = toggle_array(_selected, key);
-            else {
-                if(_selected.length === 1 && _selected[0] === key && _behavior.secondClickEvent())
+            if(_behavior.multipleSelect()) {
+                if(isUnion(d3.event))
+                    newSelected = add_array(_selected, key);
+                else if(isToggle(d3.event))
+                    newSelected = toggle_array(_selected, key);
+            }
+            if(!newSelected) {
+                if(_selected.length === 1 && _selected[0] === key && _behavior.secondClickEvent()) {
                     _behavior.secondClickEvent()(d3.select(this));
+                    d3.event.stopPropagation();
+                }
                 newSelected = [key];
             }
             things_group.set_changed(newSelected);
