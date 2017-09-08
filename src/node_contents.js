@@ -23,6 +23,9 @@ dc_graph.text_contents = function() {
             text
                 .attr('fill', _contents.parent().nodeLabelFill.eval);
         },
+        textbox: function(container) {
+            return this.select(container).node().getBBox();
+        },
         select: function(container) {
             return container.select('text.node-label');
         }
@@ -54,18 +57,21 @@ dc_graph.with_icon_contents = function(contents, width, height) {
                 height: height + 'px'
             });
             g.call(contents.update);
-            contents.select(g).each(function(d) {
-                var bbox = this.getBBox();
-                d.__foo = width + bbox.width;
-            })
+            contents.select(g)
                 .attr('transform',  'translate(' + width/2 + ')');
             g.selectAll('image.icon').attr({
                 href: _contents.parent().nodeIcon.eval,
                 x: function(d) {
-                    return -d.__foo/2 - _contents.parent().nodeLabelPadding.eval(d).x;
+                    var totwid = width + contents.textbox(d3.select(this.parentNode)).width;
+                    return -totwid/2 - _contents.parent().nodeLabelPadding.eval(d).x;
                 },
                 y: -height/2
             });
+        },
+        textbox: function(container) {
+            var box = contents.textbox(container);
+            box.x += width/2;
+            return box;
         },
         select: function(container) {
             return container.select('g.with-icon');
