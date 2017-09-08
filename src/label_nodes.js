@@ -17,7 +17,7 @@ dc_graph.label_nodes = function(options) {
     }
 
     function edit_node_label_listener(chart) {
-        return function(node, options) {
+        return function(node, eventOptions) {
             var contents = chart.content(chart.nodeContent.eval(node.datum())),
                 box = contents.textbox(node);
             box.x += node.datum().cola.x;
@@ -25,9 +25,10 @@ dc_graph.label_nodes = function(options) {
             dc_graph.edit_text(
                 chart.g(),
                 {
-                    text: options.text || chart.nodeLabel.eval(node.datum()),
+                    text: eventOptions.text || chart.nodeLabel.eval(node.datum()),
+                    align: options.align,
                     box: box,
-                    selectText: options.selectText,
+                    selectText: eventOptions.selectText,
                     accept: function(text) {
                         var callback = _behavior.changeNodeLabel() ?
                                 _behavior.changeNodeLabel()(chart.nodeKey.eval(node.datum()), text) :
