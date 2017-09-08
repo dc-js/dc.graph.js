@@ -2,11 +2,9 @@ dc_graph.keyboard = function() {
     var _input_anchor, _dispatch = d3.dispatch('keydown', 'keyup');
 
     function keydown() {
-        console.log('keydown');
         _dispatch.keydown();
     }
     function keyup() {
-        console.log('keyup');
         _dispatch.keyup();
     }
     function add_behavior(chart) {
@@ -21,7 +19,6 @@ dc_graph.keyboard = function() {
 
         // grab focus whenever svg is clicked
         chart.svg().on('click.keyboard', function() {
-            console.log('click-svg');
             _input_anchor.node().focus();
         });
     }
