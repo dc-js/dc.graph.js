@@ -1,15 +1,23 @@
 // adapted from
 // http://stackoverflow.com/questions/9308938/inline-text-editing-in-svg/#26644652
 
-function edittext(svg, position, options) {
-    var foreign = svg.append('foreignObject').attr({
-        width: '100%'//, // don't wrap
-        //transform: 'translate(' + position.x + ' ' + position.y + ')'
+dc_graph.edit_text = function(parent, options) {
+    var foreign = parent.append('foreignObject').attr({
+        width: '100%' // don't wrap
     });
-    function recenter() {
-        foreign.attr('transform',
-                     'translate(' + (position.x - textdiv.node().offsetWidth/2) + ' ' +
-                     (position.y - textdiv.node().offsetHeight/2) + ')');
+    function reposition() {
+        var pos;
+        switch(options.align) {
+        case 'left':
+        default:
+        case 'center':
+            pos = [
+                options.position.x - textdiv.node().offsetWidth/2,
+                options.position.y - textdiv.node().offsetHeight/2
+            ];
+            break;
+        }
+        foreign.attr('transform', 'translate(' + pos.join(' ') + ')');
     }
     var textdiv = foreign.append('xhtml:div');
     var text = options.text || "type on me";
@@ -43,9 +51,9 @@ function edittext(svg, position, options) {
         } else if(d3.event.keyCode===27) {
             cancel();
         }
-        recenter();
+        reposition();
     }).on('blur.edittext', cancel);
-    recenter();
+    reposition();
     textdiv.node().focus();
 
     var range = document.createRange();
@@ -58,16 +66,4 @@ function edittext(svg, position, options) {
     var sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
-}
-
-dc_graph.edit_text = function(svg, selection, options) {
-    var position;
-    if(selection && selection.size()) {
-        var bbox = selection.node().getBBox();
-        position = {x: options.position.x + bbox.x + bbox.width / 2, y: options.position.y + bbox.y + bbox.height / 2};
-    }
-    if(!position)
-        position = options.position || {x: 0, y: 0};
-    edittext(svg, position, options);
 };
-
