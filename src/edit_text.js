@@ -3,6 +3,7 @@
 
 dc_graph.edit_text = function(parent, options) {
     var foreign = parent.append('foreignObject').attr({
+        height: '100%',
         width: '100%' // don't wrap
     });
     function reposition() {
