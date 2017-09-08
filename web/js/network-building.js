@@ -37,9 +37,7 @@ var select_edges = dc_graph.select_edges({
     edgeStrokeWidth: 2
 }).multipleSelect(false);
 
-var label_nodes = dc_graph.label_nodes({
-    nodeCrossfilter: node_flat.crossfilter
-});
+var label_nodes = dc_graph.label_nodes();
 
 
 var delete_nodes = dc_graph.delete_nodes()
