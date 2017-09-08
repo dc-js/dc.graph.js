@@ -18,11 +18,15 @@ dc_graph.label_nodes = function(options) {
 
     function edit_node_label_listener(chart) {
         return function(node, options) {
+            var contents = chart.content(chart.nodeContent.eval(node.datum())),
+                box = contents.textbox(node);
+            box.x += node.datum().cola.x;
+            box.y += node.datum().cola.y;
             dc_graph.edit_text(
                 chart.g(),
                 {
                     text: options.text || chart.nodeLabel.eval(node.datum()),
-                    position: {x: node.datum().cola.x, y: node.datum().cola.y},
+                    box: box,
                     selectText: options.selectText,
                     accept: function(text) {
                         var callback = _behavior.changeNodeLabel() ?

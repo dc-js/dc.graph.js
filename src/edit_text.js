@@ -12,8 +12,8 @@ dc_graph.edit_text = function(parent, options) {
         default:
         case 'center':
             pos = [
-                options.position.x - textdiv.node().offsetWidth/2,
-                options.position.y - textdiv.node().offsetHeight/2
+                options.box.x + (options.box.width - textdiv.node().offsetWidth)/2,
+                options.box.y + (options.box.height - textdiv.node().offsetHeight)/2
             ];
             break;
         }
