@@ -22,6 +22,7 @@ diagram
     .edgeSource(function(e) { return e.value.source; })
     .edgeTarget(function(e) { return e.value.target; })
     .nodeLabel(function(n) { return n.value.label; })
+    .nodeLabelPadding({x: 4, y: 4})
     .nodeFixed(function(n) { return n.value.fixedPos; })
     .edgeArrowhead('vee');
 
