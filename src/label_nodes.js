@@ -12,6 +12,10 @@ dc_graph.label_nodes = function(options) {
         };
     }
 
+    function promise_identity(x) {
+        return Promise.resolve(x);
+    }
+
     function edit_node_label_listener(chart) {
         return function(node, options) {
             dc_graph.edit_text(
@@ -22,10 +26,15 @@ dc_graph.label_nodes = function(options) {
                     position: {x: node.datum().cola.x, y: node.datum().cola.y},
                     selectText: options.selectText,
                     accept: function(text) {
-                        var d = node.datum();
-                        d.orig.value[_labelTag] = text;
-                        chart.redrawGroup();
-                        _keyboard.focus();
+                        var callback = _behavior.changeNodeLabel() ?
+                                _behavior.changeNodeLabel()(chart.nodeKey.eval(node.datum()), text) :
+                                Promise.resolve(text);
+                        callback.then(function(text2) {
+                            var d = node.datum();
+                            d.orig.value[_labelTag] = text2;
+                            chart.redrawGroup();
+                            _keyboard.focus();
+                        });
                     }
                 });
         };
@@ -70,6 +79,7 @@ dc_graph.label_nodes = function(options) {
             }
         }
     });
+    _behavior.changeNodeLabel = property(null);
     return _behavior;
 };
 
