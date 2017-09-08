@@ -19,8 +19,7 @@ dc_graph.label_nodes = function(options) {
     function edit_node_label_listener(chart) {
         return function(node, options) {
             dc_graph.edit_text(
-                chart.svg(),
-                node.select('text.node-label'),
+                chart.g(),
                 {
                     text: options.text || chart.nodeLabel.eval(node.datum()),
                     position: {x: node.datum().cola.x, y: node.datum().cola.y},
