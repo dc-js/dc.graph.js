@@ -9,6 +9,8 @@ dc_graph.edit_text = function(parent, options) {
         var pos;
         switch(options.align) {
         case 'left':
+            pos = [options.box.x, options.box.y];
+            break;
         default:
         case 'center':
             pos = [
