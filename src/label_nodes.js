@@ -5,6 +5,7 @@ dc_graph.label_nodes = function(options) {
     options.select_type = options.select_type || 'select-nodes';
     options.label_group = options.label_group || 'label-nodes-group';
     options.label_type = options.label_type || 'label-nodes';
+    options.default_label = "node name";
 
     options.find_thing = function(key, node, edge) {
         return node.filter(function(d) {
