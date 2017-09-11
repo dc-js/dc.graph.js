@@ -1,96 +1,32 @@
 dc_graph.label_nodes = function(options) {
     options = options || {};
     var _labelTag = options.labelTag || 'label';
-    var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
-        label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
-    var _selected = [];
-    var _keyboard;
+    options.select_group = options.select_group || 'select-nodes-group';
+    options.select_type = options.select_type || 'select-nodes';
+    options.label_type = options.label_type || 'label-nodes';
 
-    function selection_changed_listener(chart) {
-        return function(selection) {
-            _selected = selection;
-        };
-    }
-
-    function promise_identity(x) {
-        return Promise.resolve(x);
-    }
-
-    function edit_node_label_listener(chart) {
-        return function(node, eventOptions) {
-            var contents = chart.content(chart.nodeContent.eval(node.datum())),
-                box = contents.textbox(node);
-            box.x += node.datum().cola.x;
-            box.y += node.datum().cola.y;
-            dc_graph.edit_text(
-                chart.g(),
-                {
-                    text: eventOptions.text || chart.nodeLabel.eval(node.datum()),
-                    align: options.align,
-                    box: box,
-                    selectText: eventOptions.selectText,
-                    accept: function(text) {
-                        var callback = _behavior.changeNodeLabel() ?
-                                _behavior.changeNodeLabel()(chart.nodeKey.eval(node.datum()), text) :
-                                Promise.resolve(text);
-                        callback.then(function(text2) {
-                            var d = node.datum();
-                            d.orig.value[_labelTag] = text2;
-                            chart.redrawGroup();
-                            _keyboard.focus();
-                        });
-                    }
-                });
-        };
-    }
-
-    function add_behavior(chart, node, edge) {
-        _keyboard.on('keyup.label-nodes', function() {
-            if(_selected.length) {
-                // printable characters should start edit
-                if(d3.event.key.length !== 1)
-                    return;
-                var n2 = node.filter(function(d) {
-                    return chart.nodeKey.eval(d) === _selected[0];
-                });
-                if(n2.empty()) {
-                    console.error("couldn't find node '" + _selected[0] + "'!");
-                    return;
-                }
-                if(n2.size()>1) {
-                    console.error("found too many nodes for '" + _selected[0] + "' (" + n2.size() + ")!");
-                    return;
-                }
-                label_nodes_group.edit_node_label(n2, {text: d3.event.key, selectText: false});
-            }
+    options.thing_box = function(node, eventOptions) {
+        var contents = _behavior.parent().content(_behavior.parent().nodeContent.eval(node.datum())),
+            box = contents.textbox(node);
+        box.x += node.datum().cola.x;
+        box.y += node.datum().cola.y;
+        return box;
+    };
+    options.thing_label = function(node) {
+        return _behavior.parent().nodeLabel.eval(node.datum());
+    };
+    options.accept = function(node, text) {
+        var callback = _behavior.changeNodeLabel() ?
+                _behavior.changeNodeLabel()(options.thing_key(_behavior.parent().nodeKey.eval(node.datum())), text) :
+                Promise.resolve(text);
+        return callback.then(function(text2) {
+            var d = node.datum();
+            d.orig.value[_labelTag] = text2;
+            _behavior.parent().redrawGroup();
         });
-    }
+    };
 
-    function remove_behavior(chart, node, edge) {
-        chart.root().select('a#label-nodes-input').remove();
-    }
-
-    var _behavior = dc_graph.behavior('label-nodes', {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
-        parent: function(p) {
-            select_nodes_group.on('set_changed.label-nodes', p ? selection_changed_listener(p) : null);
-            label_nodes_group.on('edit_node_label.label-nodes', p ? edit_node_label_listener(p) : null);
-            if(p) {
-                _keyboard = p.child('keyboard');
-                if(!_keyboard)
-                    p.child('keyboard', _keyboard = dc_graph.keyboard());
-            }
-        }
-    });
+    var _behavior = dc_graph.label_things(options);
     _behavior.changeNodeLabel = property(null);
     return _behavior;
-};
-
-dc_graph.label_nodes_group = function(brushgroup) {
-    window.chart_registry.create_type('label-nodes', function() {
-        return d3.dispatch('edit_node_label');
-    });
-
-    return window.chart_registry.create_group('label-nodes', brushgroup);
 };

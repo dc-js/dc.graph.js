@@ -307,6 +307,7 @@ module.exports.jsFiles = [
     'src/filter_selection.js',
     'src/delete_things.js',
     'src/delete_nodes.js',
+    'src/label_things.js',
     'src/label_nodes.js',
     'src/highlight_neighbors.js',
     'src/highlight_paths_group.js',
