@@ -4,7 +4,7 @@ var options = Object.assign({
 }, qs);
 
 var node_flat = dc_graph.flat_group.make([], function(d) { return d.id; }),
-    edge_flat = dc_graph.flat_group.make([], function(d) { return d.source + '-' + d.target; });
+    edge_flat = dc_graph.flat_group.make([], function(d) { return d.id; });
 
 var diagram = dc_graph.diagram('#graph');
 var engine = dc_graph.spawn_engine(options.layout, options, options.worker != 'false');
