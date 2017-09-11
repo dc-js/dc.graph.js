@@ -1,7 +1,7 @@
 dc_graph.label_things = function(options) {
     options = options || {};
-    var select_nodes_group = dc_graph.select_things_group(options.select_group, options.select_type),
-        label_nodes_group = dc_graph.label_things_group(options.label_type);
+    var select_things_group = dc_graph.select_things_group(options.select_group, options.select_type),
+        label_things_group = dc_graph.label_things_group(options.label_group, options.label_type);
     var _selected = [];
     var _keyboard;
 
@@ -57,7 +57,7 @@ dc_graph.label_things = function(options) {
                     console.error("found too many things for '" + _selected[0] + "' (" + n2.size() + ")!");
                     return;
                 }
-                label_nodes_group.edit_label(thing, {text: d3.event.key, selectText: false});
+                label_things_group.edit_label(thing, {text: d3.event.key, selectText: false});
             }
         });
     }
@@ -69,8 +69,8 @@ dc_graph.label_things = function(options) {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
-            select_nodes_group.on('set_changed.' + options.label_type, p ? selection_changed_listener(p) : null);
-            label_nodes_group.on('edit_label.' + options.label_type, p ? edit_label_listener(p) : null);
+            select_things_group.on('set_changed.' + options.label_type, p ? selection_changed_listener(p) : null);
+            label_things_group.on('edit_label.' + options.label_type, p ? edit_label_listener(p) : null);
             if(p) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
