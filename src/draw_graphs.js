@@ -1,11 +1,11 @@
 dc_graph.draw_graphs = function(options) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
         label_nodes_group = dc_graph.label_things_group('label-nodes-group', 'label-nodes');
-    var _idTag = options.idTag || 'id',
-        _edgeIdTag = options.edgeIdTag || _idTag,
+    var _nodeIdTag = options.idTag || 'id',
+        _edgeIdTag = options.edgeIdTag || _nodeIdTag,
         _sourceTag = options.sourceTag || 'source',
         _targetTag = options.targetTag || 'target',
-        _labelTag = options.labelTag || 'label',
+        _nodeLabelTag = options.labelTag || 'label',
         _fixedPosTag = options.fixedPosTag || 'fixedPos';
 
     var _sourceDown = null, _targetMove = null, _edgeLayer = null, _hintData = [];
@@ -56,8 +56,8 @@ dc_graph.draw_graphs = function(options) {
             node = data;
         else {
             node = {};
-            node[_idTag] = uuid();
-            node[_labelTag] = '';
+            node[_nodeIdTag] = uuid();
+            node[_nodeLabelTag] = '';
         }
         if(pos)
             node[_fixedPosTag] = {x: pos[0], y: pos[1]};
@@ -66,7 +66,7 @@ dc_graph.draw_graphs = function(options) {
                 return;
             _behavior.nodeCrossfilter().add([node2]);
             chart.redrawGroup();
-            select_nodes_group.set_changed([node2[_idTag]]);
+            select_nodes_group.set_changed([node2[_nodeIdTag]]);
         });
     }
 
