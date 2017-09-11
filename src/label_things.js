@@ -24,7 +24,7 @@ dc_graph.label_things = function(options) {
             dc_graph.edit_text(
                 chart.g(),
                 {
-                    text: eventOptions.text || options.thing_label(thing),
+                    text: eventOptions.text || options.thing_label(thing) || options.default_label,
                     align: options.align,
                     box: box,
                     selectText: eventOptions.selectText,
