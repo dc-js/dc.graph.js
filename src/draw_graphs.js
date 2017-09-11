@@ -1,6 +1,6 @@
 dc_graph.draw_graphs = function(options) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
-        label_nodes_group = dc_graph.label_nodes_group('label-nodes-group');
+        label_nodes_group = dc_graph.label_things_group('label-nodes-group', 'label-nodes');
     var _idTag = options.idTag || 'id',
         _edgeIdTag = options.edgeIdTag || _idTag,
         _sourceTag = options.sourceTag || 'source',
