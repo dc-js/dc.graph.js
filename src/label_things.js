@@ -46,18 +46,18 @@ dc_graph.label_things = function(options) {
                 // printable characters should start edit
                 if(d3.event.key.length !== 1)
                     return;
-                var n2 = node.filter(function(d) {
-                    return chart.nodeKey.eval(d) === _selected[0];
-                });
-                if(n2.empty()) {
-                    console.error("couldn't find node '" + _selected[0] + "'!");
+                // less than ideal interface.
+                // what if there are other things? can i blame the missing metagraph?
+                var thing = options.find_thing(_selected[0], node, edge);
+                if(thing.empty()) {
+                    console.error("couldn't find thing '" + _selected[0] + "'!");
                     return;
                 }
-                if(n2.size()>1) {
-                    console.error("found too many nodes for '" + _selected[0] + "' (" + n2.size() + ")!");
+                if(thing.size()>1) {
+                    console.error("found too many things for '" + _selected[0] + "' (" + n2.size() + ")!");
                     return;
                 }
-                label_nodes_group.edit_label(n2, {text: d3.event.key, selectText: false});
+                label_nodes_group.edit_label(thing, {text: d3.event.key, selectText: false});
             }
         });
     }

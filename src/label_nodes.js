@@ -5,6 +5,11 @@ dc_graph.label_nodes = function(options) {
     options.select_type = options.select_type || 'select-nodes';
     options.label_type = options.label_type || 'label-nodes';
 
+    options.find_thing = function(key, node, edge) {
+        return node.filter(function(d) {
+            return _behavior.parent().nodeKey.eval(d) === key;
+        });
+    };
     options.thing_box = function(node, eventOptions) {
         var contents = _behavior.parent().content(_behavior.parent().nodeContent.eval(node.datum())),
             box = contents.textbox(node);
