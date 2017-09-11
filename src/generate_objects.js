@@ -15,10 +15,11 @@ function regenerate_objects(preserved, list, need, key, assign, create, destroy)
     var wlist = list.map(wrap);
     if(need)
         need.forEach(function(k) {
-            if(!preserved[k]) {
+            if(!preserved[k]) // hasn't been created, needs to be
                 create(k, preserved[k] = {}, null);
-                keep[k] = true;
+            if(!keep[k]) { // wasn't in list, should be
                 wlist.push(preserved[k]);
+                keep[k] = true;
             }
         });
     // delete any objects from last round that are no longer used
