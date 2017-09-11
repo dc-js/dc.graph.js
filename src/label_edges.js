@@ -11,12 +11,10 @@ dc_graph.label_edges = function(options) {
         });
     };
     options.thing_box = function(edge, eventOptions) {
-        return {x: 400, y: 400, width:0, height: 20};
-        var contents = _behavior.parent().content(_behavior.parent().edgeContent.eval(edge.datum())),
-            box = contents.textbox(edge);
-        box.x += edge.datum().cola.x;
-        box.y += edge.datum().cola.y;
-        return box;
+        var points = edge.datum().pos.new.path.points,
+            x = (points[0].x + points[1].x)/2,
+            y = (points[0].y + points[1].y)/2;
+        return {x: x, y: y-10, width:0, height: 20};
     };
     options.thing_label = function(edge) {
         return _behavior.parent().edgeLabel.eval(edge.datum());
