@@ -3,6 +3,7 @@ dc_graph.label_edges = function(options) {
     var _labelTag = options.labelTag || 'label';
     options.select_group = options.select_group || 'select-edges-group';
     options.select_type = options.select_type || 'select-edges';
+    options.label_group = options.label_group || 'label-edges-group';
     options.label_type = options.label_type || 'label-edges';
 
     options.find_thing = function(key, node, edge) {
