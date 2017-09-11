@@ -24,7 +24,7 @@ dc_graph.label_nodes = function(options) {
     };
     options.accept = function(node, text) {
         var callback = _behavior.changeNodeLabel() ?
-                _behavior.changeNodeLabel()(options.thing_key(_behavior.parent().nodeKey.eval(node.datum())), text) :
+                _behavior.changeNodeLabel()(_behavior.parent().nodeKey.eval(node.datum()), text) :
                 Promise.resolve(text);
         return callback.then(function(text2) {
             var d = node.datum();

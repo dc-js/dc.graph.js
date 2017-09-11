@@ -23,7 +23,7 @@ dc_graph.label_edges = function(options) {
     };
     options.accept = function(edge, text) {
         var callback = _behavior.changeEdgeLabel() ?
-                _behavior.changeEdgeLabel()(options.thing_key(_behavior.parent().edgeKey.eval(edge.datum())), text) :
+                _behavior.changeEdgeLabel()(_behavior.parent().edgeKey.eval(edge.datum()), text) :
                 Promise.resolve(text);
         return callback.then(function(text2) {
             var d = edge.datum();
