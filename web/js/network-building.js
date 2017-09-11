@@ -22,6 +22,7 @@ diagram
     .edgeSource(function(e) { return e.value.source; })
     .edgeTarget(function(e) { return e.value.target; })
     .nodeLabel(function(n) { return n.value.label; })
+    .edgeLabel(function(e) { return e.value.label || ''; })
     .nodeLabelPadding({x: 4, y: 4})
     .nodeFixed(function(n) { return n.value.fixedPos; })
     .edgeArrowhead('vee');
@@ -38,8 +39,8 @@ var select_edges = dc_graph.select_edges({
     edgeStrokeWidth: 2
 }).multipleSelect(false);
 
-var label_nodes = dc_graph.label_nodes();
-
+var label_nodes = dc_graph.label_nodes(),
+    label_edges = dc_graph.label_edges();
 
 var delete_nodes = dc_graph.delete_nodes()
         .crossfilterAccessor(function(chart) {
@@ -74,6 +75,7 @@ diagram
     .child('select-nodes', select_nodes)
     .child('select-edges', select_edges)
     .child('label-nodes', label_nodes)
+    .child('label-edges', label_edges)
     .child('draw-graphs', draw_graphs)
     .child('delete-nodes', delete_nodes)
     .child('delete-edges', delete_edges);
@@ -118,6 +120,12 @@ var outedges = dc.dataTable('#output-edges')
                 label: 'Target',
                 format: function(d) {
                     return node_labels[d.target];
+                }
+            },
+            {
+                label: 'Label',
+                format: function(d) {
+                    return d.label;
                 }
             }
         ]);
