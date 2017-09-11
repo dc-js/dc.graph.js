@@ -1,7 +1,8 @@
 dc_graph.draw_graphs = function(options) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
         select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges'),
-        label_nodes_group = dc_graph.label_things_group('label-nodes-group', 'label-nodes');
+        label_nodes_group = dc_graph.label_things_group('label-nodes-group', 'label-nodes'),
+        label_edges_group = dc_graph.label_things_group('label-edges-group', 'label-edges');
     var _nodeIdTag = options.idTag || 'id',
         _edgeIdTag = options.edgeIdTag || _nodeIdTag,
         _sourceTag = options.sourceTag || 'source',
@@ -99,7 +100,13 @@ dc_graph.draw_graphs = function(options) {
             if(_behavior.clickCreatesNodes())
                 select_nodes.clickBackgroundClears(false);
             select_nodes.secondClickEvent(function(node) {
-                label_nodes_group.edit_node_label(node, {selectText: true});
+                label_nodes_group.edit_label(node, {selectText: true});
+            });
+        }
+        var select_edges = chart.child('select-edges');
+        if(select_edges) {
+            select_edges.secondClickEvent(function(edge) {
+                label_edges_group.edit_label(edge, {selectText: true});
             });
         }
         node
