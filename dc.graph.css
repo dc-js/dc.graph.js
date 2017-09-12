@@ -6,19 +6,19 @@
 }
 
 .dc-graph text.node-label {
-    font: bold 14px verdana, san-serif;
+    font: bold 14px verdana, sans-serif;
     text-anchor: middle;
     pointer-events: none;
     user-select: none;
 }
 
 .dc-graph text.edge-label {
-    font: 10px verdana, san-serif;
+    font: 10px verdana, sans-serif;
     pointer-events: none;
 }
 
 .dc-graph-legend text.legend-label {
-    font: bold 14px verdana, san-serif;
+    font: bold 14px verdana, sans-serif;
     pointer-events: none;
 }
 
