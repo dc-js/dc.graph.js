@@ -1,3 +1,7 @@
+.dc-graph {
+    -moz-user-select: none;
+    user-select: none;
+}
 .dc-graph div.chart {
     float: left;
 }
@@ -9,7 +13,6 @@
     font: bold 14px verdana, sans-serif;
     text-anchor: middle;
     pointer-events: none;
-    user-select: none;
 }
 
 .dc-graph text.edge-label {
