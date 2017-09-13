@@ -18,8 +18,6 @@ dc_graph.move_nodes = function() {
             if(refresh === undefined)
                 refresh = true;
             _selected = selection;
-            if(refresh)
-                chart.refresh();
         };
     }
     function for_each_selected(f) {
