@@ -1737,6 +1737,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
+    _chart.relax = function(node) {
+        node = node || _chart.selectAllNodes();
+        node.each(function(n) {
+            n.cola.dcg_nodeFixed = null; // nodeFixed will only override toward fixedness
+        });
+        return this;
+    };
 
     function layout_done(happens) {
         _dispatch.end(happens);

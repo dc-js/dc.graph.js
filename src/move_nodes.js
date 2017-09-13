@@ -55,9 +55,16 @@ dc_graph.move_nodes = function(sourceprops, moveprops) {
         }
         function mouse_up() {
             if(_startPos) {
+                chart.relax();
                 for_each_selected(function(n) {
                     n.cola.dcg_nodeFixed = {x: n.cola.x, y: n.cola.y};
                 });
+                // chart.on('end.move-nodes', function() {
+                //     chart
+                //         .on('end.move-nodes', null)
+                //         .relax()
+                //         .redraw();
+                // });
                 chart.redraw();
                 _startPos = null;
             }
