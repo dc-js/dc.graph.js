@@ -55,6 +55,7 @@
         var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
         diagram
             .layoutEngine(engine)
+            .timeLimit(5000)
             .width($(window).width())
             .height($(window).height())
             .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
