@@ -114,6 +114,7 @@
             })
             .nodeOpacity(0.25)
             .edgeOpacity(0.25)
+            .timeLimit(1000)
             .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(colors))
             .nodeTitle(dc.pluck('key'))
             .edgeStrokeDashArray(function(e) {
