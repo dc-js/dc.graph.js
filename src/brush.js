@@ -27,8 +27,10 @@ dc_graph.brush = function() {
         }
     }
     function remove_brush() {
-        if(_gBrush)
+        if(_gBrush) {
             _gBrush.remove();
+            _gBrush = null;
+        }
     }
     var _behavior = dc_graph.behavior('brush', {
         add_behavior: function() {},
@@ -41,6 +43,14 @@ dc_graph.brush = function() {
     };
     _behavior.activate = function() {
         install_brush(_behavior.parent());
+        return this;
+    };
+    _behavior.deactivate = function() {
+        remove_brush();
+        return this;
+    };
+    _behavior.isActive = function () {
+        return !!_gBrush;
     };
 
     return _behavior;
