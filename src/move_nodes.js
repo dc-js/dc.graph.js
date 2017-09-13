@@ -46,6 +46,11 @@ dc_graph.move_nodes = function(options) {
         node.on('mousedown.move-nodes', function(d) {
             _startPos = dc_graph.event_coords(chart);
             _downNode = d3.select(this);
+            // if the node under the mouse is not in the selection, need to
+            // make that node selected
+            var key = chart.nodeKey.eval(d);
+            if(_selected.indexOf(key)<0)
+                select_nodes_group.set_changed([key]);
             for_each_selected(function(n) {
                 n.original_position = [n.cola.x, n.cola.y];
             });
