@@ -129,6 +129,8 @@
               .autoCropSelection(false));
         diagram.child('filter-selection-nodes', dc_graph.filter_selection('select-nodes-group', 'select-nodes'));
 
+        diagram.child('move-nodes', dc_graph.move_nodes({}, {}));
+
         diagram.child('select-edges', dc_graph.select_edges(
             {
                 edgeStrokeWidth: 2,
