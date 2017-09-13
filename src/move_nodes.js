@@ -1,4 +1,4 @@
-dc_graph.move_nodes = function(sourceprops, moveprops) {
+dc_graph.move_nodes = function() {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
     var _selected = [], _startPos = null;
     var _brush;
@@ -29,10 +29,6 @@ dc_graph.move_nodes = function(sourceprops, moveprops) {
         });
     }
     function add_behavior(chart, node, edge) {
-        chart.cascade(50, true, conditional_properties(function(n) {
-            return _startPos && _selected.indexOf(n.orig.key) >= 0;
-        }, null, sourceprops));
-
         node.on('mousedown.move-nodes', function(d) {
             _startPos = dc_graph.event_coords(chart);
             for_each_selected(function(n) {
@@ -81,7 +77,6 @@ dc_graph.move_nodes = function(sourceprops, moveprops) {
         node.on('mousedown.move-nodes', null);
         node.on('mousemove.move-nodes', null);
         node.on('mouseup.move-nodes', null);
-        chart.cascade(50, false, sourceprops);
     }
 
     var _behavior = dc_graph.behavior('move-nodes', {
