@@ -1077,6 +1077,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _nodes[id] ? _nodes[id].orig : null;
     };
 
+    _chart.getWholeNode = function(id) {
+        return _nodes[id] ? _nodes[id] : null;
+    };
+
     _chart.getEdge = function(id) {
         return _edges[id] ? _edges[id].orig : null;
     };
