@@ -1709,6 +1709,32 @@ dc_graph.diagram = function (parent, chartGroup) {
         textPaths = textPaths || _chart.selectAllDefs('path.edge-label-path');
         var nullSel = d3.select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel);
+        return this;
+    };
+
+    _chart.reposition = function(node, edge) {
+        node
+            .attr('transform', function (d) {
+                return 'translate(' + d.cola.x + ',' + d.cola.y + ')';
+            });
+        // reset edge ports
+        edge.each(function(d) {
+            d.pos.new = null;
+            d.pos.old = null;
+        });
+
+        var edgeEntered = {};
+        edge
+            .each(function(e) {
+                calc_new_edge_path(e);
+                if(_chart.edgeArrowhead.eval(e))
+                    d3.select('#' + _chart.arrowId(e, 'head'))
+                    .attr('orient', function() {
+                        return e.pos.new.orient;
+                    });
+            })
+            .attr('d', render_edge_path('new'));
+        return this;
     };
 
 
