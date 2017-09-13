@@ -13,12 +13,6 @@ dc_graph.draw_graphs = function(options) {
 
     var _sourceDown = null, _targetMove = null, _edgeLayer = null, _hintData = [];
 
-    function event_coords(chart) {
-        var bound = chart.root().node().getBoundingClientRect();
-        return chart.invertCoord([d3.event.clientX - bound.left,
-                                  d3.event.clientY - bound.top]);
-    }
-
     function update_hint() {
         var data = _hintData.filter(function(h) {
             return h.source && h.target;
@@ -167,7 +161,7 @@ dc_graph.draw_graphs = function(options) {
                             _hintData[0].target = {x: d.cola.x, y: d.cola.y};
                     }
                     else {
-                        var coords = event_coords(chart);
+                        var coords = dc_graph.event_coords(chart);
                         _hintData[0].target = {x: coords[0], y: coords[1]};
                     }
                     update_hint();
@@ -196,7 +190,7 @@ dc_graph.draw_graphs = function(options) {
                 if(_sourceDown) { // drawing edge
                     if(_behavior.conduct().changeDragTarget && _targetMove)
                         _behavior.conduct().changeDragTarget(_sourceDown, null);
-                    var coords = event_coords(chart);
+                    var coords = dc_graph.event_coords(chart);
                     _targetMove = null;
                     _hintData[0].target = {x: coords[0], y: coords[1]};
                     update_hint();
@@ -209,7 +203,7 @@ dc_graph.draw_graphs = function(options) {
                     erase_hint();
                 } else { // click-node
                     if(d3.event.target === this && _behavior.clickCreatesNodes())
-                        create_node(chart, event_coords(chart));
+                        create_node(chart, dc_graph.event_coords(chart));
                 }
             });
         if(!_edgeLayer)
