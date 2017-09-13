@@ -101,6 +101,7 @@
             .height(document.documentElement.clientHeight)
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
             .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
+            .nodeFixed(n => n.value.fixed)
             .nodeStrokeWidth(0) // turn off outlines
             .nodeLabel('')
             .nodeLabelFill(function(n) {
@@ -129,7 +130,9 @@
               .autoCropSelection(false));
         diagram.child('filter-selection-nodes', dc_graph.filter_selection('select-nodes-group', 'select-nodes'));
 
-        diagram.child('move-nodes', dc_graph.move_nodes({}, {}));
+        diagram.child('move-nodes', dc_graph.move_nodes({
+            fixedTag: 'fixed'
+        }));
 
         diagram.child('select-edges', dc_graph.select_edges(
             {

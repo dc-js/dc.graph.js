@@ -1,6 +1,8 @@
-dc_graph.move_nodes = function() {
+dc_graph.move_nodes = function(options) {
+    options = options || {};
+    var _fixedTag = options.fixedTag || 'fixed';
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
-    var _selected = [], _startPos = null;
+    var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush;
 
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
@@ -13,6 +15,14 @@ dc_graph.move_nodes = function() {
         return is_a_mac ? event.metaKey : event.ctrlKey;
     }
 
+    function relax_all() {
+        var chart = _behavior.parent();
+        for_all_nodes(chart.selectAllNodes(), function(n, selected) {
+            n.orig.value[_fixedTag] = null;
+        });
+        chart
+            .redraw();
+    }
     function selection_changed(chart) {
         return function(selection, refresh) {
             if(refresh === undefined)
@@ -26,9 +36,16 @@ dc_graph.move_nodes = function() {
             f(n);
         });
     }
+    function for_all_nodes(node, f) {
+        node.each(function(n) {
+            var selected = _selected.indexOf(_behavior.parent().nodeKey.eval(n)) >= 0;
+            f(n, selected);
+        });
+    }
     function add_behavior(chart, node, edge) {
         node.on('mousedown.move-nodes', function(d) {
             _startPos = dc_graph.event_coords(chart);
+            _downNode = d3.select(this);
             for_each_selected(function(n) {
                 n.original_position = [n.cola.x, n.cola.y];
             });
@@ -40,26 +57,33 @@ dc_graph.move_nodes = function() {
                 var pos = dc_graph.event_coords(chart);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
-                for_each_selected(function(n) {
-                    n.cola.x = n.original_position[0] + dx;
-                    n.cola.y = n.original_position[1] + dy;
-                });
-                chart.reposition(node, edge);
+                if(!_moveStarted && Math.hypot(dx, dy) > _behavior.dragSize()) {
+                    _moveStarted = true;
+                    if(_downNode)
+                        _downNode.style('pointer-events', 'none'); // prevent click event for this node
+                }
+                if(_moveStarted) {
+                    for_each_selected(function(n) {
+                        n.cola.x = n.original_position[0] + dx;
+                        n.cola.y = n.original_position[1] + dy;
+                    });
+                    chart.reposition(node, edge);
+                }
             }
         }
         function mouse_up() {
             if(_startPos) {
-                chart.relax();
-                for_each_selected(function(n) {
-                    n.cola.dcg_nodeFixed = {x: n.cola.x, y: n.cola.y};
-                });
-                // chart.on('end.move-nodes', function() {
-                //     chart
-                //         .on('end.move-nodes', null)
-                //         .relax()
-                //         .redraw();
-                // });
-                chart.redraw();
+                if(_moveStarted) {
+                    _moveStarted = false;
+                    if(_downNode) {
+                        _downNode.style('pointer-events', null);
+                        _downNode = null;
+                    }
+                    for_all_nodes(node, function(n, selected) {
+                        n.orig.value[_fixedTag] = selected ? {x: n.cola.x, y: n.cola.y} : null;
+                    });
+                    chart.redraw();
+                }
                 _startPos = null;
             }
         }
@@ -68,7 +92,11 @@ dc_graph.move_nodes = function() {
             .on('mouseup.move-nodes', mouse_up);
         chart.svg()
             .on('mousemove.move-nodes', mouse_move)
-            .on('mouseup.move-nodes', mouse_up);
+            .on('mouseup.move-nodes', mouse_up)
+            .on('click.move-nodes', function() {
+                if(!_selected.length)
+                    relax_all();
+            });
     }
 
     function remove_behavior(chart, node, edge) {
@@ -85,6 +113,9 @@ dc_graph.move_nodes = function() {
             _brush = p.child('brush');
         }
     });
+
+    // minimum distance that is considered a drag, not a click
+    _behavior.dragSize = property(5);
 
     return _behavior;
 };
