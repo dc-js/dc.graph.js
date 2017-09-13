@@ -1476,11 +1476,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.initialLayout())
             _chart.initialLayout()(_chart, wnodes, wedges);
 
-        // no layout if the topology hasn't changed
+        // no layout if the topology and layout parameters haven't changed
         var skip_layout = false;
         if(!_chart.layoutUnchanged()) {
-            var nodes_snapshot = JSON.stringify(wnodes.map(get_original)),
-                edges_snapshot = JSON.stringify(wedges.map(get_original));
+            var nodes_snapshot = JSON.stringify(wnodes.map(function(n) {
+                return {orig: get_original(n), cola: {dcg_nodeFixed: n.cola.dcg_nodeFixed}};
+            }));
+            var edges_snapshot = JSON.stringify(wedges.map(function(e) {
+                return {orig: get_original(e), cola: e.cola};
+            }));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
