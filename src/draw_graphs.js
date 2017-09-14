@@ -41,10 +41,6 @@ dc_graph.draw_graphs = function(options) {
         update_hint();
     }
 
-    function promise_identity(x) {
-        return Promise.resolve(x);
-    }
-
     function create_node(chart, pos, data) {
         if(!_behavior.nodeCrossfilter())
             throw new Error('need nodeCrossfilter');
