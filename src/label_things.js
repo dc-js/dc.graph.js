@@ -26,13 +26,9 @@ dc_graph.label_things = function(options) {
                     box: box,
                     selectText: eventOptions.selectText,
                     accept: function(text) {
-                        return options.accept(thing, text)
-                            .then(grab_focus) // finallyc
-                            .catch(function(error) {
-                                grab_focus();
-                                throw error;
-                            });
-                    }
+                        return options.accept(thing, text);
+                    },
+                    finally: grab_focus
                 });
         };
     }

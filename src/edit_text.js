@@ -37,11 +37,13 @@ dc_graph.edit_text = function(parent, options) {
         options.accept && options.accept(textdiv.text());
         textdiv.on('blur.edittext', null);
         foreign.remove();
+        options.finally && options.finally();
     }
     function cancel() {
         options.cancel && options.cancel();
         textdiv.on('blur.edittext', null);
         foreign.remove();
+        options.finally && options.finally();
     }
 
     textdiv.on('keydown.edittext', function() {
