@@ -1,6 +1,6 @@
 dc_graph.move_nodes = function(options) {
     options = options || {};
-    var _fixedTag = options.fixedTag || 'fixed';
+    var _fixedPosTag = options.fixedPosTag || 'fixedPos';
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
@@ -18,7 +18,7 @@ dc_graph.move_nodes = function(options) {
     function relax_all() {
         var chart = _behavior.parent();
         for_all_nodes(chart.selectAllNodes(), function(n, selected) {
-            n.orig.value[_fixedTag] = null;
+            n.orig.value[_fixedPosTag] = null;
         });
         chart
             .redraw();
@@ -90,12 +90,33 @@ dc_graph.move_nodes = function(options) {
                         _downNode.style('pointer-events', null);
                         _downNode = null;
                     }
+                    var callback = _behavior.fixNode() || promise_identity;
+                    var promises = [];
                     for_all_nodes(node, function(n, selected) {
-                        n.orig.value[_fixedTag] = selected ? {x: n.cola.x, y: n.cola.y} : null;
+                        var key = chart.nodeKey.eval(n),
+                            oldFixed = n.orig.value[_fixedPosTag],
+                            changed = false;
+                        if(oldFixed) {
+                            if(!selected || n.cola.x !== oldFixed.x || n.cola.y !== oldFixed.y)
+                                changed = true;
+                        }
+                        else changed = selected;
+                        if(changed) {
+                            var promise;
+                            if(selected)
+                                promise = callback(key, {x: n.cola.x, y: n.cola.y});
+                            else
+                                promise = callback(key, null);
+                            promises.push(promise.then(function(fixed) {
+                                n.orig.value[_fixedPosTag] = fixed;
+                            }));
+                        }
                     });
-                    chart.redraw();
-                    if(_restoreBackgroundClick)
-                        _selectNodes.clickBackgroundClears(true);
+                    Promise.all(promises).then(function() {
+                        chart.redraw();
+                        if(_restoreBackgroundClick)
+                            _selectNodes.clickBackgroundClears(true);
+                    });
                 }
                 _startPos = null;
             }
@@ -131,6 +152,8 @@ dc_graph.move_nodes = function(options) {
 
     // minimum distance that is considered a drag, not a click
     _behavior.dragSize = property(5);
+    // callback for setting & fixing node position
+    _behavior.fixNode = property(null);
 
     return _behavior;
 };
