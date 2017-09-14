@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.5.3
+ *  dc.graph 0.6.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.5.3
+ * @version 0.6.0
  * @example
  * // Example chaining
  * chart.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.5.3',
+    version: '0.6.0',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -103,6 +103,27 @@ var property = function (defaultValue, unwrap) {
     return ret;
 };
 
+function named_children() {
+    var _children = {};
+    var f = function(id, object) {
+        if(arguments.length === 1)
+            return _children[id];
+        // do not notify unnecessarily
+        if(_children[id] === object)
+            return this;
+        if(_children[id])
+            _children[id].parent(null);
+        _children[id] = object;
+        if(object)
+            object.parent(this);
+        return this;
+    };
+    f.enum = function() {
+        return Object.keys(_children);
+    };
+    return f;
+}
+
 function deprecated_property(message, defaultValue) {
     var prop = property(defaultValue);
     var ret = function() {
@@ -128,7 +149,7 @@ function uuid() {
 }
 
 // create or re-use objects in a map, delete the ones that were not reused
-function regenerate_objects(preserved, list, key, assign, create, destroy) {
+function regenerate_objects(preserved, list, need, key, assign, create, destroy) {
     if(!create) create = function(k, o) { };
     if(!destroy) destroy = function(k) { };
     var keep = {};
@@ -142,6 +163,15 @@ function regenerate_objects(preserved, list, key, assign, create, destroy) {
         return o1;
     }
     var wlist = list.map(wrap);
+    if(need)
+        need.forEach(function(k) {
+            if(!preserved[k]) // hasn't been created, needs to be
+                create(k, preserved[k] = {}, null);
+            if(!keep[k]) { // wasn't in list, should be
+                wlist.push(preserved[k]);
+                keep[k] = true;
+            }
+        });
     // delete any objects from last round that are no longer used
     for(var k in preserved)
         if(!keep[k]) {
@@ -236,7 +266,7 @@ dc_graph.cola_layout = function(id) {
     }
 
     function data(nodes, edges, constraints, options) {
-        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+        var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -256,7 +286,7 @@ dc_graph.cola_layout = function(id) {
                     v1.y = v.y;
             }
         });
-        var wedges = regenerate_objects(_edges, edges, function(e) {
+        var wedges = regenerate_objects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -324,6 +354,9 @@ dc_graph.cola_layout = function(id) {
         },
         supportsWebworker: function() {
             return true;
+        },
+        needsStage: function(stage) { // stopgap until we have engine chaining
+            return stage === 'ports' || stage === 'edgepos';
         },
         parent: property(null),
         on: function(event, f) {
