@@ -3,7 +3,7 @@ dc_graph.move_nodes = function(options) {
     var _fixedTag = options.fixedTag || 'fixed';
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
-    var _brush, _drawGraphs;
+    var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
 
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
     var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
@@ -47,6 +47,9 @@ dc_graph.move_nodes = function(options) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
                 return;
+            if(_selectNodes)
+                if((_restoreBackgroundClick = _selectNodes.clickBackgroundClears()))
+                    _selectNodes.clickBackgroundClears(false);
             _startPos = dc_graph.event_coords(chart);
             _downNode = d3.select(this);
             // if the node under the mouse is not in the selection, need to
@@ -91,6 +94,8 @@ dc_graph.move_nodes = function(options) {
                         n.orig.value[_fixedTag] = selected ? {x: n.cola.x, y: n.cola.y} : null;
                     });
                     chart.redraw();
+                    if(_restoreBackgroundClick)
+                        _selectNodes.clickBackgroundClears(true);
                 }
                 _startPos = null;
             }
@@ -120,6 +125,7 @@ dc_graph.move_nodes = function(options) {
             select_nodes_group.on('set_changed.move-nodes', p ? selection_changed(p) : null);
             _brush = p.child('brush');
             _drawGraphs = p.child('draw-graphs');
+            _selectNodes = p.child('select-nodes');
         }
     });
 
