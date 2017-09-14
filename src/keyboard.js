@@ -19,7 +19,7 @@ dc_graph.keyboard = function() {
 
         // grab focus whenever svg is clicked
         chart.svg().on('click.keyboard', function() {
-            _input_anchor.node().focus();
+            _behavior.focus();
         });
     }
     function remove_behavior(chart) {
