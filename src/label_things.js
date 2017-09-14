@@ -11,9 +11,6 @@ dc_graph.label_things = function(options) {
         };
     }
 
-    function promise_identity(x) {
-        return Promise.resolve(x);
-    }
     function grab_focus() {
         _keyboard.focus();
     }
