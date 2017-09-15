@@ -121,7 +121,8 @@
             .edgeStrokeDashArray(function(e) {
                 return dasheses[e.value.dash].ray;
             })
-            .edgeArrowhead(qs.arrows ? 'vee' : null);
+            .edgeArrowhead(qs.arrows === 'head' || qs.arrows === 'both' ? 'vee' : null)
+            .edgeArrowtail(qs.arrows === 'tail' || qs.arrows === 'both' ? 'crow' : null)
 
         diagram.child('select-nodes', dc_graph.select_nodes(
             {
