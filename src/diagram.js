@@ -1714,25 +1714,20 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.reposition = function(node, edge) {
         node
-            .attr('transform', function (d) {
-                return 'translate(' + d.cola.x + ',' + d.cola.y + ')';
+            .attr('transform', function (n) {
+                return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
             });
         // reset edge ports
-        edge.each(function(d) {
-            d.pos.new = null;
-            d.pos.old = null;
-        });
-
-        var edgeEntered = {};
-        edge
-            .each(function(e) {
-                calc_new_edge_path(e);
-                if(_chart.edgeArrowhead.eval(e))
-                    d3.select('#' + _chart.arrowId(e, 'head'))
-                    .attr('orient', function() {
-                        return e.pos.new.orient;
-                    });
-            })
+        edge.each(function(e) {
+            e.pos.new = null;
+            e.pos.old = null;
+            calc_new_edge_path(e);
+            if(_chart.edgeArrowhead.eval(e))
+                d3.select('#' + _chart.arrowId(e, 'head'))
+                .attr('orient', function() {
+                    return e.pos.new.orient;
+                });
+        })
             .attr('d', render_edge_path('new'));
         return this;
     };
