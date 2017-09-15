@@ -20,8 +20,8 @@ dc_graph.keyboard = function() {
             .on('focusin', () => console.log('focus in, man'))
             .on('focusout', () => console.log('focus out, man'));
 
-        // grab focus whenever svg is clicked
-        chart.svg().on('click.keyboard', function() {
+        // grab focus whenever svg is interacted with (?)
+        chart.svg().on('mouseup.keyboard', function() {
             _behavior.focus();
         });
     }

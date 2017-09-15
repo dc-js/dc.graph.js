@@ -164,7 +164,8 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function(d) {
-                d3.event.stopPropagation();
+                // allow keyboard mode to hear this one (again, we need better cooperation)
+                // d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
                     if(_behavior.conduct().finishDragEdge)
                         if(!_behavior.conduct().finishDragEdge(_sourceDown, _targetMove))
