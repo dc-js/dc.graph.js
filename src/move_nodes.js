@@ -47,9 +47,6 @@ dc_graph.move_nodes = function(options) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
                 return;
-            if(_selectNodes)
-                if((_restoreBackgroundClick = _selectNodes.clickBackgroundClears()))
-                    _selectNodes.clickBackgroundClears(false);
             _startPos = dc_graph.event_coords(chart);
             _downNode = d3.select(this);
             // if the node under the mouse is not in the selection, need to
@@ -70,8 +67,13 @@ dc_graph.move_nodes = function(options) {
                     dy = pos[1] - _startPos[1];
                 if(!_moveStarted && Math.hypot(dx, dy) > _behavior.dragSize()) {
                     _moveStarted = true;
+                    // prevent background-clicking clearing selection
+                    if(_selectNodes)
+                        if((_restoreBackgroundClick = _selectNodes.clickBackgroundClears()))
+                            _selectNodes.clickBackgroundClears(false);
+                    // prevent click event for this node setting selection just to this
                     if(_downNode)
-                        _downNode.style('pointer-events', 'none'); // prevent click event for this node
+                        _downNode.style('pointer-events', 'none');
                 }
                 if(_moveStarted) {
                     for_each_selected(function(n) {
