@@ -26,11 +26,16 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 chart.refresh();
         };
     }
+    var _have_bce = false;
     function background_click_event(chart, v) {
+        // we seem to have nodes-background interrupting edges-background by reinstalling uselessly
+        if(_have_bce === v)
+            return;
         chart.svg().on('click.' + things_name, v ? function(d) {
             if(d3.event.target === this)
                 things_group.set_changed([]);
         } : null);
+        _have_bce = v;
     }
     function brushstart() {
         if(isUnion(d3.event.sourceEvent) || isToggle(d3.event.sourceEvent))
