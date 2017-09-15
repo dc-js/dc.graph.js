@@ -2340,7 +2340,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     };
             }
             wedges.forEach(function(e) {
-                e.pos = {};
+                e.pos = e.pos || {};
                 var min = Math.min(e.source.index, e.target.index),
                     max = Math.max(e.source.index, e.target.index);
                 e.parallel = em[min][max];
@@ -2413,11 +2413,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                     class: 'edge-label-path',
                     id: _chart.textpathId
                 });
-        edgeLabels
-          .selectAll('textPath')
-            .text(function(d){
-                return _chart.edgeLabel.eval(d);
-            });
         edgeLabels.exit().transition()
             .duration(_chart.stagedDuration())
             .delay(_chart.deleteDelay())
@@ -2688,25 +2683,20 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _chart.reposition = function(node, edge) {
         node
-            .attr('transform', function (d) {
-                return 'translate(' + d.cola.x + ',' + d.cola.y + ')';
+            .attr('transform', function (n) {
+                return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
             });
         // reset edge ports
-        edge.each(function(d) {
-            d.pos.new = null;
-            d.pos.old = null;
-        });
-
-        var edgeEntered = {};
-        edge
-            .each(function(e) {
-                calc_new_edge_path(e);
-                if(_chart.edgeArrowhead.eval(e))
-                    d3.select('#' + _chart.arrowId(e, 'head'))
-                    .attr('orient', function() {
-                        return e.pos.new.orient;
-                    });
-            })
+        edge.each(function(e) {
+            e.pos.new = null;
+            e.pos.old = null;
+            calc_new_edge_path(e);
+            if(_chart.edgeArrowhead.eval(e))
+                d3.select('#' + _chart.arrowId(e, 'head'))
+                .attr('orient', function() {
+                    return e.pos.new.orient;
+                });
+        })
             .attr('d', render_edge_path('new'));
         return this;
     };
@@ -3026,6 +3016,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                             edgeEntered[_chart.edgeKey.eval(e)] ? 'old' : 'new';
                     return render_edge_path(when)(e);
                 });
+        edgeLabels
+          .selectAll('textPath')
+            .text(function(d){
+                return _chart.edgeLabel.eval(d);
+            });
         textPathsEnter
             .attr('d', render_edge_label_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
         var textTrans = textPaths.transition()
@@ -5189,9 +5184,9 @@ dc_graph.keyboard = function() {
         _input_anchor.on('keydown.keyboard', keydown);
         _input_anchor.on('keyup.keyboard', keyup);
 
-        // grab focus whenever svg is clicked
-        chart.svg().on('click.keyboard', function() {
-            _input_anchor.node().focus();
+        // grab focus whenever svg is interacted with (?)
+        chart.svg().on('mouseup.keyboard', function() {
+            _behavior.focus();
         });
     }
     function remove_behavior(chart) {
@@ -5249,15 +5244,26 @@ dc_graph.edit_text = function(parent, options) {
         padding: '2px'
     });
 
+    function stopProp() {
+        d3.event.stopPropagation();
+    }
+    foreign
+        .on('mousedown', stopProp)
+        .on('mousemove', stopProp)
+        .on('mouseup', stopProp)
+        .on('dblclick', stopProp);
+
     function accept() {
         options.accept && options.accept(textdiv.text());
         textdiv.on('blur.edittext', null);
         foreign.remove();
+        options.finally && options.finally();
     }
     function cancel() {
         options.cancel && options.cancel();
         textdiv.on('blur.edittext', null);
         foreign.remove();
+        options.finally && options.finally();
     }
 
     textdiv.on('keydown.edittext', function() {
@@ -5279,8 +5285,8 @@ dc_graph.edit_text = function(parent, options) {
     if(options.selectText) {
         range.selectNodeContents(textdiv.node());
     } else {
-        range.setStart(textdiv.node(), text.length);
-        range.setEnd(textdiv.node(), text.length);
+        range.setStart(textdiv.node(), 1);
+        range.setEnd(textdiv.node(), 1);
     }
     var sel = window.getSelection();
     sel.removeAllRanges();
@@ -5373,11 +5379,16 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 chart.refresh();
         };
     }
+    var _have_bce = false;
     function background_click_event(chart, v) {
+        // we seem to have nodes-background interrupting edges-background by reinstalling uselessly
+        if(_have_bce === v)
+            return;
         chart.svg().on('click.' + things_name, v ? function(d) {
             if(d3.event.target === this)
                 things_group.set_changed([]);
         } : null);
+        _have_bce = v;
     }
     function brushstart() {
         if(isUnion(d3.event.sourceEvent) || isToggle(d3.event.sourceEvent))
@@ -5415,13 +5426,8 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 else if(isToggle(d3.event))
                     newSelected = toggle_array(_selected, key);
             }
-            if(!newSelected) {
-                if(_selected.length === 1 && _selected[0] === key && _behavior.secondClickEvent()) {
-                    _behavior.secondClickEvent()(d3.select(this));
-                    d3.event.stopPropagation();
-                }
+            if(!newSelected)
                 newSelected = [key];
-            }
             things_group.set_changed(newSelected);
         });
 
@@ -5470,12 +5476,15 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         if(!_behavior.multipleSelect() && _behavior.parent())
             background_click_event(_behavior.parent(), v);
     });
-    _behavior.secondClickEvent = property(null);
     _behavior.noneIsAll = property(false);
     // if you're replacing the data, you probably want the selection not to be preserved when a thing
     // with the same key re-appears later (true). however, if you're filtering dc.js-style, you
     // probably want filters to be independent between charts (false)
     _behavior.autoCropSelection = property(true);
+    // if you want to do the cool things select_things can do
+    _behavior.thinginess = function() {
+        return thinginess;
+    };
     return _behavior;
 };
 
@@ -5599,9 +5608,6 @@ dc_graph.move_nodes = function(options) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
                 return;
-            if(_selectNodes)
-                if((_restoreBackgroundClick = _selectNodes.clickBackgroundClears()))
-                    _selectNodes.clickBackgroundClears(false);
             _startPos = dc_graph.event_coords(chart);
             _downNode = d3.select(this);
             // if the node under the mouse is not in the selection, need to
@@ -5622,8 +5628,13 @@ dc_graph.move_nodes = function(options) {
                     dy = pos[1] - _startPos[1];
                 if(!_moveStarted && Math.hypot(dx, dy) > _behavior.dragSize()) {
                     _moveStarted = true;
+                    // prevent background-clicking clearing selection
+                    if(_selectNodes)
+                        if((_restoreBackgroundClick = _selectNodes.clickBackgroundClears()))
+                            _selectNodes.clickBackgroundClears(false);
+                    // prevent click event for this node setting selection just to this
                     if(_downNode)
-                        _downNode.style('pointer-events', 'none'); // prevent click event for this node
+                        _downNode.style('pointer-events', 'none');
                 }
                 if(_moveStarted) {
                     for_each_selected(function(n) {
@@ -5737,7 +5748,8 @@ dc_graph.filter_selection = function(things_group, things_name) {
     return _behavior;
 };
 
-dc_graph.delete_things = function(things_group, mode_name) {
+dc_graph.delete_things = function(things_group, mode_name, id_tag) {
+    id_tag = id_tag || 'id';
     var _keyboard, _selected = [];
     function selection_changed(selection) {
         _selected = selection;
@@ -5756,11 +5768,16 @@ dc_graph.delete_things = function(things_group, mode_name) {
             if(selection && selection.length) {
                 var crossfilter = _behavior.crossfilterAccessor()(_behavior.parent()),
                     dimension = _behavior.dimensionAccessor()(_behavior.parent());
-                dimension.filterFunction(function(k) {
-                    return selection.indexOf(k) !== -1;
-                });
-                crossfilter.remove();
+                var all = crossfilter.all().slice(), n = all.length;
                 dimension.filter(null);
+                crossfilter.remove();
+                console.assert(all.length === n);
+                var filtered = all.filter(function(r) {
+                    return selection.indexOf(r[id_tag]) === -1;
+                });
+                console.assert(all.length === filtered.length + selection.length);
+                crossfilter.add(filtered);
+
                 _behavior.parent().redrawGroup();
             }
         });
@@ -5793,10 +5810,10 @@ dc_graph.delete_things = function(things_group, mode_name) {
     return _behavior;
 };
 
-dc_graph.delete_nodes = function() {
+dc_graph.delete_nodes = function(id_tag) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
     var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
-    var _behavior = dc_graph.delete_things(select_nodes_group, 'delete-nodes');
+    var _behavior = dc_graph.delete_things(select_nodes_group, 'delete-nodes', id_tag);
 
     _behavior.preDelete(function(nodes) {
         // request a delete of all attached edges, using the delete edges mode
@@ -5822,7 +5839,7 @@ dc_graph.label_things = function(options) {
     var select_things_group = dc_graph.select_things_group(options.select_group, options.select_type),
         label_things_group = dc_graph.label_things_group(options.label_group, options.label_type);
     var _selected = [];
-    var _keyboard;
+    var _keyboard, _selectThings;
 
     function selection_changed_listener(chart) {
         return function(selection) {
@@ -5845,37 +5862,40 @@ dc_graph.label_things = function(options) {
                     box: box,
                     selectText: eventOptions.selectText,
                     accept: function(text) {
-                        return options.accept(thing, text)
-                            .then(grab_focus) // finallyc
-                            .catch(function(error) {
-                                grab_focus();
-                                throw error;
-                            });
-                    }
+                        return options.accept(thing, text);
+                    },
+                    finally: grab_focus
                 });
         };
     }
 
+    function edit_selected(node, edge, eventOptions) {
+        // less than ideal interface.
+        // what if there are other things? can i blame the missing metagraph?
+        var thing = options.find_thing(_selected[0], node, edge);
+        if(thing.empty()) {
+            console.error("couldn't find thing '" + _selected[0] + "'!");
+            return;
+        }
+        if(thing.size()>1) {
+            console.error("found too many things for '" + _selected[0] + "' (" + thing.size() + ")!");
+            return;
+        }
+        label_things_group.edit_label(thing, eventOptions);
+    }
     function add_behavior(chart, node, edge) {
         _keyboard.on('keyup.' + options.label_type, function() {
             if(_selected.length) {
                 // printable characters should start edit
                 if(d3.event.key.length !== 1)
                     return;
-                // less than ideal interface.
-                // what if there are other things? can i blame the missing metagraph?
-                var thing = options.find_thing(_selected[0], node, edge);
-                if(thing.empty()) {
-                    console.error("couldn't find thing '" + _selected[0] + "'!");
-                    return;
-                }
-                if(thing.size()>1) {
-                    console.error("found too many things for '" + _selected[0] + "' (" + n2.size() + ")!");
-                    return;
-                }
-                label_things_group.edit_label(thing, {text: d3.event.key, selectText: false});
+                edit_selected(node, edge, {text: d3.event.key, selectText: false});
             }
         });
+        if(_selectThings)
+            _selectThings.thinginess().clickables(chart, node, edge).on('dblclick.' + options.label_type, function() {
+                edit_selected(node, edge, {selectText: true});
+            });
     }
 
     function remove_behavior(chart, node, edge) {
@@ -5891,6 +5911,7 @@ dc_graph.label_things = function(options) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
                     p.child('keyboard', _keyboard = dc_graph.keyboard());
+                _selectThings = p.child(options.select_type);
             }
         }
     });
@@ -5975,7 +5996,9 @@ dc_graph.label_edges = function(options) {
         return callback.then(function(text2) {
             var d = edge.datum();
             d.orig.value[_labelTag] = text2;
-            _behavior.parent().redrawGroup();
+            // currently edge labels don't affect layout (nevermind the rest of the group!)
+            // _behavior.parent().redrawGroup();
+            _behavior.parent().refresh();
         });
     };
 
@@ -6509,15 +6532,6 @@ dc_graph.draw_graphs = function(options) {
         if(select_nodes) {
             if(_behavior.clickCreatesNodes())
                 select_nodes.clickBackgroundClears(false);
-            select_nodes.secondClickEvent(function(node) {
-                label_nodes_group.edit_label(node, {selectText: true});
-            });
-        }
-        var select_edges = chart.child('select-edges');
-        if(select_edges) {
-            select_edges.secondClickEvent(function(edge) {
-                label_edges_group.edit_label(edge, {selectText: true});
-            });
         }
         node
             .on('mousedown.draw-graphs', function(d) {
@@ -6584,7 +6598,8 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function(d) {
-                d3.event.stopPropagation();
+                // allow keyboard mode to hear this one (again, we need better cooperation)
+                // d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
                     if(_behavior.conduct().finishDragEdge)
                         if(!_behavior.conduct().finishDragEdge(_sourceDown, _targetMove))
