@@ -1439,11 +1439,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                     class: 'edge-label-path',
                     id: _chart.textpathId
                 });
-        edgeLabels
-          .selectAll('textPath')
-            .text(function(d){
-                return _chart.edgeLabel.eval(d);
-            });
         edgeLabels.exit().transition()
             .duration(_chart.stagedDuration())
             .delay(_chart.deleteDelay())
@@ -2047,6 +2042,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                             edgeEntered[_chart.edgeKey.eval(e)] ? 'old' : 'new';
                     return render_edge_path(when)(e);
                 });
+        edgeLabels
+          .selectAll('textPath')
+            .text(function(d){
+                return _chart.edgeLabel.eval(d);
+            });
         textPathsEnter
             .attr('d', render_edge_label_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
         var textTrans = textPaths.transition()
