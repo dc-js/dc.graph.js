@@ -65,8 +65,8 @@ dc_graph.edit_text = function(parent, options) {
     if(options.selectText) {
         range.selectNodeContents(textdiv.node());
     } else {
-        range.setStart(textdiv.node(), text.length);
-        range.setEnd(textdiv.node(), text.length);
+        range.setStart(textdiv.node(), 1);
+        range.setEnd(textdiv.node(), 1);
     }
     var sel = window.getSelection();
     sel.removeAllRanges();
