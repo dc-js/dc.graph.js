@@ -33,6 +33,15 @@ dc_graph.edit_text = function(parent, options) {
         padding: '2px'
     });
 
+    function stopProp() {
+        d3.event.stopPropagation();
+    }
+    foreign
+        .on('mousedown', stopProp)
+        .on('mousemove', stopProp)
+        .on('mouseup', stopProp)
+        .on('dblclick', stopProp);
+
     function accept() {
         options.accept && options.accept(textdiv.text());
         textdiv.on('blur.edittext', null);
