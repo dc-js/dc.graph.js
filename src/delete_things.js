@@ -1,4 +1,5 @@
-dc_graph.delete_things = function(things_group, mode_name) {
+dc_graph.delete_things = function(things_group, mode_name, id_tag) {
+    id_tag = id_tag || 'id';
     var _keyboard, _selected = [];
     function selection_changed(selection) {
         _selected = selection;
@@ -17,11 +18,16 @@ dc_graph.delete_things = function(things_group, mode_name) {
             if(selection && selection.length) {
                 var crossfilter = _behavior.crossfilterAccessor()(_behavior.parent()),
                     dimension = _behavior.dimensionAccessor()(_behavior.parent());
-                dimension.filterFunction(function(k) {
-                    return selection.indexOf(k) !== -1;
-                });
-                crossfilter.remove();
+                var all = crossfilter.all().slice(), n = all.length;
                 dimension.filter(null);
+                crossfilter.remove();
+                console.assert(all.length === n);
+                var filtered = all.filter(function(r) {
+                    return selection.indexOf(r[id_tag]) === -1;
+                });
+                console.assert(all.length === filtered.length + selection.length);
+                crossfilter.add(filtered);
+
                 _behavior.parent().redrawGroup();
             }
         });

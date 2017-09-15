@@ -1,7 +1,7 @@
-dc_graph.delete_nodes = function() {
+dc_graph.delete_nodes = function(id_tag) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
     var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
-    var _behavior = dc_graph.delete_things(select_nodes_group, 'delete-nodes');
+    var _behavior = dc_graph.delete_things(select_nodes_group, 'delete-nodes', id_tag);
 
     _behavior.preDelete(function(nodes) {
         // request a delete of all attached edges, using the delete edges mode
