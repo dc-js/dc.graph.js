@@ -16,6 +16,9 @@ dc_graph.keyboard = function() {
             });
         _input_anchor.on('keydown.keyboard', keydown);
         _input_anchor.on('keyup.keyboard', keyup);
+        _input_anchor
+            .on('focusin', () => console.log('focus in, man'))
+            .on('focusout', () => console.log('focus out, man'));
 
         // grab focus whenever svg is clicked
         chart.svg().on('click.keyboard', function() {
