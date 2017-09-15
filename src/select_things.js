@@ -73,13 +73,8 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 else if(isToggle(d3.event))
                     newSelected = toggle_array(_selected, key);
             }
-            if(!newSelected) {
-                if(_selected.length === 1 && _selected[0] === key && _behavior.secondClickEvent()) {
-                    _behavior.secondClickEvent()(d3.select(this));
-                    d3.event.stopPropagation();
-                }
+            if(!newSelected)
                 newSelected = [key];
-            }
             things_group.set_changed(newSelected);
         });
 
@@ -128,12 +123,15 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         if(!_behavior.multipleSelect() && _behavior.parent())
             background_click_event(_behavior.parent(), v);
     });
-    _behavior.secondClickEvent = property(null);
     _behavior.noneIsAll = property(false);
     // if you're replacing the data, you probably want the selection not to be preserved when a thing
     // with the same key re-appears later (true). however, if you're filtering dc.js-style, you
     // probably want filters to be independent between charts (false)
     _behavior.autoCropSelection = property(true);
+    // if you want to do the cool things select_things can do
+    _behavior.thinginess = function() {
+        return thinginess;
+    };
     return _behavior;
 };
 
