@@ -3,7 +3,7 @@ dc_graph.label_things = function(options) {
     var select_things_group = dc_graph.select_things_group(options.select_group, options.select_type),
         label_things_group = dc_graph.label_things_group(options.label_group, options.label_type);
     var _selected = [];
-    var _keyboard;
+    var _keyboard, _selectThings;
 
     function selection_changed_listener(chart) {
         return function(selection) {
@@ -33,26 +33,33 @@ dc_graph.label_things = function(options) {
         };
     }
 
+    function edit_selected(node, edge, eventOptions) {
+        // less than ideal interface.
+        // what if there are other things? can i blame the missing metagraph?
+        var thing = options.find_thing(_selected[0], node, edge);
+        if(thing.empty()) {
+            console.error("couldn't find thing '" + _selected[0] + "'!");
+            return;
+        }
+        if(thing.size()>1) {
+            console.error("found too many things for '" + _selected[0] + "' (" + thing.size() + ")!");
+            return;
+        }
+        label_things_group.edit_label(thing, eventOptions);
+    }
     function add_behavior(chart, node, edge) {
         _keyboard.on('keyup.' + options.label_type, function() {
             if(_selected.length) {
                 // printable characters should start edit
                 if(d3.event.key.length !== 1)
                     return;
-                // less than ideal interface.
-                // what if there are other things? can i blame the missing metagraph?
-                var thing = options.find_thing(_selected[0], node, edge);
-                if(thing.empty()) {
-                    console.error("couldn't find thing '" + _selected[0] + "'!");
-                    return;
-                }
-                if(thing.size()>1) {
-                    console.error("found too many things for '" + _selected[0] + "' (" + n2.size() + ")!");
-                    return;
-                }
-                label_things_group.edit_label(thing, {text: d3.event.key, selectText: false});
+                edit_selected(node, edge, {text: d3.event.key, selectText: false});
             }
         });
+        if(_selectThings)
+            _selectThings.thinginess().clickables(chart, node, edge).on('dblclick.' + options.label_type, function() {
+                edit_selected(node, edge, {selectText: true});
+            });
     }
 
     function remove_behavior(chart, node, edge) {
@@ -68,6 +75,7 @@ dc_graph.label_things = function(options) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
                     p.child('keyboard', _keyboard = dc_graph.keyboard());
+                _selectThings = p.child(options.select_type);
             }
         }
     });

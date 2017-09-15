@@ -89,15 +89,6 @@ dc_graph.draw_graphs = function(options) {
         if(select_nodes) {
             if(_behavior.clickCreatesNodes())
                 select_nodes.clickBackgroundClears(false);
-            select_nodes.secondClickEvent(function(node) {
-                label_nodes_group.edit_label(node, {selectText: true});
-            });
-        }
-        var select_edges = chart.child('select-edges');
-        if(select_edges) {
-            select_edges.secondClickEvent(function(edge) {
-                label_edges_group.edit_label(edge, {selectText: true});
-            });
         }
         node
             .on('mousedown.draw-graphs', function(d) {
