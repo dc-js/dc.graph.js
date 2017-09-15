@@ -1720,7 +1720,12 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(_chart.edgeArrowhead.eval(e))
                 d3.select('#' + _chart.arrowId(e, 'head'))
                 .attr('orient', function() {
-                    return e.pos.new.orient;
+                    return e.pos.new.orienthead;
+                });
+            if(_chart.edgeArrowtail.eval(e))
+                d3.select('#' + _chart.arrowId(e, 'tail'))
+                .attr('orient', function() {
+                    return e.pos.new.orienttail;
                 });
         })
             .attr('d', render_edge_path('new'));
@@ -1739,10 +1744,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
-    function calculate_arrowhead_orientation(points) {
+    function calculate_arrowhead_orientation(points, end) {
         var spos = points[0], tpos = points[points.length-1];
-        var near = bezier_point(points, 0.75);
-        return Math.atan2(tpos.y - near.y, tpos.x - near.x) + 'rad';
+        var partial = bezier_point(points, end === 'tail' ? 0.25 : 0.75);
+        return (end === 'head' ?
+                Math.atan2(tpos.y - partial.y, tpos.x - partial.x) :
+                Math.atan2(partial.y - spos.y, partial.x - spos.x)) + 'rad';
     }
 
     function calc_edge_path(d, age, sx, sy, tx, ty) {
@@ -1754,7 +1761,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     points: d.cola.points,
                     bezDegree: 3
                 },
-                orient: calculate_arrowhead_orientation(d.cola.points)
+                orienthead: calculate_arrowhead_orientation(d.cola.points, 'head'),
+                orienttail: calculate_arrowhead_orientation(d.cola.points, 'tail')
             };
         }
         else if(!d.pos[age]) {
@@ -1783,7 +1791,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     path.points.reverse();
                 parallel.edges[p].pos[age] = {
                     path: path,
-                    orient: calculate_arrowhead_orientation(path.points)
+                    orienthead: calculate_arrowhead_orientation(path.points, 'head'),
+                    orienttail: calculate_arrowhead_orientation(path.points, 'tail')
                 };
             }
         }
@@ -2015,21 +2024,32 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(_chart.edgeArrowhead.eval(e))
                     d3.select('#' + _chart.arrowId(e, 'head'))
                     .attr('orient', function() {
-                        return e.pos[age].orient;
+                        return e.pos[age].orienthead;
+                    });
+                if(_chart.edgeArrowtail.eval(e))
+                    d3.select('#' + _chart.arrowId(e, 'tail'))
+                    .attr('orient', function() {
+                        return e.pos[age].orienttail;
                     });
             })
             .attr('d', render_edge_path(_chart.stageTransitions() === 'modins' ? 'new' : 'old'));
 
         var etrans = edge.each(calc_new_edge_path)
                 .each(function(e) {
-                    if(_chart.edgeArrowhead.eval(e)) {
+                    if(_chart.edgeArrowhead.eval(e))
                         d3.select('#' + _chart.arrowId(e, 'head'))
                             .transition().duration(_chart.stagedDuration())
                             .delay(_chart.stagedDelay(false))
                             .attr('orient', function() {
-                                return e.pos.new.orient;
+                                return e.pos.new.orienthead;
                             });
-                    }
+                    if(_chart.edgeArrowtail.eval(e))
+                        d3.select('#' + _chart.arrowId(e, 'tail'))
+                            .transition().duration(_chart.stagedDuration())
+                            .delay(_chart.stagedDelay(false))
+                            .attr('orient', function() {
+                                return e.pos.new.orienttail;
+                            });
                 })
               .transition()
                 .duration(_chart.stagedDuration())
@@ -2534,6 +2554,11 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+        marker.append('svg:path')
+            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+            .attr('stroke-width', '0px');
+    });
+    _chart.defineArrow('crow', 12, 12, 0, 0, function(marker) {
         marker.append('svg:path')
             .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
             .attr('stroke-width', '0px');
