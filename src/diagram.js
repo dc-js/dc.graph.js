@@ -1366,7 +1366,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     };
             }
             wedges.forEach(function(e) {
-                e.pos = {};
+                e.pos = e.pos || {};
                 var min = Math.min(e.source.index, e.target.index),
                     max = Math.max(e.source.index, e.target.index);
                 e.parallel = em[min][max];
