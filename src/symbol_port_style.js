@@ -15,32 +15,32 @@ dc_graph.symbol_port_style = function() {
     function name_or_edge(p) {
         return p.named ? p.name : _style.parent().edgeKey.eval(p.edges[0]);
     }
-    _style.portSymbol = property(name_or_edge);
-    _style.portColor = property(name_or_edge);
-    _style.portRadius = property(d3.functor(7));
-    _style.portHoverNodeRadius = property(d3.functor(10));
-    _style.portHoverPortRadius = property(d3.functor(14));
-    _style.portDisplacement = property(d3.functor(2));
-    _style.portBackground = property(d3.functor(true));
-    _style.portPadding = property(d3.functor(2));
+    _style.portSymbol = property(name_or_edge, false); // non standard properties taking "outer datum"
+    _style.portColor = property(name_or_edge, false);
+    _style.portRadius = property(7);
+    _style.portHoverNodeRadius = property(10);
+    _style.portHoverPortRadius = property(14);
+    _style.portDisplacement = property(2);
+    _style.portBackground = property(true);
+    _style.portPadding = property(2);
     _style.portLabel = _style.portText = property(function(p) {
         return p.name;
     });
     _style.portLabelPadding = property({x: 5, y: 5});
 
     function port_fill(d) {
-        return _style.colorScale()(_style.portColor()(d));
+        return _style.colorScale()(_style.portColor.eval(d));
     }
     function port_transform(d) {
         var l = Math.hypot(d.pos.x, d.pos.y),
             u = {x: d.pos.x / l, y: d.pos.y / l},
-            disp = _style.portDisplacement()(d),
+            disp = _style.portDisplacement.eval(d),
             pos = {x: d.pos.x + disp * u.x, y: d.pos.y + disp * u.y};
         return 'translate(' + pos.x + ',' + pos.y + ')';
     }
     function port_symbol(d, size) {
         return d3.svg.symbol()
-            .type(_style.symbolScale()(_style.portSymbol()(d))) // why no eval here (does that system make sense?)
+            .type(_style.symbolScale()(_style.portSymbol.eval(d)))
             .size(size*size)
         ();
     }
@@ -50,12 +50,12 @@ dc_graph.symbol_port_style = function() {
     function hover_radius(d) {
         switch(d.state) {
         case 'large':
-            return _style.portHoverPortRadius()(d);
+            return _style.portHoverPortRadius.eval(d);
         case 'medium':
-            return _style.portHoverNodeRadius()(d);
+            return _style.portHoverNodeRadius.eval(d);
         case 'small':
         default:
-            return _style.portRadius()(d);
+            return _style.portRadius.eval(d);
         }
     }
     // yuk but correct, fill the port the same way node <g> is
@@ -84,12 +84,12 @@ dc_graph.symbol_port_style = function() {
                     .ease("bounce");
             shimin.selectAll('circle.port')
                 .attr('r', function(d) {
-                    return _style.portHoverPortRadius()(d) + _style.portPadding()(d);
+                    return _style.portHoverPortRadius.eval(d) + _style.portPadding.eval(d);
                 });
             shimin.selectAll('path.port')
                 .attr({
                     d: function(d) {
-                        return port_symbol(d, _style.portHoverPortRadius()(d));
+                        return port_symbol(d, _style.portHoverPortRadius.eval(d));
                     }
                 });
             var shimout = shimin.transition()
@@ -97,12 +97,12 @@ dc_graph.symbol_port_style = function() {
                     .ease('sin');
             shimout.selectAll('circle.port')
                 .attr('r', function(d) {
-                    return _style.portRadius()(d) + _style.portPadding()(d);
+                    return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 });
             shimout.selectAll('path.port')
                 .attr({
                     d: function(d) {
-                        return port_symbol(d, _style.portRadius()(d));
+                        return port_symbol(d, _style.portRadius.eval(d));
                     }
                 });
             shimout.each("end", repeat);
@@ -113,7 +113,7 @@ dc_graph.symbol_port_style = function() {
         trans.selectAll('circle.port')
             .attr({
                 r: function(d) {
-                    return hover_radius(d) + _style.portPadding()(d);
+                    return hover_radius(d) + _style.portPadding.eval(d);
                 }
             });
         trans.selectAll('path.port')
@@ -173,14 +173,14 @@ dc_graph.symbol_port_style = function() {
             });
 
         var background = port.selectAll('circle.port').data(function(p) {
-            return _style.portBackground()(p) ? [p] : [];
+            return _style.portBackground.eval(p) ? [p] : [];
         });
         background.exit().remove();
         background.enter().append('circle')
             .attr({
                 class: 'port',
                 r: function(d) {
-                    return _style.portRadius()(d) + _style.portPadding()(d);
+                    return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 },
                 fill: node_fill,
                 nodeStrokeWidth: 0
@@ -190,7 +190,7 @@ dc_graph.symbol_port_style = function() {
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr({
                 r: function(d) {
-                    return _style.portRadius()(d) + _style.portPadding()(d);
+                    return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 },
                 fill: node_fill
             });
@@ -200,7 +200,7 @@ dc_graph.symbol_port_style = function() {
                     class: 'port',
                     fill: port_fill,
                     d: function(d) {
-                        return port_symbol(d,  _style.portRadius()(d));
+                        return port_symbol(d,  _style.portRadius.eval(d));
                     }
                 });
         var symbol = port.select('path.port');
@@ -210,7 +210,7 @@ dc_graph.symbol_port_style = function() {
             .attr({
                 fill: port_fill,
                 d: function(d) {
-                    return port_symbol(d, _style.portRadius()(d));
+                    return port_symbol(d, _style.portRadius.eval(d));
                 }
             });
 
@@ -234,7 +234,7 @@ dc_graph.symbol_port_style = function() {
             });
         label
             .each(function(p) {
-                p.offset = (is_left(p) ? -1 : 1) * (_style.portHoverPortRadius()(p) + _style.portPadding()(p));
+                p.offset = (is_left(p) ? -1 : 1) * (_style.portHoverPortRadius.eval(p) + _style.portPadding.eval(p));
             })
             .attr({
                 'text-anchor': function(d) {
