@@ -22,13 +22,15 @@ dc_graph.symbol_port_style = function() {
     _style.portHoverPortRadius = property(14);
     _style.portDisplacement = property(2);
     _style.portBackground = property(true);
+    _style.portBackgroundScale = property(null);
+    _style.portBackgroundFill = property(null);
     _style.portPadding = property(2);
     _style.portLabel = _style.portText = property(function(p) {
         return p.name;
     });
     _style.portLabelPadding = property({x: 5, y: 5});
 
-    function port_fill(d) {
+    function symbol_fill(d) {
         return _style.colorScale()(_style.portColor.eval(d));
     }
     function port_transform(d) {
@@ -58,10 +60,18 @@ dc_graph.symbol_port_style = function() {
             return _style.portRadius.eval(d);
         }
     }
-    // yuk but correct, fill the port the same way node <g> is
-    function node_fill() {
-        var scale = _style.parent().nodeFillScale() || identity;
-        return scale(_style.parent().nodeFill.eval(d3.select(this.parentNode.parentNode).datum()));
+    // fall back to node fill if portBackgroundFill not specified
+    function background_fill(p) {
+        var scale, fill;
+        if(_style.portBackgroundFill()) {
+            scale = _style.portBackgroundScale() || identity;
+            fill = _style.portBackgroundFill.eval(p);
+        }
+        else {
+            scale = _style.parent().nodeFillScale() || identity;
+            fill = _style.parent().nodeFill.eval(p.node);
+        }
+        return scale(fill);
     }
     _style.animateNodes = function(nids, before) {
         var setn = d3.set(nids);
@@ -182,7 +192,7 @@ dc_graph.symbol_port_style = function() {
                 r: function(d) {
                     return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 },
-                fill: node_fill,
+                fill: background_fill,
                 nodeStrokeWidth: 0
             });
         background.transition()
@@ -192,13 +202,13 @@ dc_graph.symbol_port_style = function() {
                 r: function(d) {
                     return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 },
-                fill: node_fill
+                fill: background_fill
             });
 
         var symbolEnter = portEnter.append('path')
                 .attr({
                     class: 'port',
-                    fill: port_fill,
+                    fill: symbol_fill,
                     d: function(d) {
                         return port_symbol(d,  _style.portRadius.eval(d));
                     }
@@ -208,7 +218,7 @@ dc_graph.symbol_port_style = function() {
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr({
-                fill: port_fill,
+                fill: symbol_fill,
                 d: function(d) {
                     return port_symbol(d, _style.portRadius.eval(d));
                 }
