@@ -13,8 +13,8 @@ dc_graph.select_nodes = function(props) {
         key: function(d) {
             return _behavior.parent().nodeKey.eval(d);
         },
-        applyStyles: function(condition) {
-            _behavior.parent().cascade(50, true, conditional_properties(condition, null, props));
+        applyStyles: function(pred) {
+            _behavior.parent().cascade(50, true, node_edge_conditions(pred, null, props));
         },
         removeStyles: function() {
             _behavior.parent().cascade(50, false, props);
