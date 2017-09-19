@@ -24,8 +24,8 @@ dc_graph.select_edges = function(props) {
         key: function(d) {
             return _behavior.parent().edgeKey.eval(d);
         },
-        applyStyles: function(condition) {
-            _behavior.parent().cascade(50, true, conditional_properties(null, condition, props));
+        applyStyles: function(pred) {
+            _behavior.parent().cascade(50, true, node_edge_conditions(null, pred, props));
         },
         removeStyles: function() {
             _behavior.parent().cascade(50, false, props);

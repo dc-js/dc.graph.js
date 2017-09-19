@@ -1,22 +1,30 @@
 // i'm sure there's a word for this in haskell
-function conditional_properties(npred, epred, props) {
+function conditional_properties(pred, props) {
     function _if(pred, curr) {
         return function(o, last) {
             return pred(o) ? curr(o) : last();
         };
     }
     var props2 = {};
+    for(var p in props)
+        props2[p] = _if(pred, param(props[p]));
+    return props2;
+}
+
+function node_edge_conditions(npred, epred, props) {
+    var nprops = {}, eprops = {}, badprops = [];
     for(var p in props) {
-        if(/^node/.test(p)) {
-            if(npred)
-                props2[p] = _if(npred, param(props[p]));
-        }
-        else if(/^edge/.test(p)) {
-            if(epred)
-                props2[p] = _if(epred, param(props[p]));
-        }
-        else console.error('only know how to deal with properties that start with "node" or "edge"');
+        if(/^node/.test(p))
+            nprops[p] = props[p];
+        else if(/^edge/.test(p))
+            eprops[p] = props[p];
+        else badprops.push(p);
     }
+    if(badprops.length)
+        console.error('only know how to deal with properties that start with "node" or "edge"', badprops);
+    var props2 = npred ? conditional_properties(npred, nprops) : {};
+    if(epred)
+        Object.assign(props2, conditional_properties(epred, eprops));
     return props2;
 }
 
