@@ -33,7 +33,7 @@ dc_graph.label_things = function(options) {
         };
     }
 
-    function edit_selected(node, edge, eventOptions) {
+    function edit_selection(node, edge, eventOptions) {
         // less than ideal interface.
         // what if there are other things? can i blame the missing metagraph?
         var thing = options.find_thing(_selected[0], node, edge);
@@ -53,12 +53,12 @@ dc_graph.label_things = function(options) {
                 // printable characters should start edit
                 if(d3.event.key.length !== 1)
                     return;
-                edit_selected(node, edge, {text: d3.event.key, selectText: false});
+                edit_selection(node, edge, {text: d3.event.key, selectText: false});
             }
         });
         if(_selectThings)
             _selectThings.thinginess().clickables(chart, node, edge).on('dblclick.' + options.label_type, function() {
-                edit_selected(node, edge, {selectText: true});
+                edit_selection(node, edge, {selectText: true});
             });
     }
 
@@ -79,6 +79,9 @@ dc_graph.label_things = function(options) {
             }
         }
     });
+    _behavior.editSelection = function(eventOptions) {
+        edit_selection(_behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), eventOptions);
+    };
     return _behavior;
 };
 
