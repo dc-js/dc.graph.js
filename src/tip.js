@@ -65,7 +65,8 @@ dc_graph.tip = function(options) {
 
     var _behavior = dc_graph.behavior(options.namespace, {
         add_behavior: add_behavior,
-        remove_behavior: remove_behavior
+        remove_behavior: remove_behavior,
+        laterDraw: true
     });
     /**
      * Specify the direction for tooltips. Currently supports the
