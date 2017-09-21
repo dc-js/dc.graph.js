@@ -27,8 +27,8 @@ dc_graph.tip = function(options) {
         }
     }
     function fetch_and_show_content(fetcher) {
-         return function(d) {
-             var target = d3.event.target,
+        return function(d) {
+             var target = this,
                  next = function() {
                      _behavior[fetcher]()(d, function(content) {
                          _d3tip.show(content, target);
@@ -44,6 +44,8 @@ dc_graph.tip = function(options) {
     }
 
     function hide_tip() {
+        if(this.contains(d3.event.relatedTarget)) // do not hide when mouse is still over a child
+            return;
         if(_timeout) {
             window.clearTimeout(_timeout);
             _timeout = null;
