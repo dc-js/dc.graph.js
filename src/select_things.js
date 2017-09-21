@@ -4,17 +4,31 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
     // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
     var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
 
+    var contains_predicate = thinginess.keysEqual ?
+            function(k1) {
+                return function(k2) {
+                    return thinginess.keysEqual(k1, k2);
+                };
+            } :
+        function(k1) {
+            return function(k2) {
+                return k1 === k2;
+            };
+        };
+    function contains(array, key) {
+        return !!_selected.find(contains_predicate(key));
+    }
     function isUnion(event) {
         return event.shiftKey;
     }
     function isToggle(event) {
         return is_a_mac ? event.metaKey : event.ctrlKey;
     }
-    function add_array(a, v) {
-        return a.indexOf(v) >= 0 ? a : a.concat([v]);
+    function add_array(array, key) {
+        return contains(array, key) ? array : array.concat([key]);
     }
-    function toggle_array(a, v) {
-        return a.indexOf(v) >= 0 ? a.filter(function(x) { return x != v; }) : a.concat([v]);
+    function toggle_array(array, key) {
+        return contains(array, key) ? array.filter(function(x) { return x != key; }) : array.concat([key]);
     }
 
     function selection_changed(chart) {
@@ -59,9 +73,9 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
 
     function add_behavior(chart, node, edge) {
         var condition = _behavior.noneIsAll() ? function(t) {
-            return !_selected.length || _selected.indexOf(thinginess.key(t)) >= 0;
+            return !_selected.length || contains(_selected, thinginess.key(t));
         } : function(t) {
-            return _selected.indexOf(thinginess.key(t)) >= 0;
+            return contains(_selected, thinginess.key(t));
         };
         thinginess.applyStyles(condition);
 
@@ -88,7 +102,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         if(_behavior.autoCropSelection()) {
             // drop any selected which no longer exist in the diagram
             var present = thinginess.clickables(chart, node, edge).data().map(thinginess.key);
-            var now_selected = _selected.filter(function(k) { return present.indexOf(k) >= 0; });
+            var now_selected = _selected.filter(function(k) { return contains(present, k); });
             if(_selected.length !== now_selected.length)
                 things_group.set_changed(now_selected, false);
         }

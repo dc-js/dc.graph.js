@@ -24,11 +24,14 @@ dc_graph.symbol_port_style = function() {
     _style.portBackground = property(true);
     _style.portBackgroundScale = property(null);
     _style.portBackgroundFill = property(null);
+    _style.portBackgroundStroke = property('black');
+    _style.portBackgroundStrokeWidth = property(1);
     _style.portPadding = property(2);
     _style.portLabel = _style.portText = property(function(p) {
         return p.name;
     });
     _style.portLabelPadding = property({x: 5, y: 5});
+    _style.cascade = cascade(_style);
 
     function symbol_fill(d) {
         return _style.colorScale()(_style.portColor.eval(d));
@@ -63,7 +66,7 @@ dc_graph.symbol_port_style = function() {
     // fall back to node fill if portBackgroundFill not specified
     function background_fill(p) {
         var scale, fill;
-        if(_style.portBackgroundFill()) {
+        if(_style.portBackgroundFill.eval(p)) {
             scale = _style.portBackgroundScale() || identity;
             fill = _style.portBackgroundFill.eval(p);
         }
@@ -193,7 +196,8 @@ dc_graph.symbol_port_style = function() {
                     return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 },
                 fill: background_fill,
-                nodeStrokeWidth: 0
+                'stroke-width': _style.portBackgroundStrokeWidth.eval,
+                stroke: _style.portBackgroundStroke.eval
             });
         background.transition()
             .duration(_style.parent().stagedDuration())
@@ -202,7 +206,9 @@ dc_graph.symbol_port_style = function() {
                 r: function(d) {
                     return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 },
-                fill: background_fill
+                fill: background_fill,
+                'stroke-width': _style.portBackgroundStrokeWidth.eval,
+                stroke: _style.portBackgroundStroke.eval
             });
 
         var symbolEnter = portEnter.append('path')
