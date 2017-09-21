@@ -51,31 +51,21 @@ dc_graph.tip = function(options) {
         _d3tip.hide();
     }
 
-    function annotate(chart, node, ehover) {
+    function add_behavior(chart, node, edge, ehover) {
         init(chart);
-        node
-            .on('mouseover.' + options.namespace, fetch_and_show_content('content'))
-            .on('mouseout.' + options.namespace, hide_tip);
-        ehover
+        _behavior.selection().select(chart, node, edge, ehover)
             .on('mouseover.' + options.namespace, fetch_and_show_content('content'))
             .on('mouseout.' + options.namespace, hide_tip);
     }
-    function remove(chart, node, ehover) {
-        node
-            .on('mouseover.' + options.namespace, null)
-            .on('mouseout.' + options.namespace, null);
-        ehover
+    function remove_behavior(chart, node, edge, ehover) {
+        _behavior.selection().select(chart, node, edge, ehover)
             .on('mouseover.' + options.namespace, null)
             .on('mouseout.' + options.namespace, null);
     }
 
     var _behavior = dc_graph.behavior(options.namespace, {
-        add_behavior: function(chart, node, edge, ehover) {
-            annotate(chart, node, ehover);
-        },
-        remove_behavior: function(chart, node, edge, ehover) {
-            remove(chart, node, ehover);
-        }
+        add_behavior: add_behavior,
+        remove_behavior: remove_behavior
     });
     /**
      * Specify the direction for tooltips. Currently supports the
@@ -115,6 +105,8 @@ dc_graph.tip = function(options) {
         k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
     });
 
+    _behavior.selection = property(dc_graph.tip.select_node_and_edge());
+
     _behavior.delay = property(0);
 
     return _behavior;
@@ -150,4 +142,15 @@ dc_graph.tip.table = function() {
     };
     gen.filter = property(true);
     return gen;
+};
+
+dc_graph.tip.select_node_and_edge = function() {
+    return {
+        select: function(chart, node, edge, ehover) {
+            // hack to merge selections, not supported d3v3
+            var selection = chart.selectAll('.foo-this-does-not-exist');
+            selection[0] = node[0].concat(ehover[0]);
+            return selection;
+        }
+    };
 };
