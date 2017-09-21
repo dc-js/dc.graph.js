@@ -11,42 +11,33 @@
  * @memberof dc_graph
  * @return {Object}
  **/
-dc_graph.tip = function() {
-    var _tip = {}, _d3tip = null;
+dc_graph.tip = function(options) {
+    options = options || {};
+    var _namespace = options.namespace || 'tip';
+    var _d3tip = null;
     var _timeout;
 
-    /**
-     * Assigns this tip object to a diagram. It will show tips for nodes in that diagram.
-     * Usually you will not call this function directly. Instead, attach the tip object
-     * using `diagram.child('tip', dc_graph.tip())`
-     * @name parent
-     * @memberof dc_graph.tip
-     * @instance
-     * @param {dc_graph.diagram} [parent]
-     * @return {dc_graph.diagram}
-     **/
-    _tip.parent = property(null)
-        .react(function(p) {
-            if(p)
-                p.on('drawn.tip', function(node, edge, ehover) {
-                    annotate(node, ehover);
-                });
-            else if(_tip.parent())
-                _tip.parent().on('drawn.tip', null);
-        });
-
+    function init(parent) {
+        if(!_d3tip) {
+            _d3tip = d3.tip()
+                .attr('class', 'd3-tip')
+                .html(function(d) { return "<span>" + d + "</span>"; })
+                .direction(_behavior.direction());
+            parent.svg().call(_d3tip);
+        }
+    }
     function fetch_and_show_content(fetcher) {
          return function(d) {
              var target = d3.event.target,
                  next = function() {
-                     _tip[fetcher]()(d, function(content) {
+                     _behavior[fetcher]()(d, function(content) {
                          _d3tip.show(content, target);
                      });
                  };
 
-             if(_tip.delay()) {
-                 clearTimeout(_timeout);
-                 _timeout = setTimeout(next, _tip.delay());
+             if(_behavior.delay()) {
+                 window.clearTimeout(_timeout);
+                 _timeout = window.setTimeout(next, _behavior.delay());
              }
              else next();
          };
@@ -54,31 +45,41 @@ dc_graph.tip = function() {
 
     function hide_tip() {
         if(_timeout) {
-            clearTimeout(_timeout);
+            window.clearTimeout(_timeout);
             _timeout = null;
         }
         _d3tip.hide();
     }
 
-    function annotate(node, ehover) {
-        if(!_d3tip) {
-            _d3tip = d3.tip()
-                .attr('class', 'd3-tip')
-                .html(function(d) { return "<span>" + d + "</span>"; })
-                .direction(_tip.direction());
-            _tip.parent().svg().call(_d3tip);
-        }
+    function annotate(chart, node, ehover) {
+        init(chart);
         node
-            .on('mouseover.tip', fetch_and_show_content('content'))
-            .on('mouseout.tip', hide_tip);
+            .on('mouseover.' + options.namespace, fetch_and_show_content('content'))
+            .on('mouseout.' + options.namespace, hide_tip);
         ehover
-            .on('mouseover.tip', fetch_and_show_content('content'))
-            .on('mouseout.tip', hide_tip);
+            .on('mouseover.' + options.namespace, fetch_and_show_content('content'))
+            .on('mouseout.' + options.namespace, hide_tip);
+    }
+    function remove(chart, node, ehover) {
+        node
+            .on('mouseover.' + options.namespace, null)
+            .on('mouseout.' + options.namespace, null);
+        ehover
+            .on('mouseover.' + options.namespace, null)
+            .on('mouseout.' + options.namespace, null);
     }
 
+    var _behavior = dc_graph.behavior(options.namespace, {
+        add_behavior: function(chart, node, edge, ehover) {
+            annotate(chart, node, ehover);
+        },
+        remove_behavior: function(chart, node, edge, ehover) {
+            remove(chart, node, ehover);
+        }
+    });
     /**
      * Specify the direction for tooltips. Currently supports the
-     * [cardinal and intercardinaldirections](https://en.wikipedia.org/wiki/Points_of_the_compass) supported by
+     * [cardinal and intercardinal directions](https://en.wikipedia.org/wiki/Points_of_the_compass) supported by
      * [d3.tip.direction](https://github.com/Caged/d3-tip/blob/master/docs/positioning-tooltips.md#tipdirection):
      * `'n'`, `'ne'`, `'e'`, etc.
      * @name direction
@@ -92,7 +93,7 @@ dc_graph.tip = function() {
      * var tip = dc_graph.tip();
      * tip.content(tip.table());
      **/
-    _tip.direction = property('n');
+    _behavior.direction = property('n');
 
     /**
      * Specifies the function to generate content for the tooltip. This function has the
@@ -107,16 +108,16 @@ dc_graph.tip = function() {
      * @example
      * // Default behavior: show title
      * var tip = dc_graph.tip().content(function(d, k) {
-     *     k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
+     *     k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
      * });
      **/
-    _tip.content = property(function(d, k) {
-        k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
+    _behavior.content = property(function(d, k) {
+        k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
     });
 
-    _tip.delay = property(0);
+    _behavior.delay = property(0);
 
-    return _tip;
+    return _behavior;
 };
 
 /**
