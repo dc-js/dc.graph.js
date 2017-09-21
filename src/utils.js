@@ -28,6 +28,17 @@ function node_edge_conditions(npred, epred, props) {
     return props2;
 }
 
+function cascade(parent) {
+    return function(level, add, props) {
+        for(var p in props) {
+            if(!parent[p])
+                throw new Error('unknown attribute ' + p);
+            parent[p].cascade(level, add ? props[p] : null);
+        }
+        return parent;
+    };
+}
+
 function compose(f, g) {
     return function() {
         return f(g.apply(null, arguments));
