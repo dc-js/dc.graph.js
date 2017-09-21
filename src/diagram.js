@@ -869,14 +869,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.edgeOrdering = property(null);
 
-    _chart.cascade = function(level, add, props) {
-        for(var p in props) {
-            if(!_chart[p])
-                throw new Error('unknown attribute ' + p);
-            _chart[p].cascade(level, add ? props[p] : null);
-        }
-        return _chart;
-    };
+    _chart.cascade = cascade(_chart);
 
     /**
      * Currently there are some bugs when the same instance of cola.js is used multiple
