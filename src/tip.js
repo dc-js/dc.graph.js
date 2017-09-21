@@ -154,3 +154,11 @@ dc_graph.tip.select_node_and_edge = function() {
         }
     };
 };
+
+dc_graph.tip.select_port = function() {
+    return {
+        select: function(chart, node, edge, ehover) {
+            return node.selectAll('g.port');
+        }
+    };
+};
