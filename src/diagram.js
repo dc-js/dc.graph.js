@@ -21,7 +21,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _chart = dc.marginMixin({});
     _chart.__dcFlag__ = dc.utils.uniqueId();
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _dispatch = d3.dispatch('data', 'end', 'start', 'drawn', 'zoomed');
+    var _dispatch = d3.dispatch('data', 'end', 'start', 'drawn', 'transitionsStarted', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
     var _stats = {};
@@ -1606,6 +1606,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                     if(nodePorts)
                         draw_ports(nodePorts, node);
+                    // should do this only once
+                    _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
                 if(_needsRedraw || _chart.timeLimit() && elapsed > _chart.timeLimit()) {
                     console.log('cancelled');
@@ -1622,6 +1624,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
                     if(nodePorts)
                         draw_ports(nodePorts, node);
+                    _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
                 else layout_done(true);
                 var do_zoom;
