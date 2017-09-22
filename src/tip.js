@@ -23,6 +23,8 @@ dc_graph.tip = function(options) {
                 .attr('class', 'd3-tip')
                 .html(function(d) { return "<span>" + d + "</span>"; })
                 .direction(_behavior.direction());
+            if(_behavior.offset())
+                _d3tip.offset(_behavior.offset());
             parent.svg().call(_d3tip);
         }
     }
@@ -31,7 +33,7 @@ dc_graph.tip = function(options) {
              var target = this,
                  next = function() {
                      _behavior[fetcher]()(d, function(content) {
-                         _d3tip.show(content, target);
+                         _d3tip.show.call(target, content, target);
                      });
                  };
 
@@ -117,6 +119,7 @@ dc_graph.tip = function(options) {
 
 /**
  * Generates a handler which can be passed to `tip.content` to produce a table of the
+    _behavior.offset = property(null);
  * attributes and values of the hovered object.
  *
  * Note: this interface is not great and is subject to change in the near term.
