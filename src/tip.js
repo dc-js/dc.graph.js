@@ -15,7 +15,7 @@ dc_graph.tip = function(options) {
     options = options || {};
     var _namespace = options.namespace || 'tip';
     var _d3tip = null;
-    var _timeout;
+    var _showTimeout;
 
     function init(parent) {
         if(!_d3tip) {
@@ -36,8 +36,8 @@ dc_graph.tip = function(options) {
                  };
 
              if(_behavior.delay()) {
-                 window.clearTimeout(_timeout);
-                 _timeout = window.setTimeout(next, _behavior.delay());
+                 window.clearTimeout(_showTimeout);
+                 _showTimeout = window.setTimeout(next, _behavior.delay());
              }
              else next();
          };
@@ -46,9 +46,9 @@ dc_graph.tip = function(options) {
     function hide_tip() {
         if(this.contains(d3.event.relatedTarget)) // do not hide when mouse is still over a child
             return;
-        if(_timeout) {
-            window.clearTimeout(_timeout);
-            _timeout = null;
+        if(_showTimeout) {
+            window.clearTimeout(_showTimeout);
+            _showTimeout = null;
         }
         _d3tip.hide();
     }
