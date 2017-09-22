@@ -15,7 +15,7 @@ dc_graph.tip = function(options) {
     options = options || {};
     var _namespace = options.namespace || 'tip';
     var _d3tip = null;
-    var _showTimeout;
+    var _showTimeout, _hideTimeout;
 
     function init(parent) {
         if(!_d3tip) {
@@ -36,7 +36,8 @@ dc_graph.tip = function(options) {
                          _d3tip.show.call(target, content, target);
                      });
                  };
-
+             if(_hideTimeout)
+                 window.clearTimeout(_hideTimeout);
              if(_behavior.delay()) {
                  window.clearTimeout(_showTimeout);
                  _showTimeout = window.setTimeout(next, _behavior.delay());
@@ -46,13 +47,20 @@ dc_graph.tip = function(options) {
     }
 
     function hide_tip() {
-        if(this.contains(d3.event.relatedTarget)) // do not hide when mouse is still over a child
+        if(d3.event.relatedTarget &&
+           (this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
+            _behavior.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
             return;
         if(_showTimeout) {
             window.clearTimeout(_showTimeout);
             _showTimeout = null;
         }
-        _d3tip.hide();
+        if(_behavior.clickable())
+            _hideTimeout = window.setTimeout(function () {
+                _d3tip.hide();
+            }, _behavior.hideDelay());
+        else
+            _d3tip.hide();
     }
 
     function add_behavior(chart, node, edge, ehover) {
@@ -60,6 +68,14 @@ dc_graph.tip = function(options) {
         _behavior.selection().select(chart, node, edge, ehover)
             .on('mouseover.' + options.namespace, fetch_and_show_content('content'))
             .on('mouseout.' + options.namespace, hide_tip);
+        if(_behavior.clickable()) {
+            d3.select('div.d3-tip')
+                .on('mouseover.' + options.namespace, function() {
+                    if(_hideTimeout)
+                        window.clearTimeout(_hideTimeout);
+                })
+                .on('mouseout.' + options.namespace, hide_tip);
+        }
     }
     function remove_behavior(chart, node, edge, ehover) {
         _behavior.selection().select(chart, node, edge, ehover)
@@ -111,15 +127,16 @@ dc_graph.tip = function(options) {
     });
 
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
-
-    _behavior.delay = property(0);
+    _behavior.showDelay = _behavior.delay = property(0);
+    _behavior.hideDelay = property(200);
+    _behavior.offset = property(null);
+    _behavior.clickable = property(false);
 
     return _behavior;
 };
 
 /**
  * Generates a handler which can be passed to `tip.content` to produce a table of the
-    _behavior.offset = property(null);
  * attributes and values of the hovered object.
  *
  * Note: this interface is not great and is subject to change in the near term.
