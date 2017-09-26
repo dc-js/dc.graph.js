@@ -34,6 +34,14 @@ dc_graph.tip = function(options) {
                  next = function() {
                      _behavior[fetcher]()(d, function(content) {
                          _d3tip.show.call(target, content, target);
+                         if(_behavior.linkCallback()) {
+                             d3.select('div.d3-tip')
+                                 .selectAll('a.tip-link')
+                                 .on('click', function() {
+                                     d3.event.preventDefault();
+                                     _behavior.linkCallback()(this.id);
+                                 });
+                         }
                      });
                  };
              if(_hideTimeout)
@@ -131,6 +139,7 @@ dc_graph.tip = function(options) {
     _behavior.hideDelay = property(200);
     _behavior.offset = property(null);
     _behavior.clickable = property(false);
+    _behavior.linkCallback = property(null);
 
     return _behavior;
 };
