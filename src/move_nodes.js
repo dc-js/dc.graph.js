@@ -104,14 +104,11 @@ dc_graph.move_nodes = function(options) {
                         }
                         else changed = selected;
                         if(changed) {
-                            var promise;
-                            if(selected)
-                                promise = callback(key, {x: n.cola.x, y: n.cola.y});
-                            else
-                                promise = callback(key, null);
-                            promises.push(promise.then(function(fixed) {
-                                n.orig.value[_fixedPosTag] = fixed;
-                            }));
+                            promises.push(
+                                callback(key, selected ? {x: n.cola.x, y: n.cola.y} : null)
+                                    .then(function(fixed) {
+                                        n.orig.value[_fixedPosTag] = fixed;
+                                    }));
                         }
                     });
                     Promise.all(promises).then(function() {
