@@ -1816,7 +1816,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     function render_edge_label_path(age) {
         return function(d) {
             var path = d.pos[age].path;
-            var points = d.target.cola.x < d.source.cola.x ?
+            var points = path.points[path.points.length-1].x < path.points[0].x ?
                     path.points.slice(0).reverse() : path.points;
             return generate_path(points, path.bezDegree);
         };
