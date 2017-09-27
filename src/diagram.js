@@ -1603,7 +1603,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     // what's the relation between this and the 'data' event?
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
                         nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
-                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
+                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, true);
                     if(nodePorts)
                         draw_ports(nodePorts, node);
                     // should do this only once
@@ -1621,7 +1621,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                         populate_cola(nodes, edges);
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
                         nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
-                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter);
+                    draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, true);
                     if(nodePorts)
                         draw_ports(nodePorts, node);
                     _dispatch.transitionsStarted(node, edge, edgeHover);
@@ -1699,7 +1699,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edgeLabels = edgeLabels || _chart.selectAllEdges('.edge-label');
         textPaths = textPaths || _chart.selectAllDefs('path.edge-label-path');
         var nullSel = d3.select(null); // no enters
-        draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel);
+        draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel, false);
         return this;
     };
 
@@ -1967,7 +1967,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
-    function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter) {
+    function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, animatePositions) {
         console.assert(edge.data().every(has_source_and_target));
 
         var nodeEntered = {};
@@ -1985,7 +1985,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .delay(function(n) {
                     return _chart.stagedDelay(nodeEntered[_chart.nodeKey.eval(n)]);
                 })
-                .attr('opacity', _chart.nodeOpacity.eval)
+                .attr('opacity', _chart.nodeOpacity.eval);
+        if(animatePositions)
+            ntrans
                 .attr('transform', function (d) {
                     return 'translate(' + d.cola.x + ',' + d.cola.y + ')';
                 })
@@ -2052,7 +2054,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .delay(function(e) {
                     return _chart.stagedDelay(edgeEntered[_chart.edgeKey.eval(e)]);
                 })
-                .attr('opacity', _chart.edgeOpacity.eval)
+                .attr('opacity', _chart.edgeOpacity.eval);
+        if(animatePositions)
+            etrans
                 .attr('d', function(e) {
                     var when = _chart.stageTransitions() === 'insmod' &&
                             edgeEntered[_chart.edgeKey.eval(e)] ? 'old' : 'new';
@@ -2070,13 +2074,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             .delay(function(e) {
                 return _chart.stagedDelay(edgeEntered[_chart.edgeKey.eval(e)]);
             })
-            .attr('opacity', _chart.edgeOpacity.eval)
+            .attr('opacity', _chart.edgeOpacity.eval);
+        if(animatePositions)
+            textTrans
             .attr('d', function(e) {
                 var when = _chart.stageTransitions() === 'insmod' &&
                         edgeEntered[_chart.edgeKey.eval(e)] ? 'old' : 'new';
                 return render_edge_label_path(when)(e);
             });
-        if(_chart.stageTransitions() === 'insmod') {
+        if(_chart.stageTransitions() === 'insmod' && animatePositions) {
             // inserted edges transition twice in insmod mode
             if(_chart.stagedDuration() >= 50) {
                 etrans = etrans.transition()
@@ -2102,7 +2108,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_chart.showLayoutSteps())
             endall([ntrans, etrans, textTrans], function() { layout_done(true); });
 
-        edgeHover.attr('d', render_edge_path('new'));
+        if(animatePositions)
+            edgeHover.attr('d', render_edge_path('new'));
     }
 
     function draw_ports(nodePorts, node) {
