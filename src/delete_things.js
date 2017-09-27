@@ -4,6 +4,9 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
     function selection_changed(selection) {
         _selected = selection;
     }
+    function row_id(r) {
+        return r[id_tag];
+    }
     function delete_selection() {
         if(!_behavior.crossfilterAccessor())
             throw new Error('need crossfilterAccessor');
@@ -21,11 +24,12 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
                 var all = crossfilter.all().slice(), n = all.length;
                 dimension.filter(null);
                 crossfilter.remove();
-                console.assert(all.length === n);
                 var filtered = all.filter(function(r) {
-                    return selection.indexOf(r[id_tag]) === -1;
+                    return selection.indexOf(row_id(r)) === -1;
                 });
-                console.assert(all.length === filtered.length + selection.length);
+                if(all.length !== filtered.length + selection.length)
+                    console.warn('size after deletion is not previous size minus selection size',
+                                 filtered.map(row_id), all.map(row_id), selection);
                 crossfilter.add(filtered);
 
                 _behavior.parent().redrawGroup();
