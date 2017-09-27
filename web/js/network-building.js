@@ -80,6 +80,18 @@ diagram
     .child('delete-nodes', delete_nodes)
     .child('delete-edges', delete_edges);
 
+// make node selection and edge selection mutually exclusive
+var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
+var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
+select_nodes_group.on('set_changed.show-info', function(nodes) {
+    if(nodes.length)
+        select_edges_group.set_changed([]); // selecting node clears selected edge
+});
+select_edges_group.on('set_changed.show-info', function(edges) {
+    if(edges.length)
+        select_nodes_group.set_changed([]); // selecting edge clears selected node
+});
+
 var nodeDim = node_flat.crossfilter.dimension(function(d) { return d.timestamp; });
 var outnodes = dc.dataTable('#output-nodes')
         .dimension(nodeDim)
