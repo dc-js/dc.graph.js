@@ -92,7 +92,7 @@ dc_graph.move_nodes = function(options) {
                         _downNode.style('pointer-events', null);
                         _downNode = null;
                     }
-                    var callback = _behavior.fixNode() || promise_identity;
+                    var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
                     var promises = [];
                     for_all_nodes(node, function(n, selected) {
                         var key = chart.nodeKey.eval(n),
