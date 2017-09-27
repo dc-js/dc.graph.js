@@ -28,9 +28,7 @@ dc_graph.label_edges = function(options) {
         return callback.then(function(text2) {
             var d = edge.datum();
             d.orig.value[_labelTag] = text2;
-            // currently edge labels don't affect layout (nevermind the rest of the group!)
-            // _behavior.parent().redrawGroup();
-            _behavior.parent().refresh();
+            _behavior.parent().redrawGroup();
         });
     };
 
