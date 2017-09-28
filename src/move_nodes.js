@@ -2,6 +2,7 @@ dc_graph.move_nodes = function(options) {
     options = options || {};
     var _fixedPosTag = options.fixedPosTag || 'fixedPos';
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
+    var fix_nodes_group = dc_graph.select_things_group('fix-nodes-group', 'select-nodes');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
 
@@ -15,14 +16,6 @@ dc_graph.move_nodes = function(options) {
         return is_a_mac ? event.metaKey : event.ctrlKey;
     }
 
-    function relax_all() {
-        var chart = _behavior.parent();
-        for_all_nodes(chart.selectAllNodes(), function(n, selected) {
-            n.orig.value[_fixedPosTag] = null;
-        });
-        chart
-            .redraw();
-    }
     function selection_changed(chart) {
         return function(selection, refresh) {
             if(refresh === undefined)
@@ -34,12 +27,6 @@ dc_graph.move_nodes = function(options) {
         _selected.forEach(function(key) {
             var n = _behavior.parent().getWholeNode(key);
             f(n);
-        });
-    }
-    function for_all_nodes(node, f) {
-        node.each(function(n) {
-            var selected = _selected.indexOf(_behavior.parent().nodeKey.eval(n)) >= 0;
-            f(n, selected);
         });
     }
     function add_behavior(chart, node, edge) {
@@ -92,30 +79,9 @@ dc_graph.move_nodes = function(options) {
                         _downNode.style('pointer-events', null);
                         _downNode = null;
                     }
-                    var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
-                    var promises = [];
-                    for_all_nodes(node, function(n, selected) {
-                        var key = chart.nodeKey.eval(n),
-                            oldFixed = n.orig.value[_fixedPosTag],
-                            changed = false;
-                        if(oldFixed) {
-                            if(!selected || n.cola.x !== oldFixed.x || n.cola.y !== oldFixed.y)
-                                changed = true;
-                        }
-                        else changed = selected;
-                        if(changed) {
-                            promises.push(
-                                callback(key, selected ? {x: n.cola.x, y: n.cola.y} : null)
-                                    .then(function(fixed) {
-                                        n.orig.value[_fixedPosTag] = fixed;
-                                    }));
-                        }
-                    });
-                    Promise.all(promises).then(function() {
-                        chart.redraw();
-                        if(_restoreBackgroundClick)
-                            _selectNodes.clickBackgroundClears(true);
-                    });
+                    fix_nodes_group.set_changed(_selected);
+                    if(_restoreBackgroundClick)
+                        _selectNodes.clickBackgroundClears(true);
                 }
                 _startPos = null;
             }
@@ -128,7 +94,7 @@ dc_graph.move_nodes = function(options) {
             .on('mouseup.move-nodes', mouse_up)
             .on('click.move-nodes', function() {
                 if(!_selected.length)
-                    relax_all();
+                    fix_nodes_group.set_changed([]);
             });
     }
 
@@ -151,8 +117,6 @@ dc_graph.move_nodes = function(options) {
 
     // minimum distance that is considered a drag, not a click
     _behavior.dragSize = property(5);
-    // callback for setting & fixing node position
-    _behavior.fixNode = property(null);
 
     return _behavior;
 };

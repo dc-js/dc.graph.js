@@ -306,6 +306,7 @@ module.exports.jsFiles = [
     'src/select_edges.js',
     'src/select_ports.js',
     'src/move_nodes.js',
+    'src/fix_nodes.js',
     'src/filter_selection.js',
     'src/delete_things.js',
     'src/delete_nodes.js',
