@@ -54,10 +54,6 @@ dc_graph.move_nodes = function(options) {
                     dy = pos[1] - _startPos[1];
                 if(!_moveStarted && Math.hypot(dx, dy) > _behavior.dragSize()) {
                     _moveStarted = true;
-                    // prevent background-clicking clearing selection
-                    if(_selectNodes)
-                        if((_restoreBackgroundClick = _selectNodes.clickBackgroundClears()))
-                            _selectNodes.clickBackgroundClears(false);
                     // prevent click event for this node setting selection just to this
                     if(_downNode)
                         _downNode.style('pointer-events', 'none');
@@ -80,8 +76,6 @@ dc_graph.move_nodes = function(options) {
                         _downNode = null;
                     }
                     fix_nodes_group.set_changed(_selected);
-                    if(_restoreBackgroundClick)
-                        _selectNodes.clickBackgroundClears(true);
                 }
                 _startPos = null;
             }
@@ -91,11 +85,7 @@ dc_graph.move_nodes = function(options) {
             .on('mouseup.move-nodes', mouse_up);
         chart.svg()
             .on('mousemove.move-nodes', mouse_move)
-            .on('mouseup.move-nodes', mouse_up)
-            .on('click.move-nodes', function() {
-                if(!_selected.length)
-                    fix_nodes_group.set_changed([]);
-            });
+            .on('mouseup.move-nodes', mouse_up);
     }
 
     function remove_behavior(chart, node, edge) {
