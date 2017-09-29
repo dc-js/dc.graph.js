@@ -77,14 +77,14 @@ dc_graph.fix_nodes = function(options) {
         }),
         // callback for setting & fixing node position
         fixNode: property(null),
-        strategy: property(dc_graph.fix_nodes.strategy.classic())
+        strategy: property(dc_graph.fix_nodes.strategy.fix_last())
     };
 
     return _behavior;
 };
 
 dc_graph.fix_nodes.strategy = {};
-dc_graph.fix_nodes.strategy.classic = function() {
+dc_graph.fix_nodes.strategy.fix_last = function() {
     return {
         request_fixes: function(exec, fixes) {
             exec.clear_fixes();
