@@ -10,6 +10,7 @@ dc_graph.draw_graphs = function(options) {
         _nodeLabelTag = options.labelTag || 'label',
         _edgeLabelTag = options.edgeLabelTag || _nodeLabelTag,
         _fixedPosTag = options.fixedPosTag || 'fixedPos';
+    var _fixNodes = null;
 
     var _sourceDown = null, _targetMove = null, _edgeLayer = null, _hintData = [];
 
@@ -52,8 +53,8 @@ dc_graph.draw_graphs = function(options) {
             node[_nodeIdTag] = uuid();
             node[_nodeLabelTag] = '';
         }
-        if(pos)
-            node[_fixedPosTag] = {x: pos[0], y: pos[1]};
+        if(_fixNodes && _fixNodes.strategy())
+            _fixNodes.strategy().new_node(node, {x: pos[0], y: pos[1]});
         callback(node).then(function(node2) {
             if(!node2)
                 return;
@@ -211,7 +212,11 @@ dc_graph.draw_graphs = function(options) {
 
     var _behavior = dc_graph.behavior('highlight-paths', {
         add_behavior: add_behavior,
-        remove_behavior: remove_behavior
+        remove_behavior: remove_behavior,
+        parent: function(p) {
+            if(p)
+                _fixNodes = p.child('fix-nodes');
+        }
     });
 
     // update the data source/destination

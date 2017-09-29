@@ -48,11 +48,18 @@ dc_graph.fix_nodes = function(options) {
                 _behavior.parent().on('data.fix-nodes', null);
         }),
         // callback for setting & fixing node position
-        fixNode: property(null)
+        fixNode: property(null),
+        strategy: property(dc_graph.fix_nodes.strategy.classic())
     };
 
     return _behavior;
 };
+
+dc_graph.fix_nodes.strategy = {};
+dc_graph.fix_nodes.strategy.classic = {
+    new_node: function(n, pos) {
+        node[_fixedPosTag] = pos;
+    }
 
 dc_graph.fix_nodes_group = function(brushgroup) {
     window.chart_registry.create_type('fix-nodes', function() {
