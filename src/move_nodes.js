@@ -2,7 +2,7 @@ dc_graph.move_nodes = function(options) {
     options = options || {};
     var _fixedPosTag = options.fixedPosTag || 'fixedPos';
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
-    var fix_nodes_group = dc_graph.select_things_group('fix-nodes-group', 'select-nodes');
+    var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
 
@@ -26,7 +26,7 @@ dc_graph.move_nodes = function(options) {
     function for_each_selected(f) {
         _selected.forEach(function(key) {
             var n = _behavior.parent().getWholeNode(key);
-            f(n);
+            f(n, key);
         });
     }
     function add_behavior(chart, node, edge) {
@@ -75,7 +75,14 @@ dc_graph.move_nodes = function(options) {
                         _downNode.style('pointer-events', null);
                         _downNode = null;
                     }
-                    fix_nodes_group.set_changed(_selected);
+                    var fixes = [];
+                    for_each_selected(function(n, id) {
+                        fixes.push({
+                            id: id,
+                            pos: {x: n.cola.x, y: n.cola.y}
+                        });
+                    });
+                    fix_nodes_group.request_fixes(fixes);
                 }
                 _startPos = null;
             }

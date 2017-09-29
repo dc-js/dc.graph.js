@@ -1,33 +1,32 @@
 dc_graph.fix_nodes = function(options) {
     options = options || {};
-    var fix_nodes_group = dc_graph.select_things_group('fix-nodes-group', 'select-nodes');
+    var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
     var _fixedPosTag = options.fixedPosTag || 'fixedPos';
-    var _fixedNodes = [], _wnodes;
+    var _fixes = [], _wnodes;
 
-    function fixed_changed(chart) {
-        return function(fixed, refresh) {
-            if(refresh === undefined)
-                refresh = true;
-            _fixedNodes = fixed;
-            fix_nodes();
-        };
+    function request_fixes(fixes) {
+        _fixes = {};
+        fixes.forEach(function(fix) {
+            _fixes[fix.id] = fix.pos;
+        });
+        fix_nodes();
     }
     function fix_nodes() {
         var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
         var promises = [];
         _wnodes.forEach(function(n) {
-            var selected = _fixedNodes.indexOf(_behavior.parent().nodeKey.eval(n)) >= 0;
+            var fixPos = _fixes[_behavior.parent().nodeKey.eval(n)];
             var key = _behavior.parent().nodeKey.eval(n),
                 oldFixed = n.orig.value[_fixedPosTag],
                 changed = false;
             if(oldFixed) {
-                if(!selected || n.cola.x !== oldFixed.x || n.cola.y !== oldFixed.y)
+                if(!fixPos || fixPos.x !== oldFixed.x || fixPos.y !== oldFixed.y)
                     changed = true;
             }
-            else changed = selected;
+            else changed = fixPos;
             if(changed) {
                 promises.push(
-                    callback(key, selected ? {x: n.cola.x, y: n.cola.y} : null)
+                    callback(key, fixPos ? {x: fixPos.x, y: fixPos.y} : null)
                         .then(function(fixed) {
                             n.orig.value[_fixedPosTag] = fixed;
                         }));
@@ -40,7 +39,7 @@ dc_graph.fix_nodes = function(options) {
 
     var _behavior = {
         parent: property(null).react(function(p) {
-            fix_nodes_group.on('set_changed.fix-nodes', p ? fixed_changed(p) : null);
+            fix_nodes_group.on('request_fixes.fix-nodes', p ? request_fixes : null);
             if(p) {
                 p.on('data.fix-nodes', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
                     _wnodes = wnodes;
@@ -55,3 +54,10 @@ dc_graph.fix_nodes = function(options) {
     return _behavior;
 };
 
+dc_graph.fix_nodes_group = function(brushgroup) {
+    window.chart_registry.create_type('fix-nodes', function() {
+        return d3.dispatch('request_fixes');
+    });
+
+    return window.chart_registry.create_group('fix-nodes', brushgroup);
+};
