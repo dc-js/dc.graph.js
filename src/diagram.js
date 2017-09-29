@@ -1982,6 +1982,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 scale = fit.scale;
                 viewBox = fit.viewBox;
             }
+            else if(fitS === 'zoom') {
+                bring_in_bounds(_zoom.translate(), _zoom.scale());
+                return;
+            }
             else if(typeof fitS === 'string')
                 pAR = _chart.fitStrategy();
             else
@@ -2474,8 +2478,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return translate[1] - _chart.y()(y) + _chart.y().range()[1];;
     }
 
-    function doZoom() {
-        var translate = d3.event.translate;
+    function bring_in_bounds(translate, scale) {
         if(_chart.restrictPan()) {
             var xDomain = _chart.x().domain(), yDomain = _chart.y().domain();
             var bounds = margined_bounds();
@@ -2528,7 +2531,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(nothing<2)
                 _zoom.translate(translate);
         }
-        globalTransform(translate, d3.event.scale);
+        globalTransform(translate, scale);
+
+    }
+    function doZoom() {
+        bring_in_bounds(d3.event.translate, d3.event.scale);
     }
 
     function resizeSvg(w, h) {
