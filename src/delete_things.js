@@ -1,5 +1,6 @@
 dc_graph.delete_things = function(things_group, mode_name, id_tag) {
     id_tag = id_tag || 'id';
+    var _deleteKey = is_a_mac ? 'Backspace' : 'Delete';
     var _keyboard, _selected = [];
     function selection_changed(selection) {
         _selected = selection;
@@ -38,7 +39,7 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
     }
     function add_behavior(chart) {
         _keyboard.on('keyup.' + mode_name, function() {
-            if(d3.event.code === 'Delete')
+            if(d3.event.code === _deleteKey)
                 delete_selection();
         });
     }
