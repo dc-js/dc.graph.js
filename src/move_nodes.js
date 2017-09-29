@@ -5,9 +5,6 @@ dc_graph.move_nodes = function(options) {
     var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
 
-    // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
-    var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
-
     function isUnion(event) {
         return event.shiftKey;
     }
