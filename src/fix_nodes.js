@@ -2,14 +2,33 @@ dc_graph.fix_nodes = function(options) {
     options = options || {};
     var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
     var _fixedPosTag = options.fixedPosTag || 'fixedPos';
-    var _fixes = [], _wnodes;
+    var _fixes = [], _nodes, _wnodes, _edges, _wedges;
+
+    var _execute = {
+        fix_node: function(n, pos) {
+            n[_fixedPosTag] = pos;
+        },
+        unfix_node: function(n) {
+            n[_fixedPosTag] = null;
+        },
+        clear_fixes: function() {
+            _fixes = {};
+        },
+        register_fix: function(id, pos) {
+            _fixes[id] = pos;
+        }
+    };
 
     function request_fixes(fixes) {
-        _fixes = {};
-        fixes.forEach(function(fix) {
-            _fixes[fix.id] = fix.pos;
-        });
+        _behavior.strategy().request_fixes(_execute, fixes);
         fix_nodes();
+    }
+    function new_node(n, pos) {
+        _behavior.strategy().new_node(_execute, n, pos);
+    }
+    function new_edge(sourceid, targetid) {
+        var source = _nodes[sourceid], target = _nodes[targetid];
+        _behavior.strategy().new_edge(_execute, source, target);
     }
     function fix_nodes() {
         var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
@@ -28,7 +47,10 @@ dc_graph.fix_nodes = function(options) {
                 promises.push(
                     callback(key, fixPos ? {x: fixPos.x, y: fixPos.y} : null)
                         .then(function(fixed) {
-                            n.orig.value[_fixedPosTag] = fixed;
+                            if(fixed)
+                                _execute.fix_node(n.orig.value, fixed);
+                            else
+                                _execute.unfix_node(n.orig.value);
                         }));
             }
         });
@@ -39,24 +61,50 @@ dc_graph.fix_nodes = function(options) {
 
     var _behavior = {
         parent: property(null).react(function(p) {
-            fix_nodes_group.on('request_fixes.fix-nodes', p ? request_fixes : null);
+            fix_nodes_group
+                .on('request_fixes.fix-nodes', p ? request_fixes : null)
+                .on('new_node.fix_nodes', p ? new_node : null)
+                .on('new_edge.fix_nodes', p ? new_edge : null);
             if(p) {
                 p.on('data.fix-nodes', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
+                    _nodes = nodes;
                     _wnodes = wnodes;
+                    _edges = edges;
+                    _wedges = wedges;
                 });
             } else if(_behavior.parent())
                 _behavior.parent().on('data.fix-nodes', null);
         }),
         // callback for setting & fixing node position
-        fixNode: property(null)
+        fixNode: property(null),
+        strategy: property(dc_graph.fix_nodes.strategy.classic())
     };
 
     return _behavior;
 };
 
+dc_graph.fix_nodes.strategy = {};
+dc_graph.fix_nodes.strategy.classic = function() {
+    return {
+        request_fixes: function(exec, fixes) {
+            exec.clear_fixes();
+            fixes.forEach(function(fix) {
+                exec.register_fix(fix.id, fix.pos);
+            });
+        },
+        new_node: function(exec, n, pos) {
+            exec.fix_node(n, pos);
+        },
+        new_edge: function(exec, source, target) {
+            exec.unfix_node(source.orig.value);
+            exec.unfix_node(target.orig.value);
+        }
+    };
+};
+
 dc_graph.fix_nodes_group = function(brushgroup) {
     window.chart_registry.create_type('fix-nodes', function() {
-        return d3.dispatch('request_fixes');
+        return d3.dispatch('request_fixes', 'new_node', 'new_edge');
     });
 
     return window.chart_registry.create_group('fix-nodes', brushgroup);
