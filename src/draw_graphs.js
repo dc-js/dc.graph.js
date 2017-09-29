@@ -2,14 +2,14 @@ dc_graph.draw_graphs = function(options) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
         select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges'),
         label_nodes_group = dc_graph.label_things_group('label-nodes-group', 'label-nodes'),
-        label_edges_group = dc_graph.label_things_group('label-edges-group', 'label-edges');
+        label_edges_group = dc_graph.label_things_group('label-edges-group', 'label-edges'),
+        fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
     var _nodeIdTag = options.idTag || 'id',
         _edgeIdTag = options.edgeIdTag || _nodeIdTag,
         _sourceTag = options.sourceTag || 'source',
         _targetTag = options.targetTag || 'target',
         _nodeLabelTag = options.labelTag || 'label',
-        _edgeLabelTag = options.edgeLabelTag || _nodeLabelTag,
-        _fixedPosTag = options.fixedPosTag || 'fixedPos';
+        _edgeLabelTag = options.edgeLabelTag || _nodeLabelTag;
 
     var _sourceDown = null, _targetMove = null, _edgeLayer = null, _hintData = [];
 
@@ -53,7 +53,7 @@ dc_graph.draw_graphs = function(options) {
             node[_nodeLabelTag] = '';
         }
         if(pos)
-            node[_fixedPosTag] = {x: pos[0], y: pos[1]};
+            fix_nodes_group.new_node(node, {x: pos[0], y: pos[1]});
         callback(node).then(function(node2) {
             if(!node2)
                 return;
@@ -74,9 +74,7 @@ dc_graph.draw_graphs = function(options) {
         callback(edge, source.port, target.port).then(function(edge2) {
             if(!edge2)
                 return;
-            // changing this data inside crossfilter is okay because it is not indexed data
-            source.node.orig.value[_fixedPosTag] = null;
-            target.node.orig.value[_fixedPosTag] = null;
+            fix_nodes_group.new_edge(edge2[_sourceTag], edge2[_targetTag]);
             _behavior.edgeCrossfilter().add([edge2]);
             select_nodes_group.set_changed([], false);
             select_edges_group.set_changed([edge2[_edgeIdTag]], false);
