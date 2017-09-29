@@ -1,9 +1,6 @@
 dc_graph.select_things = function(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;
 
-    // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
-    var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
-
     var contains_predicate = thinginess.keysEqual ?
             function(k1) {
                 return function(k2) {

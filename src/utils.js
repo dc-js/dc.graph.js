@@ -142,3 +142,6 @@ dc_graph.event_coords = function(chart) {
 function promise_identity(x) {
     return Promise.resolve(x);
 }
+
+// http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
+var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
