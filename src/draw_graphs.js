@@ -53,7 +53,7 @@ dc_graph.draw_graphs = function(options) {
             node[_nodeLabelTag] = '';
         }
         if(pos)
-            fix_nodes_group.new_node(node, {x: pos[0], y: pos[1]});
+            fix_nodes_group.new_node(node[_nodeIdTag], node, {x: pos[0], y: pos[1]});
         callback(node).then(function(node2) {
             if(!node2)
                 return;
@@ -74,7 +74,7 @@ dc_graph.draw_graphs = function(options) {
         callback(edge, source.port, target.port).then(function(edge2) {
             if(!edge2)
                 return;
-            fix_nodes_group.new_edge(edge2[_sourceTag], edge2[_targetTag]);
+            fix_nodes_group.new_edge(edge[_edgeIdTag], edge2[_sourceTag], edge2[_targetTag]);
             _behavior.edgeCrossfilter().add([edge2]);
             select_nodes_group.set_changed([], false);
             select_edges_group.set_changed([edge2[_edgeIdTag]], false);
