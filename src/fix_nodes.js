@@ -30,12 +30,11 @@ dc_graph.fix_nodes = function(options) {
         var source = _nodes[sourceid], target = _nodes[targetid];
         _behavior.strategy().new_edge(_execute, source, target);
     }
-    function fix_nodes() {
-        var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
-        var promises = [];
+    function find_changes() {
+        var changes = [];
         _wnodes.forEach(function(n) {
-            var fixPos = _fixes[_behavior.parent().nodeKey.eval(n)];
             var key = _behavior.parent().nodeKey.eval(n),
+                fixPos = _fixes[key],
                 oldFixed = n.orig.value[_fixedPosTag],
                 changed = false;
             if(oldFixed) {
@@ -43,18 +42,24 @@ dc_graph.fix_nodes = function(options) {
                     changed = true;
             }
             else changed = fixPos;
-            if(changed) {
-                promises.push(
-                    callback(key, fixPos ? {x: fixPos.x, y: fixPos.y} : null)
-                        .then(function(fixed) {
-                            if(fixed)
-                                _execute.fix_node(n.orig.value, fixed);
-                            else
-                                _execute.unfix_node(n.orig.value);
-                        }));
-            }
+            if(changed)
+                changes.push({n: n, fixed: fixPos ? {x: fixPos.x, y: fixPos.y} : null});
         });
-        Promise.all(promises).then(function() {
+        return changes;
+    }
+    function fix_nodes() {
+        var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
+        var promises = find_changes().map(function(change) {
+            var key = _behavior.parent().nodeKey.eval(change.n);
+            return callback(key, change.fixed)
+                .then(function(fixed) {
+                    if(fixed)
+                        _execute.fix_node(change.n.orig.value, fixed);
+                    else
+                        _execute.unfix_node(change.n.orig.value);
+                });
+        });
+        return Promise.all(promises).then(function() {
             _behavior.parent().redraw();
         });
     }
