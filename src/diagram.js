@@ -395,6 +395,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.nodeStroke = _chart.nodeStrokeAccessor = property('black');
 
+    _chart.nodeStrokeDashArray = property(null);
+
     /**
      * If set, the value returned from `nodeFill` will be processed through this
      * {@link https://github.com/mbostock/d3/wiki/Scales d3.scale}
@@ -1184,6 +1186,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr({
                 stroke: _chart.nodeStroke.eval,
                 'stroke-width': _chart.nodeStrokeWidth.eval,
+                'stroke-dasharray': _chart.nodeStrokeDashArray.eval,
                 fill: compose(_chart.nodeFillScale() || identity, _chart.nodeFill.eval)
             });
         return _chart;
