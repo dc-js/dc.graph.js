@@ -21,7 +21,9 @@ dc_graph.fix_nodes = function(options) {
 
     function request_fixes(fixes) {
         _behavior.strategy().request_fixes(_execute, fixes);
-        fix_nodes();
+        tell_then_set(find_changes()).then(function() {
+            _behavior.parent().redraw();
+        });
     }
     function new_node(n, pos) {
         _behavior.strategy().new_node(_execute, n, pos);
@@ -47,21 +49,31 @@ dc_graph.fix_nodes = function(options) {
         });
         return changes;
     }
-    function fix_nodes() {
+    function execute_change(n, fixed) {
+        if(fixed)
+            _execute.fix_node(n.orig.value, fixed);
+        else
+            _execute.unfix_node(n.orig.value);
+    }
+    function tell_then_set(changes) {
         var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
-        var promises = find_changes().map(function(change) {
+        var promises = changes.map(function(change) {
             var key = _behavior.parent().nodeKey.eval(change.n);
             return callback(key, change.fixed)
                 .then(function(fixed) {
-                    if(fixed)
-                        _execute.fix_node(change.n.orig.value, fixed);
-                    else
-                        _execute.unfix_node(change.n.orig.value);
+                    execute_change(change.n, fixed);
                 });
         });
-        return Promise.all(promises).then(function() {
-            _behavior.parent().redraw();
+        return Promise.all(promises);
+    }
+    function set_then_tell(changes) {
+        var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
+        var promises = changes.map(function(change) {
+            var key = _behavior.parent().nodeKey.eval(change.n);
+            execute_change(change.n, change.fixed);
+            return callback(key, change.fixed);
         });
+        return Promise.all(promises);
     }
 
     var _behavior = {
