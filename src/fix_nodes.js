@@ -5,6 +5,15 @@ dc_graph.fix_nodes = function(options) {
     var _fixes = [], _nodes, _wnodes, _edges, _wedges;
 
     var _execute = {
+        nodeid: function(n) {
+            return _behavior.parent().nodeKey.eval(n);
+        },
+        sourceid: function(e) {
+            return _behavior.parent().edgeSource.eval(e);
+        },
+        targetid: function(e) {
+            return _behavior.parent().edgeTarget.eval(e);
+        },
         fix_node: function(n, pos) {
             n[_fixedPosTag] = pos;
         },
@@ -25,12 +34,12 @@ dc_graph.fix_nodes = function(options) {
             _behavior.parent().redraw();
         });
     }
-    function new_node(n, pos) {
-        _behavior.strategy().new_node(_execute, n, pos);
+    function new_node(nid, n, pos) {
+        _behavior.strategy().new_node(_execute, nid, n, pos);
     }
-    function new_edge(sourceid, targetid) {
+    function new_edge(eid, sourceid, targetid) {
         var source = _nodes[sourceid], target = _nodes[targetid];
-        _behavior.strategy().new_edge(_execute, source, target);
+        _behavior.strategy().new_edge(_execute, eid, source, target);
     }
     function find_changes() {
         var changes = [];
@@ -75,6 +84,18 @@ dc_graph.fix_nodes = function(options) {
         });
         return Promise.all(promises);
     }
+    function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
+        _nodes = nodes;
+        _wnodes = wnodes;
+        _edges = edges;
+        _wedges = wedges;
+        if(_behavior.strategy().on_data) {
+            _behavior.strategy().on_data(_execute, nodes, wnodes, edges, wedges, ports, wports); // ghastly
+            // grotesque: can't wait for backend to acknowledge so just set then blast
+            if(_behavior.doHorribleCallbacksOnData())
+                set_then_tell(find_changes()); // dangling promise
+        }
+    }
 
     var _behavior = {
         parent: property(null).react(function(p) {
@@ -83,18 +104,14 @@ dc_graph.fix_nodes = function(options) {
                 .on('new_node.fix_nodes', p ? new_node : null)
                 .on('new_edge.fix_nodes', p ? new_edge : null);
             if(p) {
-                p.on('data.fix-nodes', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
-                    _nodes = nodes;
-                    _wnodes = wnodes;
-                    _edges = edges;
-                    _wedges = wedges;
-                });
+                p.on('data.fix-nodes', on_data);
             } else if(_behavior.parent())
                 _behavior.parent().on('data.fix-nodes', null);
         }),
         // callback for setting & fixing node position
         fixNode: property(null),
-        strategy: property(dc_graph.fix_nodes.strategy.fix_last())
+        strategy: property(dc_graph.fix_nodes.strategy.fix_last()),
+        doHorribleCallbacksOnData: property(false)
     };
 
     return _behavior;
@@ -109,12 +126,63 @@ dc_graph.fix_nodes.strategy.fix_last = function() {
                 exec.register_fix(fix.id, fix.pos);
             });
         },
-        new_node: function(exec, n, pos) {
+        new_node: function(exec, nid, n, pos) {
             exec.fix_node(n, pos);
         },
-        new_edge: function(exec, source, target) {
+        new_edge: function(exec, eid, source, target) {
             exec.unfix_node(source.orig.value);
             exec.unfix_node(target.orig.value);
+        }
+    };
+};
+dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
+    var _age = 0;
+    var _allFixes = {};
+    return {
+        request_fixes: function(exec, fixes) {
+            ++_age;
+            fixes.forEach(function(fix) {
+                _allFixes[fix.id] = {id: fix.id, age: _age, pos: fix.pos};
+            });
+        },
+        new_node: function(exec, nid, n, pos) {
+            ++_age;
+            _allFixes[nid] = {id: nid, age: _age, pos: pos};
+            exec.fix_node(n, pos);
+        },
+        new_edge: function() {},
+        on_data: function(exec, nodes, wnodes, edges, wedges, ports, wports) {
+            ++_age;
+            var components = [];
+            var dfs = dc_graph.undirected_dfs({
+                nodeid: exec.nodeid,
+                sourceid: exec.sourceid,
+                targetid: exec.targetid,
+                comp: function() {
+                    components.push([]);
+                },
+                node: function(compid, n) {
+                    components[compid].push(n);
+                }
+            });
+            dfs(wnodes, wedges);
+            exec.clear_fixes();
+            components.forEach(function(comp) {
+                var fixes = comp.map(function(n) {
+                    return _allFixes[exec.nodeid(n)];
+                }).filter(function(fix) {
+                    return fix;
+                });
+                if(fixes.length > N) {
+                    fixes.sort(function(f1, f2) {
+                        return f2.age - f1.age;
+                    });
+                    fixes = fixes.slice(0, N);
+                }
+                fixes.forEach(function(fix) {
+                    exec.register_fix(fix.id, fix.pos);
+                });
+            });
         }
     };
 };
