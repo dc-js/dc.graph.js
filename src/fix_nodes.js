@@ -75,11 +75,15 @@ dc_graph.fix_nodes = function(options) {
         });
         return Promise.all(promises);
     }
-    function set_then_tell(changes) {
+    function set_changes(changes) {
+        changes.forEach(function(change) {
+            execute_change(change.n, change.fixed);
+        });
+    }
+    function tell_changes(changes) {
         var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
         var promises = changes.map(function(change) {
             var key = _behavior.parent().nodeKey.eval(change.n);
-            execute_change(change.n, change.fixed);
             return callback(key, change.fixed);
         });
         return Promise.all(promises);
@@ -91,9 +95,11 @@ dc_graph.fix_nodes = function(options) {
         _wedges = wedges;
         if(_behavior.strategy().on_data) {
             _behavior.strategy().on_data(_execute, nodes, wnodes, edges, wedges, ports, wports); // ghastly
-            // grotesque: can't wait for backend to acknowledge so just set then blast
-            if(_behavior.doHorribleCallbacksOnData())
-                set_then_tell(find_changes()); // dangling promise
+            var changes = find_changes();
+            set_changes(changes);
+            // can't wait for backend to acknowledge/approve so just set then blast
+            if(_behavior.reportOverridesAsynchronously())
+                tell_changes(find_changes()); // dangling promise
         }
     }
 
@@ -111,7 +117,7 @@ dc_graph.fix_nodes = function(options) {
         // callback for setting & fixing node position
         fixNode: property(null),
         strategy: property(dc_graph.fix_nodes.strategy.fix_last()),
-        doHorribleCallbacksOnData: property(false)
+        reportOverridesAsynchronously: property(true)
     };
 
     return _behavior;
