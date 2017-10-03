@@ -210,7 +210,14 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
                 fixes.forEach(function(fix) {
                     exec.register_fix(fix.id, fix.pos);
                 });
+                var kept = fixes.reduce(function(m, fix) {
+                    m[fix.id] = true;
+                    return m;
+                }, {});
                 comp.forEach(function(n) {
+                    var nid = exec.nodeid(n);
+                    if(!kept[nid])
+                        _allFixes[nid] = null;
                     n.last_component = i+1;
                 });
             });
