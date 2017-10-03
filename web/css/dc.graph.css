@@ -39,3 +39,7 @@
     color: darkred;
     font-family: Monaco, monospace;
 }
+
+.dc-graph g.node image.icon {
+    pointer-events: none;
+}
