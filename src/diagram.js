@@ -1291,8 +1291,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.orig = v;
             v1.cola = v1.cola || {};
             v1.cola.dcg_nodeKey = _chart.nodeKey.eval(v1);
-            if(_chart.nodeFixed())
-                v1.cola.dcg_nodeFixed = _chart.nodeFixed.eval(v1);
             _chart.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
         var wedges = regenerate_objects(_edges, edges, null, function(e) {
@@ -1380,8 +1378,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             v.index = i;
         });
 
+        // announce new data
         _dispatch.data(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
         _stats = {nnodes: wnodes.length, nedges: wedges.length};
+
+        // fixed nodes may have been affected by .data() so calculate now
+        wnodes.forEach(function(v) {
+            if(_chart.nodeFixed())
+                v.cola.dcg_nodeFixed = _chart.nodeFixed.eval(v);
+        });
 
         // annotate parallel edges so we can draw them specially
         if(_chart.parallelEdgeOffset()) {
