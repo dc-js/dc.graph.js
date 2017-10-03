@@ -167,8 +167,30 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
             });
             dfs(wnodes, wedges);
             exec.clear_fixes();
-            components.forEach(function(comp) {
-                var fixes = comp.map(function(n) {
+            components.forEach(function(comp, i) {
+                var oldcomps = comp.reduce(function(cc, n) {
+                    if(n.last_component) {
+                        var counts = cc[n.last_component] = cc[n.last_component] || {
+                            total: 0,
+                            fixed: 0
+                        };
+                        counts.total++;
+                        if(_allFixes[exec.nodeid(n)])
+                            counts.fixed++;
+                    }
+                    return cc;
+                }, {});
+                var fixed_by_size = Object.keys(oldcomps).reduce(function(ff, compid) {
+                    if(oldcomps[compid].fixed)
+                        ff.push({compid: +compid, total: oldcomps[compid].total, fixed: oldcomps[compid].fixed});
+                    return ff;
+                }, []).sort(function(coa, cob) {
+                    return cob.total - coa.total;
+                });
+                var largest_fixed = fixed_by_size.length && fixed_by_size[0].compid;
+                var fixes = comp.filter(function(n) {
+                    return !n.last_component || n.last_component === largest_fixed;
+                }).map(function(n) {
                     return _allFixes[exec.nodeid(n)];
                 }).filter(function(fix) {
                     return fix;
@@ -181,6 +203,9 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
                 }
                 fixes.forEach(function(fix) {
                     exec.register_fix(fix.id, fix.pos);
+                });
+                comp.forEach(function(n) {
+                    n.last_component = i+1;
                 });
             });
         }
