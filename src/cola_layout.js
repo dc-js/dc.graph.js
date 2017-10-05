@@ -109,11 +109,11 @@ dc_graph.cola_layout = function(id) {
             .groups(groups);
     }
 
-    function start(options) {
-        _d3cola.start(options.initialUnconstrainedIterations,
-                      options.initialUserConstraintIterations,
-                      options.initialAllConstraintsIterations,
-                      options.gridSnapIterations);
+    function start() {
+        _d3cola.start(engine.unconstrainedIterations(),
+                      engine.userConstraintIterations(),
+                      engine.allConstraintsIterations(),
+                      engine.gridSnapIterations());
     }
 
     function stop() {
@@ -151,8 +151,8 @@ dc_graph.cola_layout = function(id) {
         data: function(nodes, edges, constraints, options) {
             data(nodes, edges, constraints, options);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();
@@ -232,6 +232,10 @@ dc_graph.cola_layout = function(id) {
             _flowLayout = flow;
             return this;
         },
+        unconstrainedIterations: property(10),
+        userConstraintIterations: property(20),
+        allConstraintsIterations: property(20),
+        gridSnapIterations: property(0),
         tickSize: property(1)
     });
     return engine;

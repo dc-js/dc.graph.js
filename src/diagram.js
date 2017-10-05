@@ -1699,11 +1699,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 constraints,
                 {groupConnected: _chart.groupConnected()}
             );
-            _chart.layoutEngine().start({
-                initialUnconstrainedIterations: 10,
-                initialUserConstraintIterations: 20,
-                initialAllConstraintsIterations: 20
-            });
+            _chart.layoutEngine().start();
         }
         return this;
     };

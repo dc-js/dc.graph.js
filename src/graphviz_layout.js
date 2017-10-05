@@ -104,7 +104,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         _dispatch.end(nodes, edges);
     }
 
-    function start(options) {
+    function start() {
         if(server) {
             d3.json(server)
                 .header("Content-type", "application/x-www-form-urlencoded")
@@ -153,8 +153,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             // filter out clusters and return them separately, because dc.graph doesn't know how to draw them
             return _clusters;
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();

@@ -52,12 +52,11 @@ dc_graph.webworker_layout = function(layoutEngine) {
             }
         });
     };
-    engine.start = function(options) {
+    engine.start = function() {
         _worker.worker.postMessage({
             command: 'start',
             args: {
-                layoutId: layoutEngine.layoutId(),
-                options: options
+                layoutId: layoutEngine.layoutId()
             }
         });
     };
