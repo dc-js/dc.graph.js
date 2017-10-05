@@ -14,6 +14,9 @@ dc_graph.fix_nodes = function(options) {
         targetid: function(e) {
             return _behavior.parent().edgeTarget.eval(e);
         },
+        get_fix: function(n) {
+            return _behavior.parent().nodeFixed.eval(n);
+        },
         fix_node: function(n, pos) {
             n[_fixedPosTag] = pos;
         },
@@ -159,6 +162,12 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
         new_edge: function() {},
         on_data: function(exec, nodes, wnodes, edges, wedges, ports, wports) {
             ++_age;
+            // add any existing fixes as requests
+            wnodes.forEach(function(n) {
+                var nid = exec.nodeid(n), pos = exec.get_fix(n);
+                if(pos && !_allFixes[nid])
+                    _allFixes[nid] = {id: nid, age: _age, pos: pos};
+            });
             var components = [];
             var dfs = dc_graph.undirected_dfs({
                 nodeid: exec.nodeid,
