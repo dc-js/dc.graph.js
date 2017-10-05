@@ -43,7 +43,7 @@ onmessage = function(e) {
         //     _done();
         // }
         // else
-        _layouts[args.layoutId].start(args.options);
+        _layouts[args.layoutId].start();
         break;
     case 'stop':
         if(_layouts)

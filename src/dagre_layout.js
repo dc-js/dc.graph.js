@@ -111,8 +111,8 @@ dc_graph.dagre_layout = function(id) {
         data: function(nodes, edges, constraints, options) {
             data(nodes, edges, constraints, options);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();

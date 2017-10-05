@@ -87,7 +87,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         _dispatch.end(nodes, edges);
     }
 
-    function start(options) {
+    function start() {
         if(server) {
             d3.json(server)
                 .header("Content-type", "application/x-www-form-urlencoded")
@@ -128,8 +128,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         data: function(nodes, edges, constraints, options) {
             data(nodes, edges, constraints, options);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();

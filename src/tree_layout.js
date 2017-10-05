@@ -107,7 +107,7 @@ dc_graph.tree_layout = function(id) {
         _edges = edges;
     }
 
-    function start(options) {
+    function start() {
         _dfs(_nodes, _edges);
         _dispatch.end(_nodes, _edges);
     }
@@ -139,8 +139,8 @@ dc_graph.tree_layout = function(id) {
         data: function(nodes, edges, constraints, opts) {
             data(nodes, edges, constraints, opts);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();
