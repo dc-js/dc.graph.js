@@ -1272,10 +1272,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        _chart.layoutEngine().stop();
-
         if(_chart.initLayoutOnRedraw())
             initLayout();
+
+        _chart.layoutEngine().stop();
 
         // ordering shouldn't matter, but we support ordering in case it does
         if(_chart.nodeOrdering()) {
