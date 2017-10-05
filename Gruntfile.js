@@ -292,6 +292,7 @@ module.exports.jsFiles = [
     'src/tree_layout.js',
     'src/graphviz_layout.js',
     'src/place_ports.js',
+    'src/troubleshoot.js',
     'src/legend.js',
     'src/constraint_pattern.js',
     'src/tree_positions.js',
