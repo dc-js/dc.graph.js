@@ -24,7 +24,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             if(port) {
                 _validTargets = _wports.filter(_behavior.isValid().bind(null, port));
                 if(_validTargets.length)
-                    return change_state(_validTargets, 'shimmer');
+                    return change_state(_validTargets, 'shimmer-medium');
             } else if(_validTargets)
                 return change_state(_validTargets, 'small');
             return null;
