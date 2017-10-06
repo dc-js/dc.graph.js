@@ -1,8 +1,9 @@
 dc_graph.match_ports = function(diagram, symbolPorts) {
-    var _ports, _wports, _validTargets;
+    var _ports, _wports, _wedges, _validTargets;
     diagram.on('data', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         _ports = ports;
         _wports = wports;
+        _wedges = wedges;
     });
     function change_state(ports, state) {
         return ports.map(function(p) {
@@ -18,7 +19,14 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
     }
     var _behavior = {
         isValid: property(function(sourcePort, targetPort) {
+            if(!_behavior.allowParallel() && _wedges.some(function(e) {
+                return sourcePort.edges.indexOf(e) >= 0 && targetPort.edges.indexOf(e) >= 0;
+            })) return false;
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
+        }),
+        allowParallel: property(false).react(function(v) {
+            if(v)
+                throw 'parallel edges not supported yet';
         }),
         hoverPort: function(port) {
             if(port) {
