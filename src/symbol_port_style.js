@@ -161,10 +161,15 @@ dc_graph.symbol_port_style = function() {
         // bring all nodes which have labels showing to the front
         _node.filter(function(n) {
             return _nodePorts[_style.parent().nodeKey.eval(n)].some(text_showing);
-        }).each(function(){
+        }).each(function() {
             this.parentNode.appendChild(this);
         });
-
+        // bring all active ports to the front
+        symbol.filter(function(p) {
+            return p.state !== 'small';
+        }).each(function() {
+            this.parentNode.appendChild(this);
+        });
         return trans;
     };
     _style.eventPort = function() {
