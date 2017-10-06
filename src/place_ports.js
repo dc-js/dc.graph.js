@@ -129,5 +129,5 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
     });
     return node_ports;
 };
-dc_graph.place_ports.MIN_DISTANCE = 30;
+dc_graph.place_ports.MIN_DISTANCE = 20;
 dc_graph.place_ports.NFAILS = 5;
