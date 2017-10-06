@@ -93,10 +93,11 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             p.vec = clip(p.vec, p.bounds);
             inside.push(p);
         });
-        // place the rest randomly within their bounds
+        // project any we know onto the border
         inside.forEach(function(p) {
             project(n, p);
         });
+        // place any remaining by trying random spots within the range until it misses all or we give up
         var patience = dc_graph.place_ports.NFAILS;
         while(unplaced.length) {
             var p = unplaced[0];
