@@ -64,6 +64,11 @@ dc_graph.symbol_port_style = function() {
             return _style.portRadius.eval(d);
         }
     }
+    function shimmer_radius(d) {
+        return /-medium$/.test(d.state) ?
+            _style.portHoverNodeRadius.eval(d) :
+            _style.portHoverPortRadius.eval(d);
+    }
     // fall back to node fill if portBackgroundFill not specified
     function background_fill(p) {
         var scale, fill;
@@ -84,8 +89,8 @@ dc_graph.symbol_port_style = function() {
                     return setn.has(_style.parent().nodeKey.eval(d));
                 });
         var symbol = node.selectAll('g.port');
-        var shimmer = symbol.filter(function(p) { return p.state === 'shimmer'; }),
-            nonshimmer = symbol.filter(function(p) { return p.state !== 'shimmer'; });
+        var shimmer = symbol.filter(function(p) { return /^shimmer/.test(p.state); }),
+            nonshimmer = symbol.filter(function(p) { return !/^shimmer/.test(p.state); });
         if(shimmer.size()) {
             if(before)
                 before.each('end', repeat);
@@ -98,12 +103,12 @@ dc_graph.symbol_port_style = function() {
                     .ease("bounce");
             shimin.selectAll('circle.port')
                 .attr('r', function(d) {
-                    return _style.portHoverPortRadius.eval(d) + _style.portPadding.eval(d);
+                    return shimmer_radius(d) + _style.portPadding.eval(d);
                 });
             shimin.selectAll('path.port')
                 .attr({
                     d: function(d) {
-                        return port_symbol(d, _style.portHoverPortRadius.eval(d));
+                        return port_symbol(d, shimmer_radius(d));
                     }
                 });
             var shimout = shimin.transition()
@@ -301,7 +306,7 @@ dc_graph.symbol_port_style = function() {
                 _nodePorts[nid].forEach(function(p) {
                     p.state = p === activePort ? 'large' : activePort ? 'small' : 'medium';
                 });
-                var nids = _drawConduct ? _drawConduct.hoverPort(activePort) : [];
+                var nids = _drawConduct && _drawConduct.hoverPort(activePort) || [];
                 nids.push(nid);
                 _style.animateNodes(nids);
             });
@@ -310,7 +315,7 @@ dc_graph.symbol_port_style = function() {
                 _nodePorts[nid].forEach(function(p) {
                     p.state = 'small';
                 });
-                var nids = _drawConduct ? _drawConduct.hoverPort(null) : [];
+                var nids = _drawConduct && _drawConduct.hoverPort(null) || [];
                 nids.push(nid);
                 _style.animateNodes(nids);
             });
