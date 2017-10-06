@@ -58,6 +58,9 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
     function project(n, p) {
         p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
     }
+    function misses(p, p2) {
+        return Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y) > dc_graph.place_ports.MIN_DISTANCE;
+    }
     // calculate port positions (currently very stupid)
     for(var nid in node_ports) {
         var n = nodes[nid],
@@ -97,6 +100,21 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         inside.forEach(function(p) {
             project(n, p);
         });
+        // detect any existing collisions, randomize the unedged or second one
+        for(var i = 0; i < inside.length; ++i)
+            for(var j = i+1; j < inside.length; ++j)
+                if(!misses(inside[i], inside[j])) {
+                    if(inside[j].edges.length && !inside[i].edges.length) {
+                        var t = inside[i];
+                        inside[i] = inside[j];
+                        inside[j] = t;
+                        // start over again on this i
+                        --i;
+                        break;
+                    }
+                    unplaced.push(inside[j]);
+                    inside.splice(j, 1);
+                }
         // place any remaining by trying random spots within the range until it misses all or we give up
         var patience = dc_graph.place_ports.NFAILS;
         while(unplaced.length) {
@@ -106,9 +124,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
                 bang[1] += 2*Math.PI;
             p.vec = a_to_v(bang[0] + Math.random()*(bang[1] - bang[0]));
             project(n, p);
-            if(!patience-- || inside.every(function(p2) {
-                return Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y) > dc_graph.place_ports.MIN_DISTANCE;
-            })) {
+            if(!patience-- || inside.every(misses.bind(null, p))) {
                 inside.push(p);
                 unplaced.shift();
                 if(!patience)
