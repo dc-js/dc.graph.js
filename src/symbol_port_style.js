@@ -5,6 +5,7 @@ dc_graph.symbol_port_style = function() {
             .attr('class', 'd3-tip')
             .html(function(d) { return "<span>" + d + "</span>"; })
             .direction('w');
+    var _drawConduct;
 
     _style.symbolScale = property(d3.shuffle(d3.scale.ordinal().range(d3.svg.symbolTypes)));
     _style.colorScale = property(d3.scale.ordinal().range(
@@ -286,6 +287,13 @@ dc_graph.symbol_port_style = function() {
     };
 
     _style.enableHover = function(whether) {
+        if(!_drawConduct) {
+            if(_style.parent()) {
+                var draw = _style.parent().child('draw-graphs');
+                if(draw)
+                    _drawConduct = draw.conduct();
+            }
+        }
         if(whether) {
             _node.on('mouseover.grow-ports', function(d) {
                 var nid = _style.parent().nodeKey.eval(d);
@@ -293,14 +301,18 @@ dc_graph.symbol_port_style = function() {
                 _nodePorts[nid].forEach(function(p) {
                     p.state = p === activePort ? 'large' : activePort ? 'small' : 'medium';
                 });
-                _style.animateNodes([nid]);
+                var nids = _drawConduct ? _drawConduct.hoverPort(activePort) : [];
+                nids.push(nid);
+                _style.animateNodes(nids);
             });
             _node.on('mouseout.grow-ports', function(d) {
                 var nid = _style.parent().nodeKey.eval(d);
                 _nodePorts[nid].forEach(function(p) {
                     p.state = 'small';
                 });
-                _style.animateNodes([nid]);
+                var nids = _drawConduct ? _drawConduct.hoverPort(null) : [];
+                nids.push(nid);
+                _style.animateNodes(nids);
             });
         } else {
             _node.on('mouseover.grow-ports', null);
