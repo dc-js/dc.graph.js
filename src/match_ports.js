@@ -20,6 +20,15 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         isValid: property(function(sourcePort, targetPort) {
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
         }),
+        hoverPort: function(port) {
+            if(port) {
+                _validTargets = _wports.filter(_behavior.isValid().bind(null, port));
+                if(_validTargets.length)
+                    return change_state(_validTargets, 'shimmer');
+            } else if(_validTargets)
+                return change_state(_validTargets, 'small');
+            return null;
+        },
         startDragEdge: function(source) {
             _validTargets = _wports.filter(_behavior.isValid().bind(null, source.port));
             var nids = change_state(_validTargets, 'shimmer');
