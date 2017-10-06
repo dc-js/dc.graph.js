@@ -55,6 +55,9 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
     function v_to_a(v) {
         return Math.atan2(v[1], v[0]);
     }
+    function project(n, p) {
+        p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
+    }
     // calculate port positions (currently very stupid)
     for(var nid in node_ports) {
         var n = nodes[nid],
@@ -91,15 +94,27 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             inside.push(p);
         });
         // place the rest randomly within their bounds
-        unplaced.forEach(function(p) {
+        inside.forEach(function(p) {
+            project(n, p);
+        });
+        var patience = dc_graph.place_ports.NFAILS;
+        while(unplaced.length) {
+            var p = unplaced[0];
             var bang = p.bounds.map(v_to_a);
             if(bang[0] > bang[1])
                 bang[1] += 2*Math.PI;
             p.vec = a_to_v(bang[0] + Math.random()*(bang[1] - bang[0]));
-        });
-        nports.forEach(function(p) {
-            p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
-        });
+            project(n, p);
+            if(!patience-- || inside.every(function(p2) {
+                return Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y) > dc_graph.place_ports.MIN_DISTANCE;
+            })) {
+                inside.push(p);
+                unplaced.shift();
+                if(!patience)
+                    console.warn('ran out of patience placing a port');
+                patience = dc_graph.place_ports.NFAILS;
+            }
+        }
     }
 
     // propagate port positions to edge endpoints
@@ -113,3 +128,5 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
     });
     return node_ports;
 };
+dc_graph.place_ports.MIN_DISTANCE = 30;
+dc_graph.place_ports.NFAILS = 5;
