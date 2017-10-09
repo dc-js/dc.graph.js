@@ -102,7 +102,7 @@ dc_graph.fix_nodes = function(options) {
             set_changes(changes);
             // can't wait for backend to acknowledge/approve so just set then blast
             if(_behavior.reportOverridesAsynchronously())
-                tell_changes(find_changes()); // dangling promise
+                tell_changes(changes); // dangling promise
         }
     }
 
