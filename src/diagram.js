@@ -138,15 +138,15 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.mouseZoomable = property(true);
 
     /**
-     * Whether zooming should only be enabled when the alt key is pressed.
-     * @method altKeyZoom
+     * Whether zooming should only be enabled when the specified key is pressed. (`true` means `Alt`.) 
+     * @method modKeyZoom
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Boolean} [altKeyZoom=true]
+     * @param {Boolean} [modKeyZoom=false]
      * @return {Boolean}
      * @return {dc_graph.diagram}
      **/
-    _chart.altKeyZoom = property(false);
+    _chart.modKeyZoom = _chart.altKeyZoom = property(false);
 
     /**
      * Set or get the fitting strategy for the canvas, which affects how the
