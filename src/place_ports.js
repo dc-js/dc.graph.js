@@ -119,7 +119,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         var patience = dc_graph.place_ports.NFAILS;
         while(unplaced.length) {
             var p = unplaced[0];
-            var bang = p.bounds.map(v_to_a);
+            var bang = p.bounds ? p.bounds.map(v_to_a) : [0, 2*Math.PI];
             if(bang[0] > bang[1])
                 bang[1] += 2*Math.PI;
             p.vec = a_to_v(bang[0] + Math.random()*(bang[1] - bang[0]));
