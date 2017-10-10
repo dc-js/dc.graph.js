@@ -67,7 +67,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             nports = node_ports[nid];
 
         // initial positions: use average of edge vectors, if any, or existing position
-        // make sure that we have vector bounds for any ports with specification
+        // make sure that we have vector and angle bounds for any ports with specification
         nports.forEach(function(p) {
             if(p.edges.length) {
                 var vecs = p.edges.map(edge_vec.bind(null, n));
@@ -78,9 +78,16 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             } else p.vec = p.vec || undefined;
             if(p.orig) { // only specified ports have bounds
                 var bounds = diagram.portBounds.eval(p);
-                if(Array.isArray(bounds[0]))
-                    p.bounds = bounds;
-                else p.bounds = bounds.map(a_to_v);
+                if(Array.isArray(bounds[0])) {
+                    p.vbounds = bounds;
+                    p.abounds = bounds.map(v_to_a);
+                }
+                else {
+                    p.vbounds = bounds.map(a_to_v);
+                    p.abounds = bounds;
+                }
+                if(p.abounds[0] > p.abounds[1])
+                    p.abounds[1] += 2*Math.PI;
             }
         });
 
@@ -89,7 +96,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         nports.forEach(function(p) {
             if(!p.vec)
                 unplaced.push(p);
-            else if(p.bounds && !in_bounds(p.vec, p.bounds))
+            else if(p.vbounds && !in_bounds(p.vec, p.vbounds))
                outside.push(p);
             else
                 inside.push(p);
@@ -97,7 +104,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
 
         // shunt outside ports into their bounds
         outside.forEach(function(p) {
-            p.vec = clip(p.vec, p.bounds);
+            p.vec = clip(p.vec, p.vbounds);
             inside.push(p);
         });
 
@@ -126,10 +133,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         var patience = dc_graph.place_ports.NFAILS;
         while(unplaced.length) {
             var p = unplaced[0];
-            var bang = p.bounds ? p.bounds.map(v_to_a) : [0, 2*Math.PI];
-            if(bang[0] > bang[1])
-                bang[1] += 2*Math.PI;
-            p.vec = a_to_v(bang[0] + Math.random()*(bang[1] - bang[0]));
+            p.vec = a_to_v(p.abounds[0] + Math.random()*(p.abounds[1] - p.abounds[0]));
             project(n, p);
             if(!patience-- || inside.every(misses.bind(null, p))) {
                 inside.push(p);
