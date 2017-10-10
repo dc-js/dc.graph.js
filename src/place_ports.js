@@ -91,7 +91,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
                 }
                 if(p.abounds[0] > p.abounds[1])
                     p.abounds[1] += 2*Math.PI;
-            }
+            } else console.assert(p.vec, 'unplaced unspecified port');
         });
 
         // determine which ports satisfy bounds or are unplaced
