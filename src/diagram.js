@@ -831,7 +831,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {String}
      * @return {dc_graph.diagram}
      **/
-    _chart.groupConnected = property(false);
+    _chart.groupConnected = deprecate_layout_algo_parameter('groupConnected');
 
     /**
      * Gets or sets the maximum time spent doing layout for a render or redraw. Set to 0 for no
@@ -1701,8 +1701,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _chart.layoutEngine().data(
                 wnodes.map(function(v) { return v.cola; }),
                 layout_edges.map(function(v) { return v.cola; }),
-                constraints,
-                {groupConnected: _chart.groupConnected()}
+                constraints
             );
             _chart.layoutEngine().start();
         }

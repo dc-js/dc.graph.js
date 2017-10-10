@@ -81,7 +81,7 @@ dc_graph.cola_layout = function(id) {
         });
 
         var groups = null;
-        if(options.groupConnected) {
+        if(engine.groupConnected()) {
             var components = cola.separateGraphs(wnodes, wedges);
             groups = components.map(function(g) {
                 return {leaves: g.array.map(function(n) { return n.index; })};
@@ -158,7 +158,7 @@ dc_graph.cola_layout = function(id) {
             stop();
         },
         optionNames: function() {
-            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize']
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize', 'groupConnected']
                 .concat(graphviz_keys);
         },
         populateLayoutNode: function() {},
@@ -236,7 +236,8 @@ dc_graph.cola_layout = function(id) {
         userConstraintIterations: property(20),
         allConstraintsIterations: property(20),
         gridSnapIterations: property(0),
-        tickSize: property(1)
+        tickSize: property(1),
+        groupConnected: property(false)
     });
     return engine;
 };
