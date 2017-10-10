@@ -61,10 +61,13 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
     function misses(p, p2) {
         return Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y) > dc_graph.place_ports.MIN_DISTANCE;
     }
-    // calculate port positions (currently very stupid)
+    // calculate port positions
     for(var nid in node_ports) {
         var n = nodes[nid],
             nports = node_ports[nid];
+
+        // initial positions: use average of edge vectors, if any, or existing position
+        // make sure that we have vector bounds for any ports with specification
         nports.forEach(function(p) {
             if(p.edges.length) {
                 var vecs = p.edges.map(edge_vec.bind(null, n));
@@ -80,6 +83,8 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
                 else p.bounds = bounds.map(a_to_v);
             }
         });
+
+        // determine which ports satisfy bounds or are unplaced
         var inside = [], outside = [], unplaced = [];
         nports.forEach(function(p) {
             if(!p.vec)
@@ -90,17 +95,18 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
                 inside.push(p);
         });
 
-        // for now, just shunt outside ports into their bounds and then place unplaced
-        // would like to use 1D force directed here
+        // shunt outside ports into their bounds
         outside.forEach(function(p) {
             p.vec = clip(p.vec, p.bounds);
             inside.push(p);
         });
-        // project any we know onto the border
+
+        // determine positions of all satisfied
         inside.forEach(function(p) {
             project(n, p);
         });
-        // detect any existing collisions, randomize the unedged or second one
+
+        // detect any existing collisions, unplace the unedged or second one
         for(var i = 0; i < inside.length; ++i)
             for(var j = i+1; j < inside.length; ++j)
                 if(!misses(inside[i], inside[j])) {
@@ -115,6 +121,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
                     unplaced.push(inside[j]);
                     inside.splice(j, 1);
                 }
+
         // place any remaining by trying random spots within the range until it misses all or we give up
         var patience = dc_graph.place_ports.NFAILS;
         while(unplaced.length) {
