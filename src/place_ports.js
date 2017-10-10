@@ -61,6 +61,9 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
     function misses(p, p2) {
         return Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y) > dc_graph.place_ports.MIN_DISTANCE;
     }
+    function rand_within(a, b) {
+        return a + Math.random()*(b-a);
+    }
     // calculate port positions
     for(var nid in node_ports) {
         var n = nodes[nid],
@@ -133,7 +136,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         var patience = dc_graph.place_ports.NFAILS;
         while(unplaced.length) {
             var p = unplaced[0];
-            p.vec = a_to_v(p.abounds[0] + Math.random()*(p.abounds[1] - p.abounds[0]));
+            p.vec = a_to_v(rand_within(p.abounds[0], p.abounds[1]));
             project(n, p);
             if(!patience-- || inside.every(misses.bind(null, p))) {
                 inside.push(p);
