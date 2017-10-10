@@ -56,10 +56,12 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(engine.getEngine)
                 engine = engine.getEngine();
             if(engine[name]) {
-                console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated. Call the corresponding method on the layout engine instead.');
+                console.warn('property is deprecated, call on layout engine instead: dc_graph.diagram.%c' + name,
+                             'font-weight: bold');
                 engine[name](value);
-            } else
-                console.warn('Warning: dc_graph.diagram."' + name + '"is deprecated, and it is not supported for the "' + engine.layoutAlgorithm() + '" layout algorithm: ignored.');
+            } else {
+                console.warn('property is deprecated, and is not supported for Warning: dc_graph.diagram.<b>' + name + '</b> is deprecated, and it is not supported for the "' + engine.layoutAlgorithm() + '" layout algorithm: ignored.');
+            }
             return this;
         };
     }
