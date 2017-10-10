@@ -111,6 +111,25 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             inside.push(p);
         });
 
+        // for all unplaced ports that share a bounds, evenly distribute them within those bounds.
+        // assume that bounds are disjoint.
+        var boundses = {}, boundports = {};
+        unplaced.forEach(function(p) {
+            var boundskey = p.abounds.map(function(x) { return x.toFixed(3); }).join(',');
+            boundses[boundskey] = p.abounds;
+            boundports[boundskey] = boundports[boundskey] || [];
+            boundports[boundskey].push(p);
+        });
+        for(var b in boundports) {
+            var bounds = boundses[b],
+                slice = (bounds[1] - bounds[0]) / (boundports[b].length + 1);
+            boundports[b].forEach(function(p, i) {
+                p.vec = a_to_v(bounds[0] + (i+1)*slice);
+            });
+        }
+        inside = inside.concat(unplaced);
+        unplaced = [];
+
         // determine positions of all satisfied
         inside.forEach(function(p) {
             project(n, p);
