@@ -80,7 +80,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
                 ];
             } else p.vec = p.vec || undefined;
             if(p.orig) { // only specified ports have bounds
-                var bounds = diagram.portBounds.eval(p);
+                var bounds = diagram.portBounds.eval(p) || [0, 2*Math.PI];
                 if(Array.isArray(bounds[0])) {
                     p.vbounds = bounds;
                     p.abounds = bounds.map(v_to_a);
