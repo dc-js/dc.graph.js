@@ -101,11 +101,11 @@ dc_graph.symbol_port_style = function() {
             var shimin = shimmer.transition()
                     .duration(1000)
                     .ease("bounce");
-            shimin.selectAll('circle.port')
+            shimin.selectAll('circle.port-outline')
                 .attr('r', function(d) {
                     return shimmer_radius(d) + _style.portPadding.eval(d);
                 });
-            shimin.selectAll('path.port')
+            shimin.selectAll('path.port-symbol')
                 .attr({
                     d: function(d) {
                         return port_symbol(d, shimmer_radius(d));
@@ -114,11 +114,11 @@ dc_graph.symbol_port_style = function() {
             var shimout = shimin.transition()
                     .duration(1000)
                     .ease('sin');
-            shimout.selectAll('circle.port')
+            shimout.selectAll('circle.port-outline')
                 .attr('r', function(d) {
                     return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 });
-            shimout.selectAll('path.port')
+            shimout.selectAll('path.port-symbol')
                 .attr({
                     d: function(d) {
                         return port_symbol(d, _style.portRadius.eval(d));
@@ -129,13 +129,13 @@ dc_graph.symbol_port_style = function() {
 
         var trans = nonshimmer.transition()
                 .duration(250);
-        trans.selectAll('circle.port')
+        trans.selectAll('circle.port-outline')
             .attr({
                 r: function(d) {
                     return hover_radius(d) + _style.portPadding.eval(d);
                 }
             });
-        trans.selectAll('path.port')
+        trans.selectAll('path.port-symbol')
             .attr({
                 d: function(d) {
                     return port_symbol(d, hover_radius(d));
@@ -145,7 +145,7 @@ dc_graph.symbol_port_style = function() {
         function text_showing(d) {
             return d.state === 'large' || d.state === 'medium';
         }
-        trans.selectAll('text.port')
+        trans.selectAll('text.port-label')
             .attr({
                 opacity: function(d) {
                     return text_showing(d) ? 1 : 0;
@@ -154,7 +154,7 @@ dc_graph.symbol_port_style = function() {
                     return text_showing(d) ? 'auto' : 'none';
                 }
             });
-        trans.selectAll('rect.port')
+        trans.selectAll('rect.port-label-background')
             .attr('opacity', function(p) {
                 return text_showing(p) ? 1 : 0;
             });
@@ -196,13 +196,13 @@ dc_graph.symbol_port_style = function() {
                 transform: port_transform
             });
 
-        var background = port.selectAll('circle.port').data(function(p) {
+        var background = port.selectAll('circle.port-outline').data(function(p) {
             return _style.portBackground.eval(p) ? [p] : [];
         });
         background.exit().remove();
         background.enter().append('circle')
             .attr({
-                class: 'port',
+                class: 'port-outline',
                 r: function(d) {
                     return _style.portRadius.eval(d) + _style.portPadding.eval(d);
                 },
@@ -224,13 +224,13 @@ dc_graph.symbol_port_style = function() {
 
         var symbolEnter = portEnter.append('path')
                 .attr({
-                    class: 'port',
+                    class: 'port-symbol',
                     fill: symbol_fill,
                     d: function(d) {
                         return port_symbol(d,  _style.portRadius.eval(d));
                     }
                 });
-        var symbol = port.select('path.port');
+        var symbol = port.select('path.port-symbol');
         symbol.transition()
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
@@ -241,19 +241,19 @@ dc_graph.symbol_port_style = function() {
                 }
             });
 
-        var label = port.selectAll('text.port').data(function(p) {
+        var label = port.selectAll('text.port-label').data(function(p) {
             return _style.portLabel.eval(p) ? [p] : [];
         });
         label.exit().remove();
         var labelEnter = label.enter();
         labelEnter.append('rect')
             .attr({
-                class: 'port',
+                class: 'port-label-background',
                 'pointer-events': 'none'
             });
         labelEnter.append('text')
             .attr({
-                class: 'port',
+                class: 'port-label',
                 'alignment-baseline': 'middle',
                 'pointer-events': 'none',
                 cursor: 'default',
@@ -275,7 +275,7 @@ dc_graph.symbol_port_style = function() {
             .each(function(p) {
                 p.bbox = this.getBBox();
             });
-        port.selectAll('rect.port')
+        port.selectAll('rect.port-label-background')
             .attr({
                 x: function(p) {
                     return (p.offset < 0 ? p.offset - p.bbox.width : p.offset) - _style.portLabelPadding.eval(p).x;
