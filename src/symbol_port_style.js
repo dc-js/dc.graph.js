@@ -197,11 +197,11 @@ dc_graph.symbol_port_style = function() {
                 transform: port_transform
             });
 
-        var background = port.selectAll('.port-outline').data(function(p) {
+        var outline = port.selectAll('.port-outline').data(function(p) {
             return outline_fill(p) !== 'none' ? [p] : [];
         });
-        background.exit().remove();
-        var backgroundEnter = background.enter().append(_style.outline().tag())
+        outline.exit().remove();
+        var outlineEnter = outline.enter().append(_style.outline().tag())
             .attr({
                 class: 'port-outline',
                 fill: outline_fill,
@@ -209,12 +209,12 @@ dc_graph.symbol_port_style = function() {
                 stroke: outline_stroke
             });
         if(_style.outline().init)
-            backgroundEnter.call(_style.outline().init);
-        backgroundEnter
+            outlineEnter.call(_style.outline().init);
+        outlineEnter
             .call(_style.outline().draw(function(d) {
                 return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
             }));
-        background.transition()
+        outline.transition()
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr({
