@@ -1,10 +1,6 @@
 dc_graph.symbol_port_style = function() {
     var _style = {};
     var _nodePorts, _node;
-    var _d3tip = d3.tip()
-            .attr('class', 'd3-tip')
-            .html(function(d) { return "<span>" + d + "</span>"; })
-            .direction('w');
     var _drawConduct;
 
     _style.symbolScale = property(d3.shuffle(d3.scale.ordinal().range(d3.svg.symbolTypes)));
@@ -328,15 +324,6 @@ dc_graph.symbol_port_style = function() {
             _node.on('mouseover.grow-ports', null);
             _node.on('mouseout.grow-ports', null);
         }
-        return _style;
-    };
-
-    _style.showTip = function(port) {
-        _node
-            .filter(function(d) {
-                return port.node === d;
-            })
-            .call(_d3tip.show);
         return _style;
     };
 
