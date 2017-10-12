@@ -12,38 +12,37 @@ dc_graph.symbol_port_style = function() {
     function name_or_edge(p) {
         return p.named ? p.name : _style.parent().edgeKey.eval(p.edges[0]);
     }
-    _style.portSymbol = property(name_or_edge, false); // non standard properties taking "outer datum"
-    _style.portColor = property(name_or_edge, false);
-    _style.outline = _style.portOutline = property(dc_graph.symbol_port_style.outline.circle());
-    _style.portRadius = property(7);
-    _style.portHoverNodeRadius = property(10);
-    _style.portHoverPortRadius = property(14);
-    _style.portDisplacement = property(2);
-    _style.portBackground = property(true);
-    _style.portBackgroundScale = property(null);
-    _style.portBackgroundFill = property(null);
-    _style.portBackgroundStroke = property('black');
-    _style.portBackgroundStrokeWidth = property(1);
-    _style.portPadding = property(2);
-    _style.portLabel = _style.portText = property(function(p) {
+    _style.symbol = _style.portSymbol = property(name_or_edge, false); // non standard properties taking "outer datum"
+    _style.color = _style.portColor = property(name_or_edge, false);
+    _style.outline = property(dc_graph.symbol_port_style.outline.circle());
+    _style.smallRadius = _style.portRadius = property(7);
+    _style.mediumRadius = _style.portHoverNodeRadius = property(10);
+    _style.largeRadius = _style.portHoverPortRadius = property(14);
+    _style.displacement = _style.portDisplacement = property(2);
+    _style.outlineFillScale = _style.portBackgroundScale = property(null);
+    _style.outlineFill = _style.portBackgroundFill = property(null);
+    _style.outlineStroke = _style.portBackgroundStroke = property('black');
+    _style.outlineStrokeWidth = _style.portBackgroundStrokeWidth = property(1);
+    _style.padding = _style.portPadding = property(2);
+    _style.label = _style.portLabel = _style.portText = property(function(p) {
         return p.name;
     });
     _style.portLabelPadding = property({x: 5, y: 5});
     _style.cascade = cascade(_style);
 
     function symbol_fill(d) {
-        return _style.colorScale()(_style.portColor.eval(d));
+        return _style.colorScale()(_style.color.eval(d));
     }
     function port_transform(d) {
         var l = Math.hypot(d.pos.x, d.pos.y),
             u = {x: d.pos.x / l, y: d.pos.y / l},
-            disp = _style.portDisplacement.eval(d),
+            disp = _style.displacement.eval(d),
             pos = {x: d.pos.x + disp * u.x, y: d.pos.y + disp * u.y};
         return 'translate(' + pos.x + ',' + pos.y + ')';
     }
     function port_symbol(d, size) {
         return d3.svg.symbol()
-            .type(_style.symbolScale()(_style.portSymbol.eval(d)))
+            .type(_style.symbolScale()(_style.symbol.eval(d)))
             .size(size*size)
         ();
     }
@@ -53,31 +52,31 @@ dc_graph.symbol_port_style = function() {
     function hover_radius(d) {
         switch(d.state) {
         case 'large':
-            return _style.portHoverPortRadius.eval(d);
+            return _style.largeRadius.eval(d);
         case 'medium':
-            return _style.portHoverNodeRadius.eval(d);
+            return _style.mediumRadius.eval(d);
         case 'small':
         default:
-            return _style.portRadius.eval(d);
+            return _style.smallRadius.eval(d);
         }
     }
     function shimmer_radius(d) {
         return /-medium$/.test(d.state) ?
-            _style.portHoverNodeRadius.eval(d) :
-            _style.portHoverPortRadius.eval(d);
+            _style.mediumRadius.eval(d) :
+            _style.largeRadius.eval(d);
     }
-    // fall back to node fill if portBackgroundFill not specified
-    function background_fill(p) {
+    // fall back to node fill if outlineFill not specified
+    function outline_fill(p) {
         var scale, fill;
-        if(_style.portBackgroundFill.eval(p)) {
-            scale = _style.portBackgroundScale() || identity;
-            fill = _style.portBackgroundFill.eval(p);
+        if(_style.outlineFill.eval(p)) {
+            scale = _style.outlineFillScale() || identity;
+            fill = _style.outlineFill.eval(p);
         }
         else {
             scale = _style.parent().nodeFillScale() || identity;
             fill = _style.parent().nodeFill.eval(p.node);
         }
-        return scale(fill);
+        return fill === 'none' ? 'none' : scale(fill);
     }
     _style.animateNodes = function(nids, before) {
         var setn = d3.set(nids);
@@ -113,12 +112,12 @@ dc_graph.symbol_port_style = function() {
                     .ease('sin');
             shimout.selectAll('.port-outline')
                 .call(_style.outline().apply_radius(function(d) {
-                    return _style.portRadius.eval(d) + _style.portPadding.eval(d);
+                    return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
                 }));
             shimout.selectAll('path.port-symbol')
                 .attr({
                     d: function(d) {
-                        return port_symbol(d, _style.portRadius.eval(d));
+                        return port_symbol(d, _style.smallRadius.eval(d));
                     }
                 });
             shimout.each("end", repeat);
@@ -192,29 +191,29 @@ dc_graph.symbol_port_style = function() {
             });
 
         var background = port.selectAll('.port-outline').data(function(p) {
-            return _style.portBackground.eval(p) ? [p] : [];
+            return outline_fill(p) !== 'none' ? [p] : [];
         });
         background.exit().remove();
         background.enter().append(_style.outline().tag())
             .attr({
                 class: 'port-outline',
-                fill: background_fill,
-                'stroke-width': _style.portBackgroundStrokeWidth.eval,
-                stroke: _style.portBackgroundStroke.eval
+                fill: outline_fill,
+                'stroke-width': _style.outlineStrokeWidth.eval,
+                stroke: _style.outlineStroke.eval
             })
             .call(_style.outline().apply_radius(function(d) {
-                return _style.portRadius.eval(d) + _style.portPadding.eval(d);
+                return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
             }));
         background.transition()
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr({
-                fill: background_fill,
-                'stroke-width': _style.portBackgroundStrokeWidth.eval,
-                stroke: _style.portBackgroundStroke.eval
+                fill: outline_fill,
+                'stroke-width': _style.outlineStrokeWidth.eval,
+                stroke: _style.outlineStroke.eval
             })
             .call(_style.outline().apply_radius(function(d) {
-                return _style.portRadius.eval(d) + _style.portPadding.eval(d);
+                return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
             }));
 
         var symbolEnter = portEnter.append('path')
@@ -222,7 +221,7 @@ dc_graph.symbol_port_style = function() {
                     class: 'port-symbol',
                     fill: symbol_fill,
                     d: function(d) {
-                        return port_symbol(d,  _style.portRadius.eval(d));
+                        return port_symbol(d,  _style.smallRadius.eval(d));
                     }
                 });
         var symbol = port.select('path.port-symbol');
@@ -232,7 +231,7 @@ dc_graph.symbol_port_style = function() {
             .attr({
                 fill: symbol_fill,
                 d: function(d) {
-                    return port_symbol(d, _style.portRadius.eval(d));
+                    return port_symbol(d, _style.smallRadius.eval(d));
                 }
             });
 
@@ -256,7 +255,7 @@ dc_graph.symbol_port_style = function() {
             });
         label
             .each(function(p) {
-                p.offset = (is_left(p) ? -1 : 1) * (_style.portHoverPortRadius.eval(p) + _style.portPadding.eval(p));
+                p.offset = (is_left(p) ? -1 : 1) * (_style.largeRadius.eval(p) + _style.portPadding.eval(p));
             })
             .attr({
                 'text-anchor': function(d) {
