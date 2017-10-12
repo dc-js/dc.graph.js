@@ -14,6 +14,7 @@ dc_graph.symbol_port_style = function() {
     }
     _style.portSymbol = property(name_or_edge, false); // non standard properties taking "outer datum"
     _style.portColor = property(name_or_edge, false);
+    _style.outline = _style.portOutline = property(dc_graph.symbol_port_style.outline.circle());
     _style.portRadius = property(7);
     _style.portHoverNodeRadius = property(10);
     _style.portHoverPortRadius = property(14);
@@ -97,10 +98,10 @@ dc_graph.symbol_port_style = function() {
             var shimin = shimmer.transition()
                     .duration(1000)
                     .ease("bounce");
-            shimin.selectAll('circle.port-outline')
-                .attr('r', function(d) {
+            shimin.selectAll('.port-outline')
+                .call(_style.outline().apply_radius(function(d) {
                     return shimmer_radius(d) + _style.portPadding.eval(d);
-                });
+                }));
             shimin.selectAll('path.port-symbol')
                 .attr({
                     d: function(d) {
@@ -110,10 +111,10 @@ dc_graph.symbol_port_style = function() {
             var shimout = shimin.transition()
                     .duration(1000)
                     .ease('sin');
-            shimout.selectAll('circle.port-outline')
-                .attr('r', function(d) {
+            shimout.selectAll('.port-outline')
+                .call(_style.outline().apply_radius(function(d) {
                     return _style.portRadius.eval(d) + _style.portPadding.eval(d);
-                });
+                }));
             shimout.selectAll('path.port-symbol')
                 .attr({
                     d: function(d) {
@@ -125,12 +126,10 @@ dc_graph.symbol_port_style = function() {
 
         var trans = nonshimmer.transition()
                 .duration(250);
-        trans.selectAll('circle.port-outline')
-            .attr({
-                r: function(d) {
-                    return hover_radius(d) + _style.portPadding.eval(d);
-                }
-            });
+        trans.selectAll('.port-outline')
+            .call(_style.outline().apply_radius(function(d) {
+                return hover_radius(d) + _style.portPadding.eval(d);
+            }));
         trans.selectAll('path.port-symbol')
             .attr({
                 d: function(d) {
@@ -192,31 +191,31 @@ dc_graph.symbol_port_style = function() {
                 transform: port_transform
             });
 
-        var background = port.selectAll('circle.port-outline').data(function(p) {
+        var background = port.selectAll('.port-outline').data(function(p) {
             return _style.portBackground.eval(p) ? [p] : [];
         });
         background.exit().remove();
-        background.enter().append('circle')
+        background.enter().append(_style.outline().tag())
             .attr({
                 class: 'port-outline',
-                r: function(d) {
-                    return _style.portRadius.eval(d) + _style.portPadding.eval(d);
-                },
                 fill: background_fill,
                 'stroke-width': _style.portBackgroundStrokeWidth.eval,
                 stroke: _style.portBackgroundStroke.eval
-            });
+            })
+            .call(_style.outline().apply_radius(function(d) {
+                return _style.portRadius.eval(d) + _style.portPadding.eval(d);
+            }));
         background.transition()
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr({
-                r: function(d) {
-                    return _style.portRadius.eval(d) + _style.portPadding.eval(d);
-                },
                 fill: background_fill,
                 'stroke-width': _style.portBackgroundStrokeWidth.eval,
                 stroke: _style.portBackgroundStroke.eval
-            });
+            })
+            .call(_style.outline().apply_radius(function(d) {
+                return _style.portRadius.eval(d) + _style.portPadding.eval(d);
+            }));
 
         var symbolEnter = portEnter.append('path')
                 .attr({
@@ -329,4 +328,18 @@ dc_graph.symbol_port_style = function() {
 
     _style.parent = property(null);
     return _style;
+};
+
+dc_graph.symbol_port_style.outline = {};
+dc_graph.symbol_port_style.outline.circle = function() {
+    return {
+        tag: function() {
+            return 'circle';
+        },
+        apply_radius: function(rf) {
+            return function(outlines) {
+                outlines.attr('r', function(d) { return rf(d); });
+            };
+        }
+    };
 };
