@@ -21,8 +21,8 @@ dc_graph.symbol_port_style = function() {
     _style.displacement = _style.portDisplacement = property(2);
     _style.outlineFillScale = _style.portBackgroundScale = property(null);
     _style.outlineFill = _style.portBackgroundFill = property(null);
-    _style.outlineStroke = _style.portBackgroundStroke = property('black');
-    _style.outlineStrokeWidth = _style.portBackgroundStrokeWidth = property(1);
+    _style.outlineStroke = _style.portBackgroundStroke = property(null);
+    _style.outlineStrokeWidth = _style.portBackgroundStrokeWidth = property(null);
     _style.padding = _style.portPadding = property(2);
     _style.label = _style.portLabel = _style.portText = property(function(p) {
         return p.name;
@@ -65,7 +65,7 @@ dc_graph.symbol_port_style = function() {
             _style.mediumRadius.eval(d) :
             _style.largeRadius.eval(d);
     }
-    // fall back to node fill if outlineFill not specified
+    // fall back to node aesthetics if not defined for port
     function outline_fill(p) {
         var scale, fill;
         if(_style.outlineFill.eval(p)) {
@@ -77,6 +77,13 @@ dc_graph.symbol_port_style = function() {
             fill = _style.parent().nodeFill.eval(p.node);
         }
         return fill === 'none' ? 'none' : scale(fill);
+    }
+    function outline_stroke(p) {
+        return _style.outlineStroke.eval(p) || _style.parent().nodeStroke.eval(p.node);
+    }
+    function outline_stroke_width(p) {
+        var sw = _style.outlineStrokeWidth.eval(p);
+        return typeof sw === 'number' ? sw : _style.parent().nodeStrokeWidth.eval(p.node);
     }
     _style.animateNodes = function(nids, before) {
         var setn = d3.set(nids);
@@ -198,8 +205,8 @@ dc_graph.symbol_port_style = function() {
             .attr({
                 class: 'port-outline',
                 fill: outline_fill,
-                'stroke-width': _style.outlineStrokeWidth.eval,
-                stroke: _style.outlineStroke.eval
+                'stroke-width': outline_stroke_width,
+                stroke: outline_stroke
             });
         if(_style.outline().init)
             backgroundEnter.call(_style.outline().init);
@@ -212,8 +219,8 @@ dc_graph.symbol_port_style = function() {
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr({
                 fill: outline_fill,
-                'stroke-width': _style.outlineStrokeWidth.eval,
-                stroke: _style.outlineStroke.eval
+                'stroke-width': outline_stroke_width,
+                stroke: outline_stroke
             })
             .call(_style.outline().draw(function(d) {
                 return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
