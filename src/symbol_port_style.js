@@ -376,7 +376,7 @@ dc_graph.symbol_port_style.outline.square = function() {
 dc_graph.symbol_port_style.outline.arrow = function() {
     // offset needed for body in order to keep centroid at 0,0
     var left_portion = 3/4 - Math.PI/8;
-    return {
+    var _outline = {
         tag: function() {
             return 'path';
         },
@@ -387,9 +387,20 @@ dc_graph.symbol_port_style.outline.arrow = function() {
             return function(outlines) {
                 outlines.attr('d', function(p) {
                     var r = rf(p);
-                    return 'M' + -left_portion*r + ',' + -r + ' h' + r + ' l' + r + ',' + r + ' l' + -r + ',' + r + ' h' + -r + ' a' + r + ',' + r + ' 0 1,1 0,' + -2*r;
+                    if(!_outline.outie() || _outline.outie()(p.orig))
+                        return 'M' + -left_portion*r + ',' + -r + ' h' + r +
+                        ' l' + r + ',' + r + ' l' + -r + ',' + r +
+                        ' h' + -r +
+                        ' a' + r + ',' + r + ' 0 1,1 0,' + -2*r;
+                    else
+                        return 'M' + -(2-left_portion)*r + ',' + -r + ' h' + 2*r +
+                        ' a' + r + ',' + r + ' 0 1,1 0,' + 2*r +
+                        ' h' + -2*r +
+                        ' l' + r + ',' + -r + ' l' + -r + ',' + -r;
                 });
             };
-        }
+        },
+        outie: property(null)
     };
+    return _outline;
 };
