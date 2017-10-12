@@ -373,19 +373,21 @@ dc_graph.symbol_port_style.outline.square = function() {
         }
     };
 };
-dc_graph.symbol_port_style.outline.square_path = function() {
+dc_graph.symbol_port_style.outline.arrow = function() {
+    // offset needed for body in order to keep centroid at 0,0
+    var left_portion = 3/4 - Math.PI/8;
     return {
         tag: function() {
             return 'path';
         },
         init: function(outlines) {
-            outlines.attr('shape-rendering', 'crispEdges');
+            //outlines.attr('shape-rendering', 'crispEdges');
         },
         draw: function(rf) {
             return function(outlines) {
                 outlines.attr('d', function(p) {
                     var r = rf(p);
-                    return 'M' + -r + ',' + -r + ' h' + 2*r + ' v' + 2*r + ' h' + -2*r + ' v' + -2*r;
+                    return 'M' + -left_portion*r + ',' + -r + ' h' + r + ' l' + r + ',' + r + ' l' + -r + ',' + r + ' h' + -r + ' a' + r + ',' + r + ' 0 1,1 0,' + -2*r;
                 });
             };
         }
