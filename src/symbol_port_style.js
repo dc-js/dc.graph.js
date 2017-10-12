@@ -355,6 +355,27 @@ dc_graph.symbol_port_style.outline.circle = function() {
 dc_graph.symbol_port_style.outline.square = function() {
     return {
         tag: function() {
+            return 'rect';
+        },
+        init: function(outlines) {
+            // crispEdges can make outline off-center from symbols
+            // outlines.attr('shape-rendering', 'crispEdges');
+        },
+        draw: function(rf) {
+            return function(outlines) {
+                outlines.attr({
+                    x: function(p) { return -rf(p); },
+                    y: function(p) { return -rf(p); },
+                    width: function(p) { return 2*rf(p); },
+                    height: function(p) { return 2*rf(p); }
+                });
+            };
+        }
+    };
+};
+dc_graph.symbol_port_style.outline.square_path = function() {
+    return {
+        tag: function() {
             return 'path';
         },
         init: function(outlines) {
