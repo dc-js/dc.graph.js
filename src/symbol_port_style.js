@@ -242,7 +242,7 @@ dc_graph.symbol_port_style = function() {
             });
 
         var label = port.selectAll('text.port').data(function(p) {
-            return _style.portText.eval(p) ? [p] : [];
+            return _style.portLabel.eval(p) ? [p] : [];
         });
         label.exit().remove();
         var labelEnter = label.enter();
@@ -271,7 +271,7 @@ dc_graph.symbol_port_style = function() {
                     return 'translate(' + p.offset + ',0)';
                 }
             })
-            .text(_style.portText.eval)
+            .text(_style.portLabel.eval)
             .each(function(p) {
                 p.bbox = this.getBBox();
             });

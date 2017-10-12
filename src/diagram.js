@@ -536,12 +536,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @example
      * // Default behavior
      * chart.nodeTitle(function(kv) {
-     *   return _chart.nodeKeyAccessor()(kv);
+     *   return _chart.nodeKey()(kv);
      * });
      * @return {dc_graph.diagram}
      **/
     _chart.nodeTitle = _chart.nodeTitleAccessor = property(function(kv) {
-        return _chart.nodeKeyAccessor()(kv);
+        return _chart.nodeKey()(kv);
     });
 
     /**
