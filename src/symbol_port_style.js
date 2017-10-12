@@ -98,7 +98,7 @@ dc_graph.symbol_port_style = function() {
                     .duration(1000)
                     .ease("bounce");
             shimin.selectAll('.port-outline')
-                .call(_style.outline().apply_radius(function(d) {
+                .call(_style.outline().draw(function(d) {
                     return shimmer_radius(d) + _style.portPadding.eval(d);
                 }));
             shimin.selectAll('path.port-symbol')
@@ -111,7 +111,7 @@ dc_graph.symbol_port_style = function() {
                     .duration(1000)
                     .ease('sin');
             shimout.selectAll('.port-outline')
-                .call(_style.outline().apply_radius(function(d) {
+                .call(_style.outline().draw(function(d) {
                     return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
                 }));
             shimout.selectAll('path.port-symbol')
@@ -126,7 +126,7 @@ dc_graph.symbol_port_style = function() {
         var trans = nonshimmer.transition()
                 .duration(250);
         trans.selectAll('.port-outline')
-            .call(_style.outline().apply_radius(function(d) {
+            .call(_style.outline().draw(function(d) {
                 return hover_radius(d) + _style.portPadding.eval(d);
             }));
         trans.selectAll('path.port-symbol')
@@ -194,14 +194,17 @@ dc_graph.symbol_port_style = function() {
             return outline_fill(p) !== 'none' ? [p] : [];
         });
         background.exit().remove();
-        background.enter().append(_style.outline().tag())
+        var backgroundEnter = background.enter().append(_style.outline().tag())
             .attr({
                 class: 'port-outline',
                 fill: outline_fill,
                 'stroke-width': _style.outlineStrokeWidth.eval,
                 stroke: _style.outlineStroke.eval
-            })
-            .call(_style.outline().apply_radius(function(d) {
+            });
+        if(_style.outline().init)
+            backgroundEnter.call(_style.outline().init);
+        backgroundEnter
+            .call(_style.outline().draw(function(d) {
                 return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
             }));
         background.transition()
@@ -212,7 +215,7 @@ dc_graph.symbol_port_style = function() {
                 'stroke-width': _style.outlineStrokeWidth.eval,
                 stroke: _style.outlineStroke.eval
             })
-            .call(_style.outline().apply_radius(function(d) {
+            .call(_style.outline().draw(function(d) {
                 return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
             }));
 
@@ -335,9 +338,27 @@ dc_graph.symbol_port_style.outline.circle = function() {
         tag: function() {
             return 'circle';
         },
-        apply_radius: function(rf) {
+        draw: function(rf) {
             return function(outlines) {
-                outlines.attr('r', function(d) { return rf(d); });
+                outlines.attr('r', function(p) { return rf(p); });
+            };
+        }
+    };
+};
+dc_graph.symbol_port_style.outline.square = function() {
+    return {
+        tag: function() {
+            return 'path';
+        },
+        init: function(outlines) {
+            outlines.attr('shape-rendering', 'crispEdges');
+        },
+        draw: function(rf) {
+            return function(outlines) {
+                outlines.attr('d', function(p) {
+                    var r = rf(p);
+                    return 'M' + -r + ',' + -r + ' h' + 2*r + ' v' + 2*r + ' h' + -2*r + ' v' + -2*r;
+                });
             };
         }
     };
