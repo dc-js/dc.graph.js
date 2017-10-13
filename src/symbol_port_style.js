@@ -214,14 +214,17 @@ dc_graph.symbol_port_style = function() {
             .call(_style.outline().draw(function(d) {
                 return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
             }));
-        outline.transition()
-            .duration(_style.parent().stagedDuration())
-            .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
+        // only position and size are animated (?) - anyway these are not on the node
+        // and they are typically used to indicate selection which should be fast
+        outline
             .attr({
                 fill: outline_fill,
                 'stroke-width': outline_stroke_width,
                 stroke: outline_stroke
-            })
+            });
+        outline.transition()
+            .duration(_style.parent().stagedDuration())
+            .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .call(_style.outline().draw(function(d) {
                 return _style.smallRadius.eval(d) + _style.portPadding.eval(d);
             }));

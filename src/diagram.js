@@ -24,6 +24,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _dispatch = d3.dispatch('data', 'end', 'start', 'drawn', 'transitionsStarted', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
+    var _nodePorts; // ports sorted by node id
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
     var _arrows = {};
@@ -1640,13 +1641,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!_chart.initialOnly())
                     populate_cola(nodes, edges);
                 if(_chart.showLayoutSteps()) {
-                    var nodePorts;
                     // what's the relation between this and the 'data' event?
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
-                        nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
+                        _nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, true);
-                    if(nodePorts)
-                        draw_ports(nodePorts, node);
+                    if(_nodePorts)
+                        draw_ports(_nodePorts, node);
                     // should do this only once
                     _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
@@ -1657,14 +1657,13 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .on('end', function(nodes, edges) {
                 if(!_chart.showLayoutSteps()) {
-                    var nodePorts;
                     if(!_chart.initialOnly())
                         populate_cola(nodes, edges);
                     if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
-                        nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
+                        _nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, true);
-                    if(nodePorts)
-                        draw_ports(nodePorts, node);
+                    if(_nodePorts)
+                        draw_ports(_nodePorts, node);
                     _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
                 else layout_done(true);
@@ -1725,6 +1724,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
 
         _chart._updateNode(node);
+        if(_nodePorts)
+            draw_ports(_nodePorts, node);
     }
 
     _chart.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
