@@ -79,19 +79,18 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
                     d3.sum(vecs, function(v) { return v[1]; })/vecs.length
                 ];
             } else p.vec = p.vec || undefined;
-            if(p.orig) { // only specified ports have bounds
-                var bounds = diagram.portBounds.eval(p) || [0, 2*Math.PI];
-                if(Array.isArray(bounds[0])) {
-                    p.vbounds = bounds;
-                    p.abounds = bounds.map(v_to_a);
-                }
-                else {
-                    p.vbounds = bounds.map(a_to_v);
-                    p.abounds = bounds;
-                }
-                if(p.abounds[0] > p.abounds[1])
-                    p.abounds[1] += 2*Math.PI;
-            } else console.assert(p.vec, 'unplaced unspecified port');
+            var bounds = p.orig && diagram.portBounds.eval(p) || [0, 2*Math.PI];
+            if(Array.isArray(bounds[0])) {
+                p.vbounds = bounds;
+                p.abounds = bounds.map(v_to_a);
+            }
+            else {
+                p.vbounds = bounds.map(a_to_v);
+                p.abounds = bounds;
+            }
+            if(p.abounds[0] > p.abounds[1])
+                p.abounds[1] += 2*Math.PI;
+            console.assert(p.orig || p.vec, 'unplaced unspecified port');
         });
 
         // determine which ports satisfy bounds or are unplaced
