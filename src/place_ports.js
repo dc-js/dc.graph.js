@@ -122,11 +122,15 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             boundports[boundskey].push(p);
         });
         for(var b in boundports) {
-            var bounds = boundses[b],
-                slice = (bounds[1] - bounds[0]) / (boundports[b].length + 1);
-            boundports[b].forEach(function(p, i) {
-                p.vec = a_to_v(bounds[0] + (i+1)*slice);
-            });
+            var bounds = boundses[b], bports = boundports[b];
+            if(bports.length === 1)
+                bports[0].vec = a_to_v((bounds[0] + bounds[1])/2);
+            else {
+                var slice = (bounds[1] - bounds[0]) / (boundports[b].length - 1);
+                boundports[b].forEach(function(p, i) {
+                    p.vec = a_to_v(bounds[0] + i*slice);
+                });
+            }
         }
         inside = inside.concat(unplaced);
         unplaced = [];
