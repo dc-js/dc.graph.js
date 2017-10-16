@@ -1351,7 +1351,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 p1.edges = [];
         }, function(k, p) {
             console.assert(k, 'should have screened out invalid ports');
-            // this is dumb. as usual, i blame the lack of metagraphs
+            // it's dumb to parse the id we just created. as usual, i blame the lack of metagraphs
             var parse = split_port_name(k);
             if(parse.nodeKey) {
                 p.node = _nodes[parse.nodeKey];
@@ -1365,6 +1365,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             }
             p.name = parse.name;
         });
+        // remove any ports where the end-node was not found, to avoid crashing elsewhere
+        wports = wports.filter(function(p) { return p.node; });
+
         // find all edges for named ports
         wedges.forEach(function(e) {
             var name = _chart.edgeSourcePortName.eval(e);
