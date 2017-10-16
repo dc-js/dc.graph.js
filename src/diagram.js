@@ -21,7 +21,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _chart = dc.marginMixin({});
     _chart.__dcFlag__ = dc.utils.uniqueId();
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _dispatch = d3.dispatch('data', 'end', 'start', 'drawn', 'transitionsStarted', 'zoomed');
+    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'transitionsStarted', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
     var _nodePorts; // ports sorted by node id
@@ -1283,6 +1283,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             initLayout();
 
         _chart.layoutEngine().stop();
+        _dispatch.preDraw();
 
         // ordering shouldn't matter, but we support ordering in case it does
         if(_chart.nodeOrdering()) {
