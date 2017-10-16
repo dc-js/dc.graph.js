@@ -161,7 +161,8 @@ dc_graph.symbol_port_style = function() {
             });
         // bring all nodes which have labels showing to the front
         _node.filter(function(n) {
-            return _nodePorts[_style.parent().nodeKey.eval(n)].some(text_showing);
+            var ports = _nodePorts[_style.parent().nodeKey.eval(n)];
+            return ports && ports.some(text_showing);
         }).each(function() {
             this.parentNode.appendChild(this);
         });
@@ -315,18 +316,20 @@ dc_graph.symbol_port_style = function() {
             _node.on('mouseover.grow-ports', function(d) {
                 var nid = _style.parent().nodeKey.eval(d);
                 var activePort = _style.eventPort();
-                _nodePorts[nid].forEach(function(p) {
-                    p.state = p === activePort ? 'large' : activePort ? 'small' : 'medium';
-                });
+                if(_nodePorts[nid])
+                    _nodePorts[nid].forEach(function(p) {
+                        p.state = p === activePort ? 'large' : activePort ? 'small' : 'medium';
+                    });
                 var nids = _drawConduct && _drawConduct.hoverPort(activePort) || [];
                 nids.push(nid);
                 _style.animateNodes(nids);
             });
             _node.on('mouseout.grow-ports', function(d) {
                 var nid = _style.parent().nodeKey.eval(d);
-                _nodePorts[nid].forEach(function(p) {
-                    p.state = 'small';
-                });
+                if(_nodePorts[nid])
+                    _nodePorts[nid].forEach(function(p) {
+                        p.state = 'small';
+                    });
                 var nids = _drawConduct && _drawConduct.hoverPort(null) || [];
                 nids.push(nid);
                 _style.animateNodes(nids);
