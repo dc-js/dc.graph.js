@@ -1,4 +1,6 @@
 function port_name(nodeId, edgeId, portName) {
+    if(!(nodeId || edgeId))
+        return null; // must have one key or the other
     return (nodeId ? 'node/' + nodeId : 'edge/' + edgeId) + '/' + portName;
 };
 function split_port_name(portname) {

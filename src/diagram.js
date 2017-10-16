@@ -1336,6 +1336,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return port_name(_chart.edgeTarget.eval(e), null, _chart.edgeTargetPortName.eval(e));
             else return port_name(null, _chart.edgeKey.eval(e), 'target');
         }));
+        // remove any invalid ports so they don't crash in confusing ways later
+        ports = ports.filter(function(p) {
+            return _chart.portNodeKey() && _chart.portNodeKey()(p) ||
+                _chart.portEdgeKey() && _chart.portEdgeKey()(p);
+        });
         var wports = regenerate_objects(_ports, ports, needports, function(p) {
             return port_name(_chart.portNodeKey()(p),
                              _chart.portEdgeKey() && _chart.portEdgeKey(p),
@@ -1345,6 +1350,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(p1.named)
                 p1.edges = [];
         }, function(k, p) {
+            console.assert(k, 'should have screened out invalid ports');
             // this is dumb. as usual, i blame the lack of metagraphs
             var parse = split_port_name(k);
             if(parse.nodeKey) {
