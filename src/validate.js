@@ -1,9 +1,27 @@
 dc_graph.validate = function() {
-    function falsy(objects, accessor) {
+    function falsy(objects, accessor, what, who) {
         var f = objects.filter(function(o) {
             return !accessor(o);
         });
-        return f.length ? f : null;
+        return f.length ?
+            [what + ' is falsy for ' + f.length + ' of ' + objects.length + ' ' + who, f] :
+            null;
+    }
+    function build_index(objects, accessor) {
+        return objects.reduce(function(m, o) {
+            m[accessor(o)] = o;
+            return m;
+        }, {});
+    }
+    function not_found(index, objects, accessor, what, where, who) {
+        var nf = objects.filter(function(o) {
+            return !index[accessor(o)];
+        }).map(function(o) {
+            return {key: accessor(o), value: o};
+        });
+        return nf.length ?
+            [what + ' was not found in ' + where + ' for ' + nf.length + ' of ' + objects.length + ' ' + who, nf] :
+            null;
     }
     function validate() {
         var diagram = _behavior.parent();
@@ -12,9 +30,21 @@ dc_graph.validate = function() {
             ports = diagram.portGroup() ? diagram.portGroup().all() : [];
         var errors = [];
 
-        var f = falsy(nodes, diagram.nodeKey());
+        var f = falsy(nodes, diagram.nodeKey(), 'nodeKey', 'nodes');
         if(f)
-            errors.push(['nodeKey is falsy for ' + f.length + ' of ' + nodes.length + ' nodes:', f]);
+            errors.push(f);
+        f = falsy(edges, diagram.edgeSource(), 'edgeSource', 'edges');
+        if(f)
+            errors.push(f);
+        f = falsy(edges, diagram.edgeTarget(), 'edgeTarget', 'edges');
+        if(f)
+            errors.push(f);
+
+        var nindex = build_index(nodes, diagram.nodeKey());
+        var nf = not_found(nindex, edges, diagram.edgeSource(), 'edgeSource', 'nodes', 'edges');
+        if(nf)
+            errors.push(nf);
+
         function count_text() {
             return nodes.length + ' nodes, ' + edges.length + ' edges, ' + ports.length + ' ports';
         }
