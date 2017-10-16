@@ -140,24 +140,29 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             project(n, p);
         });
 
-        // detect any existing collisions, unplace the unedged or second one
-        for(var i = 0; i < inside.length; ++i)
-            for(var j = i+1; j < inside.length; ++j)
-                if(!misses(inside[i], inside[j])) {
-                    if(inside[j].edges.length && !inside[i].edges.length) {
-                        var t = inside[i];
-                        inside[i] = inside[j];
-                        inside[j] = t;
-                        // start over again on this i
-                        --i;
-                        break;
+        // detect any existing collisions, unplace the one without edges or second one
+        for(var i = 0; i < inside.length; ++i) {
+            var x = inside[i];
+            if(unplaced.includes(x))
+                continue;
+            for(var j = i+1; j < inside.length; ++j) {
+                var y = inside[j];
+                if(unplaced.includes(y))
+                   continue;
+                if(!misses(x, y)) {
+                    if(!x.edges.length) {
+                        unplaced.push(x);
+                        continue;
                     }
-                    unplaced.push(inside[j]);
-                    inside.splice(j, 1);
+                    else
+                        unplaced.push(y);
                 }
 
         // place any remaining by trying random spots within the range until it misses all or we give up
         var patience = dc_graph.place_ports.NFAILS;
+            }
+        }
+        inside = inside.filter(function(p) { return !unplaced.includes(p); });
         while(unplaced.length) {
             var p = unplaced[0];
             p.vec = a_to_v(rand_within(p.abounds[0], p.abounds[1]));
