@@ -165,7 +165,7 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             if(!patience-- || inside.every(misses.bind(null, p))) {
                 inside.push(p);
                 unplaced.shift();
-                if(!patience)
+                if(patience<0)
                     console.warn('ran out of patience placing a port');
                 patience = dc_graph.place_ports.NFAILS;
             }
