@@ -61,7 +61,10 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
         p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
     }
     function misses(p, p2) {
-        return Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y) > dc_graph.place_ports.MIN_DISTANCE;
+        var dist = Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y);
+        var misses = dist > dc_graph.place_ports.MIN_DISTANCE;
+        console.log('dist', dist, misses ? 'misses' : 'does not miss');
+        return misses;
     }
     function rand_within(a, b) {
         return a + Math.random()*(b-a);
@@ -157,13 +160,15 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
                     else
                         unplaced.push(y);
                 }
-
-        // place any remaining by trying random spots within the range until it misses all or we give up
-        var patience = dc_graph.place_ports.NFAILS;
             }
         }
         inside = inside.filter(function(p) { return !unplaced.includes(p); });
+        console.log(nid, 'unplaced', unplaced.length);
+
+        // place any remaining by trying random spots within the range until it misses all or we give up
+        var patience = dc_graph.place_ports.NFAILS;
         while(unplaced.length) {
+            console.log('round', patience);
             var p = unplaced[0];
             p.vec = a_to_v(rand_within(p.abounds[0], p.abounds[1]));
             project(n, p);
