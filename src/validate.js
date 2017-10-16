@@ -4,7 +4,7 @@ dc_graph.validate = function() {
             return !accessor(o);
         });
         return f.length ?
-            [what + ' is falsy for ' + f.length + ' of ' + objects.length + ' ' + who, f] :
+            [what + ' is empty for ' + f.length + ' of ' + objects.length + ' ' + who, f] :
             null;
     }
     function build_index(objects, accessor) {
@@ -30,23 +30,33 @@ dc_graph.validate = function() {
             ports = diagram.portGroup() ? diagram.portGroup().all() : [];
         var errors = [];
 
-        var f = falsy(nodes, diagram.nodeKey(), 'nodeKey', 'nodes');
-        if(f)
-            errors.push(f);
-        f = falsy(edges, diagram.edgeSource(), 'edgeSource', 'edges');
-        if(f)
-            errors.push(f);
-        f = falsy(edges, diagram.edgeTarget(), 'edgeTarget', 'edges');
-        if(f)
-            errors.push(f);
+        function check(error) {
+            if(error)
+                errors.push(error);
+        }
 
-        var nindex = build_index(nodes, diagram.nodeKey());
-        var nf = not_found(nindex, edges, diagram.edgeSource(), 'edgeSource', 'nodes', 'edges');
-        if(nf)
-            errors.push(nf);
-        nf = not_found(nindex, edges, diagram.edgeTarget(), 'edgeTarget', 'nodes', 'edges');
-        if(nf)
-            errors.push(nf);
+        check(falsy(nodes, diagram.nodeKey(), 'nodeKey', 'nodes'));
+        check(falsy(edges, diagram.edgeSource(), 'edgeSource', 'edges'));
+        check(falsy(edges, diagram.edgeTarget(), 'edgeTarget', 'edges'));
+
+        var nindex = build_index(nodes, diagram.nodeKey()),
+            eindex = build_index(edges, diagram.edgeKey());
+        check(not_found(nindex, edges, diagram.edgeSource(), 'edgeSource', 'nodes', 'edges'));
+        check(not_found(nindex, edges, diagram.edgeTarget(), 'edgeTarget', 'nodes', 'edges'));
+
+        check(falsy(ports, function(p) {
+            return diagram.portNodeKey() && diagram.portNodeKey()(p) ||
+                diagram.portEdgeKey() && diagram.portEdgeKey()(p);
+        }, 'portNodeKey||portEdgeKey', 'ports'));
+
+        var named_ports = !diagram.portNodeKey() && [] || ports.filter(function(p) {
+            return diagram.portNodeKey()(p);
+        });
+        var anonymous_ports = !diagram.portEdgeKey() && [] || ports.filter(function(p) {
+            return diagram.portEdgeKey()(p);
+        });
+        check(not_found(nindex, named_ports, diagram.portNodeKey(), 'portNodeKey', 'nodes', 'ports'));
+        check(not_found(eindex, anonymous_ports, diagram.portEdgeKey(), 'portEdgeKey', 'edges', 'ports'));
 
         function count_text() {
             return nodes.length + ' nodes, ' + edges.length + ' edges, ' + ports.length + ' ports';
