@@ -1342,8 +1342,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 _chart.portEdgeKey() && _chart.portEdgeKey()(p);
         });
         var wports = regenerate_objects(_ports, ports, needports, function(p) {
-            return port_name(_chart.portNodeKey()(p),
-                             _chart.portEdgeKey() && _chart.portEdgeKey(p),
+            return port_name(_chart.portNodeKey() && _chart.portNodeKey()(p),
+                             _chart.portEdgeKey() && _chart.portEdgeKey()(p),
                              _chart.portName()(p));
         }, function(p1, p) {
             p1.orig = p;
