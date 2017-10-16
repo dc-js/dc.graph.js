@@ -44,6 +44,9 @@ dc_graph.validate = function() {
         var nf = not_found(nindex, edges, diagram.edgeSource(), 'edgeSource', 'nodes', 'edges');
         if(nf)
             errors.push(nf);
+        nf = not_found(nindex, edges, diagram.edgeTarget(), 'edgeTarget', 'nodes', 'edges');
+        if(nf)
+            errors.push(nf);
 
         function count_text() {
             return nodes.length + ' nodes, ' + edges.length + ' edges, ' + ports.length + ' ports';
