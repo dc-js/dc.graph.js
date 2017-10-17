@@ -60,10 +60,12 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
     function project(n, p) {
         p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
     }
+    function distance(p, p2) {
+        return Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y);
+    }
     function misses(p, p2) {
-        var dist = Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y);
+        var dist = distance(p, p2);
         var misses = dist > dc_graph.place_ports.MIN_DISTANCE;
-        console.log('dist', dist, misses ? 'misses' : 'does not miss');
         return misses;
     }
     function rand_within(a, b) {
@@ -163,21 +165,28 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
             }
         }
         inside = inside.filter(function(p) { return !unplaced.includes(p); });
-        console.log(nid, 'unplaced', unplaced.length);
 
         // place any remaining by trying random spots within the range until it misses all or we give up
-        var patience = dc_graph.place_ports.NFAILS;
+        var patience = dc_graph.place_ports.NFAILS, maxdist = 0, maxvec;
         while(unplaced.length) {
-            console.log('round', patience);
             var p = unplaced[0];
             p.vec = a_to_v(rand_within(p.abounds[0], p.abounds[1]));
             project(n, p);
-            if(!patience-- || inside.every(misses.bind(null, p))) {
+            var mindist = d3.min(inside, function(p2) { return distance(p, p2); });
+            if(mindist > maxdist) {
+                maxdist = mindist;
+                maxvec = p.vec;
+            }
+            if(!patience-- || mindist > dc_graph.place_ports.MIN_DISTANCE) {
+                if(patience<0) {
+                    console.warn('ran out of patience placing a port');
+                    p.vec = maxvec;
+                    project(n, p);
+                }
                 inside.push(p);
                 unplaced.shift();
-                if(patience<0)
-                    console.warn('ran out of patience placing a port');
                 patience = dc_graph.place_ports.NFAILS;
+                maxdist = 0;
             }
         }
     }
@@ -194,4 +203,4 @@ dc_graph.place_ports = function(diagram, nodes, wnodes, edges, wedges, ports, wp
     return node_ports;
 };
 dc_graph.place_ports.MIN_DISTANCE = 20;
-dc_graph.place_ports.NFAILS = 5;
+dc_graph.place_ports.NFAILS = 20;
