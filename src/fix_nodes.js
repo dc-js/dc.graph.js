@@ -91,6 +91,21 @@ dc_graph.fix_nodes = function(options) {
         });
         return Promise.all(promises);
     }
+    function fix_all_nodes(tell) {
+        if(tell === undefined)
+           tell = true;
+        var changes = _wnodes.map(function(n) {
+            return {n: n, fixed: {x: n.cola.x, y: n.cola.y}};
+        });
+        if(tell)
+            tell_then_set(changes);
+        else
+            set_changes(changes);
+    }
+    function clear_fixes() {
+        _behavior.strategy().clear_all_fixes && _behavior.strategy().clear_all_fixes();
+        _execute.clear_fixes();
+    }
     function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         _nodes = nodes;
         _wnodes = wnodes;
@@ -119,6 +134,10 @@ dc_graph.fix_nodes = function(options) {
         }),
         // callback for setting & fixing node position
         fixNode: property(null),
+        // save/load may want to nail everything / start from scratch
+        // (should probably be automatic though)
+        fixAllNodes: fix_all_nodes,
+        clearFixes: clear_fixes,
         strategy: property(dc_graph.fix_nodes.strategy.fix_last()),
         reportOverridesAsynchronously: property(true)
     };
@@ -148,6 +167,9 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
     var _age = 0;
     var _allFixes = {};
     return {
+        clear_all_fixes: function() {
+            _allFixes = {};
+        },
         request_fixes: function(exec, fixes) {
             ++_age;
             fixes.forEach(function(fix) {
