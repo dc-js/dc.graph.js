@@ -1088,6 +1088,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             val.parent(_chart);
     });
 
+    // S-spline any edges that are not going in this direction
+    _chart.enforceEdgeDirection = property(null);
+
     _chart.tickSize = deprecate_layout_algo_parameter('tickSize');
 
 
@@ -1801,6 +1804,44 @@ dc_graph.diagram = function (parent, chartGroup) {
                 Math.atan2(partial.y - spos.y, partial.x - spos.x)) + 'rad';
     }
 
+    function enforce_path_direction(path) {
+        var points = path.points, first = points[0], last = points[points.length-1];
+        switch(_chart.enforceEdgeDirection()) {
+        case 'LR':
+            if(first.x >= last.x) {
+                var dx = first.x - last.x;
+                return {
+                    points: [
+                        first,
+                        {x: first.x + dx, y: first.y},
+                        {x: last.x - dx, y: last.y},
+                        last
+                    ],
+                    bezDegree: 3,
+                    sourcePort: path.sourcePort,
+                    targetPort: path.targetPort
+                };
+            }
+            break;
+        case 'TB':
+            if(first.y >= last.y) {
+                var dy = first.y - last.y;
+                return {
+                    points: [
+                        first,
+                        {x: first.x, y: first.y + dy},
+                        {x: last.x, y: last.y - dy},
+                        last
+                    ],
+                    bezDegree: 3,
+                    sourcePort: path.sourcePort,
+                    targetPort: path.targetPort
+                };
+            }
+            break;
+        }
+        return path;
+    }
     function calc_edge_path(d, age, sx, sy, tx, ty) {
         if(d.cola.points) {
             // just to be clear, this is not a great way to populate old/new
@@ -1838,6 +1879,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                                               );
                 if(parallel.edges.length > 1 && parallel.rev[p])
                     path.points.reverse();
+                if(_chart.enforceEdgeDirection())
+                    path = enforce_path_direction(path);
                 parallel.edges[p].pos[age] = {
                     path: path,
                     orienthead: calculate_arrowhead_orientation(path.points, 'head'),
