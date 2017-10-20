@@ -126,7 +126,8 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                     .on('brushstart.' + things_name, brushstart)
                     .on('brushmove.' + things_name, brushmove);
             }
-        }
+        },
+        laterDraw: thinginess.laterDraw || false
     });
 
     _behavior.multipleSelect = property(true);

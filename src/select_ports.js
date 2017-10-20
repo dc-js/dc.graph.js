@@ -1,6 +1,7 @@
 dc_graph.select_ports = function(props) {
     var select_ports_group = dc_graph.select_things_group('select-ports-group', 'select-ports');
     var thinginess = {
+        laterDraw: true,
         intersectRect: null, // multiple selection not supported for now
         clickables: function() {
             return _behavior.parent().selectAllNodes('g.port');
