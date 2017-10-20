@@ -98,9 +98,11 @@ dc_graph.fix_nodes = function(options) {
             return {n: n, fixed: {x: n.cola.x, y: n.cola.y}};
         });
         if(tell)
-            tell_then_set(changes);
-        else
+            return tell_then_set(changes);
+        else {
             set_changes(changes);
+            return Promise.resolve(undefined);
+        }
     }
     function clear_fixes() {
         _behavior.strategy().clear_all_fixes && _behavior.strategy().clear_all_fixes();
