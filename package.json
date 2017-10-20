@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "crossfilter2": "~1.4.0-alpha.1",
+    "css-layout": "1.x",
     "dc": "~2.1.0",
     "dagre": "0.7.x",
     "d3": "3.x",

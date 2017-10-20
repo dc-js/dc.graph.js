@@ -168,6 +168,7 @@ module.exports = function (grunt) {
                             'timeline.js',
                             'node_modules/bootstrap/dist/js/bootstrap.js',
                             'node_modules/crossfilter2/crossfilter.js',
+                            'node_modules/css-layout/dist/css-layout.js',
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
                             'node_modules/jquery/dist/jquery.js',
