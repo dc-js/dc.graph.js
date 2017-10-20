@@ -1836,7 +1836,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                                               last, dir, _chart.parallelEdgeOffset(),
                                               source_padding, target_padding
                                               );
-                if(parallel.rev[p])
+                if(parallel.edges.length > 1 && parallel.rev[p])
                     path.points.reverse();
                 parallel.edges[p].pos[age] = {
                     path: path,
