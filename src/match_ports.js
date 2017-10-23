@@ -17,11 +17,13 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         nids.push(diagram.portNodeKey.eval(source.port));
         symbolPorts.animateNodes(nids);
     }
+    function is_valid(sourcePort, targetPort) {
+        return (_behavior.allowParallel() || !_wedges.some(function(e) {
+            return sourcePort.edges.indexOf(e) >= 0 && targetPort.edges.indexOf(e) >= 0;
+        })) && _behavior.isValid()(sourcePort, targetPort);
+    }
     var _behavior = {
         isValid: property(function(sourcePort, targetPort) {
-            if(!_behavior.allowParallel() && _wedges.some(function(e) {
-                return sourcePort.edges.indexOf(e) >= 0 && targetPort.edges.indexOf(e) >= 0;
-            })) return false;
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
         }),
         allowParallel: property(false).react(function(v) {
@@ -30,7 +32,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         }),
         hoverPort: function(port) {
             if(port) {
-                _validTargets = _wports.filter(_behavior.isValid().bind(null, port));
+                _validTargets = _wports.filter(is_valid.bind(null, port));
                 if(_validTargets.length)
                     return change_state(_validTargets, 'shimmer-medium');
             } else if(_validTargets)
@@ -38,7 +40,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             return null;
         },
         startDragEdge: function(source) {
-            _validTargets = _wports.filter(_behavior.isValid().bind(null, source.port));
+            _validTargets = _wports.filter(is_valid.bind(null, source.port));
             var nids = change_state(_validTargets, 'shimmer');
             if(_validTargets.length) {
                 symbolPorts.enableHover(false);
@@ -50,7 +52,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             return _validTargets.length !== 0;
         },
         changeDragTarget: function(source, target) {
-            var nids, valid = target && _behavior.isValid()(source.port, target.port), before;
+            var nids, valid = target && is_valid(source.port, target.port), before;
             if(valid) {
                 nids = change_state(_validTargets, 'small');
                 target.port.state = 'large'; // it's one of the valid
@@ -66,7 +68,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         finishDragEdge: function(source, target) {
             symbolPorts.enableHover(true);
             reset_ports(source);
-            return _behavior.isValid()(source.port, target.port);
+            return is_valid(source.port, target.port);
         },
         cancelDragEdge: function(source) {
             symbolPorts.enableHover(true);
