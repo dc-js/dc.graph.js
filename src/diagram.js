@@ -1484,7 +1484,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('startOffset', '50%')
                 .attr('xlink:href', function(d) {
                     var id = _chart.textpathId(d);
-                    return '#' + id;
+                    // angular on firefox needs absolute paths for fragments
+                    return window.location.href.split('#')[0] + '#' + id;
                 });
         var textPaths = _defs.selectAll('path.edge-label-path')
                 .data(wedges, _chart.textpathId);
