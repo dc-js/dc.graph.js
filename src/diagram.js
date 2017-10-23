@@ -1813,8 +1813,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return {
                     points: [
                         first,
-                        {x: first.x + dx, y: first.y},
-                        {x: last.x - dx, y: last.y},
+                        {x: first.x + dx, y: first.y - dx/2},
+                        {x: last.x - dx, y: last.y - dx/2},
                         last
                     ],
                     bezDegree: 3,
@@ -1829,8 +1829,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 return {
                     points: [
                         first,
-                        {x: first.x, y: first.y + dy},
-                        {x: last.x, y: last.y - dy},
+                        {x: first.x + dy/2, y: first.y + dy},
+                        {x: last.x + dy/2, y: last.y - dy},
                         last
                     ],
                     bezDegree: 3,
