@@ -1411,19 +1411,27 @@ dc_graph.diagram = function (parent, chartGroup) {
         // annotate parallel edges so we can draw them specially
         if(_chart.parallelEdgeOffset()) {
             var em = new Array(wnodes.length);
-            for(var i = 0; i < wnodes.length; ++i) {
+            for(var i = 0; i < wnodes.length; ++i)
                 em[i] = new Array(i);
-                for(var j = 0; j < i; ++j)
-                    em[i][j] = {
-                        rev: [],
-                        edges: []
-                    };
-            }
             wedges.forEach(function(e) {
                 e.pos = e.pos || {};
-                var min = Math.min(e.source.index, e.target.index),
-                    max = Math.max(e.source.index, e.target.index);
-                e.parallel = em[max][min];
+                var min, max, minattr, maxattr;
+                if(e.source.index < e.target.index) {
+                    min = e.source.index; max = e.target.index;
+                    minattr = 'edgeSourcePortName'; maxattr = 'edgeTargetPortName';
+                } else {
+                    max = e.source.index; min = e.target.index;
+                    maxattr = 'edgeSourcePortName'; minattr = 'edgeTargetPortName';
+                }
+                var minport = _chart[minattr].eval(e) || 'no port',
+                    maxport = _chart[maxattr].eval(e) || 'no port';
+                em[max][min] = em[max][min] || {};
+                em[max][min][maxport] = em[max][min][maxport] || {};
+                e.parallel = em[max][min][maxport][minport] = em[max][min][maxport][minport] || {
+                    rev: [],
+                    edges: []
+                };
+                console.log('parallel', min,max,minport,maxport, e.parallel);
                 e.parallel.edges.push(e);
                 e.parallel.rev.push(min !== e.source.index);
             });
