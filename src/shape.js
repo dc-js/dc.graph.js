@@ -61,57 +61,84 @@ function point_on_polygon(points, x0, y0, x1, y1) {
 
 // as many as we can get from
 // http://www.graphviz.org/doc/info/shapes.html
-var dc_graph_shapes_ = {
-    ellipse: function() {
-        return {shape: 'ellipse'};
+dc_graph.shape_presets = {
+    egg: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 100, distortion: -0.25};
+        }
     },
-    egg: function() {
-        return {shape: 'polygon', sides: 100, distortion: -0.25};
+    triangle: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 3};
+        }
     },
-    triangle: function() {
-        return {shape: 'polygon', sides: 3};
+    rectangle: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4};
+        }
     },
-    rectangle: function() {
-        return {shape: 'polygon', sides: 4};
+    diamond: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4, rotation: 45};
+        }
     },
-    diamond: function() {
-        return {shape: 'polygon', sides: 4, rotation: 45};
+    trapezium: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4, distortion: -0.5};
+        }
     },
-    trapezium: function() {
-        return {shape: 'polygon', sides: 4, distortion: -0.5};
+    parallelogram: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4, skew: 0.5};
+        }
     },
-    parallelogram: function() {
-        return {shape: 'polygon', sides: 4, skew: 0.5};
+    pentagon: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 5};
+        }
     },
-    pentagon: function() {
-        return {shape: 'polygon', sides: 5};
+    hexagon: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 6};
+        }
     },
-    hexagon: function() {
-        return {shape: 'polygon', sides: 6};
+    septagon: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 7};
+        }
     },
-    septagon: function() {
-        return {shape: 'polygon', sides: 7};
+    octagon: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 8};
+        }
     },
-    octagon: function() {
-        return {shape: 'polygon', sides: 8};
+    invtriangle: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 3, rotation: 180};
+        }
     },
-    invtriangle: function() {
-        return {shape: 'polygon', sides: 3, rotation: 180};
+    invtrapezium: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4, distortion: 0.5};
+        }
     },
-    invtrapezium: function() {
-        return {shape: 'polygon', sides: 4, distortion: 0.5};
-    },
-    square: function() {
-        return {shape: 'polygon', sides: 4};
-    },
-    polygon: function(def) {
-        return {
-            shape: 'polygon',
-            sides: def.sides,
-            skew: def.skew,
-            distortion: def.distortion,
-            rotation: def.rotation
-        };
+    square: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4};
+        }
     }
 };
 
@@ -123,16 +150,21 @@ dc_graph.available_shapes = function() {
 var default_shape = {shape: 'ellipse'};
 
 function elaborate_shape(chart, def) {
-    var shape = def.shape;
-    if(def.shape === 'random') {
+    var shape = def.shape, def2 = Object.assign({}, def);
+    delete def2.shape;
+    if(shape === 'random') {
         var available = dc_graph.available_shapes(); // could include chart.shape !== ellipse, polygon
         shape = available[Math.floor(Math.random()*available.length)];
     }
-    else if(chart.shape.enum().indexOf(def.shape) !== -1)
-        return chart.shape(def.shape).elaborate(def);
-    if(!dc_graph_shapes_[shape])
-        throw new Error('unknown shape ' + shape);
-    return dc_graph_shapes_[shape](def);
+    else if(chart.shape.enum().indexOf(shape) !== -1)
+        return chart.shape(shape).elaborate({shape: shape}, def2);
+    if(!dc_graph.shape_presets[shape]) {
+        console.warn('unknown shape ', shape);
+        shape = 'rectangle';
+    }
+    var preset = dc_graph.shape_presets[shape].preset(def2);
+    preset.shape = dc_graph.shape_presets[shape].generator;
+    return chart.shape(preset.shape).elaborate(preset, def2);
 }
 
 function infer_shape(chart) {
@@ -373,8 +405,8 @@ function bezier_point(points, t_) {
 dc_graph.ellipse_shape = function() {
     var _shape = {
         parent: property(null),
-        elaborate: function(def) {
-            return dc_graph_shapes_.ellipse(def);
+        elaborate: function(preset, def) {
+            return Object.assign(preset, def);
         },
         intersect_vec: function(d, deltaX, deltaY) {
             return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
@@ -412,8 +444,8 @@ dc_graph.ellipse_shape = function() {
 dc_graph.polygon_shape = function() {
     var _shape = {
         parent: property(null),
-        elaborate: function(def) {
-            return dc_graph_shapes_.polygon(def);
+        elaborate: function(preset, def) {
+            return Object.assign(preset, def);
         },
         intersect_vec: function(d, deltaX, deltaY) {
             return point_on_polygon(d.dcg_points, 0, 0, deltaX, deltaY);
@@ -451,12 +483,9 @@ dc_graph.rounded_rectangle_shape = function() {
     var _polygon = dc_graph.polygon_shape();
     var _shape = {
         parent: property(null),
-        elaborate: function(def) {
-            return {
-                shape: def.shape,
-                rx: def.rx || 10,
-                ry: def.ry || 10
-            };
+        elaborate: function(preset, def) {
+            preset = Object.assign({rx: 10, ry: 10}, preset);
+            return Object.assign(preset, def);
         },
         intersect_vec: function(d, deltaX, deltaY) {
             var points = [
