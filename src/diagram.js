@@ -1412,8 +1412,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_chart.parallelEdgeOffset()) {
             var em = new Array(wnodes.length);
             for(var i = 0; i < wnodes.length; ++i) {
-                em[i] = new Array(wnodes.length); // technically could be diagonal array
-                for(var j = 0; j < wnodes.length; ++j)
+                em[i] = new Array(i);
+                for(var j = 0; j < i; ++j)
                     em[i][j] = {
                         rev: [],
                         edges: []
@@ -1423,7 +1423,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 e.pos = e.pos || {};
                 var min = Math.min(e.source.index, e.target.index),
                     max = Math.max(e.source.index, e.target.index);
-                e.parallel = em[min][max];
+                e.parallel = em[max][min];
                 e.parallel.edges.push(e);
                 e.parallel.rev.push(min !== e.source.index);
             });
