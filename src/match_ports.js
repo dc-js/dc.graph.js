@@ -26,10 +26,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         isValid: property(function(sourcePort, targetPort) {
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
         }),
-        allowParallel: property(false).react(function(v) {
-            if(v)
-                throw 'parallel edges not supported yet';
-        }),
+        allowParallel: property(false),
         hoverPort: function(port) {
             if(port) {
                 _validTargets = _wports.filter(is_valid.bind(null, port));
