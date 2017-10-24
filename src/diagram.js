@@ -1465,6 +1465,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'edge-hover')
             .attr('opacity', 0)
+            .attr('fill', 'none')
             .attr('stroke', 'green')
             .attr('stroke-width', 10)
             .on('mouseover', function(d) {
