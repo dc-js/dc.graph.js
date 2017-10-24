@@ -100,6 +100,7 @@ if(shape) {
         shape.rotation = +parts[4] || 0;
         break;
     }
+    shape.regular = qs.regular!=='false';
 }
 
 function show_type_graph(nodes, edges, sourceattr, targetattr) {

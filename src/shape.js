@@ -203,7 +203,8 @@ function ellipse_attrs(chart) {
 function polygon_attrs(chart, d) {
     return {
         d: function(d) {
-            var def = d.dcg_shape,
+            var rx = d.dcg_rx, ry = d.dcg_ry,
+                def = d.dcg_shape,
                 sides = def.sides || 4,
                 skew = def.skew || 0,
                 distortion = def.distortion || 0,
@@ -216,12 +217,14 @@ function polygon_attrs(chart, d) {
                 angles.push({x: Math.cos(theta), y: Math.sin(theta)});
             }
             var yext = d3.extent(angles, function(theta) { return theta.y; });
-            var rx = d.dcg_rx,
-                ry = d.dcg_ry / Math.min(-yext[0], yext[1]);
+            if(def.regular)
+                rx = ry = Math.max(rx, ry);
+            else
+                ry = ry / Math.min(-yext[0], yext[1]);
             d.dcg_points = angles.map(function(theta) {
                 var x = rx*theta.x,
                     y = ry*theta.y;
-                x *= 1 + distortion*((d.dcg_ry-y)/d.dcg_ry - 1);
+                x *= 1 + distortion*((ry-y)/ry - 1);
                 x -= skew*y/2;
                 return {x: x, y: y};
             });
