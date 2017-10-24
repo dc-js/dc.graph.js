@@ -363,5 +363,8 @@ source(function(error, data) {
 
     if(qs.play)
         runner.toggle();
+
+    if(qs.infdraw)
+        diagram.layoutUnchanged(true);
 });
 
