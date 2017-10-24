@@ -63,6 +63,8 @@ function point_on_polygon(points, x0, y0, x1, y1) {
 // http://www.graphviz.org/doc/info/shapes.html
 dc_graph.shape_presets = {
     egg: {
+        // not really: an ovoid should be two half-ellipses stuck together
+        // https://en.wikipedia.org/wiki/Oval
         generator: 'polygon',
         preset: function() {
             return {sides: 100, distortion: -0.25};
