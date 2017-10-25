@@ -235,17 +235,16 @@ dc_graph.symbol_port_style = function() {
         var symbolEnter = portEnter.append('path')
                 .attr({
                     class: 'port-symbol',
-                    fill: symbol_fill,
                     d: function(d) {
-                        return port_symbol(d,  _style.smallRadius.eval(d));
+                        return port_symbol(d, _style.smallRadius.eval(d));
                     }
                 });
         var symbol = port.select('path.port-symbol');
+        symbol.attr('fill', symbol_fill);
         symbol.transition()
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr({
-                fill: symbol_fill,
                 d: function(d) {
                     return port_symbol(d, _style.smallRadius.eval(d));
                 }
