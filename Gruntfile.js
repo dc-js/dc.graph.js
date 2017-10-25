@@ -322,6 +322,7 @@ module.exports.jsFiles = [
     'src/expand_collapse.js',
     'src/draw_graphs.js',
     'src/match_ports.js',
+    'src/wildcard_ports.js',
     'src/symbol_port_style.js',
     'src/load_graph.js',
     'src/munge_graph.js',
