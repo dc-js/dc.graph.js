@@ -165,7 +165,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Boolean}
      * @return {dc_graph.diagram}
      **/
-    _chart.altKeyZoom = property(false);
+    _chart.modKeyZoom = _chart.altKeyZoom = property(false);
 
     /**
      * Set or get the fitting strategy for the canvas, which affects how the
@@ -2733,14 +2733,21 @@ dc_graph.diagram = function (parent, chartGroup) {
             .on('zoom', doZoom)
             .x(_chart.x()).y(_chart.y());
         if(_chart.mouseZoomable()) {
-            if(_chart.altKeyZoom()) {
+            var mod, mods;
+            if((mod = _chart.modKeyZoom())) {
+                if (Array.isArray (mod))
+                    mods = mod.slice ();
+                else if (typeof mod === "string")
+                    mods = [mod];
+                else
+                    mods = ['Alt'];
                 d3.select(document)
                     .on('keydown', function() {
-                        if(d3.event.key === 'Alt')
+                        if(mods.indexOf (d3.event.key) > -1)
                             enableZoom();
                     })
                     .on('keyup', function() {
-                        if(d3.event.key === 'Alt')
+                        if(mods.indexOf (d3.event.key) > -1)
                             disableZoom();
                     });
             }
