@@ -31,7 +31,8 @@ dc_graph.symbol_port_style = function() {
     _style.cascade = cascade(_style);
 
     function symbol_fill(d) {
-        return _style.colorScale()(_style.color.eval(d));
+        var symcolor = _style.color.eval(d);
+        return symcolor ? _style.colorScale()(symcolor) : 'none';
     }
     function port_transform(d) {
         var l = Math.hypot(d.pos.x, d.pos.y),
@@ -41,8 +42,9 @@ dc_graph.symbol_port_style = function() {
         return 'translate(' + pos.x + ',' + pos.y + ')';
     }
     function port_symbol(d, size) {
-        return d3.svg.symbol()
-            .type(_style.symbolScale()(_style.symbol.eval(d)))
+        var symname = _style.symbol.eval(d);
+        return symname && d3.svg.symbol()
+            .type(_style.symbolScale()(symname))
             .size(size*size)
         ();
     }
