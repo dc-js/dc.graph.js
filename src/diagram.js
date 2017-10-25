@@ -21,7 +21,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _chart = dc.marginMixin({});
     _chart.__dcFlag__ = dc.utils.uniqueId();
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'transitionsStarted', 'zoomed');
+    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
     var _nodePorts; // ports sorted by node id
@@ -1132,6 +1132,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _ports[port_name(nid, eid, name)];
     };
 
+    _chart.nodePorts = function() {
+        return _nodePorts;
+    };
+
     /**
      * Instructs cola.js to fit the connected components.
      *
@@ -1435,7 +1439,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                     rev: [],
                     edges: []
                 };
-                console.log('parallel', min,max,minport,maxport, e.parallel);
                 e.parallel.edges.push(e);
                 e.parallel.rev.push(min !== e.source.index);
             });
@@ -1674,12 +1677,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!_chart.initialOnly())
                     populate_cola(nodes, edges);
                 if(_chart.showLayoutSteps()) {
-                    // what's the relation between this and the 'data' event?
-                    if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
-                        _nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
+                    init_node_ports(_nodes, wports);
+                    _dispatch.receivedLayout(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
+                    propagate_port_positions(_nodes, wedges, _ports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, true);
-                    if(_nodePorts)
-                        draw_ports(_nodePorts, node);
+                    draw_ports(node);
                     // should do this only once
                     _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
@@ -1692,11 +1694,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!_chart.showLayoutSteps()) {
                     if(!_chart.initialOnly())
                         populate_cola(nodes, edges);
-                    if(_chart.layoutEngine().needsStage && _chart.layoutEngine().needsStage('ports'))
-                        _nodePorts = dc_graph.place_ports(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
+                    init_node_ports(_nodes, wports);
+                    _dispatch.receivedLayout(_chart, _nodes, wnodes, _edges, wedges, _ports, wports);
+                    propagate_port_positions(_nodes, wedges, _ports);
                     draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, true);
-                    if(_nodePorts)
-                        draw_ports(_nodePorts, node);
+                    draw_ports(node);
                     _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
                 else layout_done(true);
@@ -1735,6 +1737,62 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
+    function norm(v) {
+        var len = Math.hypot(v[0], v[1]);
+        return [v[0]/len, v[1]/len];
+    }
+    function edge_vec(n, e) {
+        var dy = e.target.cola.y - e.source.cola.y,
+            dx = e.target.cola.x - e.source.cola.x;
+        if(e.source !== n)
+            dy = -dy, dx = -dx;
+        return norm([dx, dy]);
+    }
+    function init_node_ports(nodes, wports) {
+        _nodePorts = {};
+        // assemble port-lists for nodes, again because we don't have a metagraph.
+        wports.forEach(function(p) {
+            var nid = _chart.nodeKey.eval(p.node);
+            var np = _nodePorts[nid] = _nodePorts[nid] || [];
+            np.push(p);
+        });
+        for(var nid in _nodePorts) {
+            var n = nodes[nid],
+                nports = _nodePorts[nid];
+            // initial positions: use average of edge vectors, if any, or existing position
+            nports.forEach(function(p) {
+                if(p.edges.length) {
+                    var vecs = p.edges.map(edge_vec.bind(null, n));
+                    p.vec = [
+                        d3.sum(vecs, function(v) { return v[0]; })/vecs.length,
+                        d3.sum(vecs, function(v) { return v[1]; })/vecs.length
+                    ];
+                } else p.vec = p.vec || undefined;
+                p.pos = null;
+            });
+        }
+    }
+    function propagate_port_positions(nodes, wedges, ports) {
+        // make sure we have projected vectors to positions
+        for(var nid in _nodePorts) {
+            var n = nodes[nid];
+            _nodePorts[nid].forEach(function(p) {
+                if(!p.pos)
+                    project_port(_chart, n, p);
+            });
+        }
+
+        // propagate port positions to edge endpoints
+        wedges.forEach(function(e) {
+            var name = _chart.edgeSourcePortName.eval(e);
+            e.sourcePort.pos = name ? ports[port_name(_chart.nodeKey.eval(e.source), null, name)].pos :
+                ports[port_name(null, _chart.edgeKey.eval(e), 'source')].pos;
+            name = _chart.edgeTargetPortName.eval(e);
+            e.targetPort.pos = name ? ports[port_name(_chart.nodeKey.eval(e.target), null, name)].pos :
+                ports[port_name(null, _chart.edgeKey.eval(e), 'target')].pos;
+        });
+    }
+
     function _refresh(node, edge) {
         edge
             .attr('stroke', _chart.edgeStroke.eval)
@@ -1756,8 +1814,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
 
         _chart._updateNode(node);
-        if(_nodePorts)
-            draw_ports(_nodePorts, node);
+        draw_ports(node);
     }
 
     _chart.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
@@ -2226,11 +2283,13 @@ dc_graph.diagram = function (parent, chartGroup) {
             edgeHover.attr('d', render_edge_path('new'));
     }
 
-    function draw_ports(nodePorts, node) {
+    function draw_ports(node) {
+        if(!_nodePorts)
+            return;
         _chart.portStyle.enum().forEach(function(style) {
             var nodePorts2 = {};
-            for(var nid in nodePorts)
-                nodePorts2[nid] = nodePorts[nid].filter(function(p) {
+            for(var nid in _nodePorts)
+                nodePorts2[nid] = _nodePorts[nid].filter(function(p) {
                     return _chart.portStyleName.eval(p) === style;
                 });
             _chart.portStyle(style).drawPorts(nodePorts2, node);
