@@ -1892,7 +1892,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var partial = bezier_point(points, end === 'tail' ? 0.25 : 0.75);
         return (end === 'head' ?
                 Math.atan2(tpos.y - partial.y, tpos.x - partial.x) :
-                Math.atan2(partial.y - spos.y, partial.x - spos.x)) + 'rad';
+                Math.atan2(spos.y - partial.y, spos.x - partial.x)) + 'rad';
     }
 
     function enforce_path_direction(path, spos, tpos) {
