@@ -1818,11 +1818,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 Math.atan2(partial.y - spos.y, partial.x - spos.x)) + 'rad';
     }
 
-    function enforce_path_direction(path) {
+    function enforce_path_direction(path, spos, tpos) {
         var points = path.points, first = points[0], last = points[points.length-1];
         switch(_chart.enforceEdgeDirection()) {
         case 'LR':
-            if(first.x >= last.x) {
+            if(spos.x >= tpos.x) {
                 var dx = first.x - last.x;
                 return {
                     points: [
@@ -1838,7 +1838,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             }
             break;
         case 'TB':
-            if(first.y >= last.y) {
+            if(spos.y >= tpos.y) {
                 var dy = first.y - last.y;
                 return {
                     points: [
@@ -1894,7 +1894,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(parallel.edges.length > 1 && parallel.rev[p])
                     path.points.reverse();
                 if(_chart.enforceEdgeDirection())
-                    path = enforce_path_direction(path);
+                    path = enforce_path_direction(path, source.cola, target.cola);
                 parallel.edges[p].pos[age] = {
                     path: path,
                     orienthead: calculate_arrowhead_orientation(path.points, 'head'),
