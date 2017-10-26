@@ -16,6 +16,10 @@ function split_port_name(portname) {
     };
 }
 function project_port(diagram, n, p) {
+    if(!p.vec) {
+        console.assert(!p.edges.length);
+        throw new Error("port has not been placed, maybe install place_ports? " + p.name);
+    }
     p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
 }
 
