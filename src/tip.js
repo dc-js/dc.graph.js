@@ -44,6 +44,10 @@ dc_graph.tip = function(options) {
                          }
                      });
                  };
+             if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
+                 hide_tip.call(this);
+                 return;
+             }
              if(_hideTimeout)
                  window.clearTimeout(_hideTimeout);
              if(_behavior.delay()) {
@@ -56,6 +60,7 @@ dc_graph.tip = function(options) {
 
     function hide_tip() {
         if(d3.event.relatedTarget &&
+           (!_behavior.selection().exclude || !_behavior.selection().exclude(d3.event.target)) &&
            (this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
             _behavior.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
             return;
@@ -183,6 +188,28 @@ dc_graph.tip.select_node_and_edge = function() {
             var selection = chart.selectAll('.foo-this-does-not-exist');
             selection[0] = node[0].concat(ehover[0]);
             return selection;
+        },
+        exclude: function(element) {
+            return ancestor_has_class(element, 'port');
+        }
+    };
+};
+
+dc_graph.tip.select_node = function() {
+    return {
+        select: function(chart, node, edge, ehover) {
+            return node;
+        },
+        exclude: function(element) {
+            return ancestor_has_class(element, 'port');
+        }
+    };
+};
+
+dc_graph.tip.select_edge = function() {
+    return {
+        select: function(chart, node, edge, ehover) {
+            return edge;
         }
     };
 };
