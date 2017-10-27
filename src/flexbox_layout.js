@@ -66,13 +66,15 @@ dc_graph.flexbox_layout = function(id) {
         tree.flexnode = flexnode;
         return flexnode;
     }
-    function apply_layout(tree) {
+    function apply_layout(offset, tree) {
         console.log(tree.node.dcg_nodeKey, tree.flexnode.layout);
-        tree.node.x = (tree.flexnode.layout.left + tree.flexnode.layout.right)/2;
-        tree.node.y = (tree.flexnode.layout.top + tree.flexnode.layout.bottom)/2;
+        tree.node.x = offset.x + tree.flexnode.layout.left + tree.flexnode.layout.width/2;
+        tree.node.y = offset.y + tree.flexnode.layout.top + tree.flexnode.layout.height/2;
         Object.keys(tree.children)
             .map(function(key) { return tree.children[key]; })
-            .map(apply_layout);
+            .forEach(function(child) {
+                apply_layout({x: offset.x + tree.flexnode.layout.left, y: offset.y + tree.flexnode.layout.top}, child);
+            });
     }
     function dispatchState(wnodes, wedges, event) {
         _dispatch[event](
@@ -89,7 +91,7 @@ dc_graph.flexbox_layout = function(id) {
         var flexTree = create_flextree(defaults, _tree);
         console.log(JSON.stringify(flexTree, null, 2));
         computeLayout(flexTree);
-        apply_layout(_tree);
+        apply_layout({x: 0, y: 0}, _tree);
         dispatchState(_wnodes, [], 'end');
     }
     function stop() {

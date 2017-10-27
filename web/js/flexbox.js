@@ -3,18 +3,18 @@ var parentNodes = [
         id: 'flex+',
         flexDirection: 'row',
         justifyContent: 'space-around',
-        padding: 50
+        padding: 10
     },
     {
         id: 'flex+a',
         flexDirection: 'column',
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-start',
         flex: 1
     },
     {
         id: 'flex+b',
         flexDirection: 'column',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         flex: 1
     }
 ];
@@ -24,15 +24,14 @@ var data = d3.range(7).map(function(i) {
         id: 'flex+a,' + i,
         label: 'node a' + i,
         alignSelf: 'stretch',
-        flex: 1
+        flex: 0
     };
 }).concat(d3.range(9).map(function(i) {
     return {
         id: 'flex+b,' + i,
         label: 'node b' + i,
         alignSelf: 'stretch',
-        minHeight: 100,
-        flex: 1
+        flex: 0
     };
 }));
 
