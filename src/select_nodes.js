@@ -1,12 +1,6 @@
 dc_graph.select_nodes = function(props) {
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
 
-    // https://stackoverflow.com/questions/16863917/check-if-class-exists-somewhere-in-parent-vanilla-js
-    function ancestor_has_class(element, classname) {
-        if(d3.select(element).classed(classname))
-            return true;
-        return element.parentElement && ancestor_has_class(element.parentElement, classname);
-    }
     var thinginess = {
         intersectRect: function(ext) {
             return _behavior.parent().selectAllNodes().data().filter(function(n) {

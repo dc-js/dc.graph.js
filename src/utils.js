@@ -145,3 +145,10 @@ function promise_identity(x) {
 
 // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
 var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
+
+// https://stackoverflow.com/questions/16863917/check-if-class-exists-somewhere-in-parent-vanilla-js
+function ancestor_has_class(element, classname) {
+    if(d3.select(element).classed(classname))
+        return true;
+    return element.parentElement && ancestor_has_class(element.parentElement, classname);
+}
