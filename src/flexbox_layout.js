@@ -45,8 +45,9 @@ dc_graph.flexbox_layout = function(id) {
     function create_flextree(attrs, tree) {
         var flexnode = {style: {}};
         if(Object.keys(tree.children).length) {
-            delete tree.node.width; delete tree.node.height;
+            tree.node.width = tree.node.height = 1000;
         }
+        var attrs2 = Object.assign({}, attrs);
         if(tree.node)
             Object.assign(attrs, tree.node);
         for(var attr in attrs) {
@@ -60,13 +61,13 @@ dc_graph.flexbox_layout = function(id) {
         flexnode.children = Object.keys(tree.children)
                 .sort(attrs.sort)
                 .map(function(key) {
-                    return create_flextree(Object.assign({}, attrs), tree.children[key]);
+                    return create_flextree(Object.assign({}, attrs2), tree.children[key]);
                 });
         tree.flexnode = flexnode;
         return flexnode;
     }
     function apply_layout(tree) {
-        console.log(tree.node.dcg_nodeKey, tree.flexnode.style, tree.flexnode.layout);
+        console.log(tree.node.dcg_nodeKey, tree.flexnode.layout);
         tree.node.x = (tree.flexnode.layout.left + tree.flexnode.layout.right)/2;
         tree.node.y = (tree.flexnode.layout.top + tree.flexnode.layout.bottom)/2;
         Object.keys(tree.children)
@@ -86,6 +87,7 @@ dc_graph.flexbox_layout = function(id) {
             sort: d3.ascending
         };
         var flexTree = create_flextree(defaults, _tree);
+        console.log(JSON.stringify(flexTree, null, 2));
         computeLayout(flexTree);
         apply_layout(_tree);
         dispatchState(_wnodes, [], 'end');

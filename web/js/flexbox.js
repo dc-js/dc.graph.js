@@ -2,31 +2,37 @@ var parentNodes = [
     {
         id: 'flex+',
         flexDirection: 'row',
-        alignSelf: 'stretch',
         justifyContent: 'space-around',
-        padding: 10
+        padding: 50
     },
     {
         id: 'flex+a',
         flexDirection: 'column',
-        justifyContent: 'flex-start'
+        justifyContent: 'flex-end',
+        flex: 1
     },
     {
         id: 'flex+b',
         flexDirection: 'column',
-        justifyContent: 'flex-start'
+        justifyContent: 'space-between',
+        flex: 1
     }
 ];
 
 var data = d3.range(7).map(function(i) {
     return {
         id: 'flex+a,' + i,
-        label: 'node a' + i
+        label: 'node a' + i,
+        alignSelf: 'stretch',
+        flex: 1
     };
 }).concat(d3.range(9).map(function(i) {
     return {
         id: 'flex+b,' + i,
-        label: 'node b' + i
+        label: 'node b' + i,
+        alignSelf: 'stretch',
+        minHeight: 100,
+        flex: 1
     };
 }));
 
