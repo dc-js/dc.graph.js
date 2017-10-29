@@ -36,26 +36,29 @@ var data = d3.range(7).map(function(i) {
 var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), n => n.id),
     edge_flat = dc_graph.flat_group.make([], e => e.id);
 
+var layout = dc_graph.flexbox_layout()
+    .addressToKey(function(ad) {
+        switch(ad.length) {
+        case 0: return 'top';
+        case 1: return 'col-' + ad[0];
+        case 2: return ad[0] + ad[1];
+        default: throw new Error('not expecting more than depth 2');
+        }
+    })
+    .keyToAddress(function(key) {
+        if(key==='top') return [];
+        else if(/^col-/.test(key)) return [key.split('col-')[1]];
+        else if(/^(a|b)/.test(key)) return [key[0], +key.slice(1)];
+        else throw new Error('couldn\'t parse key: ' + key);
+    });
+
 var diagram = dc_graph.diagram('#graph')
-        .layoutEngine(dc_graph.flexbox_layout()
-                      .addressToKey(function(ad) {
-                          switch(ad.length) {
-                          case 0: return 'top';
-                          case 1: return 'col-' + ad[0];
-                          case 2: return ad[0] + ad[1];
-                          default: throw new Error('not expecting more than depth 2');
-                          }
-                      })
-                      .keyToAddress(function(key) {
-                          if(key==='top') return [];
-                          else if(/^col-/.test(key)) return [key.split('col-')[1]];
-                          else if(/^(a|b)/.test(key)) return [key[0], +key.slice(1)];
-                          else throw new Error('couldn\'t parse key: ' + key);
-                      }))
+        .layoutEngine(layout)
         .width(1000).height(1000)
         .mouseZoomable(false)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
+        .nodeShape(n => layout.keyToAddress()(diagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rectangle')
         .edgeLabel(null);
 
 var drawGraphs = dc_graph.draw_graphs({
