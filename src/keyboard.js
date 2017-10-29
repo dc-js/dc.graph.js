@@ -10,7 +10,7 @@ dc_graph.keyboard = function() {
     function add_behavior(chart) {
         _input_anchor = chart.svg().selectAll('a#dcgraph-keyboard').data([1]);
         _input_anchor.enter()
-            .append('a').attr({
+            .insert('a', ':first-child').attr({
                 id: 'dcgraph-keyboard',
                 href: '#'
             });
