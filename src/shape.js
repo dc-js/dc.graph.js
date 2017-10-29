@@ -254,6 +254,8 @@ function polygon_attrs(chart, d) {
             var yext = d3.extent(angles, function(theta) { return theta.y; });
             if(def.regular)
                 rx = ry = Math.max(rx, ry);
+            else if(rx < ry && !def.squeeze)
+                rx = ry;
             else
                 ry = ry / Math.min(-yext[0], yext[1]);
             d.dcg_points = angles.map(function(theta) {
