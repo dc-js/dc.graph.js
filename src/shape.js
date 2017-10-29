@@ -505,7 +505,6 @@ dc_graph.polygon_shape = function() {
 };
 
 dc_graph.rounded_rectangle_shape = function() {
-    var _polygon = dc_graph.polygon_shape();
     var _shape = {
         parent: property(null),
         elaborate: function(preset, def) {
@@ -522,8 +521,6 @@ dc_graph.rounded_rectangle_shape = function() {
             return point_on_polygon(points, 0, 0, deltaX, deltaY); // not rounded
         },
         calc_radii: function(d, ry, bbox) {
-            // use default sides === 4, smelly
-            // _polygon.calc_radii(d, ry, bbox);
             return {
                 rx: bbox.width / 2,
                 ry: Math.max(ry, bbox.height/2 + 5)
