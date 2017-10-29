@@ -143,9 +143,19 @@ module.exports = function (grunt) {
                             'node_modules/bootstrap/dist/css/bootstrap.css',
                             'node_modules/dc/dc.css',
                             'node_modules/font-awesome/css/font-awesome.css',
-                            'node_modules/jquery-ui-dist/jquery-ui.css'
+                            'node_modules/jquery-ui-dist/jquery-ui.css',
+                            'node_modules/x-editable/dist/jqueryui-editable/css/jqueryui-editable.css'
                         ],
                         dest: '<%= conf.web %>/css/'
+                    },
+                    {
+                        expand: true,
+                        flatten: true,
+                        nonull: true,
+                        src: [
+                            'node_modules/x-editable/dist/jqueryui-editable/img/*'
+                        ],
+                        dest: '<%= conf.web %>/img'
                     },
                     {
                         nonull: true,
@@ -177,7 +187,8 @@ module.exports = function (grunt) {
                             'node_modules/queue-async/build/queue.js',
                             'node_modules/dagre/dist/dagre.js',
                             'node_modules/webcola/WebCola/cola.js',
-                            'node_modules/viz.js/viz.js'
+                            'node_modules/viz.js/viz.js',
+                            'node_modules/x-editable/dist/jqueryui-editable/js/jqueryui-editable.js'
                           ],
                         dest: '<%= conf.web %>/js/'
                     },
