@@ -72,6 +72,22 @@ var drawGraphs = dc_graph.draw_graphs({
 
 diagram.child('draw-graphs', drawGraphs);
 
+var select_edges = dc_graph.select_edges({
+    edgeStroke: 'lightblue',
+    edgeStrokeWidth: 3
+}).multipleSelect(false);
+diagram.child('select-edges', select_edges);
+
+var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
+var delete_edges = dc_graph.delete_things(select_edges_group, 'delete-edges', 'id')
+        .crossfilterAccessor(function(chart) {
+            return edge_flat.crossfilter;
+        })
+        .dimensionAccessor(function(chart) {
+            return diagram.edgeDimension();
+        });
+diagram.child('delete-edges', delete_edges);
+
 
 dc.renderAll();
 
