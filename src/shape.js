@@ -404,6 +404,28 @@ function bezier_point(points, t_) {
     return q[q.length-1][0];
 }
 
+dc_graph.no_shape = function() {
+    var _shape = {
+        parent: property(null),
+        elaborate: function(preset, def) {
+            return Object.assign(preset, def);
+        },
+        intersect_vec: function(d, deltaX, deltaY) {
+            return {x: 0, y: 0};
+        },
+        calc_radii: function(d, ry, bbox) {
+            return {rx: 0, ry: 0};
+        },
+        create: function(nodeEnter) {
+        },
+        replace: function(nodeChanged) {
+        },
+        update: function(node) {
+        }
+    };
+    return _shape;
+};
+
 dc_graph.ellipse_shape = function() {
     var _shape = {
         parent: property(null),

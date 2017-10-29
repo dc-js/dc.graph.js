@@ -520,6 +520,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     // for defining custom (and standard) shapes
     _chart.shape = named_children();
 
+    _chart.shape('nothing', dc_graph.no_shape());
     _chart.shape('ellipse', dc_graph.ellipse_shape());
     _chart.shape('polygon', dc_graph.polygon_shape());
     _chart.shape('rounded-rect', dc_graph.rounded_rectangle_shape());
