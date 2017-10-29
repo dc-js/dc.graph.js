@@ -36,8 +36,11 @@ dc_graph.keyboard = function() {
     };
 
     _behavior.focus = function() {
-        _input_anchor.node().focus();
+        if(!_behavior.disableFocus())
+            _input_anchor.node().focus();
     };
+
+    _behavior.disableFocus = property(false);
 
     return _behavior;
 };
