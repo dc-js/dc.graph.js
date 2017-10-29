@@ -40,15 +40,15 @@ dc_graph.webworker_layout = function(layoutEngine) {
         });
         return this;
     };
-    engine.data = function(nodes, edges, constraints, options) {
+    engine.data = function(graph, nodes, edges, constraints) {
         _worker.worker.postMessage({
             command: 'data',
             args: {
                 layoutId: layoutEngine.layoutId(),
+                graph: graph,
                 nodes: nodes,
                 edges: edges,
-                constraints: constraints,
-                options: options
+                constraints: constraints
             }
         });
     };

@@ -1729,6 +1729,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         else {
             _dispatch.start(); // cola doesn't seem to fire this itself?
             _chart.layoutEngine().data(
+                { width: _chart.width(), height: _chart.height() },
                 wnodes.map(function(v) { return v.cola; }),
                 layout_edges.map(function(v) { return v.cola; }),
                 constraints

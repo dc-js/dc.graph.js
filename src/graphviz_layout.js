@@ -29,7 +29,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     function stringize_properties(props) {
         return '[' + props.join(', ') + ']';
     }
-    function data(nodes, edges, constraints, options) {
+    function data(nodes, edges) {
         if(_dotInput) {
             _dotString = _dotInput;
             return;
@@ -142,8 +142,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, options) {
-            data(nodes, edges, constraints, options);
+        data: function(graph, nodes, edges) {
+            data(nodes, edges);
         },
         dotInput: function(text) {
             _dotInput = text;

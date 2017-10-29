@@ -152,8 +152,8 @@ dc_graph.flexbox_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, options) {
-            data(nodes, edges, constraints, options);
+        data: function(graph, nodes, edges) {
+            data(nodes);
         },
         start: function() {
             start();
