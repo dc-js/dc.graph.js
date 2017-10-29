@@ -152,6 +152,7 @@ dc_graph.available_shapes = function() {
 var default_shape = {shape: 'ellipse'};
 
 function elaborate_shape(chart, def) {
+    if(typeof def === 'string') def = {shape: def};
     var shape = def.shape, def2 = Object.assign({}, def);
     delete def2.shape;
     if(shape === 'random') {
