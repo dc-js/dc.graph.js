@@ -59,6 +59,7 @@ var diagram = dc_graph.diagram('#graph')
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .nodeShape(n => layout.keyToAddress()(diagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rectangle')
+        .nodeTitle(null)
         .edgeLabel(null);
 
 var drawGraphs = dc_graph.draw_graphs({
