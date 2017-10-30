@@ -2,7 +2,7 @@ dc_graph.flexbox_layout = function(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
 
-    var _tree, _nodes = {}, _wnodes;
+    var _graph, _tree, _nodes = {}, _wnodes;
 
     function init(options) {
     }
@@ -25,7 +25,8 @@ dc_graph.flexbox_layout = function(id) {
             return all_keys(tree.children[k]);
         }));
     }
-    function data(nodes) {
+    function data(graph, nodes) {
+        _graph = graph;
         _tree = {};
         nodes.forEach(function(n) {
             var ad = _engine.keyToAddress()(n.dcg_nodeKey);
@@ -37,9 +38,6 @@ dc_graph.flexbox_layout = function(id) {
     var internal_attrs = ['sort', 'dcg_nodeKey'];
     function create_flextree(attrs, tree) {
         var flexnode = {style: {}};
-        if(Object.keys(tree.children).length) {
-            tree.node.width = tree.node.height = 1000;
-        }
         var attrs2 = Object.assign({}, attrs);
         if(tree.node)
             Object.assign(attrs, tree.node);
@@ -82,6 +80,8 @@ dc_graph.flexbox_layout = function(id) {
             sort: d3.ascending
         };
         var flexTree = create_flextree(defaults, _tree);
+        flexTree.style.width = _graph.width;
+        flexTree.style.height = _graph.height;
         console.log(JSON.stringify(flexTree, null, 2));
         computeLayout(flexTree);
         apply_layout({x: 0, y: 0}, _tree);
@@ -145,8 +145,8 @@ dc_graph.flexbox_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges) {
-            data(nodes);
+        data: function(graph, nodes) {
+            data(graph, nodes);
         },
         start: function() {
             start();
