@@ -96,6 +96,10 @@ var diagram = dc_graph.diagram('#graph')
 diagram.child('validate', dc_graph.validate());
 diagram.child('place-ports', dc_graph.place_ports());
 
+var oppositeMatcher = dc_graph.match_opposites(diagram, {
+    edgeStroke: 'orangered'
+});
+
 var drawGraphs = dc_graph.draw_graphs({
     idTag: 'id',
     sourceTag: 'sourcename',
@@ -103,7 +107,8 @@ var drawGraphs = dc_graph.draw_graphs({
 })
         .usePorts(true)
         .clickCreatesNodes(false)
-        .edgeCrossfilter(edge_flat.crossfilter);
+        .edgeCrossfilter(edge_flat.crossfilter)
+        .conduct(oppositeMatcher);
 
 diagram.child('draw-graphs', drawGraphs);
 
