@@ -1,14 +1,24 @@
-// i'm sure there's a word for this in haskell
-function conditional_properties(pred, props) {
-    function _if(pred, curr) {
-        return function(o, last) {
-            return pred(o) ? curr(o) : last();
-        };
-    }
+function property_if(pred, curr) {
+    return function(o, last) {
+        return pred(o) ? curr(o) : last();
+    };
+}
+
+function property_interpolate(value, curr) {
+    return function(o, last) {
+        return d3.interpolate(last(o), curr(o))(value(o));
+    };
+}
+
+function multiply_properties(pred, props, blend) {
     var props2 = {};
     for(var p in props)
-        props2[p] = _if(pred, param(props[p]));
+        props2[p] = blend(pred, param(props[p]));
     return props2;
+}
+
+function conditional_properties(pred, props) {
+    return multiply_properties(pred, props, property_if);
 }
 
 function node_edge_conditions(npred, epred, props) {
