@@ -357,6 +357,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _chart.portEdgeKey = property(null);
     _chart.portName = property(null);
     _chart.portStyleName = property(null);
+    _chart.portElastic = property(true);
 
     _chart.portStyle = named_children();
 
@@ -1763,7 +1764,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 nports = _nodePorts[nid];
             // initial positions: use average of edge vectors, if any, or existing position
             nports.forEach(function(p) {
-                if(p.edges.length) {
+                if(_chart.portElastic.eval(p) && p.edges.length) {
                     var vecs = p.edges.map(edge_vec.bind(null, n));
                     p.vec = [
                         d3.sum(vecs, function(v) { return v[0]; })/vecs.length,
