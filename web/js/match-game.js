@@ -2,24 +2,25 @@ var qs = querystring.parse();
 var options = Object.assign({
 }, qs);
 
+var vertical = options.rankdir === 'TB';
 // intentionally using a dumb identifier scheme: 'top, 'col-a', .. 'a1 .. 'b3' for generality's sake
 // it would be smarter irl to use key = prefix + addr.join(delimiter)
 var parentNodes = [
     {
         id: 'top',
-        flexDirection: 'row',
+        flexDirection: vertical ? 'column' : 'row',
         justifyContent: 'space-around',
         padding: 10
     },
     {
         id: 'col-a',
-        flexDirection: 'column',
+        flexDirection: vertical ? 'row' : 'column',
         justifyContent: 'flex-start',
         flex: 0
     },
     {
         id: 'col-b',
-        flexDirection: 'column',
+        flexDirection: vertical ? 'row' : 'column',
         justifyContent: 'flex-start',
         flex: 0
     }
@@ -39,9 +40,9 @@ var data = d3.range(3 + Math.random()*7).map(function(i) {
     };
 }));
 
-var lbounds = [Math.PI-1, Math.PI+1], rbounds = [-1,1], ubounds = [-Math.PI, -Math.PI], dbounds = [Math.PI, Math.PI];
+var lbounds = [Math.PI-1, Math.PI+1], rbounds = [-1,1], ubounds = [-Math.PI/2-1, -Math.PI/2+1], dbounds = [Math.PI/2-1, Math.PI/2+1];
 var inbounds, outbounds;
-if(options.rankdir === 'TB') {
+if(vertical) {
     inbounds = ubounds;
     outbounds = dbounds;
 } else  {
