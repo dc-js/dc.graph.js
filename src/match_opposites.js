@@ -21,12 +21,16 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
             return sourcePort.edges.indexOf(e) >= 0 && targetPort.edges.indexOf(e) >= 0;
         })) && _behavior.isValid()(sourcePort, targetPort);
     }
-    function reset_deletables(targets) {
+    function reset_deletables(source, targets) {
         targets.forEach(function(p) {
             p.edges.forEach(function(e) {
                 e.deleting = 0;
             });
         });
+        if(source)
+            source.port.edges.forEach(function(e) {
+                e.deleting = 0;
+            });
     }
     var _behavior = {
         isValid: property(function(sourcePort, targetPort) {
@@ -58,7 +62,9 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                     e.deleting = 1 - options.multiplier * c.distance / Math.hypot(cpos.x - spos.x, cpos.y - spos.y);
                 });
             });
-            //reset_deletables(d3.range(1, closest.length).map(function(i) { return closest[i].port; }));
+            source.port.edges.forEach(function(e) {
+                e.deleting = 1 - options.multiplier * closest[0].distance / Math.hypot(cpos.x - spos.x, cpos.y - spos.y);
+            });
             diagram.refresh();
         },
         changeDragTarget: function(source, target) {
@@ -67,7 +73,10 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                 target.port.edges.forEach(function(e) {
                     e.deleting = 1;
                 });
-                reset_deletables(_validTargets.filter(function(p) {
+                source.port.edges.forEach(function(e) {
+                    e.deleting = 1;
+                });
+                reset_deletables(null, _validTargets.filter(function(p) {
                     return p !== target.port;
                 }));
                 diagram.refresh();
@@ -75,16 +84,21 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
             return valid;
         },
         finishDragEdge: function(source, target) {
-            reset_deletables(_validTargets);
             if(is_valid(source.port, target.port)) {
-                if(options.delete_edges)
-                    options.delete_edges.deleteSelection(target.port.edges.map(diagram.edgeKey.eval));
+                reset_deletables(_validTargets.filter(function(p) {
+                    return p !== target.port;
+                }));
+                if(options.delete_edges) {
+                    var edgeKeys = source.port.edges.map(diagram.edgeKey.eval).concat(target.port.edges.map(diagram.edgeKey.eval));
+                    options.delete_edges.deleteSelection(edgeKeys);
+                }
                 return true;
             }
+            reset_deletables(source, _validTargets);
             return false;
         },
         cancelDragEdge: function(source) {
-            reset_deletables(_validTargets);
+            reset_deletables(source, _validTargets);
             return true;
         }
     };
