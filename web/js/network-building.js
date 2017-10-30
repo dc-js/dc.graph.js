@@ -21,6 +21,7 @@ diagram
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
     .edgeSource(function(e) { return e.value.source; })
     .edgeTarget(function(e) { return e.value.target; })
+    .nodeShape(qs.shape || 'ellipse')
     .nodeLabel(function(n) { return n.value.label; })
     .edgeLabel(function(e) { return e.value.label || ''; })
     .nodeLabelPadding({x: 4, y: 4})
