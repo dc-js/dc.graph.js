@@ -8,14 +8,15 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
     function row_id(r) {
         return r[id_tag];
     }
-    function delete_selection() {
+    function delete_selection(selection) {
         if(!_behavior.crossfilterAccessor())
             throw new Error('need crossfilterAccessor');
         if(!_behavior.dimensionAccessor())
             throw new Error('need dimensionAccessor');
-        if(_selected.length === 0)
+        selection = selection || _selected;
+        if(selection.length === 0)
             return Promise.resolve([]);
-        var promise = _behavior.preDelete() ? _behavior.preDelete()(_selected) : Promise.resolve(_selected);
+        var promise = _behavior.preDelete() ? _behavior.preDelete()(selection) : Promise.resolve(selection);
         if(_behavior.onDelete())
             promise = promise.then(_behavior.onDelete());
         return promise.then(function(selection) {
