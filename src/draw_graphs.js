@@ -94,7 +94,10 @@ dc_graph.draw_graphs = function(options) {
                 if(!_behavior.dragCreatesEdges())
                     return;
                 if(_behavior.usePorts()) {
-                    var activePort = _behavior.usePorts().eventPort();
+                    var activePort;
+                    if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
+                        activePort = _behavior.usePorts().eventPort();
+                    else activePort = chart.getPort(chart.nodeKey.eval(d), null, 'out');
                     if(!activePort)
                         return;
                     _sourceDown = {node: d, port: activePort};
@@ -117,7 +120,10 @@ dc_graph.draw_graphs = function(options) {
                         _hintData[0].target = null;
                     }
                     else if(_behavior.usePorts()) {
-                        var activePort =  _behavior.usePorts().eventPort();
+                        var activePort;
+                        if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
+                            activePort = _behavior.usePorts().eventPort();
+                        else activePort = chart.getPort(chart.nodeKey.eval(d), null, 'in');
                         if(activePort)
                             _targetMove = {node: d, port: activePort};
                         else
