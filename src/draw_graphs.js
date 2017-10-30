@@ -68,9 +68,16 @@ dc_graph.draw_graphs = function(options) {
             throw new Error('need edgeCrossfilter');
         var edge = {}, callback = _behavior.addEdge() || promise_identity;
         edge[_edgeIdTag] = uuid();
-        edge[_sourceTag] = source.node.orig.key;
-        edge[_targetTag] = target.node.orig.key;
         edge[_edgeLabelTag] = '';
+        if(_behavior.conduct().detectReversedEdge && _behavior.conduct().detectReversedEdge(edge, source.port, target.port)) {
+            edge[_sourceTag] = target.node.orig.key;
+            edge[_targetTag] = source.node.orig.key;
+            var t;
+            t = source; source = target; target = t;
+        } else {
+            edge[_sourceTag] = source.node.orig.key;
+            edge[_targetTag] = target.node.orig.key;
+        }
         callback(edge, source.port, target.port).then(function(edge2) {
             if(!edge2)
                 return;
@@ -97,7 +104,8 @@ dc_graph.draw_graphs = function(options) {
                     var activePort;
                     if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
                         activePort = _behavior.usePorts().eventPort();
-                    else activePort = chart.getPort(chart.nodeKey.eval(d), null, 'out');
+                    else activePort = chart.getPort(chart.nodeKey.eval(d), null, 'out')
+                        || chart.getPort(chart.nodeKey.eval(d), null, 'in');
                     if(!activePort)
                         return;
                     _sourceDown = {node: d, port: activePort};
@@ -123,7 +131,8 @@ dc_graph.draw_graphs = function(options) {
                         var activePort;
                         if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
                             activePort = _behavior.usePorts().eventPort();
-                        else activePort = chart.getPort(chart.nodeKey.eval(d), null, 'in');
+                        else activePort = chart.getPort(chart.nodeKey.eval(d), null, 'in')
+                            || chart.getPort(chart.nodeKey.eval(d), null, 'out');
                         if(activePort)
                             _targetMove = {node: d, port: activePort};
                         else

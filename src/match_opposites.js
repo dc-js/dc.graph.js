@@ -100,6 +100,9 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
         cancelDragEdge: function(source) {
             reset_deletables(source, _validTargets);
             return true;
+        },
+        detectReversedEdge: function(edge, sourcePort, targetPort) {
+            return diagram.portName.eval(sourcePort) === 'in';
         }
     };
     return _behavior;
