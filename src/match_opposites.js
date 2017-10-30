@@ -85,7 +85,7 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
         },
         finishDragEdge: function(source, target) {
             if(is_valid(source.port, target.port)) {
-                reset_deletables(_validTargets.filter(function(p) {
+                reset_deletables(null, _validTargets.filter(function(p) {
                     return p !== target.port;
                 }));
                 if(options.delete_edges) {
