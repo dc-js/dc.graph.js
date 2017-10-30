@@ -78,6 +78,7 @@ var layout = dc_graph.flexbox_layout()
 var diagram = dc_graph.diagram('#graph')
         .layoutEngine(layout)
         .width(500).height(500)
+        .transitionDuration(250)
         .mouseZoomable(false)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
@@ -96,10 +97,6 @@ var diagram = dc_graph.diagram('#graph')
 diagram.child('validate', dc_graph.validate());
 diagram.child('place-ports', dc_graph.place_ports());
 
-var oppositeMatcher = dc_graph.match_opposites(diagram, {
-    edgeStroke: 'orangered'
-});
-
 var drawGraphs = dc_graph.draw_graphs({
     idTag: 'id',
     sourceTag: 'sourcename',
@@ -107,8 +104,7 @@ var drawGraphs = dc_graph.draw_graphs({
 })
         .usePorts(true)
         .clickCreatesNodes(false)
-        .edgeCrossfilter(edge_flat.crossfilter)
-        .conduct(oppositeMatcher);
+        .edgeCrossfilter(edge_flat.crossfilter);
 
 diagram.child('draw-graphs', drawGraphs);
 
@@ -127,6 +123,13 @@ var delete_edges = dc_graph.delete_things(select_edges_group, 'delete-edges', 'i
             return diagram.edgeDimension();
         });
 diagram.child('delete-edges', delete_edges);
+
+var oppositeMatcher = dc_graph.match_opposites(diagram, {
+    edgeStroke: 'orangered'
+}, {
+    delete_edges: delete_edges
+});
+drawGraphs.conduct(oppositeMatcher);
 
 
 dc.renderAll();
