@@ -1,3 +1,9 @@
+var qs = querystring.parse();
+var options = Object.assign({
+}, qs);
+
+// intentionally using a dumb identifier scheme: 'top, 'col-a', .. 'a1 .. 'b3' for generality's sake
+// it would be smarter irl to use key = prefix + addr.join(delimiter)
 var parentNodes = [
     {
         id: 'top',
@@ -33,8 +39,24 @@ var data = d3.range(7).map(function(i) {
     };
 }));
 
+var lbounds = [Math.PI-1, Math.PI+1], rbounds = [-1,1], ubounds = [-Math.PI, -Math.PI], dbounds = [Math.PI, Math.PI];
+var inbounds, outbounds;
+if(options.rankdir === 'TB') {
+    inbounds = ubounds;
+    outbounds = dbounds;
+} else  {
+    inbounds = lbounds;
+    outbounds = rbounds;
+}
+var ports = data.map(n => ({
+    nodeId: n.id,
+    side: n.id[0] === 'a' ? 'out' : 'in',
+    bounds: n.id[0] === 'a' ? outbounds : inbounds
+}));
+
 var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), n => n.id),
-    edge_flat = dc_graph.flat_group.make([], e => e.id);
+    edge_flat = dc_graph.flat_group.make([], e => e.id),
+    port_flat = dc_graph.flat_group.make(ports, p => p.nodeId + '/' + p.side);
 
 var layout = dc_graph.flexbox_layout()
     .addressToKey(function(ad) {
@@ -58,16 +80,27 @@ var diagram = dc_graph.diagram('#graph')
         .mouseZoomable(false)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
+        .portDimension(port_flat.dimension).portGroup(port_flat.group)
         .nodeShape(n => layout.keyToAddress()(diagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rectangle')
         .nodeStrokeWidth(0)
         .nodeTitle(null)
-        .edgeLabel(null);
+        .edgeSourcePortName('out')
+        .edgeTargetPortName('in')
+        .edgeLabel(null)
+        .portNodeKey(p => p.value.nodeId)
+        .portName(p => p.value.side)
+        .portBounds(p => p.value.bounds)
+        .portElastic(false);
+
+diagram.child('validate', dc_graph.validate());
+diagram.child('place-ports', dc_graph.place_ports());
 
 var drawGraphs = dc_graph.draw_graphs({
     idTag: 'id',
     sourceTag: 'sourcename',
     targetTag: 'targetname'
 })
+        .usePorts(true)
         .clickCreatesNodes(false)
         .edgeCrossfilter(edge_flat.crossfilter);
 
