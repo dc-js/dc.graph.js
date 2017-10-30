@@ -180,9 +180,11 @@ dc_graph.draw_graphs = function(options) {
             .on('mousemove.draw-graphs', function() {
                 var data = [];
                 if(_sourceDown) { // drawing edge
+                    var coords = dc_graph.event_coords(chart);
+                    if(_behavior.conduct().dragCanvas)
+                        _behavior.conduct().dragCanvas(_sourceDown, coords);
                     if(_behavior.conduct().changeDragTarget && _targetMove)
                         _behavior.conduct().changeDragTarget(_sourceDown, null);
-                    var coords = dc_graph.event_coords(chart);
                     _targetMove = null;
                     _hintData[0].target = {x: coords[0], y: coords[1]};
                     update_hint();
