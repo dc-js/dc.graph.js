@@ -33,13 +33,6 @@ dc_graph.flexbox_layout = function(id) {
         });
         var need = all_keys(_tree);
         _wnodes = nodes;
-        // var wnodes = regenerate_objects(_nodes, nodes, need, function(n) {
-        //     return n.dcg_nodeKey;
-        // }, function(n1, n) {
-        // }, function(k, n) {
-        //     var address = _engine.keyToAddress()(k);
-        //     add_node(address, [], n, _tree);
-        // });
     }
     var internal_attrs = ['sort', 'dcg_nodeKey'];
     function create_flextree(attrs, tree) {
