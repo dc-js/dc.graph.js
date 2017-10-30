@@ -139,7 +139,10 @@ dc_graph.shape_presets = {
     square: {
         generator: 'polygon',
         preset: function() {
-            return {sides: 4};
+            return {
+                sides: 4,
+                regular: true
+            };
         }
     }
 };
