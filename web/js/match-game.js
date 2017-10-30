@@ -9,13 +9,13 @@ var parentNodes = [
         id: 'col-a',
         flexDirection: 'column',
         justifyContent: 'flex-start',
-        flex: 1
+        flex: 0
     },
     {
         id: 'col-b',
         flexDirection: 'column',
         justifyContent: 'flex-start',
-        flex: 1
+        flex: 0
     }
 ];
 
@@ -54,11 +54,12 @@ var layout = dc_graph.flexbox_layout()
 
 var diagram = dc_graph.diagram('#graph')
         .layoutEngine(layout)
-        .width(1000).height(1000)
+        .width(500).height(500)
         .mouseZoomable(false)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .nodeShape(n => layout.keyToAddress()(diagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rectangle')
+        .nodeStrokeWidth(0)
         .nodeTitle(null)
         .edgeLabel(null);
 
