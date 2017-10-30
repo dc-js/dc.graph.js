@@ -144,6 +144,14 @@ dc_graph.shape_presets = {
                 regular: true
             };
         }
+    },
+    plain: {
+        generator: 'rounded-rect',
+        preset: function() {
+            return {
+                noshape: true
+            };
+        }
     }
 };
 
@@ -199,7 +207,7 @@ function fit_shape(shape, chart) {
     return function(text) {
         text.each(function(d) {
             var bbox = null;
-            if((!shape.useTextSize || shape.useTextSize()) && chart.nodeFitLabel.eval(d)) {
+            if((!shape.useTextSize || shape.useTextSize(d.dcg_shape)) && chart.nodeFitLabel.eval(d)) {
                 bbox = this.getBBox();
                 var padding;
                 var content = chart.nodeContent.eval(d);
@@ -216,9 +224,9 @@ function fit_shape(shape, chart) {
                 bbox.height += padding.y;
             }
             var r = 0, radii;
-            if(!shape.useRadius || shape.useRadius())
+            if(!shape.useRadius || shape.useRadius(d.dcg_shape))
                 r = chart.nodeRadius.eval(d);
-            if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize())
+            if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize(d.dcg_shape))
                 radii = shape.calc_radii(d, r, bbox);
             else
                 radii = {rx: r, ry: r};
@@ -231,7 +239,7 @@ function fit_shape(shape, chart) {
             // (not a bad idea, just no time right now)
             if(w<h) w = h;
 
-            if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke()) {
+            if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke(d.dcg_shape)) {
                 var pands = chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
                 w += pands;
                 h += pands;
@@ -539,19 +547,30 @@ dc_graph.rounded_rectangle_shape = function() {
             ];
             return point_on_polygon(points, 0, 0, deltaX, deltaY); // not rounded
         },
+        useRadius: function(shape) {
+            return !shape.noshape;
+        },
         calc_radii: function(d, ry, bbox) {
+            var fity = bbox.height/2;
+            // fixme: fudge to make sure text is not too tall for node
+            if(!d.dcg_shape.noshape)
+                fity += 5;
             return {
                 rx: bbox.width / 2,
-                ry: Math.max(ry, bbox.height/2 + 5)
+                ry: Math.max(ry, fity)
             };
         },
         create: function(nodeEnter) {
-            nodeEnter.append('rect')
+            nodeEnter.filter(function(d) {
+                return !d.dcg_shape.noshape;
+            }).append('rect')
                 .attr('class', 'node-shape');
         },
         replace: function(nodeChanged) {
             nodeChanged.select('rect.node-shape').remove();
-            nodeChanged.insert('rect', ':first-child')
+            nodeChanged.filter(function(d) {
+                return !d.dcg_shape.noshape;
+            }).insert('rect', ':first-child')
                 .attr('class', 'node-shape');
         },
         update: function(node) {
