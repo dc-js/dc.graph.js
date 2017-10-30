@@ -195,8 +195,8 @@ function shape_changed(chart) {
 function fit_shape(shape, chart) {
     return function(text) {
         text.each(function(d) {
-            var bbox;
-            if(chart.nodeFitLabel.eval(d)) {
+            var bbox = null;
+            if((!shape.useTextSize || shape.useTextSize()) && chart.nodeFitLabel.eval(d)) {
                 bbox = this.getBBox();
                 var padding;
                 var content = chart.nodeContent.eval(d);
@@ -212,18 +212,29 @@ function fit_shape(shape, chart) {
                 bbox.width += padding.x;
                 bbox.height += padding.y;
             }
-            var fitx = 0;
-            if(bbox && bbox.width && bbox.height) {
-                var r = chart.nodeRadius.eval(d);
-                var radii = shape.calc_radii(d, r, bbox);
-                d.dcg_rx = radii.rx;
-                d.dcg_ry = radii.ry;
-                fitx = radii.rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-            } else
-                d.dcg_rx = d.dcg_ry = chart.nodeRadius.eval(d);
-            var rplus = d.dcg_ry*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-            d.cola.width = Math.max(fitx, rplus);
-            d.cola.height = rplus;
+            var r = 0, radii;
+            if(!shape.useRadius || shape.useRadius())
+                r = chart.nodeRadius.eval(d);
+            if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize())
+                radii = shape.calc_radii(d, r, bbox);
+            else
+                radii = {rx: r, ry: r};
+            d.dcg_rx = radii.rx;
+            d.dcg_ry = radii.ry;
+
+            var w = radii.rx*2, h = radii.ry*2;
+            // fixme: this is only consistent if regular || !squeeze
+            // but we'd need to calculate polygon first in order to find out
+            // (not a bad idea, just no time right now)
+            if(w<h) w = h;
+
+            if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke()) {
+                var pands = chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
+                w += pands;
+                h += pands;
+            }
+            d.cola.width = w;
+            d.cola.height = h;
         });
     };
 }
@@ -413,6 +424,9 @@ dc_graph.no_shape = function() {
         elaborate: function(preset, def) {
             return Object.assign(preset, def);
         },
+        useTextSize: function() { return false; },
+        useRadius: function() { return false; },
+        usePaddingAndStroke: function() { return false; },
         intersect_vec: function(d, deltaX, deltaY) {
             return {x: 0, y: 0};
         },
