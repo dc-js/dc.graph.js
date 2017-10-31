@@ -59,7 +59,7 @@ dc_graph.flexbox_layout = function(id) {
     }
     function apply_layout(offset, tree) {
         if(_engine.logStuff())
-            console.log(tree.node.dcg_nodeKey, tree.flexnode.layout);
+            console.log(tree.node.dcg_nodeKey + ': '+ JSON.stringify(tree.flexnode.layout));
         tree.node.x = offset.x + tree.flexnode.layout.left + tree.flexnode.layout.width/2;
         tree.node.y = offset.y + tree.flexnode.layout.top + tree.flexnode.layout.height/2;
         Object.keys(tree.children)
