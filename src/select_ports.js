@@ -1,5 +1,6 @@
-dc_graph.select_ports = function(props) {
-    var select_ports_group = dc_graph.select_things_group('select-ports-group', 'select-ports');
+dc_graph.select_ports = function(props, options) {
+    options = options || {};
+    var select_ports_group = dc_graph.select_things_group(options.select_ports_group || 'select-ports-group', 'select-ports');
     var thinginess = {
         laterDraw: true,
         intersectRect: null, // multiple selection not supported for now

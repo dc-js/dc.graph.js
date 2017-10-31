@@ -1,5 +1,6 @@
-dc_graph.select_nodes = function(props) {
-    var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
+dc_graph.select_nodes = function(props, options) {
+    options = options || {};
+    var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
 
     var thinginess = {
         intersectRect: function(ext) {

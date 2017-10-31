@@ -1,6 +1,6 @@
 dc_graph.draw_graphs = function(options) {
-    var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes'),
-        select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges'),
+    var select_nodes_group =  dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes'),
+        select_edges_group = dc_graph.select_things_group(options.select_edges_group || 'select-edges-group', 'select-edges'),
         label_nodes_group = dc_graph.label_things_group('label-nodes-group', 'label-nodes'),
         label_edges_group = dc_graph.label_things_group('label-edges-group', 'label-edges'),
         fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');

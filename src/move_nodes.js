@@ -1,6 +1,6 @@
 dc_graph.move_nodes = function(options) {
     options = options || {};
-    var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
+    var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
     var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;

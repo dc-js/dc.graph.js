@@ -1,5 +1,6 @@
-dc_graph.select_edges = function(props) {
-    var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
+dc_graph.select_edges = function(props, options) {
+    options = options || {};
+    var select_edges_group = dc_graph.select_things_group(options.select_edges_group || 'select-edges-group', 'select-edges');
     var thinginess = {
         intersectRect: function(ext) {
             return this.clickables().data().filter(function(e) {
