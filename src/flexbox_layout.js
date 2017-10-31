@@ -49,11 +49,12 @@ dc_graph.flexbox_layout = function(id) {
                 value = value(tree.node);
             flexnode.style[attr] = value;
         }
-        flexnode.children = Object.keys(tree.children)
-                .sort(attrs.sort)
-                .map(function(key) {
-                    return create_flextree(Object.assign({}, attrs2), tree.children[key]);
-                });
+        flexnode.children = Object.values(tree.children)
+            .sort(attrs.sort)
+            .map(function(c) { return c.address[c.address.length-1]; })
+            .map(function(key) {
+                return create_flextree(Object.assign({}, attrs2), tree.children[key]);
+            });
         tree.flexnode = flexnode;
         return flexnode;
     }
@@ -78,7 +79,9 @@ dc_graph.flexbox_layout = function(id) {
     }
     function start() {
         var defaults = {
-            sort: d3.ascending
+            sort: function(a, b) {
+                return d3.ascending(a.node.dcg_nodeKey, b.node.dcg_nodeKey);
+            }
         };
         var flexTree = create_flextree(defaults, _tree);
         flexTree.style.width = _graph.width;
