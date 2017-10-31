@@ -10,10 +10,10 @@ dc_graph.wildcard_ports = function(diagram, options) {
         },
         copyType: function(e, sport, tport) {
             if(get_type(sport) === null) {
-                set_type(sport, get_type(tport));
+                set_type(sport, tport);
                 update_ports();
             } else if(get_type(tport) === null) {
-                set_type(tport, get_type(sport));
+                set_type(tport, sport);
                 update_ports();
             }
             return Promise.resolve(e);
