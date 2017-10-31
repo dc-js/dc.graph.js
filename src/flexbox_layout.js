@@ -37,7 +37,7 @@ dc_graph.flexbox_layout = function(id) {
     }
     var internal_attrs = ['sort', 'dcg_nodeKey'];
     function create_flextree(attrs, tree) {
-        var flexnode = {style: {}};
+        var flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
         var attrs2 = Object.assign({}, attrs);
         if(tree.node)
             Object.assign(attrs, tree.node);
