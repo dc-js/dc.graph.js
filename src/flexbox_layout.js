@@ -163,7 +163,7 @@ dc_graph.flexbox_layout = function(id) {
             return [];
         },
         populateLayoutNode: function(n1, n) {
-            supportedAttributes.forEach(function(attr) {
+            ['sort', 'order'].concat(supportedAttributes).forEach(function(attr) {
                 if(n.orig.value[attr])
                     n1[attr] = n.orig.value[attr];
             });
