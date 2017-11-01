@@ -1,5 +1,7 @@
 var qs = querystring.parse();
 var options = Object.assign({
+    min: 3,
+    max: 10
 }, qs);
 
 var vertical = options.rankdir === 'TB';
@@ -26,13 +28,13 @@ var parentNodes = [
     }
 ];
 
-var data = d3.range(3 + Math.random()*7).map(function(i) {
+var data = d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'a' + i,
         label: String.fromCharCode(97+i),
         flex: 0
     };
-}).concat(d3.range(3 + Math.random()*7).map(function(i) {
+}).concat(d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'b' + i,
         label: String.fromCharCode(48+i),
