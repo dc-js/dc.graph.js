@@ -20,7 +20,7 @@
             return {key: accessor(o), value: o};
         });
         return nf.length ?
-            [what + ' was not found in ' + where + ' for ' + nf.length + ' of ' + objects.length + ' ' + who, nf] :
+            [what + ' was not found in ' + where, Object.keys(index), 'for ' + nf.length + ' of ' + objects.length + ' ' + who, nf] :
             null;
     }
     function validate() {
