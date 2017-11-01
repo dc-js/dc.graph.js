@@ -222,6 +222,7 @@ function fit_shape(shape, chart) {
                 }
                 bbox.width += padding.x;
                 bbox.height += padding.y;
+                d.bbox = bbox;
             }
             var r = 0, radii;
             if(!shape.useRadius || shape.useRadius(d.dcg_shape))
