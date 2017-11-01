@@ -8,7 +8,7 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
     diagram.cascade(100, true, multiply_properties(function(e) {
         return options.ease(e.deleting || 0);
     }, deleteProps, property_interpolate));
-    diagram.on('data', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
+    diagram.on('data.match-opposites', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         _ports = ports;
         _wports = wports;
         _wedges = wedges;

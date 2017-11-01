@@ -71,7 +71,7 @@ dc_graph.validate = function() {
     }
     var _behavior = {
         parent: property(null).react(function(p) {
-            p.on('preDraw', validate);
+            p.on('data.validate', validate);
         })
     };
 

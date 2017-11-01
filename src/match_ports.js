@@ -1,6 +1,6 @@
 dc_graph.match_ports = function(diagram, symbolPorts) {
     var _ports, _wports, _wedges, _validTargets;
-    diagram.on('data', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
+    diagram.on('data.match-ports', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         _ports = ports;
         _wports = wports;
         _wedges = wedges;
