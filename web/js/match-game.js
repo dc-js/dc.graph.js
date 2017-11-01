@@ -28,16 +28,27 @@ var parentNodes = [
     }
 ];
 
+var adjectives = ['strong', 'happy', 'libelious', 'rainy', 'effulgent', 'bookish'],
+    nouns = ['steel', 'book', 'cat', 'talk', 'road', 'umbrella', 'nimwit'];
+
+function rndsel(a) {
+    return a[Math.floor(Math.random()*a.length)];
+}
+
+function phrase() {
+    return rndsel(adjectives) + ' ' + rndsel(nouns);
+}
+
 var data = d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'a' + i,
-        label: String.fromCharCode(97+i),
+        label: [String.fromCharCode(97+i), phrase()],
         flex: 0
     };
 }).concat(d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'b' + i,
-        label: String.fromCharCode(48+i),
+        label: [String.fromCharCode(48+i), phrase()],
         flex: 0
     };
 }));
