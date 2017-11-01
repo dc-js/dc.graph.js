@@ -18,12 +18,14 @@ var parentNodes = [
         id: 'col-a',
         flexDirection: vertical ? 'row' : 'column',
         justifyContent: 'flex-start',
+        alignItems: 'flex-end',
         flex: 0
     },
     {
         id: 'col-b',
         flexDirection: vertical ? 'row' : 'column',
         justifyContent: 'flex-start',
+        alignItems: 'flex-start',
         flex: 0
     }
 ];
@@ -98,7 +100,8 @@ var diagram = dc_graph.diagram('#graph')
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .portDimension(port_flat.dimension).portGroup(port_flat.group)
-        .nodeShape(n => layout.keyToAddress()(diagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rectangle')
+        .nodeShape(n => layout.keyToAddress()(diagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rounded-rect')
+        .nodeLabelPadding({x: 10, y: 0})
         .nodeStrokeWidth(0)
         .nodeTitle(null)
         .edgeSourcePortName('out')
@@ -110,6 +113,7 @@ var diagram = dc_graph.diagram('#graph')
         .portElastic(false);
 
 diagram.child('validate', dc_graph.validate());
+//diagram.child('troubleshoot', dc_graph.troubleshoot());
 diagram.child('place-ports', dc_graph.place_ports());
 
 var circlePorts = dc_graph.symbol_port_style()
