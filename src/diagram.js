@@ -1304,6 +1304,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
+        resizeSvg();
         if(_chart.initLayoutOnRedraw())
             initLayout();
 
