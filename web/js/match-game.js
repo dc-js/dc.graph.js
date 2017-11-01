@@ -60,6 +60,7 @@ var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), n => n.id),
     port_flat = dc_graph.flat_group.make(ports, p => p.nodeId + '/' + p.side);
 
 var layout = dc_graph.flexbox_layout()
+    .logStuff(true)
     .addressToKey(function(ad) {
         switch(ad.length) {
         case 0: return 'top';
@@ -77,8 +78,9 @@ var layout = dc_graph.flexbox_layout()
 
 var diagram = dc_graph.diagram('#graph')
         .layoutEngine(layout)
-        .width(500).height(500)
+        .width(null).height(null)
         .transitionDuration(250)
+        .layoutUnchanged(true)
         .mouseZoomable(false)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
@@ -134,3 +136,11 @@ drawGraphs.conduct(oppositeMatcher);
 
 dc.renderAll();
 
+$('#resize').resizable({
+    resize: function(event, ui) {
+        diagram
+            .width(null)
+            .height(null)
+            .redraw();
+    }
+});
