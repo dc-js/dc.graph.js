@@ -24,29 +24,36 @@ dc_graph.troubleshoot = function() {
             opacity: _behavior.xhairOpacity() !== null ? _behavior.xhairOpacity() : _behavior.opacity(),
             stroke: _behavior.xhairColor()
         });
-        var boundaries = node.data().map(function(n) {
+        function boundary(point, wid, hei) {
             return {
-                left: n.cola.x - n.cola.width/2,
-                top: n.cola.y - n.cola.height/2,
-                right: n.cola.x + n.cola.width/2,
-                bottom: n.cola.y + n.cola.height/2
+                left: point.x - wid/2,
+                top: point.y - hei/2,
+                right: point.x + wid/2,
+                bottom: point.y + hei/2
             };
-        });
+        };
+        function cola_point(n) {
+            return {x: n.cola.x, y: n.cola.y};
+        }
+        function corners(bounds) {
+            return [
+                bound_tick(bounds.left, bounds.top, _behavior.boundsWidth(), _behavior.boundsHeight()),
+                bound_tick(bounds.right, bounds.top, -_behavior.boundsWidth(), _behavior.boundsHeight()),
+                bound_tick(bounds.right, bounds.bottom, -_behavior.boundsWidth(), -_behavior.boundsHeight()),
+                bound_tick(bounds.left, bounds.bottom, _behavior.boundsWidth(), -_behavior.boundsHeight()),
+            ].join(' ');
+        }
         function bound_tick(x, y, dx, dy) {
             return 'M' + x + ',' + (y + dy) + ' v' + -dy + ' h' + dx;
         }
-        var nodebounds = _debugLayer.selectAll('path.nodebounds').data(boundaries);
-        nodebounds.exit().remove();
-        nodebounds.enter().append('path').attr('class', 'nodebounds');
-        nodebounds.attr({
-            d: function(d) {
-                return [
-                    bound_tick(d.left, d.top, _behavior.boundsWidth(), _behavior.boundsHeight()),
-                    bound_tick(d.right, d.top, -_behavior.boundsWidth(), _behavior.boundsHeight()),
-                    bound_tick(d.right, d.bottom, -_behavior.boundsWidth(), -_behavior.boundsHeight()),
-                    bound_tick(d.left, d.bottom, _behavior.boundsWidth(), -_behavior.boundsHeight()),
-                ].join(' ');
-            },
+        var colabounds = node.data().map(function(n) {
+            return boundary(cola_point(n), n.cola.width, n.cola.height);
+        });
+        var colaboundary = _debugLayer.selectAll('path.colaboundary').data(colabounds);
+        colaboundary.exit().remove();
+        colaboundary.enter().append('path').attr('class', 'colaboundary');
+        colaboundary.attr({
+            d: corners,
             opacity: _behavior.boundsOpacity() !== null ? _behavior.boundsOpacity() : _behavior.opacity(),
             stroke: _behavior.boundsColor(),
             fill: 'none'
