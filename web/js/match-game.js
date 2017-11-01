@@ -44,13 +44,13 @@ function phrase() {
 var data = d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'a' + i,
-        label: [String.fromCharCode(97+i), phrase()],
+        label: [String.fromCharCode(97+i) + '.', phrase()],
         flex: 0
     };
 }).concat(d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'b' + i,
-        label: [String.fromCharCode(48+i), phrase()],
+        label: [String.fromCharCode(48+i) + '.', phrase()],
         flex: 0
     };
 }));
@@ -101,7 +101,8 @@ var diagram = dc_graph.diagram('#graph')
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .portDimension(port_flat.dimension).portGroup(port_flat.group)
         .nodeShape(n => layout.keyToAddress()(diagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rounded-rect')
-        .nodeLabelPadding({x: 10, y: 0})
+        .nodeLabelPadding({x: 20, y: 0})
+        .nodeLabelAlignment(n => /^a/.test(n.key) ? 'right' : 'left')
         .nodeStrokeWidth(0)
         .nodeTitle(null)
         .edgeSourcePortName('out')
