@@ -1,4 +1,4 @@
-dc_graph.validate = function() {
+ dc_graph.validate = function(title) {
     function falsy(objects, accessor, what, who) {
         var f = objects.filter(function(o) {
             return !accessor(o);
@@ -62,12 +62,12 @@ dc_graph.validate = function() {
             return nodes.length + ' nodes, ' + edges.length + ' edges, ' + ports.length + ' ports';
         }
         if(errors.length) {
-            console.warn('validation failed with ' + count_text() + ':');
+            console.warn('validation of ' + title + ' failed with ' + count_text() + ':');
             errors.forEach(function(err) {
                 console.warn.apply(null, err);
             });
         }
-        console.log('validation succeeded with ' + count_text() + '.');
+        console.log('validation of ' + title + ' succeeded with ' + count_text() + '.');
     }
     var _behavior = {
         parent: property(null).react(function(p) {
