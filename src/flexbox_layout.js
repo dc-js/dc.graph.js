@@ -35,7 +35,7 @@ dc_graph.flexbox_layout = function(id) {
         var need = all_keys(_tree);
         _wnodes = nodes;
     }
-    var internal_attrs = ['sort', 'dcg_nodeKey'];
+    var internal_attrs = ['sort', 'dcg_nodeKey', 'x', 'y'];
     function create_flextree(attrs, tree) {
         var flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
         var attrs2 = Object.assign({}, attrs);
@@ -100,18 +100,8 @@ dc_graph.flexbox_layout = function(id) {
     // and it might be more appropriate for it to look at the original data.
     // (Especially because it also computes some attributes based on data.)
     var supportedAttributes = [
+        'width', 'height', // positive number
         'minWidth', 'minHeight', // positive number
-        'maxWidth', 'maxHeight', // positive number
-        'left', 'right', 'top', 'bottom', // number
-        'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', // number
-        'padding', 'paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom', // positive number
-        'borderWidth', 'borderLeftWidth', 'borderRightWidth', 'borderTopWidth', 'borderBottomWidth', // positive number
-        'flexDirection', // 'column', 'row'
-        'justifyContent', // 'flex-start', 'center', 'flex-end', 'space-between', 'space-around'
-        'alignItems', 'alignSelf', // 'flex-start', 'center', 'flex-end', 'stretch'
-        'flex', // positive number
-        'flexWrap', // 'wrap', 'nowrap'
-        'position', // 'minWidth', 'minHeight', // positive number
         'maxWidth', 'maxHeight', // positive number
         'left', 'right', 'top', 'bottom', // number
         'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', // number
