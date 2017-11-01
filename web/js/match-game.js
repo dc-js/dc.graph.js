@@ -112,6 +112,13 @@ var diagram = dc_graph.diagram('#graph')
 diagram.child('validate', dc_graph.validate());
 diagram.child('place-ports', dc_graph.place_ports());
 
+var circlePorts = dc_graph.symbol_port_style()
+        .portSymbol(null)
+        .smallRadius(2).mediumRadius(4).largeRadius(6)
+        .outlineStroke('black').outlineStrokeWidth(1);
+diagram.portStyle('circle-ports', circlePorts)
+    .portStyleName('circle-ports');
+
 var drawGraphs = dc_graph.draw_graphs({
     idTag: 'id',
     sourceTag: 'sourcename',
