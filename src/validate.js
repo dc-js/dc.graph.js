@@ -58,6 +58,20 @@
         check(not_found(nindex, named_ports, diagram.portNodeKey(), 'portNodeKey', 'nodes', 'ports'));
         check(not_found(eindex, anonymous_ports, diagram.portEdgeKey(), 'portEdgeKey', 'edges', 'ports'));
 
+        if(diagram.portName()) {
+            var pindex = build_index(named_ports, function(p) {
+                return diagram.portNodeKey()(p) + ' - ' + diagram.portName()(p);
+            });
+            if(diagram.edgeSourcePortName())
+                check(not_found(pindex, edges, function(e) {
+                    return diagram.edgeSource()(e) + ' - ' + d3.functor(diagram.edgeSourcePortName())(e);
+                }, 'edgeSourcePortName', 'ports', 'edges'));
+            if(diagram.edgeTargetPortName())
+                check(not_found(pindex, edges,  function(e) {
+                    return diagram.edgeTarget()(e) + ' - ' + d3.functor(diagram.edgeTargetPortName())(e);
+                }, 'edgeTargetPortName', 'ports', 'edges'));
+        }
+
         function count_text() {
             return nodes.length + ' nodes, ' + edges.length + ' edges, ' + ports.length + ' ports';
         }
