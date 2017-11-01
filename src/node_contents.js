@@ -13,12 +13,35 @@ dc_graph.text_contents = function() {
                 else if(typeof lines === 'string')
                     lines = [lines];
                 var first = lines.length%2 ? 0.3 - (lines.length-1)/2 : 1-lines.length/2;
-                return lines.map(function(line, i) { return {line: line, ofs: (i==0 ? first : 1) + 'em'}; });
+                return lines.map(function(line, i) { return {node: n, line: line, ofs: (i==0 ? first : 1) + 'em'}; });
             });
-            tspan.enter().append('tspan')
-                .attr('x', 0)
-                .attr('dy', function(d) { return d.ofs; });
-            tspan.text(function(d) { return d.line; });
+            tspan.enter().append('tspan');
+            tspan.text(function(s) { return s.line; })
+                .each(function(s) {
+                    s.bbox = this.getBBox();
+                    if(s.bbox.width > (s.node.maxw || 0))
+                        s.node.maxw = s.bbox.width;
+                });
+            tspan.attr({
+                'text-anchor': function(s) {
+                    switch(_contents.parent().nodeLabelAlignment.eval(s.node)) {
+                    case 'left': return 'start';
+                    case 'center': return 'middle';
+                    case 'right': return 'end';
+                    }
+                    return null;
+                },
+                x: function(s) {
+                    switch(_contents.parent().nodeLabelAlignment.eval(s.node)) {
+                    case 'left': return -s.node.maxw/2;
+                    case 'right': return s.node.maxw/2;
+                    case 'center':
+                    }
+                    return 0;
+                },
+                dy: function(d) { return d.ofs; }
+            });
+
             tspan.exit().remove();
             text
                 .attr('fill', _contents.parent().nodeLabelFill.eval);

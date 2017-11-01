@@ -485,6 +485,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return kv.value.label || kv.value.name;
     });
 
+    _chart.nodeLabelAlignment = property('center');
+
     /**
      * Set or get the function which will be used to retrieve the label fill color. Default: null
      * @method nodeLabelFill
