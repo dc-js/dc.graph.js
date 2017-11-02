@@ -35,21 +35,25 @@ dc_graph.flexbox_layout = function(id) {
         var need = all_keys(_tree);
         _wnodes = nodes;
     }
-    var internal_attrs = ['sort', 'dcg_nodeKey', 'x', 'y'];
+    var internal_attrs = ['sort', 'dcg_nodeKey', 'x', 'y'],
+        skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
         var flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
         var attrs2 = Object.assign({}, attrs);
+        var isParent = Object.keys(tree.children).length;
         if(tree.node)
             Object.assign(attrs, tree.node);
         for(var attr in attrs) {
             if(internal_attrs.includes(attr))
+                continue;
+            if(isParent && skip_on_parents.includes(attr))
                 continue;
             var value = attrs[attr];
             if(typeof value === 'function')
                 value = value(tree.node);
             flexnode.style[attr] = value;
         }
-        if(Object.keys(tree.children).length) {
+        if(isParent) {
             flexnode.children = Object.values(tree.children)
                 .sort(attrs.sort)
                 .map(function(c) { return c.address[c.address.length-1]; })
