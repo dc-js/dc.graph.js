@@ -76,7 +76,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         };
         thinginess.applyStyles(condition);
 
-        thinginess.clickables(chart, node, edge).on('click.' + things_name, function(d) {
+        thinginess.clickables(chart, node, edge).on('mouseup.' + things_name, function(d) {
             if(thinginess.excludeClick && thinginess.excludeClick(d3.event.target))
                 return;
             var key = thinginess.key(d), newSelected;
