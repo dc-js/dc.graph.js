@@ -297,6 +297,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.edgeGroup = property();
 
+    _chart.edgesInFront = property(false);
+
     /**
      * Set or get the function which will be used to retrieve the unique key for each node. By
      * default, this accesses the `key` field of the object passed to it. The keys should match
@@ -2330,10 +2332,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         _chart.resetSvg();
         _g = _svg.append('g')
             .attr('class', 'draw');
-        _edgeLayer = _g.append('g')
-            .attr('class', 'edge-layer');
-        _nodeLayer = _g.append('g')
-            .attr('class', 'node-layer');
+
+        var layers = ['edge-layer', 'node-layer'];
+        if(_chart.edgesInFront())
+            layers.reverse();
+        _g.selectAll('g').data(layers)
+          .enter().append('g')
+            .attr('class', function(l) { return l; });
+        _edgeLayer = _g.selectAll('g.edge-layer');
+        _nodeLayer = _g.selectAll('g.node-layer');
 
         if(_chart.legend())
             _chart.legend().render();
