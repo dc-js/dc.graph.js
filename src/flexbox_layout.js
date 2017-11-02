@@ -49,12 +49,14 @@ dc_graph.flexbox_layout = function(id) {
                 value = value(tree.node);
             flexnode.style[attr] = value;
         }
-        flexnode.children = Object.values(tree.children)
-            .sort(attrs.sort)
-            .map(function(c) { return c.address[c.address.length-1]; })
-            .map(function(key) {
-                return create_flextree(Object.assign({}, attrs2), tree.children[key]);
-            });
+        if(Object.keys(tree.children).length) {
+            flexnode.children = Object.values(tree.children)
+                .sort(attrs.sort)
+                .map(function(c) { return c.address[c.address.length-1]; })
+                .map(function(key) {
+                    return create_flextree(Object.assign({}, attrs2), tree.children[key]);
+                });
+        }
         tree.flexnode = flexnode;
         return flexnode;
     }
