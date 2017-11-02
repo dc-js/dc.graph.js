@@ -105,6 +105,7 @@ var diagram = dc_graph.diagram('#graph')
         .nodeLabelAlignment(n => /^a/.test(n.key) ? 'right' : 'left')
         .nodeStrokeWidth(0)
         .nodeTitle(null)
+        .edgesInFront(true)
         .edgeSourcePortName('out')
         .edgeTargetPortName('in')
         .edgeLabel(null)
@@ -119,6 +120,7 @@ diagram.child('place-ports', dc_graph.place_ports());
 
 var circlePorts = dc_graph.symbol_port_style()
         .portSymbol(null)
+        .displacement(0)
         .smallRadius(2).mediumRadius(4).largeRadius(6)
         .outlineStroke('black').outlineStrokeWidth(1);
 diagram.portStyle('circle-ports', circlePorts)
