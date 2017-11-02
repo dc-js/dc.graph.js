@@ -11,7 +11,7 @@ var parentNodes = [
     {
         id: 'top',
         flexDirection: vertical ? 'column' : 'row',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         padding: 10
     },
     {
@@ -115,7 +115,8 @@ var diagram = dc_graph.diagram('#graph')
         .portElastic(false);
 
 diagram.child('validate', dc_graph.validate());
-//diagram.child('troubleshoot', dc_graph.troubleshoot());
+if(options.trouble)
+    diagram.child('troubleshoot', dc_graph.troubleshoot());
 diagram.child('place-ports', dc_graph.place_ports());
 
 var circlePorts = dc_graph.symbol_port_style()
