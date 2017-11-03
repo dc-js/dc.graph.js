@@ -13,33 +13,45 @@ dc_graph.text_contents = function() {
                 else if(typeof lines === 'string')
                     lines = [lines];
                 var first = lines.length%2 ? 0.3 - (lines.length-1)/2 : 1-lines.length/2;
-                return lines.map(function(line, i) { return {node: n, line: line, ofs: (i==0 ? first : 1) + 'em'}; });
+                return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : 1) + 'em'}; });
             });
             tspan.enter().append('tspan');
-            tspan.text(function(s) { return s.line; })
+            tspan.text(function(s) { return s.line; });
+            var aligned = container
+                .each(function(n) {
+                    n.xofs = 0;
+                })
+                .filter(function(n) {
+                    return _contents.parent().nodeLabelAlignment.eval(n) !== 'center';
+                });
+            aligned
+                .selectAll('tspan')
                 .each(function(s) {
                     s.bbox = this.getBBox();
+                    console.log(window.getComputedStyle(this).getPropertyValue('font'));
                     if(s.bbox.width > (s.node.maxw || 0))
                         s.node.maxw = s.bbox.width;
-                });
-            tspan.attr({
-                'text-anchor': function(s) {
+                }).attr('text-anchor', function(s) {
                     switch(_contents.parent().nodeLabelAlignment.eval(s.node)) {
                     case 'left': return 'start';
                     case 'center': return 'middle';
                     case 'right': return 'end';
                     }
                     return null;
+                });
+            aligned.each(function(n) {
+                switch(_contents.parent().nodeLabelAlignment.eval(n)) {
+                case 'left': n.xofs = -n.maxw/2;
+                    break;
+                case 'right': n.xofs = n.maxw/2;
+                    break;
+                }
+            });
+            tspan.attr({
+                    x: function(s) {
+                    return s.node.xofs;
                 },
-                x: function(s) {
-                    switch(_contents.parent().nodeLabelAlignment.eval(s.node)) {
-                    case 'left': return -s.node.maxw/2;
-                    case 'right': return s.node.maxw/2;
-                    case 'center':
-                    }
-                    return 0;
-                },
-                dy: function(d) { return d.ofs; }
+                dy: function(d) { return d.yofs; }
             });
 
             tspan.exit().remove();
