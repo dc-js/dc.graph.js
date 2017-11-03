@@ -17,38 +17,33 @@ dc_graph.text_contents = function() {
             });
             tspan.enter().append('tspan');
             tspan.text(function(s) { return s.line; });
-            var aligned = container
+            text
                 .each(function(n) {
                     n.xofs = 0;
                 })
                 .filter(function(n) {
                     return _contents.parent().nodeLabelAlignment.eval(n) !== 'center';
-                });
-            aligned
-                .selectAll('tspan')
-                .each(function(s) {
-                    s.bbox = this.getBBox();
-                    console.log(window.getComputedStyle(this).getPropertyValue('font'));
-                    if(s.bbox.width > (s.node.maxw || 0))
-                        s.node.maxw = s.bbox.width;
-                }).attr('text-anchor', function(s) {
+                })
+                .each(function(n) {
+                    n.bbox = this.getBBox();
+                    switch(_contents.parent().nodeLabelAlignment.eval(n)) {
+                    case 'left': n.xofs = -n.bbox.width/2;
+                        break;
+                    case 'right': n.xofs = n.bbox.width/2;
+                        break;
+                    }
+                })
+                .selectAll('tspan');
+            tspan.attr({
+                'text-anchor': function(s) {
                     switch(_contents.parent().nodeLabelAlignment.eval(s.node)) {
                     case 'left': return 'start';
                     case 'center': return 'middle';
                     case 'right': return 'end';
                     }
                     return null;
-                });
-            aligned.each(function(n) {
-                switch(_contents.parent().nodeLabelAlignment.eval(n)) {
-                case 'left': n.xofs = -n.maxw/2;
-                    break;
-                case 'right': n.xofs = n.maxw/2;
-                    break;
-                }
-            });
-            tspan.attr({
-                    x: function(s) {
+                },
+                x: function(s) {
                     return s.node.xofs;
                 },
                 dy: function(d) { return d.yofs; }
