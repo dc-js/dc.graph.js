@@ -195,6 +195,7 @@ module.exports = function (grunt) {
                             'node_modules/lodash/lodash.js',
                             'node_modules/queue-async/build/queue.js',
                             'node_modules/dagre/dist/dagre.js',
+                            'node_modules/promise-polyfill/promise.js',
                             'node_modules/webcola/WebCola/cola.js',
                             'node_modules/viz.js/viz.js',
                             'node_modules/x-editable/dist/jqueryui-editable/js/jqueryui-editable.js'
