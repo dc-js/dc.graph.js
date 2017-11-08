@@ -54,7 +54,8 @@ dc_graph.text_contents = function() {
                 .attr('fill', _contents.parent().nodeLabelFill.eval);
         },
         textbox: function(container) {
-            return this.select(container).node().getBBox();
+            var bbox = this.select(container).node().getBBox();
+            return {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
         },
         select: function(container) {
             return container.select('text.node-label');

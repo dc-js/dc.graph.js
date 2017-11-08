@@ -209,6 +209,7 @@ function fit_shape(shape, chart) {
             var bbox = null;
             if((!shape.useTextSize || shape.useTextSize(d.dcg_shape)) && chart.nodeFitLabel.eval(d)) {
                 bbox = this.getBBox();
+                bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                 var padding;
                 var content = chart.nodeContent.eval(d);
                 if(content && chart.content(content).padding)
