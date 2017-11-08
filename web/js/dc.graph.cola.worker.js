@@ -148,6 +148,38 @@ function uuid() {
     });
 }
 
+// polyfill Object.assign for IE
+// it's just too useful to do without
+if (typeof Object.assign != 'function') {
+  // Must be writable: true, enumerable: false, configurable: true
+  Object.defineProperty(Object, "assign", {
+    value: function assign(target, varArgs) { // .length of function is 2
+      'use strict';
+      if (target == null) { // TypeError if undefined or null
+        throw new TypeError('Cannot convert undefined or null to object');
+      }
+
+      var to = Object(target);
+
+      for (var index = 1; index < arguments.length; index++) {
+        var nextSource = arguments[index];
+
+        if (nextSource != null) { // Skip over if undefined or null
+          for (var nextKey in nextSource) {
+            // Avoid bugs when hasOwnProperty is shadowed
+            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+              to[nextKey] = nextSource[nextKey];
+            }
+          }
+        }
+      }
+      return to;
+    },
+    writable: true,
+    configurable: true
+  });
+}
+
 // create or re-use objects in a map, delete the ones that were not reused
 function regenerate_objects(preserved, list, need, key, assign, create, destroy) {
     if(!create) create = function(k, o) { };
@@ -165,8 +197,10 @@ function regenerate_objects(preserved, list, need, key, assign, create, destroy)
     var wlist = list.map(wrap);
     if(need)
         need.forEach(function(k) {
-            if(!preserved[k]) // hasn't been created, needs to be
+            if(!preserved[k]) { // hasn't been created, needs to be
                 create(k, preserved[k] = {}, null);
+                assign(preserved[k], null);
+            }
             if(!keep[k]) { // wasn't in list, should be
                 wlist.push(preserved[k]);
                 keep[k] = true;
@@ -265,7 +299,7 @@ dc_graph.cola_layout = function(id) {
         }
     }
 
-    function data(nodes, edges, constraints, options) {
+    function data(nodes, edges, constraints) {
         var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
@@ -303,7 +337,7 @@ dc_graph.cola_layout = function(id) {
         });
 
         var groups = null;
-        if(options.groupConnected) {
+        if(engine.groupConnected()) {
             var components = cola.separateGraphs(wnodes, wedges);
             groups = components.map(function(g) {
                 return {leaves: g.array.map(function(n) { return n.index; })};
@@ -331,11 +365,11 @@ dc_graph.cola_layout = function(id) {
             .groups(groups);
     }
 
-    function start(options) {
-        _d3cola.start(options.initialUnconstrainedIterations,
-                      options.initialUserConstraintIterations,
-                      options.initialAllConstraintsIterations,
-                      options.gridSnapIterations);
+    function start() {
+        _d3cola.start(engine.unconstrainedIterations(),
+                      engine.userConstraintIterations(),
+                      engine.allConstraintsIterations(),
+                      engine.gridSnapIterations());
     }
 
     function stop() {
@@ -370,17 +404,17 @@ dc_graph.cola_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, options) {
-            data(nodes, edges, constraints, options);
+        data: function(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();
         },
         optionNames: function() {
-            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize']
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize', 'groupConnected']
                 .concat(graphviz_keys);
         },
         populateLayoutNode: function() {},
@@ -454,7 +488,12 @@ dc_graph.cola_layout = function(id) {
             _flowLayout = flow;
             return this;
         },
-        tickSize: property(1)
+        unconstrainedIterations: property(10),
+        userConstraintIterations: property(20),
+        allConstraintsIterations: property(20),
+        gridSnapIterations: property(0),
+        tickSize: property(1),
+        groupConnected: property(false)
     });
     return engine;
 };
@@ -497,7 +536,7 @@ onmessage = function(e) {
         break;
     case 'data':
         if(_layouts)
-            _layouts[args.layoutId].data(args.nodes, args.edges, args.constraints, args.options);
+            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.constraints);
         break;
     case 'start':
         // if(args.initialOnly) {
@@ -506,7 +545,7 @@ onmessage = function(e) {
         //     _done();
         // }
         // else
-        _layouts[args.layoutId].start(args.options);
+        _layouts[args.layoutId].start();
         break;
     case 'stop':
         if(_layouts)
