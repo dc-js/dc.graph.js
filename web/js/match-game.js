@@ -161,6 +161,26 @@ var oppositeMatcher = dc_graph.match_opposites(diagram, {
 });
 drawGraphs.conduct(oppositeMatcher);
 
+if(qs.selports) {
+    var select_ports = dc_graph.select_ports({
+        portBackgroundFill: 'lightgreen',
+        outlineStroke: 'orange',
+        outlineStrokeWidth: 2,
+        smallRadius: 5,
+        mediumRadius: 7,
+        largeRadius: 10
+    }, {
+        portStyle: 'circle-ports'
+    }).multipleSelect(false);
+    diagram.child('select-ports', select_ports);
+    var select_ports_group = dc_graph.select_things_group('select-ports-group', 'select-ports');
+    select_ports_group.on('set_changed.show-info', function(ports) {
+        if(ports.length>0) {
+            select_edges_group.set_changed([]);
+        }
+    });
+}
+
 
 dc.renderAll();
 
