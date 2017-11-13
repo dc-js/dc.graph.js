@@ -171,10 +171,15 @@ dc_graph.draw_graphs = function(options) {
                 // allow keyboard mode to hear this one (again, we need better cooperation)
                 // d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
+                    var finishPromise;
                     if(_behavior.conduct().finishDragEdge)
-                        if(!_behavior.conduct().finishDragEdge(_sourceDown, _targetMove))
-                            return;
-                    create_edge(chart, _sourceDown, _targetMove);
+                        finishPromise = _behavior.conduct().finishDragEdge(_sourceDown, _targetMove);
+                    else finishPromise = Promise.resolve(true);
+                    var source = _sourceDown, target = _targetMove;
+                    finishPromise.then(function(ok) {
+                        if(ok)
+                            create_edge(chart, source, target);
+                    });
                 }
                 else if(_sourceDown) {
                     if(_behavior.conduct().cancelDragEdge)

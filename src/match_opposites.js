@@ -90,12 +90,12 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                 }));
                 if(options.delete_edges) {
                     var edgeKeys = source.port.edges.map(diagram.edgeKey.eval).concat(target.port.edges.map(diagram.edgeKey.eval));
-                    options.delete_edges.deleteSelection(edgeKeys);
+                    return options.delete_edges.deleteSelection(edgeKeys);
                 }
-                return true;
+                return Promise.resolve(true);
             }
             reset_deletables(source, _validTargets);
-            return false;
+            return Promise.resolve(false);
         },
         cancelDragEdge: function(source) {
             reset_deletables(source, _validTargets);

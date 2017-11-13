@@ -36,6 +36,7 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
 
                 _behavior.parent().redrawGroup();
             }
+            return true;
         });
     }
     function add_behavior(chart) {

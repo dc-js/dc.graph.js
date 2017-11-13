@@ -65,7 +65,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         finishDragEdge: function(source, target) {
             symbolPorts.enableHover(true);
             reset_ports(source);
-            return is_valid(source.port, target.port);
+            return Promise.resolve(is_valid(source.port, target.port));
         },
         cancelDragEdge: function(source) {
             symbolPorts.enableHover(true);
