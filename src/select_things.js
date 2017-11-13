@@ -1,5 +1,6 @@
 dc_graph.select_things = function(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;
+    var _mousedownThing = null;
 
     var contains_predicate = thinginess.keysEqual ?
             function(k1) {
@@ -76,8 +77,16 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         };
         thinginess.applyStyles(condition);
 
+        thinginess.clickables(chart, node, edge).on('mousedown.' + things_name, function(d) {
+            _mousedownThing = d;
+        });
+
         thinginess.clickables(chart, node, edge).on('mouseup.' + things_name, function(d) {
             if(thinginess.excludeClick && thinginess.excludeClick(d3.event.target))
+                return;
+            // it's only a click if the same target was mousedown & mouseup
+            // but we can't use click event because things may have been reordered
+            if(_mousedownThing !== d)
                 return;
             var key = thinginess.key(d), newSelected;
             if(_behavior.multipleSelect()) {
