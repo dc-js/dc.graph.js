@@ -16,7 +16,10 @@ dc_graph.text_contents = function() {
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : 1) + 'em'}; });
             });
             tspan.enter().append('tspan');
-            tspan.text(function(s) { return s.line; });
+            tspan.attr({
+                'text-anchor': 'start',
+                x: 0
+            }).text(function(s) { return s.line; });
             text
                 .each(function(n) {
                     n.xofs = 0;
