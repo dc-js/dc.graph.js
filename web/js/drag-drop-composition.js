@@ -764,7 +764,7 @@ get_catalog().then(function(catalog) {
     var node_tips = dc_graph.tip({namespace: 'node-tips'})
             .selection(dc_graph.tip.select_node())
             .content(function(d, k) {
-                k(d.orig.value.type);
+                k(d.orig.value && d.orig.value.type);
             });
 
     _diagram.child('node-tips', node_tips);
