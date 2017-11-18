@@ -574,7 +574,7 @@ get_catalog().then(function(catalog) {
     var portMatcher = dc_graph.match_ports(_diagram, symbolPorts)
             .allowParallel(qs.parallel || false);
 
-    var wildcard = dc_graph.wildcard_ports(_diagram, {
+    var wildcard = dc_graph.wildcard_ports({
         get_type: p => p.orig.value.type,
         set_type: (p,type) => p.orig.value.type = type,
         get_wild: p => p.orig.value.wild,
@@ -725,7 +725,7 @@ get_catalog().then(function(catalog) {
             })
             .onDelete(function(edges) {
                 // confirm with server here, promise-then pass to wildcard
-                return wildcard.resetTypes(edges);
+                return wildcard.resetTypes(_diagram, edges);
             });
     _diagram.child('delete-edges', delete_edges);
 

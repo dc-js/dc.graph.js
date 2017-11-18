@@ -1,4 +1,4 @@
-dc_graph.wildcard_ports = function(diagram, options) {
+dc_graph.wildcard_ports = function(options) {
     var get_type = options.get_type || function(p) { return p.name; },
         set_type = options.set_type || function(p, type) { p.name = type; }, // harmful? feature may only work with type in data
         is_wild = options.is_wild || function(p) { return p.orig.value.wild; },
@@ -18,7 +18,7 @@ dc_graph.wildcard_ports = function(diagram, options) {
             }
             return Promise.resolve(e);
         },
-        resetTypes: function(edges)  {
+        resetTypes: function(diagram, edges)  {
             edges.forEach(function(eid) {
                 var e = diagram.getWholeEdge(eid);
                 var p = diagram.getPort(diagram.nodeKey.eval(e.source), null,
