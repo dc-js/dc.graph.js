@@ -34,14 +34,13 @@ dc_graph.tip = function(options) {
                  next = function() {
                      _behavior[fetcher]()(d, function(content) {
                          _d3tip.show.call(target, content, target);
-                         if(_behavior.linkCallback()) {
-                             d3.select('div.d3-tip')
-                                 .selectAll('a.tip-link')
-                                 .on('click', function() {
-                                     d3.event.preventDefault();
+                         d3.select('div.d3-tip')
+                             .selectAll('a.tip-link')
+                             .on('click', function() {
+                                 d3.event.preventDefault();
+                                 if(_behavior.linkCallback())
                                      _behavior.linkCallback()(this.id);
-                                 });
-                         }
+                             });
                      });
                  };
              if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
