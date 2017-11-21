@@ -79,24 +79,24 @@ dc_graph.tip = function(options) {
     function add_behavior(chart, node, edge, ehover) {
         init(chart);
         _behavior.selection().select(chart, node, edge, ehover)
-            .on('mouseover.' + options.namespace, fetch_and_show_content('content'))
-            .on('mouseout.' + options.namespace, hide_tip);
+            .on('mouseover.' + _namespace, fetch_and_show_content('content'))
+            .on('mouseout.' + _namespace, hide_tip);
         if(_behavior.clickable()) {
             d3.select('div.d3-tip')
-                .on('mouseover.' + options.namespace, function() {
+                .on('mouseover.' + _namespace, function() {
                     if(_hideTimeout)
                         window.clearTimeout(_hideTimeout);
                 })
-                .on('mouseout.' + options.namespace, hide_tip);
+                .on('mouseout.' + _namespace, hide_tip);
         }
     }
     function remove_behavior(chart, node, edge, ehover) {
         _behavior.selection().select(chart, node, edge, ehover)
-            .on('mouseover.' + options.namespace, null)
-            .on('mouseout.' + options.namespace, null);
+            .on('mouseover.' + _namespace, null)
+            .on('mouseout.' + _namespace, null);
     }
 
-    var _behavior = dc_graph.behavior(options.namespace, {
+    var _behavior = dc_graph.behavior(_namespace, {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         laterDraw: true
