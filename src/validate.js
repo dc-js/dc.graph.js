@@ -85,7 +85,10 @@
     }
     var _behavior = {
         parent: property(null).react(function(p) {
-            p.on('data.validate', validate);
+            if(p)
+                p.on('data.validate', validate);
+            else
+                _behavior.parent().on('data.validate', null);
         })
     };
 
