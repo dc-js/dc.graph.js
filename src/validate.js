@@ -81,7 +81,8 @@
                 console.warn.apply(null, err);
             });
         }
-        console.log('validation of ' + title + ' succeeded with ' + count_text() + '.');
+        else
+            console.log('validation of ' + title + ' succeeded with ' + count_text() + '.');
     }
     var _behavior = {
         parent: property(null).react(function(p) {
