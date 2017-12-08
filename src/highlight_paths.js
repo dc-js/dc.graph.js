@@ -75,17 +75,17 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
 
     function add_behavior(chart, node, edge, ehover) {
         chart
-            .cascade(200, true, conditional_properties(function(n) {
+            .cascade(200, true, node_edge_conditions(function(n) {
                 return !!node_on_paths[chart.nodeKey.eval(n)];
             }, function(e) {
                 return !!edge_on_paths[chart.edgeKey.eval(e)];
             }, pathprops))
-            .cascade(300, true, conditional_properties(function(n) {
+            .cascade(300, true, node_edge_conditions(function(n) {
                 return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], selected);
             }, function(e) {
                 return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], selected);
             }, selectprops))
-            .cascade(400, true, conditional_properties(function(n) {
+            .cascade(400, true, node_edge_conditions(function(n) {
                 return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], hoverpaths);
             }, function(e) {
                 return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], hoverpaths);

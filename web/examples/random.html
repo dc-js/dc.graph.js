@@ -51,7 +51,12 @@
             worker: true,
             newnode: 0.9,
             newcomp: 0.1,
-            interval: 1000
+            interval: 1000,
+            opacity: 1,
+            ports: false,
+            shape: 'ellipse',
+            content: 'text',
+            icon: null
         }, qs);
 
         var engine = dc_graph.spawn_engine(options.layout, qs, options.worker != 'false');
@@ -65,7 +70,8 @@
             nodeKey: 'id', edgeKey: 'id',
             ncolors: 12,
             newNodeProb: +options.newnode,
-            newComponentProb: +options.newcomp
+            newComponentProb: +options.newcomp,
+            log: options.log && options.log !== 'false'
         });
         var diagram = dc_graph.diagram('#graph');
         var data = build_data(random.nodes(), random.edges());
@@ -75,9 +81,12 @@
             .height(document.documentElement.clientHeight)
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
             .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
+            .nodeShape({shape: options.shape})
+            .nodeContent(options.content)
+            .nodeIcon(options.icon)
             .nodeStrokeWidth(0) // turn off outlines
             .nodeLabel(function(kv) { return kv.key; })
-            .nodeLabelFill(function(n) {
+            .nodeLabelFill(options.shape === 'plain' ? 'black' : function(n) {
                 var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
                     // https://www.w3.org/TR/AERT#color-contrast
                     brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
@@ -89,9 +98,18 @@
             .nodeFillScale(d3.scale.ordinal().range(
                 ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
                  '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
+            .nodeOpacity(+options.opacity)
             .nodeTitle(null) // deactivate basic tooltips
             .edgeArrowhead(options.arrows ? 'vee' : null)
-            .timeLimit(options.interval - 100)
+            .timeLimit(options.interval - 100);
+
+        if(options.ports) {
+            diagram
+                .portStyle('symbols', dc_graph.symbol_port_style())
+                .portStyleName('symbols');
+        }
+
+        diagram
             .render();
 
         window.setInterval(function() {

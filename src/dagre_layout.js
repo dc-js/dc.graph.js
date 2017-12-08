@@ -27,8 +27,8 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
     }
 
-    function data(nodes, edges, constraints, options) {
-        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+    function data(nodes, edges) {
+        var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -46,7 +46,7 @@ dc_graph.dagre_layout = function(id) {
         }, function(k) {
             _dagreGraph.removeNode(k);
         });
-        var wedges = regenerate_objects(_edges, edges, function(e) {
+        var wedges = regenerate_objects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -94,6 +94,9 @@ dc_graph.dagre_layout = function(id) {
         supportsWebworker: function() {
             return true;
         },
+        needsStage: function(stage) { // stopgap until we have engine chaining
+            return stage === 'ports' || stage === 'edgepos';
+        },
         on: function(event, f) {
             _dispatch.on(event, f);
             return this;
@@ -105,11 +108,11 @@ dc_graph.dagre_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, options) {
-            data(nodes, edges, constraints, options);
+        data: function(graph, nodes, edges) {
+            data(nodes, edges);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();

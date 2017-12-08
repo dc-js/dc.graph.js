@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Drag and Drop Network Composition</title>
+    <meta charset="UTF-8">
+    <link rel="icon" href="img/favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
+    <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+    <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.css"/>
+    <link rel="stylesheet" href="css/jquery-ui.css"/>
+    <link rel="stylesheet" href="css/jqueryui-editable.css">
+    <link rel="stylesheet" type="text/css" href="css/drag-drop-composition.css"/>
+    <link rel="stylesheet" type="text/css" href="css/d3-tip/example-styles.css"/>
+
+    <script type="text/javascript" src="js/d3.js"></script>
+    <script type="text/javascript" src="js/crossfilter.js"></script>
+    <script type="text/javascript" src="js/dc.js"></script>
+    <script type="text/javascript" src="js/queue.js"></script>
+    <script type="text/javascript" src="js/d3-tip/index.js"></script>
+
+    <script type="text/javascript" src="js/lodash.js"></script>
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.js"></script>
+    <script type="text/javascript" src="js/jqueryui-editable.js"></script>
+
+    <script type="text/javascript" src="js/dagre.js"></script>
+    <script type="text/javascript" src="js/cola.js"></script>
+    <script type="text/javascript" src="js/dc.graph.js"></script>
+    <script type="text/javascript" src="js/chart.registry.js"></script>
+
+    <script type="text/javascript" src="js/querystring.js"></script>
+  </head>
+
+<body>
+
+  <div id="main">
+    <div id="canvas-panel">
+      <div id="canvas"></div>
+    </div>
+    <div id="right-panel">
+      <div id="naming">
+        <div><a href="#" id="solution-name" data-type="text" data-pk="1" data-title="Enter solution name"></a></div>
+        <div><a href="#" id="description" data-type="text" data-pk="1" data-title="Enter description"></a></div>
+      </div>
+      <div id="commands">
+        <div id="command-buttons">
+          <a href='#' id="new-button" title="new solution"><i class="fa fa-plus"></i></a>
+          &nbsp;&nbsp;&nbsp;&nbsp;<a href='#' id='save-button' class="button-disabled" title="solution is unchanged"><i class="fa fa-save"></i></a>
+          &nbsp;&nbsp;&nbsp;&nbsp;<a href='#' id='delete-button' class="button-disabled" title="delete solution"><i class="fa fa-remove"></i></a>
+        </div>
+      </div>
+      <div id="palette" role="tablist" aria-multiselectable="true"></div>
+      <div id="properties">
+        <div id="properties-content">
+          <h4 id="selected-name"></h4>
+          <table id="properties-table" class="table">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript" src="js/bootstrap.js"></script>
+  <script type="text/javascript" src="js/drag-drop-composition.js"></script>
+</body>
+</html>

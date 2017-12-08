@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.5.6
+ *  dc.graph 0.6.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.5.6
+ * @version 0.6.0
  * @example
  * // Example chaining
  * chart.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.5.6',
+    version: '0.6.0',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -103,6 +103,27 @@ var property = function (defaultValue, unwrap) {
     return ret;
 };
 
+function named_children() {
+    var _children = {};
+    var f = function(id, object) {
+        if(arguments.length === 1)
+            return _children[id];
+        // do not notify unnecessarily
+        if(_children[id] === object)
+            return this;
+        if(_children[id])
+            _children[id].parent(null);
+        _children[id] = object;
+        if(object)
+            object.parent(this);
+        return this;
+    };
+    f.enum = function() {
+        return Object.keys(_children);
+    };
+    return f;
+}
+
 function deprecated_property(message, defaultValue) {
     var prop = property(defaultValue);
     var ret = function() {
@@ -127,8 +148,40 @@ function uuid() {
     });
 }
 
+// polyfill Object.assign for IE
+// it's just too useful to do without
+if (typeof Object.assign != 'function') {
+  // Must be writable: true, enumerable: false, configurable: true
+  Object.defineProperty(Object, "assign", {
+    value: function assign(target, varArgs) { // .length of function is 2
+      'use strict';
+      if (target == null) { // TypeError if undefined or null
+        throw new TypeError('Cannot convert undefined or null to object');
+      }
+
+      var to = Object(target);
+
+      for (var index = 1; index < arguments.length; index++) {
+        var nextSource = arguments[index];
+
+        if (nextSource != null) { // Skip over if undefined or null
+          for (var nextKey in nextSource) {
+            // Avoid bugs when hasOwnProperty is shadowed
+            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+              to[nextKey] = nextSource[nextKey];
+            }
+          }
+        }
+      }
+      return to;
+    },
+    writable: true,
+    configurable: true
+  });
+}
+
 // create or re-use objects in a map, delete the ones that were not reused
-function regenerate_objects(preserved, list, key, assign, create, destroy) {
+function regenerate_objects(preserved, list, need, key, assign, create, destroy) {
     if(!create) create = function(k, o) { };
     if(!destroy) destroy = function(k) { };
     var keep = {};
@@ -142,6 +195,17 @@ function regenerate_objects(preserved, list, key, assign, create, destroy) {
         return o1;
     }
     var wlist = list.map(wrap);
+    if(need)
+        need.forEach(function(k) {
+            if(!preserved[k]) { // hasn't been created, needs to be
+                create(k, preserved[k] = {}, null);
+                assign(preserved[k], null);
+            }
+            if(!keep[k]) { // wasn't in list, should be
+                wlist.push(preserved[k]);
+                keep[k] = true;
+            }
+        });
     // delete any objects from last round that are no longer used
     for(var k in preserved)
         if(!keep[k]) {
@@ -235,8 +299,8 @@ dc_graph.cola_layout = function(id) {
         }
     }
 
-    function data(nodes, edges, constraints, options) {
-        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+    function data(nodes, edges, constraints) {
+        var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -256,7 +320,7 @@ dc_graph.cola_layout = function(id) {
                     v1.y = v.y;
             }
         });
-        var wedges = regenerate_objects(_edges, edges, function(e) {
+        var wedges = regenerate_objects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -273,7 +337,7 @@ dc_graph.cola_layout = function(id) {
         });
 
         var groups = null;
-        if(options.groupConnected) {
+        if(engine.groupConnected()) {
             var components = cola.separateGraphs(wnodes, wedges);
             groups = components.map(function(g) {
                 return {leaves: g.array.map(function(n) { return n.index; })};
@@ -301,11 +365,11 @@ dc_graph.cola_layout = function(id) {
             .groups(groups);
     }
 
-    function start(options) {
-        _d3cola.start(options.initialUnconstrainedIterations,
-                      options.initialUserConstraintIterations,
-                      options.initialAllConstraintsIterations,
-                      options.gridSnapIterations);
+    function start() {
+        _d3cola.start(engine.unconstrainedIterations(),
+                      engine.userConstraintIterations(),
+                      engine.allConstraintsIterations(),
+                      engine.gridSnapIterations());
     }
 
     function stop() {
@@ -325,6 +389,9 @@ dc_graph.cola_layout = function(id) {
         supportsWebworker: function() {
             return true;
         },
+        needsStage: function(stage) { // stopgap until we have engine chaining
+            return stage === 'ports' || stage === 'edgepos';
+        },
         parent: property(null),
         on: function(event, f) {
             _dispatch.on(event, f);
@@ -337,17 +404,17 @@ dc_graph.cola_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, options) {
-            data(nodes, edges, constraints, options);
+        data: function(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();
         },
         optionNames: function() {
-            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize']
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize', 'groupConnected']
                 .concat(graphviz_keys);
         },
         populateLayoutNode: function() {},
@@ -421,7 +488,12 @@ dc_graph.cola_layout = function(id) {
             _flowLayout = flow;
             return this;
         },
-        tickSize: property(1)
+        unconstrainedIterations: property(10),
+        userConstraintIterations: property(20),
+        allConstraintsIterations: property(20),
+        gridSnapIterations: property(0),
+        tickSize: property(1),
+        groupConnected: property(false)
     });
     return engine;
 };
@@ -464,7 +536,7 @@ onmessage = function(e) {
         break;
     case 'data':
         if(_layouts)
-            _layouts[args.layoutId].data(args.nodes, args.edges, args.constraints, args.options);
+            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.constraints);
         break;
     case 'start':
         // if(args.initialOnly) {
@@ -473,7 +545,7 @@ onmessage = function(e) {
         //     _done();
         // }
         // else
-        _layouts[args.layoutId].start(args.options);
+        _layouts[args.layoutId].start();
         break;
     case 'stop':
         if(_layouts)

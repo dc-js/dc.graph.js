@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Match Game</title>
+  <meta charset="UTF-8">
+  <link rel="icon" href="img/favicon.png" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/jquery-ui.css"/>
+
+  <script type="text/javascript" src="js/d3.js"></script>
+  <script type="text/javascript" src="js/crossfilter.js"></script>
+  <script type="text/javascript" src="js/dc.js"></script>
+
+  <script type="text/javascript" src="js/lodash.js"></script>
+
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.js"></script>
+
+  <script type="text/javascript" src="js/css-layout.js"></script>
+  <script type="text/javascript" src="js/dc.graph.js"></script>
+  <script type="text/javascript" src="js/chart.registry.js"></script>
+
+  <script type="text/javascript" src="js/querystring.js"></script>
+
+  <style>
+    #graph {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+    }
+    #graph.dc-graph text.node-label {
+      font: 16px sans-serif;
+    }
+    #resize {
+        border: 1px dotted grey;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="resize" style="width: 400px; height: 400px; position: absolute; left: 100px; top: 100px">
+    <div id="graph" class="chart"></div>
+  </div>
+
+<script type="text/javascript" src="js/match-game.js"></script>
+</body>
+</html>

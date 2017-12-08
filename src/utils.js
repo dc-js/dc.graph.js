@@ -1,23 +1,52 @@
-// i'm sure there's a word for this in haskell
-function conditional_properties(npred, epred, props) {
-    function _if(pred, curr) {
-        return function(o, last) {
-            return pred(o) ? curr(o) : last();
-        };
-    }
+function property_if(pred, curr) {
+    return function(o, last) {
+        return pred(o) ? curr(o) : last();
+    };
+}
+
+function property_interpolate(value, curr) {
+    return function(o, last) {
+        return d3.interpolate(last(o), curr(o))(value(o));
+    };
+}
+
+function multiply_properties(pred, props, blend) {
     var props2 = {};
-    for(var p in props) {
-        if(/^node/.test(p)) {
-            if(npred)
-                props2[p] = _if(npred, param(props[p]));
-        }
-        else if(/^edge/.test(p)) {
-            if(epred)
-                props2[p] = _if(epred, param(props[p]));
-        }
-        else console.error('only know how to deal with properties that start with "node" or "edge"');
-    }
+    for(var p in props)
+        props2[p] = blend(pred, param(props[p]));
     return props2;
+}
+
+function conditional_properties(pred, props) {
+    return multiply_properties(pred, props, property_if);
+}
+
+function node_edge_conditions(npred, epred, props) {
+    var nprops = {}, eprops = {}, badprops = [];
+    for(var p in props) {
+        if(/^node/.test(p))
+            nprops[p] = props[p];
+        else if(/^edge/.test(p))
+            eprops[p] = props[p];
+        else badprops.push(p);
+    }
+    if(badprops.length)
+        console.error('only know how to deal with properties that start with "node" or "edge"', badprops);
+    var props2 = npred ? conditional_properties(npred, nprops) : {};
+    if(epred)
+        Object.assign(props2, conditional_properties(epred, eprops));
+    return props2;
+}
+
+function cascade(parent) {
+    return function(level, add, props) {
+        for(var p in props) {
+            if(!parent[p])
+                throw new Error('unknown attribute ' + p);
+            parent[p].cascade(level, add ? props[p] : null);
+        }
+        return parent;
+    };
 }
 
 function compose(f, g) {
@@ -93,6 +122,51 @@ Math.hypot = Math.hypot || function() {
   return Math.sqrt(y);
 };
 
+// https://tc39.github.io/ecma262/#sec-array.prototype.find
+if (!Array.prototype.find) {
+  Object.defineProperty(Array.prototype, 'find', {
+    value: function(predicate) {
+     // 1. Let O be ? ToObject(this value).
+      if (this == null) {
+        throw new TypeError('"this" is null or not defined');
+      }
+
+      var o = Object(this);
+
+      // 2. Let len be ? ToLength(? Get(O, "length")).
+      var len = o.length >>> 0;
+
+      // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+      if (typeof predicate !== 'function') {
+        throw new TypeError('predicate must be a function');
+      }
+
+      // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+      var thisArg = arguments[1];
+
+      // 5. Let k be 0.
+      var k = 0;
+
+      // 6. Repeat, while k < len
+      while (k < len) {
+        // a. Let Pk be ! ToString(k).
+        // b. Let kValue be ? Get(O, Pk).
+        // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+        // d. If testResult is true, return kValue.
+        var kValue = o[k];
+        if (predicate.call(thisArg, kValue, k, o)) {
+          return kValue;
+        }
+        // e. Increase k by 1.
+        k++;
+      }
+
+      // 7. Return undefined.
+      return undefined;
+    }
+  });
+}
+
 var script_path = function() {
     var _path;
     return function() {
@@ -113,3 +187,23 @@ var script_path = function() {
         return _path;
     };
 }();
+
+dc_graph.event_coords = function(chart) {
+    var bound = chart.root().node().getBoundingClientRect();
+    return chart.invertCoord([d3.event.clientX - bound.left,
+                              d3.event.clientY - bound.top]);
+};
+
+function promise_identity(x) {
+    return Promise.resolve(x);
+}
+
+// http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
+var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
+
+// https://stackoverflow.com/questions/16863917/check-if-class-exists-somewhere-in-parent-vanilla-js
+function ancestor_has_class(element, classname) {
+    if(d3.select(element).classed(classname))
+        return true;
+    return element.parentElement && ancestor_has_class(element.parentElement, classname);
+}
