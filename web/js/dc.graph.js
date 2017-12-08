@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0
+ *  dc.graph 0.6.0-alpha.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the chart.
  * @namespace dc_graph
- * @version 0.6.0
+ * @version 0.6.0-alpha.1
  * @example
  * // Example chaining
  * chart.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0',
+    version: '0.6.0-alpha.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1160,7 +1160,10 @@ dc_graph.text_contents = function() {
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : 1) + 'em'}; });
             });
             tspan.enter().append('tspan');
-            tspan.text(function(s) { return s.line; });
+            tspan.attr({
+                'text-anchor': 'start',
+                x: 0
+            }).text(function(s) { return s.line; });
             text
                 .each(function(n) {
                     n.xofs = 0;
@@ -1169,7 +1172,8 @@ dc_graph.text_contents = function() {
                     return _contents.parent().nodeLabelAlignment.eval(n) !== 'center';
                 })
                 .each(function(n) {
-                    n.bbox = this.getBBox();
+                    var bbox = this.getBBox();
+                    n.bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                     switch(_contents.parent().nodeLabelAlignment.eval(n)) {
                     case 'left': n.xofs = -n.bbox.width/2;
                         break;
@@ -5608,11 +5612,15 @@ dc_graph.troubleshoot = function() {
                 console.warn.apply(null, err);
             });
         }
-        console.log('validation of ' + title + ' succeeded with ' + count_text() + '.');
+        else
+            console.log('validation of ' + title + ' succeeded with ' + count_text() + '.');
     }
     var _behavior = {
         parent: property(null).react(function(p) {
-            p.on('data.validate', validate);
+            if(p)
+                p.on('data.validate', validate);
+            else
+                _behavior.parent().on('data.validate', null);
         })
     };
 
@@ -6117,14 +6125,13 @@ dc_graph.tip = function(options) {
                  next = function() {
                      _behavior[fetcher]()(d, function(content) {
                          _d3tip.show.call(target, content, target);
-                         if(_behavior.linkCallback()) {
-                             d3.select('div.d3-tip')
-                                 .selectAll('a.tip-link')
-                                 .on('click', function() {
-                                     d3.event.preventDefault();
+                         d3.select('div.d3-tip')
+                             .selectAll('a.tip-link')
+                             .on('click', function() {
+                                 d3.event.preventDefault();
+                                 if(_behavior.linkCallback())
                                      _behavior.linkCallback()(this.id);
-                                 });
-                         }
+                             });
                      });
                  };
              if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
@@ -6162,24 +6169,24 @@ dc_graph.tip = function(options) {
     function add_behavior(chart, node, edge, ehover) {
         init(chart);
         _behavior.selection().select(chart, node, edge, ehover)
-            .on('mouseover.' + options.namespace, fetch_and_show_content('content'))
-            .on('mouseout.' + options.namespace, hide_tip);
+            .on('mouseover.' + _namespace, fetch_and_show_content('content'))
+            .on('mouseout.' + _namespace, hide_tip);
         if(_behavior.clickable()) {
             d3.select('div.d3-tip')
-                .on('mouseover.' + options.namespace, function() {
+                .on('mouseover.' + _namespace, function() {
                     if(_hideTimeout)
                         window.clearTimeout(_hideTimeout);
                 })
-                .on('mouseout.' + options.namespace, hide_tip);
+                .on('mouseout.' + _namespace, hide_tip);
         }
     }
     function remove_behavior(chart, node, edge, ehover) {
         _behavior.selection().select(chart, node, edge, ehover)
-            .on('mouseover.' + options.namespace, null)
-            .on('mouseout.' + options.namespace, null);
+            .on('mouseover.' + _namespace, null)
+            .on('mouseout.' + _namespace, null);
     }
 
-    var _behavior = dc_graph.behavior(options.namespace, {
+    var _behavior = dc_graph.behavior(_namespace, {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         laterDraw: true
@@ -6496,6 +6503,7 @@ dc_graph.brush = function() {
 
 dc_graph.select_things = function(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;
+    var _mousedownThing = null;
 
     var contains_predicate = thinginess.keysEqual ?
             function(k1) {
@@ -6572,8 +6580,16 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         };
         thinginess.applyStyles(condition);
 
+        thinginess.clickables(chart, node, edge).on('mousedown.' + things_name, function(d) {
+            _mousedownThing = d;
+        });
+
         thinginess.clickables(chart, node, edge).on('mouseup.' + things_name, function(d) {
             if(thinginess.excludeClick && thinginess.excludeClick(d3.event.target))
+                return;
+            // it's only a click if the same target was mousedown & mouseup
+            // but we can't use click event because things may have been reordered
+            if(_mousedownThing !== d)
                 return;
             var key = thinginess.key(d), newSelected;
             if(_behavior.multipleSelect()) {
@@ -6724,6 +6740,7 @@ dc_graph.select_edges = function(props, options) {
 
 dc_graph.select_ports = function(props, options) {
     options = options || {};
+    var port_style = options.portStyle || 'symbols';
     var select_ports_group = dc_graph.select_things_group(options.select_ports_group || 'select-ports-group', 'select-ports');
     var thinginess = {
         laterDraw: true,
@@ -6738,10 +6755,10 @@ dc_graph.select_ports = function(props, options) {
             {edge: _behavior.parent().edgeKey.eval(p.edges[0]), name: p.name};
         },
         applyStyles: function(pred) {
-            _behavior.parent().portStyle('symbols').cascade(50, true, conditional_properties(pred, props));
+            _behavior.parent().portStyle(port_style).cascade(50, true, conditional_properties(pred, props));
         },
         removeStyles: function() {
-            _behavior.parent().portStyle('symbols').cascade(50, false, props);
+            _behavior.parent().portStyle(port_style).cascade(50, false, props);
         },
         keysEqual: function(k1, k2) {
             return k1.name === k2.name && (k1.node ? k1.node === k2.node : k1.edge === k2.edge);
@@ -7200,6 +7217,7 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
 
                 _behavior.parent().redrawGroup();
             }
+            return true;
         });
     }
     function add_behavior(chart) {
@@ -8045,10 +8063,15 @@ dc_graph.draw_graphs = function(options) {
                 // allow keyboard mode to hear this one (again, we need better cooperation)
                 // d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
+                    var finishPromise;
                     if(_behavior.conduct().finishDragEdge)
-                        if(!_behavior.conduct().finishDragEdge(_sourceDown, _targetMove))
-                            return;
-                    create_edge(chart, _sourceDown, _targetMove);
+                        finishPromise = _behavior.conduct().finishDragEdge(_sourceDown, _targetMove);
+                    else finishPromise = Promise.resolve(true);
+                    var source = _sourceDown, target = _targetMove;
+                    finishPromise.then(function(ok) {
+                        if(ok)
+                            create_edge(chart, source, target);
+                    });
                 }
                 else if(_sourceDown) {
                     if(_behavior.conduct().cancelDragEdge)
@@ -8197,7 +8220,7 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         finishDragEdge: function(source, target) {
             symbolPorts.enableHover(true);
             reset_ports(source);
-            return is_valid(source.port, target.port);
+            return Promise.resolve(is_valid(source.port, target.port));
         },
         cancelDragEdge: function(source) {
             symbolPorts.enableHover(true);
@@ -8300,12 +8323,12 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                 }));
                 if(options.delete_edges) {
                     var edgeKeys = source.port.edges.map(diagram.edgeKey.eval).concat(target.port.edges.map(diagram.edgeKey.eval));
-                    options.delete_edges.deleteSelection(edgeKeys);
+                    return options.delete_edges.deleteSelection(edgeKeys);
                 }
-                return true;
+                return Promise.resolve(true);
             }
             reset_deletables(source, _validTargets);
-            return false;
+            return Promise.resolve(false);
         },
         cancelDragEdge: function(source) {
             reset_deletables(source, _validTargets);
@@ -8318,7 +8341,7 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
     return _behavior;
 };
 
-dc_graph.wildcard_ports = function(diagram, options) {
+dc_graph.wildcard_ports = function(options) {
     var get_type = options.get_type || function(p) { return p.name; },
         set_type = options.set_type || function(p, type) { p.name = type; }, // harmful? feature may only work with type in data
         is_wild = options.is_wild || function(p) { return p.orig.value.wild; },
@@ -8338,7 +8361,7 @@ dc_graph.wildcard_ports = function(diagram, options) {
             }
             return Promise.resolve(e);
         },
-        resetTypes: function(edges)  {
+        resetTypes: function(diagram, edges)  {
             edges.forEach(function(eid) {
                 var e = diagram.getWholeEdge(eid);
                 var p = diagram.getPort(diagram.nodeKey.eval(e.source), null,
