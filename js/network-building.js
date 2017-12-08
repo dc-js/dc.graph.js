@@ -4,7 +4,7 @@ var options = Object.assign({
 }, qs);
 
 var node_flat = dc_graph.flat_group.make([], function(d) { return d.id; }),
-    edge_flat = dc_graph.flat_group.make([], function(d) { return d.source + '-' + d.target; });
+    edge_flat = dc_graph.flat_group.make([], function(d) { return d.id; });
 
 var diagram = dc_graph.diagram('#graph');
 var engine = dc_graph.spawn_engine(options.layout, options, options.worker != 'false');
@@ -21,7 +21,10 @@ diagram
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
     .edgeSource(function(e) { return e.value.source; })
     .edgeTarget(function(e) { return e.value.target; })
+    .nodeShape(qs.shape || 'ellipse')
     .nodeLabel(function(n) { return n.value.label; })
+    .edgeLabel(function(e) { return e.value.label || ''; })
+    .nodeLabelPadding({x: 4, y: 4})
     .nodeFixed(function(n) { return n.value.fixedPos; })
     .edgeArrowhead('vee');
 
@@ -32,13 +35,36 @@ var select_nodes = dc_graph.select_nodes({
     nodeStrokeWidth: 2
 }).multipleSelect(false);
 
-var label_nodes = dc_graph.label_nodes({
-    nodeCrossfilter: node_flat.crossfilter
-});
+var select_edges = dc_graph.select_edges({
+    edgeStroke: 'darkgreen',
+    edgeStrokeWidth: 2
+}).multipleSelect(false);
+
+var label_nodes = dc_graph.label_nodes(),
+    label_edges = dc_graph.label_edges();
+
+var delete_nodes = dc_graph.delete_nodes()
+        .crossfilterAccessor(function(chart) {
+            return node_flat.crossfilter;
+        })
+        .dimensionAccessor(function(chart) {
+            return node_flat.dimension;
+        });
+
+var delete_edges = dc_graph.delete_things(
+    dc_graph.select_things_group('select-edges-group', 'select-edges'),
+    'delete-edges')
+        .crossfilterAccessor(function(chart) {
+            return edge_flat.crossfilter;
+        })
+        .dimensionAccessor(function(chart) {
+            return edge_flat.dimension;
+        });
 
 var timestamp = 0;
 function add_object(d) {
     d.timestamp = timestamp++;
+    return Promise.resolve(d);
 }
 
 var draw_graphs = dc_graph.draw_graphs({
@@ -48,8 +74,24 @@ var draw_graphs = dc_graph.draw_graphs({
 
 diagram
     .child('select-nodes', select_nodes)
+    .child('select-edges', select_edges)
     .child('label-nodes', label_nodes)
-    .child('draw-graphs', draw_graphs);
+    .child('label-edges', label_edges)
+    .child('draw-graphs', draw_graphs)
+    .child('delete-nodes', delete_nodes)
+    .child('delete-edges', delete_edges);
+
+// make node selection and edge selection mutually exclusive
+var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
+var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
+select_nodes_group.on('set_changed.show-info', function(nodes) {
+    if(nodes.length)
+        select_edges_group.set_changed([]); // selecting node clears selected edge
+});
+select_edges_group.on('set_changed.show-info', function(edges) {
+    if(edges.length)
+        select_nodes_group.set_changed([]); // selecting edge clears selected node
+});
 
 var nodeDim = node_flat.crossfilter.dimension(function(d) { return d.timestamp; });
 var outnodes = dc.dataTable('#output-nodes')
@@ -91,6 +133,12 @@ var outedges = dc.dataTable('#output-edges')
                 label: 'Target',
                 format: function(d) {
                     return node_labels[d.target];
+                }
+            },
+            {
+                label: 'Label',
+                format: function(d) {
+                    return d.label;
                 }
             }
         ]);
