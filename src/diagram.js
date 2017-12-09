@@ -208,7 +208,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Auto-zoom behavior.
      * * `'always'` - zoom every time layout happens
-     * * `'once'` - zoom the first time layout happens
+     * * `'once'` - zoom the next time layout happens
      * * `null` - manual, call `zoomToFit` to fit
      * @method autoZoom
      * @memberof dc_graph.diagram
