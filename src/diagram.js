@@ -2096,8 +2096,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     (sheight - _chart.margins().top - _chart.margins().bottom) / vheight :
                     (swidth - _chart.margins().left - _chart.margins().right) / vwidth;
                 scale = Math.max(_chart.zoomExtent()[0], Math.min(_chart.zoomExtent()[1], scale));
-                translate = [_chart.margins().left - _bounds.left*scale,
-                             _chart.margins().top - _bounds.top*scale];
+                translate = [_chart.margins().left - _bounds.left*scale + (swidth - vwidth*scale) / 2,
+                             _chart.margins().top - _bounds.top*scale + (sheight - vheight*scale) / 2];
             }
             else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
                 var sides = fitS.split('_')[1].toLowerCase().split('');
