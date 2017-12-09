@@ -94,7 +94,8 @@
         diagram
             .layoutEngine(engine)
             .timeLimit(5000)
-            //.fitStrategy('horizontal')
+            .fitStrategy('zoom')
+            .restrictPan(true)
             //.autoZoom('always')
             .altKeyZoom(true)
             .width(document.documentElement.clientWidth)
