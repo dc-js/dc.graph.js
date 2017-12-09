@@ -2085,23 +2085,16 @@ dc_graph.diagram = function (parent, chartGroup) {
                 swidth =  _chart.width(), sheight = _chart.height(), viewBox;
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(_bounds);
-            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1;
+            var fitS = _chart.fitStrategy(), translate = [0,0], scale = 1;
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
                     vrl = vAR<sAR, // view aspect ratio is less (wider)
-                    amv; // align margins vertically
-                if(fitS === 'default') {
-                    amv = !vrl;
-                    pAR = null;
-                }
-                else {
-                    amv = fitS==='vertical';
-                    pAR = 'xMidYMid ' + (vrl ^ amv ? 'meet' : 'slice');
-                }
-                translate = [_chart.margins().left, _chart.margins().top];
+                    amv = (fitS === 'default') ? !vrl : (fitS === 'vertical'); // align margins vertically
                 scale = amv ?
-                    (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
-                    (swidth - _chart.margins().left - _chart.margins().right) / swidth;
+                    (sheight - _chart.margins().top - _chart.margins().bottom) / vheight :
+                    (swidth - _chart.margins().left - _chart.margins().right) / vwidth;
+                translate = [_chart.margins().left - _bounds.left*scale,
+                             _chart.margins().top - _bounds.top*scale];
             }
             else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
                 var sides = fitS.split('_')[1].toLowerCase().split('');
@@ -2129,31 +2122,15 @@ dc_graph.diagram = function (parent, chartGroup) {
                     }
                 });
             }
-            else if(typeof fitS === 'function') {
-                var fit = fitS(vwidth, vheight, swidth, sheight);
-                pAR = fit.pAR;
-                translate = fit.translate;
-                scale = fit.scale;
-                viewBox = fit.viewBox;
-            }
             else if(fitS === 'zoom') {
                 bring_in_bounds(_zoom.translate(), _zoom.scale());
                 return;
             }
-            else if(typeof fitS === 'string')
-                pAR = _chart.fitStrategy();
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
-            if(pAR !== undefined) {
-                if(!viewBox)
-                    viewBox = [_bounds.left, _bounds.top, vwidth, vheight].join(' ');
-                _svg.attr({
-                    viewBox: viewBox,
-                    preserveAspectRatio: pAR
-                });
-            }
             _zoom.translate(translate).scale(scale).event(_svg);
+            globalTransform(translate, scale);
             _dispatch.zoomed(translate, scale);
         }
     }
