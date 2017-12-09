@@ -2085,11 +2085,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                 swidth =  _chart.width(), sheight = _chart.height(), viewBox;
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(_bounds);
-            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
-                amv; // align margins vertically
+            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1;
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
-                    vrl = vAR<sAR; // view aspect ratio is less (wider)
+                    vrl = vAR<sAR, // view aspect ratio is less (wider)
+                    amv; // align margins vertically
                 if(fitS === 'default') {
                     amv = !vrl;
                     pAR = null;
