@@ -165,7 +165,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Boolean}
      * @return {dc_graph.diagram}
      **/
-    _chart.altKeyZoom = property(false);
+    _chart.modKeyZoom = _chart.altKeyZoom = property(false);
 
     /**
      * Set or get the fitting strategy for the canvas, which affects how the
@@ -1892,7 +1892,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var partial = bezier_point(points, end === 'tail' ? 0.25 : 0.75);
         return (end === 'head' ?
                 Math.atan2(tpos.y - partial.y, tpos.x - partial.x) :
-                Math.atan2(partial.y - spos.y, partial.x - spos.x)) + 'rad';
+                Math.atan2(spos.y - partial.y, spos.x - partial.x)) + 'rad';
     }
 
     function enforce_path_direction(path, spos, tpos) {
@@ -2085,23 +2085,16 @@ dc_graph.diagram = function (parent, chartGroup) {
                 swidth =  _chart.width(), sheight = _chart.height(), viewBox;
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(_bounds);
-            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
-                amv; // align margins vertically
+            var fitS = _chart.fitStrategy(), translate = [0,0], scale = 1;
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
-                    vrl = vAR<sAR; // view aspect ratio is less (wider)
-                if(fitS === 'default') {
-                    amv = !vrl;
-                    pAR = null;
-                }
-                else {
-                    amv = fitS==='vertical';
-                    pAR = 'xMidYMid ' + (vrl ^ amv ? 'meet' : 'slice');
-                }
-                translate = [_chart.margins().left, _chart.margins().top];
+                    vrl = vAR<sAR, // view aspect ratio is less (wider)
+                    amv = (fitS === 'default') ? !vrl : (fitS === 'vertical'); // align margins vertically
                 scale = amv ?
-                    (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
-                    (swidth - _chart.margins().left - _chart.margins().right) / swidth;
+                    (sheight - _chart.margins().top - _chart.margins().bottom) / vheight :
+                    (swidth - _chart.margins().left - _chart.margins().right) / vwidth;
+                translate = [_chart.margins().left - _bounds.left*scale,
+                             _chart.margins().top - _bounds.top*scale];
             }
             else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
                 var sides = fitS.split('_')[1].toLowerCase().split('');
@@ -2129,31 +2122,15 @@ dc_graph.diagram = function (parent, chartGroup) {
                     }
                 });
             }
-            else if(typeof fitS === 'function') {
-                var fit = fitS(vwidth, vheight, swidth, sheight);
-                pAR = fit.pAR;
-                translate = fit.translate;
-                scale = fit.scale;
-                viewBox = fit.viewBox;
-            }
             else if(fitS === 'zoom') {
                 bring_in_bounds(_zoom.translate(), _zoom.scale());
                 return;
             }
-            else if(typeof fitS === 'string')
-                pAR = _chart.fitStrategy();
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
-            if(pAR !== undefined) {
-                if(!viewBox)
-                    viewBox = [_bounds.left, _bounds.top, vwidth, vheight].join(' ');
-                _svg.attr({
-                    viewBox: viewBox,
-                    preserveAspectRatio: pAR
-                });
-            }
             _zoom.translate(translate).scale(scale).event(_svg);
+            globalTransform(translate, scale);
             _dispatch.zoomed(translate, scale);
         }
     }
@@ -2733,14 +2710,21 @@ dc_graph.diagram = function (parent, chartGroup) {
             .on('zoom', doZoom)
             .x(_chart.x()).y(_chart.y());
         if(_chart.mouseZoomable()) {
-            if(_chart.altKeyZoom()) {
+            var mod, mods;
+            if((mod = _chart.modKeyZoom())) {
+                if (Array.isArray (mod))
+                    mods = mod.slice ();
+                else if (typeof mod === "string")
+                    mods = [mod];
+                else
+                    mods = ['Alt'];
                 d3.select(document)
                     .on('keydown', function() {
-                        if(d3.event.key === 'Alt')
+                        if(mods.indexOf (d3.event.key) > -1)
                             enableZoom();
                     })
                     .on('keyup', function() {
-                        if(d3.event.key === 'Alt')
+                        if(mods.indexOf (d3.event.key) > -1)
                             disableZoom();
                     });
             }
