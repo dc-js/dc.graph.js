@@ -156,6 +156,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.mouseZoomable = property(true);
 
+    _chart.zoomExtent = property([.1, 2]);
+
     /**
      * Whether zooming should only be enabled when the alt key is pressed.
      * @method altKeyZoom
@@ -2093,6 +2095,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 scale = amv ?
                     (sheight - _chart.margins().top - _chart.margins().bottom) / vheight :
                     (swidth - _chart.margins().left - _chart.margins().right) / vwidth;
+                scale = Math.max(_chart.zoomExtent()[0], Math.min(_chart.zoomExtent()[1], scale));
                 translate = [_chart.margins().left - _bounds.left*scale,
                              _chart.margins().top - _bounds.top*scale];
             }
@@ -2708,7 +2711,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                      .range([0, _chart.height()]));
         _zoom = d3.behavior.zoom()
             .on('zoom', doZoom)
-            .x(_chart.x()).y(_chart.y());
+            .x(_chart.x()).y(_chart.y())
+            .scaleExtent(_chart.zoomExtent());
         if(_chart.mouseZoomable()) {
             var mod, mods;
             if((mod = _chart.modKeyZoom())) {
