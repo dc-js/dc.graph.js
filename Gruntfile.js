@@ -143,9 +143,28 @@ module.exports = function (grunt) {
                             'node_modules/bootstrap/dist/css/bootstrap.css',
                             'node_modules/dc/dc.css',
                             'node_modules/font-awesome/css/font-awesome.css',
-                            'node_modules/jquery-ui-dist/jquery-ui.css'
+                            'node_modules/jquery-ui-dist/jquery-ui.css',
+                            'node_modules/x-editable/dist/jqueryui-editable/css/jqueryui-editable.css'
                         ],
                         dest: '<%= conf.web %>/css/'
+                    },
+                    {
+                        expand: true,
+                        flatten: true,
+                        nonull: true,
+                        src: [
+                            'node_modules/jquery-ui-dist/images/*'
+                        ],
+                        dest: '<%= conf.web %>/css/images'
+                    },
+                    {
+                        expand: true,
+                        flatten: true,
+                        nonull: true,
+                        src: [
+                            'node_modules/x-editable/dist/jqueryui-editable/img/*'
+                        ],
+                        dest: '<%= conf.web %>/img'
                     },
                     {
                         nonull: true,
@@ -168,6 +187,7 @@ module.exports = function (grunt) {
                             'timeline.js',
                             'node_modules/bootstrap/dist/js/bootstrap.js',
                             'node_modules/crossfilter2/crossfilter.js',
+                            'node_modules/css-layout/dist/css-layout.js',
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
                             'node_modules/jquery/dist/jquery.js',
@@ -175,8 +195,10 @@ module.exports = function (grunt) {
                             'node_modules/lodash/lodash.js',
                             'node_modules/queue-async/build/queue.js',
                             'node_modules/dagre/dist/dagre.js',
+                            'node_modules/promise-polyfill/promise.js',
                             'node_modules/webcola/WebCola/cola.js',
-                            'node_modules/viz.js/viz.js'
+                            'node_modules/viz.js/viz.js',
+                            'node_modules/x-editable/dist/jqueryui-editable/js/jqueryui-editable.js'
                           ],
                         dest: '<%= conf.web %>/js/'
                     },
@@ -282,6 +304,7 @@ module.exports.jsFiles = [
     'src/depth_first_traversal.js',
     'src/generate_objects.js',
     'src/shape.js',
+    'src/node_contents.js',
     'src/diagram.js',
     'src/engine.js',
     'src/webworker_layout.js',
@@ -290,21 +313,41 @@ module.exports.jsFiles = [
     'src/dagre_layout.js',
     'src/tree_layout.js',
     'src/graphviz_layout.js',
+    'src/flexbox_layout.js',
+    'src/manual_layout.js',
+    'src/place_ports.js',
+    'src/troubleshoot.js',
+    'src/validate.js',
     'src/legend.js',
     'src/constraint_pattern.js',
     'src/tree_positions.js',
     'src/tree_constraints.js',
     'src/behavior.js',
     'src/tip.js',
+    'src/keyboard.js',
     'src/edit_text.js',
+    'src/brush.js',
+    'src/select_things.js',
     'src/select_nodes.js',
+    'src/select_edges.js',
+    'src/select_ports.js',
+    'src/move_nodes.js',
+    'src/fix_nodes.js',
     'src/filter_selection.js',
+    'src/delete_things.js',
+    'src/delete_nodes.js',
+    'src/label_things.js',
     'src/label_nodes.js',
+    'src/label_edges.js',
     'src/highlight_neighbors.js',
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',
     'src/expand_collapse.js',
     'src/draw_graphs.js',
+    'src/match_ports.js',
+    'src/match_opposites.js',
+    'src/wildcard_ports.js',
+    'src/symbol_port_style.js',
     'src/load_graph.js',
     'src/munge_graph.js',
     'src/flat_group.js',

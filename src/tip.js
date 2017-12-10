@@ -11,74 +11,98 @@
  * @memberof dc_graph
  * @return {Object}
  **/
-dc_graph.tip = function() {
-    var _tip = {}, _d3tip = null;
-    var _timeout;
+dc_graph.tip = function(options) {
+    options = options || {};
+    var _namespace = options.namespace || 'tip';
+    var _d3tip = null;
+    var _showTimeout, _hideTimeout;
 
-    /**
-     * Assigns this tip object to a diagram. It will show tips for nodes in that diagram.
-     * Usually you will not call this function directly. Instead, attach the tip object
-     * using `diagram.child('tip', dc_graph.tip())`
-     * @name parent
-     * @memberof dc_graph.tip
-     * @instance
-     * @param {dc_graph.diagram} [parent]
-     * @return {dc_graph.diagram}
-     **/
-    _tip.parent = property(null)
-        .react(function(p) {
-            if(p)
-                p.on('drawn.tip', function(node, edge, ehover) {
-                    annotate(node, ehover);
-                });
-            else if(_tip.parent())
-                _tip.parent().on('drawn.tip', null);
-        });
-
+    function init(parent) {
+        if(!_d3tip) {
+            _d3tip = d3.tip()
+                .attr('class', 'd3-tip')
+                .html(function(d) { return "<span>" + d + "</span>"; })
+                .direction(_behavior.direction());
+            if(_behavior.offset())
+                _d3tip.offset(_behavior.offset());
+            parent.svg().call(_d3tip);
+        }
+    }
     function fetch_and_show_content(fetcher) {
-         return function(d) {
-             var target = d3.event.target,
+        return function(d) {
+             var target = this,
                  next = function() {
-                     _tip[fetcher]()(d, function(content) {
-                         _d3tip.show(content, target);
+                     _behavior[fetcher]()(d, function(content) {
+                         _d3tip.show.call(target, content, target);
+                         d3.select('div.d3-tip')
+                             .selectAll('a.tip-link')
+                             .on('click', function() {
+                                 d3.event.preventDefault();
+                                 if(_behavior.linkCallback())
+                                     _behavior.linkCallback()(this.id);
+                             });
                      });
                  };
-
-             if(_tip.delay()) {
-                 clearTimeout(_timeout);
-                 _timeout = setTimeout(next, _tip.delay());
+             if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
+                 hide_tip.call(this);
+                 return;
+             }
+             if(_hideTimeout)
+                 window.clearTimeout(_hideTimeout);
+             if(_behavior.delay()) {
+                 window.clearTimeout(_showTimeout);
+                 _showTimeout = window.setTimeout(next, _behavior.delay());
              }
              else next();
          };
     }
 
     function hide_tip() {
-        if(_timeout) {
-            clearTimeout(_timeout);
-            _timeout = null;
+        if(d3.event.relatedTarget &&
+           (!_behavior.selection().exclude || !_behavior.selection().exclude(d3.event.target)) &&
+           (this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
+            _behavior.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
+            return;
+        if(_showTimeout) {
+            window.clearTimeout(_showTimeout);
+            _showTimeout = null;
         }
-        _d3tip.hide();
+        if(_behavior.clickable())
+            _hideTimeout = window.setTimeout(function () {
+                _d3tip.hide();
+            }, _behavior.hideDelay());
+        else
+            _d3tip.hide();
     }
 
-    function annotate(node, ehover) {
-        if(!_d3tip) {
-            _d3tip = d3.tip()
-                .attr('class', 'd3-tip')
-                .html(function(d) { return "<span>" + d + "</span>"; })
-                .direction(_tip.direction());
-            _tip.parent().svg().call(_d3tip);
+    function add_behavior(chart, node, edge, ehover) {
+        init(chart);
+        _behavior.selection().select(chart, node, edge, ehover)
+            .on('mouseover.' + _namespace, fetch_and_show_content('content'))
+            .on('mouseout.' + _namespace, hide_tip);
+        if(_behavior.clickable()) {
+            d3.select('div.d3-tip')
+                .on('mouseover.' + _namespace, function() {
+                    if(_hideTimeout)
+                        window.clearTimeout(_hideTimeout);
+                })
+                .on('mouseout.' + _namespace, hide_tip);
         }
-        node
-            .on('mouseover.tip', fetch_and_show_content('content'))
-            .on('mouseout.tip', hide_tip);
-        ehover
-            .on('mouseover.tip', fetch_and_show_content('content'))
-            .on('mouseout.tip', hide_tip);
+    }
+    function remove_behavior(chart, node, edge, ehover) {
+        _behavior.selection().select(chart, node, edge, ehover)
+            .on('mouseover.' + _namespace, null)
+            .on('mouseout.' + _namespace, null);
     }
 
+    var _behavior = dc_graph.behavior(_namespace, {
+        add_behavior: add_behavior,
+        remove_behavior: remove_behavior,
+        laterDraw: true
+    });
     /**
      * Specify the direction for tooltips. Currently supports the
-     * [cardinal and intercardinaldirections](https://en.wikipedia.org/wiki/Points_of_the_compass) supported by
+     * [cardinal and intercardinal directions](https://en.wikipedia.org/wiki/Points_of_the_compass) supported by
      * [d3.tip.direction](https://github.com/Caged/d3-tip/blob/master/docs/positioning-tooltips.md#tipdirection):
      * `'n'`, `'ne'`, `'e'`, etc.
      * @name direction
@@ -92,7 +116,7 @@ dc_graph.tip = function() {
      * var tip = dc_graph.tip();
      * tip.content(tip.table());
      **/
-    _tip.direction = property('n');
+    _behavior.direction = property('n');
 
     /**
      * Specifies the function to generate content for the tooltip. This function has the
@@ -107,16 +131,21 @@ dc_graph.tip = function() {
      * @example
      * // Default behavior: show title
      * var tip = dc_graph.tip().content(function(d, k) {
-     *     k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
+     *     k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
      * });
      **/
-    _tip.content = property(function(d, k) {
-        k(_tip.parent() ? _tip.parent().nodeTitle.eval(d) : '');
+    _behavior.content = property(function(d, k) {
+        k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
     });
 
-    _tip.delay = property(0);
+    _behavior.selection = property(dc_graph.tip.select_node_and_edge());
+    _behavior.showDelay = _behavior.delay = property(0);
+    _behavior.hideDelay = property(200);
+    _behavior.offset = property(null);
+    _behavior.clickable = property(false);
+    _behavior.linkCallback = property(null);
 
-    return _tip;
+    return _behavior;
 };
 
 /**
@@ -149,4 +178,45 @@ dc_graph.tip.table = function() {
     };
     gen.filter = property(true);
     return gen;
+};
+
+dc_graph.tip.select_node_and_edge = function() {
+    return {
+        select: function(chart, node, edge, ehover) {
+            // hack to merge selections, not supported d3v3
+            var selection = chart.selectAll('.foo-this-does-not-exist');
+            selection[0] = node[0].concat(ehover[0]);
+            return selection;
+        },
+        exclude: function(element) {
+            return ancestor_has_class(element, 'port');
+        }
+    };
+};
+
+dc_graph.tip.select_node = function() {
+    return {
+        select: function(chart, node, edge, ehover) {
+            return node;
+        },
+        exclude: function(element) {
+            return ancestor_has_class(element, 'port');
+        }
+    };
+};
+
+dc_graph.tip.select_edge = function() {
+    return {
+        select: function(chart, node, edge, ehover) {
+            return edge;
+        }
+    };
+};
+
+dc_graph.tip.select_port = function() {
+    return {
+        select: function(chart, node, edge, ehover) {
+            return node.selectAll('g.port');
+        }
+    };
 };

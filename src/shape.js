@@ -59,93 +59,132 @@ function point_on_polygon(points, x0, y0, x1, y1) {
     return null;
 }
 
-function point_on_shape(chart, d, deltaX, deltaY) {
-    switch(d.dcg_shape.shape) {
-    case 'ellipse':
-        return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
-    case 'polygon':
-        return point_on_polygon(d.dcg_points, 0, 0, deltaX, deltaY);
-    }
-}
-
 // as many as we can get from
 // http://www.graphviz.org/doc/info/shapes.html
-var dc_graph_shapes_ = {
-    ellipse: function() {
-        return {shape: 'ellipse'};
+dc_graph.shape_presets = {
+    egg: {
+        // not really: an ovoid should be two half-ellipses stuck together
+        // https://en.wikipedia.org/wiki/Oval
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 100, distortion: -0.25};
+        }
     },
-    egg: function() {
-        return {shape: 'polygon', sides: 100, distortion: -0.25};
+    triangle: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 3};
+        }
     },
-    triangle: function() {
-        return {shape: 'polygon', sides: 3};
+    rectangle: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4};
+        }
     },
-    rectangle: function() {
-        return {shape: 'polygon', sides: 4};
+    diamond: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4, rotation: 45};
+        }
     },
-    diamond: function() {
-        return {shape: 'polygon', sides: 4, rotation: 45};
+    trapezium: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4, distortion: -0.5};
+        }
     },
-    trapezium: function() {
-        return {shape: 'polygon', sides: 4, distortion: -0.5};
+    parallelogram: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4, skew: 0.5};
+        }
     },
-    parallelogram: function() {
-        return {shape: 'polygon', sides: 4, skew: 0.5};
+    pentagon: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 5};
+        }
     },
-    pentagon: function() {
-        return {shape: 'polygon', sides: 5};
+    hexagon: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 6};
+        }
     },
-    hexagon: function() {
-        return {shape: 'polygon', sides: 6};
+    septagon: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 7};
+        }
     },
-    septagon: function() {
-        return {shape: 'polygon', sides: 7};
+    octagon: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 8};
+        }
     },
-    octagon: function() {
-        return {shape: 'polygon', sides: 8};
+    invtriangle: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 3, rotation: 180};
+        }
     },
-    invtriangle: function() {
-        return {shape: 'polygon', sides: 3, rotation: 180};
+    invtrapezium: {
+        generator: 'polygon',
+        preset: function() {
+            return {sides: 4, distortion: 0.5};
+        }
     },
-    invtrapezium: function() {
-        return {shape: 'polygon', sides: 4, distortion: 0.5};
+    square: {
+        generator: 'polygon',
+        preset: function() {
+            return {
+                sides: 4,
+                regular: true
+            };
+        }
     },
-    square: function() {
-        return {shape: 'polygon', sides: 4};
-    },
-    polygon: function(def) {
-        return {
-            shape: 'polygon',
-            sides: def.sides,
-            skew: def.skew,
-            distortion: def.distortion,
-            rotation: def.rotation
-        };
+    plain: {
+        generator: 'rounded-rect',
+        preset: function() {
+            return {
+                noshape: true
+            };
+        }
     }
 };
 
 dc_graph.available_shapes = function() {
     var shapes = Object.keys(dc_graph_shapes_);
-    return shapes.slice(0, shapes.length-1);
+    return shapes.slice(0, shapes.length-1); // not including polygon
 };
 
 var default_shape = {shape: 'ellipse'};
 
-function elaborate_shape(def) {
-    var shape = def.shape;
-    if(def.shape === 'random') {
-        var keys = Object.keys(dc_graph_shapes_);
-        shape = def._shape = keys[Math.floor(Math.random()*keys.length)];
+function elaborate_shape(chart, def) {
+    if(typeof def === 'string') def = {shape: def};
+    var shape = def.shape, def2 = Object.assign({}, def);
+    delete def2.shape;
+    if(shape === 'random') {
+        var available = dc_graph.available_shapes(); // could include chart.shape !== ellipse, polygon
+        shape = available[Math.floor(Math.random()*available.length)];
     }
-    return (dc_graph_shapes_[shape] || function() {
-        throw new Error('unknown shape ' + def.shape);
-    })(def);
+    else if(chart.shape.enum().indexOf(shape) !== -1)
+        return chart.shape(shape).elaborate({shape: shape}, def2);
+    if(!dc_graph.shape_presets[shape]) {
+        console.warn('unknown shape ', shape);
+        shape = 'rectangle';
+    }
+    var preset = dc_graph.shape_presets[shape].preset(def2);
+    preset.shape = dc_graph.shape_presets[shape].generator;
+    return chart.shape(preset.shape).elaborate(preset, def2);
 }
 
 function infer_shape(chart) {
     return function(d) {
         var def = chart.nodeShape.eval(d) || default_shape;
-        d.dcg_shape = elaborate_shape(def);
+        d.dcg_shape = elaborate_shape(chart, def);
         d.dcg_shape.abstract = def;
     };
 }
@@ -164,58 +203,56 @@ function shape_changed(chart) {
     };
 }
 
-function shape_element(chart) {
-    return function(d) {
-        var shape = d.dcg_shape.shape, elem;
-        switch(shape) {
-        case 'ellipse':
-            elem = 'ellipse';
-            break;
-        case 'polygon':
-            elem = 'path';
-            break;
-        default:
-            throw new Error('unknown shape ' + shape);
-        }
-        return document.createElementNS("http://www.w3.org/2000/svg", elem);
-    };
-}
-
-function fit_shape(chart) {
-    return function(d) {
-        var r = chart.nodeRadius.eval(d);
-        var bbox;
-        if(chart.nodeFitLabel.eval(d))
-            bbox = this.getBBox();
-        var fitx = 0;
-        if(bbox && bbox.width && bbox.height) {
-            // make sure we can fit height in r
-            r = Math.max(r, bbox.height/2 + 5);
-            var rx = bbox.width/2;
-            if(d.dcg_shape.shape === 'ellipse') {
-                // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
-                // http://stackoverflow.com/a/433438/676195
-                var y_over_B = bbox.height/2/r;
-                rx = rx/Math.sqrt(1 - y_over_B*y_over_B);
-                rx = Math.max(rx, r);
-            } else {
-                // this is cribbed from graphviz but there is much i don't understand
-                // and any errors are mine
-                // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
-                rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
+function fit_shape(shape, chart) {
+    return function(text) {
+        text.each(function(d) {
+            var bbox = null;
+            if((!shape.useTextSize || shape.useTextSize(d.dcg_shape)) && chart.nodeFitLabel.eval(d)) {
+                bbox = this.getBBox();
+                bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
+                var padding;
+                var content = chart.nodeContent.eval(d);
+                if(content && chart.content(content).padding)
+                    padding = chart.content(content).padding(d);
+                else {
+                    var padding2 = chart.nodeLabelPadding.eval(d);
+                    padding = {
+                        x: padding2.x*2,
+                        y: padding2.y*2
+                    };
+                }
+                bbox.width += padding.x;
+                bbox.height += padding.y;
+                d.bbox = bbox;
             }
-            d.dcg_rx = rx;
-            fitx = rx*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-        }
-        else d.dcg_rx = r;
-        d.dcg_ry = r;
-        var rplus = r*2 + chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
-        d.cola.width = Math.max(fitx, rplus);
-        d.cola.height = rplus;
+            var r = 0, radii;
+            if(!shape.useRadius || shape.useRadius(d.dcg_shape))
+                r = chart.nodeRadius.eval(d);
+            if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize(d.dcg_shape))
+                radii = shape.calc_radii(d, r, bbox);
+            else
+                radii = {rx: r, ry: r};
+            d.dcg_rx = radii.rx;
+            d.dcg_ry = radii.ry;
+
+            var w = radii.rx*2, h = radii.ry*2;
+            // fixme: this is only consistent if regular || !squeeze
+            // but we'd need to calculate polygon first in order to find out
+            // (not a bad idea, just no time right now)
+            if(w<h) w = h;
+
+            if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke(d.dcg_shape)) {
+                var pands = chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
+                w += pands;
+                h += pands;
+            }
+            d.cola.width = w;
+            d.cola.height = h;
+        });
     };
 }
 
-function ellipse_attrs(chart, d) {
+function ellipse_attrs(chart) {
     return {
         rx: function(d) { return d.dcg_rx; },
         ry: function(d) { return d.dcg_ry; }
@@ -225,7 +262,8 @@ function ellipse_attrs(chart, d) {
 function polygon_attrs(chart, d) {
     return {
         d: function(d) {
-            var def = d.dcg_shape,
+            var rx = d.dcg_rx, ry = d.dcg_ry,
+                def = d.dcg_shape,
                 sides = def.sides || 4,
                 skew = def.skew || 0,
                 distortion = def.distortion || 0,
@@ -238,31 +276,20 @@ function polygon_attrs(chart, d) {
                 angles.push({x: Math.cos(theta), y: Math.sin(theta)});
             }
             var yext = d3.extent(angles, function(theta) { return theta.y; });
-            var rx = d.dcg_rx,
-                ry = d.dcg_ry / Math.min(-yext[0], yext[1]);
+            if(def.regular)
+                rx = ry = Math.max(rx, ry);
+            else if(rx < ry && !def.squeeze)
+                rx = ry;
+            else
+                ry = ry / Math.min(-yext[0], yext[1]);
             d.dcg_points = angles.map(function(theta) {
                 var x = rx*theta.x,
                     y = ry*theta.y;
-                x *= 1 + distortion*((d.dcg_ry-y)/d.dcg_ry - 1);
+                x *= 1 + distortion*((ry-y)/ry - 1);
                 x -= skew*y/2;
                 return {x: x, y: y};
             });
             return generate_path(d.dcg_points, 1, true);
-        }
-    };
-}
-
-function shape_attrs(chart) {
-    return function(d) {
-        var sel = d3.select(this);
-        switch(d.dcg_shape.shape) {
-        case 'ellipse':
-            sel.attr(ellipse_attrs(chart, d));
-            break;
-        case 'polygon':
-            sel.attr(polygon_attrs(chart, d));
-            break;
-        default: throw new Error('unknown shape ' + d.dcg_shape.shape);
         }
     };
 }
@@ -287,18 +314,22 @@ function binary_search(f, a, b) {
     }
 }
 
-function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
+function draw_edge_to_shapes(chart, e, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
         sp, tp, points, bezDegree,
         headAng, retPath;
     if(!neighbor) {
-        deltaX = tx - sx;
-        deltaY = ty - sy;
-        sp = point_on_shape(chart, source, deltaX, deltaY);
-        tp = point_on_shape(chart, target, -deltaX, -deltaY);
-        if(!sp) sp = {x: 0, y: 0};
-        if(!tp) tp = {x: 0, y: 0};
+        sp = e.sourcePort.pos;
+        tp = e.targetPort.pos;
+        console.assert(sp);
+        console.assert(tp);
+        // deltaX = tx - sx;
+        // deltaY = ty - sy;
+        // sp = chart.shape(e.source.dcg_shape.shape).intersect_vec(e.source, deltaX, deltaY);
+        // tp = chart.shape(e.target.dcg_shape.shape).intersect_vec(e.target, -deltaX, -deltaY);
+        // if(!sp) sp = {x: 0, y: 0};
+        // if(!tp) tp = {x: 0, y: 0};
         points = [{
             x: sx + sp.x,
             y: sy + sp.y
@@ -310,7 +341,7 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
     }
     else {
         var p_on_s = function(node, ang) {
-            return point_on_shape(chart, node, Math.cos(ang)*1000, Math.sin(ang)*1000);
+            return chart.shape(node.dcg_shape.shape).intersect_vec(node, Math.cos(ang)*1000, Math.sin(ang)*1000);
         };
         var compare_dist = function(node, port0, goal) {
             return function(ang) {
@@ -335,14 +366,14 @@ function draw_edge_to_shapes(chart, source, target, sx, sy, tx, ty,
 
         // don't like this but throwing is unacceptable
         try {
-            bss = binary_search(compare_dist(source, neighbor.sourcePort, offset),
+            bss = binary_search(compare_dist(e.source, neighbor.sourcePort, offset),
                                 srcang, srcang + 2 * dir * offset / source_padding);
         }
         catch(x) {
             bss = {ang: srcang, port: neighbor.sourcePort};
         }
         try {
-            bst = binary_search(compare_dist(target, neighbor.targetPort, offset),
+            bst = binary_search(compare_dist(e.target, neighbor.targetPort, offset),
                                 tarang, tarang - 2 * dir * offset / source_padding);
         }
         catch(x) {
@@ -399,3 +430,175 @@ function bezier_point(points, t_) {
     var q = getLevels(points, t_);
     return q[q.length-1][0];
 }
+
+dc_graph.no_shape = function() {
+    var _shape = {
+        parent: property(null),
+        elaborate: function(preset, def) {
+            return Object.assign(preset, def);
+        },
+        useTextSize: function() { return false; },
+        useRadius: function() { return false; },
+        usePaddingAndStroke: function() { return false; },
+        intersect_vec: function(d, deltaX, deltaY) {
+            return {x: 0, y: 0};
+        },
+        calc_radii: function(d, ry, bbox) {
+            return {rx: 0, ry: 0};
+        },
+        create: function(nodeEnter) {
+        },
+        replace: function(nodeChanged) {
+        },
+        update: function(node) {
+        }
+    };
+    return _shape;
+};
+
+dc_graph.ellipse_shape = function() {
+    var _shape = {
+        parent: property(null),
+        elaborate: function(preset, def) {
+            return Object.assign(preset, def);
+        },
+        intersect_vec: function(d, deltaX, deltaY) {
+            return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
+        },
+        calc_radii: function(d, ry, bbox) {
+            // make sure we can fit height in r
+            ry = Math.max(ry, bbox.height/2 + 5);
+            var rx = bbox.width/2;
+
+            // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
+            // http://stackoverflow.com/a/433438/676195
+            var y_over_B = bbox.height/2/ry;
+            rx = rx/Math.sqrt(1 - y_over_B*y_over_B);
+            rx = Math.max(rx, ry);
+
+            return {rx: rx, ry: ry};
+        },
+        create: function(nodeEnter) {
+            nodeEnter.append('ellipse')
+                .attr('class', 'node-shape');
+        },
+        replace: function(nodeChanged) {
+            nodeChanged.select('ellipse.node-shape').remove();
+            nodeChanged.insert('ellipse', ':first-child')
+                .attr('class', 'node-shape');
+        },
+        update: function(node) {
+            node.select('ellipse.node-shape')
+                .attr(ellipse_attrs(_shape.parent()));
+        }
+    };
+    return _shape;
+};
+
+dc_graph.polygon_shape = function() {
+    var _shape = {
+        parent: property(null),
+        elaborate: function(preset, def) {
+            return Object.assign(preset, def);
+        },
+        intersect_vec: function(d, deltaX, deltaY) {
+            return point_on_polygon(d.dcg_points, 0, 0, deltaX, deltaY);
+        },
+        calc_radii: function(d, ry, bbox) {
+            // make sure we can fit height in r
+            ry = Math.max(ry, bbox.height/2 + 5);
+            var rx = bbox.width/2;
+
+            // this is cribbed from graphviz but there is much i don't understand
+            // and any errors are mine
+            // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
+            rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
+
+            return {rx: rx, ry: ry};
+        },
+        create: function(nodeEnter) {
+            nodeEnter.append('path')
+                .attr('class', 'node-shape');
+        },
+        replace: function(nodeChanged) {
+            nodeChanged.select('path.node-shape').remove();
+            nodeChanged.insert('path', ':first-child')
+                .attr('class', 'node-shape');
+        },
+        update: function(node) {
+            node.select('path.node-shape')
+                .attr(polygon_attrs(_shape.parent()));
+        }
+    };
+    return _shape;
+};
+
+dc_graph.rounded_rectangle_shape = function() {
+    var _shape = {
+        parent: property(null),
+        elaborate: function(preset, def) {
+            preset = Object.assign({rx: 10, ry: 10}, preset);
+            return Object.assign(preset, def);
+        },
+        intersect_vec: function(d, deltaX, deltaY) {
+            var points = [
+                {x:  d.dcg_rx, y:  d.dcg_ry},
+                {x:  d.dcg_rx, y: -d.dcg_ry},
+                {x: -d.dcg_rx, y: -d.dcg_ry},
+                {x: -d.dcg_rx, y:  d.dcg_ry}
+            ];
+            return point_on_polygon(points, 0, 0, deltaX, deltaY); // not rounded
+        },
+        useRadius: function(shape) {
+            return !shape.noshape;
+        },
+        calc_radii: function(d, ry, bbox) {
+            var fity = bbox.height/2;
+            // fixme: fudge to make sure text is not too tall for node
+            if(!d.dcg_shape.noshape)
+                fity += 5;
+            return {
+                rx: bbox.width / 2,
+                ry: Math.max(ry, fity)
+            };
+        },
+        create: function(nodeEnter) {
+            nodeEnter.filter(function(d) {
+                return !d.dcg_shape.noshape;
+            }).append('rect')
+                .attr('class', 'node-shape');
+        },
+        replace: function(nodeChanged) {
+            nodeChanged.select('rect.node-shape').remove();
+            nodeChanged.filter(function(d) {
+                return !d.dcg_shape.noshape;
+            }).insert('rect', ':first-child')
+                .attr('class', 'node-shape');
+        },
+        update: function(node) {
+            node.select('rect.node-shape')
+                .attr({
+                    x: function(d) {
+                        return -d.dcg_rx;
+                    },
+                    y: function(d) {
+                        return -d.dcg_ry;
+                    },
+                    width: function(d) {
+                        return 2*d.dcg_rx;
+                    },
+                    height: function(d) {
+                        return 2*d.dcg_ry;
+                    },
+                    rx: function(d) {
+                        return d.dcg_shape.rx + 'px';
+                    },
+                    ry: function(d) {
+                        return d.dcg_shape.ry + 'px';
+                    }
+                });
+        }
+    };
+    return _shape;
+};
+

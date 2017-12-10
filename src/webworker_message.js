@@ -34,7 +34,7 @@ onmessage = function(e) {
         break;
     case 'data':
         if(_layouts)
-            _layouts[args.layoutId].data(args.nodes, args.edges, args.constraints, args.options);
+            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.constraints);
         break;
     case 'start':
         // if(args.initialOnly) {
@@ -43,7 +43,7 @@ onmessage = function(e) {
         //     _done();
         // }
         // else
-        _layouts[args.layoutId].start(args.options);
+        _layouts[args.layoutId].start();
         break;
     case 'stop':
         if(_layouts)

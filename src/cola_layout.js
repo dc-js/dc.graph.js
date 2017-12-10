@@ -43,8 +43,8 @@ dc_graph.cola_layout = function(id) {
         }
     }
 
-    function data(nodes, edges, constraints, options) {
-        var wnodes = regenerate_objects(_nodes, nodes, function(v) {
+    function data(nodes, edges, constraints) {
+        var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -64,7 +64,7 @@ dc_graph.cola_layout = function(id) {
                     v1.y = v.y;
             }
         });
-        var wedges = regenerate_objects(_edges, edges, function(e) {
+        var wedges = regenerate_objects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -81,7 +81,7 @@ dc_graph.cola_layout = function(id) {
         });
 
         var groups = null;
-        if(options.groupConnected) {
+        if(engine.groupConnected()) {
             var components = cola.separateGraphs(wnodes, wedges);
             groups = components.map(function(g) {
                 return {leaves: g.array.map(function(n) { return n.index; })};
@@ -109,11 +109,11 @@ dc_graph.cola_layout = function(id) {
             .groups(groups);
     }
 
-    function start(options) {
-        _d3cola.start(options.initialUnconstrainedIterations,
-                      options.initialUserConstraintIterations,
-                      options.initialAllConstraintsIterations,
-                      options.gridSnapIterations);
+    function start() {
+        _d3cola.start(engine.unconstrainedIterations(),
+                      engine.userConstraintIterations(),
+                      engine.allConstraintsIterations(),
+                      engine.gridSnapIterations());
     }
 
     function stop() {
@@ -133,6 +133,9 @@ dc_graph.cola_layout = function(id) {
         supportsWebworker: function() {
             return true;
         },
+        needsStage: function(stage) { // stopgap until we have engine chaining
+            return stage === 'ports' || stage === 'edgepos';
+        },
         parent: property(null),
         on: function(event, f) {
             _dispatch.on(event, f);
@@ -145,17 +148,17 @@ dc_graph.cola_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, options) {
-            data(nodes, edges, constraints, options);
+        data: function(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();
         },
         optionNames: function() {
-            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize']
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize', 'groupConnected']
                 .concat(graphviz_keys);
         },
         populateLayoutNode: function() {},
@@ -229,7 +232,12 @@ dc_graph.cola_layout = function(id) {
             _flowLayout = flow;
             return this;
         },
-        tickSize: property(1)
+        unconstrainedIterations: property(10),
+        userConstraintIterations: property(20),
+        allConstraintsIterations: property(20),
+        gridSnapIterations: property(0),
+        tickSize: property(1),
+        groupConnected: property(false)
     });
     return engine;
 };

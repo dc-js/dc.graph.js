@@ -20,6 +20,8 @@
   <script type="text/javascript" src="../js/viz.js"></script>
   <script type="text/javascript" src="../js/dc.graph.js"></script>
 
+  <script type="text/javascript" src="../js/graphlib-dot.min.js"></script>
+
   <script type="text/javascript" src="../js/querystring.js"></script>
 
   <style type="text/css">
@@ -55,6 +57,7 @@
         var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
         diagram
             .layoutEngine(engine)
+            .timeLimit(5000)
             .width($(window).width())
             .height($(window).height())
             .nodeDimension(nodes.dimension).nodeGroup(nodes.group)

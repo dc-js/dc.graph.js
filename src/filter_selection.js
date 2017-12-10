@@ -1,22 +1,26 @@
-dc_graph.filter_selection = function() {
-    var select_nodes_group = dc_graph.select_nodes_group('select-nodes-group');
+dc_graph.filter_selection = function(things_group, things_name) {
+    things_name = things_name || 'select-nodes';
+    var select_nodes_group = dc_graph.select_things_group(things_group || 'select-nodes-group', things_name);
 
     function selection_changed(chart) {
         return function(selection) {
             if(selection.length) {
                 var set = d3.set(selection);
-                chart.nodeDimension().filterFunction(function(k) {
+                _behavior.dimensionAccessor()(chart).filterFunction(function(k) {
                     return set.has(k);
                 });
-            } else chart.nodeDimension().filter(null);
+            } else _behavior.dimensionAccessor()(chart).filter(null);
             chart.redrawGroup();
         };
     }
 
     var _behavior = {
         parent: property(null).react(function(p) {
-            select_nodes_group.on('node_set_changed.filter-selection', p ? selection_changed(p) : null);
+            select_nodes_group.on('set_changed.filter-selection-' + things_name, p ? selection_changed(p) : null);
         })
     };
+    _behavior.dimensionAccessor = property(function(chart) {
+        return chart.nodeDimension();
+    });
     return _behavior;
 };

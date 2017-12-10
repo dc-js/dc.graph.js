@@ -1,0 +1,86 @@
+html, body {
+    margin: 0 0 0 1em;
+    height: 100%;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+#main {
+    margin: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display:flex;
+    flex-direction: row
+}
+#canvas-panel {
+    flex: 4;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+#right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-right: 1em;
+    padding-top: 1em;
+    user-select: none;
+}
+
+#command-buttons {
+    float: right;
+}
+
+#palette a:focus {
+    color: #0275d8;
+    text-decoration-line: none;
+}
+
+a.button-disabled {
+    color: lightgrey;
+    cursor: default;
+}
+#selected-name {
+    margin-left: 0.5em;
+}
+#properties {
+    flex: 1 1 content;
+    margin-top: auto;
+    overflow-y: auto;
+}
+#properties-content {
+    visibility: hidden;
+}
+
+.component-selection .ui-selecting {
+    background: #68B7FF;
+}
+.component-selection .ui-selected {
+    background: #008BD5; color: white;
+}
+ul.component-selection {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+ul.component-selection li {
+    margin: 3px;
+    padding: 0.4em;
+    font-size: 1.4em;
+    cursor: default;
+    width: 150px;
+}
+
+text.edge-label {
+    visibility: visible;
+}
+
+circle.port {
+    stroke: #777;
+    stroke-width: 1px;
+}

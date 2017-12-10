@@ -1,0 +1,56 @@
+{
+  "nodes": [
+    {
+      "id": "A1",
+      "type": "A",
+      "fixedPos": null
+    },
+    {
+      "id": "E1",
+      "type": "E",
+      "fixedPos": null
+    },
+    {
+      "id": "E2",
+      "type": "E",
+      "fixedPos": {
+        "x": 471.66788749082315,
+        "y": 169.03939276033827
+      }
+    },
+    {
+      "id": "E3",
+      "type": "E",
+      "fixedPos": {
+        "x": 467.16791413041125,
+        "y": 139.0393924704174
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "A1->E3",
+      "sourcename": "A1",
+      "targetname": "E3",
+      "label": "",
+      "sourceport": "cap2",
+      "targetport": "cap2"
+    },
+    {
+      "id": "A1->E2",
+      "sourcename": "A1",
+      "targetname": "E2",
+      "label": "",
+      "sourceport": "cap2",
+      "targetport": "cap2"
+    },
+    {
+      "id": "A1->E1",
+      "sourcename": "A1",
+      "targetname": "E1",
+      "label": "",
+      "sourceport": "cap2",
+      "targetport": "cap2"
+    }
+  ]
+}

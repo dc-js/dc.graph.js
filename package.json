@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.5.6",
+  "version": "0.6.0-alpha.1",
   "license": "Apache-2.0",
   "copyright": "2017",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
@@ -24,7 +24,8 @@
     "url": "https://github.com/dc-js/dc.graph.js.git"
   },
   "dependencies": {
-    "crossfilter2": "~1.4.0-alpha.1",
+    "crossfilter2": "1.4.x",
+    "css-layout": "1.x",
     "dc": "~2.1.0",
     "dagre": "0.7.x",
     "d3": "3.x",
@@ -57,8 +58,10 @@
     "jsdifflib": "~1.1",
     "load-grunt-tasks": "~3.5",
     "marked": "~0.3",
+    "promise-polyfill": "6.x",
     "time-grunt": "~1.4",
-    "uglify-js": "~2.7"
+    "uglify-js": "~2.7",
+    "x-editable": "1.5.x"
   },
   "scripts": {
     "test": "grunt test"

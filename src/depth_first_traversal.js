@@ -4,7 +4,7 @@
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree, place, sib, push, pop, skip, finish, nodeid, sourceid, targetid}
+dc_graph.depth_first_traversal = function(callbacks) { // {[init, root, row, tree, place, sib, push, pop, skip,] finish, nodeid, sourceid, targetid}
     return function(nodes, edges) {
         callbacks.init && callbacks.init();
         if(callbacks.tree)
@@ -63,5 +63,46 @@ dc_graph.depth_first_traversal = function(callbacks) { // {init, root, row, tree
             place_tree(n, callbacks.row && callbacks.row(n) || 0);
         });
         callbacks.finish(rows);
+    };
+};
+
+// basically, see if it's any simpler if we start from scratch
+// (well, of course it's simpler because we have less callbacks)
+// same caveats as above
+dc_graph.undirected_dfs = function(callbacks) { // {[comp, node], nodeid, sourceid, targetid}
+    return function(nodes, edges) {
+        var adjacencies = edges.reduce(function(m, e) {
+            var tail = callbacks.sourceid(e),
+                head = callbacks.targetid(e);
+            if(!m[tail]) m[tail] = [];
+            if(!m[head]) m[head] = [];
+            m[tail].push(head);
+            m[head].push(tail);
+            return m;
+        }, {});
+        var nmap = nodes.reduce(function(m, n) {
+            var key = callbacks.nodeid(n);
+            m[key] = n;
+            return m;
+        }, {});
+        var found = {};
+        function recurse(n) {
+            var nid = callbacks.nodeid(n);
+            callbacks.node(compid, n);
+            found[nid] = true;
+            if(adjacencies[nid])
+                adjacencies[nid].forEach(function(adj) {
+                    if(!found[adj])
+                        recurse(nmap[adj]);
+                });
+        }
+        var compid = 0;
+        nodes.forEach(function(n) {
+            if(!found[callbacks.nodeid(n)]) {
+                callbacks.comp && callbacks.comp(compid);
+                recurse(n);
+                ++compid;
+            }
+        });
     };
 };

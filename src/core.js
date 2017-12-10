@@ -84,6 +84,27 @@ var property = function (defaultValue, unwrap) {
     return ret;
 };
 
+function named_children() {
+    var _children = {};
+    var f = function(id, object) {
+        if(arguments.length === 1)
+            return _children[id];
+        // do not notify unnecessarily
+        if(_children[id] === object)
+            return this;
+        if(_children[id])
+            _children[id].parent(null);
+        _children[id] = object;
+        if(object)
+            object.parent(this);
+        return this;
+    };
+    f.enum = function() {
+        return Object.keys(_children);
+    };
+    return f;
+}
+
 function deprecated_property(message, defaultValue) {
     var prop = property(defaultValue);
     var ret = function() {
@@ -106,4 +127,36 @@ function uuid() {
         var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
         return v.toString(16);
     });
+}
+
+// polyfill Object.assign for IE
+// it's just too useful to do without
+if (typeof Object.assign != 'function') {
+  // Must be writable: true, enumerable: false, configurable: true
+  Object.defineProperty(Object, "assign", {
+    value: function assign(target, varArgs) { // .length of function is 2
+      'use strict';
+      if (target == null) { // TypeError if undefined or null
+        throw new TypeError('Cannot convert undefined or null to object');
+      }
+
+      var to = Object(target);
+
+      for (var index = 1; index < arguments.length; index++) {
+        var nextSource = arguments[index];
+
+        if (nextSource != null) { // Skip over if undefined or null
+          for (var nextKey in nextSource) {
+            // Avoid bugs when hasOwnProperty is shadowed
+            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+              to[nextKey] = nextSource[nextKey];
+            }
+          }
+        }
+      }
+      return to;
+    },
+    writable: true,
+    configurable: true
+  });
 }

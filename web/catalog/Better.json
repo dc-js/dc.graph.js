@@ -1,0 +1,54 @@
+{
+  "nodes": [
+    {
+      "id": "A1",
+      "type": "A"
+    },
+    {
+      "id": "B1",
+      "type": "B"
+    },
+    {
+      "id": "C1",
+      "type": "C"
+    },
+    {
+      "id": "E1",
+      "type": "E"
+    },
+    {
+      "id": "G1",
+      "type": "G"
+    },
+    {
+      "id": "H1",
+      "type": "H"
+    }
+  ],
+  "edges": [
+    {
+      "sourcename": "A1",
+      "targetname": "B1",
+      "sourceport": "cap1",
+      "targetport": "cap1"
+    },
+    {
+      "sourcename": "A1",
+      "targetname": "C1",
+      "sourceport": "cap2",
+      "targetport": "cap2"
+    },
+    {
+      "sourcename": "E1",
+      "targetname": "C1",
+      "sourceport": "cap3",
+      "targetport": "cap3"
+    },
+    {
+      "sourcename": "G1",
+      "targetname": "H1",
+      "sourceport": "cap0",
+      "targetport": "cap0"
+    }
+  ]
+}
