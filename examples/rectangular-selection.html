@@ -54,7 +54,6 @@
 
 
 <body>
-  <p id="hint">(use <kbd>alt</kbd> key to pan and zoom)</p>
   <div id="graph" class="chart"></div>
   <div id="pie"></div>
   <div id="row"></div>
@@ -94,8 +93,9 @@
         diagram
             .layoutEngine(engine)
             .timeLimit(5000)
-            //.fitStrategy('horizontal')
-            //.autoZoom('always')
+            .restrictPan(true)
+            .margins({top: 5, left: 5, right: 5, bottom: 5})
+            .autoZoom('once')
             .altKeyZoom(true)
             .width(document.documentElement.clientWidth)
             .height(document.documentElement.clientHeight)
