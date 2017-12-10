@@ -1418,6 +1418,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _chart.mouseZoomable = property(true);
 
+    _chart.zoomExtent = property([.1, 2]);
+
     /**
      * Whether zooming should only be enabled when the alt key is pressed.
      * @method altKeyZoom
@@ -1427,7 +1429,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Boolean}
      * @return {dc_graph.diagram}
      **/
-    _chart.altKeyZoom = property(false);
+    _chart.modKeyZoom = _chart.altKeyZoom = property(false);
 
     /**
      * Set or get the fitting strategy for the canvas, which affects how the
@@ -1468,7 +1470,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Auto-zoom behavior.
      * * `'always'` - zoom every time layout happens
-     * * `'once'` - zoom the first time layout happens
+     * * `'once'` - zoom the next time layout happens
      * * `null` - manual, call `zoomToFit` to fit
      * @method autoZoom
      * @memberof dc_graph.diagram
@@ -1485,6 +1487,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             edge = _chart.selectAllEdges();
         auto_zoom(node, edge);
     };
+    _chart.zoomDuration = property(500);
 
     /**
      * Set or get the crossfilter dimension which represents the nodes (vertices) in the
@@ -3154,7 +3157,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var partial = bezier_point(points, end === 'tail' ? 0.25 : 0.75);
         return (end === 'head' ?
                 Math.atan2(tpos.y - partial.y, tpos.x - partial.x) :
-                Math.atan2(partial.y - spos.y, partial.x - spos.x)) + 'rad';
+                Math.atan2(spos.y - partial.y, spos.x - partial.x)) + 'rad';
     }
 
     function enforce_path_direction(path, spos, tpos) {
@@ -3347,23 +3350,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 swidth =  _chart.width(), sheight = _chart.height(), viewBox;
             if(_chart.DEBUG_BOUNDS)
                 debug_bounds(_bounds);
-            var fitS = _chart.fitStrategy(), pAR, translate = [0,0], scale = 1,
-                amv; // align margins vertically
+            var fitS = _chart.fitStrategy(), translate = [0,0], scale = 1;
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
-                    vrl = vAR<sAR; // view aspect ratio is less (wider)
-                if(fitS === 'default') {
-                    amv = !vrl;
-                    pAR = null;
-                }
-                else {
-                    amv = fitS==='vertical';
-                    pAR = 'xMidYMid ' + (vrl ^ amv ? 'meet' : 'slice');
-                }
-                translate = [_chart.margins().left, _chart.margins().top];
+                    vrl = vAR<sAR, // view aspect ratio is less (wider)
+                    amv = (fitS === 'default') ? !vrl : (fitS === 'vertical'); // align margins vertically
                 scale = amv ?
-                    (sheight - _chart.margins().top - _chart.margins().bottom) / sheight :
-                    (swidth - _chart.margins().left - _chart.margins().right) / swidth;
+                    (sheight - _chart.margins().top - _chart.margins().bottom) / vheight :
+                    (swidth - _chart.margins().left - _chart.margins().right) / vwidth;
+                scale = Math.max(_chart.zoomExtent()[0], Math.min(_chart.zoomExtent()[1], scale));
+                translate = [_chart.margins().left - _bounds.left*scale + (swidth - vwidth*scale) / 2,
+                             _chart.margins().top - _bounds.top*scale + (sheight - vheight*scale) / 2];
             }
             else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
                 var sides = fitS.split('_')[1].toLowerCase().split('');
@@ -3391,31 +3388,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                     }
                 });
             }
-            else if(typeof fitS === 'function') {
-                var fit = fitS(vwidth, vheight, swidth, sheight);
-                pAR = fit.pAR;
-                translate = fit.translate;
-                scale = fit.scale;
-                viewBox = fit.viewBox;
-            }
-            else if(fitS === 'zoom') {
-                bring_in_bounds(_zoom.translate(), _zoom.scale());
-                return;
-            }
-            else if(typeof fitS === 'string')
-                pAR = _chart.fitStrategy();
+            else if(fitS === 'zoom')
+                translate = bring_in_bounds(_zoom.translate());
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
-            if(pAR !== undefined) {
-                if(!viewBox)
-                    viewBox = [_bounds.left, _bounds.top, vwidth, vheight].join(' ');
-                _svg.attr({
-                    viewBox: viewBox,
-                    preserveAspectRatio: pAR
-                });
-            }
             _zoom.translate(translate).scale(scale).event(_svg);
+            globalTransform(translate, scale, true);
             _dispatch.zoomed(translate, scale);
         }
     }
@@ -3871,10 +3850,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         return name ? id : null;
     }
 
-    function globalTransform(pos, scale) {
+    function globalTransform(pos, scale, animate) {
         _translate = pos;
         _scale = scale;
-        _g.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
+        var obj = _g;
+        if(animate)
+            obj = _g.transition().duration(_chart.zoomDuration());
+        obj.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
     }
 
     function margined_bounds() {
@@ -3901,64 +3883,60 @@ dc_graph.diagram = function (parent, chartGroup) {
         return translate[1] - _chart.y()(y) + _chart.y().range()[1];;
     }
 
-    function bring_in_bounds(translate, scale) {
-        if(_chart.restrictPan()) {
-            var xDomain = _chart.x().domain(), yDomain = _chart.y().domain();
-            var bounds = margined_bounds();
-            var less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
-                lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
-            var align, nothing = 0;
-            if(less1 && less2)
-                if(lessExt)
-                    align = 'left';
-                else
-                    align = 'right';
-            else if(!less1 && !less2)
-                if(lessExt)
-                    align = 'right';
-                else
-                    align = 'left';
-            switch(align) {
-            case 'left':
-                translate[0] = align_left(translate, bounds.left);
-                break;
-            case 'right':
-                translate[0] = align_right(translate, bounds.right);
-                break;
-            default:
-                ++nothing;
-            }
-            less1 = bounds.top < yDomain[0]; less2 = bounds.bottom < yDomain[1];
-            lessExt = (bounds.bottom - bounds.top) < (yDomain[1] - yDomain[0]);
-            if(less1 && less2)
-                if(lessExt)
-                    align = 'top';
-                else
-                    align = 'bottom';
-            else if(!less1 && !less2)
-                if(lessExt)
-                    align = 'bottom';
-                else
-                    align = 'top';
-            switch(align) {
-            case 'top':
-                translate[1] = align_top(translate, bounds.top);
-                break;
-            case 'bottom':
-                translate[1] = align_bottom(translate, bounds.bottom);
-                break;
-            default:
-                ++nothing;
-            }
-
-            if(nothing<2)
-                _zoom.translate(translate);
+    function bring_in_bounds(translate) {
+        var xDomain = _chart.x().domain(), yDomain = _chart.y().domain();
+        var bounds = margined_bounds();
+        var less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
+            lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
+        var align, nothing = 0;
+        if(less1 && less2)
+            if(lessExt)
+                align = 'left';
+        else
+            align = 'right';
+        else if(!less1 && !less2)
+            if(lessExt)
+                align = 'right';
+        else
+            align = 'left';
+        switch(align) {
+        case 'left':
+            translate[0] = align_left(translate, bounds.left);
+            break;
+        case 'right':
+            translate[0] = align_right(translate, bounds.right);
+            break;
+        default:
+            ++nothing;
         }
-        globalTransform(translate, scale);
+        less1 = bounds.top < yDomain[0]; less2 = bounds.bottom < yDomain[1];
+        lessExt = (bounds.bottom - bounds.top) < (yDomain[1] - yDomain[0]);
+        if(less1 && less2)
+            if(lessExt)
+                align = 'top';
+        else
+            align = 'bottom';
+        else if(!less1 && !less2)
+            if(lessExt)
+                align = 'bottom';
+        else
+            align = 'top';
+        switch(align) {
+        case 'top':
+            translate[1] = align_top(translate, bounds.top);
+            break;
+        case 'bottom':
+            translate[1] = align_bottom(translate, bounds.bottom);
+            break;
+        default:
+            ++nothing;
+        }
+        return translate;
 
     }
     function doZoom() {
-        bring_in_bounds(d3.event.translate, d3.event.scale);
+        var xlate = _chart.restrictPan() ? bring_in_bounds(d3.event.translate) : d3.event.translate;
+        globalTransform(xlate, d3.event.scale, false);
     }
 
     function resizeSvg(w, h) {
@@ -3993,16 +3971,24 @@ dc_graph.diagram = function (parent, chartGroup) {
                      .range([0, _chart.height()]));
         _zoom = d3.behavior.zoom()
             .on('zoom', doZoom)
-            .x(_chart.x()).y(_chart.y());
+            .x(_chart.x()).y(_chart.y())
+            .scaleExtent(_chart.zoomExtent());
         if(_chart.mouseZoomable()) {
-            if(_chart.altKeyZoom()) {
+            var mod, mods;
+            if((mod = _chart.modKeyZoom())) {
+                if (Array.isArray (mod))
+                    mods = mod.slice ();
+                else if (typeof mod === "string")
+                    mods = [mod];
+                else
+                    mods = ['Alt'];
                 d3.select(document)
                     .on('keydown', function() {
-                        if(d3.event.key === 'Alt')
+                        if(mods.indexOf (d3.event.key) > -1)
                             enableZoom();
                     })
                     .on('keyup', function() {
-                        if(d3.event.key === 'Alt')
+                        if(mods.indexOf (d3.event.key) > -1)
                             disableZoom();
                     });
             }
