@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.6.0",
+  "version": "0.6.0-alpha.1",
   "license": "Apache-2.0",
   "copyright": "2017",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
@@ -33,7 +33,7 @@
     "font-awesome": "~4.7",
     "lodash": "4.x",
     "viz.js": "1.x",
-    "webcola": "3.2.x"
+    "webcola": "3.3.x"
   },
   "devDependencies": {
     "bootstrap": "~3.3",

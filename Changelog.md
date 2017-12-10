@@ -1,3 +1,7 @@
+# 0.6 Alpha
+Stay tuned for details. This has ports, selection, moving of nodes, flexbox layout, labeling
+modes, icons with text in nodes, among many other things.
+
 ## 0.5.6
 * avoid cola crash with `initLayoutOnRedraw`
 
