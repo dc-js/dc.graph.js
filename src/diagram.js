@@ -225,6 +225,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             edge = _chart.selectAllEdges();
         auto_zoom(node, edge);
     };
+    _chart.zoomDuration = property(500);
 
     /**
      * Set or get the crossfilter dimension which represents the nodes (vertices) in the
@@ -2125,15 +2126,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                     }
                 });
             }
-            else if(fitS === 'zoom') {
-                bring_in_bounds(_zoom.translate(), _zoom.scale());
-                return;
-            }
+            else if(fitS === 'zoom')
+                translate = bring_in_bounds(_zoom.translate());
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
             _zoom.translate(translate).scale(scale).event(_svg);
-            globalTransform(translate, scale);
+            globalTransform(translate, scale, true);
             _dispatch.zoomed(translate, scale);
         }
     }
@@ -2589,10 +2588,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         return name ? id : null;
     }
 
-    function globalTransform(pos, scale) {
+    function globalTransform(pos, scale, animate) {
         _translate = pos;
         _scale = scale;
-        _g.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
+        var obj = _g;
+        if(animate)
+            obj = _g.transition().duration(_chart.zoomDuration());
+        obj.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
     }
 
     function margined_bounds() {
@@ -2619,64 +2621,60 @@ dc_graph.diagram = function (parent, chartGroup) {
         return translate[1] - _chart.y()(y) + _chart.y().range()[1];;
     }
 
-    function bring_in_bounds(translate, scale) {
-        if(_chart.restrictPan()) {
-            var xDomain = _chart.x().domain(), yDomain = _chart.y().domain();
-            var bounds = margined_bounds();
-            var less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
-                lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
-            var align, nothing = 0;
-            if(less1 && less2)
-                if(lessExt)
-                    align = 'left';
-                else
-                    align = 'right';
-            else if(!less1 && !less2)
-                if(lessExt)
-                    align = 'right';
-                else
-                    align = 'left';
-            switch(align) {
-            case 'left':
-                translate[0] = align_left(translate, bounds.left);
-                break;
-            case 'right':
-                translate[0] = align_right(translate, bounds.right);
-                break;
-            default:
-                ++nothing;
-            }
-            less1 = bounds.top < yDomain[0]; less2 = bounds.bottom < yDomain[1];
-            lessExt = (bounds.bottom - bounds.top) < (yDomain[1] - yDomain[0]);
-            if(less1 && less2)
-                if(lessExt)
-                    align = 'top';
-                else
-                    align = 'bottom';
-            else if(!less1 && !less2)
-                if(lessExt)
-                    align = 'bottom';
-                else
-                    align = 'top';
-            switch(align) {
-            case 'top':
-                translate[1] = align_top(translate, bounds.top);
-                break;
-            case 'bottom':
-                translate[1] = align_bottom(translate, bounds.bottom);
-                break;
-            default:
-                ++nothing;
-            }
-
-            if(nothing<2)
-                _zoom.translate(translate);
+    function bring_in_bounds(translate) {
+        var xDomain = _chart.x().domain(), yDomain = _chart.y().domain();
+        var bounds = margined_bounds();
+        var less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
+            lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
+        var align, nothing = 0;
+        if(less1 && less2)
+            if(lessExt)
+                align = 'left';
+        else
+            align = 'right';
+        else if(!less1 && !less2)
+            if(lessExt)
+                align = 'right';
+        else
+            align = 'left';
+        switch(align) {
+        case 'left':
+            translate[0] = align_left(translate, bounds.left);
+            break;
+        case 'right':
+            translate[0] = align_right(translate, bounds.right);
+            break;
+        default:
+            ++nothing;
         }
-        globalTransform(translate, scale);
+        less1 = bounds.top < yDomain[0]; less2 = bounds.bottom < yDomain[1];
+        lessExt = (bounds.bottom - bounds.top) < (yDomain[1] - yDomain[0]);
+        if(less1 && less2)
+            if(lessExt)
+                align = 'top';
+        else
+            align = 'bottom';
+        else if(!less1 && !less2)
+            if(lessExt)
+                align = 'bottom';
+        else
+            align = 'top';
+        switch(align) {
+        case 'top':
+            translate[1] = align_top(translate, bounds.top);
+            break;
+        case 'bottom':
+            translate[1] = align_bottom(translate, bounds.bottom);
+            break;
+        default:
+            ++nothing;
+        }
+        return translate;
 
     }
     function doZoom() {
-        bring_in_bounds(d3.event.translate, d3.event.scale);
+        var xlate = _chart.restrictPan() ? bring_in_bounds(d3.event.translate) : d3.event.translate;
+        globalTransform(xlate, d3.event.scale, false);
     }
 
     function resizeSvg(w, h) {
