@@ -1769,6 +1769,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             dx = e.target.cola.x - e.source.cola.x;
         if(e.source !== n)
             dy = -dy, dx = -dx;
+        if(e.parallel && e.parallel.edges.length > 1 && e.source.index > e.target.index)
+            dy = -dy, dx = -dx;
         return norm([dx, dy]);
     }
     function init_node_ports(nodes, wports) {
