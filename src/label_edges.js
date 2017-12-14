@@ -8,8 +8,8 @@ dc_graph.label_edges = function(options) {
     options.default_label = "edge name";
 
     options.find_thing = function(key, node, edge) {
-        return edge.filter(function(d) {
-            return _behavior.parent().edgeKey.eval(d) === key;
+        return edge.filter(function(e) {
+            return _behavior.parent().edgeKey.eval(e) === key;
         });
     };
     options.thing_box = function(edge, eventOptions) {
@@ -26,8 +26,8 @@ dc_graph.label_edges = function(options) {
                 _behavior.changeEdgeLabel()(_behavior.parent().edgeKey.eval(edge.datum()), text) :
                 Promise.resolve(text);
         return callback.then(function(text2) {
-            var d = edge.datum();
-            d.orig.value[_labelTag] = text2;
+            var e = edge.datum();
+            e.orig.value[_labelTag] = text2;
             _behavior.parent().redrawGroup();
         });
     };

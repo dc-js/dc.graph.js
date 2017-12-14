@@ -182,17 +182,17 @@ function elaborate_shape(diagram, def) {
 }
 
 function infer_shape(diagram) {
-    return function(d) {
-        var def = diagram.nodeShape.eval(d) || default_shape;
-        d.dcg_shape = elaborate_shape(diagram, def);
-        d.dcg_shape.abstract = def;
+    return function(n) {
+        var def = diagram.nodeShape.eval(n) || default_shape;
+        n.dcg_shape = elaborate_shape(diagram, def);
+        n.dcg_shape.abstract = def;
     };
 }
 
 function shape_changed(diagram) {
-    return function(d) {
-        var def = diagram.nodeShape.eval(d) || default_shape;
-        var old = d.dcg_shape.abstract;
+    return function(n) {
+        var def = diagram.nodeShape.eval(n) || default_shape;
+        var old = n.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
         else if(def.shape === 'polygon') {
@@ -205,17 +205,17 @@ function shape_changed(diagram) {
 
 function fit_shape(shape, diagram) {
     return function(text) {
-        text.each(function(d) {
+        text.each(function(n) {
             var bbox = null;
-            if((!shape.useTextSize || shape.useTextSize(d.dcg_shape)) && diagram.nodeFitLabel.eval(d)) {
+            if((!shape.useTextSize || shape.useTextSize(n.dcg_shape)) && diagram.nodeFitLabel.eval(n)) {
                 bbox = this.getBBox();
                 bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                 var padding;
-                var content = diagram.nodeContent.eval(d);
+                var content = diagram.nodeContent.eval(n);
                 if(content && diagram.content(content).padding)
-                    padding = diagram.content(content).padding(d);
+                    padding = diagram.content(content).padding(n);
                 else {
-                    var padding2 = diagram.nodeLabelPadding.eval(d);
+                    var padding2 = diagram.nodeLabelPadding.eval(n);
                     padding = {
                         x: padding2.x*2,
                         y: padding2.y*2
@@ -223,17 +223,17 @@ function fit_shape(shape, diagram) {
                 }
                 bbox.width += padding.x;
                 bbox.height += padding.y;
-                d.bbox = bbox;
+                n.bbox = bbox;
             }
             var r = 0, radii;
-            if(!shape.useRadius || shape.useRadius(d.dcg_shape))
-                r = diagram.nodeRadius.eval(d);
-            if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize(d.dcg_shape))
-                radii = shape.calc_radii(d, r, bbox);
+            if(!shape.useRadius || shape.useRadius(n.dcg_shape))
+                r = diagram.nodeRadius.eval(n);
+            if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize(n.dcg_shape))
+                radii = shape.calc_radii(n, r, bbox);
             else
                 radii = {rx: r, ry: r};
-            d.dcg_rx = radii.rx;
-            d.dcg_ry = radii.ry;
+            n.dcg_rx = radii.rx;
+            n.dcg_ry = radii.ry;
 
             var w = radii.rx*2, h = radii.ry*2;
             // fixme: this is only consistent if regular || !squeeze
@@ -241,29 +241,29 @@ function fit_shape(shape, diagram) {
             // (not a bad idea, just no time right now)
             if(w<h) w = h;
 
-            if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke(d.dcg_shape)) {
-                var pands = diagram.nodePadding.eval(d) + diagram.nodeStrokeWidth.eval(d);
+            if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke(n.dcg_shape)) {
+                var pands = diagram.nodePadding.eval(n) + diagram.nodeStrokeWidth.eval(n);
                 w += pands;
                 h += pands;
             }
-            d.cola.width = w;
-            d.cola.height = h;
+            n.cola.width = w;
+            n.cola.height = h;
         });
     };
 }
 
 function ellipse_attrs(diagram) {
     return {
-        rx: function(d) { return d.dcg_rx; },
-        ry: function(d) { return d.dcg_ry; }
+        rx: function(n) { return n.dcg_rx; },
+        ry: function(n) { return n.dcg_ry; }
     };
 }
 
-function polygon_attrs(diagram, d) {
+function polygon_attrs(diagram, n) {
     return {
-        d: function(d) {
-            var rx = d.dcg_rx, ry = d.dcg_ry,
-                def = d.dcg_shape,
+        d: function(n) {
+            var rx = n.dcg_rx, ry = n.dcg_ry,
+                def = n.dcg_shape,
                 sides = def.sides || 4,
                 skew = def.skew || 0,
                 distortion = def.distortion || 0,
@@ -282,14 +282,14 @@ function polygon_attrs(diagram, d) {
                 rx = ry;
             else
                 ry = ry / Math.min(-yext[0], yext[1]);
-            d.dcg_points = angles.map(function(theta) {
+            n.dcg_points = angles.map(function(theta) {
                 var x = rx*theta.x,
                     y = ry*theta.y;
                 x *= 1 + distortion*((ry-y)/ry - 1);
                 x -= skew*y/2;
                 return {x: x, y: y};
             });
-            return generate_path(d.dcg_points, 1, true);
+            return generate_path(n.dcg_points, 1, true);
         }
     };
 }
@@ -440,10 +440,10 @@ dc_graph.no_shape = function() {
         useTextSize: function() { return false; },
         useRadius: function() { return false; },
         usePaddingAndStroke: function() { return false; },
-        intersect_vec: function(d, deltaX, deltaY) {
+        intersect_vec: function(n, deltaX, deltaY) {
             return {x: 0, y: 0};
         },
-        calc_radii: function(d, ry, bbox) {
+        calc_radii: function(n, ry, bbox) {
             return {rx: 0, ry: 0};
         },
         create: function(nodeEnter) {
@@ -462,10 +462,10 @@ dc_graph.ellipse_shape = function() {
         elaborate: function(preset, def) {
             return Object.assign(preset, def);
         },
-        intersect_vec: function(d, deltaX, deltaY) {
-            return point_on_ellipse(d.dcg_rx, d.dcg_ry, deltaX, deltaY);
+        intersect_vec: function(n, deltaX, deltaY) {
+            return point_on_ellipse(n.dcg_rx, n.dcg_ry, deltaX, deltaY);
         },
-        calc_radii: function(d, ry, bbox) {
+        calc_radii: function(n, ry, bbox) {
             // make sure we can fit height in r
             ry = Math.max(ry, bbox.height/2 + 5);
             var rx = bbox.width/2;
@@ -501,10 +501,10 @@ dc_graph.polygon_shape = function() {
         elaborate: function(preset, def) {
             return Object.assign(preset, def);
         },
-        intersect_vec: function(d, deltaX, deltaY) {
-            return point_on_polygon(d.dcg_points, 0, 0, deltaX, deltaY);
+        intersect_vec: function(n, deltaX, deltaY) {
+            return point_on_polygon(n.dcg_points, 0, 0, deltaX, deltaY);
         },
-        calc_radii: function(d, ry, bbox) {
+        calc_radii: function(n, ry, bbox) {
             // make sure we can fit height in r
             ry = Math.max(ry, bbox.height/2 + 5);
             var rx = bbox.width/2;
@@ -512,7 +512,7 @@ dc_graph.polygon_shape = function() {
             // this is cribbed from graphviz but there is much i don't understand
             // and any errors are mine
             // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
-            rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(d.dcg_shape.sides||4));
+            rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(n.dcg_shape.sides||4));
 
             return {rx: rx, ry: ry};
         },
@@ -540,22 +540,22 @@ dc_graph.rounded_rectangle_shape = function() {
             preset = Object.assign({rx: 10, ry: 10}, preset);
             return Object.assign(preset, def);
         },
-        intersect_vec: function(d, deltaX, deltaY) {
+        intersect_vec: function(n, deltaX, deltaY) {
             var points = [
-                {x:  d.dcg_rx, y:  d.dcg_ry},
-                {x:  d.dcg_rx, y: -d.dcg_ry},
-                {x: -d.dcg_rx, y: -d.dcg_ry},
-                {x: -d.dcg_rx, y:  d.dcg_ry}
+                {x:  n.dcg_rx, y:  n.dcg_ry},
+                {x:  n.dcg_rx, y: -n.dcg_ry},
+                {x: -n.dcg_rx, y: -n.dcg_ry},
+                {x: -n.dcg_rx, y:  n.dcg_ry}
             ];
             return point_on_polygon(points, 0, 0, deltaX, deltaY); // not rounded
         },
         useRadius: function(shape) {
             return !shape.noshape;
         },
-        calc_radii: function(d, ry, bbox) {
+        calc_radii: function(n, ry, bbox) {
             var fity = bbox.height/2;
             // fixme: fudge to make sure text is not too tall for node
-            if(!d.dcg_shape.noshape)
+            if(!n.dcg_shape.noshape)
                 fity += 5;
             return {
                 rx: bbox.width / 2,
@@ -563,38 +563,38 @@ dc_graph.rounded_rectangle_shape = function() {
             };
         },
         create: function(nodeEnter) {
-            nodeEnter.filter(function(d) {
-                return !d.dcg_shape.noshape;
+            nodeEnter.filter(function(n) {
+                return !n.dcg_shape.noshape;
             }).append('rect')
                 .attr('class', 'node-shape');
         },
         replace: function(nodeChanged) {
             nodeChanged.select('rect.node-shape').remove();
-            nodeChanged.filter(function(d) {
-                return !d.dcg_shape.noshape;
+            nodeChanged.filter(function(n) {
+                return !n.dcg_shape.noshape;
             }).insert('rect', ':first-child')
                 .attr('class', 'node-shape');
         },
         update: function(node) {
             node.select('rect.node-shape')
                 .attr({
-                    x: function(d) {
-                        return -d.dcg_rx;
+                    x: function(n) {
+                        return -n.dcg_rx;
                     },
-                    y: function(d) {
-                        return -d.dcg_ry;
+                    y: function(n) {
+                        return -n.dcg_ry;
                     },
-                    width: function(d) {
-                        return 2*d.dcg_rx;
+                    width: function(n) {
+                        return 2*n.dcg_rx;
                     },
-                    height: function(d) {
-                        return 2*d.dcg_ry;
+                    height: function(n) {
+                        return 2*n.dcg_ry;
                     },
-                    rx: function(d) {
-                        return d.dcg_shape.rx + 'px';
+                    rx: function(n) {
+                        return n.dcg_shape.rx + 'px';
                     },
-                    ry: function(d) {
-                        return d.dcg_shape.ry + 'px';
+                    ry: function(n) {
+                        return n.dcg_shape.ry + 'px';
                     }
                 });
         }

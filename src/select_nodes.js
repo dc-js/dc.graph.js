@@ -15,8 +15,8 @@ dc_graph.select_nodes = function(props, options) {
         excludeClick: function(element) {
             return ancestor_has_class(element, 'port');
         },
-        key: function(d) {
-            return _behavior.parent().nodeKey.eval(d);
+        key: function(n) {
+            return _behavior.parent().nodeKey.eval(n);
         },
         applyStyles: function(pred) {
             _behavior.parent().cascade(50, true, node_edge_conditions(pred, null, props));

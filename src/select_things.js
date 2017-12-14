@@ -43,7 +43,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         // we seem to have nodes-background interrupting edges-background by reinstalling uselessly
         if(_have_bce === v)
             return;
-        diagram.svg().on('click.' + things_name, v ? function(d) {
+        diagram.svg().on('click.' + things_name, v ? function(t) {
             if(d3.event.target === this)
                 things_group.set_changed([]);
         } : null);
@@ -77,18 +77,18 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         };
         thinginess.applyStyles(condition);
 
-        thinginess.clickables(diagram, node, edge).on('mousedown.' + things_name, function(d) {
-            _mousedownThing = d;
+        thinginess.clickables(diagram, node, edge).on('mousedown.' + things_name, function(t) {
+            _mousedownThing = t;
         });
 
-        thinginess.clickables(diagram, node, edge).on('mouseup.' + things_name, function(d) {
+        thinginess.clickables(diagram, node, edge).on('mouseup.' + things_name, function(t) {
             if(thinginess.excludeClick && thinginess.excludeClick(d3.event.target))
                 return;
             // it's only a click if the same target was mousedown & mouseup
             // but we can't use click event because things may have been reordered
-            if(_mousedownThing !== d)
+            if(_mousedownThing !== t)
                 return;
-            var key = thinginess.key(d), newSelected;
+            var key = thinginess.key(t), newSelected;
             if(_behavior.multipleSelect()) {
                 if(isUnion(d3.event))
                     newSelected = add_array(_selected, key);

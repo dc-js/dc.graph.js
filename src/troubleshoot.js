@@ -17,9 +17,9 @@ dc_graph.troubleshoot = function() {
         crosshairs.exit().remove();
         crosshairs.enter().append('path').attr('class', 'nodecenter');
         crosshairs.attr({
-            d: function(d) {
-                return 'M' + (d.x - _behavior.xhairWidth()/2) + ',' + d.y + ' h' + _behavior.xhairWidth() +
-                    ' M' + d.x + ',' + (d.y - _behavior.xhairHeight()/2) + ' v' + _behavior.xhairHeight();
+            d: function(c) {
+                return 'M' + (c.x - _behavior.xhairWidth()/2) + ',' + c.y + ' h' + _behavior.xhairWidth() +
+                    ' M' + c.x + ',' + (c.y - _behavior.xhairHeight()/2) + ' v' + _behavior.xhairHeight();
             },
             opacity: _behavior.xhairOpacity() !== null ? _behavior.xhairOpacity() : _behavior.opacity(),
             stroke: _behavior.xhairColor()

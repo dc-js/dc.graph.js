@@ -57,20 +57,20 @@ dc_graph.legend = function() {
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
         var node = legend.selectAll('.node')
-                .data(_items, function(d) { return d.name; });
+                .data(_items, function(n) { return n.name; });
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node');
         nodeEnter.append('text')
             .attr('dy', '0.3em')
             .attr('class', 'legend-label');
         node
-            .attr('transform', function(d, i) {
+            .attr('transform', function(n, i) {
                 return 'translate(' + _legend.nodeWidth()/2 + ',' + (_legend.nodeHeight() + _legend.gap())*(i+0.5) + ')';
             });
         node.select('text.legend-label')
             .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
-            .text(function(d) {
-                return d.name;
+            .text(function(n) {
+                return n.name;
             });
         _legend.parent()
             ._enterNode(nodeEnter)

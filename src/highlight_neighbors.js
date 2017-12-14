@@ -10,13 +10,13 @@ dc_graph.highlight_neighbors = function(props) {
             return e.dcg_highlighted;
         }, props));
         node
-            .on('mouseover.highlight-neighbors', function(d) {
+            .on('mouseover.highlight-neighbors', function(n) {
                 edge.each(function(e) {
-                    e.dcg_highlighted = e.source === d || e.target === d;
+                    e.dcg_highlighted = e.source === n || e.target === n;
                 });
                 diagram.refresh(node, edge);
             })
-            .on('mouseout.highlight-neighbors', function(d) {
+            .on('mouseout.highlight-neighbors', function(n) {
                 clear_all_highlights(edge);
                 diagram.refresh(node, edge);
             });

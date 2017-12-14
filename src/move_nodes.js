@@ -26,7 +26,7 @@ dc_graph.move_nodes = function(options) {
         });
     }
     function add_behavior(diagram, node, edge) {
-        node.on('mousedown.move-nodes', function(d) {
+        node.on('mousedown.move-nodes', function(n) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
                 return;
@@ -34,7 +34,7 @@ dc_graph.move_nodes = function(options) {
             _downNode = d3.select(this);
             // if the node under the mouse is not in the selection, need to
             // make that node selected
-            var key = diagram.nodeKey.eval(d);
+            var key = diagram.nodeKey.eval(n);
             if(_selected.indexOf(key)<0)
                 select_nodes_group.set_changed([key]);
             for_each_selected(function(n) {

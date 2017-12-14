@@ -48,13 +48,13 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         return edge.filter(fil).size();
     }
 
-    function spike_directioner(rankdir, dir, n) {
+    function spike_directioner(rankdir, dir, N) {
         if(dir==='both')
             return function(i) {
-                return Math.PI * (2 * i / n - 0.5);
+                return Math.PI * (2 * i / N - 0.5);
             };
         else {
-            var sweep = (n-1)*Math.PI/n, ofs;
+            var sweep = (N-1)*Math.PI/N, ofs;
             switch(rankdir) {
             case 'LR':
                 ofs = 0;
@@ -72,7 +72,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             if(dir === 'in')
                 ofs += Math.PI;
             return function(i) {
-                return ofs + sweep * (-.5 + (n > 1 ? i / (n-1) : 0)); // avoid 0/0
+                return ofs + sweep * (-.5 + (N > 1 ? i / (N-1) : 0)); // avoid 0/0
             };
         }
     }
@@ -80,10 +80,10 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
     function draw_selected(diagram, node, edge) {
         var spike = node
             .selectAll('g.spikes')
-            .data(function(d) {
-                return (d.dcg_expand_selected &&
-                        (!d.dcg_expanded || !d.dcg_expanded[d.dcg_expand_selected.dir])) ?
-                    [d] : [];
+            .data(function(n) {
+                return (n.dcg_expand_selected &&
+                        (!n.dcg_expanded || !n.dcg_expanded[n.dcg_expand_selected.dir])) ?
+                    [n] : [];
             });
         spike.exit().remove();
         spike
@@ -91,18 +91,18 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             .classed('spikes', true);
         var rect = spike
           .selectAll('rect.spike')
-            .data(function(d) {
-                var key = diagram.nodeKey.eval(d);
-                var dir = d.dcg_expand_selected.dir,
-                    n = d.dcg_expand_selected.n,
-                    af = spike_directioner(diagram.layoutEngine().rankdir(), dir, n),
-                    ret = Array(n);
-                for(var i = 0; i<n; ++i) {
+            .data(function(n) {
+                var key = diagram.nodeKey.eval(n);
+                var dir = n.dcg_expand_selected.dir,
+                    N = n.dcg_expand_selected.n,
+                    af = spike_directioner(diagram.layoutEngine().rankdir(), dir, N),
+                    ret = Array(N);
+                for(var i = 0; i<N; ++i) {
                     var a = af(i);
                     ret[i] = {
                         a: a * 180 / Math.PI,
-                        x: Math.cos(a) * d.dcg_rx*.9,
-                        y: Math.sin(a) * d.dcg_ry*.9
+                        x: Math.cos(a) * n.dcg_rx*.9,
+                        y: Math.sin(a) * n.dcg_ry*.9
                     };
                 }
                 return ret;
@@ -136,7 +136,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         return view_degree(diagram, edge, dir, key) === 1;
     }
 
-    function zonedir(diagram, event, dirs, d) {
+    function zonedir(diagram, event, dirs, n) {
         if(dirs.length === 1) // we assume it's ['out', 'in']
             return dirs[0];
         var bound = diagram.root().node().getBoundingClientRect();
@@ -145,68 +145,68 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             y = invert[1];
         switch(diagram.layoutEngine().rankdir()) {
         case 'TB':
-            return y > d.cola.y ? 'out' : 'in';
+            return y > n.cola.y ? 'out' : 'in';
         case 'BT':
-            return y < d.cola.y ? 'out' : 'in';
+            return y < n.cola.y ? 'out' : 'in';
         case 'LR':
-            return x > d.cola.x ? 'out' : 'in';
+            return x > n.cola.x ? 'out' : 'in';
         case 'RL':
-            return x < d.cola.x ? 'out' : 'in';
+            return x < n.cola.x ? 'out' : 'in';
         }
         throw new Error('unknown rankdir ' + diagram.layoutEngine().rankdir());
     }
 
 
     function add_behavior(diagram, node, edge) {
-        function mousemove(d) {
-            var dir = zonedir(diagram, d3.event, dirs, d);
-            var nk = diagram.nodeKey.eval(d);
+        function mousemove(n) {
+            var dir = zonedir(diagram, d3.event, dirs, n);
+            var nk = diagram.nodeKey.eval(n);
             Promise.resolve(get_degree(nk, dir)).then(function(degree) {
                 var spikes = {
                     dir: dir,
                     n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
                 };
-                node.each(function(n) {
-                    n.dcg_expand_selected = n === d ? spikes : null;
+                node.each(function(n2) {
+                    n2.dcg_expand_selected = n2 === n ? spikes : null;
                 });
                 draw_selected(diagram, node, edge);
             });
         }
 
-        function click(d) {
+        function click(n) {
             var event = d3.event;
             console.log(event.type);
             function action() {
-                var dir = zonedir(diagram, event, dirs, d);
-                d.dcg_expanded = d.dcg_expanded || {};
-                if(!d.dcg_expanded[dir]) {
-                    expand(diagram.nodeKey.eval(d), dir, event.type === 'dblclick');
-                    d.dcg_expanded[dir] = true;
+                var dir = zonedir(diagram, event, dirs, n);
+                n.dcg_expanded = n.dcg_expanded || {};
+                if(!n.dcg_expanded[dir]) {
+                    expand(diagram.nodeKey.eval(n), dir, event.type === 'dblclick');
+                    n.dcg_expanded[dir] = true;
                 }
                 else {
-                    collapse(diagram.nodeKey.eval(d), collapsible.bind(null, diagram, edge, dir), dir);
-                    d.dcg_expanded[dir] = false;
+                    collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, dir), dir);
+                    n.dcg_expanded[dir] = false;
                 }
                 draw_selected(diagram, node, edge);
-                d.dcg_dblclk_timeout = null;
+                n.dcg_dblclk_timeout = null;
             }
             return action();
             // distinguish click and double click - kind of fishy but seems to work
             // basically, wait to see if a click becomes a dblclick - but it's even worse
             // because you'll receive a second click before the dblclick on most browsers
-            if(d.dcg_dblclk_timeout) {
-                window.clearTimeout(d.dcg_dblclk_timeout);
+            if(n.dcg_dblclk_timeout) {
+                window.clearTimeout(n.dcg_dblclk_timeout);
                 if(event.type === 'dblclick')
                     action();
-                d.dcg_dblclk_timeout = null;
+                n.dcg_dblclk_timeout = null;
             }
-            else d.dcg_dblclk_timeout = window.setTimeout(action, 200);
+            else n.dcg_dblclk_timeout = window.setTimeout(action, 200);
         }
 
         node
             .on('mouseover.expand-collapse', mousemove)
             .on('mousemove.expand-collapse', mousemove)
-            .on('mouseout.expand-collapse', function(d) {
+            .on('mouseout.expand-collapse', function(n) {
                 clear_selected(diagram, node, edge);
             })
             .on('click', click)

@@ -120,7 +120,7 @@ dc_graph.tip = function(options) {
 
     /**
      * Specifies the function to generate content for the tooltip. This function has the
-     * signature `function(d, k)`, where `d` is the datum of the node being hovered over,
+     * signature `function(d, k)`, where `d` is the datum of the thing being hovered over,
      * and `k` is a continuation. The function should fetch the content, asynchronously if
      * needed, and then pass html forward to `k`.
      * @name content
@@ -129,13 +129,13 @@ dc_graph.tip = function(options) {
      * @param {Function} [content]
      * @return {Function}
      * @example
-     * // Default behavior: show title
-     * var tip = dc_graph.tip().content(function(d, k) {
-     *     k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
+     * // Default behavior: assume it's a node, show node title
+     * var tip = dc_graph.tip().content(function(n, k) {
+     *     k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
      * });
      **/
-    _behavior.content = property(function(d, k) {
-        k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
+    _behavior.content = property(function(n, k) {
+        k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
     });
 
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());

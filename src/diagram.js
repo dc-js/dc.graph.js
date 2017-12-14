@@ -642,14 +642,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @param {Function|String} [edgeLabel]
      * @example
      * // Default behavior
-     * diagram.edgeLabel(function(d) {
-     *   return _diagram.edgeKey()(d);
+     * diagram.edgeLabel(function(e) {
+     *   return _diagram.edgeKey()(e);
      * });
      * @return {Function|String}
      * @return {dc_graph.diagram}
      **/
-    _diagram.edgeLabel = _diagram.edgeLabelAccessor = property(function(d) {
-        return _diagram.edgeKey()(d);
+    _diagram.edgeLabel = _diagram.edgeLabelAccessor = property(function(e) {
+        return _diagram.edgeKey()(e);
     });
 
     /**
@@ -1045,10 +1045,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @example
      * // Display tooltips on node hover, via the d3-tip library
      * var tip = dc_graph.tip()
-     * tip.content(function(d, k) {
+     * tip.content(function(n, k) {
      *   // you can do an asynchronous call here, e.g. d3.json, if you need
      *   // to fetch data to show the tooltip - just call k() with the content
-     *   k("This is <em>" + d.orig.value.name + "</em>");
+     *   k("This is <em>" + n.orig.value.name + "</em>");
      * });
      * diagram.child('tip', tip);
      * @return {dc_graph.diagram}
@@ -1116,15 +1116,15 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _diagram.anchorName().replace(/[ .#=\[\]"]/g, '-');
     };
 
-    _diagram.edgeId = function(d) {
-        return 'edge-' + _diagram.edgeKey.eval(d).replace(/[^\w-_]/g, '-');
+    _diagram.edgeId = function(e) {
+        return 'edge-' + _diagram.edgeKey.eval(e).replace(/[^\w-_]/g, '-');
     };
 
-    _diagram.arrowId = function(d, kind) {
-        return 'arrow-' + kind + '-' + _diagram.uniqueId() + '-'  + _diagram.edgeId(d);
+    _diagram.arrowId = function(e, kind) {
+        return 'arrow-' + kind + '-' + _diagram.uniqueId() + '-'  + _diagram.edgeId(e);
     };
-    _diagram.textpathId = function(d) {
-        return 'textpath-' + _diagram.uniqueId() + '-' + _diagram.edgeId(d);
+    _diagram.textpathId = function(e) {
+        return 'textpath-' + _diagram.uniqueId() + '-' + _diagram.edgeId(e);
     };
 
     // this kind of begs a (meta)graph ADT
@@ -1180,11 +1180,11 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.forEachChild = function(node, children, idf, f) {
         children.enum().forEach(function(key) {
             f(children(key),
-              node.filter(function(d) { return idf(d) === key; }));
+              node.filter(function(n) { return idf(n) === key; }));
         });
     };
     _diagram.forEachShape = function(node, f) {
-        _diagram.forEachChild(node, _diagram.shape, function(d) { return d.dcg_shape.shape; }, f);
+        _diagram.forEachChild(node, _diagram.shape, function(n) { return n.dcg_shape.shape; }, f);
     };
     _diagram.forEachContent = function(node, f) {
         _diagram.forEachChild(node, _diagram.content, _diagram.nodeContent.eval, f);
@@ -1248,21 +1248,21 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.selectAllNodes = function(selector) {
         selector = selector || '.node';
-        return _nodeLayer.selectAll(selector).filter(function(d) {
-            return !d.deleted;
+        return _nodeLayer.selectAll(selector).filter(function(n) {
+            return !n.deleted;
         });
     };
 
     _diagram.selectAllEdges = function(selector) {
         selector = selector || '.edge';
-        return _edgeLayer.selectAll(selector).filter(function(d) {
-            return !d.deleted;
+        return _edgeLayer.selectAll(selector).filter(function(e) {
+            return !e.deleted;
         });
     };
 
     _diagram.selectAllDefs = function(selector) {
-        return _defs.selectAll(selector).filter(function(d) {
-            return !d.deleted;
+        return _defs.selectAll(selector).filter(function(def) {
+            return !def.deleted;
         });
     };
 
@@ -1473,15 +1473,15 @@ dc_graph.diagram = function (parent, chartGroup) {
                     opacity: 0
                 });
 
-        edge.exit().each(function(d) {
-            d.deleted = true;
+        edge.exit().each(function(e) {
+            e.deleted = true;
         }).transition()
             .duration(_diagram.stagedDuration())
             .delay(_diagram.deleteDelay())
             .attr('opacity', 0)
-            .each(function(d) {
-                edgeArrow(d, 'head', null);
-                edgeArrow(d, 'head', null);
+            .each(function(e) {
+                edgeArrow(e, 'head', null);
+                edgeArrow(e, 'head', null);
             })
             .remove();
 
@@ -1494,12 +1494,12 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('fill', 'none')
             .attr('stroke', 'green')
             .attr('stroke-width', 10)
-            .on('mouseover', function(d) {
-                d3.select('#' + _diagram.edgeId(d) + '-label')
+            .on('mouseover', function(e) {
+                d3.select('#' + _diagram.edgeId(e) + '-label')
                     .attr('visibility', 'visible');
             })
-            .on('mouseout', function(d) {
-                d3.select('#' + _diagram.edgeId(d) + '-label')
+            .on('mouseout', function(e) {
+                d3.select('#' + _diagram.edgeId(e) + '-label')
                     .attr('visibility', 'hidden');
             });
         edgeHover.exit().remove();
@@ -1508,8 +1508,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(wedges, _diagram.edgeKey.eval);
         var edgeLabelsEnter = edgeLabels.enter()
               .append('text')
-                .attr('id', function(d) {
-                    return _diagram.edgeId(d) + '-label';
+                .attr('id', function(e) {
+                    return _diagram.edgeId(e) + '-label';
                 })
                 .attr('visibility', 'hidden')
                 .attr({'class':'edge-label',
@@ -1517,8 +1517,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                        dy:-2})
               .append('textPath')
                 .attr('startOffset', '50%')
-                .attr('xlink:href', function(d) {
-                    var id = _diagram.textpathId(d);
+                .attr('xlink:href', function(e) {
+                    var id = _diagram.textpathId(e);
                     // angular on firefox needs absolute paths for fragments
                     return window.location.href.split('#')[0] + '#' + id;
                 });
@@ -1544,8 +1544,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _diagram._enterNode(nodeEnter);
 
-        node.exit().each(function(d) {
-            d.deleted = true;
+        node.exit().each(function(n) {
+            n.deleted = true;
         }).transition()
             .duration(_diagram.stagedDuration())
             .delay(_diagram.deleteDelay())
@@ -1820,14 +1820,14 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke', _diagram.edgeStroke.eval)
             .attr('stroke-width', _diagram.edgeStrokeWidth.eval)
             .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
-            .attr('marker-end', function(d) {
-                var name = _diagram.edgeArrowhead.eval(d),
-                    id = edgeArrow(d, 'head', name);
+            .attr('marker-end', function(e) {
+                var name = _diagram.edgeArrowhead.eval(e),
+                    id = edgeArrow(e, 'head', name);
                 return id ? 'url(#' + id + ')' : null;
             })
-            .attr('marker-start', function(d) {
-                var name = _diagram.edgeArrowtail.eval(d),
-                    arrow_id = edgeArrow(d, 'tail', name);
+            .attr('marker-start', function(e) {
+                var name = _diagram.edgeArrowtail.eval(e),
+                    arrow_id = edgeArrow(e, 'tail', name);
                 return name ? 'url(#' + arrow_id + ')' : null;
             })
             .each(function(e) {
@@ -1935,23 +1935,23 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return path;
     }
-    function calc_edge_path(d, age, sx, sy, tx, ty) {
-        if(d.cola.points) {
+    function calc_edge_path(e, age, sx, sy, tx, ty) {
+        if(e.cola.points) {
             // just to be clear, this is not a great way to populate old/new
             // part of the problem is that currently we clear edges at start of draw
-            d.pos.new = d.pos.old = {
+            e.pos.new = e.pos.old = {
                 path: {
-                    points: d.cola.points,
+                    points: e.cola.points,
                     bezDegree: 3
                 },
-                orienthead: calculate_arrowhead_orientation(d.cola.points, 'head'),
-                orienttail: calculate_arrowhead_orientation(d.cola.points, 'tail')
+                orienthead: calculate_arrowhead_orientation(e.cola.points, 'head'),
+                orienttail: calculate_arrowhead_orientation(e.cola.points, 'tail')
             };
         }
-        else if(!d.pos[age]) {
-            var parallel = d.parallel;
-            var source = d.source, target = d.target;
-            if(parallel.edges.length > 1 && d.source.index > d.target.index) {
+        else if(!e.pos[age]) {
+            var parallel = e.parallel;
+            var source = e.source, target = e.target;
+            if(parallel.edges.length > 1 && e.source.index > e.target.index) {
                 var t;
                 t = target; target = source; source = t;
                 t = tx; tx = sx; sx = t;
@@ -1966,7 +1966,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                     port = Math.floor((p+1)/2),
                     last = port > 0 ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
-                var path = draw_edge_to_shapes(_diagram, d, sx, sy, tx, ty,
+                var path = draw_edge_to_shapes(_diagram, e, sx, sy, tx, ty,
                                               last, dir, _diagram.parallelEdgeOffset(),
                                               source_padding, target_padding
                                               );
@@ -1981,30 +1981,30 @@ dc_graph.diagram = function (parent, chartGroup) {
                 };
             }
         }
-        return d.pos[age].path;
+        return e.pos[age].path;
     }
 
-    function calc_old_edge_path(d) {
-        calc_edge_path(d, 'old', d.source.prevX || d.source.cola.x, d.source.prevY || d.source.cola.y,
-                         d.target.prevX || d.target.cola.x, d.target.prevY || d.target.cola.y);
+    function calc_old_edge_path(e) {
+        calc_edge_path(e, 'old', e.source.prevX || e.source.cola.x, e.source.prevY || e.source.cola.y,
+                         e.target.prevX || e.target.cola.x, e.target.prevY || e.target.cola.y);
     }
 
-    function calc_new_edge_path(d) {
-        var path = calc_edge_path(d, 'new', d.source.cola.x, d.source.cola.y, d.target.cola.x, d.target.cola.y);
+    function calc_new_edge_path(e) {
+        var path = calc_edge_path(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
         var spos = path.points[0], tpos = path.points[path.points.length-1];
-        d.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
+        e.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
     }
 
     function render_edge_path(age) {
-        return function(d) {
-            var path = d.pos[age].path;
+        return function(e) {
+            var path = e.pos[age].path;
             return generate_path(path.points, path.bezDegree);
         };
     }
 
     function render_edge_label_path(age) {
-        return function(d) {
-            var path = d.pos[age].path;
+        return function(e) {
+            var path = e.pos[age].path;
             var points = path.points[path.points.length-1].x < path.points[0].x ?
                     path.points.slice(0).reverse() : path.points;
             return generate_path(points, path.bezDegree);
@@ -2144,9 +2144,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             .each(function(n) {
                 nodeEntered[_diagram.nodeKey.eval(n)] = true;
             })
-            .attr('transform', function (d) {
+            .attr('transform', function (n) {
                 // start new nodes at their final position
-                return 'translate(' + d.cola.x + ',' + d.cola.y + ')';
+                return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
             });
         var ntrans = node
                 .transition()
@@ -2157,18 +2157,18 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('opacity', _diagram.nodeOpacity.eval);
         if(animatePositions)
             ntrans
-                .attr('transform', function (d) {
-                    return 'translate(' + d.cola.x + ',' + d.cola.y + ')';
+                .attr('transform', function (n) {
+                    return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
                 })
-                .each('end.record', function(d) {
-                    d.prevX = d.cola.x;
-                    d.prevY = d.cola.y;
+                .each('end.record', function(n) {
+                    n.prevX = n.cola.x;
+                    n.prevY = n.cola.y;
                 });
 
         // reset edge ports
-        edge.each(function(d) {
-            d.pos.new = null;
-            d.pos.old = null;
+        edge.each(function(e) {
+            e.pos.new = null;
+            e.pos.old = null;
         });
 
         var edgeEntered = {};
@@ -2233,8 +2233,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 });
         edgeLabels
           .selectAll('textPath')
-            .text(function(d){
-                return _diagram.edgeLabel.eval(d);
+            .text(function(e){
+                return _diagram.edgeLabel.eval(e);
             });
         textPathsEnter
             .attr('d', render_edge_label_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
@@ -2567,8 +2567,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         return selEnter;
     };
 
-    function edgeArrow(d, kind, name) {
-        var id = _diagram.arrowId(d, kind),
+    function edgeArrow(e, kind, name) {
+        var id = _diagram.arrowId(e, kind),
             markerEnter = _diagram.addOrRemoveDef(id, !!name, 'svg:marker');
 
         if(name) {
@@ -2577,10 +2577,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('refX', _arrows[name].refX)
                 .attr('refY', _arrows[name].refY)
                 .attr('markerUnits', 'userSpaceOnUse')
-                .attr('markerWidth', _arrows[name].width*_diagram.edgeArrowSize.eval(d))
-                .attr('markerHeight', _arrows[name].height*_diagram.edgeArrowSize.eval(d))
-                .attr('stroke', _diagram.edgeStroke.eval(d))
-                .attr('fill', _diagram.edgeStroke.eval(d))
+                .attr('markerWidth', _arrows[name].width*_diagram.edgeArrowSize.eval(e))
+                .attr('markerHeight', _arrows[name].height*_diagram.edgeArrowSize.eval(e))
+                .attr('stroke', _diagram.edgeStroke.eval(e))
+                .attr('fill', _diagram.edgeStroke.eval(e))
                 .call(_arrows[name].drawFunction);
         }
         return name ? id : null;

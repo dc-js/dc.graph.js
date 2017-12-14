@@ -28,10 +28,10 @@ dc_graph.draw_graphs = function(options) {
             });
 
         line.attr({
-            x1: function(d) { return d.source.x; },
-            y1: function(d) { return d.source.y; },
-            x2: function(d) { return d.target.x; },
-            y2: function(d) { return d.target.y; }
+            x1: function(n) { return n.source.x; },
+            y1: function(n) { return n.source.y; },
+            x2: function(n) { return n.target.x; },
+            y2: function(n) { return n.target.y; }
         });
     }
 
@@ -96,7 +96,7 @@ dc_graph.draw_graphs = function(options) {
                 select_nodes.clickBackgroundClears(false);
         }
         node
-            .on('mousedown.draw-graphs', function(d) {
+            .on('mousedown.draw-graphs', function(n) {
                 d3.event.stopPropagation();
                 if(!_behavior.dragCreatesEdges())
                     return;
@@ -104,14 +104,14 @@ dc_graph.draw_graphs = function(options) {
                     var activePort;
                     if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
                         activePort = _behavior.usePorts().eventPort();
-                    else activePort = diagram.getPort(diagram.nodeKey.eval(d), null, 'out')
-                        || diagram.getPort(diagram.nodeKey.eval(d), null, 'in');
+                    else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'out')
+                        || diagram.getPort(diagram.nodeKey.eval(n), null, 'in');
                     if(!activePort)
                         return;
-                    _sourceDown = {node: d, port: activePort};
-                    _hintData = [{source: {x: d.cola.x + activePort.pos.x, y: d.cola.y + activePort.pos.y}}];
+                    _sourceDown = {node: n, port: activePort};
+                    _hintData = [{source: {x: n.cola.x + activePort.pos.x, y: n.cola.y + activePort.pos.y}}];
                 } else {
-                    _sourceDown = {node: d};
+                    _sourceDown = {node: n};
                     _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
                 }
                 if(_behavior.conduct().startDragEdge) {
@@ -119,11 +119,11 @@ dc_graph.draw_graphs = function(options) {
                         erase_hint();
                 }
             })
-            .on('mousemove.draw-graphs', function(d) {
+            .on('mousemove.draw-graphs', function(n) {
                 d3.event.stopPropagation();
                 if(_sourceDown) {
                     var oldTarget = _targetMove;
-                    if(d === _sourceDown.node) {
+                    if(n === _sourceDown.node) {
                         _targetMove = null;
                         _hintData[0].target = null;
                     }
@@ -131,14 +131,14 @@ dc_graph.draw_graphs = function(options) {
                         var activePort;
                         if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
                             activePort = _behavior.usePorts().eventPort();
-                        else activePort = diagram.getPort(diagram.nodeKey.eval(d), null, 'in')
-                            || diagram.getPort(diagram.nodeKey.eval(d), null, 'out');
+                        else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'in')
+                            || diagram.getPort(diagram.nodeKey.eval(n), null, 'out');
                         if(activePort)
-                            _targetMove = {node: d, port: activePort};
+                            _targetMove = {node: n, port: activePort};
                         else
                             _targetMove = null;
-                    } else if(!_targetMove || d !== _targetMove.node) {
-                        _targetMove = {node: d};
+                    } else if(!_targetMove || n !== _targetMove.node) {
+                        _targetMove = {node: n};
                     }
                     if(_behavior.conduct().changeDragTarget) {
                         var change;
@@ -156,9 +156,9 @@ dc_graph.draw_graphs = function(options) {
                     }
                     if(_targetMove) {
                         if(_targetMove.port)
-                            _hintData[0].target = {x: d.cola.x + activePort.pos.x, y: d.cola.y + activePort.pos.y};
+                            _hintData[0].target = {x: n.cola.x + activePort.pos.x, y: n.cola.y + activePort.pos.y};
                         else
-                            _hintData[0].target = {x: d.cola.x, y: d.cola.y};
+                            _hintData[0].target = {x: n.cola.x, y: n.cola.y};
                     }
                     else {
                         var coords = dc_graph.event_coords(diagram);
@@ -167,7 +167,7 @@ dc_graph.draw_graphs = function(options) {
                     update_hint();
                 }
             })
-            .on('mouseup.draw-graphs', function(d) {
+            .on('mouseup.draw-graphs', function(n) {
                 // allow keyboard mode to hear this one (again, we need better cooperation)
                 // d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
