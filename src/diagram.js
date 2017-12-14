@@ -231,10 +231,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Set or get the crossfilter dimension which represents the nodes (vertices) in the
      * diagram. Typically there will be a crossfilter instance for the nodes, and another for
      * the edges.
-
-     * *The node dimension currently does nothing, but once selection is supported, it will be
-     * used for filtering other charts on the same crossfilter instance based on the nodes
-     * selected.*
+     *
+     * *Dimensions are included on the diagram for similarity to dc.js, however the diagram
+     * itself does not use them - but {@link dc_graph.filter_selection filter_selection} will.*
      * @method nodeDimension
      * @memberof dc_graph.diagram
      * @instance
@@ -249,10 +248,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * diagram. The diagram will use the group's `.all()` method to get an array of `{key,
      * value}` pairs, where the key is a unique identifier, and the value is usually an object
      * containing the node's attributes. All accessors work with these key/value pairs.
-
+     *
      * If the group is changed or returns different values, the next call to `.redraw()` will
      * reflect the changes incrementally.
-
+     *
      * It is possible to pass another object with the same `.all()` interface instead of a
      * crossfilter group.
      * @method nodeGroup
@@ -268,11 +267,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Set or get the crossfilter dimension which represents the edges in the
      * diagram. Typically there will be a crossfilter instance for the nodes, and another for
      * the edges.
-
-     * *The edge dimension currently does nothing, but once selection is supported, it will be
-     * used for filtering other charts on the same crossfilter instance based on the edges
-     * selected.*
-
+     *
+     * *Dimensions are included on the diagram for similarity to dc.js, however the diagram
+     * itself does not use them - but {@link dc_graph.filter_selection filter_selection} will.*
      * @method edgeDimension
      * @memberof dc_graph.diagram
      * @instance
@@ -285,12 +282,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the crossfilter group which is the data source for the edges in the
      * diagram. See `.nodeGroup` above for the way data is loaded from a crossfilter group.
-
+     *
      * The values in the key/value pairs returned by `diagram.edgeGroup().all()` need to
      * support, at a minimum, the {@link dc_graph.diagram#nodeSource nodeSource} and
      * {@link dc_graph.diagram#nodeTarget nodeTarget}, which should return the same
      * keys as the {@link dc_graph.diagram#nodeKey nodeKey}
-
+     *
      * @method edgeGroup
      * @memberof dc_graph.diagram
      * @instance
@@ -307,7 +304,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * default, this accesses the `key` field of the object passed to it. The keys should match
      * the keys returned by the {@link dc_graph.diagram#edgeSource edgeSource} and
      * {@link dc_graph.diagram#edgeTarget edgeTarget}.
-
+     *
      * @method nodeKey
      * @memberof dc_graph.diagram
      * @instance
@@ -322,7 +319,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     /**
      * Set or get the function which will be used to retrieve the unique key for each edge. By
      * default, this accesses the `key` field of the object passed to it.
-
+     *
      * @method edgeKey
      * @memberof dc_graph.diagram
      * @instance
@@ -339,7 +336,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * the edge objects.  The key must equal the key returned by the `.nodeKey` for one of the
      * nodes; if it does not, or if the node is currently filtered out, the edge will not be
      * displayed. By default, looks for `.value.sourcename`.
-
+     *
      * @method edgeSource
      * @memberof dc_graph.diagram
      * @instance
@@ -870,13 +867,13 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Gets or sets a function which will be called with the current nodes and edges on each
      * redraw in order to derive new layout constraints. The constraints are built from scratch
      * on each redraw.
-
+     *
      * This can be used to generate alignment (rank) or axis constraints. By default, no
      * constraints will be added, although cola.js uses constraints internally to implement
      * flow and overlap prevention. See
      * {@link https://github.com/tgdwyer/WebCola/wiki/Constraints the cola.js wiki}
      * for more details.
-
+     *
      * For convenience, dc.graph.js implements a other constraints on top of those implemented
      * by cola.js:
      * * 'ordering' - the nodes will be ordered on the specified `axis` according to the keys
@@ -919,7 +916,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * By default, edges are added to the layout in the order that `.edgeGroup().all()` returns
      * them. If specified, `.edgeOrdering` provides an accessor that returns a key to sort the
      * edges on.
-
+     *
      * *It would be better not to rely on ordering to affect layout, but it may affect the
      * layout in some cases. (Probably less than node ordering, but it does affect which
      * parallel edge is which.)*
@@ -1280,10 +1277,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * displays the diagram.  To the extent possible, the diagram will minimize changes in
      * positions from the previous layout.  `.render()` must be called the first time, and
      * `.redraw()` can be called after that.
-
+     *
      * `.redraw()` will be triggered by changes to the filters in any other charts in the same
      * dc.js chart group.
-
+     *
      * Unlike in dc.js, `redraw` executes asynchronously, because drawing can be computationally
      * intensive, and the diagram will be drawn multiple times if
      * {@link #dc_graph.diagram+showLayoutSteps showLayoutSteps}
@@ -2389,11 +2386,11 @@ dc_graph.diagram = function (parent, chartGroup) {
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Selects all elements that match the d3 single selector in the diagram's scope,
      * and return the d3 selection. Roughly the same as
-
+     *
      * ```js
      * d3.select('#diagram-id').selectAll(selector)
      * ```
-
+     *
      * Since this function returns a d3 selection, it is not chainable. (However, d3 selection
      * calls can be chained after it.)
      * @method selectAll
@@ -2523,9 +2520,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      * the marker is `0 -5 10 10`, so the arrow should be drawn from (0, -5) to (10, 5); it
      * will be moved and sized based on the other parameters, and rotated based on the
      * orientation of the edge.
-
+     *
      * (If further customization is required, it is possible to append other `svg:defs` to
-     * `chart.svg()` and use refer to them by `id`.)
+     * `diagram.svg()` and use refer to them by `id`.)
      * @method defineArrow
      * @memberof dc_graph.diagram
      * @instance
