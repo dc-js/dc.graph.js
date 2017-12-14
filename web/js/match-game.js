@@ -146,10 +146,10 @@ diagram.child('select-edges', select_edges);
 
 var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
 var delete_edges = dc_graph.delete_things(select_edges_group, 'delete-edges', 'id')
-        .crossfilterAccessor(function(chart) {
+        .crossfilterAccessor(function(diagram) {
             return edge_flat.crossfilter;
         })
-        .dimensionAccessor(function(chart) {
+        .dimensionAccessor(function(diagram) {
             return diagram.edgeDimension();
         });
 diagram.child('delete-edges', delete_edges);

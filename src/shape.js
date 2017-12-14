@@ -162,36 +162,36 @@ dc_graph.available_shapes = function() {
 
 var default_shape = {shape: 'ellipse'};
 
-function elaborate_shape(chart, def) {
+function elaborate_shape(diagram, def) {
     if(typeof def === 'string') def = {shape: def};
     var shape = def.shape, def2 = Object.assign({}, def);
     delete def2.shape;
     if(shape === 'random') {
-        var available = dc_graph.available_shapes(); // could include chart.shape !== ellipse, polygon
+        var available = dc_graph.available_shapes(); // could include diagram.shape !== ellipse, polygon
         shape = available[Math.floor(Math.random()*available.length)];
     }
-    else if(chart.shape.enum().indexOf(shape) !== -1)
-        return chart.shape(shape).elaborate({shape: shape}, def2);
+    else if(diagram.shape.enum().indexOf(shape) !== -1)
+        return diagram.shape(shape).elaborate({shape: shape}, def2);
     if(!dc_graph.shape_presets[shape]) {
         console.warn('unknown shape ', shape);
         shape = 'rectangle';
     }
     var preset = dc_graph.shape_presets[shape].preset(def2);
     preset.shape = dc_graph.shape_presets[shape].generator;
-    return chart.shape(preset.shape).elaborate(preset, def2);
+    return diagram.shape(preset.shape).elaborate(preset, def2);
 }
 
-function infer_shape(chart) {
+function infer_shape(diagram) {
     return function(d) {
-        var def = chart.nodeShape.eval(d) || default_shape;
-        d.dcg_shape = elaborate_shape(chart, def);
+        var def = diagram.nodeShape.eval(d) || default_shape;
+        d.dcg_shape = elaborate_shape(diagram, def);
         d.dcg_shape.abstract = def;
     };
 }
 
-function shape_changed(chart) {
+function shape_changed(diagram) {
     return function(d) {
-        var def = chart.nodeShape.eval(d) || default_shape;
+        var def = diagram.nodeShape.eval(d) || default_shape;
         var old = d.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
@@ -203,19 +203,19 @@ function shape_changed(chart) {
     };
 }
 
-function fit_shape(shape, chart) {
+function fit_shape(shape, diagram) {
     return function(text) {
         text.each(function(d) {
             var bbox = null;
-            if((!shape.useTextSize || shape.useTextSize(d.dcg_shape)) && chart.nodeFitLabel.eval(d)) {
+            if((!shape.useTextSize || shape.useTextSize(d.dcg_shape)) && diagram.nodeFitLabel.eval(d)) {
                 bbox = this.getBBox();
                 bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                 var padding;
-                var content = chart.nodeContent.eval(d);
-                if(content && chart.content(content).padding)
-                    padding = chart.content(content).padding(d);
+                var content = diagram.nodeContent.eval(d);
+                if(content && diagram.content(content).padding)
+                    padding = diagram.content(content).padding(d);
                 else {
-                    var padding2 = chart.nodeLabelPadding.eval(d);
+                    var padding2 = diagram.nodeLabelPadding.eval(d);
                     padding = {
                         x: padding2.x*2,
                         y: padding2.y*2
@@ -227,7 +227,7 @@ function fit_shape(shape, chart) {
             }
             var r = 0, radii;
             if(!shape.useRadius || shape.useRadius(d.dcg_shape))
-                r = chart.nodeRadius.eval(d);
+                r = diagram.nodeRadius.eval(d);
             if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize(d.dcg_shape))
                 radii = shape.calc_radii(d, r, bbox);
             else
@@ -242,7 +242,7 @@ function fit_shape(shape, chart) {
             if(w<h) w = h;
 
             if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke(d.dcg_shape)) {
-                var pands = chart.nodePadding.eval(d) + chart.nodeStrokeWidth.eval(d);
+                var pands = diagram.nodePadding.eval(d) + diagram.nodeStrokeWidth.eval(d);
                 w += pands;
                 h += pands;
             }
@@ -252,14 +252,14 @@ function fit_shape(shape, chart) {
     };
 }
 
-function ellipse_attrs(chart) {
+function ellipse_attrs(diagram) {
     return {
         rx: function(d) { return d.dcg_rx; },
         ry: function(d) { return d.dcg_ry; }
     };
 }
 
-function polygon_attrs(chart, d) {
+function polygon_attrs(diagram, d) {
     return {
         d: function(d) {
             var rx = d.dcg_rx, ry = d.dcg_ry,
@@ -314,7 +314,7 @@ function binary_search(f, a, b) {
     }
 }
 
-function draw_edge_to_shapes(chart, e, sx, sy, tx, ty,
+function draw_edge_to_shapes(diagram, e, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
         sp, tp, points, bezDegree,
@@ -326,8 +326,8 @@ function draw_edge_to_shapes(chart, e, sx, sy, tx, ty,
         console.assert(tp);
         // deltaX = tx - sx;
         // deltaY = ty - sy;
-        // sp = chart.shape(e.source.dcg_shape.shape).intersect_vec(e.source, deltaX, deltaY);
-        // tp = chart.shape(e.target.dcg_shape.shape).intersect_vec(e.target, -deltaX, -deltaY);
+        // sp = diagram.shape(e.source.dcg_shape.shape).intersect_vec(e.source, deltaX, deltaY);
+        // tp = diagram.shape(e.target.dcg_shape.shape).intersect_vec(e.target, -deltaX, -deltaY);
         // if(!sp) sp = {x: 0, y: 0};
         // if(!tp) tp = {x: 0, y: 0};
         points = [{
@@ -341,7 +341,7 @@ function draw_edge_to_shapes(chart, e, sx, sy, tx, ty,
     }
     else {
         var p_on_s = function(node, ang) {
-            return chart.shape(node.dcg_shape.shape).intersect_vec(node, Math.cos(ang)*1000, Math.sin(ang)*1000);
+            return diagram.shape(node.dcg_shape.shape).intersect_vec(node, Math.cos(ang)*1000, Math.sin(ang)*1000);
         };
         var compare_dist = function(node, port0, goal) {
             return function(ang) {

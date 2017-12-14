@@ -41,7 +41,7 @@ dc_graph.draw_graphs = function(options) {
         update_hint();
     }
 
-    function create_node(chart, pos, data) {
+    function create_node(diagram, pos, data) {
         if(!_behavior.nodeCrossfilter())
             throw new Error('need nodeCrossfilter');
         var node, callback = _behavior.addNode() || promise_identity;
@@ -58,12 +58,12 @@ dc_graph.draw_graphs = function(options) {
             if(!node2)
                 return;
             _behavior.nodeCrossfilter().add([node2]);
-            chart.redrawGroup();
+            diagram.redrawGroup();
             select_nodes_group.set_changed([node2[_nodeIdTag]]);
         });
     }
 
-    function create_edge(chart, source, target) {
+    function create_edge(diagram, source, target) {
         if(!_behavior.edgeCrossfilter())
             throw new Error('need edgeCrossfilter');
         var edge = {}, callback = _behavior.addEdge() || promise_identity;
@@ -85,12 +85,12 @@ dc_graph.draw_graphs = function(options) {
             _behavior.edgeCrossfilter().add([edge2]);
             select_nodes_group.set_changed([], false);
             select_edges_group.set_changed([edge2[_edgeIdTag]], false);
-            chart.redrawGroup();
+            diagram.redrawGroup();
         });
     }
 
-    function add_behavior(chart, node, edge, ehover) {
-        var select_nodes = chart.child('select-nodes');
+    function add_behavior(diagram, node, edge, ehover) {
+        var select_nodes = diagram.child('select-nodes');
         if(select_nodes) {
             if(_behavior.clickCreatesNodes())
                 select_nodes.clickBackgroundClears(false);
@@ -104,8 +104,8 @@ dc_graph.draw_graphs = function(options) {
                     var activePort;
                     if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
                         activePort = _behavior.usePorts().eventPort();
-                    else activePort = chart.getPort(chart.nodeKey.eval(d), null, 'out')
-                        || chart.getPort(chart.nodeKey.eval(d), null, 'in');
+                    else activePort = diagram.getPort(diagram.nodeKey.eval(d), null, 'out')
+                        || diagram.getPort(diagram.nodeKey.eval(d), null, 'in');
                     if(!activePort)
                         return;
                     _sourceDown = {node: d, port: activePort};
@@ -131,8 +131,8 @@ dc_graph.draw_graphs = function(options) {
                         var activePort;
                         if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
                             activePort = _behavior.usePorts().eventPort();
-                        else activePort = chart.getPort(chart.nodeKey.eval(d), null, 'in')
-                            || chart.getPort(chart.nodeKey.eval(d), null, 'out');
+                        else activePort = diagram.getPort(diagram.nodeKey.eval(d), null, 'in')
+                            || diagram.getPort(diagram.nodeKey.eval(d), null, 'out');
                         if(activePort)
                             _targetMove = {node: d, port: activePort};
                         else
@@ -161,7 +161,7 @@ dc_graph.draw_graphs = function(options) {
                             _hintData[0].target = {x: d.cola.x, y: d.cola.y};
                     }
                     else {
-                        var coords = dc_graph.event_coords(chart);
+                        var coords = dc_graph.event_coords(diagram);
                         _hintData[0].target = {x: coords[0], y: coords[1]};
                     }
                     update_hint();
@@ -178,7 +178,7 @@ dc_graph.draw_graphs = function(options) {
                     var source = _sourceDown, target = _targetMove;
                     finishPromise.then(function(ok) {
                         if(ok)
-                            create_edge(chart, source, target);
+                            create_edge(diagram, source, target);
                     });
                 }
                 else if(_sourceDown) {
@@ -187,14 +187,14 @@ dc_graph.draw_graphs = function(options) {
                 }
                 erase_hint();
             });
-        chart.svg()
+        diagram.svg()
             .on('mousedown.draw-graphs', function() {
                 _sourceDown = null;
             })
             .on('mousemove.draw-graphs', function() {
                 var data = [];
                 if(_sourceDown) { // drawing edge
-                    var coords = dc_graph.event_coords(chart);
+                    var coords = dc_graph.event_coords(diagram);
                     if(_behavior.conduct().dragCanvas)
                         _behavior.conduct().dragCanvas(_sourceDown, coords);
                     if(_behavior.conduct().changeDragTarget && _targetMove)
@@ -211,19 +211,19 @@ dc_graph.draw_graphs = function(options) {
                     erase_hint();
                 } else { // click-node
                     if(d3.event.target === this && _behavior.clickCreatesNodes())
-                        create_node(chart, dc_graph.event_coords(chart));
+                        create_node(diagram, dc_graph.event_coords(diagram));
                 }
             });
         if(!_edgeLayer)
-            _edgeLayer = chart.g().append('g').attr('class', 'draw-graphs');
+            _edgeLayer = diagram.g().append('g').attr('class', 'draw-graphs');
     }
 
-    function remove_behavior(chart, node, edge, ehover) {
+    function remove_behavior(diagram, node, edge, ehover) {
         node
             .on('mousedown.draw-graphs', null)
             .on('mousemove.draw-graphs', null)
             .on('mouseup.draw-graphs', null);
-        chart.svg()
+        diagram.svg()
             .on('mousedown.draw-graphs', null)
             .on('mousemove.draw-graphs', null)
             .on('mouseup.draw-graphs', null);

@@ -39,13 +39,13 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
             return true;
         });
     }
-    function add_behavior(chart) {
+    function add_behavior(diagram) {
         _keyboard.on('keyup.' + mode_name, function() {
             if(d3.event.code === _deleteKey)
                 delete_selection();
         });
     }
-    function remove_behavior(chart) {
+    function remove_behavior(diagram) {
     }
     var _behavior = dc_graph.behavior(mode_name, {
         add_behavior: add_behavior,

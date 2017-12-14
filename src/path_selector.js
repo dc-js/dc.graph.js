@@ -120,4 +120,4 @@ dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
     };
     dc.registerChart(selector, chartgroup);
     return selector;
-}
+};

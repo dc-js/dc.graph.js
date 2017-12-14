@@ -1,9 +1,9 @@
 dc_graph.troubleshoot = function() {
     var _debugLayer = null;
 
-    function add_behavior(chart, node, edge, ehover) {
+    function add_behavior(diagram, node, edge, ehover) {
         if(!_debugLayer)
-            _debugLayer = chart.g().append('g').attr({
+            _debugLayer = diagram.g().append('g').attr({
                 class: 'draw-graphs',
                 'pointer-events': 'none'
             });
@@ -79,7 +79,7 @@ dc_graph.troubleshoot = function() {
         });
     }
 
-    function remove_behavior(chart, node, edge, ehover) {
+    function remove_behavior(diagram, node, edge, ehover) {
         if(_debugLayer)
             _debugLayer.remove();
     }

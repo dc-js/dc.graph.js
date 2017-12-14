@@ -8,25 +8,25 @@ dc_graph.behavior = function(event_namespace, options) {
      **/
     _behavior.parent = property(null)
         .react(function(p) {
-            var chart;
+            var diagram;
             if(p) {
                 var first = true;
-                chart = p;
+                diagram = p;
                 p.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
-                    options.add_behavior(chart, node, edge, ehover);
+                    options.add_behavior(diagram, node, edge, ehover);
                     if(first && options.first) {
-                        options.first(chart, node, edge, ehover);
+                        options.first(diagram, node, edge, ehover);
                         first = false;
                     }
                     else if(options.rest)
-                        options.rest(chart, node, edge, ehover);
+                        options.rest(diagram, node, edge, ehover);
                 });
             }
             else if(_behavior.parent()) {
-                chart = _behavior.parent();
-                chart.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
-                    options.remove_behavior(chart, node, edge, ehover);
-                    chart.on(_eventName + '.' + event_namespace, null);
+                diagram = _behavior.parent();
+                diagram.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
+                    options.remove_behavior(diagram, node, edge, ehover);
+                    diagram.on(_eventName + '.' + event_namespace, null);
                 });
             }
             options.parent && options.parent(p);

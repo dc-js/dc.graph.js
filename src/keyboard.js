@@ -7,8 +7,8 @@ dc_graph.keyboard = function() {
     function keyup() {
         _dispatch.keyup();
     }
-    function add_behavior(chart) {
-        _input_anchor = chart.svg().selectAll('a#dcgraph-keyboard').data([1]);
+    function add_behavior(diagram) {
+        _input_anchor = diagram.svg().selectAll('a#dcgraph-keyboard').data([1]);
         _input_anchor.enter()
             .insert('a', ':first-child').attr({
                 id: 'dcgraph-keyboard',
@@ -18,11 +18,11 @@ dc_graph.keyboard = function() {
         _input_anchor.on('keyup.keyboard', keyup);
 
         // grab focus whenever svg is interacted with (?)
-        chart.svg().on('mouseup.keyboard', function() {
+        diagram.svg().on('mouseup.keyboard', function() {
             _behavior.focus();
         });
     }
-    function remove_behavior(chart) {
+    function remove_behavior(diagram) {
         _input_anchor.remove();
     }
     var _behavior = dc_graph.behavior('brush', {

@@ -12,16 +12,16 @@ dc_graph.brush = function() {
         _dispatch.brushend();
         _gBrush.call(_brush.clear());
     }
-    function install_brush(chart) {
+    function install_brush(diagram) {
         if(!_brush) {
             _brush = d3.svg.brush()
-                .x(chart.x()).y(chart.y())
+                .x(diagram.x()).y(diagram.y())
                 .on('brushstart', brushstart)
                 .on('brush', brushmove)
                 .on('brushend', brushend);
         }
         if(!_gBrush) {
-            _gBrush = chart.svg().insert('g', ':first-child')
+            _gBrush = diagram.svg().insert('g', ':first-child')
                 .attr('class', 'brush')
                 .call(_brush);
         }
