@@ -145,7 +145,7 @@ dc_graph.symbol_port_style = function() {
                 }
             });
 
-        function text_showing(d) {
+        function text_showing(p) {
             return p.state === 'large' || p.state === 'medium';
         }
         trans.selectAll('text.port-label')
