@@ -1,6 +1,11 @@
-## 0.5 alpha 2
+## 0.6 alpha 2
 * use specific n, e, p parameter names for datum, instead of d
 * stop using the word chart, these are diagrams
+* brush and modkey-zoom are mutually exclusive instead of both happening at once ([#56](https://github.com/dc-js/dc.graph.js/issues/56))
+
+## 0.6 alpha 1
+* generalize `altKeyZoom` to `modKeyZoom`, by Lefteris Koutsofios ([#65](https://github.com/dc-js/dc.graph.js/pull/65))
+* reverse orientation of arrow tails, so that the same arrow spec can be used for both (Ibid)
 
 # 0.6
 * ports are specific positions on nodes where edges can connect, placed manually or automatically, and they can have shapes and symbols in them. named ports allow multiple edges to connect to the same spot; anonymous ports are specific to one edge but can still be styled
@@ -28,7 +33,8 @@
 * fix apparent chrome optimization bug - the result of `Math.floor` should never be undefined
 
 ## 0.5.3
-* `select_nodes` mode also disable modifier keys when `multipleSelect` is disable
+* `select_nodes` mode also disable modifier keys when `multipleSelect` is disabled
+
 ## 0.5.2
 * graphviz edge routing
 * warn, don't die, if deprecated engine parameter called on diagram and engine doesn't support it
