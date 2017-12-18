@@ -12,7 +12,7 @@ dc_graph.move_nodes = function(options) {
         return is_a_mac ? event.metaKey : event.ctrlKey;
     }
 
-    function selection_changed(chart) {
+    function selection_changed(diagram) {
         return function(selection, refresh) {
             if(refresh === undefined)
                 refresh = true;
@@ -25,16 +25,16 @@ dc_graph.move_nodes = function(options) {
             f(n, key);
         });
     }
-    function add_behavior(chart, node, edge) {
-        node.on('mousedown.move-nodes', function(d) {
+    function add_behavior(diagram, node, edge) {
+        node.on('mousedown.move-nodes', function(n) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
                 return;
-            _startPos = dc_graph.event_coords(chart);
+            _startPos = dc_graph.event_coords(diagram);
             _downNode = d3.select(this);
             // if the node under the mouse is not in the selection, need to
             // make that node selected
-            var key = chart.nodeKey.eval(d);
+            var key = diagram.nodeKey.eval(n);
             if(_selected.indexOf(key)<0)
                 select_nodes_group.set_changed([key]);
             for_each_selected(function(n) {
@@ -45,7 +45,7 @@ dc_graph.move_nodes = function(options) {
         });
         function mouse_move() {
             if(_startPos) {
-                var pos = dc_graph.event_coords(chart);
+                var pos = dc_graph.event_coords(diagram);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
                 if(!_moveStarted && Math.hypot(dx, dy) > _behavior.dragSize()) {
@@ -59,7 +59,7 @@ dc_graph.move_nodes = function(options) {
                         n.cola.x = n.original_position[0] + dx;
                         n.cola.y = n.original_position[1] + dy;
                     });
-                    chart.reposition(node, edge);
+                    diagram.reposition(node, edge);
                 }
             }
         }
@@ -86,12 +86,12 @@ dc_graph.move_nodes = function(options) {
         node
             .on('mousemove.move-nodes', mouse_move)
             .on('mouseup.move-nodes', mouse_up);
-        chart.svg()
+        diagram.svg()
             .on('mousemove.move-nodes', mouse_move)
             .on('mouseup.move-nodes', mouse_up);
     }
 
-    function remove_behavior(chart, node, edge) {
+    function remove_behavior(diagram, node, edge) {
         node.on('mousedown.move-nodes', null);
         node.on('mousemove.move-nodes', null);
         node.on('mouseup.move-nodes', null);

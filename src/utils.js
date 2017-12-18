@@ -188,9 +188,9 @@ var script_path = function() {
     };
 }();
 
-dc_graph.event_coords = function(chart) {
-    var bound = chart.root().node().getBoundingClientRect();
-    return chart.invertCoord([d3.event.clientX - bound.left,
+dc_graph.event_coords = function(diagram) {
+    var bound = diagram.root().node().getBoundingClientRect();
+    return diagram.invertCoord([d3.event.clientX - bound.left,
                               d3.event.clientY - bound.top]);
 };
 

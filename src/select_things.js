@@ -29,21 +29,21 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         return contains(array, key) ? array.filter(function(x) { return x != key; }) : array.concat([key]);
     }
 
-    function selection_changed(chart) {
+    function selection_changed(diagram) {
         return function(selection, refresh) {
             if(refresh === undefined)
                 refresh = true;
             _selected = selection;
             if(refresh)
-                chart.refresh();
+                diagram.refresh();
         };
     }
     var _have_bce = false;
-    function background_click_event(chart, v) {
+    function background_click_event(diagram, v) {
         // we seem to have nodes-background interrupting edges-background by reinstalling uselessly
         if(_have_bce === v)
             return;
-        chart.svg().on('click.' + things_name, v ? function(d) {
+        diagram.svg().on('click.' + things_name, v ? function(t) {
             if(d3.event.target === this)
                 things_group.set_changed([]);
         } : null);
@@ -69,7 +69,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         things_group.set_changed(newSelected);
     }
 
-    function add_behavior(chart, node, edge) {
+    function add_behavior(diagram, node, edge) {
         var condition = _behavior.noneIsAll() ? function(t) {
             return !_selected.length || contains(_selected, thinginess.key(t));
         } : function(t) {
@@ -77,18 +77,18 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         };
         thinginess.applyStyles(condition);
 
-        thinginess.clickables(chart, node, edge).on('mousedown.' + things_name, function(d) {
-            _mousedownThing = d;
+        thinginess.clickables(diagram, node, edge).on('mousedown.' + things_name, function(t) {
+            _mousedownThing = t;
         });
 
-        thinginess.clickables(chart, node, edge).on('mouseup.' + things_name, function(d) {
+        thinginess.clickables(diagram, node, edge).on('mouseup.' + things_name, function(t) {
             if(thinginess.excludeClick && thinginess.excludeClick(d3.event.target))
                 return;
             // it's only a click if the same target was mousedown & mouseup
             // but we can't use click event because things may have been reordered
-            if(_mousedownThing !== d)
+            if(_mousedownThing !== t)
                 return;
-            var key = thinginess.key(d), newSelected;
+            var key = thinginess.key(t), newSelected;
             if(_behavior.multipleSelect()) {
                 if(isUnion(d3.event))
                     newSelected = add_array(_selected, key);
@@ -101,24 +101,24 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         });
 
         if(_behavior.multipleSelect()) {
-            var brush_mode = chart.child('brush');
+            var brush_mode = diagram.child('brush');
             brush_mode.activate();
         }
         else
-            background_click_event(chart, _behavior.clickBackgroundClears());
+            background_click_event(diagram, _behavior.clickBackgroundClears());
 
         if(_behavior.autoCropSelection()) {
             // drop any selected which no longer exist in the diagram
-            var present = thinginess.clickables(chart, node, edge).data().map(thinginess.key);
+            var present = thinginess.clickables(diagram, node, edge).data().map(thinginess.key);
             var now_selected = _selected.filter(function(k) { return contains(present, k); });
             if(_selected.length !== now_selected.length)
                 things_group.set_changed(now_selected, false);
         }
     }
 
-    function remove_behavior(chart, node, edge) {
-        thinginess.clickables(chart, node, edge).on('click.' + things_name, null);
-        chart.svg().on('click.' + things_name, null);
+    function remove_behavior(diagram, node, edge) {
+        thinginess.clickables(diagram, node, edge).on('click.' + things_name, null);
+        diagram.svg().on('click.' + things_name, null);
         thinginess.removeStyles();
     }
 
@@ -149,7 +149,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
     _behavior.noneIsAll = property(false);
     // if you're replacing the data, you probably want the selection not to be preserved when a thing
     // with the same key re-appears later (true). however, if you're filtering dc.js-style, you
-    // probably want filters to be independent between charts (false)
+    // probably want filters to be independent between diagrams (false)
     _behavior.autoCropSelection = property(true);
     // if you want to do the cool things select_things can do
     _behavior.thinginess = function() {

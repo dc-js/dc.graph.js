@@ -1,10 +1,16 @@
 function port_name(nodeId, edgeId, portName) {
     if(!(nodeId || edgeId))
         return null; // must have one key or the other
+    if(nodeId) nodeId = nodeId.replace(/\//g, '%2F');
+    if(edgeId) edgeId = edgeId.replace(/\//g, '%2F');
     return (nodeId ? 'node/' + nodeId : 'edge/' + edgeId) + '/' + portName;
 };
 function split_port_name(portname) {
     var parts = portname.split('/');
+    console.assert(parts.length === 3);
+    parts = parts.map(function(p) {
+        return p.replace(/%2F/g, '/');
+    });
     if(parts[0] === 'node')
         return {
             nodeKey: parts[1],

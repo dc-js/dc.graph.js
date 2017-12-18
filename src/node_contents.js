@@ -3,7 +3,7 @@ dc_graph.text_contents = function() {
         parent: property(null),
         update: function(container) {
             var text = container.selectAll('text.node-label')
-                    .data(function(d) { return [d]; });
+                    .data(function(n) { return [n]; });
             text.enter().append('text')
                 .attr('class', 'node-label');
             var tspan = text.selectAll('tspan').data(function(n) {
@@ -73,8 +73,8 @@ dc_graph.with_icon_contents = function(contents, width, height) {
         parent: property(null).react(function(parent) {
             contents.parent(parent);
         }),
-        padding: function(d) {
-            var padding = _contents.parent().nodeLabelPadding.eval(d);
+        padding: function(n) {
+            var padding = _contents.parent().nodeLabelPadding.eval(n);
             return {
                 x: padding.x * 3,
                 y: padding.y * 3
@@ -82,7 +82,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
         },
         update: function(container) {
             var g = container.selectAll('g.with-icon')
-                    .data(function(d) { return [d]; });
+                    .data(function(n) { return [n]; });
             var gEnter = g.enter();
             gEnter.append('g')
                 .attr('class', 'with-icon')
@@ -96,9 +96,9 @@ dc_graph.with_icon_contents = function(contents, width, height) {
                 .attr('transform',  'translate(' + width/2 + ')');
             g.selectAll('image.icon').attr({
                 href: _contents.parent().nodeIcon.eval,
-                x: function(d) {
+                x: function(n) {
                     var totwid = width + contents.textbox(d3.select(this.parentNode)).width;
-                    return -totwid/2 - _contents.parent().nodeLabelPadding.eval(d).x;
+                    return -totwid/2 - _contents.parent().nodeLabelPadding.eval(n).x;
                 },
                 y: -height/2
             });

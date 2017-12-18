@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="../css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="../css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="../css/font-awesome.css"/>
 
   <script type="text/javascript" src="../js/d3.js"></script>
   <script type="text/javascript" src="../js/crossfilter.js"></script>
@@ -21,6 +22,12 @@
       overflow: hidden;
       margin: 0;
     }
+    #controls {
+        position: absolute;
+        left: 1em;
+        top: 1em;
+        font-size: 3em;
+    }
   </style>
 
 </head>
@@ -29,6 +36,9 @@
 <body>
 
   <div id="graph" class="chart"></div>
+  <div id="controls">
+    <i id="play-stop" class="fa fa-pause"></i>
+  </div>
 
   <script type="text/javascript">
 
@@ -112,14 +122,29 @@
         diagram
             .render();
 
-        window.setInterval(function() {
-            random.generate(1);
-            data = build_data(random.nodes(), random.edges());
-            diagram
-                .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
-                .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
-                .redraw();
-        }, +options.interval);
+        var interval = null;
+        function run() {
+            interval = window.setInterval(function() {
+                random.generate(1);
+                data = build_data(random.nodes(), random.edges());
+                diagram
+                    .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
+                    .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
+                    .redraw();
+            }, +options.interval);
+        }
+        run();
+
+        d3.select('#play-stop').on('click', function() {
+            if(interval) {
+                d3.select('#play-stop').attr('class', 'fa fa-play');
+                window.clearInterval(interval);
+                interval = null;
+            } else {
+                d3.select('#play-stop').attr('class', 'fa fa-pause');
+                run();
+            }
+        });
     })();
 </script>
 </body>

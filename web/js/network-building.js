@@ -44,20 +44,20 @@ var label_nodes = dc_graph.label_nodes(),
     label_edges = dc_graph.label_edges();
 
 var delete_nodes = dc_graph.delete_nodes()
-        .crossfilterAccessor(function(chart) {
+        .crossfilterAccessor(function(diagram) {
             return node_flat.crossfilter;
         })
-        .dimensionAccessor(function(chart) {
+        .dimensionAccessor(function(diagram) {
             return node_flat.dimension;
         });
 
 var delete_edges = dc_graph.delete_things(
     dc_graph.select_things_group('select-edges-group', 'select-edges'),
     'delete-edges')
-        .crossfilterAccessor(function(chart) {
+        .crossfilterAccessor(function(diagram) {
             return edge_flat.crossfilter;
         })
-        .dimensionAccessor(function(chart) {
+        .dimensionAccessor(function(diagram) {
             return edge_flat.dimension;
         });
 

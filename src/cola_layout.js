@@ -214,9 +214,9 @@ dc_graph.cola_layout = function(id) {
          * @param {Object} [flowLayout=null]
          * @example
          * // No flow (default)
-         * chart.flowLayout(null)
+         * diagram.flowLayout(null)
          * // flow in x with min separation 200
-         * chart.flowLayout({axis: 'x', minSeparation: 200})
+         * diagram.flowLayout({axis: 'x', minSeparation: 200})
          **/
         flowLayout: function(flow) {
             if(!arguments.length) {

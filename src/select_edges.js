@@ -22,8 +22,8 @@ dc_graph.select_edges = function(props, options) {
         clickables: function() {
             return _behavior.parent().selectAllEdges('.edge-hover');
         },
-        key: function(d) {
-            return _behavior.parent().edgeKey.eval(d);
+        key: function(e) {
+            return _behavior.parent().edgeKey.eval(e);
         },
         applyStyles: function(pred) {
             _behavior.parent().cascade(50, true, node_edge_conditions(null, pred, props));

@@ -48,17 +48,17 @@ dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
                 margin: '5px'
             });
         p2.exit().transition(1000).attr('opacity', 0).remove();
-        p2.text(function(d, i) {
-            return 'path ' + (i+1) + ' (' + reader.elementList.eval(d).length + ')';
+        p2.text(function(p, i) {
+            return 'path ' + (i+1) + ' (' + reader.elementList.eval(p).length + ')';
         })
-            .on('mouseover', function(d) {
-                highlight_paths_group.hover_changed([d]);
+            .on('mouseover', function(p) {
+                highlight_paths_group.hover_changed([p]);
             })
-            .on('mouseout', function(d) {
+            .on('mouseout', function(p) {
                 highlight_paths_group.hover_changed(null);
             })
-            .on('click', function(d) {
-                highlight_paths_group.select_changed(toggle_paths(selected, [d]));
+            .on('click', function(p) {
+                highlight_paths_group.select_changed(toggle_paths(selected, [p]));
             });
         var no_paths = root.selectAll('span.no-paths').data(paths.length === 0 ? [0] : []);
         no_paths.exit().remove();
@@ -74,9 +74,9 @@ dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
         var is_hovered = contains_path(hovered);
         root.selectAll('span.path-selector')
             .style({
-                'border-color': function(d, i) { return is_hovered(d) ? '#e41a1c' : 'grey'; },
-                'border-width': function(d, i) { return (is_hovered(d) ? 2 : 1) + 'px'; },
-                padding: function(d, i) { return (is_hovered(d) ? 3 : 4) + 'px'; }
+                'border-color': function(p, i) { return is_hovered(p) ? '#e41a1c' : 'grey'; },
+                'border-width': function(p, i) { return (is_hovered(p) ? 2 : 1) + 'px'; },
+                padding: function(p, i) { return (is_hovered(p) ? 3 : 4) + 'px'; }
             });
     }
 
@@ -84,8 +84,8 @@ dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
         var is_selected = contains_path(selected);
         root.selectAll('span.path-selector')
             .style({
-                'background-color': function(d, i) { return is_selected(d) ? '#1c1ae6' : 'white'; },
-                'color': function(d, i) { return is_selected(d) ? 'white' : 'black'; }
+                'background-color': function(p, i) { return is_selected(p) ? '#1c1ae6' : 'white'; },
+                'color': function(p, i) { return is_selected(p) ? 'white' : 'black'; }
             });
     }
 
@@ -120,4 +120,4 @@ dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
     };
     dc.registerChart(selector, chartgroup);
     return selector;
-}
+};

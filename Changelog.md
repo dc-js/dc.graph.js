@@ -1,6 +1,26 @@
-# 0.6 Alpha
-Stay tuned for details. This has ports, selection, moving of nodes, flexbox layout, labeling
-modes, icons with text in nodes, among many other things.
+## 0.6 alpha 2
+* use specific n, e, p parameter names for datum, instead of d
+* stop using the word chart, these are diagrams
+* brush and modkey-zoom are mutually exclusive instead of both happening at once ([#56](https://github.com/dc-js/dc.graph.js/issues/56))
+
+## 0.6 alpha 1
+* generalize `altKeyZoom` to `modKeyZoom`, by Lefteris Koutsofios ([#65](https://github.com/dc-js/dc.graph.js/pull/65))
+* reverse orientation of arrow tails, so that the same arrow spec can be used for both (Ibid)
+
+# 0.6
+* ports are specific positions on nodes where edges can connect, placed manually or automatically, and they can have shapes and symbols in them. named ports allow multiple edges to connect to the same spot; anonymous ports are specific to one edge but can still be styled
+* selection of edges, ports
+* `delete_nodes`, `delete_edges` modes
+* `move_nodes` mode, and `fix_nodes` to fix (nail) the position of N previously-moved nodes
+* `flexbox_layout` allows positioning of nodes according to the flexbox algorithm
+* `label_nodes` and `label_edges` modes allow double clicking or selecting and typing on label to change it
+* `match_ports` allows an edge to be drawn only if ports have the same type (string); `wildcard_ports` infer their type from the port at the other end of the edge
+* `match_opposites` allows an edge to be drawn only if the polarity is opposite, and removes any other edges to the same port
+* rounded rectangle nodes
+* icons inside of nodes
+* `brush`, `keyboard` modes support modes that need these behaviors
+* `validate` mode checks the consistency of node, edge, port data
+* `troubleshoot` mode draws marks & ticks for debugging and understanding layout problems
 
 ## 0.5.6
 * avoid cola crash with `initLayoutOnRedraw`

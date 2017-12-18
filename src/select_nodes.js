@@ -9,14 +9,14 @@ dc_graph.select_nodes = function(props, options) {
                     ext[0][1] < n.cola.y && n.cola.y < ext[1][1];
             }).map(this.key);
         },
-        clickables: function(chart, node, edge) {
+        clickables: function(diagram, node, edge) {
             return node;
         },
         excludeClick: function(element) {
             return ancestor_has_class(element, 'port');
         },
-        key: function(d) {
-            return _behavior.parent().nodeKey.eval(d);
+        key: function(n) {
+            return _behavior.parent().nodeKey.eval(n);
         },
         applyStyles: function(pred) {
             _behavior.parent().cascade(50, true, node_edge_conditions(pred, null, props));

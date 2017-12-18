@@ -5,7 +5,7 @@ dc_graph.label_things = function(options) {
     var _selected = [];
     var _keyboard, _selectThings;
 
-    function selection_changed_listener(chart) {
+    function selection_changed_listener(diagram) {
         return function(selection) {
             _selected = selection;
         };
@@ -15,11 +15,11 @@ dc_graph.label_things = function(options) {
         _keyboard.focus();
     }
 
-    function edit_label_listener(chart) {
+    function edit_label_listener(diagram) {
         return function(thing, eventOptions) {
             var box = options.thing_box(thing);
             dc_graph.edit_text(
-                chart.g(),
+                diagram.g(),
                 {
                     text: eventOptions.text || options.thing_label(thing) || options.default_label,
                     align: options.align,
@@ -47,7 +47,7 @@ dc_graph.label_things = function(options) {
         }
         label_things_group.edit_label(thing, eventOptions);
     }
-    function add_behavior(chart, node, edge) {
+    function add_behavior(diagram, node, edge) {
         _keyboard.on('keyup.' + options.label_type, function() {
             if(_selected.length) {
                 // printable characters should start edit
@@ -57,12 +57,12 @@ dc_graph.label_things = function(options) {
             }
         });
         if(_selectThings)
-            _selectThings.thinginess().clickables(chart, node, edge).on('dblclick.' + options.label_type, function() {
+            _selectThings.thinginess().clickables(diagram, node, edge).on('dblclick.' + options.label_type, function() {
                 edit_selection(node, edge, {selectText: true});
             });
     }
 
-    function remove_behavior(chart, node, edge) {
+    function remove_behavior(diagram, node, edge) {
     }
 
     var _behavior = dc_graph.behavior(options.label_type, {

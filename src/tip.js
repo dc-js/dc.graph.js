@@ -75,9 +75,9 @@ dc_graph.tip = function(options) {
             _d3tip.hide();
     }
 
-    function add_behavior(chart, node, edge, ehover) {
-        init(chart);
-        _behavior.selection().select(chart, node, edge, ehover)
+    function add_behavior(diagram, node, edge, ehover) {
+        init(diagram);
+        _behavior.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, fetch_and_show_content('content'))
             .on('mouseout.' + _namespace, hide_tip);
         if(_behavior.clickable()) {
@@ -89,8 +89,8 @@ dc_graph.tip = function(options) {
                 .on('mouseout.' + _namespace, hide_tip);
         }
     }
-    function remove_behavior(chart, node, edge, ehover) {
-        _behavior.selection().select(chart, node, edge, ehover)
+    function remove_behavior(diagram, node, edge, ehover) {
+        _behavior.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, null)
             .on('mouseout.' + _namespace, null);
     }
@@ -120,7 +120,7 @@ dc_graph.tip = function(options) {
 
     /**
      * Specifies the function to generate content for the tooltip. This function has the
-     * signature `function(d, k)`, where `d` is the datum of the node being hovered over,
+     * signature `function(d, k)`, where `d` is the datum of the thing being hovered over,
      * and `k` is a continuation. The function should fetch the content, asynchronously if
      * needed, and then pass html forward to `k`.
      * @name content
@@ -129,13 +129,13 @@ dc_graph.tip = function(options) {
      * @param {Function} [content]
      * @return {Function}
      * @example
-     * // Default behavior: show title
-     * var tip = dc_graph.tip().content(function(d, k) {
-     *     k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
+     * // Default behavior: assume it's a node, show node title
+     * var tip = dc_graph.tip().content(function(n, k) {
+     *     k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
      * });
      **/
-    _behavior.content = property(function(d, k) {
-        k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
+    _behavior.content = property(function(n, k) {
+        k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
     });
 
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
@@ -182,9 +182,9 @@ dc_graph.tip.table = function() {
 
 dc_graph.tip.select_node_and_edge = function() {
     return {
-        select: function(chart, node, edge, ehover) {
+        select: function(diagram, node, edge, ehover) {
             // hack to merge selections, not supported d3v3
-            var selection = chart.selectAll('.foo-this-does-not-exist');
+            var selection = diagram.selectAll('.foo-this-does-not-exist');
             selection[0] = node[0].concat(ehover[0]);
             return selection;
         },
@@ -196,7 +196,7 @@ dc_graph.tip.select_node_and_edge = function() {
 
 dc_graph.tip.select_node = function() {
     return {
-        select: function(chart, node, edge, ehover) {
+        select: function(diagram, node, edge, ehover) {
             return node;
         },
         exclude: function(element) {
@@ -207,7 +207,7 @@ dc_graph.tip.select_node = function() {
 
 dc_graph.tip.select_edge = function() {
     return {
-        select: function(chart, node, edge, ehover) {
+        select: function(diagram, node, edge, ehover) {
             return edge;
         }
     };
@@ -215,7 +215,7 @@ dc_graph.tip.select_edge = function() {
 
 dc_graph.tip.select_port = function() {
     return {
-        select: function(chart, node, edge, ehover) {
+        select: function(diagram, node, edge, ehover) {
             return node.selectAll('g.port');
         }
     };
