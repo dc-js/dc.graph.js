@@ -698,10 +698,10 @@ get_catalog().then(function(catalog) {
     _diagram.child('label-edges', label_edges);
 
     var delete_nodes = dc_graph.delete_nodes()
-            .crossfilterAccessor(function(chart) {
+            .crossfilterAccessor(function(diagram) {
                 return _drawGraphs.nodeCrossfilter();
             })
-            .dimensionAccessor(function(chart) {
+            .dimensionAccessor(function(diagram) {
                 return _diagram.nodeDimension();
             })
             .onDelete(function(nodes) {
@@ -717,10 +717,10 @@ get_catalog().then(function(catalog) {
     _diagram.child('delete-nodes', delete_nodes);
 
     var delete_edges = dc_graph.delete_things(select_edges_group, 'delete-edges', 'id')
-            .crossfilterAccessor(function(chart) {
+            .crossfilterAccessor(function(diagram) {
                 return _drawGraphs.edgeCrossfilter();
             })
-            .dimensionAccessor(function(chart) {
+            .dimensionAccessor(function(diagram) {
                 return _diagram.edgeDimension();
             })
             .onDelete(function(edges) {

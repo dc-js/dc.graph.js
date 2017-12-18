@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-alpha.1
+ *  dc.graph 0.6.0-alpha.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -21,21 +21,21 @@
  * The entire dc.graph.js library is scoped under the **dc_graph** name space. It does not introduce
  * anything else into the global name space.
  *
- * Like in dc.js and most libraries built on d3, most `dc_graph` functions are designed to allow function chaining, meaning they return the current chart
+ * Like in dc.js and most libraries built on d3, most `dc_graph` functions are designed to allow function chaining, meaning they return the current diagram
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
- * chaining because they return values that are not the chart.
+ * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-alpha.1
+ * @version 0.6.0-alpha.2
  * @example
  * // Example chaining
- * chart.width(600)
+ * diagram.width(600)
  *      .height(400)
  *      .nodeDimension(nodeDim)
  *      .nodeGroup(nodeGroup);
  */
 
 var dc_graph = {
-    version: '0.6.0-alpha.1',
+    version: '0.6.0-alpha.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -470,9 +470,9 @@ dc_graph.cola_layout = function(id) {
          * @param {Object} [flowLayout=null]
          * @example
          * // No flow (default)
-         * chart.flowLayout(null)
+         * diagram.flowLayout(null)
          * // flow in x with min separation 200
-         * chart.flowLayout({axis: 'x', minSeparation: 200})
+         * diagram.flowLayout({axis: 'x', minSeparation: 200})
          **/
         flowLayout: function(flow) {
             if(!arguments.length) {
