@@ -2671,8 +2671,11 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     }
     function doZoom() {
-        var xlate = _diagram.restrictPan() ? bring_in_bounds(d3.event.translate) : d3.event.translate;
-        globalTransform(xlate, d3.event.scale, false);
+        var translate, scale = d3.event.scale;
+        if(_diagram.restrictPan())
+            _zoom.translate(translate = bring_in_bounds(d3.event.translate));
+        else translate = d3.event.translate;
+        globalTransform(translate, scale, false);
     }
 
     function resizeSvg(w, h) {
