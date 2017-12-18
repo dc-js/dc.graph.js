@@ -165,8 +165,9 @@ dc_graph.fix_nodes.strategy.fix_last = function() {
         }
     };
 };
-dc_graph.fix_nodes.strategy.last_N_per_component = function(maxf) {
+dc_graph.fix_nodes.strategy.last_N_per_component = function(maxf, minf) {
     maxf = maxf || 1;
+    minf = minf || 0;
     var _age = 0;
     var _allFixes = {};
     return {
@@ -243,6 +244,13 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(maxf) {
                         return f2.age - f1.age;
                     });
                     fixes = fixes.slice(0, maxf);
+                } else {
+                    var shufn = shuffle(wnodes.slice());
+                    while(fixes.length < minf && shufn.length) {
+                        var n = shufn.pop();
+                        if(n.cola.x !== undefined && n.cola.y !== undefined)
+                            fixes.push({id: exec.nodeid(n), age: ++_age, pos: {x: n.cola.x, y: n.cola.y}});
+                    }
                 }
                 fixes.forEach(function(fix) {
                     exec.register_fix(fix.id, fix.pos);
