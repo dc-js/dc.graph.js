@@ -165,7 +165,8 @@ dc_graph.fix_nodes.strategy.fix_last = function() {
         }
     };
 };
-dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
+dc_graph.fix_nodes.strategy.last_N_per_component = function(maxf) {
+    maxf = maxf || 1;
     var _age = 0;
     var _allFixes = {};
     return {
@@ -192,6 +193,7 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
                 if(pos && !_allFixes[nid])
                     _allFixes[nid] = {id: nid, age: _age, pos: pos};
             });
+            // determine components
             var components = [];
             var dfs = dc_graph.undirected_dfs({
                 nodeid: exec.nodeid,
@@ -205,7 +207,9 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
                 }
             });
             dfs(wnodes, wedges);
+            // start from scratch
             exec.clear_fixes();
+            // keep or produce enough fixed nodes per component
             components.forEach(function(comp, i) {
                 var oldcomps = comp.reduce(function(cc, n) {
                     if(n.last_component) {
@@ -234,11 +238,11 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
                 }).filter(function(fix) {
                     return fix;
                 });
-                if(fixes.length > N) {
+                if(fixes.length > maxf) {
                     fixes.sort(function(f1, f2) {
                         return f2.age - f1.age;
                     });
-                    fixes = fixes.slice(0, N);
+                    fixes = fixes.slice(0, maxf);
                 }
                 fixes.forEach(function(fix) {
                     exec.register_fix(fix.id, fix.pos);
