@@ -99,6 +99,7 @@
             .nodeContent(options.content)
             .nodeIcon(options.icon)
             .nodeStrokeWidth(0) // turn off outlines
+            .nodeFixed(function(kv) { return kv.value.fixedPos; })
             .nodeLabel(function(kv) { return kv.key; })
             .nodeLabelFill(options.shape === 'plain' ? 'black' : function(n) {
                 var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
@@ -123,7 +124,7 @@
                 .portStyleName('symbols');
         }
         var fix_nodes = dc_graph.fix_nodes()
-            .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(1));
+            .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(3,3));
         diagram.child('fix-nodes', fix_nodes);
 
         diagram
