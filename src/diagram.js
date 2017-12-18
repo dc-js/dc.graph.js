@@ -2711,6 +2711,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .scaleExtent(_diagram.zoomExtent());
         if(_diagram.mouseZoomable()) {
             var mod, mods;
+            var brush = _diagram.child('brush');
             if((mod = _diagram.modKeyZoom())) {
                 if (Array.isArray (mod))
                     mods = mod.slice ();
@@ -2718,14 +2719,40 @@ dc_graph.diagram = function (parent, chartGroup) {
                     mods = [mod];
                 else
                     mods = ['Alt'];
+                var mouseDown = 0, modDown = false, zoomEnabled = false;
+                _svg.on('mousedown.modkey-zoom', function() {
+                    ++mouseDown;
+                }).on('mouseup.modkey-zoom', function() {
+                    --mouseDown;
+                    if(!mouseDown && !modDown && zoomEnabled) {
+                        zoomEnabled = false;
+                        disableZoom();
+                        if(brush)
+                            brush.activate();
+                    }
+                });
                 d3.select(document)
-                    .on('keydown', function() {
-                        if(mods.indexOf (d3.event.key) > -1)
-                            enableZoom();
+                    .on('keydown.modkey-zoom', function() {
+                        if(mods.indexOf (d3.event.key) > -1) {
+                            modDown = true;
+                            if(!mouseDown) {
+                                zoomEnabled = true;
+                                enableZoom();
+                                if(brush)
+                                    brush.deactivate();
+                            }
+                        }
                     })
-                    .on('keyup', function() {
-                        if(mods.indexOf (d3.event.key) > -1)
-                            disableZoom();
+                    .on('keyup.modkey-zoom', function() {
+                        if(mods.indexOf (d3.event.key) > -1) {
+                            modDown = false;
+                            if(!mouseDown) {
+                                zoomEnabled = false;
+                                disableZoom();
+                                if(brush)
+                                    brush.activate();
+                            }
+                        }
                     });
             }
             else enableZoom();
