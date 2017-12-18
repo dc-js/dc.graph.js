@@ -4,16 +4,16 @@
 The entire dc.graph.js library is scoped under the **dc_graph** name space. It does not introduce
 anything else into the global name space.
 
-Like in dc.js and most libraries built on d3, most `dc_graph` functions are designed to allow function chaining, meaning they return the current chart
+Like in dc.js and most libraries built on d3, most `dc_graph` functions are designed to allow function chaining, meaning they return the current diagram
 instance whenever it is appropriate.  The getter forms of functions do not participate in function
-chaining because they return values that are not the chart.
+chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.6.0  
+**Version**: 0.6.0-alpha.2  
 **Example**  
 ```js
 // Example chaining
-chart.width(600)
+diagram.width(600)
      .height(400)
      .nodeDimension(nodeDim)
      .nodeGroup(nodeGroup);
@@ -224,7 +224,7 @@ visualization versus conventional charts.
 | Param | Type | Description |
 | --- | --- | --- |
 | parent | <code>String</code> &#124; <code>node</code> | Any valid [d3 single selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom block element such as a div; or a dom element. |
-| [chartGroup] | <code>String</code> | The name of the chart group this chart instance should be placed in. Filter interaction with a chart will only trigger events and redraws within the chart's group. |
+| [chartGroup] | <code>String</code> | The name of the dc.js chart group this diagram instance should be placed in. Filter interaction with a diagram will only trigger events and redraws within the diagram's group. |
 
 <a name="dc_graph.diagram+width"></a>
 
@@ -323,7 +323,7 @@ height) and result will be used to set `preserveAspectRatio`.
 #### diagram.autoZoom([autoZoom]) ⇒ <code>String</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Auto-zoom behavior.
 * `'always'` - zoom every time layout happens
-* `'once'` - zoom the first time layout happens
+* `'once'` - zoom the next time layout happens
 * `null` - manual, call `zoomToFit` to fit
 
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
@@ -338,9 +338,9 @@ Auto-zoom behavior.
 Set or get the crossfilter dimension which represents the nodes (vertices) in the
 diagram. Typically there will be a crossfilter instance for the nodes, and another for
 the edges.
-*The node dimension currently does nothing, but once selection is supported, it will be
-used for filtering other charts on the same crossfilter instance based on the nodes
-selected.*
+
+*Dimensions are included on the diagram for similarity to dc.js, however the diagram
+itself does not use them - but [filter_selection](dc_graph.filter_selection) will.*
 
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
 
@@ -355,8 +355,10 @@ Set or get the crossfilter group which is the data source for the nodes in the
 diagram. The diagram will use the group's `.all()` method to get an array of `{key,
 value}` pairs, where the key is a unique identifier, and the value is usually an object
 containing the node's attributes. All accessors work with these key/value pairs.
+
 If the group is changed or returns different values, the next call to `.redraw()` will
 reflect the changes incrementally.
+
 It is possible to pass another object with the same `.all()` interface instead of a
 crossfilter group.
 
@@ -372,9 +374,9 @@ crossfilter group.
 Set or get the crossfilter dimension which represents the edges in the
 diagram. Typically there will be a crossfilter instance for the nodes, and another for
 the edges.
-*The edge dimension currently does nothing, but once selection is supported, it will be
-used for filtering other charts on the same crossfilter instance based on the edges
-selected.*
+
+*Dimensions are included on the diagram for similarity to dc.js, however the diagram
+itself does not use them - but [filter_selection](dc_graph.filter_selection) will.*
 
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
 
@@ -387,6 +389,7 @@ selected.*
 #### diagram.edgeGroup([edgeGroup]) ⇒ <code>crossfilter.group</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Set or get the crossfilter group which is the data source for the edges in the
 diagram. See `.nodeGroup` above for the way data is loaded from a crossfilter group.
+
 The values in the key/value pairs returned by `diagram.edgeGroup().all()` need to
 support, at a minimum, the [nodeSource](dc_graph.diagram#nodeSource) and
 [nodeTarget](dc_graph.diagram#nodeTarget), which should return the same
@@ -619,8 +622,8 @@ as a tooltip. By default, uses the key of the node.
 **Example**  
 ```js
 // Default behavior
-chart.nodeTitle(function(kv) {
-  return _chart.nodeKey()(kv);
+diagram.nodeTitle(function(kv) {
+  return _diagram.nodeKey()(kv);
 });
 ```
 <a name="dc_graph.diagram+nodeOrdering"></a>
@@ -699,8 +702,8 @@ displayed when an edge is hovered over. By default, uses the `edgeKey`.
 **Example**  
 ```js
 // Default behavior
-chart.edgeLabel(function(d) {
-  return _chart.edgeKey()(d);
+diagram.edgeLabel(function(e) {
+  return _diagram.edgeKey()(e);
 });
 ```
 <a name="dc_graph.diagram+edgeArrowhead"></a>
@@ -756,7 +759,7 @@ value is truthy, true otherwise.
 **Example**  
 ```js
 // Default behavior
-chart.edgeIsLayout(function(kv) {
+diagram.edgeIsLayout(function(kv) {
   return !kv.value.notLayout;
 });
 ```
@@ -796,7 +799,7 @@ distance is falsy, uses the `baseLength`.
 **Example**  
 ```js
 // Default behavior
-chart.edgeLength(function(kv) {
+diagram.edgeLength(function(kv) {
   return kv.value.distance;
 });
 ```
@@ -817,9 +820,9 @@ now it is separate.
 **Example**  
 ```js
 // No flow (default)
-chart.flowLayout(null)
+diagram.flowLayout(null)
 // flow in x with min separation 200
-chart.flowLayout({axis: 'x', minSeparation: 200})
+diagram.flowLayout({axis: 'x', minSeparation: 200})
 ```
 <a name="dc_graph.diagram+rankdir"></a>
 
@@ -921,11 +924,13 @@ limit.
 Gets or sets a function which will be called with the current nodes and edges on each
 redraw in order to derive new layout constraints. The constraints are built from scratch
 on each redraw.
+
 This can be used to generate alignment (rank) or axis constraints. By default, no
 constraints will be added, although cola.js uses constraints internally to implement
 flow and overlap prevention. See
 [the cola.js wiki](https://github.com/tgdwyer/WebCola/wiki/Constraints)
 for more details.
+
 For convenience, dc.graph.js implements a other constraints on top of those implemented
 by cola.js:
 * 'ordering' - the nodes will be ordered on the specified `axis` according to the keys
@@ -966,6 +971,7 @@ from the original so they don't overlap.
 By default, edges are added to the layout in the order that `.edgeGroup().all()` returns
 them. If specified, `.edgeOrdering` provides an accessor that returns a key to sort the
 edges on.
+
 *It would be better not to rely on ordering to affect layout, but it may affect the
 layout in some cases. (Probably less than node ordering, but it does affect which
 parallel edge is which.)*
@@ -1085,10 +1091,10 @@ The child needs to support a `parent` method, the diagram to modify.
 ```js
 // Display tooltips on node hover, via the d3-tip library
 var tip = dc_graph.tip()
-tip.content(function(d, k) {
+tip.content(function(n, k) {
   // you can do an asynchronous call here, e.g. d3.json, if you need
   // to fetch data to show the tooltip - just call k() with the content
-  k("This is <em>" + d.orig.value.name + "</em>");
+  k("This is <em>" + n.orig.value.name + "</em>");
 });
 diagram.child('tip', tip);
 ```
@@ -1205,9 +1211,11 @@ Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
 method. Selects all elements that match the d3 single selector in the diagram's scope,
 and return the d3 selection. Roughly the same as
+
 ```js
 d3.select('#diagram-id').selectAll(selector)
 ```
+
 Since this function returns a d3 selection, it is not chainable. (However, d3 selection
 calls can be chained after it.)
 
@@ -1248,7 +1256,7 @@ method. Gets or sets the y scale.
 #### diagram.svg([selection]) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
-method. Returns the top `svg` element for this specific chart. You can also pass in a new
+method. Returns the top `svg` element for this specific diagram. You can also pass in a new
 svg element, but setting the svg element on a diagram may have unexpected consequences.
 
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
@@ -1260,7 +1268,7 @@ svg element, but setting the svg element on a diagram may have unexpected conseq
 <a name="dc_graph.diagram+g"></a>
 
 #### diagram.g([selection]) ⇒ <code>d3.selection</code> &#124; <code>[diagram](#dc_graph.diagram)</code>
-Returns the top `g` element for this specific chart. This method is usually used to
+Returns the top `g` element for this specific diagram. This method is usually used to
 retrieve the g element in order to overlay custom svg drawing
 programatically. **Caution**: The root g element is usually generated internally, and
 resetting it might produce unpredictable results.
@@ -1303,8 +1311,9 @@ Creates an svg marker definition for drawing edge arrow tails or heads. The `vie
 the marker is `0 -5 10 10`, so the arrow should be drawn from (0, -5) to (10, 5); it
 will be moved and sized based on the other parameters, and rotated based on the
 orientation of the edge.
+
 (If further customization is required, it is possible to append other `svg:defs` to
-`chart.svg()` and use refer to them by `id`.)
+`diagram.svg()` and use refer to them by `id`.)
 
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
 
@@ -1320,7 +1329,7 @@ orientation of the edge.
 **Example**  
 ```js
 // the built-in `vee` arrow is defined like so:
-_chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+_diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
   marker.append('svg:path')
     .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
     .attr('stroke-width', '0px');
@@ -1332,7 +1341,7 @@ _chart.defineArrow('vee', 12, 12, 10, 0, function(marker) {
 Set the root SVGElement to either be any valid [d3 single
 selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom
 block element such as a div; or a dom element or d3 selection. This class is called
-internally on chart initialization, but be called again to relocate the chart. However, it
+internally on diagram initialization, but be called again to relocate the diagram. However, it
 will orphan any previously created SVGElements.
 
 **Kind**: instance method of <code>[diagram](#dc_graph.diagram)</code>  
@@ -1483,9 +1492,9 @@ default for cola layout), then there will be no flow.
 **Example**  
 ```js
 // No flow (default)
-chart.flowLayout(null)
+diagram.flowLayout(null)
 // flow in x with min separation 200
-chart.flowLayout({axis: 'x', minSeparation: 200})
+diagram.flowLayout({axis: 'x', minSeparation: 200})
 ```
 <a name="dc_graph.dagre_layout"></a>
 
@@ -1640,7 +1649,7 @@ tip.content(tip.table());
 
 #### tip.content ⇒ <code>function</code>
 Specifies the function to generate content for the tooltip. This function has the
-signature `function(d, k)`, where `d` is the datum of the node being hovered over,
+signature `function(d, k)`, where `d` is the datum of the thing being hovered over,
 and `k` is a continuation. The function should fetch the content, asynchronously if
 needed, and then pass html forward to `k`.
 
@@ -1652,9 +1661,9 @@ needed, and then pass html forward to `k`.
 
 **Example**  
 ```js
-// Default behavior: show title
-var tip = dc_graph.tip().content(function(d, k) {
-    k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(d) : '');
+// Default behavior: assume it's a node, show node title
+var tip = dc_graph.tip().content(function(n, k) {
+    k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
 });
 ```
 <a name="dc_graph.tip+table"></a>
