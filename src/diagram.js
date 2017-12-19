@@ -2597,11 +2597,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function margined_bounds() {
         var bounds = _bounds || {left: 0, top: 0, right: 0, bottom: 0};
+        var scale = _zoom ? _zoom.scale() : 1;
         return {
-            left: bounds.left - _diagram.margins().left,
-            top: bounds.top - _diagram.margins().top,
-            right: bounds.right + _diagram.margins().right,
-            bottom: bounds.bottom + _diagram.margins().bottom
+            left: bounds.left - _diagram.margins().left/scale,
+            top: bounds.top - _diagram.margins().top/scale,
+            right: bounds.right + _diagram.margins().right/scale,
+            bottom: bounds.bottom + _diagram.margins().bottom/scale
         };
     }
 
