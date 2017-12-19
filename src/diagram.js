@@ -1309,7 +1309,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        resizeSvg();
+        _diagram.resizeSvg();
         if(_diagram.initLayoutOnRedraw())
             initLayout();
         if(_diagram.layoutEngine().relayout)
@@ -2680,12 +2680,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         globalTransform(translate, scale, false);
     }
 
-    function resizeSvg(w, h) {
+    _diagram.resizeSvg = function(w, h) {
         if(_svg) {
             _svg.attr('width', w || _diagram.width())
                 .attr('height', h || _diagram.height());
         }
-    }
+        return _diagram;
+    };
 
     function enableZoom() {
         _svg.call(_zoom);
@@ -2697,7 +2698,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function generateSvg() {
         _svg = _diagram.root().append('svg');
-        resizeSvg();
+        _diagram.resizeSvg();
 
         _defs = _svg.append('svg:defs');
 
