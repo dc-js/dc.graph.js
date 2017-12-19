@@ -2085,7 +2085,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_bounds)
                 return;
             var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
-                swidth =  _diagram.width(), sheight = _diagram.height(), viewBox;
+                swidth =  _diagram.width() - _diagram.margins().left - _diagram.margins().right,
+                sheight = _diagram.height() - _diagram.margins().top - _diagram.margins().bottom;
             if(_diagram.DEBUG_BOUNDS)
                 debug_bounds(_bounds);
             var fitS = _diagram.fitStrategy(), translate = [0,0], scale = 1;
@@ -2093,9 +2094,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
                     vrl = vAR<sAR, // view aspect ratio is less (wider)
                     amv = (fitS === 'default') ? !vrl : (fitS === 'vertical'); // align margins vertically
-                scale = amv ?
-                    (sheight - _diagram.margins().top - _diagram.margins().bottom) / vheight :
-                    (swidth - _diagram.margins().left - _diagram.margins().right) / vwidth;
+                scale = amv ? sheight / vheight : swidth / vwidth;
                 scale = Math.max(_diagram.zoomExtent()[0], Math.min(_diagram.zoomExtent()[1], scale));
                 translate = [_diagram.margins().left - _bounds.left*scale + (swidth - vwidth*scale) / 2,
                              _diagram.margins().top - _bounds.top*scale + (sheight - vheight*scale) / 2];
