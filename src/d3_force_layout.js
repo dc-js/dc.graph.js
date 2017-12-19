@@ -49,13 +49,13 @@ dc_graph.d3_force_layout = function(id) {
             .charge(_options.initialCharge);
     }
 
-    function data(nodes, edges, constraints, options) {
+    function data(nodes, edges, constraints) {
         var nodeIDs = {};
         nodes.forEach(function(d, i) {
             nodeIDs[d.dcg_nodeKey] = i;
         });
 
-        _wnodes = regenerate_objects(_nodes, nodes, function(v) {
+        _wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -64,7 +64,7 @@ dc_graph.d3_force_layout = function(id) {
             v1.id = v.dcg_nodeKey;
         });
 
-        _wedges = regenerate_objects(_edges, edges, function(e) {
+        _wedges = regenerate_objects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -81,7 +81,7 @@ dc_graph.d3_force_layout = function(id) {
         _simulation.links(_wedges);
     }
 
-    function start(options) {
+    function start() {
         runSimulation();
 
         _initialized = true;
@@ -226,11 +226,11 @@ dc_graph.d3_force_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, options) {
-            data(nodes, edges, constraints, options);
+        data: function(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();

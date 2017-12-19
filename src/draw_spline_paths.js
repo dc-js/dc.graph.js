@@ -41,7 +41,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             switch(pathreader.elementType.eval(element)) {
             case 'node':
                 key = pathreader.nodeKey.eval(element);
-                node = _chart.getNodeAllInfo(key);
+                node = _chart.getWholeNode(key);
                 if(node !== null) {
                     plist.push({'x': node.cola.x, 'y': node.cola.y});
                 }
