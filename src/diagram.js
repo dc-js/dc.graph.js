@@ -2311,16 +2311,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         _diagram.resetSvg();
         _g = _svg.append('g')
             .attr('class', 'draw');
-        _edgeLayer = _g.append('g')
-            .attr('class', 'edge-layer');
-        _nodeLayer = _g.append('g')
-            .attr('class', 'node-layer');
-        _splineLayer = _g.append('g')
-            .attr('class', 'spline-layer');
-        _edgeLayer = _g.append('g')
-            .attr('class', 'edge-layer');
-        _nodeLayer = _g.append('g')
-            .attr('class', 'node-layer');
 
         var layers = ['edge-layer', 'node-layer'];
         if(_diagram.edgesInFront())
