@@ -19,7 +19,9 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         break;
     case 'cola':
     default:
-        engine = dc_graph.cola_layout();
+        engine = dc_graph.cola_layout()
+            .groupConnected(true)
+            .handleDisconnected(false);
         params = ['lengthStrategy'];
         break;
     }
