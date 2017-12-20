@@ -2701,9 +2701,25 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     _diagram.resizeSvg = function(w, h) {
+        var restoreZoom;
+        if(_zoom)
+            restoreZoom = {translate: _zoom.translate(), scale: _zoom.scale()};
+        w = w || _diagram.width();
+        h = h || _diagram.height();
         if(_svg) {
-            _svg.attr('width', w || _diagram.width())
-                .attr('height', h || _diagram.height());
+            _svg.attr('width', w)
+                .attr('height', h);
+        }
+        // start scales with 1:1 zoom
+        if(!_diagram.x())
+            _diagram.x(d3.scale.linear().domain([0, w]));
+        if(!_diagram.y())
+            _diagram.y(d3.scale.linear().domain([0, h]));
+        _diagram.x().range([0, w]);
+        _diagram.y().range([0, h]);
+        if(restoreZoom) {
+            _zoom.x(_diagram.x()).y(_diagram.y())
+                .translate(restoreZoom.translate).scale(restoreZoom.scale);
         }
         return _diagram;
     };
@@ -2722,15 +2738,6 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         _defs = _svg.append('svg:defs');
 
-        // start out with 1:1 zoom
-        if(!_diagram.x())
-            _diagram.x(d3.scale.linear()
-                     .domain([0, _diagram.width()])
-                     .range([0, _diagram.width()]));
-        if(!_diagram.y())
-            _diagram.y(d3.scale.linear()
-                     .domain([0, _diagram.height()])
-                     .range([0, _diagram.height()]));
         _zoom = d3.behavior.zoom()
             .on('zoom', doZoom)
             .x(_diagram.x()).y(_diagram.y())
