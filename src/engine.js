@@ -27,7 +27,7 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         if(args[p])
             engine[p](args[p]);
     });
-    if(engine.supportsWebworker() && worker)
+    if(engine.supportsWebworker && engine.supportsWebworker() && worker)
         engine = dc_graph.webworker_layout(engine);
     return engine;
 };
