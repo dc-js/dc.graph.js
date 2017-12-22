@@ -5,6 +5,14 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         engine = dc_graph.dagre_layout();
         params = ['rankdir'];
         break;
+    case 'd3force':
+        engine = dc_graph.d3_force_layout();
+        params = [];
+        break;
+    case 'd3v4force':
+        engine = dc_graph.d3v4_force_layout();
+        params = [];
+        break;
     case 'tree':
         engine = dc_graph.tree_layout();
         params = [];
@@ -27,7 +35,7 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         if(args[p])
             engine[p](args[p]);
     });
-    if(engine.supportsWebworker() && worker)
+    if(engine.supportsWebworker && engine.supportsWebworker() && worker)
         engine = dc_graph.webworker_layout(engine);
     return engine;
 };

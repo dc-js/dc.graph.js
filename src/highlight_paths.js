@@ -141,9 +141,9 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             if(p)
                 _anchor = p.anchorName();
             // else we should have received anchor earlier
-            highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
-            highlight_paths_group.on('hover_changed.' + _anchor, p ? hover_changed : null);
-            highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
+            highlight_paths_group.on('paths_changed.highlight' + _anchor, p ? paths_changed : null);
+            highlight_paths_group.on('hover_changed.highlight' + _anchor, p ? hover_changed : null);
+            highlight_paths_group.on('select_changed.highlight' + _anchor, p ? select_changed : null);
         }
     });
 

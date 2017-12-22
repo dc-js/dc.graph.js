@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-alpha.2
+ *  dc.graph 0.6.0-alpha.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-alpha.2
+ * @version 0.6.0-alpha.3
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-alpha.2',
+    version: '0.6.0-alpha.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1282,6 +1282,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     // but attempt to implement most of that interface, copying some of the most basic stuff
     var _diagram = dc.marginMixin({});
     _diagram.__dcFlag__ = dc.utils.uniqueId();
+    _diagram.margins({left: 10, top: 10, right: 10, bottom: 10});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
@@ -2570,10 +2571,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        resizeSvg();
+        _diagram.resizeSvg();
         if(_diagram.initLayoutOnRedraw())
             initLayout();
-
         _diagram.layoutEngine().stop();
         _dispatch.preDraw();
 
@@ -3346,7 +3346,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_bounds)
                 return;
             var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
-                swidth =  _diagram.width(), sheight = _diagram.height(), viewBox;
+                swidth =  _diagram.width() - _diagram.margins().left - _diagram.margins().right,
+                sheight = _diagram.height() - _diagram.margins().top - _diagram.margins().bottom;
             if(_diagram.DEBUG_BOUNDS)
                 debug_bounds(_bounds);
             var fitS = _diagram.fitStrategy(), translate = [0,0], scale = 1;
@@ -3354,9 +3355,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
                     vrl = vAR<sAR, // view aspect ratio is less (wider)
                     amv = (fitS === 'default') ? !vrl : (fitS === 'vertical'); // align margins vertically
-                scale = amv ?
-                    (sheight - _diagram.margins().top - _diagram.margins().bottom) / vheight :
-                    (swidth - _diagram.margins().left - _diagram.margins().right) / vwidth;
+                scale = amv ? sheight / vheight : swidth / vwidth;
                 scale = Math.max(_diagram.zoomExtent()[0], Math.min(_diagram.zoomExtent()[1], scale));
                 translate = [_diagram.margins().left - _bounds.left*scale + (swidth - vwidth*scale) / 2,
                              _diagram.margins().top - _bounds.top*scale + (sheight - vheight*scale) / 2];
@@ -3859,11 +3858,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function margined_bounds() {
         var bounds = _bounds || {left: 0, top: 0, right: 0, bottom: 0};
+        var scale = _zoom ? _zoom.scale() : 1;
         return {
-            left: bounds.left - _diagram.margins().left,
-            top: bounds.top - _diagram.margins().top,
-            right: bounds.right + _diagram.margins().right,
-            bottom: bounds.bottom + _diagram.margins().bottom
+            left: bounds.left - _diagram.margins().left/scale,
+            top: bounds.top - _diagram.margins().top/scale,
+            right: bounds.right + _diagram.margins().right/scale,
+            bottom: bounds.bottom + _diagram.margins().bottom/scale
         };
     }
 
@@ -3940,12 +3940,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         globalTransform(translate, scale, false);
     }
 
-    function resizeSvg(w, h) {
+    _diagram.resizeSvg = function(w, h) {
         if(_svg) {
             _svg.attr('width', w || _diagram.width())
                 .attr('height', h || _diagram.height());
         }
-    }
+        return _diagram;
+    };
 
     function enableZoom() {
         _svg.call(_zoom);
@@ -3957,7 +3958,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function generateSvg() {
         _svg = _diagram.root().append('svg');
-        resizeSvg();
+        _diagram.resizeSvg();
 
         _defs = _svg.append('svg:defs');
 
@@ -4124,6 +4125,14 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         engine = dc_graph.dagre_layout();
         params = ['rankdir'];
         break;
+    case 'd3force':
+        engine = dc_graph.d3_force_layout();
+        params = [];
+        break;
+    case 'd3v4force':
+        engine = dc_graph.d3v4_force_layout();
+        params = [];
+        break;
     case 'tree':
         engine = dc_graph.tree_layout();
         params = [];
@@ -4146,7 +4155,7 @@ dc_graph.spawn_engine = function(layout, args, worker) {
         if(args[p])
             engine[p](args[p]);
     });
-    if(engine.supportsWebworker() && worker)
+    if(engine.supportsWebworker && engine.supportsWebworker() && worker)
         engine = dc_graph.webworker_layout(engine);
     return engine;
 };
@@ -4994,6 +5003,508 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     });
 }
 
+
+/**
+ * `dc_graph.d3_force_layout` is an adaptor for d3-force layouts in dc.graph.js
+ * @class d3_force_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.d3_force_layout}
+ **/
+dc_graph.d3_force_layout = function(id) {
+    var _layoutId = id || uuid();
+    var _simulation = null; // d3-force simulation
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    // node and edge objects shared with d3-force, preserved from one iteration
+    // to the next (as long as the object is still in the layout)
+    var _nodes = {}, _edges = {};
+    var _wnodes = [], _wedges = [];
+    var _originalNodesPosition = {};
+    var _options = null;
+    var _paths = null;
+    var _initialized = false;
+
+    function init(options) {
+        _options = options;
+
+        _simulation = d3.layout.force()
+            .size([options.width, options.height]);
+
+        _simulation.on('tick', /* _tick = */ function() {
+            dispatchState('tick');
+        }).on('start', function() {
+            _dispatch.start();
+        }).on('end', /* _done = */ function() {
+            dispatchState('end');
+        });
+    }
+
+    function dispatchState(event) {
+        _dispatch[event](
+            _wnodes,
+            _wedges.map(function(e) {
+                return {dcg_edgeKey: e.dcg_edgeKey};
+            })
+        );
+    }
+
+    function data(nodes, edges, constraints) {
+        var nodeIDs = {};
+        nodes.forEach(function(d, i) {
+            nodeIDs[d.dcg_nodeKey] = i;
+        });
+
+        _wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
+            return v.dcg_nodeKey;
+        }, function(v1, v) {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.width = v.width;
+            v1.height = v.height;
+            v1.id = v.dcg_nodeKey;
+        });
+
+        _wedges = regenerate_objects(_edges, edges, null, function(e) {
+            return e.dcg_edgeKey;
+        }, function(e1, e) {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            // cola edges can work with indices or with object references
+            // but it will replace indices with object references
+            e1.source = _nodes[e.dcg_edgeSource];
+            e1.source.id = nodeIDs[e1.source.dcg_nodeKey];
+            e1.target = _nodes[e.dcg_edgeTarget];
+            e1.target.id = nodeIDs[e1.target.dcg_nodeKey];
+            e1.dcg_edgeLength = e.dcg_edgeLength;
+        });
+
+        _simulation.nodes(_wnodes);
+        _simulation.links(_wedges);
+    }
+
+    function start() {
+        var iters = installForces();
+        runSimulation(iters);
+
+        if(!_paths) {
+            _initialized = true;
+            // store original positions
+            Object.keys(_nodes).forEach(function(key) {
+                _originalNodesPosition[key] = {x: _nodes[key].x, y: _nodes[key].y};
+            });
+        }
+    }
+
+    function stop() {
+        _simulation.stop();
+    }
+
+    function installForces() {
+        if(_paths === null) {
+            _simulation.gravity(_options.gravityStrength)
+                .charge(_options.initialCharge);
+            if(_initialized) {
+                Object.keys(_nodes).forEach(function(key) {
+                    _nodes[key].fixed = false;
+                    _nodes[key].x = _originalNodesPosition[key].x;
+                    _nodes[key].y = _originalNodesPosition[key].y;
+                });
+                return 0;
+            }
+        } else {
+            if(_options.fixOffPathNodes) {
+                var nodesOnPath = d3.set(); // nodes on path
+                _paths.forEach(function(path) {
+                    path.forEach(function(nid) {
+                        nodesOnPath.add(nid);
+                    });
+                });
+
+                // fix nodes not on paths
+                Object.keys(_nodes).forEach(function(key) {
+                    if(!nodesOnPath.has(key)) {
+                        _nodes[key].fixed = true;
+                    } else {
+                        _nodes[key].fixed = false;
+                    }
+                });
+            }
+
+            // enlarge charge force to seperate nodes on paths
+            _simulation.charge(_options.chargeForce);
+        }
+        return _options.iterations;
+    };
+
+    function runSimulation(iterations) {
+        if(!iterations) {
+            dispatchState('end');
+            return;
+        }
+        _simulation.start();
+        for (var i = 0; i < 300; ++i) {
+            _simulation.tick();
+            if(_paths)
+                applyPathAngleForces();
+        }
+        _simulation.stop();
+    }
+
+    function applyPathAngleForces() {
+        function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
+        function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
+        function _angle(v1, v2) {
+            var a = _dot(v1, v2) / (_len(v1)*_len(v2));
+            a = Math.min(a, 1);
+            a = Math.max(a, -1);
+            return Math.acos(a);
+        };
+        // perpendicular unit length vector
+        function _pVec(v) {
+            var xx = -v.y/v.x, yy = 1;
+            var length = _len({x: xx, y: yy});
+            return {x: xx/length, y: yy/length};
+        };
+
+        function updateNode(node, angle, pVec, alpha) {
+            node.x += pVec.x*(Math.PI-angle)*alpha;
+            node.y += pVec.y*(Math.PI-angle)*alpha;
+        }
+
+        _paths.forEach(function(path) {
+            if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
+            for(var i = 1; i < path.length-1; ++i) {
+                var current = _nodes[path[i]];
+                var prev = _nodes[path[i-1]];
+                var next = _nodes[path[i+1]];
+
+                // calculate the angle
+                var vPrev = {x: prev.x - current.x, y: prev.y - current.y};
+                var vNext = {x: next.x - current.x, y: next.y - current.y};
+
+                var angle = _angle(vPrev, vNext); // angle in [0, PI]
+
+                var pvecPrev = _pVec(vPrev);
+                var pvecNext = _pVec(vNext);
+
+                // make sure the perpendicular vector is in the
+                // direction that makes the angle more towards 180 degree
+                // 1. calculate the middle point of node 'prev' and 'next'
+                var mid = {x: (prev.x+next.x)/2.0, y: (prev.y+next.y)/2.0};
+                // 2. calculate the vectors: 'prev' pointing to 'mid', 'next' pointing to 'mid'
+                var prev_mid = {x: mid.x-prev.x, y: mid.y-prev.y};
+                var next_mid = {x: mid.x-next.x, y: mid.y-next.y};
+                // 3. the 'correct' vector: the angle between pvec and prev_mid(next_mid) should
+                //    be an obtuse angle
+                pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {x: -pvecPrev.x, y: -pvecPrev.x};
+                pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {x: -pvecNext.x, y: -pvecNext.x};
+
+                // modify positions of prev and next
+                updateNode(prev, angle, pvecPrev, _options.angleForce);
+                updateNode(next, angle, pvecNext, _options.angleForce);
+            }
+
+        });
+    }
+
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+
+    var engine = Object.assign(graphviz, {
+        layoutAlgorithm: function() {
+            return 'd3-force';
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        parent: property(null),
+        on: function(event, f) {
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
+        },
+        start: function() {
+            start();
+        },
+        stop: function() {
+            stop();
+        },
+        paths: function(paths) {
+            _paths = paths;
+        },
+        optionNames: function() {
+            return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength',
+                    'initialCharge', 'fixOffPathNodes']
+                .concat(graphviz_keys);
+        },
+        iterations: property(300),
+        angleForce: property(0.02),
+        chargeForce: property(-500),
+        gravityStrength: property(1.0),
+        initialCharge: property(-400),
+        fixOffPathNodes: property(false),
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {}
+    });
+    return engine;
+};
+
+dc_graph.d3_force_layout.scripts = ['d3.js'];
+
+/**
+ * `dc_graph.d3v4_force_layout` is an adaptor for d3-force version 4 layouts in dc.graph.js
+ * @class d3v4_force_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.d3v4_force_layout}
+ **/
+dc_graph.d3v4_force_layout = function(id) {
+    var _layoutId = id || uuid();
+    var _simulation = null; // d3-force simulation
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    // node and edge objects shared with d3-force, preserved from one iteration
+    // to the next (as long as the object is still in the layout)
+    var _nodes = {}, _edges = {};
+    var _wnodes = [], _wedges = [];
+    var _originalNodesPosition = {};
+    var _options = null;
+    var _paths = null;
+    var _initialized = false;
+
+    function init(options) {
+        _options = options;
+
+        _simulation = d3v4.forceSimulation()
+            .force('link', d3v4.forceLink())
+            .force('center', d3v4.forceCenter(options.width / 2, options.height / 2))
+            .force('gravityX', d3v4.forceX(options.width / 2).strength(_options.gravityStrength))
+            .force('gravityY', d3v4.forceY(options.height / 2).strength(_options.gravityStrength))
+            .stop();
+
+    }
+
+    function dispatchState(event) {
+        _dispatch[event](
+            _wnodes,
+            _wedges.map(function(e) {
+                return {dcg_edgeKey: e.dcg_edgeKey};
+            })
+        );
+    }
+
+    function data(nodes, edges, constraints) {
+        var nodeIDs = {};
+        nodes.forEach(function(d, i) {
+            nodeIDs[d.dcg_nodeKey] = i;
+        });
+
+        _wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
+            return v.dcg_nodeKey;
+        }, function(v1, v) {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.width = v.width;
+            v1.height = v.height;
+            v1.id = v.dcg_nodeKey;
+        });
+
+        _wedges = regenerate_objects(_edges, edges, null, function(e) {
+            return e.dcg_edgeKey;
+        }, function(e1, e) {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            e1.source = nodeIDs[_nodes[e.dcg_edgeSource].dcg_nodeKey];
+            e1.target = nodeIDs[_nodes[e.dcg_edgeTarget].dcg_nodeKey];
+            e1.dcg_edgeLength = e.dcg_edgeLength;
+        });
+
+        _simulation.nodes(_wnodes);
+        _simulation.force('link').links(_wedges);
+    }
+
+    function start() {
+        _dispatch.start();
+        installForces(_paths);
+        runSimulation(_options.iterations);
+
+        if(!_paths) {
+            _initialized = true;
+            // store original positions
+            Object.keys(_nodes).forEach(function(key) {
+                _originalNodesPosition[key] = {x: _nodes[key].x, y: _nodes[key].y};
+            });
+        }
+    }
+
+    function stop() {
+        // not running asynchronously, no _simulation.stop();
+    }
+
+    function installForces(paths) {
+        _simulation.force('collision', d3v4.forceCollide(_options.collisionRadius));
+        if(paths === null) {
+            if(_initialized) {
+                Object.keys(_nodes).forEach(function(key) {
+                    _nodes[key].fx = _originalNodesPosition[key].x;
+                    _nodes[key].fy = _originalNodesPosition[key].y;
+                });
+            }
+            _simulation.force('charge', d3v4.forceManyBody().strength(_options.initialCharge));
+            _simulation.force('angle', null);
+        } else {
+            var nodesOnPath;
+            if(_options.fixOffPathNodes) {
+                nodesOnPath = d3.set();
+                paths.forEach(function(path) {
+                    path.forEach(function(nid) {
+                        nodesOnPath.add(nid);
+                    });
+                });
+            }
+
+            // fix nodes not on paths
+            Object.keys(_nodes).forEach(function(key) {
+                if(_options.fixOffPathNodes && !nodesOnPath.has(key)) {
+                    _nodes[key].fx = _originalNodesPosition[key].x;
+                    _nodes[key].fy = _originalNodesPosition[key].y;
+                } else {
+                    _nodes[key].fx = null;
+                    _nodes[key].fy = null;
+                }
+            });
+
+            _simulation.force('link', d3v4.forceLink())
+                .force('center', d3v4.forceCenter(_options.width / 2, _options.height / 2))
+                .force('gravityX', d3v4.forceX(_options.width / 2).strength(_options.gravityStrength))
+                .force('gravityY', d3v4.forceY(_options.height / 2).strength(_options.gravityStrength));
+            _simulation.force('charge', d3v4.forceManyBody().strength(_options.chargeForce));
+            _simulation.force('angle', function(alpha) {
+                angleForces(alpha, paths, _options.angleForce);
+            });
+        }
+    };
+
+    function runSimulation(iterations) {
+        for (var i = 0; i < iterations; ++i) {
+            _simulation.tick();
+            dispatchState('tick');
+        }
+        dispatchState('end');
+    }
+
+    function angleForces(alpha, paths, k) {
+        function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
+        function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
+        function _angle(v1, v2) {
+            var a = _dot(v1, v2) / (_len(v1)*_len(v2));
+            a = Math.min(a, 1);
+            a = Math.max(a, -1);
+            return Math.acos(a);
+        };
+        // perpendicular unit length vector
+        function _pVec(v) {
+            var xx = -v.y/v.x, yy = 1;
+            var length = _len({x: xx, y: yy});
+            return {x: xx/length, y: yy/length};
+        };
+
+        function updateNode(node, angle, pVec, k) {
+            node.x += pVec.x*(Math.PI-angle)*k;
+            node.y += pVec.y*(Math.PI-angle)*k;
+        }
+
+        paths.forEach(function(path) {
+            if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
+            for(var i = 1; i < path.length-1; ++i) {
+                var current = _nodes[path[i]];
+                var prev = _nodes[path[i-1]];
+                var next = _nodes[path[i+1]];
+
+                // calculate the angle
+                var vPrev = {x: prev.x - current.x, y: prev.y - current.y};
+                var vNext = {x: next.x - current.x, y: next.y - current.y};
+
+                var angle = _angle(vPrev, vNext); // angle in [0, PI]
+
+                var pvecPrev = _pVec(vPrev);
+                var pvecNext = _pVec(vNext);
+
+                // make sure the perpendicular vector is in the
+                // direction that makes the angle more towards 180 degree
+                // 1. calculate the middle point of node 'prev' and 'next'
+                var mid = {x: (prev.x+next.x)/2.0, y: (prev.y+next.y)/2.0};
+                // 2. calculate the vectors: 'prev' pointing to 'mid', 'next' pointing to 'mid'
+                var prev_mid = {x: mid.x-prev.x, y: mid.y-prev.y};
+                var next_mid = {x: mid.x-next.x, y: mid.y-next.y};
+                // 3. the 'correct' vector: the angle between pvec and prev_mid(next_mid) should
+                //    be an obtuse angle
+                pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {x: -pvecPrev.x, y: -pvecPrev.x};
+                pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {x: -pvecNext.x, y: -pvecNext.x};
+
+                // modify positions of prev and next
+                updateNode(prev, angle, pvecPrev, k);
+                updateNode(next, angle, pvecNext, k);
+            }
+
+        });
+    }
+
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+
+    var engine = Object.assign(graphviz, {
+        layoutAlgorithm: function() {
+            return 'd3v4-force';
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        parent: property(null),
+        on: function(event, f) {
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
+        },
+        start: function() {
+            start();
+        },
+        stop: function() {
+            stop();
+        },
+        paths: function(paths) {
+            _paths = paths;
+        },
+        optionNames: function() {
+            return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength', 'collisionRadius',
+                    'initialCharge', 'fixOffPathNodes']
+                .concat(graphviz_keys);
+        },
+        iterations: property(300),
+        angleForce: property(0.01),
+        chargeForce: property(-600),
+        gravityStrength: property(0.3),
+        collisionRadius: property(8),
+        initialCharge: property(-100),
+        fixOffPathNodes: property(false),
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {}
+    });
+    return engine;
+};
+
+dc_graph.d3v4_force_layout.scripts = ['d3.js'];
 
 dc_graph.flexbox_layout = function(id) {
     var _layoutId = id || uuid();
@@ -7071,7 +7582,8 @@ dc_graph.fix_nodes.strategy.fix_last = function() {
         }
     };
 };
-dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
+dc_graph.fix_nodes.strategy.last_N_per_component = function(maxf) {
+    maxf = maxf || 1;
     var _age = 0;
     var _allFixes = {};
     return {
@@ -7098,6 +7610,7 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
                 if(pos && !_allFixes[nid])
                     _allFixes[nid] = {id: nid, age: _age, pos: pos};
             });
+            // determine components
             var components = [];
             var dfs = dc_graph.undirected_dfs({
                 nodeid: exec.nodeid,
@@ -7111,7 +7624,9 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
                 }
             });
             dfs(wnodes, wedges);
+            // start from scratch
             exec.clear_fixes();
+            // keep or produce enough fixed nodes per component
             components.forEach(function(comp, i) {
                 var oldcomps = comp.reduce(function(cc, n) {
                     if(n.last_component) {
@@ -7140,11 +7655,11 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(N) {
                 }).filter(function(fix) {
                     return fix;
                 });
-                if(fixes.length > N) {
+                if(fixes.length > maxf) {
                     fixes.sort(function(f1, f2) {
                         return f2.age - f1.age;
                     });
-                    fixes = fixes.slice(0, N);
+                    fixes = fixes.slice(0, maxf);
                 }
                 fixes.forEach(function(fix) {
                     exec.register_fix(fix.id, fix.pos);
@@ -7668,9 +8183,9 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             if(p)
                 _anchor = p.anchorName();
             // else we should have received anchor earlier
-            highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
-            highlight_paths_group.on('hover_changed.' + _anchor, p ? hover_changed : null);
-            highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
+            highlight_paths_group.on('paths_changed.highlight' + _anchor, p ? paths_changed : null);
+            highlight_paths_group.on('hover_changed.highlight' + _anchor, p ? hover_changed : null);
+            highlight_paths_group.on('select_changed.highlight' + _anchor, p ? select_changed : null);
         }
     });
 
@@ -7680,6 +8195,255 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     return _behavior;
 };
 
+
+dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgroup) {
+    var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
+    pathprops = pathprops || {};
+    hoverprops = hoverprops || {};
+    var _paths = null;
+    var _anchor;
+    var _layer = null;
+
+    function paths_changed(nop, eop, paths) {
+        // clear old paths
+        _layer.selectAll('.spline-edge').remove();
+        _layer.selectAll('.spline-edge-hover').remove();
+
+        _paths = paths;
+        // check if path exits on current chart
+        if(pathExists(paths) === true) {
+            // layout engine wants just array of array of nodeids
+            var nidpaths = paths.map(function(path) {
+                return pathreader.elementList.eval(path).filter(function(elem) {
+                    return pathreader.elementType.eval(elem) === 'node';
+                }).map(function(elem) {
+                    return pathreader.nodeKey.eval(elem);
+                });
+            });
+            _behavior.parent().layoutEngine().paths(nidpaths);
+        } else {
+            _behavior.parent().layoutEngine().paths(null);
+        }
+        _behavior.parent().redraw();
+    }
+
+    // check if path exists in current view
+    function pathExists(paths) {
+        var nodesCount = 0;
+        paths.forEach(function(d) {
+            nodesCount += getNodePosition(d).length;
+        });
+        return nodesCount > 0;
+    }
+
+    // get the positions of nodes on path
+    function getNodePosition(path) {
+        var _chart = _behavior.parent();
+        var plist = [];
+
+        pathreader.elementList.eval(path).forEach(function(element) {
+            var key, node;
+            switch(pathreader.elementType.eval(element)) {
+            case 'node':
+                key = pathreader.nodeKey.eval(element);
+                node = _chart.getWholeNode(key);
+                if(node !== null) {
+                    plist.push({'x': node.cola.x, 'y': node.cola.y});
+                }
+                break;
+            case 'edge':
+                break;
+            }
+        });
+
+        return plist;
+    };
+
+    // insert fake nodes to avoid sharp turns
+    function insertDummyNodes(path_coord) {
+        function _distance(node1, node2) {
+            return Math.sqrt(Math.pow((node1.x-node2.x),2) + Math.pow((node1.y-node2.y),2));
+        }
+
+        var new_path_coord = [];
+
+        for(var i = 0; i < path_coord.length; i ++) {
+            if (i-1 >= 0 && i+1 < path_coord.length) {
+                if (path_coord[i-1].x === path_coord[i+1].x &&
+                    path_coord[i-1].y === path_coord[i+1].y ) {
+                    // insert node when the previous and next nodes are the same
+                    var x1 = path_coord[i-1].x, y1 = path_coord[i-1].y;
+                    var x2 = path_coord[i].x, y2 = path_coord[i].y;
+                    var dx = x1 - x2, dy = y1 - y2;
+
+                    var v1 = dy / Math.sqrt(dx*dx + dy*dy);
+                    var v2 = - dx / Math.sqrt(dx*dx + dy*dy);
+
+                    var insert_p1 = {'x': null, 'y': null};
+                    var insert_p2 = {'x': null, 'y': null};
+
+                    var offset = 10;
+
+                    insert_p1.x = (x1+x2)/2.0 + offset*v1;
+                    insert_p1.y = (y1+y2)/2.0 + offset*v2;
+
+                    insert_p2.x = (x1+x2)/2.0 - offset*v1;
+                    insert_p2.y = (y1+y2)/2.0 - offset*v2;
+
+                    new_path_coord.push(insert_p1);
+                    new_path_coord.push(path_coord[i]);
+                    new_path_coord.push(insert_p2);
+                } else if (_distance(path_coord[i-1], path_coord[i+1]) < pathprops.nearNodesDistance){
+                    // insert node when the previous and next nodes are very close
+                    // first node
+                    var x1 = path_coord[i-1].x, y1 = path_coord[i-1].y;
+                    var x2 = path_coord[i].x, y2 = path_coord[i].y;
+                    var dx = x1 - x2, dy = y1 - y2;
+
+                    var v1 = dy / Math.sqrt(dx*dx + dy*dy);
+                    var v2 = - dx / Math.sqrt(dx*dx + dy*dy);
+
+                    var insert_p1 = {'x': null, 'y': null};
+
+                    var offset = 10;
+
+                    insert_p1.x = (x1+x2)/2.0 + offset*v1;
+                    insert_p1.y = (y1+y2)/2.0 + offset*v2;
+
+                    // second node
+                    x1 = path_coord[i].x;
+                    y1 = path_coord[i].y;
+                    x2 = path_coord[i+1].x;
+                    y2 = path_coord[i+1].y;
+                    dx = x1 - x2;
+                    dy = y1 - y2;
+
+                    v1 = dy / Math.sqrt(dx*dx + dy*dy);
+                    v2 = - dx / Math.sqrt(dx*dx + dy*dy);
+
+                    var insert_p2 = {'x': null, 'y': null};
+
+                    insert_p2.x = (x1+x2)/2.0 + offset*v1;
+                    insert_p2.y = (y1+y2)/2.0 + offset*v2;
+
+                    new_path_coord.push(insert_p1);
+                    new_path_coord.push(path_coord[i]);
+                    new_path_coord.push(insert_p2);
+
+                }
+                else {
+                    new_path_coord.push(path_coord[i]);
+                }
+            } else {
+                new_path_coord.push(path_coord[i]);
+            }
+        }
+        return new_path_coord;
+    }
+
+    // convert original path data into <d>
+    function genPath(p, lineTension) {
+        lineTension = lineTension || 0.6;
+
+        var path_coord = getNodePosition(p);
+        if(pathprops.insertDummyNodes) {
+            path_coord = insertDummyNodes(path_coord);
+        }
+
+        var line = d3.svg.line()
+            .interpolate("cardinal")
+            .x(function(d) { return d.x; })
+            .y(function(d) { return d.y; })
+            .tension(lineTension);
+
+        return line(path_coord);
+    }
+
+    // draw the spline for paths
+    function drawSpline(paths, pathprops) {
+        if(paths === null) return;
+
+        // draw spline edge
+        var _chart = _behavior.parent();
+
+        var edge = _layer.selectAll(".spline-edge").data(paths);
+        var edgeEnter = edge.enter().append("svg:path")
+            .attr('class', 'spline-edge')
+            .attr('id', function(d, i) { return "spline-path-"+i; })
+            .attr('d', function(d) { return genPath(d, pathprops.lineTension); })
+            .attr('stroke', pathprops.edgeStroke || 'black')
+            .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
+            .attr('opacity', pathprops.edgeOpacity || 1)
+            .attr('fill', 'none');
+
+        // another wider copy of the edge just for hover events
+        var edgeHover = _layer.selectAll('.spline-edge-hover')
+            .data(paths);
+        var edgeHoverEnter = edgeHover.enter().append('svg:path')
+            .attr('class', 'spline-edge-hover')
+            .attr('d', function(d) { return genPath(d); })
+            .attr('opacity', 0)
+            .attr('stroke', 'green')
+            .attr('stroke-width', hoverprops.edgeStrokeWidth || 5)
+            .attr('fill', 'none')
+            .on('mouseover', function(d, i) {
+                highlight_paths_group.hover_changed([paths[i]]);
+             })
+            .on('mouseout', function(d, i) {
+                highlight_paths_group.hover_changed(null);
+             })
+            .on('click', function(d, i) {
+                highlight_paths_group.select_changed([paths[i]]);
+             });
+    };
+
+    function draw_hovered(hoversplines) {
+        if(hoversplines === null) {
+            d3.selectAll('.spline-edge').attr('stroke', 'black');
+        } else {
+            for(var i = 0; i < hoversplines.length; i ++) {
+                var path_id = _paths.indexOf(hoversplines[i]);
+                var sel_path = d3.select("#spline-path-"+path_id).attr('stroke', hoverprops.edgeStroke);
+                sel_path.each(function() {this.parentNode.appendChild(this);});
+            }
+        }
+    }
+
+    function add_behavior(chart, node, edge, ehover) {
+        // create the layer if it's null
+        if(_layer === null) {
+            _layer = _behavior.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
+            _layer.enter().append('g').attr('class', 'spline-layer');
+        }
+
+        drawSpline(_paths, pathprops);
+
+    }
+
+    function remove_behavior(chart, node, edge, ehover) {
+    }
+
+    highlight_paths_group
+        .on('hover_changed.draw-spline-paths', function(hpaths) {
+            draw_hovered(hpaths);
+        });
+
+    var _behavior = dc_graph.behavior('draw-spline-paths', {
+        laterDraw: true,
+        add_behavior: add_behavior,
+        remove_behavior: function(chart, node, edge, ehover) {
+            remove_behavior(chart, node, edge, ehover);
+            return this;
+        },
+        parent: function(p) {
+            if(p)
+                _anchor = p.anchorName();
+            highlight_paths_group.on('paths_changed.spline-' + _anchor, p ? paths_changed : null);
+        }
+    });
+
+    return _behavior;
+};
 
 dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
     dirs = dirs || ['both'];
@@ -9555,6 +10319,7 @@ dc_graph.random_graph = function(options) {
         edgeKeyGen: function(i) { return 'e' + i; },
         newComponentProb: 0.1,
         newNodeProb: 0.9,
+        removeEdgeProb: 0.75,
         log: false
     }, options);
     if(isNaN(options.newNodeProb))
@@ -9600,6 +10365,25 @@ dc_graph.random_graph = function(options) {
                     if(options.log)
                         console.log(n1[options.nodeKey] + ' -> ' + n2[options.nodeKey]);
                     _edges.push(edge);
+                }
+            }
+        },
+        remove: function(N) {
+            while(N-- > 0) {
+                var choice = Math.random();
+                if(choice < options.removeEdgeProb)
+                    _edges.splice(Math.floor(Math.random()*_edges.length), 1);
+                else {
+                    var n = _nodes[Math.floor(Math.random()*_nodes.length)];
+                    var eis = [];
+                    _edges.forEach(function(e, ei) {
+                        if(e[options.sourceKey] === n[options.nodeKey] ||
+                           e[options.targetKey] === n[options.nodeKey])
+                            eis.push(ei);
+                    });
+                    eis.reverse().forEach(function(ei) {
+                        _edges.splice(ei, 1);
+                    });
                 }
             }
         }

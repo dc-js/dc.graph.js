@@ -20,6 +20,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     // but attempt to implement most of that interface, copying some of the most basic stuff
     var _diagram = dc.marginMixin({});
     _diagram.__dcFlag__ = dc.utils.uniqueId();
+    _diagram.margins({left: 10, top: 10, right: 10, bottom: 10});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed');
     var _nodes = {}, _edges = {}; // hold state between runs
@@ -1308,10 +1309,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        resizeSvg();
+        _diagram.resizeSvg();
         if(_diagram.initLayoutOnRedraw())
             initLayout();
-
         _diagram.layoutEngine().stop();
         _dispatch.preDraw();
 
@@ -2084,7 +2084,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(!_bounds)
                 return;
             var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
-                swidth =  _diagram.width(), sheight = _diagram.height(), viewBox;
+                swidth =  _diagram.width() - _diagram.margins().left - _diagram.margins().right,
+                sheight = _diagram.height() - _diagram.margins().top - _diagram.margins().bottom;
             if(_diagram.DEBUG_BOUNDS)
                 debug_bounds(_bounds);
             var fitS = _diagram.fitStrategy(), translate = [0,0], scale = 1;
@@ -2092,9 +2093,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
                     vrl = vAR<sAR, // view aspect ratio is less (wider)
                     amv = (fitS === 'default') ? !vrl : (fitS === 'vertical'); // align margins vertically
-                scale = amv ?
-                    (sheight - _diagram.margins().top - _diagram.margins().bottom) / vheight :
-                    (swidth - _diagram.margins().left - _diagram.margins().right) / vwidth;
+                scale = amv ? sheight / vheight : swidth / vwidth;
                 scale = Math.max(_diagram.zoomExtent()[0], Math.min(_diagram.zoomExtent()[1], scale));
                 translate = [_diagram.margins().left - _bounds.left*scale + (swidth - vwidth*scale) / 2,
                              _diagram.margins().top - _bounds.top*scale + (sheight - vheight*scale) / 2];
@@ -2597,11 +2596,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function margined_bounds() {
         var bounds = _bounds || {left: 0, top: 0, right: 0, bottom: 0};
+        var scale = _zoom ? _zoom.scale() : 1;
         return {
-            left: bounds.left - _diagram.margins().left,
-            top: bounds.top - _diagram.margins().top,
-            right: bounds.right + _diagram.margins().right,
-            bottom: bounds.bottom + _diagram.margins().bottom
+            left: bounds.left - _diagram.margins().left/scale,
+            top: bounds.top - _diagram.margins().top/scale,
+            right: bounds.right + _diagram.margins().right/scale,
+            bottom: bounds.bottom + _diagram.margins().bottom/scale
         };
     }
 
@@ -2678,12 +2678,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         globalTransform(translate, scale, false);
     }
 
-    function resizeSvg(w, h) {
+    _diagram.resizeSvg = function(w, h) {
         if(_svg) {
             _svg.attr('width', w || _diagram.width())
                 .attr('height', h || _diagram.height());
         }
-    }
+        return _diagram;
+    };
 
     function enableZoom() {
         _svg.call(_zoom);
@@ -2695,7 +2696,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function generateSvg() {
         _svg = _diagram.root().append('svg');
-        resizeSvg();
+        _diagram.resizeSvg();
 
         _defs = _svg.append('svg:defs');
 

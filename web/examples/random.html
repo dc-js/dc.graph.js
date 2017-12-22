@@ -15,6 +15,7 @@
   <script type="text/javascript" src="../js/dagre.js"></script>
   <script type="text/javascript" src="../js/dc.graph.js"></script>
 
+  <script type="text/javascript" src="../js/chart.registry.js"></script>
   <script type="text/javascript" src="../js/querystring.js"></script>
 
   <style type="text/css">
@@ -61,6 +62,8 @@
             worker: true,
             newnode: 0.9,
             newcomp: 0.1,
+            remove: 0,
+            remedge: 0.75,
             interval: 1000,
             opacity: 1,
             ports: false,
@@ -81,6 +84,7 @@
             ncolors: 12,
             newNodeProb: +options.newnode,
             newComponentProb: +options.newcomp,
+            removeEdgeProb: +options.remedge,
             log: options.log && options.log !== 'false'
         });
         var diagram = dc_graph.diagram('#graph');
@@ -118,6 +122,9 @@
                 .portStyle('symbols', dc_graph.symbol_port_style())
                 .portStyleName('symbols');
         }
+        var fix_nodes = dc_graph.fix_nodes()
+            .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(1));
+        diagram.child('fix-nodes', fix_nodes);
 
         diagram
             .render();
@@ -125,7 +132,10 @@
         var interval = null;
         function run() {
             interval = window.setInterval(function() {
-                random.generate(1);
+                if(Math.random() < +options.remove)
+                    random.remove(1)
+                else
+                    random.generate(1);
                 data = build_data(random.nodes(), random.edges());
                 diagram
                     .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
