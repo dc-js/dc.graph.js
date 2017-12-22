@@ -97,19 +97,21 @@ dc_graph.d3v4_force_layout = function(id) {
             _simulation.force('charge', d3v4.forceManyBody().strength(_options.initialCharge));
             _simulation.force('angle', null);
         } else {
-            var nodeIDs = []; // nodes on path
-            if(_options.fixOffPathNodes)
+            var nodesOnPath;
+            if(_options.fixOffPathNodes) {
+                nodesOnPath = d3.set();
                 paths.forEach(function(path) {
                     path.element_list.forEach(function(d) {
                         if(d.element_type === 'node') {
-                            nodeIDs.push(d.property_map.ecomp_uid);
+                            nodesOnPath.add(d.property_map.ecomp_uid);
                         }
                     });
                 });
+            }
 
             // fix nodes not on paths
             Object.keys(_nodes).forEach(function(key) {
-                if(_options.fixOffPathNodes && !nodeIDs.includes(key)) {
+                if(_options.fixOffPathNodes && !nodesOnPath.has(key)) {
                     _nodes[key].fx = _originalNodesPosition[key].x;
                     _nodes[key].fy = _originalNodesPosition[key].y;
                 } else {

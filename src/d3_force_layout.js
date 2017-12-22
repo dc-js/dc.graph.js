@@ -105,18 +105,18 @@ dc_graph.d3_force_layout = function(id) {
             }
         } else {
             if(_options.fixOffPathNodes) {
-                var nodeIDs = []; // nodes on path
+                var nodesOnPath = d3.set(); // nodes on path
                 _paths.forEach(function(path) {
                     path.element_list.forEach(function(d) {
                         if(d.element_type === 'node') {
-                            nodeIDs.push(d.property_map.ecomp_uid);
+                            nodesOnPath.add(d.property_map.ecomp_uid);
                         }
                     });
                 });
 
                 // fix nodes not on paths
                 Object.keys(_nodes).forEach(function(key) {
-                    if(!nodeIDs.includes(key)) {
+                    if(!nodesOnPath.has(key)) {
                         _nodes[key].fixed = true;
                     } else {
                         _nodes[key].fixed = false;
