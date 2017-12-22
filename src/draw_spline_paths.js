@@ -225,6 +225,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         });
 
     var _behavior = dc_graph.behavior('draw-spline-paths', {
+        laterDraw: true,
         add_behavior: add_behavior,
         remove_behavior: function(chart, node, edge, ehover) {
             remove_behavior(chart, node, edge, ehover);
