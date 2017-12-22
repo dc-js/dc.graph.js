@@ -1,0 +1,35 @@
+{
+    "preset": "google",
+    "maximumLineLength": {
+        "value": 140
+    },
+    "validateIndentation": 4,
+    "disallowMultipleVarDecl": null,
+    "requireSpacesInFunctionExpression": {
+        "beforeOpeningCurlyBrace": true
+    },
+    "requireSpacesInFunctionDeclaration": {
+        "beforeOpeningCurlyBrace": true
+    },
+    "disallowSpacesInFunctionExpression": null,
+    "disallowSpacesInAnonymousFunctionExpression": null,
+    "disallowSpacesInFunctionDeclaration": null,
+    "requireCamelCaseOrUpperCaseIdentifiers": false,
+    "requireSpaceAfterKeywords": false,
+    "requireCurlyBraces": false,
+    "requireSpaceAfterBinaryOperators": false,
+    "requireSpaceBeforeBinaryOperators": false,
+    "disallowQuotedKeysInObjects": {"allExcept": ["reserved"]},
+    "disallowKeywordsOnNewLine": false,
+    "jsDoc": {
+        "checkAnnotations": "jsdoc3",
+        "checkParamNames": true,
+        "requireParamTypes": true,
+        "checkRedundantParams": true,
+        "checkReturnTypes": true,
+        "checkRedundantReturns": true,
+        "requireReturnTypes": true,
+        "checkTypes": "capitalizedNativeCase",
+        "checkRedundantAccess": true
+    }
+}
