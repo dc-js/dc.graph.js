@@ -181,6 +181,7 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.dagre.worker.js.map',
                             'd3.flexdivs.js',
                             'dc.graph.tracker.domain.js',
+                            'd3v4-force.js',
                             'lysenko-interval-tree.js',
                             'querystring.js',
                             'chart.registry.js',
