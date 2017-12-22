@@ -104,23 +104,25 @@ dc_graph.d3_force_layout = function(id) {
                 return 0;
             }
         } else {
-            var nodeIDs = []; // nodes on path
-            paths.forEach(function(path) {
-                path.element_list.forEach(function(d) {
-                    if( d.element_type === 'node') {
-                        nodeIDs.push(d.property_map.ecomp_uid);
+            if(_options.fixOffPathNodes) {
+                var nodeIDs = []; // nodes on path
+                _paths.forEach(function(path) {
+                    path.element_list.forEach(function(d) {
+                        if(d.element_type === 'node') {
+                            nodeIDs.push(d.property_map.ecomp_uid);
+                        }
+                    });
+                });
+
+                // fix nodes not on paths
+                Object.keys(_nodes).forEach(function(key) {
+                    if(!nodeIDs.includes(key)) {
+                        _nodes[key].fixed = true;
+                    } else {
+                        _nodes[key].fixed = false;
                     }
                 });
-            });
-
-            // fix nodes not on paths
-            Object.keys(_nodes).forEach(function(key) {
-                if(!nodeIDs.includes(key)) {
-                    _nodes[key].fixed = true;
-                } else {
-                    _nodes[key].fixed = false;
-                }
-            });
+            }
 
             // enlarge charge force to seperate nodes on paths
             _simulation.charge(_options.chargeForce);
@@ -237,7 +239,8 @@ dc_graph.d3_force_layout = function(id) {
             _paths = paths;
         },
         optionNames: function() {
-            return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength', 'initialCharge']
+            return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength',
+                    'initialCharge', 'fixOffPathNodes']
                 .concat(graphviz_keys);
         },
         iterations: property(300),
@@ -245,6 +248,7 @@ dc_graph.d3_force_layout = function(id) {
         chargeForce: property(-500),
         gravityStrength: property(1.0),
         initialCharge: property(-400),
+        fixOffPathNodes: property(false),
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {}
     });
