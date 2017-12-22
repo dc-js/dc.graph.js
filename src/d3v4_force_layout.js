@@ -101,10 +101,8 @@ dc_graph.d3v4_force_layout = function(id) {
             if(_options.fixOffPathNodes) {
                 nodesOnPath = d3.set();
                 paths.forEach(function(path) {
-                    path.element_list.forEach(function(d) {
-                        if(d.element_type === 'node') {
-                            nodesOnPath.add(d.property_map.ecomp_uid);
-                        }
+                    path.forEach(function(nid) {
+                        nodesOnPath.add(nid);
                     });
                 });
             }
@@ -161,11 +159,11 @@ dc_graph.d3v4_force_layout = function(id) {
         }
 
         paths.forEach(function(path) {
-            if(path.element_list.length < 5) return; // at leaset 3 nodes and 2 edges:  A->B->C
-            for(var i = 2; i < path.element_list.length-2; i += 2) {
-                var current = _nodes[path.element_list[i].property_map.ecomp_uid];
-                var prev = _nodes[path.element_list[i-2].property_map.ecomp_uid];
-                var next = _nodes[path.element_list[i+2].property_map.ecomp_uid];
+            if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
+            for(var i = 1; i < path.length-1; ++i) {
+                var current = _nodes[path[i]];
+                var prev = _nodes[path[i-1]];
+                var next = _nodes[path[i+1]];
 
                 // calculate the angle
                 var vPrev = {x: prev.x - current.x, y: prev.y - current.y};

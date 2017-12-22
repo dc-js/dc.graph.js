@@ -14,7 +14,15 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         _paths = paths;
         // check if path exits on current chart
         if(pathExists(paths) === true) {
-            _behavior.parent().layoutEngine().paths(paths);
+            // layout engine wants just array of array of nodeids
+            var nidpaths = paths.map(function(path) {
+                return pathreader.elementList.eval(path).filter(function(elem) {
+                    return pathreader.elementType.eval(elem) === 'node';
+                }).map(function(elem) {
+                    return pathreader.nodeKey.eval(elem);
+                });
+            });
+            _behavior.parent().layoutEngine().paths(nidpaths);
         } else {
             _behavior.parent().layoutEngine().paths(null);
         }
