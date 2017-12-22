@@ -7,8 +7,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     var _layer = null;
 
     function paths_changed(nop, eop, paths) {
-
-        //clear old paths
+        // clear old paths
         _layer.selectAll('.spline-edge').remove();
         _layer.selectAll('.spline-edge-hover').remove();
 
@@ -31,7 +30,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         return nodesCount > 0;
     }
 
-    // get the postions of nodes on path
+    // get the positions of nodes on path
     function getNodePosition(path) {
         var _chart = _behavior.parent();
         var plist = [];
@@ -56,7 +55,6 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
     // insert fake nodes to avoid sharp turns
     function insertDummyNodes(path_coord) {
-
         function _distance(node1, node2) {
             return Math.sqrt(Math.pow((node1.x-node2.x),2) + Math.pow((node1.y-node2.y),2));
         }

@@ -1312,8 +1312,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         _diagram.resizeSvg();
         if(_diagram.initLayoutOnRedraw())
             initLayout();
-        if(_diagram.layoutEngine().relayout)
-            _diagram.layoutEngine().relayout();
         _diagram.layoutEngine().stop();
         _dispatch.preDraw();
 

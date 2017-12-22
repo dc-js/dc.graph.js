@@ -24,7 +24,13 @@ dc_graph.d3_force_layout = function(id) {
         _simulation = d3.layout.force()
             .size([options.width, options.height]);
 
-        resetSim();
+        _simulation.on('tick', /* _tick = */ function() {
+            dispatchState('tick');
+        }).on('start', function() {
+            _dispatch.start();
+        }).on('end', /* _done = */ function() {
+            dispatchState('end');
+        });
     }
 
     function dispatchState(event) {
@@ -34,19 +40,6 @@ dc_graph.d3_force_layout = function(id) {
                 return {dcg_edgeKey: e.dcg_edgeKey};
             })
         );
-    }
-
-    function resetSim() {
-        _simulation.on('tick', /* _tick = */ function() {
-            dispatchState('tick');
-        }).on('start', function() {
-            _dispatch.start();
-        }).on('end', /* _done = */ function() {
-            dispatchState('end');
-        });
-
-        _simulation.gravity(_options.gravityStrength)
-            .charge(_options.initialCharge);
     }
 
     function data(nodes, edges, constraints) {
@@ -82,29 +75,34 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function start() {
-        runSimulation();
+        var iters = installForces(_paths);
+        runSimulation(iters);
 
-        _initialized = true;
-        //store original positions
-        Object.keys(_nodes).forEach(function(key) {
-            _originalNodesPosition[key] = {'x': _nodes[key].x, 'y': _nodes[key].y};
-        });
+        if(!_paths) {
+            _initialized = true;
+            // store original positions
+            Object.keys(_nodes).forEach(function(key) {
+                _originalNodesPosition[key] = {'x': _nodes[key].x, 'y': _nodes[key].y};
+            });
+        }
     }
 
     function stop() {
         _simulation.stop();
     }
 
-    function relayout(paths) {
+    function installForces(paths) {
         if(paths === null) {
+            _simulation.gravity(_options.gravityStrength)
+                .charge(_options.initialCharge);
             if(_initialized) {
                 Object.keys(_nodes).forEach(function(key) {
                     _nodes[key].fixed = false;
                     _nodes[key].x = _originalNodesPosition[key].x;
                     _nodes[key].y = _originalNodesPosition[key].y;
                 });
+                return 0;
             }
-            dispatchState('end');
         } else {
             var nodeIDs = []; // nodes on path
             paths.forEach(function(path) {
@@ -129,17 +127,18 @@ dc_graph.d3_force_layout = function(id) {
 
             // change tick function to apply custom force
             _simulation.on('tick', function() {
-                applyRelayoutPathForces(paths);
+                applyPathAngleForces(paths);
             });
 
-            runSimulation();
         }
-
-        resetSim();
+        return _options.iterations;
     };
 
-    function runSimulation(iteration) {
-        var iterations = iterations || 300;
+    function runSimulation(iterations) {
+        if(!iterations) {
+            dispatchState('end');
+            return;
+        }
         _simulation.start();
         for (var i = 0; i < 300; ++i) {
             _simulation.tick();
@@ -147,8 +146,7 @@ dc_graph.d3_force_layout = function(id) {
         _simulation.stop();
     }
 
-    function applyRelayoutPathForces(paths) {
-
+    function applyPathAngleForces(paths) {
         function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
         function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
         function _angle(v1, v2) {
@@ -235,16 +233,14 @@ dc_graph.d3_force_layout = function(id) {
         stop: function() {
             stop();
         },
-        relayout: function() {
-            relayout(_paths);
-        },
         paths: function(paths) {
             _paths = paths;
         },
         optionNames: function() {
-            return ['angleForce', 'chargeForce', 'gravityStrength', 'initialCharge']
+            return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength', 'initialCharge']
                 .concat(graphviz_keys);
         },
+        iterations: property(300),
         angleForce: property(0.02),
         chargeForce: property(-500),
         gravityStrength: property(1.0),
