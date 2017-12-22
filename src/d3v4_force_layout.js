@@ -129,9 +129,9 @@ dc_graph.d3v4_force_layout = function(id) {
             });
 
             _simulation.force("link", d3v4.forceLink())
-            .force("center", d3v4.forceCenter(_options.width / 2, _options.height / 2))
-            .force('gravityX', d3v4.forceX(_options.width / 2).strength(_options.gravityStrength))
-            .force('gravityY', d3v4.forceY(_options.height / 2).strength(_options.gravityStrength));
+                .force("center", d3v4.forceCenter(_options.width / 2, _options.height / 2))
+                .force('gravityX', d3v4.forceX(_options.width / 2).strength(_options.gravityStrength))
+                .force('gravityY', d3v4.forceY(_options.height / 2).strength(_options.gravityStrength));
             _simulation.force("charge", d3v4.forceManyBody().strength(_options.chargeForce));
             _simulation.force('angle', function(alpha) {
                 angleForces(alpha, paths, _options.angleForce);
