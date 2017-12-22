@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>dc.graph.js Class: tip</title>
+	<title>dc.graph.js Class: d3_force_layout</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -72,7 +72,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: tip</h1>
+	<h1 class="page-title">Class: d3_force_layout</h1>
 <section>
 
 <header>
@@ -80,7 +80,7 @@
         <h2>
             <span class="ancestors"><a href="dc_graph.html">dc_graph</a>.</span>
         
-        tip
+        d3_force_layout
         </h2>
         
     
@@ -93,7 +93,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="tip"><span class="type-signature"></span>new tip()</h4>
+    <h4 class="name" id="d3_force_layout"><span class="type-signature"></span>new d3_force_layout( [id])</h4>
     
     
 </dt>
@@ -101,11 +101,7 @@
 
     
     <div class="description">
-        <p>Asynchronous <a href="https://github.com/Caged/d3-tip">d3.tip</a> support for dc.graph.js</p>
-<p>Add tooltips to the nodes and edges of a graph using an asynchronous callback to get
-the html to show.</p>
-<p>Optional - requires separately loading the d3.tip script and CSS (which are included in
-dc.graph.js in <code>web/js/d3-tip/index.js</code> and <code>web/css/d3-tip/example-styles.css</code>)</p>
+        <p><code>dc_graph.d3_force_layout</code> is an adaptor for d3-force layouts in dc.graph.js</p>
     </div>
     
 
@@ -114,6 +110,76 @@ dc.graph.js in <code>web/js/d3-tip/index.js</code> and <code>web/css/d3-tip/exam
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    uuid()
+                
+                </td>
+            
+
+            <td class="description last"><p>Unique identifier</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -151,8 +217,8 @@ dc.graph.js in <code>web/js/d3-tip/index.js</code> and <code>web/css/d3-tip/exam
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="tip.js.html">tip.js</a>,
-				 <a href="tip.js.html#sunlight-1-line-1">line 1</a>
+				<a href="d3_force_layout.js.html">d3_force_layout.js</a>,
+				 <a href="d3_force_layout.js.html#sunlight-1-line-1">line 1</a>
 			</li>
 		</ul>
 	</dd>
@@ -188,7 +254,7 @@ dc.graph.js in <code>web/js/d3-tip/index.js</code> and <code>web/css/d3-tip/exam
     </dt>
     <dd>
         
-<span class="param-type">Object</span>
+<span class="param-type"><a href="dc_graph.d3_force_layout.html">dc_graph.d3_force_layout</a></span>
 
 
 
@@ -214,253 +280,6 @@ dc.graph.js in <code>web/js/d3-tip/index.js</code> and <code>web/css/d3-tip/exam
 
     
 
-    
-        <h3 class="subsection-title">Members</h3>
-
-        <dl>
-            
-<hr>
-<dt class="name" id="content">
-    <h4 id="content"><span class="type-signature"></span>content<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Specifies the function to generate content for the tooltip. This function has the
-signature <code>function(d, k)</code>, where <code>d</code> is the datum of the thing being hovered over,
-and <code>k</code> is a continuation. The function should fetch the content, asynchronously if
-needed, and then pass html forward to <code>k</code>.</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="tip.js.html">tip.js</a>,
-				 <a href="tip.js.html#sunlight-1-line-121">line 121</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-        <h5>Example</h5>
-        
-    <pre class="sunlight-highlight-javascript">// Default behavior: assume it&#x27;s a node, show node title
-var tip = dc_graph.tip().content(function(n, k) {
-    k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : &#x27;&#x27;);
-});</pre>
-
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt class="name" id="direction">
-    <h4 id="direction"><span class="type-signature"></span>direction<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Specify the direction for tooltips. Currently supports the
-<a href="https://en.wikipedia.org/wiki/Points_of_the_compass">cardinal and intercardinal directions</a> supported by
-<a href="https://github.com/Caged/d3-tip/blob/master/docs/positioning-tooltips.md#tipdirection">d3.tip.direction</a>:
-<code>'n'</code>, <code>'ne'</code>, <code>'e'</code>, etc.</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="tip.js.html">tip.js</a>,
-				 <a href="tip.js.html#sunlight-1-line-103">line 103</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-        <h5>Example</h5>
-        
-    <pre class="sunlight-highlight-javascript">// show all the attributes and values in the node and edge objects
-var tip = dc_graph.tip();
-tip.content(tip.table());</pre>
-
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt class="name" id="table">
-    <h4 id="table"><span class="type-signature"></span>table<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Generates a handler which can be passed to <code>tip.content</code> to produce a table of the
-attributes and values of the hovered object.</p>
-<p>Note: this interface is not great and is subject to change in the near term.</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="tip.js.html">tip.js</a>,
-				 <a href="tip.js.html#sunlight-1-line-151">line 151</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-        <h5>Example</h5>
-        
-    <pre class="sunlight-highlight-javascript">// show all the attributes and values in the node and edge objects
-var tip = dc_graph.tip();
-tip.content(dc_graph.tip.table());</pre>
-
-
-    
-</dd>
-
-        </dl>
     
 
     
