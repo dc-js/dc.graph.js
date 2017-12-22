@@ -82,7 +82,7 @@ dc_graph.d3_force_layout = function(id) {
             _initialized = true;
             // store original positions
             Object.keys(_nodes).forEach(function(key) {
-                _originalNodesPosition[key] = {'x': _nodes[key].x, 'y': _nodes[key].y};
+                _originalNodesPosition[key] = {x: _nodes[key].x, y: _nodes[key].y};
             });
         }
     }
@@ -148,7 +148,7 @@ dc_graph.d3_force_layout = function(id) {
         function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
         function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
         function _angle(v1, v2) {
-            var a = _dot(v1,v2) / (_len(v1)*_len(v2));
+            var a = _dot(v1, v2) / (_len(v1)*_len(v2));
             a = Math.min(a, 1);
             a = Math.max(a, -1);
             return Math.acos(a);
@@ -156,8 +156,8 @@ dc_graph.d3_force_layout = function(id) {
         // perpendicular unit length vector
         function _pVec(v) {
             var xx = -v.y/v.x, yy = 1;
-            var length = _len({'x':xx, 'y':yy});
-            return {'x': xx/length, 'y': yy/length};
+            var length = _len({x: xx, y: yy});
+            return {x: xx/length, y: yy/length};
         };
 
         function updateNode(node, angle, pVec, alpha) {
@@ -173,8 +173,8 @@ dc_graph.d3_force_layout = function(id) {
                 var next = _nodes[path.element_list[i+2].property_map.ecomp_uid];
 
                 // calculate the angle
-                var vPrev = {'x': prev.x - current.x, 'y': prev.y - current.y};
-                var vNext = {'x': next.x - current.x, 'y': next.y - current.y};
+                var vPrev = {x: prev.x - current.x, y: prev.y - current.y};
+                var vNext = {x: next.x - current.x, y: next.y - current.y};
 
                 var angle = _angle(vPrev, vNext); // angle in [0, PI]
 
@@ -184,14 +184,14 @@ dc_graph.d3_force_layout = function(id) {
                 // make sure the perpendicular vector is in the
                 // direction that makes the angle more towards 180 degree
                 // 1. calculate the middle point of node 'prev' and 'next'
-                var mid = {'x': (prev.x+next.x)/2.0, 'y': (prev.y+next.y)/2.0 };
+                var mid = {x: (prev.x+next.x)/2.0, y: (prev.y+next.y)/2.0};
                 // 2. calculate the vectors: 'prev' pointing to 'mid', 'next' pointing to 'mid'
-                var prev_mid = {'x': mid.x-prev.x, 'y': mid.y-prev.y};
-                var next_mid = {'x': mid.x-next.x, 'y': mid.y-next.y};
+                var prev_mid = {x: mid.x-prev.x, y: mid.y-prev.y};
+                var next_mid = {x: mid.x-next.x, y: mid.y-next.y};
                 // 3. the 'correct' vector: the angle between pvec and prev_mid(next_mid) should
                 //    be an obtuse angle
-                pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {'x': -pvecPrev.x, 'y': -pvecPrev.x};
-                pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {'x': -pvecNext.x, 'y': -pvecNext.x};
+                pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {x: -pvecPrev.x, y: -pvecPrev.x};
+                pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {x: -pvecNext.x, y: -pvecNext.x};
 
                 // modify positions of prev and next
                 updateNode(prev, angle, pvecPrev, _options.angleForce);
