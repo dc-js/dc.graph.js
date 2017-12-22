@@ -198,7 +198,7 @@ dc_graph.d3v4_force_layout = function(id) {
 
     var engine = Object.assign(graphviz, {
         layoutAlgorithm: function() {
-            return 'd3-force';
+            return 'd3v4-force';
         },
         layoutId: function() {
             return _layoutId;
