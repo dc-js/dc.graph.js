@@ -1,3 +1,8 @@
+## 0.6 alpha 3
+* `d3_force_layout` and `d3v4_force_layout` engines
+* we build and distribute a custom `d3v4-force.js` using rollup (since we're still in the d3v3 universe)
+* `draw_spline_paths` mode will draw splined paths (chains of edges) on top of the existing graph
+
 ## 0.6 alpha 2
 * use specific n, e, p parameter names for datum, instead of d
 * stop using the word chart, these are diagrams

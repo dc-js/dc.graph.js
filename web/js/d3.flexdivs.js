@@ -57,8 +57,8 @@ function flex_divs(root, data, place) {
     d3.select(root).data([data])
         .each(flex_div_helper);
     Object.keys(map).forEach(function(k) {
+        document.getElementById('wrap-' + k).appendChild(map[k]);
         if(place)
             place(k);
-        document.getElementById('wrap-' + k).appendChild(map[k]);
     });
 }

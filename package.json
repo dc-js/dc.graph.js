@@ -38,6 +38,7 @@
   "devDependencies": {
     "bootstrap": "~3.3",
     "d3-tip": "~0.7",
+    "d3-force": "~1",
     "grunt": "~1.0",
     "grunt-browserify": "~5.2.0",
     "grunt-cli": "~1.2",
@@ -59,12 +60,15 @@
     "load-grunt-tasks": "~3.5",
     "marked": "~0.3",
     "promise-polyfill": "6.x",
+    "rollup": "0.36",
+    "rollup-plugin-node-resolve": "2",
     "time-grunt": "~1.4",
     "uglify-js": "~3.2",
     "x-editable": "1.5.x"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "prepublish": "rollup -c"
   },
   "npmName": "dc.graph",
   "npmFileMap": [
