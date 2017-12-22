@@ -75,7 +75,7 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function start() {
-        var iters = installForces(_paths);
+        var iters = installForces();
         runSimulation(iters);
 
         if(!_paths) {
@@ -91,8 +91,8 @@ dc_graph.d3_force_layout = function(id) {
         _simulation.stop();
     }
 
-    function installForces(paths) {
-        if(paths === null) {
+    function installForces() {
+        if(_paths === null) {
             _simulation.gravity(_options.gravityStrength)
                 .charge(_options.initialCharge);
             if(_initialized) {
@@ -126,12 +126,6 @@ dc_graph.d3_force_layout = function(id) {
 
             // enlarge charge force to seperate nodes on paths
             _simulation.charge(_options.chargeForce);
-
-            // change tick function to apply custom force
-            _simulation.on('tick', function() {
-                applyPathAngleForces(paths);
-            });
-
         }
         return _options.iterations;
     };
@@ -144,11 +138,13 @@ dc_graph.d3_force_layout = function(id) {
         _simulation.start();
         for (var i = 0; i < 300; ++i) {
             _simulation.tick();
+            if(_paths)
+                applyPathAngleForces();
         }
         _simulation.stop();
     }
 
-    function applyPathAngleForces(paths) {
+    function applyPathAngleForces() {
         function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
         function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
         function _angle(v1, v2) {
@@ -169,7 +165,7 @@ dc_graph.d3_force_layout = function(id) {
             node.y += pVec.y*(Math.PI-angle)*alpha;
         }
 
-        paths.forEach(function(path) {
+        _paths.forEach(function(path) {
             if(path.element_list.length < 5) return; // at leaset 3 nodes and 2 edges:  A->B->C
             for(var i = 2; i < path.element_list.length-2; i += 2) {
                 var current = _nodes[path.element_list[i].property_map.ecomp_uid];
