@@ -60,7 +60,7 @@
     "load-grunt-tasks": "~3.5",
     "marked": "~0.3",
     "promise-polyfill": "6.x",
-    "rollup": "0.36",
+    "rollup": "0.53",
     "rollup-plugin-node-resolve": "2",
     "time-grunt": "~1.4",
     "uglify-js": "~3.2",
@@ -68,7 +68,7 @@
   },
   "scripts": {
     "test": "grunt test",
-    "prepublish": "rollup -c"
+    "prepublish": "rollup node_modules/d3-force/index.js --output.format umd --name d3v4 --output.file d3v4-force.js"
   },
   "npmName": "dc.graph",
   "npmFileMap": [
