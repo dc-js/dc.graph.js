@@ -12,10 +12,17 @@
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dagre.js"></script>
+  <script type="text/javascript" src="js/d3v4-force.js"></script>
+  <script type="text/javascript" src="js/viz.js"></script>
+
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/chart.registry.js"></script>
 
+  <script type="text/javascript" src="js/jquery.js"></script>
+
   <script type="text/javascript" src="js/querystring.js"></script>
+  <script type="text/javascript" src="js/sync-url-options.js"></script>
+  <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
 
   <style type="text/css">
     body {
@@ -29,6 +36,11 @@
         top: 0;
         right: 0;
         bottom: 0;
+    }
+    #layout {
+        position: absolute;
+        left: 5em;
+        top: 3em;
     }
     #pie {
         position: absolute;
@@ -55,12 +67,35 @@
 
 <body>
   <div id="graph" class="chart"></div>
+  <select id="layout"></select>
   <div id="pie"></div>
   <div id="row"></div>
 
   <script type="text/javascript">
 
-    var diagram, pie, row;
+    var diagram = dc_graph.diagram('#graph'), pie, row;
+
+    var options = {
+        layout: {
+            default: 'dagre',
+            selector: '#layout',
+            needs_relayout: true,
+            exert: function(val, diagram) {
+                var engine = dc_graph.spawn_engine(val);
+                diagram
+                    .layoutEngine(engine)
+                    .autoZoom('once');
+            }
+        }
+    };
+    var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+    var engopt = d3.select('#layout').selectAll('option').data(dc_graph.engines.available())
+    engopt.enter().append('option').attr({
+        value: function(x) { return x; },
+        selected: function(x) { return x === sync_url.vals.layout; }
+    }).text(function(x) { return x; })
+    d3.select('#layout')
+    .property('value', sync_url.vals.layout);
     (function() {
         function build_data(nodes, edges) {
             // build crossfilters from scratch
@@ -79,8 +114,7 @@
             ncolors: 3
         });
 
-        var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
-        diagram = dc_graph.diagram('#graph');
+        var engine = dc_graph.spawn_engine(sync_url.vals.layout, qs, qs.worker != 'false');
         random.generate(qs.n || 100);
         var data = build_data(random.nodes(), random.edges());
         var colors = ['#1b9e77', '#d95f02', '#7570b3'];
