@@ -184,6 +184,7 @@ module.exports = function (grunt) {
                             'd3v4-force.js',
                             'lysenko-interval-tree.js',
                             'querystring.js',
+                            'sync-url-options.js',
                             'chart.registry.js',
                             'timeline.js',
                             'node_modules/bootstrap/dist/js/bootstrap.js',
