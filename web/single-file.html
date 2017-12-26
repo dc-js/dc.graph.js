@@ -3,26 +3,26 @@
 <head>
   <title>Single file viewer</title>
   <meta charset="UTF-8">
-  <link rel="stylesheet" type="text/css" href="../css/dc.graph.css"/>
-  <link rel="stylesheet" type="text/css" href="../css/dc.css"/>
-  <link rel="stylesheet" type="text/css" href="../css/d3-tip/example-styles.css"/>
+  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/d3-tip/example-styles.css"/>
 
-  <script type="text/javascript" src="../js/d3.js"></script>
-  <script type="text/javascript" src="../js/crossfilter.js"></script>
-  <script type="text/javascript" src="../js/dc.js"></script>
-  <script type="text/javascript" src="../js/d3-tip/index.js"></script>
+  <script type="text/javascript" src="js/d3.js"></script>
+  <script type="text/javascript" src="js/crossfilter.js"></script>
+  <script type="text/javascript" src="js/dc.js"></script>
+  <script type="text/javascript" src="js/d3-tip/index.js"></script>
 
-  <script type="text/javascript" src="../js/jquery.js"></script>
-  <script type="text/javascript" src="../js/lodash.js"></script>
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/lodash.js"></script>
 
-  <script type="text/javascript" src="../js/cola.js"></script>
-  <script type="text/javascript" src="../js/dagre.js"></script>
-  <script type="text/javascript" src="../js/viz.js"></script>
-  <script type="text/javascript" src="../js/dc.graph.js"></script>
+  <script type="text/javascript" src="js/cola.js"></script>
+  <script type="text/javascript" src="js/dagre.js"></script>
+  <script type="text/javascript" src="js/viz.js"></script>
+  <script type="text/javascript" src="js/dc.graph.js"></script>
 
-  <script type="text/javascript" src="../js/graphlib-dot.min.js"></script>
+  <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 
-  <script type="text/javascript" src="../js/querystring.js"></script>
+  <script type="text/javascript" src="js/querystring.js"></script>
 
   <style type="text/css">
     body {
@@ -43,7 +43,7 @@
 
     var qs = querystring.parse();
 
-    dc_graph.load_graph(qs.file || 'process.json', function(error, data) {
+    dc_graph.load_graph(qs.file || 'data/process.json', function(error, data) {
         if(error) {
             console.log(error);
             return;
