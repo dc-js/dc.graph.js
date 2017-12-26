@@ -1105,6 +1105,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.layoutEngine = property(null).react(function(val) {
         if(val && val.parent)
             val.parent(_diagram);
+        if(_g) // already rendered, need to initialize engine
+            initLayout(val);
     });
 
     // S-spline any edges that are not going in this direction
@@ -1169,10 +1171,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.handleDisconnected = deprecate_layout_algo_parameter('handleDisconnected');
 
-    function initLayout() {
+    function initLayout(engine) {
         if(!_diagram.layoutEngine())
             _diagram.layoutAlgorithm('cola', true);
-        _diagram.layoutEngine().init({
+        (engine || _diagram.layoutEngine()).init({
             width: _diagram.width(),
             height: _diagram.height()
         });

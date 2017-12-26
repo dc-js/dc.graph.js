@@ -88,7 +88,8 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function stop() {
-        _simulation.stop();
+        if(_simulation)
+            _simulation.stop();
     }
 
     function installForces() {
