@@ -95,7 +95,7 @@
         selected: function(x) { return x === sync_url.vals.layout; }
     }).text(function(x) { return x; })
     d3.select('#layout')
-    .property('value', sync_url.vals.layout);
+        .property('value', sync_url.vals.layout);
     (function() {
         function build_data(nodes, edges) {
             // build crossfilters from scratch
