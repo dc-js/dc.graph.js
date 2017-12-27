@@ -13,10 +13,8 @@ dc_graph.d3_force_layout = function(id) {
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
     var _wnodes = [], _wedges = [];
-    var _originalNodesPosition = {};
     var _options = null;
     var _paths = null;
-    var _initialized = false;
 
     function init(options) {
         _options = options;
@@ -75,16 +73,8 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function start() {
-        var iters = installForces();
-        runSimulation(iters);
-
-        if(!_paths) {
-            _initialized = true;
-            // store original positions
-            Object.keys(_nodes).forEach(function(key) {
-                _originalNodesPosition[key] = {x: _nodes[key].x, y: _nodes[key].y};
-            });
-        }
+        installForces();
+        runSimulation(_options.iterations);
     }
 
     function stop() {
@@ -92,19 +82,29 @@ dc_graph.d3_force_layout = function(id) {
             _simulation.stop();
     }
 
+    function savePositions() {
+        var data = {};
+        Object.keys(_nodes).forEach(function(key) {
+            data[key] = {x: _nodes[key].x, y: _nodes[key].y};
+        });
+        return data;
+    }
+
+    function restorePositions(data) {
+        Object.keys(data).forEach(function(key) {
+            if(_nodes[key]) {
+                _nodes[key].fixed = false;
+                _nodes[key].x = data[key].x;
+                _nodes[key].y = data[key].y;
+            }
+        });
+    }
+
     function installForces() {
-        if(_paths === null) {
+        if(_paths === null)
             _simulation.gravity(_options.gravityStrength)
                 .charge(_options.initialCharge);
-            if(_initialized) {
-                Object.keys(_nodes).forEach(function(key) {
-                    _nodes[key].fixed = false;
-                    _nodes[key].x = _originalNodesPosition[key].x;
-                    _nodes[key].y = _originalNodesPosition[key].y;
-                });
-                return 0;
-            }
-        } else {
+        else {
             if(_options.fixOffPathNodes) {
                 var nodesOnPath = d3.set(); // nodes on path
                 _paths.forEach(function(path) {
@@ -123,10 +123,9 @@ dc_graph.d3_force_layout = function(id) {
                 });
             }
 
-            // enlarge charge force to seperate nodes on paths
+            // enlarge charge force to separate nodes on paths
             _simulation.charge(_options.chargeForce);
         }
-        return _options.iterations;
     };
 
     function runSimulation(iterations) {
@@ -233,6 +232,8 @@ dc_graph.d3_force_layout = function(id) {
         paths: function(paths) {
             _paths = paths;
         },
+        savePositions: savePositions,
+        restorePositions: restorePositions,
         optionNames: function() {
             return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength',
                     'initialCharge', 'fixOffPathNodes']

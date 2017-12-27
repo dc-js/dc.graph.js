@@ -13,10 +13,8 @@ dc_graph.d3v4_force_layout = function(id) {
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
     var _wnodes = [], _wedges = [];
-    var _originalNodesPosition = {};
     var _options = null;
     var _paths = null;
-    var _initialized = false;
 
     function init(options) {
         _options = options;
@@ -71,29 +69,30 @@ dc_graph.d3v4_force_layout = function(id) {
         _dispatch.start();
         installForces(_paths);
         runSimulation(_options.iterations);
-
-        if(!_paths) {
-            _initialized = true;
-            // store original positions
-            Object.keys(_nodes).forEach(function(key) {
-                _originalNodesPosition[key] = {x: _nodes[key].x, y: _nodes[key].y};
-            });
-        }
     }
 
     function stop() {
         // not running asynchronously, no _simulation.stop();
     }
 
+    function savePositions() {
+        var data = {};
+        Object.keys(_nodes).forEach(function(key) {
+            data[key] = {x: _nodes[key].x, y: _nodes[key].y};
+        });
+        return data;
+    }
+    function restorePositions(data) {
+        Object.keys(data).forEach(function(key) {
+            if(_nodes[key]) {
+                _nodes[key].fx = data[key].x;
+                _nodes[key].fy = data[key].y;
+            }
+        });
+    }
     function installForces(paths) {
         _simulation.force('collision', d3v4.forceCollide(_options.collisionRadius));
         if(paths === null) {
-            if(_initialized) {
-                Object.keys(_nodes).forEach(function(key) {
-                    _nodes[key].fx = _originalNodesPosition[key].x;
-                    _nodes[key].fy = _originalNodesPosition[key].y;
-                });
-            }
             _simulation.force('charge', d3v4.forceManyBody().strength(_options.initialCharge));
             _simulation.force('angle', null);
         } else {
@@ -110,8 +109,8 @@ dc_graph.d3v4_force_layout = function(id) {
             // fix nodes not on paths
             Object.keys(_nodes).forEach(function(key) {
                 if(_options.fixOffPathNodes && !nodesOnPath.has(key)) {
-                    _nodes[key].fx = _originalNodesPosition[key].x;
-                    _nodes[key].fy = _originalNodesPosition[key].y;
+                    _nodes[key].fx = _nodes[key].x;
+                    _nodes[key].fy = _nodes[key].y;
                 } else {
                     _nodes[key].fx = null;
                     _nodes[key].fy = null;
@@ -227,6 +226,8 @@ dc_graph.d3v4_force_layout = function(id) {
         paths: function(paths) {
             _paths = paths;
         },
+        savePositions: savePositions,
+        restorePositions: restorePositions,
         optionNames: function() {
             return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength', 'collisionRadius',
                     'initialCharge', 'fixOffPathNodes']
