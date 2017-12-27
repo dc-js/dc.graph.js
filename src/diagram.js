@@ -1105,8 +1105,14 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.layoutEngine = property(null).react(function(val) {
         if(val && val.parent)
             val.parent(_diagram);
-        if(_g) // already rendered, need to initialize engine
+        if(_g) { // already rendered
+            // remove any calculated points, if engine did that
+            Object.keys(_edges).forEach(function(k) {
+                _edges[k].cola.points = null;
+            });
+            // initialize engine
             initLayout(val);
+        }
     });
 
     // S-spline any edges that are not going in this direction
