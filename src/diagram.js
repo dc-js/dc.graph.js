@@ -1999,8 +1999,6 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function calc_new_edge_path(e) {
         var path = calc_edge_path(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
-        var spos = path.points[0], tpos = path.points[path.points.length-1];
-        e.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
     }
 
     function render_edge_path(age) {
