@@ -68,7 +68,7 @@
   },
   "scripts": {
     "test": "grunt test",
-    "prepublish": "rollup node_modules/d3-force/index.js --output.format umd --name d3v4 --output.file d3v4-force.js"
+    "prepublish": "rollup -c"
   },
   "npmName": "dc.graph",
   "npmFileMap": [
