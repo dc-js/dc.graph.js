@@ -13,12 +13,12 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         _layer.selectAll('.spline-edge-hover').remove();
 
         _paths = paths;
-        // check if path exits on current chart
+
         var engine = _behavior.parent().layoutEngine(),
-            have_paths = pathExists(paths);
-        if(have_paths) {
+            localPaths = paths.filter(pathIsPresent);
+        if(localPaths.length) {
             // layout engine wants just array of array of nodeids
-            var nidpaths = paths.map(function(path) {
+            var nidpaths = localPaths.map(function(path) {
                 return pathreader.elementList.eval(path).filter(function(elem) {
                     return pathreader.elementType.eval(elem) === 'node';
                 }).map(function(elem) {
@@ -34,16 +34,16 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         _behavior.parent().redraw();
     }
 
-    // check if path exists in current view
-    function pathExists(paths) {
-        return paths.some(function(d) {
-            return getNodePosition(d).length;
+    // check if entire path is present in this view
+    function pathIsPresent(path) {
+        return pathreader.elementList.eval(path).every(function(element) {
+            return pathreader.elementType.eval(element) !== 'node' ||
+                _behavior.parent().getWholeNode(pathreader.nodeKey.eval(element));
         });
     }
 
     // get the positions of nodes on path
     function getNodePosition(path) {
-        var _chart = _behavior.parent();
         var plist = [];
 
         pathreader.elementList.eval(path).forEach(function(element) {
@@ -51,7 +51,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             switch(pathreader.elementType.eval(element)) {
             case 'node':
                 key = pathreader.nodeKey.eval(element);
-                node = _chart.getWholeNode(key);
+                node = _behavior.parent().getWholeNode(key);
                 if(node !== null) {
                     plist.push({'x': node.cola.x, 'y': node.cola.y});
                 }
@@ -171,9 +171,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             return;
         }
 
-        // draw spline edge
-        var _chart = _behavior.parent();
-
+        // edge spline
         var edge = _layer.selectAll(".spline-edge").data(paths);
         var edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
@@ -217,7 +215,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         }
     }
 
-    function add_behavior(chart, node, edge, ehover) {
+    function add_behavior(diagram, node, edge, ehover) {
         // create the layer if it's null
         if(_layer === null) {
             _layer = _behavior.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
@@ -228,7 +226,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
     }
 
-    function remove_behavior(chart, node, edge, ehover) {
+    function remove_behavior(diagram, node, edge, ehover) {
     }
 
     highlight_paths_group
@@ -239,8 +237,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     var _behavior = dc_graph.behavior('draw-spline-paths', {
         laterDraw: true,
         add_behavior: add_behavior,
-        remove_behavior: function(chart, node, edge, ehover) {
-            remove_behavior(chart, node, edge, ehover);
+        remove_behavior: function(diagram, node, edge, ehover) {
+            remove_behavior(diagram, node, edge, ehover);
             return this;
         },
         parent: function(p) {
