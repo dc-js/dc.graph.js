@@ -406,6 +406,35 @@ function draw_edge_to_shapes(diagram, e, sx, sy, tx, ty,
     };
 }
 
+function is_one_segment(path) {
+    return path.bezDegree === 1 && path.points.length === 2 ||
+        path.bezDegree === 3 && path.points.length === 4;
+}
+
+function as_bezier3(path) {
+    var p = path.points;
+    if(path.bezDegree === 3) return p;
+    else if(path.bezDegree === 1)
+        return [
+            {
+                x: p[0].x,
+                y: p[0].y
+            },
+            {
+                x: p[0].x + (p[1].x - p[0].x)/3,
+                y: p[0].y + (p[1].y - p[0].y)/3
+            },
+            {
+                x: p[0].x + 2*(p[1].x - p[0].x)/3,
+                y: p[0].y + 2*(p[1].y - p[0].y)/3
+            },
+            {
+                x: p[1].x,
+                y: p[1].y
+            }
+        ];
+    else throw new Error('unknown bezDegree ' + path.bezDegree);
+}
 
 // from https://www.jasondavies.com/animated-bezier/
 function interpolate(d, p) {
@@ -429,6 +458,49 @@ function getLevels(points, t_) {
 function bezier_point(points, t_) {
     var q = getLevels(points, t_);
     return q[q.length-1][0];
+}
+
+// from https://stackoverflow.com/questions/8369488/splitting-a-bezier-curve#8405756
+// somewhat redundant with the above but different objective
+function split_bezier(p, t) {
+    var x1 = p[0].x, y1 = p[0].y,
+        x2 = p[1].x, y2 = p[1].y,
+        x3 = p[2].x, y3 = p[2].y,
+        x4 = p[3].x, y4 = p[3].y,
+
+        x12 = (x2-x1)*t+x1,
+        y12 = (y2-y1)*t+y1,
+
+        x23 = (x3-x2)*t+x2,
+        y23 = (y3-y2)*t+y2,
+
+        x34 = (x4-x3)*t+x3,
+        y34 = (y4-y3)*t+y3,
+
+        x123 = (x23-x12)*t+x12,
+        y123 = (y23-y12)*t+y12,
+
+        x234 = (x34-x23)*t+x23,
+        y234 = (y34-y23)*t+y23,
+
+        x1234 = (x234-x123)*t+x123,
+        y1234 = (y234-y123)*t+y123;
+
+    return [
+        [{x: x1, y: y1}, {x: x12, y: y12}, {x: x123, y: y123}, {x: x1234, y: y1234}],
+        [{x: x1234, y: y1234}, {x: x234, y: y234}, {x: x34, y: y34}, {x: x4, y: y4}]
+    ];
+}
+function split_bezier_n(p, n) {
+    var ret = [];
+    while(n > 1) {
+        var parts = split_bezier(p, 1/n);
+        ret.push(parts[0][0], parts[0][1], parts[0][2]);
+        p = parts[1];
+        --n;
+    }
+    ret.push.apply(ret, p);
+    return ret;
 }
 
 dc_graph.no_shape = function() {

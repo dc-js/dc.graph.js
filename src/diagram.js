@@ -2151,11 +2151,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         // recalculate edge positions
         edge.each(function(e) {
             e.pos.new = null;
-            e.pos.old = null;
         });
         edge.each(function(e) {
             if(e.cola.points) {
-                e.pos.new = e.pos.old = {
+                e.pos.new = {
                     path: {
                         points: e.cola.points,
                         bezDegree: 3
@@ -2171,6 +2170,27 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!e.pos.new)
                     calc_edge_path(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
             }
+            if(e.pos.old) {
+                if(e.pos.old.path.bezDegree !== e.pos.new.path.bezDegree ||
+                   e.pos.old.path.points.length !== e.pos.new.path.points.length) {
+                    console.log('old', e.pos.old.path.points.length, 'new', e.pos.new.path.points.length);
+                    if(is_one_segment(e.pos.old.path)) {
+                        e.pos.new.path.points = as_bezier3(e.pos.new.path);
+                        e.pos.old.path.points = split_bezier_n(as_bezier3(e.pos.old.path),
+                                                               (e.pos.new.path.points.length-1)/3);
+                        e.pos.old.path.bezDegree = e.pos.new.bezDegree = 3;
+                    }
+                    else if(is_one_segment(e.pos.new.path)) {
+                        e.pos.old.path.points = as_bezier3(e.pos.old.path);
+                        e.pos.new.path.points = split_bezier_n(as_bezier3(e.pos.new.path),
+                                                               (e.pos.old.path.points.length-1)/3);
+                        e.pos.old.path.bezDegree = e.pos.new.bezDegree = 3;
+                    }
+                    else console.warn("don't know how to interpolate two multi-segments");
+                }
+            }
+            else
+                e.pos.old = e.pos.new;
         });
 
         var edgeEntered = {};
@@ -2273,6 +2293,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         if(animatePositions)
             edgeHover.attr('d', render_edge_path('new'));
+
+        edge.each(function(e) {
+            e.pos.old = e.pos.new;
+        });
     }
 
     function draw_ports(node) {
