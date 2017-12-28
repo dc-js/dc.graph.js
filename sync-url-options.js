@@ -137,6 +137,10 @@ var sync_url_options = (function() {
                 if(domain && domain.on_exert)
                     domain.on_exert(opt);
             };
+            if(typeof options[key] !== 'object' || options[key] === null)
+                options[key] = {
+                    default: options[key]
+                };
             do_option(key, options[key], callback.bind(null, options[key]));
         }
 
