@@ -30,11 +30,20 @@
       overflow: hidden;
       margin: 0;
     }
-    #controls {
+    #dashboard {
         position: absolute;
         left: 1em;
         top: 1em;
+        min-width: 20em;
+        min-height: 10em;
+
+        background-color: #f4f2fc;
+    }
+    #controls {
         font-size: 3em;
+        position: absolute;
+        left: 1em;
+        top: 1em;
     }
   </style>
 
@@ -44,8 +53,10 @@
 <body>
 
   <div id="graph" class="chart"></div>
-  <div id="controls">
-    <i id="play-stop" class="fa fa-pause"></i>&emsp;&emsp;<select id="layout"></select>
+  <div id="dashboard">
+    <div id="controls">
+      <i id="play-stop" class="fa fa-pause"></i>&emsp;&emsp;<select id="layout"></select>
+    </div>
   </div>
 
   <script type="text/javascript">
