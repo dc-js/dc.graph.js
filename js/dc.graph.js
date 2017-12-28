@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-alpha.4
+ *  dc.graph 0.6.0-alpha.5
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-alpha.4
+ * @version 0.6.0-alpha.5
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-alpha.4',
+    version: '0.6.0-alpha.5',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1090,12 +1090,7 @@ dc_graph.ellipse_shape = function() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            nodeEnter.append('ellipse')
-                .attr('class', 'node-shape');
-        },
-        replace: function(nodeChanged) {
-            nodeChanged.select('ellipse.node-shape').remove();
-            nodeChanged.insert('ellipse', ':first-child')
+            nodeEnter.insert('ellipse', ':first-child')
                 .attr('class', 'node-shape');
         },
         update: function(node) {
@@ -1128,12 +1123,7 @@ dc_graph.polygon_shape = function() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            nodeEnter.append('path')
-                .attr('class', 'node-shape');
-        },
-        replace: function(nodeChanged) {
-            nodeChanged.select('path.node-shape').remove();
-            nodeChanged.insert('path', ':first-child')
+            nodeEnter.insert('path', ':first-child')
                 .attr('class', 'node-shape');
         },
         update: function(node) {
@@ -1175,13 +1165,6 @@ dc_graph.rounded_rectangle_shape = function() {
         },
         create: function(nodeEnter) {
             nodeEnter.filter(function(n) {
-                return !n.dcg_shape.noshape;
-            }).append('rect')
-                .attr('class', 'node-shape');
-        },
-        replace: function(nodeChanged) {
-            nodeChanged.select('rect.node-shape').remove();
-            nodeChanged.filter(function(n) {
                 return !n.dcg_shape.noshape;
             }).insert('rect', ':first-child')
                 .attr('class', 'node-shape');
@@ -2543,11 +2526,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
     _diagram.redrawNode = _diagram._updateNode = function(node) {
         var changedShape = node.filter(shape_changed(_diagram));
+        changedShape.selectAll('.node-shape').remove();
         changedShape.each(infer_shape(_diagram));
         _diagram.forEachShape(changedShape, function(shape, node) {
-            // this is imperfect: old shape should remove itself,
-            // and perhaps create and replace merged (although they are append vs insert)
-            node.call(shape.replace);
+            node.call(shape.create);
         });
         node.select('title')
             .text(_diagram.nodeTitle.eval);
@@ -8382,12 +8364,12 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         _layer.selectAll('.spline-edge-hover').remove();
 
         _paths = paths;
-        // check if path exits on current chart
+
         var engine = _behavior.parent().layoutEngine(),
-            have_paths = pathExists(paths);
-        if(have_paths) {
+            localPaths = paths.filter(pathIsPresent);
+        if(localPaths.length) {
             // layout engine wants just array of array of nodeids
-            var nidpaths = paths.map(function(path) {
+            var nidpaths = localPaths.map(function(path) {
                 return pathreader.elementList.eval(path).filter(function(elem) {
                     return pathreader.elementType.eval(elem) === 'node';
                 }).map(function(elem) {
@@ -8403,16 +8385,16 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         _behavior.parent().redraw();
     }
 
-    // check if path exists in current view
-    function pathExists(paths) {
-        return paths.some(function(d) {
-            return getNodePosition(d).length;
+    // check if entire path is present in this view
+    function pathIsPresent(path) {
+        return pathreader.elementList.eval(path).every(function(element) {
+            return pathreader.elementType.eval(element) !== 'node' ||
+                _behavior.parent().getWholeNode(pathreader.nodeKey.eval(element));
         });
     }
 
     // get the positions of nodes on path
     function getNodePosition(path) {
-        var _chart = _behavior.parent();
         var plist = [];
 
         pathreader.elementList.eval(path).forEach(function(element) {
@@ -8420,7 +8402,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             switch(pathreader.elementType.eval(element)) {
             case 'node':
                 key = pathreader.nodeKey.eval(element);
-                node = _chart.getWholeNode(key);
+                node = _behavior.parent().getWholeNode(key);
                 if(node !== null) {
                     plist.push({'x': node.cola.x, 'y': node.cola.y});
                 }
@@ -8540,9 +8522,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             return;
         }
 
-        // draw spline edge
-        var _chart = _behavior.parent();
-
+        // edge spline
         var edge = _layer.selectAll(".spline-edge").data(paths);
         var edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
@@ -8586,7 +8566,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         }
     }
 
-    function add_behavior(chart, node, edge, ehover) {
+    function add_behavior(diagram, node, edge, ehover) {
         // create the layer if it's null
         if(_layer === null) {
             _layer = _behavior.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
@@ -8597,7 +8577,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
     }
 
-    function remove_behavior(chart, node, edge, ehover) {
+    function remove_behavior(diagram, node, edge, ehover) {
     }
 
     highlight_paths_group
@@ -8608,8 +8588,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     var _behavior = dc_graph.behavior('draw-spline-paths', {
         laterDraw: true,
         add_behavior: add_behavior,
-        remove_behavior: function(chart, node, edge, ehover) {
-            remove_behavior(chart, node, edge, ehover);
+        remove_behavior: function(diagram, node, edge, ehover) {
+            remove_behavior(diagram, node, edge, ehover);
             return this;
         },
         parent: function(p) {
