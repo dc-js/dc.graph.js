@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rectangular selection of nodes and edges</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+
+  <script type="text/javascript" src="js/d3.js"></script>
+  <script type="text/javascript" src="js/crossfilter.js"></script>
+  <script type="text/javascript" src="js/dc.js"></script>
+
+  <script type="text/javascript" src="js/cola.js"></script>
+  <script type="text/javascript" src="js/dagre.js"></script>
+  <script type="text/javascript" src="js/d3v4-force.js"></script>
+  <script type="text/javascript" src="js/viz.js"></script>
+
+  <script type="text/javascript" src="js/dc.graph.js"></script>
+  <script type="text/javascript" src="js/chart.registry.js"></script>
+
+  <script type="text/javascript" src="js/jquery.js"></script>
+
+  <script type="text/javascript" src="js/querystring.js"></script>
+  <script type="text/javascript" src="js/sync-url-options.js"></script>
+  <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
+
+  <style type="text/css">
+    body {
+      overflow: hidden;
+      margin: 0;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    #main {
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    #dashboard {
+        flex: 1 0 content;
+        min-height: 200px;
+        background-color: #e8e8e0;
+    }
+    #canvas {
+        flex: 1;
+        position: relative;
+    }
+    #graph {
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+    }
+    #controls {
+        position: absolute;
+        left: 5em;
+        top: 3em;
+    }
+    #pie {
+        position: absolute;
+        right: 2em;
+        top: 2em;
+    }
+    #row {
+        position: absolute;
+        right: 2in;
+        top: 2em;
+    }
+    .dc-chart .selected path, .dc-chart .selected circle {
+        stroke-width: 0
+    }
+    p#hint {
+        position: absolute;
+        left: 1em;
+        top: 0.5em;
+    }
+</style>
+
+</head>
+
+
+<body>
+  <div id="main">
+    <div id="dashboard">
+      <div id="controls">
+        <select id="layout"></select>
+        <select id="number"></select>
+      </div>
+      <div id="pie"></div>
+      <div id="row"></div>
+    </div>
+    <div id="canvas">
+      <div id="graph" class="chart"></div>
+    </div>
+  <script type="text/javascript">
+
+    var diagram = dc_graph.diagram('#graph'), pie, row;
+
+    var options = {
+        layout: {
+            default: 'dagre',
+            values: dc_graph.engines.available(),
+            selector: '#layout',
+            needs_relayout: true,
+            exert: function(val, diagram) {
+                var engine = dc_graph.spawn_engine(val);
+                diagram
+                    .layoutEngine(engine)
+                    .autoZoom('once');
+            }
+        },
+        worker: {
+            default: false
+        },
+        n: {
+            default: 100,
+            values: [1, 5, 10, 20, 50, 100, 200],
+            selector: '#number',
+            needs_redraw: true,
+            exert: function(val, diagram) {
+                populate(val);
+                diagram.autoZoom('once');
+            }
+        },
+        transition_duration: {
+            query: 'tdur',
+            default: 1000
+        },
+        arrows: {
+            default: 'none'
+        }
+    };
+    var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram),
+        populate;
+
+    (function() {
+        function build_data(nodes, edges) {
+            // build crossfilters from scratch
+            return {
+                edgef: dc_graph.flat_group.make(edges, function(d) {
+                    return d.key;
+                }),
+                nodef: dc_graph.flat_group.make(nodes, function(d) {
+                    return d.key;
+                })
+            };
+        }
+
+        populate = function(n) {
+            var random = dc_graph.random_graph({
+                ncolors: 3
+            });
+
+            random.generate(n);
+            var data = build_data(random.nodes(), random.edges()),
+                colorDimension = data.nodef.crossfilter.dimension(function(n) {
+                    return n.color;
+                }),
+                colorGroup = colorDimension.group(),
+                dashDimension = data.edgef.crossfilter.dimension(function(e) {
+                    return e.dash;
+                }),
+                dashGroup = dashDimension.group();
+            diagram
+                .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
+                .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
+            pie
+                .dimension(colorDimension)
+                .group(colorGroup);
+            row
+                .dimension(dashDimension)
+                .group(dashGroup);
+        }
+        var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
+        var colors = ['#1b9e77', '#d95f02', '#7570b3'];
+        var dasheses = [
+            {name: 'solid', ray: null},
+            {name: 'dash', ray: [5,5]},
+            {name: 'dot', ray: [1,5]},
+            {name: 'dot-dash', ray: [15,10,5,10]}
+        ];
+        diagram
+            .layoutEngine(engine)
+            .timeLimit(5000)
+            .transitionDuration(sync_url.vals.transition_duration)
+            .restrictPan(true)
+            .margins({top: 5, left: 5, right: 5, bottom: 5})
+            .autoZoom('once-noanim')
+            .zoomDuration(sync_url.vals.transition_duration)
+            .altKeyZoom(true)
+            .width(null)
+            .height(null)
+            .nodeFixed(n => n.value.fixed)
+            .nodeStrokeWidth(0) // turn off outlines
+            .nodeLabel('')
+            .nodeLabelFill(function(n) {
+                var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
+                    // https://www.w3.org/TR/AERT#color-contrast
+                    brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+                return brightness > 127 ? 'black' : 'ghostwhite';
+            })
+            .nodeFill(function(kv) {
+                return kv.value.color;
+            })
+            .nodeOpacity(0.25)
+            .edgeOpacity(0.25)
+            .timeLimit(1000)
+            .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(colors))
+            .nodeTitle(dc.pluck('key'))
+            .edgeStrokeDashArray(function(e) {
+                return dasheses[e.value.dash].ray;
+            })
+            .edgeArrowhead(sync_url.vals.arrows === 'head' || sync_url.vals.arrows === 'both' ? 'vee' : null)
+            .edgeArrowtail(sync_url.vals.arrows === 'tail' || sync_url.vals.arrows === 'both' ? 'crow' : null)
+
+        diagram.child('select-nodes', dc_graph.select_nodes(
+            {
+                nodeOpacity: 1
+            }).noneIsAll(true)
+              .autoCropSelection(false));
+        diagram.child('filter-selection-nodes', dc_graph.filter_selection('select-nodes-group', 'select-nodes'));
+
+        diagram.child('move-nodes', dc_graph.move_nodes());
+
+        diagram.child('fix-nodes', dc_graph.fix_nodes({
+            fixedPosTag: 'fixed'
+        }));
+
+        diagram.child('select-edges', dc_graph.select_edges(
+            {
+                edgeStrokeWidth: 2,
+                edgeOpacity: 1
+            }).noneIsAll(true)
+              .autoCropSelection(false));
+        diagram.child('filter-selection-edges',
+                      dc_graph.filter_selection('select-edges-group', 'select-edges')
+                      .dimensionAccessor(c => c.edgeDimension()));
+
+        pie = dc.pieChart('#pie')
+            .width(150).height(150)
+            .radius(75)
+            .colors(d3.scale.ordinal().domain([0,1,2]).range(colors))
+            .label(function() { return ''; })
+            .title(function(kv) {
+                return colors[kv.key] + ' nodes (' + kv.value + ')';
+            });
+
+        row = dc.rowChart('#row')
+            .width(300).height(150)
+            .label(function(kv) {
+                return dasheses[kv.key].name;
+            });
+
+        populate(sync_url.vals.n);
+
+        dc.renderAll();
+    })();
+</script>
+</body>
