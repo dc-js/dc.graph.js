@@ -30,12 +30,24 @@
       margin: 0;
       font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     }
+    #main {
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    #dashboard {
+        flex: 1 0 content;
+        min-height: 200px;
+        background-color: #e8e8e0;
+    }
+    #canvas {
+        flex: 1;
+        position: relative;
+    }
     #graph {
         position: absolute;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
+        left: 0; top: 0; right: 0; bottom: 0;
     }
     #controls {
         position: absolute;
@@ -66,14 +78,18 @@
 
 
 <body>
-  <div id="graph" class="chart"></div>
-  <div id="controls">
-    <select id="layout"></select>
-    <select id="number"></select>
-  </div>
-  <div id="pie"></div>
-  <div id="row"></div>
-
+  <div id="main">
+    <div id="dashboard">
+      <div id="controls">
+        <select id="layout"></select>
+        <select id="number"></select>
+      </div>
+      <div id="pie"></div>
+      <div id="row"></div>
+    </div>
+    <div id="canvas">
+      <div id="graph" class="chart"></div>
+    </div>
   <script type="text/javascript">
 
     var diagram = dc_graph.diagram('#graph'), pie, row;
@@ -164,8 +180,8 @@
             .margins({top: 5, left: 5, right: 5, bottom: 5})
             .autoZoom('once')
             .altKeyZoom(true)
-            .width(document.documentElement.clientWidth)
-            .height(document.documentElement.clientHeight)
+            .width(null)
+            .height(null)
             .nodeFixed(n => n.value.fixed)
             .nodeStrokeWidth(0) // turn off outlines
             .nodeLabel('')
