@@ -37,7 +37,7 @@
         right: 0;
         bottom: 0;
     }
-    #layout {
+    #controls {
         position: absolute;
         left: 5em;
         top: 3em;
@@ -67,7 +67,10 @@
 
 <body>
   <div id="graph" class="chart"></div>
-  <select id="layout"></select>
+  <div id="controls">
+    <select id="layout"></select>
+    <select id="number"></select>
+  </div>
   <div id="pie"></div>
   <div id="row"></div>
 
@@ -78,6 +81,7 @@
     var options = {
         layout: {
             default: 'dagre',
+            values: dc_graph.engines.available(),
             selector: '#layout',
             needs_relayout: true,
             exert: function(val, diagram) {
@@ -91,22 +95,21 @@
             default: false
         },
         n: {
-            default: 100
+            default: 100,
+            values: [1, 5, 10, 20, 50, 100, 200],
+            selector: '#number',
+            needs_redraw: true,
+            exert: function(val, diagram) {
+                populate(val);
+                diagram.autoZoom('once');
+            }
         },
         arrows: {
             default: 'none'
         }
     };
-    var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
-
-    var engopt = d3.select('#layout').selectAll('option').data(dc_graph.engines.available())
-    engopt.enter().append('option').attr({
-        value: function(x) { return x; },
-        selected: function(x) { return x === sync_url.vals.layout; }
-    }).text(function(x) { return x; })
-    d3.select('#layout')
-    .property('value', sync_url.vals.layout);
-
+    var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram),
+        populate;
 
     (function() {
         function build_data(nodes, edges) {
@@ -121,13 +124,32 @@
             };
         }
 
-        var random = dc_graph.random_graph({
-            ncolors: 3
-        });
+        populate = function(n) {
+            var random = dc_graph.random_graph({
+                ncolors: 3
+            });
 
+            random.generate(n);
+            var data = build_data(random.nodes(), random.edges()),
+                colorDimension = data.nodef.crossfilter.dimension(function(n) {
+                    return n.color;
+                }),
+                colorGroup = colorDimension.group(),
+                dashDimension = data.edgef.crossfilter.dimension(function(e) {
+                    return e.dash;
+                }),
+                dashGroup = dashDimension.group();
+            diagram
+                .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
+                .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
+            pie
+                .dimension(colorDimension)
+                .group(colorGroup);
+            row
+                .dimension(dashDimension)
+                .group(dashGroup);
+        }
         var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
-        random.generate(sync_url.vals.n);
-        var data = build_data(random.nodes(), random.edges());
         var colors = ['#1b9e77', '#d95f02', '#7570b3'];
         var dasheses = [
             {name: 'solid', ray: null},
@@ -144,8 +166,6 @@
             .altKeyZoom(true)
             .width(document.documentElement.clientWidth)
             .height(document.documentElement.clientHeight)
-            .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
-            .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
             .nodeFixed(n => n.value.fixed)
             .nodeStrokeWidth(0) // turn off outlines
             .nodeLabel('')
@@ -192,32 +212,22 @@
                       dc_graph.filter_selection('select-edges-group', 'select-edges')
                       .dimensionAccessor(c => c.edgeDimension()));
 
-        var colorDimension = data.nodef.crossfilter.dimension(function(n) {
-            return n.color;
-        }),
-            colorGroup = colorDimension.group();
         pie = dc.pieChart('#pie')
             .width(150).height(150)
             .radius(75)
-            .dimension(colorDimension)
-            .group(colorGroup)
             .colors(d3.scale.ordinal().domain([0,1,2]).range(colors))
             .label(function() { return ''; })
             .title(function(kv) {
                 return colors[kv.key] + ' nodes (' + kv.value + ')';
             });
 
-        var dashDimension = data.edgef.crossfilter.dimension(function(e) {
-            return e.dash;
-        }),
-            dashGroup = dashDimension.group();
         row = dc.rowChart('#row')
             .width(300).height(150)
-            .dimension(dashDimension)
-            .group(dashGroup)
             .label(function(kv) {
                 return dasheses[kv.key].name;
             });
+
+        populate(sync_url.vals.n);
 
         dc.renderAll();
     })();
