@@ -24,8 +24,9 @@ dc_graph.d3v4_force_layout = function(id) {
             .force('center', d3v4.forceCenter(options.width / 2, options.height / 2))
             .force('gravityX', d3v4.forceX(options.width / 2).strength(_options.gravityStrength))
             .force('gravityY', d3v4.forceY(options.height / 2).strength(_options.gravityStrength))
+            .force('collision', d3v4.forceCollide(_options.collisionRadius))
+            .force('charge', d3v4.forceManyBody())
             .stop();
-
     }
 
     function dispatchState(event) {
@@ -91,9 +92,8 @@ dc_graph.d3v4_force_layout = function(id) {
         });
     }
     function installForces(paths) {
-        _simulation.force('collision', d3v4.forceCollide(_options.collisionRadius));
         if(paths === null) {
-            _simulation.force('charge', d3v4.forceManyBody().strength(_options.initialCharge));
+            _simulation.force('charge').strength(_options.initialCharge);
             _simulation.force('angle', null);
         } else {
             var nodesOnPath;
@@ -117,11 +117,7 @@ dc_graph.d3v4_force_layout = function(id) {
                 }
             });
 
-            _simulation.force('link', d3v4.forceLink())
-                .force('center', d3v4.forceCenter(_options.width / 2, _options.height / 2))
-                .force('gravityX', d3v4.forceX(_options.width / 2).strength(_options.gravityStrength))
-                .force('gravityY', d3v4.forceY(_options.height / 2).strength(_options.gravityStrength));
-            _simulation.force('charge', d3v4.forceManyBody().strength(_options.chargeForce));
+            _simulation.force('charge').strength(_options.chargeForce);
             _simulation.force('angle', function(alpha) {
                 angleForces(alpha, paths, _options.angleForce);
             });
