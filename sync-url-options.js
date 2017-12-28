@@ -33,7 +33,7 @@ var sync_url_options = (function() {
     }
 
     function query_type(val) {
-        return Array.isArray(val) ? 'array' : typeof val;
+        return Array.isArray(val) ? 'array' : val === null ? 'string' : typeof val;
     }
 
     // we could probably depend on _, but _.pick is the only thing we need atm
