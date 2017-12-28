@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-alpha.3
+ *  dc.graph 0.6.0-alpha.4
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-alpha.3
+ * @version 0.6.0-alpha.4
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-alpha.3',
+    version: '0.6.0-alpha.4',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -945,6 +945,35 @@ function draw_edge_to_shapes(diagram, e, sx, sy, tx, ty,
     };
 }
 
+function is_one_segment(path) {
+    return path.bezDegree === 1 && path.points.length === 2 ||
+        path.bezDegree === 3 && path.points.length === 4;
+}
+
+function as_bezier3(path) {
+    var p = path.points;
+    if(path.bezDegree === 3) return p;
+    else if(path.bezDegree === 1)
+        return [
+            {
+                x: p[0].x,
+                y: p[0].y
+            },
+            {
+                x: p[0].x + (p[1].x - p[0].x)/3,
+                y: p[0].y + (p[1].y - p[0].y)/3
+            },
+            {
+                x: p[0].x + 2*(p[1].x - p[0].x)/3,
+                y: p[0].y + 2*(p[1].y - p[0].y)/3
+            },
+            {
+                x: p[1].x,
+                y: p[1].y
+            }
+        ];
+    else throw new Error('unknown bezDegree ' + path.bezDegree);
+}
 
 // from https://www.jasondavies.com/animated-bezier/
 function interpolate(d, p) {
@@ -968,6 +997,49 @@ function getLevels(points, t_) {
 function bezier_point(points, t_) {
     var q = getLevels(points, t_);
     return q[q.length-1][0];
+}
+
+// from https://stackoverflow.com/questions/8369488/splitting-a-bezier-curve#8405756
+// somewhat redundant with the above but different objective
+function split_bezier(p, t) {
+    var x1 = p[0].x, y1 = p[0].y,
+        x2 = p[1].x, y2 = p[1].y,
+        x3 = p[2].x, y3 = p[2].y,
+        x4 = p[3].x, y4 = p[3].y,
+
+        x12 = (x2-x1)*t+x1,
+        y12 = (y2-y1)*t+y1,
+
+        x23 = (x3-x2)*t+x2,
+        y23 = (y3-y2)*t+y2,
+
+        x34 = (x4-x3)*t+x3,
+        y34 = (y4-y3)*t+y3,
+
+        x123 = (x23-x12)*t+x12,
+        y123 = (y23-y12)*t+y12,
+
+        x234 = (x34-x23)*t+x23,
+        y234 = (y34-y23)*t+y23,
+
+        x1234 = (x234-x123)*t+x123,
+        y1234 = (y234-y123)*t+y123;
+
+    return [
+        [{x: x1, y: y1}, {x: x12, y: y12}, {x: x123, y: y123}, {x: x1234, y: y1234}],
+        [{x: x1234, y: y1234}, {x: x234, y: y234}, {x: x34, y: y34}, {x: x4, y: y4}]
+    ];
+}
+function split_bezier_n(p, n) {
+    var ret = [];
+    while(n > 1) {
+        var parts = split_bezier(p, 1/n);
+        ret.push(parts[0][0], parts[0][1], parts[0][2]);
+        p = parts[1];
+        --n;
+    }
+    ret.push.apply(ret, p);
+    return ret;
 }
 
 dc_graph.no_shape = function() {
@@ -1293,7 +1365,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _arrows = {};
     var _running = false; // for detecting concurrency issues
     var _translate = [0,0], _scale = 1;
-    var _zoom;
+    var _zoom, _animateZoom;
     var _anchor, _chartGroup;
 
     var _minWidth = 200;
@@ -1481,12 +1553,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.autoZoom = property(null);
-    _diagram.zoomToFit = function() {
+    _diagram.zoomToFit = function(animate) {
         if(!(_nodeLayer && _edgeLayer))
             return;
         var node = _diagram.selectAllNodes(),
             edge = _diagram.selectAllEdges();
-        auto_zoom(node, edge);
+        auto_zoom(node, edge, animate);
     };
     _diagram.zoomDuration = property(500);
 
@@ -2367,6 +2439,14 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.layoutEngine = property(null).react(function(val) {
         if(val && val.parent)
             val.parent(_diagram);
+        if(_g) { // already rendered
+            // remove any calculated points, if engine did that
+            Object.keys(_edges).forEach(function(k) {
+                _edges[k].cola.points = null;
+            });
+            // initialize engine
+            initLayout(val);
+        }
     });
 
     // S-spline any edges that are not going in this direction
@@ -2431,10 +2511,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.handleDisconnected = deprecate_layout_algo_parameter('handleDisconnected');
 
-    function initLayout() {
+    function initLayout(engine) {
         if(!_diagram.layoutEngine())
             _diagram.layoutAlgorithm('cola', true);
-        _diagram.layoutEngine().init({
+        (engine || _diagram.layoutEngine()).init({
             width: _diagram.width(),
             height: _diagram.height()
         });
@@ -2983,11 +3063,16 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
                 else layout_done(true);
-                var do_zoom;
+                var do_zoom, animate = true;
                 switch(_diagram.autoZoom()) {
+                case 'always-skipanimonce':
+                    animate = false;
+                    _diagram.autoZoom('always');
                 case 'always':
                     do_zoom = true;
                     break;
+                case 'once-noanim':
+                    animate = false;
                 case 'once':
                     do_zoom = true;
                     _diagram.autoZoom(null);
@@ -2997,7 +3082,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
                 calc_bounds(node, edge);
                 if(do_zoom)
-                    auto_zoom();
+                    auto_zoom(animate);
             })
             .on('start', function() {
                 console.log('algo ' + _diagram.layoutEngine().layoutAlgorithm() + ' started.');
@@ -3123,7 +3208,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         edge.each(function(e) {
             e.pos.new = null;
             e.pos.old = null;
-            calc_new_edge_path(e);
+            calc_edge_path(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
             if(_diagram.edgeArrowhead.eval(e))
                 d3.select('#' + _diagram.arrowId(e, 'head'))
                 .attr('orient', function() {
@@ -3198,63 +3283,37 @@ dc_graph.diagram = function (parent, chartGroup) {
         return path;
     }
     function calc_edge_path(e, age, sx, sy, tx, ty) {
-        if(e.cola.points) {
-            // just to be clear, this is not a great way to populate old/new
-            // part of the problem is that currently we clear edges at start of draw
-            e.pos.new = e.pos.old = {
-                path: {
-                    points: e.cola.points,
-                    bezDegree: 3
-                },
-                orienthead: calculate_arrowhead_orientation(e.cola.points, 'head'),
-                orienttail: calculate_arrowhead_orientation(e.cola.points, 'tail')
+        var parallel = e.parallel;
+        var source = e.source, target = e.target;
+        if(parallel.edges.length > 1 && e.source.index > e.target.index) {
+            var t;
+            t = target; target = source; source = t;
+            t = tx; tx = sx; sx = t;
+            t = ty; ty = sy; sy = t;
+        }
+        var source_padding = source.dcg_ry +
+            _diagram.nodeStrokeWidth.eval(source) / 2,
+            target_padding = target.dcg_ry +
+            _diagram.nodeStrokeWidth.eval(target) / 2;
+        for(var p = 0; p < parallel.edges.length; ++p) {
+            // alternate parallel edges over, then under
+            var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
+                port = Math.floor((p+1)/2),
+                last = port > 0 ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
+            var path = draw_edge_to_shapes(_diagram, e, sx, sy, tx, ty,
+                                           last, dir, _diagram.parallelEdgeOffset(),
+                                           source_padding, target_padding
+                                          );
+            if(parallel.edges.length > 1 && parallel.rev[p])
+                path.points.reverse();
+            if(_diagram.enforceEdgeDirection())
+                path = enforce_path_direction(path, source.cola, target.cola);
+            parallel.edges[p].pos[age] = {
+                path: path,
+                orienthead: calculate_arrowhead_orientation(path.points, 'head'),
+                orienttail: calculate_arrowhead_orientation(path.points, 'tail')
             };
         }
-        else if(!e.pos[age]) {
-            var parallel = e.parallel;
-            var source = e.source, target = e.target;
-            if(parallel.edges.length > 1 && e.source.index > e.target.index) {
-                var t;
-                t = target; target = source; source = t;
-                t = tx; tx = sx; sx = t;
-                t = ty; ty = sy; sy = t;
-            }
-            var source_padding = source.dcg_ry +
-                    _diagram.nodeStrokeWidth.eval(source) / 2,
-                target_padding = target.dcg_ry +
-                    _diagram.nodeStrokeWidth.eval(target) / 2;
-            for(var p = 0; p < parallel.edges.length; ++p) {
-                // alternate parallel edges over, then under
-                var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
-                    port = Math.floor((p+1)/2),
-                    last = port > 0 ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
-                var path = draw_edge_to_shapes(_diagram, e, sx, sy, tx, ty,
-                                              last, dir, _diagram.parallelEdgeOffset(),
-                                              source_padding, target_padding
-                                              );
-                if(parallel.edges.length > 1 && parallel.rev[p])
-                    path.points.reverse();
-                if(_diagram.enforceEdgeDirection())
-                    path = enforce_path_direction(path, source.cola, target.cola);
-                parallel.edges[p].pos[age] = {
-                    path: path,
-                    orienthead: calculate_arrowhead_orientation(path.points, 'head'),
-                    orienttail: calculate_arrowhead_orientation(path.points, 'tail')
-                };
-            }
-        }
-        return e.pos[age].path;
-    }
-
-    function calc_old_edge_path(e) {
-        calc_edge_path(e, 'old', e.source.prevX || e.source.cola.x, e.source.prevY || e.source.cola.y,
-                         e.target.prevX || e.target.cola.x, e.target.prevY || e.target.cola.y);
-    }
-
-    function calc_new_edge_path(e) {
-        var path = calc_edge_path(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
-        var spos = path.points[0], tpos = path.points[path.points.length-1];
-        e.length = Math.hypot(tpos.x-spos.x, tpos.y-spos.y);
     }
 
     function render_edge_path(age) {
@@ -3341,7 +3400,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
-    function auto_zoom() {
+    function auto_zoom(animate) {
         if(_diagram.fitStrategy()) {
             if(!_bounds)
                 return;
@@ -3391,9 +3450,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
+            _animateZoom = animate;
             _zoom.translate(translate).scale(scale).event(_svg);
-            globalTransform(translate, scale, true);
-            _dispatch.zoomed(translate, scale);
+            _animateZoom = false;
         }
     }
 
@@ -3426,10 +3485,49 @@ dc_graph.diagram = function (parent, chartGroup) {
                     n.prevY = n.cola.y;
                 });
 
-        // reset edge ports
+        // recalculate edge positions
         edge.each(function(e) {
             e.pos.new = null;
-            e.pos.old = null;
+        });
+        edge.each(function(e) {
+            if(e.cola.points) {
+                e.pos.new = {
+                    path: {
+                        points: e.cola.points,
+                        bezDegree: 3
+                    },
+                    orienthead: calculate_arrowhead_orientation(e.cola.points, 'head'),
+                    orienttail: calculate_arrowhead_orientation(e.cola.points, 'tail')
+                };
+            }
+            else {
+                if(!e.pos.old)
+                    calc_edge_path(e, 'old', e.source.prevX || e.source.cola.x, e.source.prevY || e.source.cola.y,
+                                   e.target.prevX || e.target.cola.x, e.target.prevY || e.target.cola.y);
+                if(!e.pos.new)
+                    calc_edge_path(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
+            }
+            if(e.pos.old) {
+                if(e.pos.old.path.bezDegree !== e.pos.new.path.bezDegree ||
+                   e.pos.old.path.points.length !== e.pos.new.path.points.length) {
+                    console.log('old', e.pos.old.path.points.length, 'new', e.pos.new.path.points.length);
+                    if(is_one_segment(e.pos.old.path)) {
+                        e.pos.new.path.points = as_bezier3(e.pos.new.path);
+                        e.pos.old.path.points = split_bezier_n(as_bezier3(e.pos.old.path),
+                                                               (e.pos.new.path.points.length-1)/3);
+                        e.pos.old.path.bezDegree = e.pos.new.bezDegree = 3;
+                    }
+                    else if(is_one_segment(e.pos.new.path)) {
+                        e.pos.old.path.points = as_bezier3(e.pos.old.path);
+                        e.pos.new.path.points = split_bezier_n(as_bezier3(e.pos.new.path),
+                                                               (e.pos.old.path.points.length-1)/3);
+                        e.pos.old.path.bezDegree = e.pos.new.bezDegree = 3;
+                    }
+                    else console.warn("don't know how to interpolate two multi-segments");
+                }
+            }
+            else
+                e.pos.old = e.pos.new;
         });
 
         var edgeEntered = {};
@@ -3440,15 +3538,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .each(function(e) {
                 // if staging transitions, just fade new edges in at new position
                 // else start new edges at old positions of nodes, if any, else new positions
-                var age;
-                if(_diagram.stageTransitions() === 'modins') {
-                    calc_new_edge_path(e);
-                    age = 'new';
-                }
-                else {
-                    calc_old_edge_path(e);
-                    age = 'old';
-                }
+                var age = _diagram.stageTransitions() === 'modins' ? 'new' : 'old';
                 if(_diagram.edgeArrowhead.eval(e))
                     d3.select('#' + _diagram.arrowId(e, 'head'))
                     .attr('orient', function() {
@@ -3462,7 +3552,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .attr('d', render_edge_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
 
-        var etrans = edge.each(calc_new_edge_path)
+        var etrans = edge
                 .each(function(e) {
                     if(_diagram.edgeArrowhead.eval(e))
                         d3.select('#' + _diagram.arrowId(e, 'head'))
@@ -3540,6 +3630,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         if(animatePositions)
             edgeHover.attr('d', render_edge_path('new'));
+
+        edge.each(function(e) {
+            e.pos.old = e.pos.new;
+        });
     }
 
     function draw_ports(node) {
@@ -3937,7 +4031,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_diagram.restrictPan())
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));
         else translate = d3.event.translate;
-        globalTransform(translate, scale, false);
+        globalTransform(translate, scale, _animateZoom);
+        _dispatch.zoomed(translate, scale);
     }
 
     _diagram.resizeSvg = function(w, h) {
@@ -4119,45 +4214,121 @@ dc_graph.diagram = function (parent, chartGroup) {
 };
 
 dc_graph.spawn_engine = function(layout, args, worker) {
-    var engine, params;
-    switch(layout) {
-    case 'dagre':
-        engine = dc_graph.dagre_layout();
-        params = ['rankdir'];
-        break;
-    case 'd3force':
-        engine = dc_graph.d3_force_layout();
-        params = [];
-        break;
-    case 'd3v4force':
-        engine = dc_graph.d3v4_force_layout();
-        params = [];
-        break;
-    case 'tree':
-        engine = dc_graph.tree_layout();
-        params = [];
-        break;
-    case "circo":
-    case "dot":
-    case "neato":
-    case "osage":
-    case "twopi":
-        engine = dc_graph.graphviz_layout(null, layout, args.server);
-        params = [];
-        break;
-    case 'cola':
-    default:
-        engine = dc_graph.cola_layout();
-        params = ['lengthStrategy'];
-        break;
+    args = args || {};
+    return dc_graph.engines.instantiate(layout, args, worker)
+        || dc_graph.engines.instantiate(dc_graph._default_engine, args, worker);
+};
+
+dc_graph._engines = [
+    {
+        name: 'dagre',
+        params: ['rankdir'],
+        instantiate: function() {
+            return dc_graph.dagre_layout();
+        }
+    },
+    {
+        name: 'd3force',
+        instantiate: function() {
+            return dc_graph.d3_force_layout();
+        }
+    },
+    {
+        name: 'd3v4force',
+        instantiate: function() {
+            return dc_graph.d3v4_force_layout();
+        }
+    },
+    {
+        name: 'tree',
+        instantiate: function() {
+            return dc_graph.tree_layout();
+        }
+    },
+    {
+        names: ['circo', 'dot', 'neato', 'osage', 'twopi'],
+        instantiate: function(layout, args) {
+            return dc_graph.graphviz_layout(null, layout, args.server);
+        }
+    },
+    {
+        name: 'cola',
+        params: ['lengthStrategy'],
+        instantiate: function() {
+            return dc_graph.cola_layout();
+        }
     }
-    params.forEach(function(p) {
-        if(args[p])
-            engine[p](args[p]);
-    });
-    if(engine.supportsWebworker && engine.supportsWebworker() && worker)
-        engine = dc_graph.webworker_layout(engine);
-    return engine;
+];
+dc_graph._default_engine = 'cola';
+
+dc_graph.engines = {
+    entry_pred: function(layoutName) {
+        return function(e) {
+            return e.name === layoutName || e.names && e.names.includes(layoutName);
+        };
+    },
+    get: function(layoutName) {
+        return dc_graph._engines.find(this.entry_pred(layoutName));
+    },
+    instantiate: function(layout, args, worker) {
+        var entry = this.get(layout);
+        if(!entry)
+            return null;
+        var engine = entry.instantiate(layout, args),
+            params = entry.params || [];
+        params.forEach(function(p) {
+            if(args[p])
+                engine[p](args[p]);
+        });
+        if(engine.supportsWebworker && engine.supportsWebworker() && worker)
+            engine = dc_graph.webworker_layout(engine);
+        return engine;
+    },
+    available: function() {
+        return dc_graph._engines.reduce(function(avail, entry) {
+            return avail.concat(entry.name ? [entry.name] : entry.names);
+        }, []);
+    },
+    unregister: function(layoutName) {
+        // meh. this is a bit much. there is such a thing as making the api too "easy".
+        var i = dc_graph._engines.findIndex(this.entry_pred(layoutName));
+        var remove = false;
+        if(i < 0)
+            return false;
+        var entry = dc_graph._engines[i];
+        if(entry.name === layoutName)
+            remove = true;
+        else {
+            var j = entry.names.indexOf(layoutName);
+            if(j >= 0)
+                entry.name.splice(j, 1);
+            else
+                console.warn('search for engine failed', layoutName);
+            if(entry.names.length === 0)
+                remove = true;
+        }
+        if(remove)
+            dc_graph._engines.splice(i, 1);
+        return true;
+    },
+    register: function(entry) {
+        if(!entry.instantiate) {
+            console.error('engine definition needs instantiate: function(layout, args) { ... }');
+            return this;
+        }
+        if(entry.name)
+            this.unregister(entry.name);
+        else if(entry.names)
+            this.names.forEach(function(layoutName) {
+                this.unregister(layoutName);
+            });
+        else {
+            console.error('engine definition needs name or names[]');
+            return this;
+        }
+        dc_graph._engines.push(entry);
+        return this;
+    }
 };
 
 var _workers = {};
@@ -4412,7 +4583,8 @@ dc_graph.cola_layout = function(id) {
     }
 
     function stop() {
-        _d3cola.stop();
+        if(_d3cola)
+            _d3cola.stop();
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
@@ -5019,10 +5191,8 @@ dc_graph.d3_force_layout = function(id) {
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
     var _wnodes = [], _wedges = [];
-    var _originalNodesPosition = {};
     var _options = null;
     var _paths = null;
-    var _initialized = false;
 
     function init(options) {
         _options = options;
@@ -5081,35 +5251,38 @@ dc_graph.d3_force_layout = function(id) {
     }
 
     function start() {
-        var iters = installForces();
-        runSimulation(iters);
-
-        if(!_paths) {
-            _initialized = true;
-            // store original positions
-            Object.keys(_nodes).forEach(function(key) {
-                _originalNodesPosition[key] = {x: _nodes[key].x, y: _nodes[key].y};
-            });
-        }
+        installForces();
+        runSimulation(_options.iterations);
     }
 
     function stop() {
-        _simulation.stop();
+        if(_simulation)
+            _simulation.stop();
+    }
+
+    function savePositions() {
+        var data = {};
+        Object.keys(_nodes).forEach(function(key) {
+            data[key] = {x: _nodes[key].x, y: _nodes[key].y};
+        });
+        return data;
+    }
+
+    function restorePositions(data) {
+        Object.keys(data).forEach(function(key) {
+            if(_nodes[key]) {
+                _nodes[key].fixed = false;
+                _nodes[key].x = data[key].x;
+                _nodes[key].y = data[key].y;
+            }
+        });
     }
 
     function installForces() {
-        if(_paths === null) {
+        if(_paths === null)
             _simulation.gravity(_options.gravityStrength)
                 .charge(_options.initialCharge);
-            if(_initialized) {
-                Object.keys(_nodes).forEach(function(key) {
-                    _nodes[key].fixed = false;
-                    _nodes[key].x = _originalNodesPosition[key].x;
-                    _nodes[key].y = _originalNodesPosition[key].y;
-                });
-                return 0;
-            }
-        } else {
+        else {
             if(_options.fixOffPathNodes) {
                 var nodesOnPath = d3.set(); // nodes on path
                 _paths.forEach(function(path) {
@@ -5128,10 +5301,9 @@ dc_graph.d3_force_layout = function(id) {
                 });
             }
 
-            // enlarge charge force to seperate nodes on paths
+            // enlarge charge force to separate nodes on paths
             _simulation.charge(_options.chargeForce);
         }
-        return _options.iterations;
     };
 
     function runSimulation(iterations) {
@@ -5238,6 +5410,8 @@ dc_graph.d3_force_layout = function(id) {
         paths: function(paths) {
             _paths = paths;
         },
+        savePositions: savePositions,
+        restorePositions: restorePositions,
         optionNames: function() {
             return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength',
                     'initialCharge', 'fixOffPathNodes']
@@ -5272,10 +5446,8 @@ dc_graph.d3v4_force_layout = function(id) {
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
     var _wnodes = [], _wedges = [];
-    var _originalNodesPosition = {};
     var _options = null;
     var _paths = null;
-    var _initialized = false;
 
     function init(options) {
         _options = options;
@@ -5285,8 +5457,9 @@ dc_graph.d3v4_force_layout = function(id) {
             .force('center', d3v4.forceCenter(options.width / 2, options.height / 2))
             .force('gravityX', d3v4.forceX(options.width / 2).strength(_options.gravityStrength))
             .force('gravityY', d3v4.forceY(options.height / 2).strength(_options.gravityStrength))
+            .force('collision', d3v4.forceCollide(_options.collisionRadius))
+            .force('charge', d3v4.forceManyBody())
             .stop();
-
     }
 
     function dispatchState(event) {
@@ -5330,30 +5503,30 @@ dc_graph.d3v4_force_layout = function(id) {
         _dispatch.start();
         installForces(_paths);
         runSimulation(_options.iterations);
-
-        if(!_paths) {
-            _initialized = true;
-            // store original positions
-            Object.keys(_nodes).forEach(function(key) {
-                _originalNodesPosition[key] = {x: _nodes[key].x, y: _nodes[key].y};
-            });
-        }
     }
 
     function stop() {
         // not running asynchronously, no _simulation.stop();
     }
 
-    function installForces(paths) {
-        _simulation.force('collision', d3v4.forceCollide(_options.collisionRadius));
-        if(paths === null) {
-            if(_initialized) {
-                Object.keys(_nodes).forEach(function(key) {
-                    _nodes[key].fx = _originalNodesPosition[key].x;
-                    _nodes[key].fy = _originalNodesPosition[key].y;
-                });
+    function savePositions() {
+        var data = {};
+        Object.keys(_nodes).forEach(function(key) {
+            data[key] = {x: _nodes[key].x, y: _nodes[key].y};
+        });
+        return data;
+    }
+    function restorePositions(data) {
+        Object.keys(data).forEach(function(key) {
+            if(_nodes[key]) {
+                _nodes[key].fx = data[key].x;
+                _nodes[key].fy = data[key].y;
             }
-            _simulation.force('charge', d3v4.forceManyBody().strength(_options.initialCharge));
+        });
+    }
+    function installForces(paths) {
+        if(paths === null) {
+            _simulation.force('charge').strength(_options.initialCharge);
             _simulation.force('angle', null);
         } else {
             var nodesOnPath;
@@ -5369,19 +5542,15 @@ dc_graph.d3v4_force_layout = function(id) {
             // fix nodes not on paths
             Object.keys(_nodes).forEach(function(key) {
                 if(_options.fixOffPathNodes && !nodesOnPath.has(key)) {
-                    _nodes[key].fx = _originalNodesPosition[key].x;
-                    _nodes[key].fy = _originalNodesPosition[key].y;
+                    _nodes[key].fx = _nodes[key].x;
+                    _nodes[key].fy = _nodes[key].y;
                 } else {
                     _nodes[key].fx = null;
                     _nodes[key].fy = null;
                 }
             });
 
-            _simulation.force('link', d3v4.forceLink())
-                .force('center', d3v4.forceCenter(_options.width / 2, _options.height / 2))
-                .force('gravityX', d3v4.forceX(_options.width / 2).strength(_options.gravityStrength))
-                .force('gravityY', d3v4.forceY(_options.height / 2).strength(_options.gravityStrength));
-            _simulation.force('charge', d3v4.forceManyBody().strength(_options.chargeForce));
+            _simulation.force('charge').strength(_options.chargeForce);
             _simulation.force('angle', function(alpha) {
                 angleForces(alpha, paths, _options.angleForce);
             });
@@ -5486,6 +5655,8 @@ dc_graph.d3v4_force_layout = function(id) {
         paths: function(paths) {
             _paths = paths;
         },
+        savePositions: savePositions,
+        restorePositions: restorePositions,
         optionNames: function() {
             return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength', 'collisionRadius',
                     'initialCharge', 'fixOffPathNodes']
@@ -8203,6 +8374,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     var _paths = null;
     var _anchor;
     var _layer = null;
+    var _savedPositions = null;
 
     function paths_changed(nop, eop, paths) {
         // clear old paths
@@ -8211,7 +8383,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
         _paths = paths;
         // check if path exits on current chart
-        if(pathExists(paths) === true) {
+        var engine = _behavior.parent().layoutEngine(),
+            have_paths = pathExists(paths);
+        if(have_paths) {
             // layout engine wants just array of array of nodeids
             var nidpaths = paths.map(function(path) {
                 return pathreader.elementList.eval(path).filter(function(elem) {
@@ -8220,20 +8394,20 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
                     return pathreader.nodeKey.eval(elem);
                 });
             });
-            _behavior.parent().layoutEngine().paths(nidpaths);
+            engine.paths(nidpaths);
         } else {
-            _behavior.parent().layoutEngine().paths(null);
+            engine.paths(null);
+            if(_savedPositions)
+                engine.restorePositions(_savedPositions);
         }
         _behavior.parent().redraw();
     }
 
     // check if path exists in current view
     function pathExists(paths) {
-        var nodesCount = 0;
-        paths.forEach(function(d) {
-            nodesCount += getNodePosition(d).length;
+        return paths.some(function(d) {
+            return getNodePosition(d).length;
         });
-        return nodesCount > 0;
     }
 
     // get the positions of nodes on path
@@ -8361,7 +8535,10 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
     // draw the spline for paths
     function drawSpline(paths, pathprops) {
-        if(paths === null) return;
+        if(paths === null) {
+            _savedPositions = _behavior.parent().layoutEngine().savePositions();
+            return;
+        }
 
         // draw spline edge
         var _chart = _behavior.parent();

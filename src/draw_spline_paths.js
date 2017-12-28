@@ -5,6 +5,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     var _paths = null;
     var _anchor;
     var _layer = null;
+    var _savedPositions = null;
 
     function paths_changed(nop, eop, paths) {
         // clear old paths
@@ -13,7 +14,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
         _paths = paths;
         // check if path exits on current chart
-        if(pathExists(paths) === true) {
+        var engine = _behavior.parent().layoutEngine(),
+            have_paths = pathExists(paths);
+        if(have_paths) {
             // layout engine wants just array of array of nodeids
             var nidpaths = paths.map(function(path) {
                 return pathreader.elementList.eval(path).filter(function(elem) {
@@ -22,20 +25,20 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
                     return pathreader.nodeKey.eval(elem);
                 });
             });
-            _behavior.parent().layoutEngine().paths(nidpaths);
+            engine.paths(nidpaths);
         } else {
-            _behavior.parent().layoutEngine().paths(null);
+            engine.paths(null);
+            if(_savedPositions)
+                engine.restorePositions(_savedPositions);
         }
         _behavior.parent().redraw();
     }
 
     // check if path exists in current view
     function pathExists(paths) {
-        var nodesCount = 0;
-        paths.forEach(function(d) {
-            nodesCount += getNodePosition(d).length;
+        return paths.some(function(d) {
+            return getNodePosition(d).length;
         });
-        return nodesCount > 0;
     }
 
     // get the positions of nodes on path
@@ -163,7 +166,10 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
     // draw the spline for paths
     function drawSpline(paths, pathprops) {
-        if(paths === null) return;
+        if(paths === null) {
+            _savedPositions = _behavior.parent().layoutEngine().savePositions();
+            return;
+        }
 
         // draw spline edge
         var _chart = _behavior.parent();

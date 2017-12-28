@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.6.0-alpha.3",
+  "version": "0.6.0-alpha.4",
   "license": "Apache-2.0",
   "copyright": "2017",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
@@ -60,7 +60,7 @@
     "load-grunt-tasks": "~3.5",
     "marked": "~0.3",
     "promise-polyfill": "6.x",
-    "rollup": "0.36",
+    "rollup": "0.53",
     "rollup-plugin-node-resolve": "2",
     "time-grunt": "~1.4",
     "uglify-js": "~3.2",

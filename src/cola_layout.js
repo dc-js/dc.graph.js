@@ -117,7 +117,8 @@ dc_graph.cola_layout = function(id) {
     }
 
     function stop() {
-        _d3cola.stop();
+        if(_d3cola)
+            _d3cola.stop();
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
