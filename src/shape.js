@@ -551,12 +551,7 @@ dc_graph.ellipse_shape = function() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            nodeEnter.append('ellipse')
-                .attr('class', 'node-shape');
-        },
-        replace: function(nodeChanged) {
-            nodeChanged.select('ellipse.node-shape').remove();
-            nodeChanged.insert('ellipse', ':first-child')
+            nodeEnter.insert('ellipse', ':first-child')
                 .attr('class', 'node-shape');
         },
         update: function(node) {
@@ -589,12 +584,7 @@ dc_graph.polygon_shape = function() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            nodeEnter.append('path')
-                .attr('class', 'node-shape');
-        },
-        replace: function(nodeChanged) {
-            nodeChanged.select('path.node-shape').remove();
-            nodeChanged.insert('path', ':first-child')
+            nodeEnter.insert('path', ':first-child')
                 .attr('class', 'node-shape');
         },
         update: function(node) {
@@ -636,13 +626,6 @@ dc_graph.rounded_rectangle_shape = function() {
         },
         create: function(nodeEnter) {
             nodeEnter.filter(function(n) {
-                return !n.dcg_shape.noshape;
-            }).append('rect')
-                .attr('class', 'node-shape');
-        },
-        replace: function(nodeChanged) {
-            nodeChanged.select('rect.node-shape').remove();
-            nodeChanged.filter(function(n) {
                 return !n.dcg_shape.noshape;
             }).insert('rect', ':first-child')
                 .attr('class', 'node-shape');
