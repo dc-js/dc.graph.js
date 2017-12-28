@@ -31,7 +31,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _arrows = {};
     var _running = false; // for detecting concurrency issues
     var _translate = [0,0], _scale = 1;
-    var _zoom;
+    var _zoom, _animateZoom;
     var _anchor, _chartGroup;
 
     var _minWidth = 200;
@@ -2111,9 +2111,9 @@ dc_graph.diagram = function (parent, chartGroup) {
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
+            _animateZoom = true;
             _zoom.translate(translate).scale(scale).event(_svg);
-            globalTransform(translate, scale, true);
-            _dispatch.zoomed(translate, scale);
+            _animateZoom = false;
         }
     }
 
@@ -2668,7 +2668,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_diagram.restrictPan())
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));
         else translate = d3.event.translate;
-        globalTransform(translate, scale, false);
+        globalTransform(translate, scale, _animateZoom);
+        _dispatch.zoomed(translate, scale);
     }
 
     _diagram.resizeSvg = function(w, h) {
