@@ -89,7 +89,7 @@ module.exports = function (grunt) {
         },
         watch: {
             scripts: {
-                files: ['<%= conf.src %>/**/*.js', 'dc.graph.css'],
+                files: ['<%= conf.src %>/**/*.js', '*.js', 'dc.graph.css'],
                 tasks: ['build', 'copy']
             },
             docs: {
