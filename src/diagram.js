@@ -219,12 +219,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.autoZoom = property(null);
-    _diagram.zoomToFit = function() {
+    _diagram.zoomToFit = function(animate) {
         if(!(_nodeLayer && _edgeLayer))
             return;
         var node = _diagram.selectAllNodes(),
             edge = _diagram.selectAllEdges();
-        auto_zoom(node, edge);
+        auto_zoom(node, edge, animate);
     };
     _diagram.zoomDuration = property(500);
 
@@ -1729,11 +1729,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
                 else layout_done(true);
-                var do_zoom;
+                var do_zoom, animate = true;
                 switch(_diagram.autoZoom()) {
                 case 'always':
                     do_zoom = true;
                     break;
+                case 'once-noanim':
+                    animate = false;
                 case 'once':
                     do_zoom = true;
                     _diagram.autoZoom(null);
@@ -1743,7 +1745,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
                 calc_bounds(node, edge);
                 if(do_zoom)
-                    auto_zoom();
+                    auto_zoom(animate);
             })
             .on('start', function() {
                 console.log('algo ' + _diagram.layoutEngine().layoutAlgorithm() + ' started.');
@@ -2061,7 +2063,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
-    function auto_zoom() {
+    function auto_zoom(animate) {
         if(_diagram.fitStrategy()) {
             if(!_bounds)
                 return;
@@ -2111,7 +2113,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
-            _animateZoom = true;
+            _animateZoom = animate;
             _zoom.translate(translate).scale(scale).event(_svg);
             _animateZoom = false;
         }
