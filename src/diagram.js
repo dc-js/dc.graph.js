@@ -1209,11 +1209,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
     _diagram.redrawNode = _diagram._updateNode = function(node) {
         var changedShape = node.filter(shape_changed(_diagram));
+        changedShape.selectAll('.node-shape').remove();
         changedShape.each(infer_shape(_diagram));
         _diagram.forEachShape(changedShape, function(shape, node) {
-            // this is imperfect: old shape should remove itself,
-            // and perhaps create and replace merged (although they are append vs insert)
-            node.call(shape.replace);
+            node.call(shape.create);
         });
         node.select('title')
             .text(_diagram.nodeTitle.eval);

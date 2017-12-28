@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.6.0-alpha.4",
+  "version": "0.6.0-alpha.5",
   "license": "Apache-2.0",
   "copyright": "2017",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
@@ -54,6 +54,7 @@
     "grunt-jsdoc-to-markdown": "~3.0",
     "grunt-shell": "~2.1",
     "ink-docstrap": "~1.3",
+    "interval-tree-1d": "~1",
     "jquery": "~3.2",
     "jquery-ui-dist": "~1.12",
     "jsdifflib": "~1.1",
@@ -61,14 +62,16 @@
     "marked": "~0.3",
     "promise-polyfill": "6.x",
     "rollup": "0.53",
-    "rollup-plugin-node-resolve": "2",
+    "rollup-plugin-node-resolve": "~2",
+    "rollup-plugin-commonjs": "~8",
     "time-grunt": "~1.4",
     "uglify-js": "~3.2",
     "x-editable": "1.5.x"
   },
   "scripts": {
     "test": "grunt test",
-    "prepublish": "rollup -c"
+    "d3v4-force": "rollup -c d3v4-force.rollup.config.js",
+    "interval-tree": "rollup -c lysenko-interval-tree.rollup.config.js"
   },
   "npmName": "dc.graph",
   "npmFileMap": [
