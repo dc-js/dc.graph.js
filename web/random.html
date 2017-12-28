@@ -70,8 +70,7 @@
             exert: function(val, diagram) {
                 var engine = dc_graph.spawn_engine(val);
                 diagram
-                    .layoutEngine(engine)
-                    .autoZoom('once');
+                    .layoutEngine(engine);
             }
         }
     };
@@ -167,7 +166,8 @@
         diagram.child('fix-nodes', fix_nodes);
 
         diagram
-            .render();
+            .render()
+            .autoZoom('always-skipanimonce');
 
         var interval = null;
         function run() {
