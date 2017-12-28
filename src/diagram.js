@@ -1731,6 +1731,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 else layout_done(true);
                 var do_zoom, animate = true;
                 switch(_diagram.autoZoom()) {
+                case 'always-skipanimonce':
+                    animate = false;
+                    _diagram.autoZoom('always');
                 case 'always':
                     do_zoom = true;
                     break;
