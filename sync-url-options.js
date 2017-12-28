@@ -74,6 +74,16 @@ var sync_url_options = (function() {
                     update_interesting(qs);
                 }
             }
+            if(opt.values) { // generate <select> options
+                var select = d3.select(opt.selector);
+                var opts = select.selectAll('option').data(opt.values);
+                opts.enter().append('option').attr({
+                    value: function(x) { return x; },
+                    selected: function(x) { return x === settings[key]; }
+                }).text(function(x) { return x; });
+                select
+                    .property('value', settings[key]);
+            }
             if(opt.selector) {
                 switch(type) {
                 case 'boolean':
