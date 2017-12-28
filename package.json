@@ -70,7 +70,8 @@
   },
   "scripts": {
     "test": "grunt test",
-    "prepublish": "rollup -c d3v4-force.rollup.config.js"
+    "d3v4-force": "rollup -c d3v4-force.rollup.config.js",
+    "interval-tree": "rollup -c lysenko-interval-tree.rollup.config.js"
   },
   "npmName": "dc.graph",
   "npmFileMap": [
