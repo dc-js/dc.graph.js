@@ -120,6 +120,10 @@
                 diagram.autoZoom('once');
             }
         },
+        transition_duration: {
+            query: 'tdur',
+            default: 1000
+        },
         arrows: {
             default: 'none'
         }
@@ -176,9 +180,11 @@
         diagram
             .layoutEngine(engine)
             .timeLimit(5000)
+            .transitionDuration(sync_url.vals.transition_duration)
             .restrictPan(true)
             .margins({top: 5, left: 5, right: 5, bottom: 5})
-            .autoZoom('once')
+            .autoZoom('once-noanim')
+            .zoomDuration(sync_url.vals.transition_duration)
             .altKeyZoom(true)
             .width(null)
             .height(null)
