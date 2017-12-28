@@ -86,16 +86,28 @@
                     .layoutEngine(engine)
                     .autoZoom('once');
             }
+        },
+        worker: {
+            default: false
+        },
+        n: {
+            default: 100
+        },
+        arrows: {
+            default: 'none'
         }
     };
     var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+
     var engopt = d3.select('#layout').selectAll('option').data(dc_graph.engines.available())
     engopt.enter().append('option').attr({
         value: function(x) { return x; },
         selected: function(x) { return x === sync_url.vals.layout; }
     }).text(function(x) { return x; })
     d3.select('#layout')
-        .property('value', sync_url.vals.layout);
+    .property('value', sync_url.vals.layout);
+
+
     (function() {
         function build_data(nodes, edges) {
             // build crossfilters from scratch
@@ -109,13 +121,12 @@
             };
         }
 
-        var qs = querystring.parse();
         var random = dc_graph.random_graph({
             ncolors: 3
         });
 
-        var engine = dc_graph.spawn_engine(sync_url.vals.layout, qs, qs.worker != 'false');
-        random.generate(qs.n || 100);
+        var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
+        random.generate(sync_url.vals.n);
         var data = build_data(random.nodes(), random.edges());
         var colors = ['#1b9e77', '#d95f02', '#7570b3'];
         var dasheses = [
@@ -155,8 +166,8 @@
             .edgeStrokeDashArray(function(e) {
                 return dasheses[e.value.dash].ray;
             })
-            .edgeArrowhead(qs.arrows === 'head' || qs.arrows === 'both' ? 'vee' : null)
-            .edgeArrowtail(qs.arrows === 'tail' || qs.arrows === 'both' ? 'crow' : null)
+            .edgeArrowhead(sync_url.vals.arrows === 'head' || sync_url.vals.arrows === 'both' ? 'vee' : null)
+            .edgeArrowtail(sync_url.vals.arrows === 'tail' || sync_url.vals.arrows === 'both' ? 'crow' : null)
 
         diagram.child('select-nodes', dc_graph.select_nodes(
             {
