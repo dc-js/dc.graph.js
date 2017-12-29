@@ -2701,11 +2701,14 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     _diagram.resizeSvg = function(w, h) {
-        var restoreZoom;
-        if(_zoom)
-            restoreZoom = {translate: _zoom.translate(), scale: _zoom.scale()};
         w = w || _diagram.width();
         h = h || _diagram.height();
+        var restoreZoom, setDomain;
+        if(_zoom)
+            restoreZoom = {translate: _zoom.translate(), scale: _zoom.scale()};
+        if(_diagram.x() && _diagram.y())
+            setDomain = {x: [_diagram.x().domain()[0], _diagram.x().invert(w)],
+                         y: [_diagram.y().domain()[0], _diagram.y().invert(h)]};
         if(_svg) {
             _svg.attr('width', w)
                 .attr('height', h);
@@ -2717,6 +2720,10 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.y(d3.scale.linear().domain([0, h]));
         _diagram.x().range([0, w]);
         _diagram.y().range([0, h]);
+        if(setDomain) {
+            _diagram.x().domain(setDomain.x);
+            _diagram.y().domain(setDomain.y);
+        }
         if(restoreZoom) {
             _zoom.x(_diagram.x()).y(_diagram.y())
                 .translate(restoreZoom.translate).scale(restoreZoom.scale);
