@@ -39,6 +39,14 @@
         check(falsy(edges, diagram.edgeSource(), 'edgeSource', 'edges'));
         check(falsy(edges, diagram.edgeTarget(), 'edgeTarget', 'edges'));
 
+        var contentTypes = d3.set(diagram.content.enum());
+        var ct = dc_graph.functor_wrap(diagram.nodeContent());
+        var noContentNodes = nodes.filter(function(kv) {
+            return !contentTypes.has(ct(kv));
+        });
+        if(noContentNodes.length)
+            errors.push(['there are ' + noContentNodes.length + ' nodes with nodeContent not matching any content', noContentNodes]);
+
         var nindex = build_index(nodes, diagram.nodeKey()),
             eindex = build_index(edges, diagram.edgeKey());
         check(not_found(nindex, edges, diagram.edgeSource(), 'edgeSource', 'nodes', 'edges'));
