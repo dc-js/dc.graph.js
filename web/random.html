@@ -65,6 +65,7 @@
     var options = {
         layout: {
             default: 'cola',
+            values: dc_graph.engines.available(),
             selector: '#layout',
             needs_relayout: true,
             exert: function(val, diagram) {
@@ -86,13 +87,6 @@
         icon: null
     };
     var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
-    var engopt = d3.select('#layout').selectAll('option').data(dc_graph.engines.available())
-    engopt.enter().append('option').attr({
-        value: function(x) { return x; },
-        selected: function(x) { return x === sync_url.vals.layout; }
-    }).text(function(x) { return x; })
-    d3.select('#layout')
-        .property('value', sync_url.vals.layout);
 
     (function() {
         function build_data(nodes, edges) {
