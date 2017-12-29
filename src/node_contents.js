@@ -61,7 +61,7 @@ dc_graph.text_contents = function() {
             var bbox = this.select(container).node().getBBox();
             return {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
         },
-        select: function(container) {
+        selectContent: function(container) {
             return container.select('text.node-label');
         }
     };
@@ -108,7 +108,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
             box.x += width/2;
             return box;
         },
-        select: function(container) {
+        selectContent: function(container) {
             return container.select('g.with-icon');
         }
     };

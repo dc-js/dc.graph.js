@@ -1216,10 +1216,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         node.select('title')
             .text(_diagram.nodeTitle.eval);
-        _diagram.forEachContent(node, function(content, node) {
-            node.call(content.update);
-            _diagram.forEachShape(content.select(node), function(shape, node) {
-                node
+        _diagram.forEachContent(node, function(contentType, node) {
+            node.call(contentType.update);
+            _diagram.forEachShape(contentType.selectContent(node), function(shape, content) {
+                content
                     .call(fit_shape(shape, _diagram));
             });
         });

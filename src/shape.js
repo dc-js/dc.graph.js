@@ -204,8 +204,8 @@ function shape_changed(diagram) {
 }
 
 function fit_shape(shape, diagram) {
-    return function(text) {
-        text.each(function(n) {
+    return function(content) {
+        content.each(function(n) {
             var bbox = null;
             if((!shape.useTextSize || shape.useTextSize(n.dcg_shape)) && diagram.nodeFitLabel.eval(n)) {
                 bbox = this.getBBox();
