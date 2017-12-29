@@ -174,7 +174,7 @@ function elaborate_shape(diagram, def) {
         return diagram.shape(shape).elaborate({shape: shape}, def2);
     if(!dc_graph.shape_presets[shape]) {
         console.warn('unknown shape ', shape);
-        shape = 'rectangle';
+        return default_shape;
     }
     var preset = dc_graph.shape_presets[shape].preset(def2);
     preset.shape = dc_graph.shape_presets[shape].generator;
