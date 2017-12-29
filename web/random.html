@@ -101,10 +101,6 @@
             };
         }
 
-        var qs = querystring.parse();
-        var options = Object.assign({
-       }, qs);
-
         var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
         // don't do multiple components for cola unless user specified
         // layout is that unstable
