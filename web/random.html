@@ -70,6 +70,7 @@
             needs_relayout: true,
             exert: function(val, diagram) {
                 var engine = dc_graph.spawn_engine(val);
+                apply_engine_parameters(engine);
                 diagram
                     .layoutEngine(engine);
             }
@@ -87,6 +88,22 @@
         icon: null
     };
     var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+    function apply_engine_parameters(engine) {
+        switch(engine.layoutAlgorithm()) {
+        case 'd3v4-force':
+            diagram.initLayoutOnRedraw(true);
+            engine
+                .collisionRadius(25)
+                .gravityStrength(0.05)
+                .initialCharge(-500);
+            break
+        case 'd3-force':
+            engine
+                .gravityStrength(0.1)
+                .initialCharge(-1000);
+        }
+        return engine;
+    }
 
     (function() {
         function build_data(nodes, edges) {
@@ -102,6 +119,7 @@
         }
 
         var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
+        apply_engine_parameters(engine);
         // don't do multiple components for cola unless user specified
         // layout is that unstable
         if(engine.layoutAlgorithm()==='cola')
