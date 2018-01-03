@@ -92,7 +92,6 @@
     function apply_engine_parameters(engine) {
         switch(engine.layoutAlgorithm()) {
         case 'd3v4-force':
-            diagram.initLayoutOnRedraw(true);
             engine
                 .collisionRadius(25)
                 .gravityStrength(0.05)

@@ -125,6 +125,7 @@ dc_graph.d3v4_force_layout = function(id) {
     };
 
     function runSimulation(iterations) {
+        _simulation.alpha(1);
         for (var i = 0; i < iterations; ++i) {
             _simulation.tick();
             dispatchState('tick');
