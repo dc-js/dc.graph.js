@@ -31,7 +31,7 @@ dc_graph._engines = [
         }
     },
     {
-        names: ['circo', 'dot', 'neato', 'osage', 'twopi'],
+        names: ['circo', 'dot', 'neato', 'osage', 'twopi', 'fdp'],
         instantiate: function(layout, args) {
             return dc_graph.graphviz_layout(null, layout, args.server);
         }
