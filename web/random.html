@@ -76,6 +76,7 @@
             }
         },
         worker: false,
+        batch: 1,
         newnode: 0.9,
         newcomp: 0.1,
         remove: 0,
@@ -180,10 +181,12 @@
         var interval = null;
         function run() {
             interval = window.setInterval(function() {
-                if(Math.random() < sync_url.vals.remove)
-                    random.remove(1)
-                else
-                    random.generate(1);
+                for(var i = 0; i < sync_url.vals.batch; ++i) {
+                    if(Math.random() < sync_url.vals.remove)
+                        random.remove(1)
+                    else
+                        random.generate(1);
+                }
                 data = build_data(random.nodes(), random.edges());
                 diagram
                     .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
