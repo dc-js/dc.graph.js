@@ -100,7 +100,15 @@
                 diagram.autoZoom('once');
             }
         },
-        validate: false
+        validate: false,
+        minWidth: {
+            default: 200,
+            query: 'minw'
+        },
+        minHeight: {
+            default: 200,
+            query: 'minh'
+        }
     };
     var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram),
         populate;
@@ -159,6 +167,8 @@
             .layoutEngine(engine)
             .width(null)
             .height(null)
+            .minWidth(sync_url.vals.minWidth)
+            .minHeight(sync_url.vals.minHeight)
             .restrictPan(true)
             .autoZoom('always')
             .zoomExtent([0.1, 1.5])
@@ -208,7 +218,9 @@
                     .height(null)
                     .resizeSvg()
                     .zoomToFit();
-            }
+            },
+            minWidth: sync_url.vals.minWidth,
+            minHeight: sync_url.vals.minHeight
         });
     })();
 </script>
