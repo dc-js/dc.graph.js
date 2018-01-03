@@ -199,6 +199,9 @@ dc_graph.d3v4_force_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
             _dispatch.on(event, f);
@@ -243,4 +246,4 @@ dc_graph.d3v4_force_layout = function(id) {
     return engine;
 };
 
-dc_graph.d3v4_force_layout.scripts = ['d3.js'];
+dc_graph.d3v4_force_layout.scripts = ['d3.js', 'd3v4-force.js'];
