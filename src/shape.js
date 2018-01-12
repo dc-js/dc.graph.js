@@ -208,7 +208,7 @@ function fit_shape(shape, diagram) {
         content.each(function(n) {
             var bbox = null;
             if((!shape.useTextSize || shape.useTextSize(n.dcg_shape)) && diagram.nodeFitLabel.eval(n)) {
-                bbox = this.getBBox();
+                bbox = getBBoxNoThrow(this);
                 bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                 var padding;
                 var content = diagram.nodeContent.eval(n);

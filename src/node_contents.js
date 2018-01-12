@@ -28,7 +28,7 @@ dc_graph.text_contents = function() {
                     return _contents.parent().nodeLabelAlignment.eval(n) !== 'center';
                 })
                 .each(function(n) {
-                    var bbox = this.getBBox();
+                    var bbox = getBBoxNoThrow(this);
                     n.bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                     switch(_contents.parent().nodeLabelAlignment.eval(n)) {
                     case 'left': n.xofs = -n.bbox.width/2;
@@ -58,7 +58,7 @@ dc_graph.text_contents = function() {
                 .attr('fill', _contents.parent().nodeLabelFill.eval);
         },
         textbox: function(container) {
-            var bbox = this.selectContent(container).node().getBBox();
+            var bbox = getBBoxNoThrow(this.selectContent(container).node());
             return {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
         },
         selectContent: function(container) {

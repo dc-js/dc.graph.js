@@ -282,7 +282,7 @@ dc_graph.symbol_port_style = function() {
             })
             .text(_style.portLabel.eval)
             .each(function(p) {
-                p.bbox = this.getBBox();
+                p.bbox = getBBoxNoThrow(this);
             });
         port.selectAll('rect.port-label-background')
             .attr({

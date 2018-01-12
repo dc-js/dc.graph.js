@@ -160,3 +160,13 @@ if (typeof Object.assign != 'function') {
     configurable: true
   });
 }
+
+function getBBoxNoThrow(elem) {
+    // firefox seems to have issues with some of my texts
+    // just catch for now
+    try {
+        return elem.getBBox();
+    } catch(xep) {
+        return {x: 0, y: 0, width:0, height: 0};
+    }
+}
