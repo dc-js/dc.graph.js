@@ -296,8 +296,9 @@ dc_graph.symbol_port_style = function() {
                     _drawConduct = draw.conduct();
             }
         }
+        var namespace = 'grow-ports-' + _style.parent().portStyle.nameOf(this);
         if(whether) {
-            _node.on('mouseover.grow-ports', function(n) {
+            _node.on('mouseover.' + namespace, function(n) {
                 var nid = _style.parent().nodeKey.eval(n);
                 var activePort = _style.eventPort();
                 if(_nodePorts[nid])
@@ -308,7 +309,7 @@ dc_graph.symbol_port_style = function() {
                 nids.push(nid);
                 _style.animateNodes(nids);
             });
-            _node.on('mouseout.grow-ports', function(n) {
+            _node.on('mouseout.' + namespace, function(n) {
                 var nid = _style.parent().nodeKey.eval(n);
                 if(_nodePorts[nid])
                     _nodePorts[nid].forEach(function(p) {
@@ -319,8 +320,8 @@ dc_graph.symbol_port_style = function() {
                 _style.animateNodes(nids);
             });
         } else {
-            _node.on('mouseover.grow-ports', null);
-            _node.on('mouseout.grow-ports', null);
+            _node.on('mouseover.' + namespace, null);
+            _node.on('mouseout.' + namespace, null);
         }
         return _style;
     };
