@@ -554,16 +554,16 @@ get_catalog().then(function(catalog) {
     _diagram.child('place-ports', dc_graph.place_ports());
 
     var symbolPorts = dc_graph.symbol_port_style()
-            .outlineStrokeWidth(1)
-//            .portLabel(p => p.value.portname)
-            .symbol(p => p.orig.value.type)
-            .color(p => p.orig.value.type)
-            .colorScale(d3.scale.ordinal().range(
-                // colorbrewer qualitative scale
-                d3.shuffle(
-                    ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#eebb22','#a65628','#f781bf'] // 8-class set1
-                    //['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666'] // 8-class dark2
-                )));
+        .outlineStrokeWidth(1)
+//        .portLabel(p => p.value.portname)
+        .symbol(p => p.orig.value.type)
+        .color(p => p.orig.value.type)
+        .colorScale(d3.scale.ordinal().range(
+            // colorbrewer qualitative scale
+            d3.shuffle(
+                ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#eebb22','#a65628','#f781bf'] // 8-class set1
+                //['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666'] // 8-class dark2
+            )));
     if(qs.direcports)
         symbolPorts.outline(dc_graph.symbol_port_style.outline.arrow()
                             .outie(p => p.value.bounds === outbounds));
