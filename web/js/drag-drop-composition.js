@@ -35,7 +35,8 @@ function demo_catalog_reader(catalog) {
         },
         ports: function(nid, def) {
             return def.requirements.map(r => ({nodeId: nid, portname: 'req-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: inbounds})).concat(
-                def.capabilities.map(r => ({nodeId: nid, portname: 'cap-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: outbounds})));
+                def.capabilities.map(r => ({nodeId: nid, portname: 'cap-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: outbounds}))).concat(
+                    (def.extras || []).map(x => ({nodeId: nid, portname: 'xtra-' + x, wild: x === 'wild', type: x === 'wild' ? null : x, bounds: xtrabounds})));
         }
     };
 }
@@ -109,13 +110,15 @@ function redraw_promise(diagram) {
 
 var lbounds = [Math.PI*5/6, -Math.PI*5/6], rbounds = [-Math.PI/6, Math.PI/6],
     dbounds = [Math.PI/6, Math.PI*5/6], ubounds = [-Math.PI*5/6, -Math.PI/6];
-var inbounds, outbounds;
+var inbounds, outbounds, xtrabounds;
 if(options.rankdir === 'TB') {
     inbounds = ubounds;
     outbounds = dbounds;
+    xtrabounds = [Math.PI, Math.PI];
 } else  {
     inbounds = lbounds;
     outbounds = rbounds;
+    xtrabounds = [-Math.PI/2, -Math.PI/2];
 }
 function update_ports() {
     var port_flat = dc_graph.flat_group.make(_ports, d => d.nodeId + '/' + d.portname);
@@ -570,9 +573,18 @@ get_catalog().then(function(catalog) {
     if(qs.lettports)
         symbolPorts
             .content(dc_graph.symbol_port_style.content.letter());
+    var letterPorts = dc_graph.symbol_port_style()
+        .content(dc_graph.symbol_port_style.content.letter())
+        .outlineStrokeWidth(1)
+        .symbol(p => p.orig.value.type)
+        .color('black')
+        .colorScale(null);
     _diagram
         .portStyle('symbols', symbolPorts)
-        .portStyleName('symbols');
+        .portStyle('letters', letterPorts)
+        .portStyleName(function(p) {
+            return /^xtra-/.test(p.value.portname) ? 'letters' : 'symbols';
+        });
 
     var portMatcher = dc_graph.match_ports(_diagram, symbolPorts)
             .allowParallel(qs.parallel || false);
