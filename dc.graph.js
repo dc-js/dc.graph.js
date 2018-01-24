@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-alpha.5
+ *  dc.graph 0.6.0-alpha.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-alpha.5
+ * @version 0.6.0-alpha.6
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-alpha.5',
+    version: '0.6.0-alpha.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -124,6 +124,12 @@ function named_children() {
     f.enum = function() {
         return Object.keys(_children);
     };
+    f.nameOf = function(o) {
+        var found = Object.entries(_children).find(function(kv) {
+            return kv[1] == o;
+        });
+        return found ? found[0] : null;
+    };
     return f;
 }
 
@@ -181,6 +187,16 @@ if (typeof Object.assign != 'function') {
     writable: true,
     configurable: true
   });
+}
+
+function getBBoxNoThrow(elem) {
+    // firefox seems to have issues with some of my texts
+    // just catch for now
+    try {
+        return elem.getBBox();
+    } catch(xep) {
+        return {x: 0, y: 0, width:0, height: 0};
+    }
 }
 
 function property_if(pred, curr) {
@@ -713,7 +729,7 @@ function elaborate_shape(diagram, def) {
         return diagram.shape(shape).elaborate({shape: shape}, def2);
     if(!dc_graph.shape_presets[shape]) {
         console.warn('unknown shape ', shape);
-        shape = 'rectangle';
+        return default_shape;
     }
     var preset = dc_graph.shape_presets[shape].preset(def2);
     preset.shape = dc_graph.shape_presets[shape].generator;
@@ -743,11 +759,11 @@ function shape_changed(diagram) {
 }
 
 function fit_shape(shape, diagram) {
-    return function(text) {
-        text.each(function(n) {
+    return function(content) {
+        content.each(function(n) {
             var bbox = null;
             if((!shape.useTextSize || shape.useTextSize(n.dcg_shape)) && diagram.nodeFitLabel.eval(n)) {
-                bbox = this.getBBox();
+                bbox = getBBoxNoThrow(this);
                 bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                 var padding;
                 var content = diagram.nodeContent.eval(n);
@@ -1227,7 +1243,7 @@ dc_graph.text_contents = function() {
                     return _contents.parent().nodeLabelAlignment.eval(n) !== 'center';
                 })
                 .each(function(n) {
-                    var bbox = this.getBBox();
+                    var bbox = getBBoxNoThrow(this);
                     n.bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                     switch(_contents.parent().nodeLabelAlignment.eval(n)) {
                     case 'left': n.xofs = -n.bbox.width/2;
@@ -1257,10 +1273,10 @@ dc_graph.text_contents = function() {
                 .attr('fill', _contents.parent().nodeLabelFill.eval);
         },
         textbox: function(container) {
-            var bbox = this.select(container).node().getBBox();
+            var bbox = getBBoxNoThrow(this.selectContent(container).node());
             return {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
         },
-        select: function(container) {
+        selectContent: function(container) {
             return container.select('text.node-label');
         }
     };
@@ -1291,7 +1307,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
                 height: height + 'px'
             });
             g.call(contents.update);
-            contents.select(g)
+            contents.selectContent(g)
                 .attr('transform',  'translate(' + width/2 + ')');
             g.selectAll('image.icon').attr({
                 href: _contents.parent().nodeIcon.eval,
@@ -1307,7 +1323,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
             box.x += width/2;
             return box;
         },
-        select: function(container) {
+        selectContent: function(container) {
             return container.select('g.with-icon');
         }
     };
@@ -2533,10 +2549,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         node.select('title')
             .text(_diagram.nodeTitle.eval);
-        _diagram.forEachContent(node, function(content, node) {
-            node.call(content.update);
-            _diagram.forEachShape(content.select(node), function(shape, node) {
-                node
+        _diagram.forEachContent(node, function(contentType, node) {
+            node.call(contentType.update);
+            _diagram.forEachShape(contentType.selectContent(node), function(shape, content) {
+                content
                     .call(fit_shape(shape, _diagram));
             });
         });
@@ -3618,6 +3634,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
     }
 
+    _diagram.selectNodePortsOfStyle = function(node, style) {
+        return node.selectAll('g.port').filter(function(p) {
+            return _diagram.portStyleName.eval(p) === style;
+        });
+    };
+
     function draw_ports(node) {
         if(!_nodePorts)
             return;
@@ -3627,7 +3649,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 nodePorts2[nid] = _nodePorts[nid].filter(function(p) {
                     return _diagram.portStyleName.eval(p) === style;
                 });
-            _diagram.portStyle(style).drawPorts(nodePorts2, node);
+            var port = _diagram.selectNodePortsOfStyle(node, style);
+            _diagram.portStyle(style).drawPorts(port, nodePorts2, node);
         });
     }
 
@@ -3678,6 +3701,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.on = function(event, f) {
+        if(arguments.length === 1)
+            return _dispatch.on(event);
         _dispatch.on(event, f);
         return this;
     };
@@ -4228,7 +4253,7 @@ dc_graph._engines = [
         }
     },
     {
-        names: ['circo', 'dot', 'neato', 'osage', 'twopi'],
+        names: ['circo', 'dot', 'neato', 'osage', 'twopi', 'fdp'],
         instantiate: function(layout, args) {
             return dc_graph.graphviz_layout(null, layout, args.server);
         }
@@ -4283,7 +4308,7 @@ dc_graph.engines = {
         else {
             var j = entry.names.indexOf(layoutName);
             if(j >= 0)
-                entry.name.splice(j, 1);
+                entry.names.splice(j, 1);
             else
                 console.warn('search for engine failed', layoutName);
             if(entry.names.length === 0)
@@ -4294,6 +4319,7 @@ dc_graph.engines = {
         return true;
     },
     register: function(entry) {
+        var that = this;
         if(!entry.instantiate) {
             console.error('engine definition needs instantiate: function(layout, args) { ... }');
             return this;
@@ -4302,7 +4328,7 @@ dc_graph.engines = {
             this.unregister(entry.name);
         else if(entry.names)
             this.names.forEach(function(layoutName) {
-                this.unregister(layoutName);
+                that.unregister(layoutName);
             });
         else {
             console.error('engine definition needs name or names[]');
@@ -4398,6 +4424,8 @@ dc_graph.webworker_layout = function(layoutEngine) {
         };
     });
     engine.on = function(event, f) {
+        if(arguments.length === 1)
+            return _dispatch.on(event);
         _dispatch.on(event, f);
         return this;
     };
@@ -4587,6 +4615,8 @@ dc_graph.cola_layout = function(id) {
         },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -4793,6 +4823,8 @@ dc_graph.dagre_layout = function(id) {
             return stage === 'ports' || stage === 'edgepos';
         },
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -4950,6 +4982,8 @@ dc_graph.tree_layout = function(id) {
             return false;
         },
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -5122,6 +5156,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             return false;
         },
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -5368,8 +5404,13 @@ dc_graph.d3_force_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -5540,6 +5581,7 @@ dc_graph.d3v4_force_layout = function(id) {
     };
 
     function runSimulation(iterations) {
+        _simulation.alpha(1);
         for (var i = 0; i < iterations; ++i) {
             _simulation.tick();
             dispatchState('tick');
@@ -5613,8 +5655,13 @@ dc_graph.d3v4_force_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -5657,7 +5704,7 @@ dc_graph.d3v4_force_layout = function(id) {
     return engine;
 };
 
-dc_graph.d3v4_force_layout.scripts = ['d3.js'];
+dc_graph.d3v4_force_layout.scripts = ['d3.js', 'd3v4-force.js'];
 
 dc_graph.flexbox_layout = function(id) {
     var _layoutId = id || uuid();
@@ -5797,6 +5844,8 @@ dc_graph.flexbox_layout = function(id) {
         },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -5875,6 +5924,8 @@ dc_graph.manual_layout = function(id) {
         },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -6253,6 +6304,14 @@ dc_graph.troubleshoot = function() {
         check(falsy(nodes, diagram.nodeKey(), 'nodeKey', 'nodes'));
         check(falsy(edges, diagram.edgeSource(), 'edgeSource', 'edges'));
         check(falsy(edges, diagram.edgeTarget(), 'edgeTarget', 'edges'));
+
+        var contentTypes = d3.set(diagram.content.enum());
+        var ct = dc_graph.functor_wrap(diagram.nodeContent());
+        var noContentNodes = nodes.filter(function(kv) {
+            return !contentTypes.has(ct(kv));
+        });
+        if(noContentNodes.length)
+            errors.push(['there are ' + noContentNodes.length + ' nodes with nodeContent not matching any content', noContentNodes]);
 
         var nindex = build_index(nodes, diagram.nodeKey()),
             eindex = build_index(edges, diagram.edgeKey());
@@ -7029,6 +7088,8 @@ dc_graph.keyboard = function() {
     });
 
     _behavior.on = function(event, f) {
+        if(arguments.length === 1)
+            return _dispatch.on(event);
         _dispatch.on(event, f);
         return this;
     };
@@ -7167,6 +7228,8 @@ dc_graph.brush = function() {
     });
 
     _behavior.on = function(event, f) {
+        if(arguments.length === 1)
+            return _dispatch.on(event);
         _dispatch.on(event, f);
         return this;
     };
@@ -9324,7 +9387,7 @@ dc_graph.symbol_port_style = function() {
     var _nodePorts, _node;
     var _drawConduct;
 
-    _style.symbolScale = property(d3.shuffle(d3.scale.ordinal().range(d3.svg.symbolTypes)));
+    _style.symbolScale = property(null);
     _style.colorScale = property(d3.scale.ordinal().range(
          // colorbrewer light qualitative scale
         d3.shuffle(['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462',
@@ -9336,6 +9399,7 @@ dc_graph.symbol_port_style = function() {
     _style.symbol = _style.portSymbol = property(name_or_edge, false); // non standard properties taking "outer datum"
     _style.color = _style.portColor = property(name_or_edge, false);
     _style.outline = property(dc_graph.symbol_port_style.outline.circle());
+    _style.content = property(dc_graph.symbol_port_style.content.d3symbol());
     _style.smallRadius = _style.portRadius = property(7);
     _style.mediumRadius = _style.portHoverNodeRadius = property(10);
     _style.largeRadius = _style.portHoverPortRadius = property(14);
@@ -9353,7 +9417,9 @@ dc_graph.symbol_port_style = function() {
 
     function symbol_fill(p) {
         var symcolor = _style.color.eval(p);
-        return symcolor ? _style.colorScale()(symcolor) : 'none';
+        return symcolor ?
+            (_style.colorScale() ? _style.colorScale()(symcolor) : symcolor) :
+        'none';
     }
     function port_transform(p) {
         var l = Math.hypot(p.pos.x, p.pos.y),
@@ -9362,12 +9428,11 @@ dc_graph.symbol_port_style = function() {
             pos = {x: p.pos.x + disp * u.x, y: p.pos.y + disp * u.y};
         return 'translate(' + pos.x + ',' + pos.y + ')';
     }
-    function port_symbol(p, size) {
+    function port_symbol(p) {
+        if(!_style.symbolScale())
+            _style.symbolScale(d3.scale.ordinal().range(d3.shuffle(_style.content().enum())));
         var symname = _style.symbol.eval(p);
-        return symname && d3.svg.symbol()
-            .type(_style.symbolScale()(symname))
-            .size(size*size)
-        ();
+        return symname && (_style.symbolScale() ? _style.symbolScale()(symname) : symname);
     }
     function is_left(p) {
         return p.vec[0] < 0;
@@ -9414,7 +9479,7 @@ dc_graph.symbol_port_style = function() {
                 .filter(function(n) {
                     return setn.has(_style.parent().nodeKey.eval(n));
                 });
-        var symbol = node.selectAll('g.port');
+        var symbol = _style.parent().selectNodePortsOfStyle(node, _style.parent().portStyle.nameOf(this));
         var shimmer = symbol.filter(function(p) { return /^shimmer/.test(p.state); }),
             nonshimmer = symbol.filter(function(p) { return !/^shimmer/.test(p.state); });
         if(shimmer.size()) {
@@ -9431,12 +9496,8 @@ dc_graph.symbol_port_style = function() {
                 .call(_style.outline().draw(function(p) {
                     return shimmer_radius(p) + _style.portPadding.eval(p);
                 }));
-            shimin.selectAll('path.port-symbol')
-                .attr({
-                    d: function(p) {
-                        return port_symbol(p, shimmer_radius(p));
-                    }
-                });
+            shimin.selectAll('.port-symbol')
+                .call(_style.content().draw(port_symbol, shimmer_radius));
             var shimout = shimin.transition()
                     .duration(1000)
                     .ease('sin');
@@ -9444,12 +9505,8 @@ dc_graph.symbol_port_style = function() {
                 .call(_style.outline().draw(function(p) {
                     return _style.smallRadius.eval(p) + _style.portPadding.eval(p);
                 }));
-            shimout.selectAll('path.port-symbol')
-                .attr({
-                    d: function(p) {
-                        return port_symbol(p, _style.smallRadius.eval(p));
-                    }
-                });
+            shimout.selectAll('.port-symbol')
+                .call(_style.content().draw(port_symbol, _style.smallRadius.eval));
             shimout.each("end", repeat);
         }
 
@@ -9459,12 +9516,8 @@ dc_graph.symbol_port_style = function() {
             .call(_style.outline().draw(function(p) {
                 return hover_radius(p) + _style.portPadding.eval(p);
             }));
-        trans.selectAll('path.port-symbol')
-            .attr({
-                d: function(p) {
-                    return port_symbol(p, hover_radius(p));
-                }
-            });
+        trans.selectAll('.port-symbol')
+            .call(_style.content().draw(port_symbol, hover_radius));
 
         function text_showing(p) {
             return p.state === 'large' || p.state === 'medium';
@@ -9503,9 +9556,9 @@ dc_graph.symbol_port_style = function() {
             return parent.datum();
         return null;
     };
-    _style.drawPorts = function(nodePorts, node) {
+    _style.drawPorts = function(ports, nodePorts, node) {
         _nodePorts = nodePorts; _node = node;
-        var port = node.selectAll('g.port').data(function(n) {
+        var port = ports.data(function(n) {
             return nodePorts[_style.parent().nodeKey.eval(n)] || [];
         }, name_or_edge);
         port.exit().remove();
@@ -9553,23 +9606,16 @@ dc_graph.symbol_port_style = function() {
                 return _style.smallRadius.eval(p) + _style.portPadding.eval(p);
             }));
 
-        var symbolEnter = portEnter.append('path')
-                .attr({
-                    class: 'port-symbol',
-                    d: function(p) {
-                        return port_symbol(p, _style.smallRadius.eval(p));
-                    }
-                });
-        var symbol = port.select('path.port-symbol');
+        var symbolEnter = portEnter.append(_style.content().tag())
+            .attr('class', 'port-symbol')
+            .call(_style.content().draw(port_symbol, _style.smallRadius.eval));
+
+        var symbol = port.select('.port-symbol');
         symbol.attr('fill', symbol_fill);
         symbol.transition()
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
-            .attr({
-                d: function(p) {
-                    return port_symbol(p, _style.smallRadius.eval(p));
-                }
-            });
+            .call(_style.content().draw(port_symbol, _style.smallRadius.eval));
 
         var label = port.selectAll('text.port-label').data(function(p) {
             return _style.portLabel.eval(p) ? [p] : [];
@@ -9603,7 +9649,7 @@ dc_graph.symbol_port_style = function() {
             })
             .text(_style.portLabel.eval)
             .each(function(p) {
-                p.bbox = this.getBBox();
+                p.bbox = getBBoxNoThrow(this);
             });
         port.selectAll('rect.port-label-background')
             .attr({
@@ -9634,8 +9680,9 @@ dc_graph.symbol_port_style = function() {
                     _drawConduct = draw.conduct();
             }
         }
+        var namespace = 'grow-ports-' + _style.parent().portStyle.nameOf(this);
         if(whether) {
-            _node.on('mouseover.grow-ports', function(n) {
+            _node.on('mouseover.' + namespace, function(n) {
                 var nid = _style.parent().nodeKey.eval(n);
                 var activePort = _style.eventPort();
                 if(_nodePorts[nid])
@@ -9646,7 +9693,7 @@ dc_graph.symbol_port_style = function() {
                 nids.push(nid);
                 _style.animateNodes(nids);
             });
-            _node.on('mouseout.grow-ports', function(n) {
+            _node.on('mouseout.' + namespace, function(n) {
                 var nid = _style.parent().nodeKey.eval(n);
                 if(_nodePorts[nid])
                     _nodePorts[nid].forEach(function(p) {
@@ -9657,8 +9704,8 @@ dc_graph.symbol_port_style = function() {
                 _style.animateNodes(nids);
             });
         } else {
-            _node.on('mouseover.grow-ports', null);
-            _node.on('mouseout.grow-ports', null);
+            _node.on('mouseover.' + namespace, null);
+            _node.on('mouseout.' + namespace, null);
         }
         return _style;
     };
@@ -9731,6 +9778,67 @@ dc_graph.symbol_port_style.outline.arrow = function() {
         outie: property(null)
     };
     return _outline;
+};
+
+dc_graph.symbol_port_style.content = {};
+dc_graph.symbol_port_style.content.d3symbol = function() {
+    var _symbol = {
+        tag: function() {
+            return 'path';
+        },
+        enum: function() {
+            return d3.svg.symbolTypes;
+        },
+        draw: function(symf, rf) {
+            return function(symbols) {
+                symbols.attr('d', function(p) {
+                    var sym = symf(p), r = rf(p);
+                    return d3.svg.symbol()
+                        .type(sym)
+                        .size(r*r)
+                    ();
+                });
+                symbols.attr('transform', function(p) {
+                    switch(symf(p)) {
+                    case 'triangle-up':
+                        return 'translate(0, -1)';
+                    case 'triangle-down':
+                        return 'translate(0, 1)';
+                    default: return null;
+                    }
+                });
+            };
+        }
+    };
+    return _symbol;
+};
+dc_graph.symbol_port_style.content.letter = function() {
+    var _symbol = {
+        tag: function() {
+            return 'text';
+        },
+        enum: function() {
+            return d3.range(65, 91).map(String.fromCharCode);
+        },
+        draw: function(symf, rf) {
+            return function(symbols) {
+                symbols.text(symf)
+                    .attr({
+                        'alignment-baseline': 'middle',
+                        'text-anchor': 'middle'
+                    });
+                symbols.each(function(p) {
+                    if(!p.symbol_size)
+                        p.symbol_size = getBBoxNoThrow(this);
+                });
+                symbols.attr('transform', function(p) {
+                    return 'scale(' + (2*rf(p)/p.symbol_size.height) +
+                        ') translate(' + [0,2].join(',') + ')';
+                });
+            };
+        }
+    };
+    return _symbol;
 };
 
 function process_dot(callback, error, text) {
