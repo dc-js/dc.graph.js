@@ -425,3 +425,31 @@ dc_graph.symbol_port_style.content.d3symbol = function() {
     };
     return _symbol;
 };
+dc_graph.symbol_port_style.content.letter = function() {
+    var _symbol = {
+        tag: function() {
+            return 'text';
+        },
+        enum: function() {
+            return d3.range(65, 91).map(String.fromCharCode);
+        },
+        draw: function(symf, rf) {
+            return function(symbols) {
+                symbols.text(symf)
+                    .attr({
+                        'alignment-baseline': 'middle',
+                        'text-anchor': 'middle'
+                    });
+                symbols.each(function(p) {
+                    if(!p.symbol_size)
+                        p.symbol_size = getBBoxNoThrow(this);
+                });
+                symbols.attr('transform', function(p) {
+                    return 'scale(' + (2*rf(p)/p.symbol_size.height) +
+                        ') translate(' + [0,2].join(',') + ')';
+                });
+            };
+        }
+    };
+    return _symbol;
+};

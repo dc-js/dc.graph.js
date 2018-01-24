@@ -567,6 +567,9 @@ get_catalog().then(function(catalog) {
     if(qs.direcports)
         symbolPorts.outline(dc_graph.symbol_port_style.outline.arrow()
                             .outie(p => p.value.bounds === outbounds));
+    if(qs.lettports)
+        symbolPorts
+            .content(dc_graph.symbol_port_style.content.letter());
     _diagram
         .portStyle('symbols', symbolPorts)
         .portStyleName('symbols');
