@@ -411,6 +411,15 @@ dc_graph.symbol_port_style.content.d3symbol = function() {
                         .size(r*r)
                     ();
                 });
+                symbols.attr('transform', function(p) {
+                    switch(symf(p)) {
+                    case 'triangle-up':
+                        return 'translate(0, -1)';
+                    case 'triangle-down':
+                        return 'translate(0, 1)';
+                    default: return null;
+                    }
+                });
             };
         }
     };
