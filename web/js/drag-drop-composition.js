@@ -576,7 +576,8 @@ get_catalog().then(function(catalog) {
     var letterPorts = dc_graph.symbol_port_style()
         .content(dc_graph.symbol_port_style.content.letter())
         .outlineStrokeWidth(1)
-        .symbol(p => p.orig.value.type)
+        .symbol('S')
+        .symbolScale(x => x)
         .color('black')
         .colorScale(null);
     _diagram
