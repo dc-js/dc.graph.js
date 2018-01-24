@@ -95,7 +95,7 @@ dc_graph.symbol_port_style = function() {
                 .filter(function(n) {
                     return setn.has(_style.parent().nodeKey.eval(n));
                 });
-        var symbol = node.selectAll('g.port');
+        var symbol = _style.parent().selectNodePortsOfStyle(node, _style.parent().portStyle.nameOf(this));
         var shimmer = symbol.filter(function(p) { return /^shimmer/.test(p.state); }),
             nonshimmer = symbol.filter(function(p) { return !/^shimmer/.test(p.state); });
         if(shimmer.size()) {
@@ -172,9 +172,9 @@ dc_graph.symbol_port_style = function() {
             return parent.datum();
         return null;
     };
-    _style.drawPorts = function(nodePorts, node) {
+    _style.drawPorts = function(ports, nodePorts, node) {
         _nodePorts = nodePorts; _node = node;
-        var port = node.selectAll('g.port').data(function(n) {
+        var port = ports.data(function(n) {
             return nodePorts[_style.parent().nodeKey.eval(n)] || [];
         }, name_or_edge);
         port.exit().remove();

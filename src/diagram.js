@@ -2301,6 +2301,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
     }
 
+    _diagram.selectNodePortsOfStyle = function(node, style) {
+        return node.selectAll('g.port').filter(function(p) {
+            return _diagram.portStyleName.eval(p) === style;
+        });
+    };
+
     function draw_ports(node) {
         if(!_nodePorts)
             return;
@@ -2310,7 +2316,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                 nodePorts2[nid] = _nodePorts[nid].filter(function(p) {
                     return _diagram.portStyleName.eval(p) === style;
                 });
-            _diagram.portStyle(style).drawPorts(nodePorts2, node);
+            var port = _diagram.selectNodePortsOfStyle(node, style);
+            _diagram.portStyle(style).drawPorts(port, nodePorts2, node);
         });
     }
 
