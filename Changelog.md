@@ -1,3 +1,24 @@
+## 0.6 alpha 6
+* letter or other symbols in symbol port style
+* firefox was crashing on flexbox layout due to nodes with no caption
+* graphviz fdp layout
+* improvements to random generation example
+* workers for d3*force (but stop doesn't work)
+* resizing example
+* `.on()` returns the current handler if none given ([#32](https://github.com/dc-js/dc.graph.js/issues/32))
+
+## 0.6 alpha 5
+* fix node shape changing, old shapes were not being deleted
+* build lysenko-interval-tree.js properly using rollup
+* fix d3*force parameters for rectangular selection demo
+
+## 0.6 alpha 4
+* support for switching between available layout engines
+* register/unregister layout engines
+* some layout engines support `savePositions` and `restorePositions` ([#74](https://github.com/dc-js/dc.graph.js/issues/74))
+* `sync_url_options` separate library
+* drop `examples` directory and move those directly into `web`
+
 ## 0.6 alpha 3
 * `d3_force_layout` and `d3v4_force_layout` engines
 * we build and distribute a custom `d3v4-force.js` using rollup (since we're still in the d3v3 universe)
