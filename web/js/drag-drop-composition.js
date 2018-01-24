@@ -598,7 +598,9 @@ get_catalog().then(function(catalog) {
     });
 
     portMatcher.isValid(
-        (sourcePort, targetPort) => wildcard.isValid(sourcePort, targetPort) && 
+        (sourcePort, targetPort) => wildcard.isValid(sourcePort, targetPort) &&
+            sourcePort.orig.value.bounds !== xtrabounds &&
+            targetPort.orig.value.bounds !== xtrabounds && 
             sourcePort.orig.value.bounds !== targetPort.orig.value.bounds);
 
     _drawGraphs = dc_graph.draw_graphs({
