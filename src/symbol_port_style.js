@@ -33,7 +33,9 @@ dc_graph.symbol_port_style = function() {
 
     function symbol_fill(p) {
         var symcolor = _style.color.eval(p);
-        return symcolor ? _style.colorScale()(symcolor) : 'none';
+        return symcolor ?
+            (_style.colorScale() ? _style.colorScale()(symcolor) : symcolor) :
+        'none';
     }
     function port_transform(p) {
         var l = Math.hypot(p.pos.x, p.pos.y),
@@ -46,7 +48,7 @@ dc_graph.symbol_port_style = function() {
         if(!_style.symbolScale())
             _style.symbolScale(d3.scale.ordinal().range(d3.shuffle(_style.content().enum())));
         var symname = _style.symbol.eval(p);
-        return symname && _style.symbolScale()(symname);
+        return symname && (_style.symbolScale() ? _style.symbolScale()(symname) : symname);
     }
     function is_left(p) {
         return p.vec[0] < 0;
