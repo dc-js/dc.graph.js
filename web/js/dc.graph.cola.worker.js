@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-alpha.5
+ *  dc.graph 0.6.0-alpha.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-alpha.5
+ * @version 0.6.0-alpha.6
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-alpha.5',
+    version: '0.6.0-alpha.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -121,6 +121,12 @@ function named_children() {
     f.enum = function() {
         return Object.keys(_children);
     };
+    f.nameOf = function(o) {
+        var found = Object.entries(_children).find(function(kv) {
+            return kv[1] == o;
+        });
+        return found ? found[0] : null;
+    };
     return f;
 }
 
@@ -178,6 +184,16 @@ if (typeof Object.assign != 'function') {
     writable: true,
     configurable: true
   });
+}
+
+function getBBoxNoThrow(elem) {
+    // firefox seems to have issues with some of my texts
+    // just catch for now
+    try {
+        return elem.getBBox();
+    } catch(xep) {
+        return {x: 0, y: 0, width:0, height: 0};
+    }
 }
 
 // create or re-use objects in a map, delete the ones that were not reused
@@ -395,6 +411,8 @@ dc_graph.cola_layout = function(id) {
         },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },

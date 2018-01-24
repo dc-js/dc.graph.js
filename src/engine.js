@@ -31,7 +31,7 @@ dc_graph._engines = [
         }
     },
     {
-        names: ['circo', 'dot', 'neato', 'osage', 'twopi'],
+        names: ['circo', 'dot', 'neato', 'osage', 'twopi', 'fdp'],
         instantiate: function(layout, args) {
             return dc_graph.graphviz_layout(null, layout, args.server);
         }
@@ -86,7 +86,7 @@ dc_graph.engines = {
         else {
             var j = entry.names.indexOf(layoutName);
             if(j >= 0)
-                entry.name.splice(j, 1);
+                entry.names.splice(j, 1);
             else
                 console.warn('search for engine failed', layoutName);
             if(entry.names.length === 0)
@@ -97,6 +97,7 @@ dc_graph.engines = {
         return true;
     },
     register: function(entry) {
+        var that = this;
         if(!entry.instantiate) {
             console.error('engine definition needs instantiate: function(layout, args) { ... }');
             return this;
@@ -105,7 +106,7 @@ dc_graph.engines = {
             this.unregister(entry.name);
         else if(entry.names)
             this.names.forEach(function(layoutName) {
-                this.unregister(layoutName);
+                that.unregister(layoutName);
             });
         else {
             console.error('engine definition needs name or names[]');

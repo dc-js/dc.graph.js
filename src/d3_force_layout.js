@@ -208,8 +208,13 @@ dc_graph.d3_force_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },

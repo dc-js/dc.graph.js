@@ -125,6 +125,7 @@ dc_graph.d3v4_force_layout = function(id) {
     };
 
     function runSimulation(iterations) {
+        _simulation.alpha(1);
         for (var i = 0; i < iterations; ++i) {
             _simulation.tick();
             dispatchState('tick');
@@ -198,8 +199,13 @@ dc_graph.d3v4_force_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -242,4 +248,4 @@ dc_graph.d3v4_force_layout = function(id) {
     return engine;
 };
 
-dc_graph.d3v4_force_layout.scripts = ['d3.js'];
+dc_graph.d3v4_force_layout.scripts = ['d3.js', 'd3v4-force.js'];

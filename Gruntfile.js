@@ -26,6 +26,20 @@ module.exports = function (grunt) {
             'src/graphviz_attrs.js',
             'src/dagre_layout.js',
             'src/webworker_message.js'
+        ],
+        d3v4ForceWorkerFiles: [
+            'src/core.js',
+            'src/generate_objects.js',
+            'src/graphviz_attrs.js',
+            'src/d3v4_force_layout.js',
+            'src/webworker_message.js'
+        ],
+        d3ForceWorkerFiles: [
+            'src/core.js',
+            'src/generate_objects.js',
+            'src/graphviz_attrs.js',
+            'src/d3_force_layout.js',
+            'src/webworker_message.js'
         ]
     };
 
@@ -49,6 +63,14 @@ module.exports = function (grunt) {
             dagreWorker: {
                 src: '<%= conf.dagreWorkerFiles %>',
                 dest: '<%= conf.pkg.name %>.dagre.worker.js'
+            },
+            d3v4ForceWorker: {
+                src: '<%= conf.d3v4ForceWorkerFiles %>',
+                dest: '<%= conf.pkg.name %>.d3v4-force.worker.js'
+            },
+            d3ForceWorker: {
+                src: '<%= conf.d3ForceWorkerFiles %>',
+                dest: '<%= conf.pkg.name %>.d3-force.worker.js'
             }
         },
         uglify: {
@@ -179,6 +201,10 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.cola.worker.js.map',
                             '<%= conf.pkg.name %>.dagre.worker.js',
                             '<%= conf.pkg.name %>.dagre.worker.js.map',
+                            '<%= conf.pkg.name %>.d3v4-force.worker.js',
+                            '<%= conf.pkg.name %>.d3v4-force.worker.js.map',
+                            '<%= conf.pkg.name %>.d3-force.worker.js',
+                            '<%= conf.pkg.name %>.d3-force.worker.js.map',
                             'd3.flexdivs.js',
                             'dc.graph.tracker.domain.js',
                             'd3v4-force.js',

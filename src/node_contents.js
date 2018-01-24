@@ -28,7 +28,7 @@ dc_graph.text_contents = function() {
                     return _contents.parent().nodeLabelAlignment.eval(n) !== 'center';
                 })
                 .each(function(n) {
-                    var bbox = this.getBBox();
+                    var bbox = getBBoxNoThrow(this);
                     n.bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                     switch(_contents.parent().nodeLabelAlignment.eval(n)) {
                     case 'left': n.xofs = -n.bbox.width/2;
@@ -58,10 +58,10 @@ dc_graph.text_contents = function() {
                 .attr('fill', _contents.parent().nodeLabelFill.eval);
         },
         textbox: function(container) {
-            var bbox = this.select(container).node().getBBox();
+            var bbox = getBBoxNoThrow(this.selectContent(container).node());
             return {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
         },
-        select: function(container) {
+        selectContent: function(container) {
             return container.select('text.node-label');
         }
     };
@@ -92,7 +92,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
                 height: height + 'px'
             });
             g.call(contents.update);
-            contents.select(g)
+            contents.selectContent(g)
                 .attr('transform',  'translate(' + width/2 + ')');
             g.selectAll('image.icon').attr({
                 href: _contents.parent().nodeIcon.eval,
@@ -108,7 +108,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
             box.x += width/2;
             return box;
         },
-        select: function(container) {
+        selectContent: function(container) {
             return container.select('g.with-icon');
         }
     };

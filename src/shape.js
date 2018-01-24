@@ -174,7 +174,7 @@ function elaborate_shape(diagram, def) {
         return diagram.shape(shape).elaborate({shape: shape}, def2);
     if(!dc_graph.shape_presets[shape]) {
         console.warn('unknown shape ', shape);
-        shape = 'rectangle';
+        return default_shape;
     }
     var preset = dc_graph.shape_presets[shape].preset(def2);
     preset.shape = dc_graph.shape_presets[shape].generator;
@@ -204,11 +204,11 @@ function shape_changed(diagram) {
 }
 
 function fit_shape(shape, diagram) {
-    return function(text) {
-        text.each(function(n) {
+    return function(content) {
+        content.each(function(n) {
             var bbox = null;
             if((!shape.useTextSize || shape.useTextSize(n.dcg_shape)) && diagram.nodeFitLabel.eval(n)) {
-                bbox = this.getBBox();
+                bbox = getBBoxNoThrow(this);
                 bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                 var padding;
                 var content = diagram.nodeContent.eval(n);

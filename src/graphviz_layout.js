@@ -132,6 +132,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             return false;
         },
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },

@@ -102,6 +102,12 @@ function named_children() {
     f.enum = function() {
         return Object.keys(_children);
     };
+    f.nameOf = function(o) {
+        var found = Object.entries(_children).find(function(kv) {
+            return kv[1] == o;
+        });
+        return found ? found[0] : null;
+    };
     return f;
 }
 
@@ -159,4 +165,14 @@ if (typeof Object.assign != 'function') {
     writable: true,
     configurable: true
   });
+}
+
+function getBBoxNoThrow(elem) {
+    // firefox seems to have issues with some of my texts
+    // just catch for now
+    try {
+        return elem.getBBox();
+    } catch(xep) {
+        return {x: 0, y: 0, width:0, height: 0};
+    }
 }

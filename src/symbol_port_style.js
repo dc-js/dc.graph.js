@@ -3,7 +3,7 @@ dc_graph.symbol_port_style = function() {
     var _nodePorts, _node;
     var _drawConduct;
 
-    _style.symbolScale = property(d3.shuffle(d3.scale.ordinal().range(d3.svg.symbolTypes)));
+    _style.symbolScale = property(null);
     _style.colorScale = property(d3.scale.ordinal().range(
          // colorbrewer light qualitative scale
         d3.shuffle(['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462',
@@ -15,6 +15,7 @@ dc_graph.symbol_port_style = function() {
     _style.symbol = _style.portSymbol = property(name_or_edge, false); // non standard properties taking "outer datum"
     _style.color = _style.portColor = property(name_or_edge, false);
     _style.outline = property(dc_graph.symbol_port_style.outline.circle());
+    _style.content = property(dc_graph.symbol_port_style.content.d3symbol());
     _style.smallRadius = _style.portRadius = property(7);
     _style.mediumRadius = _style.portHoverNodeRadius = property(10);
     _style.largeRadius = _style.portHoverPortRadius = property(14);
@@ -32,7 +33,9 @@ dc_graph.symbol_port_style = function() {
 
     function symbol_fill(p) {
         var symcolor = _style.color.eval(p);
-        return symcolor ? _style.colorScale()(symcolor) : 'none';
+        return symcolor ?
+            (_style.colorScale() ? _style.colorScale()(symcolor) : symcolor) :
+        'none';
     }
     function port_transform(p) {
         var l = Math.hypot(p.pos.x, p.pos.y),
@@ -41,12 +44,11 @@ dc_graph.symbol_port_style = function() {
             pos = {x: p.pos.x + disp * u.x, y: p.pos.y + disp * u.y};
         return 'translate(' + pos.x + ',' + pos.y + ')';
     }
-    function port_symbol(p, size) {
+    function port_symbol(p) {
+        if(!_style.symbolScale())
+            _style.symbolScale(d3.scale.ordinal().range(d3.shuffle(_style.content().enum())));
         var symname = _style.symbol.eval(p);
-        return symname && d3.svg.symbol()
-            .type(_style.symbolScale()(symname))
-            .size(size*size)
-        ();
+        return symname && (_style.symbolScale() ? _style.symbolScale()(symname) : symname);
     }
     function is_left(p) {
         return p.vec[0] < 0;
@@ -93,7 +95,7 @@ dc_graph.symbol_port_style = function() {
                 .filter(function(n) {
                     return setn.has(_style.parent().nodeKey.eval(n));
                 });
-        var symbol = node.selectAll('g.port');
+        var symbol = _style.parent().selectNodePortsOfStyle(node, _style.parent().portStyle.nameOf(this));
         var shimmer = symbol.filter(function(p) { return /^shimmer/.test(p.state); }),
             nonshimmer = symbol.filter(function(p) { return !/^shimmer/.test(p.state); });
         if(shimmer.size()) {
@@ -110,12 +112,8 @@ dc_graph.symbol_port_style = function() {
                 .call(_style.outline().draw(function(p) {
                     return shimmer_radius(p) + _style.portPadding.eval(p);
                 }));
-            shimin.selectAll('path.port-symbol')
-                .attr({
-                    d: function(p) {
-                        return port_symbol(p, shimmer_radius(p));
-                    }
-                });
+            shimin.selectAll('.port-symbol')
+                .call(_style.content().draw(port_symbol, shimmer_radius));
             var shimout = shimin.transition()
                     .duration(1000)
                     .ease('sin');
@@ -123,12 +121,8 @@ dc_graph.symbol_port_style = function() {
                 .call(_style.outline().draw(function(p) {
                     return _style.smallRadius.eval(p) + _style.portPadding.eval(p);
                 }));
-            shimout.selectAll('path.port-symbol')
-                .attr({
-                    d: function(p) {
-                        return port_symbol(p, _style.smallRadius.eval(p));
-                    }
-                });
+            shimout.selectAll('.port-symbol')
+                .call(_style.content().draw(port_symbol, _style.smallRadius.eval));
             shimout.each("end", repeat);
         }
 
@@ -138,12 +132,8 @@ dc_graph.symbol_port_style = function() {
             .call(_style.outline().draw(function(p) {
                 return hover_radius(p) + _style.portPadding.eval(p);
             }));
-        trans.selectAll('path.port-symbol')
-            .attr({
-                d: function(p) {
-                    return port_symbol(p, hover_radius(p));
-                }
-            });
+        trans.selectAll('.port-symbol')
+            .call(_style.content().draw(port_symbol, hover_radius));
 
         function text_showing(p) {
             return p.state === 'large' || p.state === 'medium';
@@ -182,9 +172,9 @@ dc_graph.symbol_port_style = function() {
             return parent.datum();
         return null;
     };
-    _style.drawPorts = function(nodePorts, node) {
+    _style.drawPorts = function(ports, nodePorts, node) {
         _nodePorts = nodePorts; _node = node;
-        var port = node.selectAll('g.port').data(function(n) {
+        var port = ports.data(function(n) {
             return nodePorts[_style.parent().nodeKey.eval(n)] || [];
         }, name_or_edge);
         port.exit().remove();
@@ -232,23 +222,16 @@ dc_graph.symbol_port_style = function() {
                 return _style.smallRadius.eval(p) + _style.portPadding.eval(p);
             }));
 
-        var symbolEnter = portEnter.append('path')
-                .attr({
-                    class: 'port-symbol',
-                    d: function(p) {
-                        return port_symbol(p, _style.smallRadius.eval(p));
-                    }
-                });
-        var symbol = port.select('path.port-symbol');
+        var symbolEnter = portEnter.append(_style.content().tag())
+            .attr('class', 'port-symbol')
+            .call(_style.content().draw(port_symbol, _style.smallRadius.eval));
+
+        var symbol = port.select('.port-symbol');
         symbol.attr('fill', symbol_fill);
         symbol.transition()
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
-            .attr({
-                d: function(p) {
-                    return port_symbol(p, _style.smallRadius.eval(p));
-                }
-            });
+            .call(_style.content().draw(port_symbol, _style.smallRadius.eval));
 
         var label = port.selectAll('text.port-label').data(function(p) {
             return _style.portLabel.eval(p) ? [p] : [];
@@ -282,7 +265,7 @@ dc_graph.symbol_port_style = function() {
             })
             .text(_style.portLabel.eval)
             .each(function(p) {
-                p.bbox = this.getBBox();
+                p.bbox = getBBoxNoThrow(this);
             });
         port.selectAll('rect.port-label-background')
             .attr({
@@ -313,8 +296,9 @@ dc_graph.symbol_port_style = function() {
                     _drawConduct = draw.conduct();
             }
         }
+        var namespace = 'grow-ports-' + _style.parent().portStyle.nameOf(this);
         if(whether) {
-            _node.on('mouseover.grow-ports', function(n) {
+            _node.on('mouseover.' + namespace, function(n) {
                 var nid = _style.parent().nodeKey.eval(n);
                 var activePort = _style.eventPort();
                 if(_nodePorts[nid])
@@ -325,7 +309,7 @@ dc_graph.symbol_port_style = function() {
                 nids.push(nid);
                 _style.animateNodes(nids);
             });
-            _node.on('mouseout.grow-ports', function(n) {
+            _node.on('mouseout.' + namespace, function(n) {
                 var nid = _style.parent().nodeKey.eval(n);
                 if(_nodePorts[nid])
                     _nodePorts[nid].forEach(function(p) {
@@ -336,8 +320,8 @@ dc_graph.symbol_port_style = function() {
                 _style.animateNodes(nids);
             });
         } else {
-            _node.on('mouseover.grow-ports', null);
-            _node.on('mouseout.grow-ports', null);
+            _node.on('mouseover.' + namespace, null);
+            _node.on('mouseout.' + namespace, null);
         }
         return _style;
     };
@@ -410,4 +394,65 @@ dc_graph.symbol_port_style.outline.arrow = function() {
         outie: property(null)
     };
     return _outline;
+};
+
+dc_graph.symbol_port_style.content = {};
+dc_graph.symbol_port_style.content.d3symbol = function() {
+    var _symbol = {
+        tag: function() {
+            return 'path';
+        },
+        enum: function() {
+            return d3.svg.symbolTypes;
+        },
+        draw: function(symf, rf) {
+            return function(symbols) {
+                symbols.attr('d', function(p) {
+                    var sym = symf(p), r = rf(p);
+                    return d3.svg.symbol()
+                        .type(sym)
+                        .size(r*r)
+                    ();
+                });
+                symbols.attr('transform', function(p) {
+                    switch(symf(p)) {
+                    case 'triangle-up':
+                        return 'translate(0, -1)';
+                    case 'triangle-down':
+                        return 'translate(0, 1)';
+                    default: return null;
+                    }
+                });
+            };
+        }
+    };
+    return _symbol;
+};
+dc_graph.symbol_port_style.content.letter = function() {
+    var _symbol = {
+        tag: function() {
+            return 'text';
+        },
+        enum: function() {
+            return d3.range(65, 91).map(String.fromCharCode);
+        },
+        draw: function(symf, rf) {
+            return function(symbols) {
+                symbols.text(symf)
+                    .attr({
+                        'alignment-baseline': 'middle',
+                        'text-anchor': 'middle'
+                    });
+                symbols.each(function(p) {
+                    if(!p.symbol_size)
+                        p.symbol_size = getBBoxNoThrow(this);
+                });
+                symbols.attr('transform', function(p) {
+                    return 'scale(' + (2*rf(p)/p.symbol_size.height) +
+                        ') translate(' + [0,2].join(',') + ')';
+                });
+            };
+        }
+    };
+    return _symbol;
 };

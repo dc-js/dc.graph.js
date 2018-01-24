@@ -38,6 +38,8 @@ dc_graph.manual_layout = function(id) {
         },
         parent: property(null),
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
