@@ -1,3 +1,6 @@
+## 0.6 alpha 7
+* treat mouse pressedness as a boolean, not an integer. zoom mode was getting stuck deactivated.
+
 ## 0.6 alpha 6
 * letter or other symbols in symbol port style
 * firefox was crashing on flexbox layout due to nodes with no caption
