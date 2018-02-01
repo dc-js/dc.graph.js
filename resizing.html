@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Randomly build a graph</title>
+  <title>Dynamic resizing</title>
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
-  <link rel="stylesheet" type="text/css" href="css/font-awesome.css"/>
+  <link rel="stylesheet" type="text/css" href="css/jquery-ui.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
@@ -22,6 +22,8 @@
   <script type="text/javascript" src="js/querystring.js"></script>
 
   <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.js"></script>
+
   <script type="text/javascript" src="js/sync-url-options.js"></script>
   <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
 
@@ -35,15 +37,26 @@
         left: 1em;
         top: 1em;
         min-width: 20em;
-        min-height: 10em;
+        min-height: 3em;
 
         background-color: #f4f2fc;
     }
     #controls {
-        font-size: 3em;
         position: absolute;
         left: 1em;
         top: 1em;
+    }
+    #resize {
+        position: absolute;
+        left: 200px;
+        top: 200px;
+        width: 400px;
+        height: 400px;
+        border: 1px solid grey;
+    }
+    #canvas {
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
     }
   </style>
 
@@ -52,19 +65,21 @@
 
 <body>
 
-  <div id="graph" class="chart"></div>
   <div id="dashboard">
     <div id="controls">
-      <i id="play-stop" class="fa fa-pause"></i>&emsp;&emsp;<select id="layout"></select>
+      <select id="layout"></select>&emsp;&emsp;<select id="number"></select>
     </div>
+  </div>
+  <div id="resize">
+    <div id="canvas"></div>
   </div>
 
   <script type="text/javascript">
 
-    var diagram = dc_graph.diagram('#graph');
+    var diagram = dc_graph.diagram('#canvas');
     var options = {
         layout: {
-            default: 'cola',
+            default: 'd3v4force',
             values: dc_graph.engines.available(),
             selector: '#layout',
             needs_relayout: true,
@@ -75,20 +90,29 @@
                     .layoutEngine(engine);
             }
         },
-        worker: false,
-        batch: 1,
-        newnode: 0.9,
-        newcomp: 0.1,
-        remove: 0,
-        remedge: 0.75,
-        interval: 1000,
-        opacity: 1,
-        ports: false,
-        shape: 'ellipse',
-        content: 'text',
-        icon: null
+        n: {
+            default: 50,
+            values: [1, 5, 10, 20, 50, 100, 200],
+            selector: '#number',
+            needs_redraw: true,
+            exert: function(val, diagram) {
+                populate(val);
+                diagram.autoZoom('once');
+            }
+        },
+        validate: false,
+        minWidth: {
+            default: 200,
+            query: 'minw'
+        },
+        minHeight: {
+            default: 200,
+            query: 'minh'
+        }
     };
-    var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+    var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram),
+        populate;
+
     function apply_engine_parameters(engine) {
         switch(engine.layoutAlgorithm()) {
         case 'd3v4-force':
@@ -117,6 +141,19 @@
                 })
             };
         }
+        populate = function(n) {
+            var random = dc_graph.random_graph({
+                nodeKey: 'id', edgeKey: 'id',
+                ncolors: 12,
+                log: sync_url.vals.log && sync_url.vals.log !== 'false'
+            });
+            random.generate(n);
+            var data = build_data(random.nodes(), random.edges());
+            diagram
+                .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
+                .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
+        }
+
 
         var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
         apply_engine_parameters(engine);
@@ -126,24 +163,17 @@
             if(typeof sync_url.vals.newcomp !== 'string')
                 sync_url.vals.newcomp = 0;
 
-        var random = dc_graph.random_graph({
-            nodeKey: 'id', edgeKey: 'id',
-            ncolors: 12,
-            newNodeProb: sync_url.vals.newnode,
-            newComponentProb: sync_url.vals.newcomp,
-            removeEdgeProb: sync_url.vals.remedge,
-            log: sync_url.vals.log && sync_url.vals.log !== 'false'
-        });
-        var data = build_data(random.nodes(), random.edges());
         diagram
             .layoutEngine(engine)
-            .width(document.documentElement.clientWidth)
-            .height(document.documentElement.clientHeight)
+            .width(null)
+            .height(null)
+            .minWidth(sync_url.vals.minWidth)
+            .minHeight(sync_url.vals.minHeight)
+            .restrictPan(true)
+            .autoZoom('always')
             .zoomExtent([0.1, 1.5])
-            .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
-            .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
             .nodeShape({shape: sync_url.vals.shape})
-            .nodeContent(sync_url.vals.content)
+            .nodeContent('text')
             .nodeIcon(sync_url.vals.icon)
             .nodeStrokeWidth(0) // turn off outlines
             .nodeLabel(function(kv) { return kv.key; })
@@ -173,37 +203,24 @@
             .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(1));
         diagram.child('fix-nodes', fix_nodes);
 
+        if(sync_url.vals.validate)
+            diagram.child('troubleshoot', dc_graph.validate());
+
+        populate(sync_url.vals.n);
         diagram
-            .render()
-            .autoZoom('always-skipanimonce');
+            .autoZoom('always-skipanimonce')
+            .render();
 
-        var interval = null;
-        function run() {
-            interval = window.setInterval(function() {
-                for(var i = 0; i < sync_url.vals.batch; ++i) {
-                    if(Math.random() < sync_url.vals.remove)
-                        random.remove(1)
-                    else
-                        random.generate(1);
-                }
-                data = build_data(random.nodes(), random.edges());
+        $('#resize').resizable({
+            resize: function(event, ui) {
                 diagram
-                    .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
-                    .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
-                    .redraw();
-            }, sync_url.vals.interval);
-        }
-        run();
-
-        d3.select('#play-stop').on('click', function() {
-            if(interval) {
-                d3.select('#play-stop').attr('class', 'fa fa-play');
-                window.clearInterval(interval);
-                interval = null;
-            } else {
-                d3.select('#play-stop').attr('class', 'fa fa-pause');
-                run();
-            }
+                    .width(null)
+                    .height(null)
+                    .resizeSvg()
+                    .zoomToFit();
+            },
+            minWidth: sync_url.vals.minWidth,
+            minHeight: sync_url.vals.minHeight
         });
     })();
 </script>

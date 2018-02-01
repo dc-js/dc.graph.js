@@ -35,7 +35,8 @@ function demo_catalog_reader(catalog) {
         },
         ports: function(nid, def) {
             return def.requirements.map(r => ({nodeId: nid, portname: 'req-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: inbounds})).concat(
-                def.capabilities.map(r => ({nodeId: nid, portname: 'cap-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: outbounds})));
+                def.capabilities.map(r => ({nodeId: nid, portname: 'cap-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: outbounds}))).concat(
+                    (def.extras || []).map(x => ({nodeId: nid, portname: 'xtra-' + x, wild: x === 'wild', type: x === 'wild' ? null : x, bounds: xtrabounds})));
         }
     };
 }
@@ -109,13 +110,15 @@ function redraw_promise(diagram) {
 
 var lbounds = [Math.PI*5/6, -Math.PI*5/6], rbounds = [-Math.PI/6, Math.PI/6],
     dbounds = [Math.PI/6, Math.PI*5/6], ubounds = [-Math.PI*5/6, -Math.PI/6];
-var inbounds, outbounds;
+var inbounds, outbounds, xtrabounds;
 if(options.rankdir === 'TB') {
     inbounds = ubounds;
     outbounds = dbounds;
+    xtrabounds = [Math.PI, Math.PI];
 } else  {
     inbounds = lbounds;
     outbounds = rbounds;
+    xtrabounds = [-Math.PI/2, -Math.PI/2];
 }
 function update_ports() {
     var port_flat = dc_graph.flat_group.make(_ports, d => d.nodeId + '/' + d.portname);
@@ -516,6 +519,7 @@ get_catalog().then(function(catalog) {
         .layoutEngine(layout)
         .timeLimit(500)
         .margins({left: 5, top: 5, right: 5, bottom: 5})
+        .modKeyZoom(options.mkzoom || null)
         .transitionDuration(1000)
         .fitStrategy('align_tl')
         .restrictPan(true)
@@ -554,22 +558,35 @@ get_catalog().then(function(catalog) {
     _diagram.child('place-ports', dc_graph.place_ports());
 
     var symbolPorts = dc_graph.symbol_port_style()
-            .outlineStrokeWidth(1)
-//            .portLabel(p => p.value.portname)
-            .symbol(p => p.orig.value.type)
-            .color(p => p.orig.value.type)
-            .colorScale(d3.scale.ordinal().range(
-                // colorbrewer qualitative scale
-                d3.shuffle(
-                    ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#eebb22','#a65628','#f781bf'] // 8-class set1
-                    //['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666'] // 8-class dark2
-                )));
+        .outlineStrokeWidth(1)
+//        .portLabel(p => p.value.portname)
+        .symbol(p => p.orig.value.type)
+        .color(p => p.orig.value.type)
+        .colorScale(d3.scale.ordinal().range(
+            // colorbrewer qualitative scale
+            d3.shuffle(
+                ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#eebb22','#a65628','#f781bf'] // 8-class set1
+                //['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666'] // 8-class dark2
+            )));
     if(qs.direcports)
         symbolPorts.outline(dc_graph.symbol_port_style.outline.arrow()
                             .outie(p => p.value.bounds === outbounds));
+    if(qs.lettports)
+        symbolPorts
+            .content(dc_graph.symbol_port_style.content.letter());
+    var letterPorts = dc_graph.symbol_port_style()
+        .content(dc_graph.symbol_port_style.content.letter())
+        .outlineStrokeWidth(1)
+        .symbol('S')
+        .symbolScale(x => x)
+        .color('black')
+        .colorScale(null);
     _diagram
         .portStyle('symbols', symbolPorts)
-        .portStyleName('symbols');
+        .portStyle('letters', letterPorts)
+        .portStyleName(function(p) {
+            return /^xtra-/.test(p.value.portname) ? 'letters' : 'symbols';
+        });
 
     var portMatcher = dc_graph.match_ports(_diagram, symbolPorts)
             .allowParallel(qs.parallel || false);
@@ -582,7 +599,9 @@ get_catalog().then(function(catalog) {
     });
 
     portMatcher.isValid(
-        (sourcePort, targetPort) => wildcard.isValid(sourcePort, targetPort) && 
+        (sourcePort, targetPort) => wildcard.isValid(sourcePort, targetPort) &&
+            sourcePort.orig.value.bounds !== xtrabounds &&
+            targetPort.orig.value.bounds !== xtrabounds && 
             sourcePort.orig.value.bounds !== targetPort.orig.value.bounds);
 
     _drawGraphs = dc_graph.draw_graphs({
