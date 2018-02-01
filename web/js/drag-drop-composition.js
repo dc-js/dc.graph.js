@@ -519,6 +519,7 @@ get_catalog().then(function(catalog) {
         .layoutEngine(layout)
         .timeLimit(500)
         .margins({left: 5, top: 5, right: 5, bottom: 5})
+        .modKeyZoom(options.mkzoom || null)
         .transitionDuration(1000)
         .fitStrategy('align_tl')
         .restrictPan(true)

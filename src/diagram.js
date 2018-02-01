@@ -1824,6 +1824,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             name = _diagram.edgeTargetPortName.eval(e);
             e.targetPort.pos = name ? ports[port_name(_diagram.nodeKey.eval(e.target), null, name)].pos :
                 ports[port_name(null, _diagram.edgeKey.eval(e), 'target')].pos;
+            console.assert(e.sourcePort.pos && e.targetPort.pos);
         });
     }
 
@@ -2754,11 +2755,11 @@ dc_graph.diagram = function (parent, chartGroup) {
                     mods = [mod];
                 else
                     mods = ['Alt'];
-                var mouseDown = 0, modDown = false, zoomEnabled = false;
+                var mouseDown = false, modDown = false, zoomEnabled = false;
                 _svg.on('mousedown.modkey-zoom', function() {
-                    ++mouseDown;
+                    mouseDown = true;
                 }).on('mouseup.modkey-zoom', function() {
-                    --mouseDown;
+                    mouseDown = false;
                     if(!mouseDown && !modDown && zoomEnabled) {
                         zoomEnabled = false;
                         disableZoom();
