@@ -80,6 +80,8 @@ dc_graph.move_nodes = function(options) {
                     });
                     fix_nodes_group.request_fixes(fixes);
                 }
+                if(_brush)
+                    _brush.activate();
                 _startPos = null;
             }
         }
