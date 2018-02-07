@@ -246,7 +246,7 @@ dc_graph.symbol_port_style = function() {
         labelEnter.append('text')
             .attr({
                 class: 'port-label',
-                'alignment-baseline': 'middle',
+                'dominant-baseline': 'middle',
                 'pointer-events': 'none',
                 cursor: 'default',
                 opacity: 0
@@ -440,7 +440,7 @@ dc_graph.symbol_port_style.content.letter = function() {
             return function(symbols) {
                 symbols.text(symf)
                     .attr({
-                        'alignment-baseline': 'middle',
+                        'dominant-baseline': 'middle',
                         'text-anchor': 'middle'
                     });
                 symbols.each(function(p) {
