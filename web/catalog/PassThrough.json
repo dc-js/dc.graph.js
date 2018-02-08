@@ -1,0 +1,6 @@
+{
+  "name": "Pass Through",
+  "requirements": ["wild", "wild"],
+  "capabilities": ["wild", "wild"],
+  "pass-through": [["cap-wild1", "req-wild1"], ["cap-wild2", "req-wild2"]]
+}

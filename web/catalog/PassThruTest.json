@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    {
+      "id": "A",
+      "type": "A"
+    },
+    {
+      "id": "E",
+      "type": "E"
+    },
+    {
+      "id": "PT",
+      "type": "Pass Through"
+    }
+  ],
+  "edges": []
+}
