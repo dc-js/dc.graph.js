@@ -6,23 +6,32 @@ dc_graph.wildcard_ports = function(options) {
         is_wild = options.is_wild || function(p) { return p.orig.value.wild; },
         update_ports = options.update_ports || function() {},
         get_linked = options.get_linked || function() { return []; };
+    function linked_ports(n, port) {
+        var nid = diagram.nodeKey.eval(n);
+        var name = get_name(port);
+        var links = get_linked(n) || [];
+        var found = links.find(function(set) {
+            return set.includes(name);
+        });
+        if(!found) return [];
+        return found.filter(function(link) { return link !== name; }).map(function(link) {
+            return diagram.getPort(nid, null, link);
+        });
+    }
+    function no_edges(ports) {
+        return ports.every(function(lp) {
+            return lp.edges.length === 0;
+        });
+    }
     return {
         isValid: function(p1, p2) {
             return get_type(p1) === null ^ get_type(p2) === null ||
                 get_type(p1) !== null && get_type(p1) === get_type(p2);
         },
         copyLinked: function(n, port) {
-            var name = get_name(port);
-            var links = get_linked(n) || [];
-            var found = links.find(function(set) {
-                return set.includes(name);
+            linked_ports(n, port).forEach(function(lp) {
+                set_type(lp, port);
             });
-            if(found) {
-                found.forEach(function(link) {
-                    if(link != name)
-                        set_type(diagram.getPort(diagram.nodeKey.eval(n), null, link), port);
-                });
-            }
         },
         copyType: function(e, sport, tport) {
             if(get_type(sport) === null) {
@@ -45,15 +54,30 @@ dc_graph.wildcard_ports = function(options) {
                 edges = arguments[1];
             }
             edges.forEach(function(eid) {
-                var e = dia.getWholeEdge(eid);
-                var p = dia.getPort(dia.nodeKey.eval(e.source), null,
-                                    dia.edgeSourcePortName.eval(e));
-                if(is_wild(p) && p.edges.length === 1)
+                var e = dia.getWholeEdge(eid),
+                    spname = dia.edgeSourcePortName.eval(e),
+                    tpname = dia.edgeTargetPortName.eval(e);
+                var update = false;
+                var p = dia.getPort(dia.nodeKey.eval(e.source), null, spname);
+                var linked = linked_ports(e.source, p);
+                if(is_wild(p) && p.edges.length === 1 && no_edges(linked)) {
                     set_type(p, null);
-                p = dia.getPort(dia.nodeKey.eval(e.target), null,
-                                dia.edgeTargetPortName.eval(e));
-                if(is_wild(p) && p.edges.length === 1)
+                    linked.forEach(function(lp) {
+                        set_type(lp, null);
+                        update = true;
+                    });
+                }
+                p = dia.getPort(dia.nodeKey.eval(e.target), null, tpname);
+                linked = linked_ports(e.target, p);
+                if(is_wild(p) && p.edges.length === 1 && no_edges(linked)) {
                     set_type(p, null);
+                    linked.forEach(function(lp) {
+                        set_type(lp, null);
+                        update = true;
+                    });
+                }
+                if(update)
+                    update_ports();
             });
             return Promise.resolve(edges);
         }
