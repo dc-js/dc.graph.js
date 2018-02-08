@@ -1,5 +1,6 @@
 dc_graph.wildcard_ports = function(options) {
-    var get_type = options.get_type || function(p) { return p.orig.value.type; },
+    var diagram = options.diagram,
+        get_type = options.get_type || function(p) { return p.orig.value.type; },
         set_type = options.set_type || function(p, src) { p.orig.value.type = src.orig.value.type; },
         get_name = options.get_name || function(p) { return p.orig.value.name; },
         is_wild = options.is_wild || function(p) { return p.orig.value.wild; },
@@ -35,15 +36,22 @@ dc_graph.wildcard_ports = function(options) {
             }
             return Promise.resolve(e);
         },
-        resetTypes: function(diagram, edges)  {
+        resetTypes: function(edges)  {
+            // backward compatibility: this used to take diagram as
+            // first arg, which was wrong
+            var dia = diagram;
+            if(arguments.length === 2) {
+                dia = arguments[0];
+                edges = arguments[1];
+            }
             edges.forEach(function(eid) {
-                var e = diagram.getWholeEdge(eid);
-                var p = diagram.getPort(diagram.nodeKey.eval(e.source), null,
-                                        diagram.edgeSourcePortName.eval(e));
+                var e = dia.getWholeEdge(eid);
+                var p = dia.getPort(dia.nodeKey.eval(e.source), null,
+                                    dia.edgeSourcePortName.eval(e));
                 if(is_wild(p) && p.edges.length === 1)
                     set_type(p, null);
-                var p = diagram.getPort(diagram.nodeKey.eval(e.target), null,
-                                        diagram.edgeTargetPortName.eval(e));
+                p = dia.getPort(dia.nodeKey.eval(e.target), null,
+                                dia.edgeTargetPortName.eval(e));
                 if(is_wild(p) && p.edges.length === 1)
                     set_type(p, null);
             });
