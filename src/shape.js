@@ -322,14 +322,8 @@ function draw_edge_to_shapes(diagram, e, sx, sy, tx, ty,
     if(!neighbor) {
         sp = e.sourcePort.pos;
         tp = e.targetPort.pos;
-        console.assert(sp);
-        console.assert(tp);
-        // deltaX = tx - sx;
-        // deltaY = ty - sy;
-        // sp = diagram.shape(e.source.dcg_shape.shape).intersect_vec(e.source, deltaX, deltaY);
-        // tp = diagram.shape(e.target.dcg_shape.shape).intersect_vec(e.target, -deltaX, -deltaY);
-        // if(!sp) sp = {x: 0, y: 0};
-        // if(!tp) tp = {x: 0, y: 0};
+        if(!sp) sp = {x: 0, y: 0};
+        if(!tp) tp = {x: 0, y: 0};
         points = [{
             x: sx + sp.x,
             y: sy + sp.y
