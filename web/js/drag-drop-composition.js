@@ -593,7 +593,7 @@ get_catalog().then(function(catalog) {
 
     var wildcard = dc_graph.wildcard_ports({
         get_type: p => p.orig.value.type,
-        set_type: (p,type) => p.orig.value.type = type,
+        set_type: (p, src) => p.orig.value.type = src && src.orig.value.type,
         get_wild: p => p.orig.value.wild,
         update_ports: update_ports
     });
@@ -601,7 +601,7 @@ get_catalog().then(function(catalog) {
     portMatcher.isValid(
         (sourcePort, targetPort) => wildcard.isValid(sourcePort, targetPort) &&
             sourcePort.orig.value.bounds !== xtrabounds &&
-            targetPort.orig.value.bounds !== xtrabounds && 
+            targetPort.orig.value.bounds !== xtrabounds &&
             sourcePort.orig.value.bounds !== targetPort.orig.value.bounds);
 
     _drawGraphs = dc_graph.draw_graphs({
