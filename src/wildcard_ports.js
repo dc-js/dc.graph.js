@@ -7,6 +7,8 @@ dc_graph.wildcard_ports = function(options) {
         update_ports = options.update_ports || function() {},
         get_linked = options.get_linked || function() { return []; };
     function linked_ports(n, port) {
+        if(!diagram)
+            return [];
         var nid = diagram.nodeKey.eval(n);
         var name = get_name(port);
         var links = get_linked(n) || [];

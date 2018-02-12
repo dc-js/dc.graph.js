@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-beta.1
+ *  dc.graph 0.6.0-beta.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-beta.1
+ * @version 0.6.0-beta.2
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-beta.1',
+    version: '0.6.0-beta.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -9351,6 +9351,8 @@ dc_graph.wildcard_ports = function(options) {
         update_ports = options.update_ports || function() {},
         get_linked = options.get_linked || function() { return []; };
     function linked_ports(n, port) {
+        if(!diagram)
+            return [];
         var nid = diagram.nodeKey.eval(n);
         var name = get_name(port);
         var links = get_linked(n) || [];
