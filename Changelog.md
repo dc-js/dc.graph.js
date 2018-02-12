@@ -1,3 +1,6 @@
+## 0.6 beta 2
+* set linked wildcard ports to empty if `wildcard_ports` initialized without `diagram`
+
 ## 0.6 beta 1
 * if `diagram.refresh()` was called while layout was still happening, `draw_edge_to_shapes` would assert because it didn't have port positions. instead, just fall back to (0,0) ports in this case
 * ability to "link" wildcard ports so that when one gets assigned a type, they all get the same type (and when *all* linked ports are disconnected, the ports revert to wild/blank)
