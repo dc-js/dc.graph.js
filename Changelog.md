@@ -1,3 +1,8 @@
+## 0.6 beta 1
+* if `diagram.refresh()` was called while layout was still happening, `draw_edge_to_shapes` would assert because it didn't have port positions. instead, just fall back to (0,0) ports in this case
+* ability to "link" wildcard ports so that when one gets assigned a type, they all get the same type (and when *all* linked ports are disconnected, the ports revert to wild/blank)
+* use `dominant-baseline` not `alignment-baseline` for `text` elements (the latter is for `tspan`)
+
 ## 0.6 alpha 7
 * treat mouse pressedness as a boolean, not an integer. zoom mode was getting stuck deactivated.
 * `?mkzoom` for testing modKeyZoom in drag-drop-composition demo. (This enables multiple selection, which may not work completely with draw-graphs and move-nodes.)
