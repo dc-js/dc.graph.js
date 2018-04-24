@@ -156,7 +156,7 @@ dc_graph.shape_presets = {
 };
 
 dc_graph.available_shapes = function() {
-    var shapes = Object.keys(dc_graph_shapes_);
+    var shapes = Object.keys(dc_graph.shape_presets);
     return shapes.slice(0, shapes.length-1); // not including polygon
 };
 
