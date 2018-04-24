@@ -1,3 +1,6 @@
+## 0.6 beta 3
+* somewhat more sensible baseline for node text
+
 ## 0.6 beta 2
 * set linked wildcard ports to empty if `wildcard_ports` initialized without `diagram`
 
