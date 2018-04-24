@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-alpha.7
+ *  dc.graph 0.6.0-beta.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-alpha.7
+ * @version 0.6.0-beta.3
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-alpha.7',
+    version: '0.6.0-beta.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -711,7 +711,7 @@ dc_graph.shape_presets = {
 };
 
 dc_graph.available_shapes = function() {
-    var shapes = Object.keys(dc_graph_shapes_);
+    var shapes = Object.keys(dc_graph.shape_presets);
     return shapes.slice(0, shapes.length-1); // not including polygon
 };
 
@@ -877,14 +877,8 @@ function draw_edge_to_shapes(diagram, e, sx, sy, tx, ty,
     if(!neighbor) {
         sp = e.sourcePort.pos;
         tp = e.targetPort.pos;
-        console.assert(sp);
-        console.assert(tp);
-        // deltaX = tx - sx;
-        // deltaY = ty - sy;
-        // sp = diagram.shape(e.source.dcg_shape.shape).intersect_vec(e.source, deltaX, deltaY);
-        // tp = diagram.shape(e.target.dcg_shape.shape).intersect_vec(e.target, -deltaX, -deltaY);
-        // if(!sp) sp = {x: 0, y: 0};
-        // if(!tp) tp = {x: 0, y: 0};
+        if(!sp) sp = {x: 0, y: 0};
+        if(!tp) tp = {x: 0, y: 0};
         points = [{
             x: sx + sp.x,
             y: sy + sp.y
@@ -1227,7 +1221,7 @@ dc_graph.text_contents = function() {
                     return [];
                 else if(typeof lines === 'string')
                     lines = [lines];
-                var first = lines.length%2 ? 0.3 - (lines.length-1)/2 : 1-lines.length/2;
+                var first = lines.length%2 ? 0.5 - (lines.length-1)/2 : 1-lines.length/2;
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : 1) + 'em'}; });
             });
             tspan.enter().append('tspan');
@@ -9349,36 +9343,87 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
 };
 
 dc_graph.wildcard_ports = function(options) {
-    var get_type = options.get_type || function(p) { return p.name; },
-        set_type = options.set_type || function(p, type) { p.name = type; }, // harmful? feature may only work with type in data
+    var diagram = options.diagram,
+        get_type = options.get_type || function(p) { return p.orig.value.type; },
+        set_type = options.set_type || function(p, src) { p.orig.value.type = src.orig.value.type; },
+        get_name = options.get_name || function(p) { return p.orig.value.name; },
         is_wild = options.is_wild || function(p) { return p.orig.value.wild; },
-        update_ports = options.update_ports || function() {};
+        update_ports = options.update_ports || function() {},
+        get_linked = options.get_linked || function() { return []; };
+    function linked_ports(n, port) {
+        if(!diagram)
+            return [];
+        var nid = diagram.nodeKey.eval(n);
+        var name = get_name(port);
+        var links = get_linked(n) || [];
+        var found = links.find(function(set) {
+            return set.includes(name);
+        });
+        if(!found) return [];
+        return found.filter(function(link) { return link !== name; }).map(function(link) {
+            return diagram.getPort(nid, null, link);
+        });
+    }
+    function no_edges(ports) {
+        return ports.every(function(lp) {
+            return lp.edges.length === 0;
+        });
+    }
     return {
         isValid: function(p1, p2) {
             return get_type(p1) === null ^ get_type(p2) === null ||
                 get_type(p1) !== null && get_type(p1) === get_type(p2);
         },
+        copyLinked: function(n, port) {
+            linked_ports(n, port).forEach(function(lp) {
+                set_type(lp, port);
+            });
+        },
         copyType: function(e, sport, tport) {
             if(get_type(sport) === null) {
                 set_type(sport, tport);
+                this.copyLinked(sport.node, sport);
                 update_ports();
             } else if(get_type(tport) === null) {
                 set_type(tport, sport);
+                this.copyLinked(tport.node, tport);
                 update_ports();
             }
             return Promise.resolve(e);
         },
-        resetTypes: function(diagram, edges)  {
+        resetTypes: function(edges)  {
+            // backward compatibility: this used to take diagram as
+            // first arg, which was wrong
+            var dia = diagram;
+            if(arguments.length === 2) {
+                dia = arguments[0];
+                edges = arguments[1];
+            }
             edges.forEach(function(eid) {
-                var e = diagram.getWholeEdge(eid);
-                var p = diagram.getPort(diagram.nodeKey.eval(e.source), null,
-                                        diagram.edgeSourcePortName.eval(e));
-                if(is_wild(p) && p.edges.length === 1)
+                var e = dia.getWholeEdge(eid),
+                    spname = dia.edgeSourcePortName.eval(e),
+                    tpname = dia.edgeTargetPortName.eval(e);
+                var update = false;
+                var p = dia.getPort(dia.nodeKey.eval(e.source), null, spname);
+                var linked = linked_ports(e.source, p);
+                if(is_wild(p) && p.edges.length === 1 && no_edges(linked)) {
                     set_type(p, null);
-                var p = diagram.getPort(diagram.nodeKey.eval(e.target), null,
-                                        diagram.edgeTargetPortName.eval(e));
-                if(is_wild(p) && p.edges.length === 1)
+                    linked.forEach(function(lp) {
+                        set_type(lp, null);
+                        update = true;
+                    });
+                }
+                p = dia.getPort(dia.nodeKey.eval(e.target), null, tpname);
+                linked = linked_ports(e.target, p);
+                if(is_wild(p) && p.edges.length === 1 && no_edges(linked)) {
                     set_type(p, null);
+                    linked.forEach(function(lp) {
+                        set_type(lp, null);
+                        update = true;
+                    });
+                }
+                if(update)
+                    update_ports();
             });
             return Promise.resolve(edges);
         }
@@ -9633,7 +9678,7 @@ dc_graph.symbol_port_style = function() {
         labelEnter.append('text')
             .attr({
                 class: 'port-label',
-                'alignment-baseline': 'middle',
+                'dominant-baseline': 'middle',
                 'pointer-events': 'none',
                 cursor: 'default',
                 opacity: 0
@@ -9827,7 +9872,7 @@ dc_graph.symbol_port_style.content.letter = function() {
             return function(symbols) {
                 symbols.text(symf)
                     .attr({
-                        'alignment-baseline': 'middle',
+                        'dominant-baseline': 'middle',
                         'text-anchor': 'middle'
                     });
                 symbols.each(function(p) {

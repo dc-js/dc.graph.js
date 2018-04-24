@@ -69,6 +69,11 @@
       "name": "Data Source",
       "category": "Utils",
       "url": "catalog/DataSource.json"
+    },
+    {
+      "name": "Pass Through",
+      "category": "Utils",
+      "url": "catalog/PassThrough.json"
     }
   ],
   "solutions": [
@@ -83,6 +88,10 @@
     {
       "name": "Tree",
       "url": "catalog/Tree.json"
+    },
+    {
+      "name": "Pass Thru Test",
+      "url": "catalog/PassThruTest.json"
     }
   ]
 }
