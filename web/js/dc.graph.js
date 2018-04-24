@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-beta.2
+ *  dc.graph 0.6.0-beta.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-beta.2
+ * @version 0.6.0-beta.3
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-beta.2',
+    version: '0.6.0-beta.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -711,7 +711,7 @@ dc_graph.shape_presets = {
 };
 
 dc_graph.available_shapes = function() {
-    var shapes = Object.keys(dc_graph_shapes_);
+    var shapes = Object.keys(dc_graph.shape_presets);
     return shapes.slice(0, shapes.length-1); // not including polygon
 };
 
@@ -1221,7 +1221,7 @@ dc_graph.text_contents = function() {
                     return [];
                 else if(typeof lines === 'string')
                     lines = [lines];
-                var first = lines.length%2 ? 0.3 - (lines.length-1)/2 : 1-lines.length/2;
+                var first = lines.length%2 ? 0.5 - (lines.length-1)/2 : 1-lines.length/2;
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : 1) + 'em'}; });
             });
             tspan.enter().append('tspan');
