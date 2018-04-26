@@ -1,3 +1,7 @@
+## 0.6 beta 4
+* put css change in the source not the artifact
+* another `dc_graph.engines.register` fix, by Lefteris Koutsofios
+
 ## 0.6 beta 3
 * somewhat more sensible baseline for node text
 
