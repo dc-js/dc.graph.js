@@ -105,7 +105,7 @@ dc_graph.engines = {
         if(entry.name)
             this.unregister(entry.name);
         else if(entry.names)
-            this.names.forEach(function(layoutName) {
+            entry.names.forEach(function(layoutName) {
                 that.unregister(layoutName);
             });
         else {
