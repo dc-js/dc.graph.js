@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.6.0-beta.4  
+**Version**: 0.6.0-beta.5  
 **Example**  
 ```js
 // Example chaining
@@ -44,6 +44,8 @@ diagram.width(600)
         * [.nodeFill([nodeFill])](#dc_graph.diagram+nodeFill) ⇒ <code>function</code> \| <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.nodeOpacity([nodeOpacity])](#dc_graph.diagram+nodeOpacity) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.nodePadding([nodePadding])](#dc_graph.diagram+nodePadding) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.nodeLabelPadding([nodeLabelPadding])](#dc_graph.diagram+nodeLabelPadding) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.nodeLineHeight([nodeLineHeight])](#dc_graph.diagram+nodeLineHeight) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.nodeLabel([nodeLabel])](#dc_graph.diagram+nodeLabel) ⇒ <code>function</code> \| <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.nodeLabelFill([nodeLabelFill])](#dc_graph.diagram+nodeLabelFill) ⇒ <code>function</code> \| <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.nodeFitLabel([nodeFitLabel])](#dc_graph.diagram+nodeFitLabel) ⇒ <code>function</code> \| <code>Boolean</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -159,6 +161,8 @@ diagram.width(600)
     * [.nodeFill([nodeFill])](#dc_graph.diagram+nodeFill) ⇒ <code>function</code> \| <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.nodeOpacity([nodeOpacity])](#dc_graph.diagram+nodeOpacity) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.nodePadding([nodePadding])](#dc_graph.diagram+nodePadding) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.nodeLabelPadding([nodeLabelPadding])](#dc_graph.diagram+nodeLabelPadding) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.nodeLineHeight([nodeLineHeight])](#dc_graph.diagram+nodeLineHeight) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.nodeLabel([nodeLabel])](#dc_graph.diagram+nodeLabel) ⇒ <code>function</code> \| <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.nodeLabelFill([nodeLabelFill])](#dc_graph.diagram+nodeLabelFill) ⇒ <code>function</code> \| <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.nodeFitLabel([nodeFitLabel])](#dc_graph.diagram+nodeFitLabel) ⇒ <code>function</code> \| <code>Boolean</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -544,6 +548,29 @@ to both sides of the node.)
 | Param | Type | Default |
 | --- | --- | --- |
 | [nodePadding] | <code>function</code> \| <code>Number</code> | <code>6</code> | 
+
+<a name="dc_graph.diagram+nodeLabelPadding"></a>
+
+#### diagram.nodeLabelPadding([nodeLabelPadding]) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set or get the padding, in pixels, for a node's label. If an object, should contain fields
+`x` and `y`. If a number, will be applied to both x and y.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [nodeLabelPadding] | <code>function</code> \| <code>Number</code> \| <code>Object</code> | <code>0</code> | 
+
+<a name="dc_graph.diagram+nodeLineHeight"></a>
+
+#### diagram.nodeLineHeight([nodeLineHeight]) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set or get the line height for nodes with multiple lines of text, in ems.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [nodeLineHeight] | <code>function</code> \| <code>Number</code> | <code>1</code> | 
 
 <a name="dc_graph.diagram+nodeLabel"></a>
 
