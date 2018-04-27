@@ -1,5 +1,6 @@
 ## 0.6 beta 5
 * nodeLineHeight
+* nodeLabelPadding can be either number or `{x,y}` object. Document it.
 
 ## 0.6 beta 4
 * put css change in the source not the artifact
