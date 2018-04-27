@@ -1,3 +1,6 @@
+## 0.6 beta 5
+* nodeLineHeight
+
 ## 0.6 beta 4
 * put css change in the source not the artifact
 * another `dc_graph.engines.register` fix, by Lefteris Koutsofios

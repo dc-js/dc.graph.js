@@ -12,8 +12,9 @@ dc_graph.text_contents = function() {
                     return [];
                 else if(typeof lines === 'string')
                     lines = [lines];
-                var first = lines.length%2 ? 0.5 - (lines.length-1)/2 : 1-lines.length/2;
-                return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : 1) + 'em'}; });
+                var lineHeight = _contents.parent().nodeLineHeight();
+                var first = 1 - ((lines.length - 1) * lineHeight + 1)/2;
+                return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
             tspan.enter().append('tspan');
             tspan.attr({
