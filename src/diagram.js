@@ -468,7 +468,30 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.nodePadding = property(6);
 
-    _diagram.nodeLabelPadding = property({x: 0, y: 0});
+
+    /**
+     * Set or get the padding, in pixels, for a node's label. If an object, should contain fields
+     * `x` and `y`. If a number, will be applied to both x and y.
+     * @method nodeLabelPadding
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function|Number|Object} [nodeLabelPadding=0]
+     * @return {Function|Number}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.nodeLabelPadding = property(0);
+
+    /**
+     * Set or get the line height for nodes with multiple lines of text, in ems.
+     * @method nodeLineHeight
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function|Number} [nodeLineHeight=1]
+     * @return {Function|Number}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.nodeLineHeight = property(1);
+
     /**
      * Set or get the function which will be used to retrieve the label text to display in each
      * node. By default, looks for a field `label` or `name` inside the `value` field.

@@ -203,6 +203,13 @@ function shape_changed(diagram) {
     };
 }
 
+function node_label_padding(diagram, n) {
+    var nlp = diagram.nodeLabelPadding.eval(n);
+    if(typeof nlp === 'number' || typeof nlp === 'string')
+        return {x: +nlp, y: +nlp};
+    else return nlp;
+}
+
 function fit_shape(shape, diagram) {
     return function(content) {
         content.each(function(n) {
@@ -215,7 +222,7 @@ function fit_shape(shape, diagram) {
                 if(content && diagram.content(content).padding)
                     padding = diagram.content(content).padding(n);
                 else {
-                    var padding2 = diagram.nodeLabelPadding.eval(n);
+                    var padding2 = node_label_padding(diagram, n);
                     padding = {
                         x: padding2.x*2,
                         y: padding2.y*2
