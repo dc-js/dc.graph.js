@@ -588,7 +588,7 @@ function crossfilters(nodes, edges) {
 
 var selected_node = null;
 function clickiness() {
-    diagram.selectAll('g.node')
+    diagram.selectAll('.draw g.node')
         .on('click.vizgems', function(d) {
             selected_node = d.orig.key;
             dc.redrawAll('network');
@@ -749,9 +749,12 @@ function init() {
             });
         var exs = [];
         for(var ost in ostypes)
-            exs.push({key: '', name: ostypes[ost], value: {ostype: ost}});
-        diagram.legend(
-            dc_graph.legend().nodeWidth(70).nodeHeight(60).exemplars(exs));
+            exs.push({key: ost, name: ostypes[ost], value: {ostype: ost}});
+        var legend = dc_graph.legend()
+            .nodeWidth(70).nodeHeight(60)
+            .exemplars(exs)
+            .dimension(filters.filterOSTypes);
+        diagram.legend(legend);
 
         osTypeSelect.render();
         diagram.render();
