@@ -4,12 +4,12 @@
 The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
 **/
 dc_graph.legend = function() {
-    var _legend = {}, _items, _excluded = [];
+    var _legend = {}, _items, _included = [];
 
     function apply_filter() {
         if(_legend.dimension()) {
             _legend.dimension().filterFunction(function(k) {
-                return !_excluded.includes(k);
+                return !_included.length || _included.includes(k);
             });
             _legend.redraw();
             _legend.parent().redraw();
@@ -43,7 +43,7 @@ dc_graph.legend = function() {
     /**
      #### .nodeHeight([value])
      Set or get legend node height. Default: 30.
-     **/
+    **/
     _legend.nodeHeight = property(40);
 
     /**
@@ -99,10 +99,13 @@ dc_graph.legend = function() {
             node.attr('cursor', 'pointer')
                 .on('click.legend', function(d) {
                     var key = _legend.parent().nodeKey.eval(d);
-                    if(_excluded.includes(key))
-                        _excluded = _excluded.filter(function(x) { return x !== key; });
+                    if(!_included.length)
+                        _included = _items.map(_legend.parent().nodeKey.eval);
+                    if(_included.includes(key))
+                        _included = _included.filter(function(x) { return x !== key; });
                     else
-                        _excluded.push(key);
+                        _included.push(key);
+                    console.log('included', _included);
                     apply_filter();
                 });
         } else {
@@ -111,7 +114,7 @@ dc_graph.legend = function() {
         }
         node.transition().duration(1000)
             .attr('opacity', function(d) {
-                return (!_excluded.length || !_excluded.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25;
+                return (!_included.length || _included.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25;
             });
     };
 
@@ -132,7 +135,7 @@ dc_graph.legend = function() {
     _legend.dimension = property(null)
         .react(function(v) {
             if(!v) {
-                _excluded = [];
+                _included = [];
                 apply_filter();
             }
         });
