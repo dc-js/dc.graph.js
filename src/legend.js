@@ -122,7 +122,6 @@ dc_graph.legend = function() {
                         _included = _included.filter(function(x) { return x !== key; });
                     else
                         _included.push(key);
-                    console.log('included', _included);
                     apply_filter();
                     _dispatch.filtered(_legend, key);
                 });
