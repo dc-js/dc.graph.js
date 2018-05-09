@@ -46,6 +46,12 @@ dc_graph.legend = function() {
      **/
     _legend.nodeHeight = property(40);
 
+    /**
+     #### .noLabel([value])
+     Remove node labels, since legend labels are displayed outside of nodes instead. Default: true
+    **/
+    _legend.noLabel = property(true);
+
 
     /**
      #### .exemplars([object])
@@ -86,6 +92,8 @@ dc_graph.legend = function() {
         _legend.parent()
             ._enterNode(nodeEnter)
             ._updateNode(node);
+        if(_legend.noLabel())
+            node.selectAll('.node-label').remove();
 
         if(_legend.dimension()) {
             node.attr('cursor', 'pointer')
