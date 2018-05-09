@@ -1,7 +1,11 @@
 dc_graph.spawn_engine = function(layout, args, worker) {
     args = args || {};
-    return dc_graph.engines.instantiate(layout, args, worker)
-        || dc_graph.engines.instantiate(dc_graph._default_engine, args, worker);
+    var engine = dc_graph.engines.instantiate(layout, args, worker);
+    if(!engine) {
+        console.warn('layout engine ' + layout + ' not found; using default ' + dc_graph._default_engine);
+        engine = dc_graph.engines.instantiate(dc_graph._default_engine, args, worker);
+    }
+    return engine;
 };
 
 dc_graph._engines = [
