@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-beta.3
+ *  dc.graph 0.6.0-beta.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-beta.3
+ * @version 0.6.0-beta.6
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-beta.3',
+    version: '0.6.0-beta.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -758,6 +758,13 @@ function shape_changed(diagram) {
     };
 }
 
+function node_label_padding(diagram, n) {
+    var nlp = diagram.nodeLabelPadding.eval(n);
+    if(typeof nlp === 'number' || typeof nlp === 'string')
+        return {x: +nlp, y: +nlp};
+    else return nlp;
+}
+
 function fit_shape(shape, diagram) {
     return function(content) {
         content.each(function(n) {
@@ -770,7 +777,7 @@ function fit_shape(shape, diagram) {
                 if(content && diagram.content(content).padding)
                     padding = diagram.content(content).padding(n);
                 else {
-                    var padding2 = diagram.nodeLabelPadding.eval(n);
+                    var padding2 = node_label_padding(diagram, n);
                     padding = {
                         x: padding2.x*2,
                         y: padding2.y*2
@@ -1221,8 +1228,9 @@ dc_graph.text_contents = function() {
                     return [];
                 else if(typeof lines === 'string')
                     lines = [lines];
-                var first = lines.length%2 ? 0.5 - (lines.length-1)/2 : 1-lines.length/2;
-                return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : 1) + 'em'}; });
+                var lineHeight = _contents.parent().nodeLineHeight();
+                var first = 1 - ((lines.length - 1) * lineHeight + 1)/2;
+                return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
             tspan.enter().append('tspan');
             tspan.attr({
@@ -1283,7 +1291,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
             contents.parent(parent);
         }),
         padding: function(n) {
-            var padding = _contents.parent().nodeLabelPadding.eval(n);
+            var padding = node_label_padding(_contents.parent(), n);
             return {
                 x: padding.x * 3,
                 y: padding.y * 3
@@ -1307,7 +1315,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
                 href: _contents.parent().nodeIcon.eval,
                 x: function(n) {
                     var totwid = width + contents.textbox(d3.select(this.parentNode)).width;
-                    return -totwid/2 - _contents.parent().nodeLabelPadding.eval(n).x;
+                    return -totwid/2 - node_label_padding(_contents.parent(), n);
                 },
                 y: -height/2
             });
@@ -1795,7 +1803,30 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.nodePadding = property(6);
 
-    _diagram.nodeLabelPadding = property({x: 0, y: 0});
+
+    /**
+     * Set or get the padding, in pixels, for a node's label. If an object, should contain fields
+     * `x` and `y`. If a number, will be applied to both x and y.
+     * @method nodeLabelPadding
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function|Number|Object} [nodeLabelPadding=0]
+     * @return {Function|Number}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.nodeLabelPadding = property(0);
+
+    /**
+     * Set or get the line height for nodes with multiple lines of text, in ems.
+     * @method nodeLineHeight
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function|Number} [nodeLineHeight=1]
+     * @return {Function|Number}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.nodeLineHeight = property(1);
+
     /**
      * Set or get the function which will be used to retrieve the label text to display in each
      * node. By default, looks for a field `label` or `name` inside the `value` field.
@@ -4322,7 +4353,7 @@ dc_graph.engines = {
         if(entry.name)
             this.unregister(entry.name);
         else if(entry.names)
-            this.names.forEach(function(layoutName) {
+            entry.names.forEach(function(layoutName) {
                 that.unregister(layoutName);
             });
         else {
@@ -6371,7 +6402,18 @@ dc_graph.troubleshoot = function() {
 The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
 **/
 dc_graph.legend = function() {
-    var _legend = {}, _items;
+    var _legend = {}, _items, _included = [];
+    var _dispatch = d3.dispatch('filtered');
+
+    function apply_filter() {
+        if(_legend.dimension()) {
+            _legend.dimension().filterFunction(function(k) {
+                return !_included.length || _included.includes(k);
+            });
+            _legend.redraw();
+            _legend.parent().redraw();
+        }
+    }
 
     /**
      #### .x([value])
@@ -6400,9 +6442,31 @@ dc_graph.legend = function() {
     /**
      #### .nodeHeight([value])
      Set or get legend node height. Default: 30.
-     **/
+    **/
     _legend.nodeHeight = property(40);
 
+    /**
+     #### .noLabel([value])
+     Remove node labels, since legend labels are displayed outside of nodes instead. Default: true
+    **/
+    _legend.noLabel = property(true);
+
+    _legend.replaceFilter = function(filter) {
+        if(filter && filter.length === 1)
+            _included = filter[0];
+        else
+            _included = [];
+        return _legend;
+    };
+
+    _legend.filters = function() {
+        return _included;
+    };
+
+    _legend.on = function(type, f) {
+        _dispatch.on(type, f);
+        return _legend;
+    };
 
     /**
      #### .exemplars([object])
@@ -6436,12 +6500,37 @@ dc_graph.legend = function() {
             });
         node.select('text.legend-label')
             .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
+            .attr('pointer-events', _legend.dimension() ? 'auto' : 'none')
             .text(function(n) {
                 return n.name;
             });
         _legend.parent()
             ._enterNode(nodeEnter)
             ._updateNode(node);
+        if(_legend.noLabel())
+            node.selectAll('.node-label').remove();
+
+        if(_legend.dimension()) {
+            node.attr('cursor', 'pointer')
+                .on('click.legend', function(d) {
+                    var key = _legend.parent().nodeKey.eval(d);
+                    if(!_included.length)
+                        _included = _items.map(_legend.parent().nodeKey.eval);
+                    if(_included.includes(key))
+                        _included = _included.filter(function(x) { return x !== key; });
+                    else
+                        _included.push(key);
+                    apply_filter();
+                    _dispatch.filtered(_legend, key);
+                });
+        } else {
+            node.attr('cursor', 'auto')
+                .on('click.legend', null);
+        }
+        node.transition().duration(1000)
+            .attr('opacity', function(d) {
+                return (!_included.length || _included.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25;
+            });
     };
 
     _legend.render = function() {
@@ -6456,6 +6545,15 @@ dc_graph.legend = function() {
         }
         _legend.redraw();
     };
+
+    /* enables filtering */
+    _legend.dimension = property(null)
+        .react(function(v) {
+            if(!v) {
+                _included = [];
+                apply_filter();
+            }
+        });
 
     return _legend;
 };
