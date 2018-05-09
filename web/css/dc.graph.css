@@ -23,7 +23,6 @@
 
 .dc-graph-legend text.legend-label {
     font: bold 14px verdana, sans-serif;
-    pointer-events: none;
 }
 
 .dc-graph g.brush rect.extent {
