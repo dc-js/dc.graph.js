@@ -125,6 +125,9 @@ var options = {
         subscribe: function(k) {
             osTypeSelect.on('filtered', function() {
                 var filters = osTypeSelect.filters();
+                diagram.legend() && diagram.legend()
+                    .replaceFilter([filters])
+                    .redraw();
                 k(filters);
             });
         },
@@ -753,8 +756,12 @@ function init() {
         var legend = dc_graph.legend()
             .nodeWidth(70).nodeHeight(60)
             .exemplars(exs)
-            .dimension(filters.filterOSTypes);
+            .dimension(filters.filterOSTypes)
+            .replaceFilter([osTypeSelect.filters()]);
         diagram.legend(legend);
+        legend.on('filtered', function() {
+            osTypeSelect.replaceFilter([legend.filters()]).redraw();
+        });
 
         osTypeSelect.render();
         diagram.render();
