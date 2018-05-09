@@ -5,6 +5,7 @@ The dc_graph.legend will show labeled examples of nodes (and someday edges), wit
 **/
 dc_graph.legend = function() {
     var _legend = {}, _items, _included = [];
+    var _dispatch = d3.dispatch('filtered');
 
     function apply_filter() {
         if(_legend.dimension()) {
@@ -52,6 +53,22 @@ dc_graph.legend = function() {
     **/
     _legend.noLabel = property(true);
 
+    _legend.replaceFilter = function(filter) {
+        if(filter && filter.length === 1)
+            _included = filter[0];
+        else
+            _included = [];
+        return _legend;
+    };
+
+    _legend.filters = function() {
+        return _included;
+    };
+
+    _legend.on = function(type, f) {
+        _dispatch.on(type, f);
+        return _legend;
+    };
 
     /**
      #### .exemplars([object])
@@ -107,6 +124,7 @@ dc_graph.legend = function() {
                         _included.push(key);
                     console.log('included', _included);
                     apply_filter();
+                    _dispatch.filtered(_legend, key);
                 });
         } else {
             node.attr('cursor', 'auto')
