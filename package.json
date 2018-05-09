@@ -26,19 +26,19 @@
   "dependencies": {
     "crossfilter2": "1.4.x",
     "css-layout": "1.x",
-    "dc": "~2.1.0",
-    "dagre": "0.7.x",
     "d3": "3.x",
-    "queue-async": "~1.x",
+    "dagre": "0.7.x",
+    "dc": "~2.1.0",
     "font-awesome": "~4.7",
     "lodash": "4.x",
-    "viz.js": "1.x",
+    "queue-async": "~1.x",
+    "viz.js": "^1.8.2",
     "webcola": "3.3.x"
   },
   "devDependencies": {
     "bootstrap": "~3.3",
-    "d3-tip": "~0.7",
     "d3-force": "~1",
+    "d3-tip": "~0.7",
     "grunt": "~1.0",
     "grunt-browserify": "~5.2.0",
     "grunt-cli": "~1.2",
@@ -62,10 +62,10 @@
     "marked": "~0.3",
     "promise-polyfill": "7.x",
     "rollup": "~0.56",
-    "rollup-plugin-node-resolve": "~2",
     "rollup-plugin-commonjs": "~8",
+    "rollup-plugin-node-resolve": "~2",
     "time-grunt": "~1.4",
-    "uglify-js": "~3.3",
+    "uglify-js": "^3.3.24",
     "x-editable": "1.5.x"
   },
   "scripts": {
