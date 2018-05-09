@@ -111,7 +111,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
                 .post('layouttool=' + layout + '&' + encodeURIComponent(_dotString), process_response);
         }
         else {
-            var result = Viz(_dotString, {format: 'json', engine: layout});
+            var result = Viz(_dotString, {format: 'json', engine: layout, totalMemory: 1 << 25});
             result = JSON.parse(result);
             process_response(null, result);
         }
