@@ -1,3 +1,7 @@
+## 0.6 beta 6
+* ability to filter using the legend
+* `legend.noLabel` because you usually don't want legend items to have internal labels
+
 ## 0.6 beta 5
 * nodeLineHeight
 * nodeLabelPadding can be either number or `{x,y}` object. Document it.
