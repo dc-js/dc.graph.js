@@ -2,6 +2,8 @@
 * deparallelize transform
 * path splining fixes: don't attempt to draw the same node twice in a row (it goes NaN). better hovering behavior: opacity, return to original color, wider hover detection, keep hover detectors on top.
 * `edgeSort` for bringing particular edges to front
+* fixed node position support for d3v4force. (also implemented for d3force but does not appear to work.)
+* increase memory allotment for graphviz
 * probably time to stop calling these betas, even though i have a huge backlog of issues to fix
 
 ## 0.6 beta 6
