@@ -205,11 +205,12 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
     function draw_hovered(hoversplines) {
         if(hoversplines === null) {
-            d3.selectAll('.spline-edge').attr('stroke', 'black');
+            d3.selectAll('.spline-edge').attr('stroke', pathprops.edgeStroke || 'black');
         } else {
             for(var i = 0; i < hoversplines.length; i ++) {
                 var path_id = _paths.indexOf(hoversplines[i]);
-                var sel_path = d3.select("#spline-path-"+path_id).attr('stroke', hoverprops.edgeStroke);
+                var sel_path = d3.select("#spline-path-"+path_id)
+                    .attr('stroke', hoverprops.edgeStroke || pathprops.edgeStroke || 'black');
                 sel_path.each(function() {this.parentNode.appendChild(this);});
             }
         }
