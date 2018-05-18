@@ -216,6 +216,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
                     .attr('opacity', hoverprops.edgeOpacity || pathprops.edgeOpacity || 1);
                 sel_path.each(function() {this.parentNode.appendChild(this);});
             }
+            // bring all hovers to front
+            _layer.selectAll('.spline-edge-hover')
+                .each(function() {this.parentNode.appendChild(this);});
         }
     }
 
