@@ -19,11 +19,11 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         if(localPaths.length) {
             // layout engine wants just array of array of nodeids
             var nidpaths = localPaths.map(function(path) {
-                return pathreader.elementList.eval(path).filter(function(elem) {
+                return uniq(pathreader.elementList.eval(path).filter(function(elem) {
                     return pathreader.elementType.eval(elem) === 'node';
                 }).map(function(elem) {
                     return pathreader.nodeKey.eval(elem);
-                });
+                }));
             });
             engine.paths(nidpaths);
         } else {
