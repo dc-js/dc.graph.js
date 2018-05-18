@@ -190,7 +190,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .attr('d', function(d) { return genPath(d); })
             .attr('opacity', 0)
             .attr('stroke', 'green')
-            .attr('stroke-width', hoverprops.edgeStrokeWidth || 5)
+            .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
             .attr('fill', 'none')
             .on('mouseover', function(d, i) {
                 highlight_paths_group.hover_changed([paths[i]]);
