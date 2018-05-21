@@ -147,21 +147,71 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // convert original path data into <d>
-    function genPath(p, lineTension) {
-        lineTension = lineTension || 0.6;
+    function genPath(originalPoints, lineTension, avoidSharpTurn, angleThreshold) {
+      var c = lineTension || 0;
+      var avoidSharpTurn = avoidSharpTurn !== false;
+      var angleThreshold = angleThreshold || 0.02;
 
-        var path_coord = getNodePosition(p);
-        if(pathprops.insertDummyNodes) {
-            path_coord = insertDummyNodes(path_coord);
+      // helper functions
+      var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y };
+      var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y) };
+
+      // get coordinates
+      var path_coord = getNodePosition(originalPoints);
+      if(path_coord.length < 2) return "";
+
+      // repeat first and last node
+      var points = [path_coord[0]];
+      points = points.concat(path_coord);
+      points.push(path_coord[path_coord.length-1]);
+
+      // a segment is a list of three points: [c0, c1, p1],
+      // representing the coordinates in "C x0,y0,x1,y1,x,y" in svg:path
+      var segments = []; // control points
+      for(var i = 1; i < points.length-2; i ++) {
+        // generate svg:path
+        var m_0_x = (1-c)*(points[i+1].x - points[i-1].x)/2;
+        var m_0_y = (1-c)*(points[i+1].y - points[i-1].y)/2;
+
+        var m_1_x = (1-c)*(points[i+2].x - points[i].x)/2;
+        var m_1_y = (1-c)*(points[i+2].y - points[i].y)/2;
+
+        var p0 = points[i];
+        var p1 = points[i+1];
+        var c0 = p0;
+        if(i !== 1) {
+          c0 = {x: p0.x+(m_0_x/3), y:p0.y+(m_0_y/3)};
+        }
+        var c1 = p1;
+        if(i !== points.length-3) {
+          c1 = {x: p1.x-(m_1_x/3), y:p1.y-(m_1_y/3)};
         }
 
-        var line = d3.svg.line()
-            .interpolate("cardinal")
-            .x(function(d) { return d.x; })
-            .y(function(d) { return d.y; })
-            .tension(lineTension);
+        // detect special case by calculating the angle
+        if(avoidSharpTurn) {
+          var v0 = {x:points[i-1].x - points[i].x, y:points[i-1].y - points[i].y};
+          var v1 = {x:points[i+1].x - points[i].x, y:points[i+1].y - points[i].y};
+          var angle = Math.acos( vecDot(v0,v1) / (vecMag(v0)*vecMag(v1)) );
 
-        return line(path_coord);
+          if(angle <= angleThreshold ){
+            var m_x = (1-c)*(points[i].x - points[i-1].x)/2;
+            var m_y = (1-c)*(points[i].y - points[i-1].y)/2;
+            c0 = {x: p0.x+(-m_y/3), y:p0.y+(m_x/3)};
+            segments[segments.length-1][1] = {x: p0.x-(-m_y/3), y:p0.y-(m_x/3)};
+          }
+        }
+
+        segments.push([c0,c1,p1]);
+      }
+
+      var path_d = "M"+points[0].x+","+points[0].y;
+      for(var i = 0; i < segments.length; i ++) {
+        var s = segments[i];
+        path_d += "C"+s[0].x+","+s[0].y;
+        path_d += ","+s[1].x+","+s[1].y;
+        path_d += ","+s[2].x+","+s[2].y;
+      }
+      return path_d;
     }
 
     // draw the spline for paths
