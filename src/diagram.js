@@ -953,6 +953,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.edgeOrdering = property(null);
 
+    _diagram.edgeSort = property(null);
+
     _diagram.cascade = cascade(_diagram);
 
     /**
@@ -1514,6 +1516,13 @@ dc_graph.diagram = function (parent, chartGroup) {
                 edgeArrow(e, 'head', null);
             })
             .remove();
+
+        if(_diagram.edgeSort()) {
+            edge.sort(function(a, b) {
+                var as = _diagram.edgeSort.eval(a), bs = _diagram.edgeSort.eval(b);
+                return as < bs ? -1 : bs < as ? 1 : 0;
+            });
+        }
 
         // another wider copy of the edge just for hover events
         var edgeHover = _edgeLayer.selectAll('.edge-hover')
