@@ -17,14 +17,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         var engine = _behavior.parent().layoutEngine(),
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
-            // layout engine wants just array of array of nodeids
-            var nidpaths = localPaths.map(function(path) {
-                return uniq(pathreader.elementList.eval(path).filter(function(elem) {
-                    return pathreader.elementType.eval(elem) === 'node';
-                }).map(function(elem) {
-                    return pathreader.nodeKey.eval(elem);
-                }));
-            });
+            var nidpaths = localPaths.map(path_keys);
             engine.paths(nidpaths);
         } else {
             engine.paths(null);
@@ -32,6 +25,14 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
                 engine.restorePositions(_savedPositions);
         }
         _behavior.parent().redraw();
+    }
+
+    function path_keys(path) {
+        return uniq(pathreader.elementList.eval(path).filter(function(elem) {
+            return pathreader.elementType.eval(elem) === 'node';
+        }).map(function(elem) {
+            return pathreader.nodeKey.eval(elem);
+        }));
     }
 
     // check if entire path is present in this view
@@ -43,25 +44,11 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // get the positions of nodes on path
-    function getNodePosition(path) {
-        var plist = [];
-
-        pathreader.elementList.eval(path).forEach(function(element) {
-            var key, node;
-            switch(pathreader.elementType.eval(element)) {
-            case 'node':
-                key = pathreader.nodeKey.eval(element);
-                node = _behavior.parent().getWholeNode(key);
-                if(node !== null) {
-                    plist.push({'x': node.cola.x, 'y': node.cola.y});
-                }
-                break;
-            case 'edge':
-                break;
-            }
+    function getNodePositions(path) {
+        return path_keys(path).map(function(key) {
+            var node = _behavior.parent().getWholeNode(key);
+            return {'x': node.cola.x, 'y': node.cola.y};
         });
-
-        return plist;
     };
 
     // insert fake nodes to avoid sharp turns
