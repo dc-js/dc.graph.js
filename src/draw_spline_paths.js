@@ -147,17 +147,17 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // convert original path data into <d>
-    function genPath(originalPoints, lineTension, avoidSharpTurn, angleThreshold) {
+    function genPath(path, lineTension, avoidSharpTurn, angleThreshold) {
       var c = lineTension || 0;
-      var avoidSharpTurn = avoidSharpTurn !== false;
-      var angleThreshold = angleThreshold || 0.02;
+      avoidSharpTurn = avoidSharpTurn !== false;
+      angleThreshold = angleThreshold || 0.02;
 
       // helper functions
-      var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y };
-      var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y) };
+      var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y; };
+      var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
 
       // get coordinates
-      var path_coord = getNodePosition(originalPoints);
+      var path_coord = getNodePositions(path);
       if(path_coord.length < 2) return "";
 
       // repeat first and last node
