@@ -2382,7 +2382,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         if(_diagram.legend())
             _diagram.legend().render();
-        return _diagram.redraw();
+        _diagram.redraw();
+        return this;
     };
 
     /**

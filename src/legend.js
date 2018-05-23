@@ -6,6 +6,7 @@ The dc_graph.legend will show labeled examples of nodes (and someday edges), wit
 dc_graph.legend = function() {
     var _legend = {}, _items, _included = [];
     var _dispatch = d3.dispatch('filtered');
+    var _totals, _counts;
 
     function apply_filter() {
         if(_legend.dimension()) {
@@ -53,6 +54,8 @@ dc_graph.legend = function() {
     **/
     _legend.noLabel = property(true);
 
+    _legend.counter = property(null);
+
     _legend.replaceFilter = function(filter) {
         if(filter && filter.length === 1)
             _included = filter[0];
@@ -79,7 +82,16 @@ dc_graph.legend = function() {
      **/
     _legend.exemplars = property({});
 
-    _legend.parent = property(null);
+    _legend.parent = property(null).react(function(p) {
+        if(p)
+            p.on('data.legend', on_data);
+        else _legend.parent().on('data.legend', null);
+    });
+
+    function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
+        if(_legend.counter())
+            _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original));
+    }
 
     _legend.redraw = function() {
         var legend = _legend.parent().svg()
@@ -104,7 +116,7 @@ dc_graph.legend = function() {
             .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
             .attr('pointer-events', _legend.dimension() ? 'auto' : 'none')
             .text(function(n) {
-                return n.name;
+                return n.name + (_legend.counter() && _counts ? (' (' + (_counts[n.name] || 0) + (_counts[n.name] !== _totals[n.name] ? '/' + (_totals[n.name] || 0) : '') + ')') : '');
             });
         _legend.parent()
             ._enterNode(nodeEnter)
@@ -137,6 +149,11 @@ dc_graph.legend = function() {
 
     _legend.render = function() {
         var exemplars = _legend.exemplars();
+        if(_legend.counter)
+            _totals = _legend.counter()(
+                _legend.parent().nodeGroup().all(),
+                _legend.parent().edgeGroup().all(),
+                _legend.parent().portGroup() && _legend.parent().portGroup().all());
         if(exemplars instanceof Array) {
             _items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}, cola: {}}; });
         }
