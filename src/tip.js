@@ -138,6 +138,15 @@ dc_graph.tip = function(options) {
         k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
     });
 
+    _behavior.displayTip = function(filter, n) {
+        var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
+            .filter(filter);
+        if(found.size() > 0) {
+            var action = fetch_and_show_content('content');
+            var which = (n || 0) % found.size();
+            action.call(found[0][which], d3.select(found[0][which]).datum());
+        }
+    };
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
     _behavior.showDelay = _behavior.delay = property(0);
     _behavior.hideDelay = property(200);
@@ -185,7 +194,7 @@ dc_graph.tip.select_node_and_edge = function() {
         select: function(diagram, node, edge, ehover) {
             // hack to merge selections, not supported d3v3
             var selection = diagram.selectAll('.foo-this-does-not-exist');
-            selection[0] = node[0].concat(ehover[0]);
+            selection[0] = node[0].concat(ehover ? ehover[0] : []);
             return selection;
         },
         exclude: function(element) {
