@@ -147,13 +147,17 @@ dc_graph.legend = function() {
             });
     };
 
-    _legend.render = function() {
-        var exemplars = _legend.exemplars();
+    _legend.countBaseline = function() {
         if(_legend.counter)
             _totals = _legend.counter()(
                 _legend.parent().nodeGroup().all(),
                 _legend.parent().edgeGroup().all(),
                 _legend.parent().portGroup() && _legend.parent().portGroup().all());
+    };
+
+    _legend.render = function() {
+        var exemplars = _legend.exemplars();
+        _legend.countBaseline();
         if(exemplars instanceof Array) {
             _items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}, cola: {}}; });
         }
