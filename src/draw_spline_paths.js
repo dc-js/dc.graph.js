@@ -8,10 +8,6 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     var _savedPositions = null;
 
     function paths_changed(nop, eop, paths) {
-        // clear old paths
-        _layer.selectAll('.spline-edge').remove();
-        _layer.selectAll('.spline-edge-hover').remove();
-
         _paths = paths;
 
         var engine = _behavior.parent().layoutEngine(),
@@ -44,10 +40,11 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // get the positions of nodes on path
-    function getNodePositions(path) {
+    function getNodePositions(path, old) {
         return path_keys(path).map(function(key) {
             var node = _behavior.parent().getWholeNode(key);
-            return {'x': node.cola.x, 'y': node.cola.y};
+            return {x: old && node.prevX !== undefined ? node.prevX : node.cola.x,
+                    y: old && node.prevY !== undefined ? node.prevY : node.cola.y};
         });
     };
 
@@ -134,7 +131,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // convert original path data into <d>
-    function genPath(path, lineTension, avoidSharpTurn, angleThreshold) {
+    function genPath(path, old, lineTension, avoidSharpTurn, angleThreshold) {
       var c = lineTension || 0;
       avoidSharpTurn = avoidSharpTurn !== false;
       angleThreshold = angleThreshold || 0.02;
@@ -144,7 +141,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
       var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
 
       // get coordinates
-      var path_coord = getNodePositions(path);
+      var path_coord = getNodePositions(path, old);
       if(path_coord.length < 2) return "";
 
       // repeat first and last node
@@ -208,27 +205,29 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             return;
         }
 
+        paths = paths.filter(pathIsPresent);
+
         // edge spline
-        var edge = _layer.selectAll(".spline-edge").data(paths);
+        var edge = _layer.selectAll(".spline-edge").data(paths, function(path) { return path_keys(path).join(','); });
+        edge.exit().remove();
         var edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
             .attr('id', function(d, i) { return "spline-path-"+i; })
-            .attr('d', function(d) { return genPath(d, pathprops.lineTension); })
             .attr('stroke', pathprops.edgeStroke || 'black')
             .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
             .attr('opacity', pathprops.edgeOpacity || 1)
-            .attr('fill', 'none');
+            .attr('fill', 'none')
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension); });
+        edge.transition().duration(_behavior.parent().transitionDuration())
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension); });
 
         // another wider copy of the edge just for hover events
         var edgeHover = _layer.selectAll('.spline-edge-hover')
-            .data(paths);
+            .data(paths, function(path) { return path_keys(path).join(','); });
+        edgeHover.exit().remove();
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
-            .attr('d', function(d) { return genPath(d); })
-            .attr('opacity', 0)
-            .attr('stroke', 'green')
-            .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
-            .attr('fill', 'none')
+            .attr('d', function(d) { return genPath(d, true); })
             .on('mouseover', function(d, i) {
                 highlight_paths_group.hover_changed([paths[i]]);
              })
@@ -238,6 +237,12 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .on('click', function(d, i) {
                 highlight_paths_group.select_changed([paths[i]]);
              });
+        edgeHoverEnter.transition().duration(_behavior.parent().transitionDuration())
+            .attr('d', function(d) { return genPath(d, false); })
+            .attr('opacity', 0)
+            .attr('stroke', 'green')
+            .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
+            .attr('fill', 'none');
     };
 
     function draw_hovered(hoversplines) {
