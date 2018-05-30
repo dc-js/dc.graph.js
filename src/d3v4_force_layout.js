@@ -159,6 +159,9 @@ dc_graph.d3v4_force_layout = function(id) {
         }
 
         paths.forEach(function(path) {
+            // ignore path where any nodes have gone away
+            if(!paths.every(function(k) { return _nodes[k]; }))
+                return;
             if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
             for(var i = 1; i < path.length-1; ++i) {
                 var current = _nodes[path[i]];
