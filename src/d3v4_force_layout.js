@@ -173,6 +173,9 @@ dc_graph.d3v4_force_layout = function(id) {
         }
         var report = [];
         paths.forEach(function(path, i) {
+            // ignore path where any nodes have gone away
+            if(!path.every(function(k) { return _nodes[k]; }))
+                return;
             if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
             report.push({
                 delay: 3000,
