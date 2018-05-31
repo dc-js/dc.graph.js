@@ -1,9 +1,15 @@
 ## 0.6 beta 7
 * deparallelize transform
-* path splining fixes: don't attempt to draw the same node twice in a row (it goes NaN). better hovering behavior: opacity, return to original color, wider hover detection, keep hover detectors on top.
+* detect sharp turns in path splines, and modify the control points to make the spline smooth, by Zhe Wang
+* path splining fixes: don't attempt to draw the same node twice in a row (it NaNs the layout and puts weird loopty loops on the nodes)
+* better path hovering behavior: opacity, return to original color, wider hover detection, keep hover detectors on top.
 * `edgeSort` for bringing particular edges to front
 * fixed node position support for d3v4force. (also implemented for d3force but does not appear to work.)
+* ability to show count/total in legend
+* ability to display a tip for the Nth item that matches a filter
 * increase memory allotment for graphviz
+* warn user when layout engine not found
+* resizing of window in drag&drop composition demo
 * probably time to stop calling these betas, even though i have a huge backlog of issues to fix
 
 ## 0.6 beta 6
