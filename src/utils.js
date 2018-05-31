@@ -122,6 +122,16 @@ Math.hypot = Math.hypot || function() {
   return Math.sqrt(y);
 };
 
+// outputs the array with adjacent identical lines collapsed to one
+function uniq(a) {
+    var ret = [];
+    a.forEach(function(x, i) {
+        if(i === 0 || x !== a[i-1])
+            ret.push(x);
+    });
+    return ret;
+}
+
 // https://tc39.github.io/ecma262/#sec-array.prototype.find
 if (!Array.prototype.find) {
   Object.defineProperty(Array.prototype, 'find', {

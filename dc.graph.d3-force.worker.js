@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-beta.6
+ *  dc.graph 0.6.0-beta.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-beta.6
+ * @version 0.6.0-beta.7
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-beta.6',
+    version: '0.6.0-beta.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -325,6 +325,11 @@ dc_graph.d3_force_layout = function(id) {
             v1.width = v.width;
             v1.height = v.height;
             v1.id = v.dcg_nodeKey;
+            if(v.dcg_nodeFixed) {
+                v1.fixed = true;
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+            } else v1.fixed = false;
         });
 
         _wedges = regenerate_objects(_edges, edges, null, function(e) {

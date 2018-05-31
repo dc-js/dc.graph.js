@@ -53,6 +53,11 @@ dc_graph.d3_force_layout = function(id) {
             v1.width = v.width;
             v1.height = v.height;
             v1.id = v.dcg_nodeKey;
+            if(v.dcg_nodeFixed) {
+                v1.fixed = true;
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+            } else v1.fixed = false;
         });
 
         _wedges = regenerate_objects(_edges, edges, null, function(e) {

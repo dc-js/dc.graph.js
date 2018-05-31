@@ -17,14 +17,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         var engine = _behavior.parent().layoutEngine(),
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
-            // layout engine wants just array of array of nodeids
-            var nidpaths = localPaths.map(function(path) {
-                return pathreader.elementList.eval(path).filter(function(elem) {
-                    return pathreader.elementType.eval(elem) === 'node';
-                }).map(function(elem) {
-                    return pathreader.nodeKey.eval(elem);
-                });
-            });
+            var nidpaths = localPaths.map(path_keys);
             engine.paths(nidpaths);
         } else {
             engine.paths(null);
@@ -32,6 +25,14 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
                 engine.restorePositions(_savedPositions);
         }
         _behavior.parent().redraw();
+    }
+
+    function path_keys(path) {
+        return uniq(pathreader.elementList.eval(path).filter(function(elem) {
+            return pathreader.elementType.eval(elem) === 'node';
+        }).map(function(elem) {
+            return pathreader.nodeKey.eval(elem);
+        }));
     }
 
     // check if entire path is present in this view
@@ -43,25 +44,11 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // get the positions of nodes on path
-    function getNodePosition(path) {
-        var plist = [];
-
-        pathreader.elementList.eval(path).forEach(function(element) {
-            var key, node;
-            switch(pathreader.elementType.eval(element)) {
-            case 'node':
-                key = pathreader.nodeKey.eval(element);
-                node = _behavior.parent().getWholeNode(key);
-                if(node !== null) {
-                    plist.push({'x': node.cola.x, 'y': node.cola.y});
-                }
-                break;
-            case 'edge':
-                break;
-            }
+    function getNodePositions(path) {
+        return path_keys(path).map(function(key) {
+            var node = _behavior.parent().getWholeNode(key);
+            return {'x': node.cola.x, 'y': node.cola.y};
         });
-
-        return plist;
     };
 
     // insert fake nodes to avoid sharp turns
@@ -147,21 +134,71 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // convert original path data into <d>
-    function genPath(p, lineTension) {
-        lineTension = lineTension || 0.6;
+    function genPath(path, lineTension, avoidSharpTurn, angleThreshold) {
+      var c = lineTension || 0;
+      avoidSharpTurn = avoidSharpTurn !== false;
+      angleThreshold = angleThreshold || 0.02;
 
-        var path_coord = getNodePosition(p);
-        if(pathprops.insertDummyNodes) {
-            path_coord = insertDummyNodes(path_coord);
+      // helper functions
+      var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y; };
+      var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
+
+      // get coordinates
+      var path_coord = getNodePositions(path);
+      if(path_coord.length < 2) return "";
+
+      // repeat first and last node
+      var points = [path_coord[0]];
+      points = points.concat(path_coord);
+      points.push(path_coord[path_coord.length-1]);
+
+      // a segment is a list of three points: [c0, c1, p1],
+      // representing the coordinates in "C x0,y0,x1,y1,x,y" in svg:path
+      var segments = []; // control points
+      for(var i = 1; i < points.length-2; i ++) {
+        // generate svg:path
+        var m_0_x = (1-c)*(points[i+1].x - points[i-1].x)/2;
+        var m_0_y = (1-c)*(points[i+1].y - points[i-1].y)/2;
+
+        var m_1_x = (1-c)*(points[i+2].x - points[i].x)/2;
+        var m_1_y = (1-c)*(points[i+2].y - points[i].y)/2;
+
+        var p0 = points[i];
+        var p1 = points[i+1];
+        var c0 = p0;
+        if(i !== 1) {
+          c0 = {x: p0.x+(m_0_x/3), y:p0.y+(m_0_y/3)};
+        }
+        var c1 = p1;
+        if(i !== points.length-3) {
+          c1 = {x: p1.x-(m_1_x/3), y:p1.y-(m_1_y/3)};
         }
 
-        var line = d3.svg.line()
-            .interpolate("cardinal")
-            .x(function(d) { return d.x; })
-            .y(function(d) { return d.y; })
-            .tension(lineTension);
+        // detect special case by calculating the angle
+        if(avoidSharpTurn) {
+          var v0 = {x:points[i-1].x - points[i].x, y:points[i-1].y - points[i].y};
+          var v1 = {x:points[i+1].x - points[i].x, y:points[i+1].y - points[i].y};
+          var angle = Math.acos( vecDot(v0,v1) / (vecMag(v0)*vecMag(v1)) );
 
-        return line(path_coord);
+          if(angle <= angleThreshold ){
+            var m_x = (1-c)*(points[i].x - points[i-1].x)/2;
+            var m_y = (1-c)*(points[i].y - points[i-1].y)/2;
+            c0 = {x: p0.x+(-m_y/3), y:p0.y+(m_x/3)};
+            segments[segments.length-1][1] = {x: p0.x-(-m_y/3), y:p0.y-(m_x/3)};
+          }
+        }
+
+        segments.push([c0,c1,p1]);
+      }
+
+      var path_d = "M"+points[0].x+","+points[0].y;
+      for(var i = 0; i < segments.length; i ++) {
+        var s = segments[i];
+        path_d += "C"+s[0].x+","+s[0].y;
+        path_d += ","+s[1].x+","+s[1].y;
+        path_d += ","+s[2].x+","+s[2].y;
+      }
+      return path_d;
     }
 
     // draw the spline for paths
@@ -190,7 +227,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .attr('d', function(d) { return genPath(d); })
             .attr('opacity', 0)
             .attr('stroke', 'green')
-            .attr('stroke-width', hoverprops.edgeStrokeWidth || 5)
+            .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
             .attr('fill', 'none')
             .on('mouseover', function(d, i) {
                 highlight_paths_group.hover_changed([paths[i]]);
@@ -205,13 +242,20 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
     function draw_hovered(hoversplines) {
         if(hoversplines === null) {
-            d3.selectAll('.spline-edge').attr('stroke', 'black');
+            d3.selectAll('.spline-edge')
+                .attr('stroke', pathprops.edgeStroke || 'black')
+                .attr('opacity', pathprops.edgeOpacity || 1);
         } else {
             for(var i = 0; i < hoversplines.length; i ++) {
                 var path_id = _paths.indexOf(hoversplines[i]);
-                var sel_path = d3.select("#spline-path-"+path_id).attr('stroke', hoverprops.edgeStroke);
+                var sel_path = d3.select("#spline-path-"+path_id)
+                    .attr('stroke', hoverprops.edgeStroke || pathprops.edgeStroke || 'black')
+                    .attr('opacity', hoverprops.edgeOpacity || pathprops.edgeOpacity || 1);
                 sel_path.each(function() {this.parentNode.appendChild(this);});
             }
+            // bring all hovers to front
+            _layer.selectAll('.spline-edge-hover')
+                .each(function() {this.parentNode.appendChild(this);});
         }
     }
 
