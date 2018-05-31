@@ -514,8 +514,8 @@ get_catalog().then(function(catalog) {
             });
 
     _diagram
-        .width($('#canvas-panel').width())
-        .height($('#canvas-panel').height())
+        .width(null)
+        .height(null)
         .layoutEngine(layout)
         .timeLimit(500)
         .margins({left: 5, top: 5, right: 5, bottom: 5})
@@ -549,6 +549,10 @@ get_catalog().then(function(catalog) {
         .edgeSourcePortName(e => e.value.sourceport)
         .edgeTargetPortName(e => e.value.targetport);
 
+    $(window).resize(function() {
+        _diagram.width(null).height(null).redraw();
+    });
+
     if(qs.showFixed)
         _diagram.nodeStrokeDashArray(n => n.value.fixedPos ? null : '5,5');
 
@@ -558,6 +562,7 @@ get_catalog().then(function(catalog) {
     _diagram.child('place-ports', dc_graph.place_ports());
 
     var symbolPorts = dc_graph.symbol_port_style()
+        .outline(dc_graph.symbol_port_style.outline.square())
         .outlineStrokeWidth(1)
 //        .portLabel(p => p.value.portname)
         .symbol(p => p.orig.value.type)
