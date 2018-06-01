@@ -178,7 +178,7 @@ dc_graph.d3v4_force_layout = function(id) {
                 return;
             if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
             report.push({
-                delay: 3000,
+                action: 'init',
                 nodes: path.map(function(n) {
                     return {
                         id: n,
@@ -226,7 +226,7 @@ dc_graph.d3v4_force_layout = function(id) {
                 var nextDisp = _displaceAdjacent(next, angle, pvecNext, k);
                 var centerDisp = _displaceCenter(prevDisp, nextDisp);
                 report.push({
-                    delay: 1000,
+                    action: 'force',
                     nodes: [{
                         id: path[i-1],
                         x: prev.x,
@@ -256,7 +256,7 @@ dc_graph.d3v4_force_layout = function(id) {
                 _offsetNode(current, centerDisp);
             }
         });
-        return report;
+        console.log(report);
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
