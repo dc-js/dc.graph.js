@@ -154,9 +154,11 @@ dc_graph.d3v4_force_layout = function(id) {
         };
 
         function _displaceAdjacent(node, angle, pVec, k) {
+            var turn = Math.PI-angle,
+                turn2 = turn*turn;
             return {
-                x: pVec.x*(Math.PI-angle)*k,
-                y: pVec.y*(Math.PI-angle)*k
+                x: pVec.x*turn2*k,
+                y: pVec.y*turn2*k
             };
         }
 
