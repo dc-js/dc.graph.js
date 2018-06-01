@@ -215,10 +215,11 @@ dc_graph.d3v4_force_layout = function(id) {
                 // 2. calculate the vectors: 'prev' pointing to 'mid', 'next' pointing to 'mid'
                 var prev_mid = {x: mid.x-prev.x, y: mid.y-prev.y};
                 var next_mid = {x: mid.x-next.x, y: mid.y-next.y};
+
                 // 3. the 'correct' vector: the angle between pvec and prev_mid(next_mid) should
                 //    be an obtuse angle
-                pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {x: -pvecPrev.x, y: -pvecPrev.x};
-                pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {x: -pvecNext.x, y: -pvecNext.x};
+                pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {x: -pvecPrev.x, y: -pvecPrev.y};
+                pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {x: -pvecNext.x, y: -pvecNext.y};
 
                 // modify positions of nodes
                 var prevDisp = _displaceAdjacent(prev, angle, pvecPrev, k);
