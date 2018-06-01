@@ -157,6 +157,7 @@ dc_graph.d3v4_force_layout = function(id) {
             var turn = Math.PI-angle,
                 turn2 = turn*turn;
             return {
+                kind: 'adjacent',
                 x: pVec.x*turn2*k,
                 y: pVec.y*turn2*k
             };
@@ -164,6 +165,7 @@ dc_graph.d3v4_force_layout = function(id) {
 
         function _displaceCenter(dadj1, dadj2) {
             return {
+                kind: 'center',
                 x: -(dadj1.x + dadj2.x),
                 y: -(dadj1.y + dadj2.y)
             };
