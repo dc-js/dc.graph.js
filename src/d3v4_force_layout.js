@@ -202,6 +202,10 @@ dc_graph.d3v4_force_layout = function(id) {
                 var prev = _nodes[path[i-1]];
                 var next = _nodes[path[i+1]];
 
+                // we can't do anything for two-cycles
+                if(prev === next)
+                    continue;
+
                 // calculate the angle
                 var vPrev = {x: prev.x - current.x, y: prev.y - current.y};
                 var vNext = {x: next.x - current.x, y: next.y - current.y};
