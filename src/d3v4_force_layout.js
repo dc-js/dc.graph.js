@@ -171,8 +171,25 @@ dc_graph.d3v4_force_layout = function(id) {
             node.x += disp.x;
             node.y += disp.y;
         }
-        paths.forEach(function(path) {
+        var report = [];
+        paths.forEach(function(path, i) {
             if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
+            report.push({
+                delay: 3000,
+                nodes: path.map(function(n) {
+                    return {
+                        id: n,
+                        x: _nodes[n].x,
+                        y: _nodes[n].y
+                    };
+                }),
+                edges: path.reduce(function(p, n) {
+                    if(typeof p === 'string')
+                        return [{source: p, target: n}];
+                    p.push({source: p[p.length-1].target, target: n});
+                    return p;
+                })
+            });
             for(var i = 1; i < path.length-1; ++i) {
                 var current = _nodes[path[i]];
                 var prev = _nodes[path[i-1]];
@@ -191,6 +208,7 @@ dc_graph.d3v4_force_layout = function(id) {
                 // direction that makes the angle more towards 180 degree
                 // 1. calculate the middle point of node 'prev' and 'next'
                 var mid = {x: (prev.x+next.x)/2.0, y: (prev.y+next.y)/2.0};
+
                 // 2. calculate the vectors: 'prev' pointing to 'mid', 'next' pointing to 'mid'
                 var prev_mid = {x: mid.x-prev.x, y: mid.y-prev.y};
                 var next_mid = {x: mid.x-next.x, y: mid.y-next.y};
@@ -203,16 +221,42 @@ dc_graph.d3v4_force_layout = function(id) {
                 var prevDisp = _displaceAdjacent(prev, angle, pvecPrev, k);
                 var nextDisp = _displaceAdjacent(next, angle, pvecNext, k);
                 var centerDisp = _displaceCenter(prevDisp, nextDisp);
+                report.push({
+                    delay: 1000,
+                    nodes: [{
+                        id: path[i-1],
+                        x: prev.x,
+                        y: prev.y,
+                        force: prevDisp
+                    }, {
+                        id: path[i],
+                        x: current.x,
+                        y: current.y,
+                        force: centerDisp
+                    }, {
+                        id: path[i+1],
+                        x: next.x,
+                        y: next.y,
+                        force: nextDisp
+                    }],
+                    edges: [{
+                        source: path[i-1],
+                        target: path[i],
+                    }, {
+                        source: path[i],
+                        target: path[i+1]
+                    }]
+                });
                 _offsetNode(prev, prevDisp);
                 _offsetNode(next, nextDisp);
                 _offsetNode(current, centerDisp);
             }
-
-
         });
+        return report;
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+
     var engine = Object.assign(graphviz, {
         layoutAlgorithm: function() {
             return 'd3v4-force';
