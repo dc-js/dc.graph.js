@@ -153,11 +153,24 @@ dc_graph.d3v4_force_layout = function(id) {
             return {x: xx/length, y: yy/length};
         };
 
-        function updateNode(node, angle, pVec, k) {
-            node.x += pVec.x*(Math.PI-angle)*k;
-            node.y += pVec.y*(Math.PI-angle)*k;
+        function _displaceAdjacent(node, angle, pVec, k) {
+            return {
+                x: pVec.x*(Math.PI-angle)*k,
+                y: pVec.y*(Math.PI-angle)*k
+            };
         }
 
+        function _displaceCenter(dadj1, dadj2) {
+            return {
+                x: -(dadj1.x + dadj2.x),
+                y: -(dadj1.y + dadj2.y)
+            };
+        }
+
+        function _offsetNode(node, disp) {
+            node.x += disp.x;
+            node.y += disp.y;
+        }
         paths.forEach(function(path) {
             if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
             for(var i = 1; i < path.length-1; ++i) {
@@ -186,16 +199,20 @@ dc_graph.d3v4_force_layout = function(id) {
                 pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {x: -pvecPrev.x, y: -pvecPrev.x};
                 pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {x: -pvecNext.x, y: -pvecNext.x};
 
-                // modify positions of prev and next
-                updateNode(prev, angle, pvecPrev, k);
-                updateNode(next, angle, pvecNext, k);
+                // modify positions of nodes
+                var prevDisp = _displaceAdjacent(prev, angle, pvecPrev, k);
+                var nextDisp = _displaceAdjacent(next, angle, pvecNext, k);
+                var centerDisp = _displaceCenter(prevDisp, nextDisp);
+                _offsetNode(prev, prevDisp);
+                _offsetNode(next, nextDisp);
+                _offsetNode(current, centerDisp);
             }
+
 
         });
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
-
     var engine = Object.assign(graphviz, {
         layoutAlgorithm: function() {
             return 'd3v4-force';
