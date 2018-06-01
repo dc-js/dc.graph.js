@@ -245,7 +245,7 @@ dc_graph.d3v4_force_layout = function(id) {
                     }],
                     edges: [{
                         source: path[i-1],
-                        target: path[i],
+                        target: path[i]
                     }, {
                         source: path[i],
                         target: path[i+1]
