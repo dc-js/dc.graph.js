@@ -13,7 +13,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         var engine = _behavior.parent().layoutEngine(),
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
-            var nidpaths = localPaths.map(path_keys);
+            var nidpaths = localPaths.map(function(lpath) {
+                return {nodes: path_keys(lpath)};
+            });
             engine.paths(nidpaths);
         } else {
             engine.paths(null);

@@ -104,7 +104,7 @@ dc_graph.d3v4_force_layout = function(id) {
             if(_options.fixOffPathNodes) {
                 nodesOnPath = d3.set();
                 paths.forEach(function(path) {
-                    path.forEach(function(nid) {
+                    path.nodes.forEach(function(nid) {
                         nodesOnPath.add(nid);
                     });
                 });
@@ -123,7 +123,7 @@ dc_graph.d3v4_force_layout = function(id) {
 
             _simulation.force('charge').strength(_options.chargeForce);
             _simulation.force('angle', function(alpha) {
-                angleForces(alpha, paths, _options.angleForce);
+                angleForces(alpha, paths);
             });
         }
     };
@@ -137,7 +137,7 @@ dc_graph.d3v4_force_layout = function(id) {
         dispatchState('end');
     }
 
-    function angleForces(alpha, paths, k) {
+    function angleForces(alpha, paths) {
         function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
         function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
         function _angle(v1, v2) {
@@ -177,30 +177,32 @@ dc_graph.d3v4_force_layout = function(id) {
         }
         var report = [];
         paths.forEach(function(path, i) {
+            var nodes = path.nodes,
+                strength = path.strength || 1;
             // ignore path where any nodes have gone away
-            if(!path.every(function(k) { return _nodes[k]; }))
+            if(!nodes.every(function(k) { return _nodes[k]; }))
                 return;
-            if(path.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
+            if(nodes.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
             report.push({
                 action: 'init',
-                nodes: path.map(function(n) {
+                nodes: nodes.map(function(n) {
                     return {
                         id: n,
                         x: _nodes[n].x,
                         y: _nodes[n].y
                     };
                 }),
-                edges: path.reduce(function(p, n) {
+                edges: nodes.reduce(function(p, n) {
                     if(typeof p === 'string')
                         return [{source: p, target: n}];
                     p.push({source: p[p.length-1].target, target: n});
                     return p;
                 })
             });
-            for(var i = 1; i < path.length-1; ++i) {
-                var current = _nodes[path[i]];
-                var prev = _nodes[path[i-1]];
-                var next = _nodes[path[i+1]];
+            for(var i = 1; i < nodes.length-1; ++i) {
+                var current = _nodes[nodes[i]];
+                var prev = _nodes[nodes[i-1]];
+                var next = _nodes[nodes[i+1]];
 
                 // we can't do anything for two-cycles
                 if(prev === next)
@@ -230,33 +232,33 @@ dc_graph.d3v4_force_layout = function(id) {
                 pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {x: -pvecNext.x, y: -pvecNext.y};
 
                 // modify positions of nodes
-                var prevDisp = _displaceAdjacent(prev, angle, pvecPrev, k);
-                var nextDisp = _displaceAdjacent(next, angle, pvecNext, k);
+                var prevDisp = _displaceAdjacent(prev, angle, pvecPrev, strength * _options.angleForce);
+                var nextDisp = _displaceAdjacent(next, angle, pvecNext, strength * _options.angleForce);
                 var centerDisp = _displaceCenter(prevDisp, nextDisp);
                 report.push({
                     action: 'force',
                     nodes: [{
-                        id: path[i-1],
+                        id: nodes[i-1],
                         x: prev.x,
                         y: prev.y,
                         force: prevDisp
                     }, {
-                        id: path[i],
+                        id: nodes[i],
                         x: current.x,
                         y: current.y,
                         force: centerDisp
                     }, {
-                        id: path[i+1],
+                        id: nodes[i+1],
                         x: next.x,
                         y: next.y,
                         force: nextDisp
                     }],
                     edges: [{
-                        source: path[i-1],
-                        target: path[i]
+                        source: nodes[i-1],
+                        target: nodes[i]
                     }, {
-                        source: path[i],
-                        target: path[i+1]
+                        source: nodes[i],
+                        target: nodes[i+1]
                     }]
                 });
                 _offsetNode(prev, prevDisp);
