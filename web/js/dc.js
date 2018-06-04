@@ -1,5 +1,5 @@
 /*!
- *  dc 2.1.2
+ *  dc 2.1.10
  *  http://dc-js.github.io/dc.js/
  *  Copyright 2012-2016 Nick Zhu & the dc.js Developers
  *  https://github.com/dc-js/dc.js/blob/master/AUTHORS
@@ -29,7 +29,7 @@
  * such as {@link dc.baseMixin#svg .svg} and {@link dc.coordinateGridMixin#xAxis .xAxis},
  * return values that are themselves chainable d3 objects.
  * @namespace dc
- * @version 2.1.2
+ * @version 2.1.10
  * @example
  * // Example chaining
  * chart.width(300)
@@ -38,7 +38,7 @@
  */
 /*jshint -W079*/
 var dc = {
-    version: '2.1.2',
+    version: '2.1.10',
     constants: {
         CHART_CLASS: 'dc-chart',
         DEBUG_GROUP_CLASS: 'debug',
@@ -1027,6 +1027,7 @@ dc.baseMixin = function (_chart) {
     };
     var _heightCalc = _defaultHeightCalc;
     var _width, _height;
+    var _useViewBoxResizing = false;
 
     var _keyAccessor = dc.pluck('key');
     var _valueAccessor = dc.pluck('value');
@@ -1199,6 +1200,37 @@ dc.baseMixin = function (_chart) {
             return _minHeight;
         }
         _minHeight = minHeight;
+        return _chart;
+    };
+
+    /**
+     * Turn on/off using the SVG
+     * {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox `viewBox` attribute}.
+     * When enabled, `viewBox` will be set on the svg root element instead of `width` and `height`.
+     * Requires that the chart aspect ratio be defined using chart.width(w) and chart.height(h).
+     *
+     * This will maintain the aspect ratio while enabling the chart to resize responsively to the
+     * space given to the chart using CSS. For example, the chart can use `width: 100%; height:
+     * 100%` or absolute positioning to resize to its parent div.
+     *
+     * Since the text will be sized as if the chart is drawn according to the width and height, and
+     * will be resized if the chart is any other size, you need to set the chart width and height so
+     * that the text looks good. In practice, 600x400 seems to work pretty well for most charts.
+     *
+     * You can see examples of this resizing strategy in the [Chart Resizing
+     * Examples](http://dc-js.github.io/dc.js/resizing/); just add `?resize=viewbox` to any of the
+     * one-chart examples to enable `useViewBoxResizing`.
+     * @method useViewBoxResizing
+     * @memberof dc.baseMixin
+     * @instance
+     * @param {Boolean} [useViewBoxResizing=false]
+     * @returns {Boolean|dc.baseMixin}
+     */
+    _chart.useViewBoxResizing = function (useViewBoxResizing) {
+        if (!arguments.length) {
+            return _useViewBoxResizing;
+        }
+        _useViewBoxResizing = useViewBoxResizing;
         return _chart;
     };
 
@@ -1485,9 +1517,14 @@ dc.baseMixin = function (_chart) {
 
     function sizeSvg () {
         if (_svg) {
-            _svg
-                .attr('width', _chart.width())
-                .attr('height', _chart.height());
+            if (!_useViewBoxResizing) {
+                _svg
+                    .attr('width', _chart.width())
+                    .attr('height', _chart.height());
+            } else if (!_svg.attr('viewBox')) {
+                _svg
+                    .attr('viewBox', '0 0 ' + _chart.width() + ' ' + _chart.height());
+            }
         }
     }
 
@@ -1984,6 +2021,7 @@ dc.baseMixin = function (_chart) {
     _chart.replaceFilter = function (filter) {
         _filters = _resetFilterHandler(_filters);
         _chart.filter(filter);
+        return _chart;
     };
 
     /**
@@ -3811,7 +3849,7 @@ dc.coordinateGridMixin = function (_chart) {
     };
 
     function getClipPathId () {
-        return _chart.anchorName().replace(/[ .#=\[\]]/g, '-') + '-clip';
+        return _chart.anchorName().replace(/[ .#=\[\]"]/g, '-') + '-clip';
     }
 
     /**
@@ -4103,9 +4141,10 @@ dc.stackMixin = function (_chart) {
     var _titles = {};
 
     var _hidableStacks = false;
+    var _evadeDomainFilter = false;
 
     function domainFilter () {
-        if (!_chart.x()) {
+        if (!_chart.x() || _evadeDomainFilter) {
             return d3.functor(true);
         }
         var xDomain = _chart.x().domain();
@@ -4334,6 +4373,30 @@ dc.stackMixin = function (_chart) {
         return _chart;
     };
 
+    /**
+     * Since dc.js 2.0, there has been {@link https://github.com/dc-js/dc.js/issues/949 an issue}
+     * where points are filtered to the current domain. While this is a useful optimization, it is
+     * incorrectly implemented: the next point outside the domain is required in order to draw lines
+     * that are clipped to the bounds, as well as bars that are partly clipped.
+     *
+     * A fix will be included in dc.js 2.1.x, but a workaround is needed for dc.js 2.0 and until
+     * that fix is published, so set this flag to skip any filtering of points.
+     *
+     * Once the bug is fixed, this flag will have no effect, and it will be deprecated.
+     * @method evadeDomainFilter
+     * @memberof dc.stackMixin
+     * @instance
+     * @param {Boolean} [evadeDomainFilter=false]
+     * @returns {Boolean|dc.stackMixin}
+     */
+    _chart.evadeDomainFilter = function (evadeDomainFilter) {
+        if (!arguments.length) {
+            return _evadeDomainFilter;
+        }
+        _evadeDomainFilter = evadeDomainFilter;
+        return _chart;
+    };
+
     function visability (l) {
         return !l.hidden;
     }
@@ -4400,27 +4463,25 @@ dc.stackMixin = function (_chart) {
  * @returns {dc.capMixin}
  */
 dc.capMixin = function (_chart) {
-
-    var _cap = Infinity;
-
+    var _cap = Infinity, _takeFront = true;
     var _othersLabel = 'Others';
 
-    var _othersGrouper = function (topRows) {
-        var topRowsSum = d3.sum(topRows, _chart.valueAccessor()),
-            allRows = _chart.group().all(),
-            allRowsSum = d3.sum(allRows, _chart.valueAccessor()),
-            topKeys = topRows.map(_chart.keyAccessor()),
-            allKeys = allRows.map(_chart.keyAccessor()),
-            topSet = d3.set(topKeys),
-            others = allKeys.filter(function (d) {return !topSet.has(d);});
-        if (allRowsSum > topRowsSum) {
-            return topRows.concat([{
-                'others': others,
-                'key': _chart.othersLabel(),
-                'value': allRowsSum - topRowsSum
+    // emulate old group.top(N) ordering
+    _chart.ordering(function (kv) {
+        return -kv.value;
+    });
+
+    var _othersGrouper = function (topItems, restItems) {
+        var restItemsSum = d3.sum(restItems, _chart.valueAccessor()),
+            restKeys = restItems.map(_chart.keyAccessor());
+        if (restItemsSum > 0) {
+            return topItems.concat([{
+                others: restKeys,
+                key: _chart.othersLabel(),
+                value: restItemsSum
             }]);
         }
-        return topRows;
+        return topItems;
     };
 
     _chart.cappedKeyAccessor = function (d, i) {
@@ -4437,23 +4498,30 @@ dc.capMixin = function (_chart) {
         return _chart.valueAccessor()(d, i);
     };
 
-    // return N biggest groups, where N is the cap, sorted in ascending order.
+    // return N "top" groups, where N is the cap, sorted by baseMixin.ordering
+    // whether top means front or back depends on takeFront
     _chart.data(function (group) {
         if (_cap === Infinity) {
             return _chart._computeOrderedGroups(group.all());
         } else {
-            var topRows = group.all(); // in key order
-            topRows = _chart._computeOrderedGroups(topRows); // re-order using ordering (defaults to key)
+            var items = group.all(), rest;
+            items = _chart._computeOrderedGroups(items); // sort by baseMixin.ordering
 
             if (_cap) {
-                var start = Math.max(0, topRows.length - _cap);
-                topRows = topRows.slice(start);
+                if (_takeFront) {
+                    rest = items.slice(_cap);
+                    items = items.slice(0, _cap);
+                } else {
+                    var start = Math.max(0, items.length - _cap);
+                    rest = items.slice(0, start);
+                    items = items.slice(start);
+                }
             }
 
             if (_othersGrouper) {
-                return _othersGrouper(topRows);
+                return _othersGrouper(items, rest);
             }
-            return topRows;
+            return items;
         }
     });
 
@@ -4462,19 +4530,26 @@ dc.capMixin = function (_chart) {
      * {@link dc.capMixin#othersGrouper othersGrouper}, any further elements will be combined in an
      * extra element with its name determined by {@link dc.capMixin#othersLabel othersLabel}.
      *
-     * Up through dc.js 2.0.*, capping uses
+     * As of dc.js 2.1 and onward, the capped charts use
+     * {@link https://github.com/crossfilter/crossfilter/wiki/API-Reference#group_all group.all()}
+     * and {@link dc.baseMixin#ordering baseMixin.ordering()} to determine the order of
+     * elements. Then `cap` and {@link dc.capMixin#takeFront takeFront} determine how many elements
+     * to keep, from which end of the resulting array.
+     *
+     * **Migration note:** Up through dc.js 2.0.*, capping used
      * {@link https://github.com/crossfilter/crossfilter/wiki/API-Reference#group_top group.top(N)},
      * which selects the largest items according to
      * {@link https://github.com/crossfilter/crossfilter/wiki/API-Reference#group_order group.order()}.
-     * The chart then sorts the items according to {@link dc.baseMixin#ordering baseMixin.ordering()}.
-     * So the two values essentially have to agree, but if the former is incorrect (it's easy to
-     * forget about `group.order()`), the latter will mask the problem. This also makes
-     * {@link https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups fake groups} difficult to
-     * implement.
+     * The chart then sorted the items according to {@link dc.baseMixin#ordering baseMixin.ordering()}.
+     * So the two values essentially had to agree, but if the `group.order()` was incorrect (it's
+     * easy to forget about), the wrong rows or slices would be displayed, in the correct order.
      *
-     * In dc.js 2.1 and forward, only
-     * {@link https://github.com/crossfilter/crossfilter/wiki/API-Reference#group_all group.all()}
-     * and `baseMixin.ordering()` are used.
+     * If your chart previously relied on `group.order()`, use `chart.ordering()` instead. As of
+     * 2.1.5, the ordering defaults to sorting from greatest to least like `group.top(N)` did.
+     *
+     * If you want to cap by one ordering but sort by another, please
+     * [file an issue](https://github.com/dc-js/dc.js/issues/new) - it's still possible but we'll
+     * need to work up an example.
      * @method cap
      * @memberof dc.capMixin
      * @instance
@@ -4486,6 +4561,24 @@ dc.capMixin = function (_chart) {
             return _cap;
         }
         _cap = count;
+        return _chart;
+    };
+
+    /**
+     * Get or set the direction of capping. If set, the chart takes the first
+     * {@link dc.capMixin#cap cap} elements from the sorted array of elements; otherwise
+     * it takes the last `cap` elements.
+     * @method takeFront
+     * @memberof dc.capMixin
+     * @instance
+     * @param {Boolean} [takeFront=true]
+     * @returns {Boolean|dc.capMixin}
+     */
+    _chart.takeFront = function (takeFront) {
+        if (!arguments.length) {
+            return _takeFront;
+        }
+        _takeFront = takeFront;
         return _chart;
     };
 
@@ -4507,8 +4600,10 @@ dc.capMixin = function (_chart) {
 
     /**
      * Get or set the grouper function that will perform the insertion of data for the *Others* slice
-     * if the slices cap is specified. If set to a falsy value, no others will be added. By default the
-     * grouper function computes the sum of all values below the cap.
+     * if the slices cap is specified. If set to a falsy value, no others will be added.
+     *
+     * The grouper function takes an array of included ("top") items, and an array of the rest of
+     * the items. By default the grouper function computes the sum of the rest.
      * @method othersGrouper
      * @memberof dc.capMixin
      * @instance
@@ -4516,35 +4611,17 @@ dc.capMixin = function (_chart) {
      * // Do not show others
      * chart.othersGrouper(null);
      * // Default others grouper
-     * chart.othersGrouper(function (topRows) {
-     *    var topRowsSum = d3.sum(topRows, _chart.valueAccessor()),
-     *        allRows = _chart.group().all(),
-     *        allRowsSum = d3.sum(allRows, _chart.valueAccessor()),
-     *        topKeys = topRows.map(_chart.keyAccessor()),
-     *        allKeys = allRows.map(_chart.keyAccessor()),
-     *        topSet = d3.set(topKeys),
-     *        others = allKeys.filter(function (d) {return !topSet.has(d);});
-     *    if (allRowsSum > topRowsSum) {
-     *        return topRows.concat([{
-     *            'others': others,
-     *            'key': _chart.othersLabel(),
-     *            'value': allRowsSum - topRowsSum
-     *        }]);
-     *    }
-     *    return topRows;
-     * });
-     * // Custom others grouper
-     * chart.othersGrouper(function (data) {
-     *     // compute the value for others, presumably the sum of all values below the cap
-     *     var othersSum  = yourComputeOthersValueLogic(data)
-     *
-     *     // the keys are needed to properly filter when the others element is clicked
-     *     var othersKeys = yourComputeOthersKeysArrayLogic(data);
-     *
-     *     // add the others row to the dataset
-     *     data.push({'key': 'Others', 'value': othersSum, 'others': othersKeys });
-     *
-     *     return data;
+     * chart.othersGrouper(function (topItems, restItems) {
+     *     var restItemsSum = d3.sum(restItems, _chart.valueAccessor()),
+     *         restKeys = restItems.map(_chart.keyAccessor());
+     *     if (restItemsSum > 0) {
+     *         return topItems.concat([{
+     *             others: restKeys,
+     *             key: _chart.othersLabel(),
+     *             value: restItemsSum
+     *         }]);
+     *     }
+     *     return topItems;
      * });
      * @param {Function} [grouperFunction]
      * @returns {Function|dc.capMixin}
@@ -4942,8 +5019,9 @@ dc.pieChart = function (parent, chartGroup) {
     };
 
     function drawChart () {
-        // set radius on basis of chart dimension if missing
-        _radius = _givenRadius ? _givenRadius : d3.min([_chart.width(), _chart.height()]) / 2;
+        // set radius from chart size if none given, or if given radius is too large
+        var maxRadius =  d3.min([_chart.width(), _chart.height()]) / 2;
+        _radius = _givenRadius && _givenRadius < maxRadius ? _givenRadius : maxRadius;
 
         var arc = buildArcs();
 
@@ -9239,7 +9317,7 @@ dc.scatterPlot = function (parent, chartGroup) {
     var _emptyColor = null;
     var _filtered = [];
 
-    _symbol.size(function (d, i) {
+    function elementSize (d, i) {
         if (!_existenceAccessor(d)) {
             return Math.pow(_emptySize, 2);
         } else if (_filtered[i]) {
@@ -9247,7 +9325,8 @@ dc.scatterPlot = function (parent, chartGroup) {
         } else {
             return Math.pow(_excludedSize, 2);
         }
-    });
+    }
+    _symbol.size(elementSize);
 
     dc.override(_chart, '_filter', function (filter) {
         if (!arguments.length) {
@@ -9355,6 +9434,29 @@ dc.scatterPlot = function (parent, chartGroup) {
             return _symbol.type();
         }
         _symbol.type(type);
+        return _chart;
+    };
+
+    /**
+     * Get or set the symbol generator. By default `dc.scatterPlot` will use
+     * {@link https://github.com/d3/d3-3.x-api-reference/blob/master/SVG-Shapes.md#symbol d3.svg.symbol()}
+     * to generate symbols. `dc.scatterPlot` will set the
+     * {@link https://github.com/d3/d3-3.x-api-reference/blob/master/SVG-Shapes.md#symbol_size size accessor}
+     * on the symbol generator.
+     * @method customSymbol
+     * @memberof dc.scatterPlot
+     * @instance
+     * @see {@link https://github.com/d3/d3-3.x-api-reference/blob/master/SVG-Shapes.md#symbol d3.svg.symbol}
+     * @see {@link https://stackoverflow.com/questions/25332120/create-additional-d3-js-symbols Create additional D3.js symbols}
+     * @param {String|Function} [customSymbol=d3.svg.symbol()]
+     * @returns {String|Function|dc.scatterPlot}
+     */
+    _chart.customSymbol = function (customSymbol) {
+        if (!arguments.length) {
+            return _symbol;
+        }
+        _symbol = customSymbol;
+        _symbol.size(elementSize);
         return _chart;
     };
 
@@ -9520,7 +9622,7 @@ dc.scatterPlot = function (parent, chartGroup) {
         resizeSymbolsWhere(function (symbol) {
             return symbol.attr('fill') === d.color;
         }, _highlightedSize);
-        _chart.selectAll('.chart-body path.symbol').filter(function () {
+        _chart.chartBodyG().selectAll('.chart-body path.symbol').filter(function () {
             return d3.select(this).attr('fill') !== d.color;
         }).classed('fadeout', true);
     };
@@ -9529,13 +9631,13 @@ dc.scatterPlot = function (parent, chartGroup) {
         resizeSymbolsWhere(function (symbol) {
             return symbol.attr('fill') === d.color;
         }, _symbolSize);
-        _chart.selectAll('.chart-body path.symbol').filter(function () {
+        _chart.chartBodyG().selectAll('.chart-body path.symbol').filter(function () {
             return d3.select(this).attr('fill') !== d.color;
         }).classed('fadeout', false);
     };
 
     function resizeSymbolsWhere (condition, size) {
-        var symbols = _chart.selectAll('.chart-body path.symbol').filter(function () {
+        var symbols = _chart.chartBodyG().selectAll('.chart-body path.symbol').filter(function () {
             return condition(d3.select(this));
         });
         var oldSize = _symbol.size();
@@ -9675,20 +9777,12 @@ dc.numberDisplay = function (parent, chartGroup) {
         return _chart.data();
     };
 
-    // probably unnecessary efficiency over computeOrderedGroups sort
     function maxBin (all) {
-        if (all.length < 1) {
+        if (!all.length) {
             return null;
         }
-        var maxi = 0, max = _chart.ordering()(all[0]);
-        for (var i = 1; i < all.length; ++i) {
-            var v = _chart.ordering()(all[i]);
-            if (v > max) {
-                max = v;
-                maxi = i;
-            }
-        }
-        return all[maxi];
+        var sorted = _chart._computeOrderedGroups(all);
+        return sorted[sorted.length - 1];
     }
     _chart.data(function (group) {
         var valObj = group.value ? group.value() : maxBin(group.all());
@@ -10803,6 +10897,14 @@ dc.selectMenu = function (parent, chartGroup) {
         _chart._doRedraw();
         return _chart;
     };
+    // Fixing IE 11 crash when redrawing the chart
+    // see here for list of IE user Agents :
+    // http://www.useragentstring.com/pages/useragentstring.php?name=Internet+Explorer
+    var ua = window.navigator.userAgent;
+    // test for IE 11 but not a lower version (which contains MSIE in UA)
+    if (ua.indexOf('Trident/') > 0 && ua.indexOf('MSIE') === -1) {
+        _chart.redraw = _chart.render;
+    }
 
     _chart._doRedraw = function () {
         setAttributes();
@@ -10811,7 +10913,7 @@ dc.selectMenu = function (parent, chartGroup) {
         if (_chart.hasFilter() && _multiple) {
             _select.selectAll('option')
                 .property('selected', function (d) {
-                    return d && _chart.filters().indexOf(String(_chart.keyAccessor()(d))) >= 0;
+                    return typeof d !== 'undefined' && _chart.filters().indexOf(String(_chart.keyAccessor()(d))) >= 0;
                 });
         } else if (_chart.hasFilter()) {
             _select.property('value', _chart.filter());
@@ -11031,7 +11133,7 @@ dc.crossfilter = crossfilter;
 
 return dc;}
     if(typeof define === "function" && define.amd) {
-        define(["d3", "crossfilter"], _dc);
+        define(["d3", "crossfilter2"], _dc);
     } else if(typeof module === "object" && module.exports) {
         var _d3 = require('d3');
         var _crossfilter = require('crossfilter2');

@@ -73,49 +73,49 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
         else return pathsA.concat(pathsB.filter(doesnt_contain_path(pathsA)));
     }
 
-    function add_behavior(chart, node, edge, ehover) {
-        chart
-            .cascade(200, true, conditional_properties(function(n) {
-                return !!node_on_paths[chart.nodeKey.eval(n)];
+    function add_behavior(diagram, node, edge, ehover) {
+        diagram
+            .cascade(200, true, node_edge_conditions(function(n) {
+                return !!node_on_paths[diagram.nodeKey.eval(n)];
             }, function(e) {
-                return !!edge_on_paths[chart.edgeKey.eval(e)];
+                return !!edge_on_paths[diagram.edgeKey.eval(e)];
             }, pathprops))
-            .cascade(300, true, conditional_properties(function(n) {
-                return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], selected);
+            .cascade(300, true, node_edge_conditions(function(n) {
+                return intersect_paths(node_on_paths[diagram.nodeKey.eval(n)], selected);
             }, function(e) {
-                return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], selected);
+                return intersect_paths(edge_on_paths[diagram.edgeKey.eval(e)], selected);
             }, selectprops))
-            .cascade(400, true, conditional_properties(function(n) {
-                return intersect_paths(node_on_paths[chart.nodeKey.eval(n)], hoverpaths);
+            .cascade(400, true, node_edge_conditions(function(n) {
+                return intersect_paths(node_on_paths[diagram.nodeKey.eval(n)], hoverpaths);
             }, function(e) {
-                return intersect_paths(edge_on_paths[chart.edgeKey.eval(e)], hoverpaths);
+                return intersect_paths(edge_on_paths[diagram.edgeKey.eval(e)], hoverpaths);
             }, hoverprops));
 
         node
             .on('mouseover.highlight-paths', function(n) {
-                highlight_paths_group.hover_changed(node_on_paths[chart.nodeKey.eval(n)] || null);
+                highlight_paths_group.hover_changed(node_on_paths[diagram.nodeKey.eval(n)] || null);
             })
             .on('mouseout.highlight-paths', function(n) {
                 highlight_paths_group.hover_changed(null);
             })
             .on('click.highlight-paths', function(n) {
-                highlight_paths_group.select_changed(toggle_paths(selected, node_on_paths[chart.nodeKey.eval(n)]));
+                highlight_paths_group.select_changed(toggle_paths(selected, node_on_paths[diagram.nodeKey.eval(n)]));
             });
 
 
         ehover
             .on('mouseover.highlight-paths', function(e) {
-                highlight_paths_group.hover_changed(edge_on_paths[chart.edgeKey.eval(e)] || null);
+                highlight_paths_group.hover_changed(edge_on_paths[diagram.edgeKey.eval(e)] || null);
             })
             .on('mouseout.highlight-paths', function(e) {
                 highlight_paths_group.hover_changed(null);
             })
             .on('click.highlight-paths', function(n) {
-                highlight_paths_group.select_changed(toggle_paths(selected, edge_on_paths[chart.nodeKey.eval(n)]));
+                highlight_paths_group.select_changed(toggle_paths(selected, edge_on_paths[diagram.nodeKey.eval(n)]));
             });
     }
 
-    function remove_behavior(chart, node, edge, ehover) {
+    function remove_behavior(diagram, node, edge, ehover) {
         node
             .on('mouseover.highlight-paths', null)
             .on('mouseout.highlight-paths', null)
@@ -125,7 +125,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             .on('mouseout.highlight-paths', null)
             .on('click.highlight-paths', null);
         clear_all_highlights();
-        chart
+        diagram
             .cascade(200, false, pathprops)
             .cascade(300, false, selectprops)
             .cascade(400, false, hoverprops);
@@ -133,17 +133,17 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
 
     var _behavior = dc_graph.behavior('highlight-paths', {
         add_behavior: add_behavior,
-        remove_behavior: function(chart, node, edge, ehover) {
-            remove_behavior(chart, node, edge, ehover);
+        remove_behavior: function(diagram, node, edge, ehover) {
+            remove_behavior(diagram, node, edge, ehover);
             return this;
         },
         parent: function(p) {
             if(p)
                 _anchor = p.anchorName();
             // else we should have received anchor earlier
-            highlight_paths_group.on('paths_changed.' + _anchor, p ? paths_changed : null);
-            highlight_paths_group.on('hover_changed.' + _anchor, p ? hover_changed : null);
-            highlight_paths_group.on('select_changed.' + _anchor, p ? select_changed : null);
+            highlight_paths_group.on('paths_changed.highlight' + _anchor, p ? paths_changed : null);
+            highlight_paths_group.on('hover_changed.highlight' + _anchor, p ? hover_changed : null);
+            highlight_paths_group.on('select_changed.highlight' + _anchor, p ? select_changed : null);
         }
     });
 

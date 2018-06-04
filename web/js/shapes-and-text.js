@@ -42,6 +42,7 @@ diagram
     .edgeSource(function(e) { return e.value.source; })
     .edgeTarget(function(e) { return e.value.target; })
     .nodeLabel(function(n) { return n.value.label; })
+    .nodeLineHeight(qs.lh || 1)
     .nodeShape(function(n) { return n.value.shape; })
     .edgeArrowhead('vee');
 

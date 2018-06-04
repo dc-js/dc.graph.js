@@ -40,24 +40,23 @@ dc_graph.webworker_layout = function(layoutEngine) {
         });
         return this;
     };
-    engine.data = function(nodes, edges, constraints, options) {
+    engine.data = function(graph, nodes, edges, constraints) {
         _worker.worker.postMessage({
             command: 'data',
             args: {
                 layoutId: layoutEngine.layoutId(),
+                graph: graph,
                 nodes: nodes,
                 edges: edges,
-                constraints: constraints,
-                options: options
+                constraints: constraints
             }
         });
     };
-    engine.start = function(options) {
+    engine.start = function() {
         _worker.worker.postMessage({
             command: 'start',
             args: {
-                layoutId: layoutEngine.layoutId(),
-                options: options
+                layoutId: layoutEngine.layoutId()
             }
         });
     };
@@ -75,14 +74,17 @@ dc_graph.webworker_layout = function(layoutEngine) {
         return layoutEngine;
     };
     // somewhat sketchy - do we want this object to be transparent or not?
-    var passthroughs = ['layoutAlgorithm', 'populateLayoutNode', 'populateLayoutEdge', 'rankdir', 'ranksep'];
-    passthroughs.forEach(function(name) {
+    var passthroughs = ['layoutAlgorithm', 'needsStage',
+                        'populateLayoutNode', 'populateLayoutEdge', 'rankdir', 'ranksep'];
+    passthroughs.concat(layoutEngine.optionNames()).forEach(function(name) {
         engine[name] = function() {
             var ret = layoutEngine[name].apply(layoutEngine, arguments);
             return arguments.length ? this : ret;
         };
     });
     engine.on = function(event, f) {
+        if(arguments.length === 1)
+            return _dispatch.on(event);
         _dispatch.on(event, f);
         return this;
     };

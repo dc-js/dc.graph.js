@@ -1,3 +1,120 @@
+## 0.6 beta 7
+* deparallelize transform
+* detect sharp turns in path splines, and modify the control points to make the spline smooth, by Zhe Wang
+* path splining fixes: don't attempt to draw the same node twice in a row (it NaNs the layout and puts weird loopty loops on the nodes)
+* better path hovering behavior: opacity, return to original color, wider hover detection, keep hover detectors on top.
+* `edgeSort` for bringing particular edges to front
+* fixed node position support for d3v4force. (also implemented for d3force but does not appear to work.)
+* ability to show count/total in legend
+* ability to display a tip for the Nth item that matches a filter
+* increase memory allotment for graphviz
+* warn user when layout engine not found
+* resizing of window in drag&drop composition demo
+* probably time to stop calling these betas, even though i have a huge backlog of issues to fix
+
+## 0.6 beta 6
+* ability to filter using the legend
+* `legend.noLabel` because you usually don't want legend items to have internal labels
+
+## 0.6 beta 5
+* nodeLineHeight
+* nodeLabelPadding can be either number or `{x,y}` object. Document it.
+
+## 0.6 beta 4
+* put css change in the source not the artifact
+* another `dc_graph.engines.register` fix, by Lefteris Koutsofios
+
+## 0.6 beta 3
+* somewhat more sensible baseline for node text
+* missing symbol from refactor
+
+## 0.6 beta 2
+* set linked wildcard ports to empty if `wildcard_ports` initialized without `diagram`
+
+## 0.6 beta 1
+* if `diagram.refresh()` was called while layout was still happening, `draw_edge_to_shapes` would assert because it didn't have port positions. instead, just fall back to (0,0) ports in this case
+* ability to "link" wildcard ports so that when one gets assigned a type, they all get the same type (and when *all* linked ports are disconnected, the ports revert to wild/blank)
+* use `dominant-baseline` not `alignment-baseline` for `text` elements (the latter is for `tspan`)
+
+## 0.6 alpha 7
+* treat mouse pressedness as a boolean, not an integer. zoom mode was getting stuck deactivated.
+* `?mkzoom` for testing modKeyZoom in drag-drop-composition demo. (This enables multiple selection, which may not work completely with draw-graphs and move-nodes.)
+
+## 0.6 alpha 6
+* letter or other symbols in symbol port style
+* firefox was crashing on flexbox layout due to nodes with no caption
+* graphviz fdp layout
+* improvements to random generation example
+* workers for d3*force (but stop doesn't work)
+* resizing example
+* `.on()` returns the current handler if none given ([#32](https://github.com/dc-js/dc.graph.js/issues/32))
+
+## 0.6 alpha 5
+* fix node shape changing, old shapes were not being deleted
+* build lysenko-interval-tree.js properly using rollup
+* fix d3*force parameters for rectangular selection demo
+
+## 0.6 alpha 4
+* support for switching between available layout engines
+* register/unregister layout engines
+* some layout engines support `savePositions` and `restorePositions` ([#74](https://github.com/dc-js/dc.graph.js/issues/74))
+* `sync_url_options` separate library
+* drop `examples` directory and move those directly into `web`
+
+## 0.6 alpha 3
+* `d3_force_layout` and `d3v4_force_layout` engines
+* we build and distribute a custom `d3v4-force.js` using rollup (since we're still in the d3v3 universe)
+* `draw_spline_paths` mode will draw splined paths (chains of edges) on top of the existing graph
+
+## 0.6 alpha 2
+* use specific n, e, p parameter names for datum, instead of d
+* stop using the word chart, these are diagrams
+* brush and modkey-zoom are mutually exclusive instead of both happening at once ([#56](https://github.com/dc-js/dc.graph.js/issues/56))
+
+## 0.6 alpha 1
+* generalize `altKeyZoom` to `modKeyZoom`, by Lefteris Koutsofios ([#65](https://github.com/dc-js/dc.graph.js/pull/65))
+* reverse orientation of arrow tails, so that the same arrow spec can be used for both (Ibid)
+
+# 0.6
+* ports are specific positions on nodes where edges can connect, placed manually or automatically, and they can have shapes and symbols in them. named ports allow multiple edges to connect to the same spot; anonymous ports are specific to one edge but can still be styled
+* selection of edges, ports
+* `delete_nodes`, `delete_edges` modes
+* `move_nodes` mode, and `fix_nodes` to fix (nail) the position of N previously-moved nodes
+* `flexbox_layout` allows positioning of nodes according to the flexbox algorithm
+* `label_nodes` and `label_edges` modes allow double clicking or selecting and typing on label to change it
+* `match_ports` allows an edge to be drawn only if ports have the same type (string); `wildcard_ports` infer their type from the port at the other end of the edge
+* `match_opposites` allows an edge to be drawn only if the polarity is opposite, and removes any other edges to the same port
+* rounded rectangle nodes
+* icons inside of nodes
+* `brush`, `keyboard` modes support modes that need these behaviors
+* `validate` mode checks the consistency of node, edge, port data
+* `troubleshoot` mode draws marks & ticks for debugging and understanding layout problems
+
+## 0.5.6
+* avoid cola crash with `initLayoutOnRedraw`
+
+## 0.5.5
+* hacks to allow passing clustered gv-format data to graphviz, and get the clusters back out
+* support graphlib-dot 0.6 for reading graphs. looks like this is older than the version we are distributing but it's the one available on npm.
+
+## 0.5.4
+* fix apparent chrome optimization bug - the result of `Math.floor` should never be undefined
+
+## 0.5.3
+* `select_nodes` mode also disable modifier keys when `multipleSelect` is disabled
+
+## 0.5.2
+* graphviz edge routing
+* warn, don't die, if deprecated engine parameter called on diagram and engine doesn't support it
+* most examples now support all layout engines
+* wheel example generates half of parallel edges in opposite direction
+* cola was overinterpreting rankdir - now only LR and TB are valid & handled
+* parallel edge code somewhat more comprehensible
+* graphviz y coord output properly inverted w.r.t. bounding box
+* graph `nodesep`, `ranksep`, `rankdir` attributes work for graphviz. node `width`, `height` are set from shapes, and `fixedsize` is specified. `arrowhead` and `arrowtail` are set to `none` because dc.graph draws those. however, edges still don't quite meet the nodes.
+* set position "hints" for graphviz (doesn't seem to work - probably coordinate systems problems)
+* graphviz via http
+
 ## 0.5.1
 * graphviz layout don't crash on empty graph
 * support for graphviz in [network-building.html](http://dc-js.github.io/dc.graph.js/network-building.html)

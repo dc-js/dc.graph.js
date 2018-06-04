@@ -1,0 +1,97 @@
+{
+  "components": [
+    {
+      "name": "A",
+      "category": "Category 1",
+      "url": "catalog/A.json"
+    },
+    {
+      "name": "B",
+      "category": "Category 2",
+      "url": "catalog/B.json"
+    },
+    {
+      "name": "C",
+      "category": "Category 3",
+      "url": "catalog/C.json"
+    },
+    {
+      "name": "D",
+      "category": "Category 4",
+      "url": "catalog/D.json"
+    },
+    {
+      "name": "E",
+      "category": "Category 2",
+      "url": "catalog/E.json"
+    },
+    {
+      "name": "F",
+      "category": "Category 2",
+      "url": "catalog/F.json"
+    },
+    {
+      "name": "G",
+      "category": "Category 5",
+      "url": "catalog/G.json"
+    },
+    {
+      "name": "H",
+      "category": "Category 5",
+      "url": "catalog/H.json"
+    },
+    {
+      "name": "I",
+      "category": "Category 5",
+      "url": "catalog/I.json"
+    },
+    {
+      "name": "J",
+      "category": "Category 3",
+      "url": "catalog/J.json"
+    },
+    {
+      "name": "K",
+      "category": "Category 4",
+      "url": "catalog/K.json"
+    },
+    {
+      "name": "L",
+      "category": "Category 1",
+      "url": "catalog/L.json"
+    },
+    {
+      "name": "Mapper",
+      "category": "Utils",
+      "url": "catalog/Mapper.json"
+    },
+    {
+      "name": "Data Source",
+      "category": "Utils",
+      "url": "catalog/DataSource.json"
+    },
+    {
+      "name": "Pass Through",
+      "category": "Utils",
+      "url": "catalog/PassThrough.json"
+    }
+  ],
+  "solutions": [
+    {
+      "name": "Better",
+      "url": "catalog/Better.json"
+    },
+    {
+      "name": "Best",
+      "url": "catalog/Best.json"
+    },
+    {
+      "name": "Tree",
+      "url": "catalog/Tree.json"
+    },
+    {
+      "name": "Pass Thru Test",
+      "url": "catalog/PassThruTest.json"
+    }
+  ]
+}

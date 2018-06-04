@@ -1,5 +1,6 @@
-dc_graph.behavior = function(event_namespace, handlers) {
+dc_graph.behavior = function(event_namespace, options) {
     var _behavior = {};
+    var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
 
     /**
      #### .parent([object])
@@ -7,28 +8,28 @@ dc_graph.behavior = function(event_namespace, handlers) {
      **/
     _behavior.parent = property(null)
         .react(function(p) {
-            var chart;
+            var diagram;
             if(p) {
                 var first = true;
-                chart = p;
-                p.on('drawn.' + event_namespace, function(node, edge, ehover) {
-                    handlers.add_behavior(chart, node, edge, ehover);
-                    if(first && handlers.first) {
-                        handlers.first(chart, node, edge, ehover);
+                diagram = p;
+                p.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
+                    options.add_behavior(diagram, node, edge, ehover);
+                    if(first && options.first) {
+                        options.first(diagram, node, edge, ehover);
                         first = false;
                     }
-                    else if(handlers.rest)
-                        handlers.rest(chart, node, edge, ehover);
+                    else if(options.rest)
+                        options.rest(diagram, node, edge, ehover);
                 });
             }
             else if(_behavior.parent()) {
-                chart = _behavior.parent();
-                chart.on('drawn.' + event_namespace, function(node, edge, ehover) {
-                    handlers.remove_behavior(chart, node, edge, ehover);
-                    chart.on('drawn.' + event_namespace, null);
+                diagram = _behavior.parent();
+                diagram.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
+                    options.remove_behavior(diagram, node, edge, ehover);
+                    diagram.on(_eventName + '.' + event_namespace, null);
                 });
             }
-            handlers.parent && handlers.parent(p);
+            options.parent && options.parent(p);
         });
     return _behavior;
 };

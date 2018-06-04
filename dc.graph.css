@@ -1,3 +1,7 @@
+.dc-graph {
+    -moz-user-select: none;
+    user-select: none;
+}
 .dc-graph div.chart {
     float: left;
 }
@@ -6,20 +10,19 @@
 }
 
 .dc-graph text.node-label {
-    font: bold 14px verdana, san-serif;
+    font: bold 14px verdana, sans-serif;
     text-anchor: middle;
+    dominant-baseline: text-after-edge;
     pointer-events: none;
-    user-select: none;
 }
 
 .dc-graph text.edge-label {
-    font: 10px verdana, san-serif;
+    font: 10px verdana, sans-serif;
     pointer-events: none;
 }
 
 .dc-graph-legend text.legend-label {
-    font: bold 14px verdana, san-serif;
-    pointer-events: none;
+    font: bold 14px verdana, sans-serif;
 }
 
 .dc-graph g.brush rect.extent {
@@ -35,4 +38,8 @@
     white-space: pre;
     color: darkred;
     font-family: Monaco, monospace;
+}
+
+.dc-graph g.node image.icon {
+    pointer-events: none;
 }

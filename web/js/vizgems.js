@@ -125,6 +125,9 @@ var options = {
         subscribe: function(k) {
             osTypeSelect.on('filtered', function() {
                 var filters = osTypeSelect.filters();
+                diagram.legend() && diagram.legend()
+                    .replaceFilter([filters])
+                    .redraw();
                 k(filters);
             });
         },
@@ -282,7 +285,7 @@ var filters = {};
 var diagram = dc_graph.diagram('#graph', 'network');
 var timeline = timeline('#timeline');
 var node_inv = null, edge_inv = null;
-var tracker = querystring.option_tracker(options, dcgraph_domain(diagram, 'network'), diagram, filters);
+var tracker = sync_url_options(options, dcgraph_domain(diagram, 'network'), diagram, filters);
 
 var is_running = tracker.vals.play;
 function display_running() {
@@ -588,7 +591,7 @@ function crossfilters(nodes, edges) {
 
 var selected_node = null;
 function clickiness() {
-    diagram.selectAll('g.node')
+    diagram.selectAll('.draw g.node')
         .on('click.vizgems', function(d) {
             selected_node = d.orig.key;
             dc.redrawAll('network');
@@ -749,9 +752,16 @@ function init() {
             });
         var exs = [];
         for(var ost in ostypes)
-            exs.push({key: '', name: ostypes[ost], value: {ostype: ost}});
-        diagram.legend(
-            dc_graph.legend().nodeWidth(70).nodeHeight(60).exemplars(exs));
+            exs.push({key: ost, name: ostypes[ost], value: {ostype: ost}});
+        var legend = dc_graph.legend()
+            .nodeWidth(70).nodeHeight(60)
+            .exemplars(exs)
+            .dimension(filters.filterOSTypes)
+            .replaceFilter([osTypeSelect.filters()]);
+        diagram.legend(legend);
+        legend.on('filtered', function() {
+            osTypeSelect.replaceFilter([legend.filters()]).redraw();
+        });
 
         osTypeSelect.render();
         diagram.render();

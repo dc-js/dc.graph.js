@@ -102,12 +102,12 @@ dc_graph.tree_layout = function(id) {
     }
 
     var _nodes, _edges;
-    function data(nodes, edges, constraints, options) {
+    function data(nodes, edges) {
         _nodes = nodes;
         _edges = edges;
     }
 
-    function start(options) {
+    function start() {
         _dfs(_nodes, _edges);
         _dispatch.end(_nodes, _edges);
     }
@@ -122,7 +122,12 @@ dc_graph.tree_layout = function(id) {
         layoutId: function() {
             return _layoutId;
         },
+        supportsWebworker: function() {
+            return false;
+        },
         on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
@@ -133,11 +138,11 @@ dc_graph.tree_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(nodes, edges, constraints, opts) {
-            data(nodes, edges, constraints, opts);
+        data: function(graph, nodes, edges) {
+            data(nodes, edges);
         },
-        start: function(options) {
-            start(options);
+        start: function() {
+            start();
         },
         stop: function() {
             stop();

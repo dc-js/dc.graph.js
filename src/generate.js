@@ -95,15 +95,19 @@ dc_graph.wheel_edges = function(namef, nindices, R) {
 dc_graph.random_graph = function(options) {
     options = Object.assign({
         ncolors: 5,
+        ndashes: 4,
         nodeKey: 'key',
         edgeKey: 'key',
         sourceKey: 'sourcename',
         targetKey: 'targetname',
         colorTag: 'color',
+        dashTag: 'dash',
         nodeKeyGen: function(i) { return 'n' + i; },
         edgeKeyGen: function(i) { return 'e' + i; },
         newComponentProb: 0.1,
-        newNodeProb: 0.9
+        newNodeProb: 0.9,
+        removeEdgeProb: 0.75,
+        log: false
     }, options);
     if(isNaN(options.newNodeProb))
         options.newNodeProb = 0.9;
@@ -144,7 +148,29 @@ dc_graph.random_graph = function(options) {
                     edge[options.edgeKey] = options.edgeKeyGen(_edges.length);
                     edge[options.sourceKey] = n1[options.nodeKey];
                     edge[options.targetKey] = n2[options.nodeKey];
+                    edge[options.dashTag] = Math.floor(Math.random()*options.ndashes);
+                    if(options.log)
+                        console.log(n1[options.nodeKey] + ' -> ' + n2[options.nodeKey]);
                     _edges.push(edge);
+                }
+            }
+        },
+        remove: function(N) {
+            while(N-- > 0) {
+                var choice = Math.random();
+                if(choice < options.removeEdgeProb)
+                    _edges.splice(Math.floor(Math.random()*_edges.length), 1);
+                else {
+                    var n = _nodes[Math.floor(Math.random()*_nodes.length)];
+                    var eis = [];
+                    _edges.forEach(function(e, ei) {
+                        if(e[options.sourceKey] === n[options.nodeKey] ||
+                           e[options.targetKey] === n[options.nodeKey])
+                            eis.push(ei);
+                    });
+                    eis.reverse().forEach(function(ei) {
+                        _edges.splice(ei, 1);
+                    });
                 }
             }
         }
