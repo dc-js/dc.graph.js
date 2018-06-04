@@ -2,7 +2,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
-    var _paths = null;
+    var _paths = null, _hoverpaths = null;
     var _anchor;
     var _layer = null;
     var _savedPositions = null;
@@ -201,13 +201,14 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // draw the spline for paths
-    function drawSpline(paths, pathprops) {
+    function drawSpline(paths) {
         if(paths === null) {
             _savedPositions = _behavior.parent().layoutEngine().savePositions();
             return;
         }
 
         paths = paths.filter(pathIsPresent);
+        var hoverpaths = _hoverpaths || [];
 
         // edge spline
         var edge = _layer.selectAll(".spline-edge").data(paths, function(path) { return path_keys(path).join(','); });
@@ -215,11 +216,22 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         var edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
             .attr('id', function(d, i) { return "spline-path-"+i; })
-            .attr('stroke', pathprops.edgeStroke || 'black')
             .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
-            .attr('opacity', pathprops.edgeOpacity || 1)
             .attr('fill', 'none')
             .attr('d', function(d) { return genPath(d, true, pathprops.lineTension); });
+        edge
+            .attr('stroke', function(p) {
+                return hoverpaths.indexOf(p) !== -1 && hoverprops.edgeStroke ||
+                    pathprops.edgeStroke || 'black';
+            })
+            .attr('opacity', function(p) {
+                return hoverpaths.indexOf(p) !== -1 && hoverprops.edgeOpacity ||
+                    pathprops.edgeOpacity || 1;
+            });
+        edge.filter(function(p) { return hoverpaths.indexOf(p) !== -1; })
+            .each(function() {this.parentNode.appendChild(this);});
+        _layer.selectAll('.spline-edge-hover')
+            .each(function() {this.parentNode.appendChild(this);});
         edge.transition().duration(_behavior.parent().transitionDuration())
             .attr('d', function(d) { return genPath(d, false, pathprops.lineTension); });
 
@@ -247,30 +259,11 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .attr('fill', 'none');
     };
 
-    function draw_hovered(hoversplines) {
-        if(hoversplines === null) {
-            d3.selectAll('.spline-edge')
-                .attr('stroke', pathprops.edgeStroke || 'black')
-                .attr('opacity', pathprops.edgeOpacity || 1);
-        } else {
-            for(var i = 0; i < hoversplines.length; i ++) {
-                var path_id = _paths.indexOf(hoversplines[i]);
-                var sel_path = d3.select("#spline-path-"+path_id)
-                    .attr('stroke', hoverprops.edgeStroke || pathprops.edgeStroke || 'black')
-                    .attr('opacity', hoverprops.edgeOpacity || pathprops.edgeOpacity || 1);
-                sel_path.each(function() {this.parentNode.appendChild(this);});
-            }
-            // bring all hovers to front
-            _layer.selectAll('.spline-edge-hover')
-                .each(function() {this.parentNode.appendChild(this);});
-        }
-    }
-
     function add_behavior(diagram, node, edge, ehover) {
         _layer = _behavior.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
         _layer.enter().append('g').attr('class', 'spline-layer');
 
-        drawSpline(_paths, pathprops);
+        drawSpline(_paths);
 
     }
 
@@ -279,7 +272,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
 
     highlight_paths_group
         .on('hover_changed.draw-spline-paths', function(hpaths) {
-            draw_hovered(hpaths);
+            _hoverpaths = hpaths;
+            drawSpline(_paths);
         });
 
     var _behavior = dc_graph.behavior('draw-spline-paths', {
