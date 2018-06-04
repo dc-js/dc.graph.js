@@ -242,6 +242,10 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
             .attr('d', function(d) { return genPath(d, true); })
+            .attr('opacity', 0)
+            .attr('stroke', 'green')
+            .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
+            .attr('fill', 'none')
             .on('mouseover', function(d, i) {
                 highlight_paths_group.hover_changed([paths[i]]);
              })
@@ -251,12 +255,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .on('click', function(d, i) {
                 highlight_paths_group.select_changed([paths[i]]);
              });
-        edgeHoverEnter.transition().duration(_behavior.parent().transitionDuration())
-            .attr('d', function(d) { return genPath(d, false); })
-            .attr('opacity', 0)
-            .attr('stroke', 'green')
-            .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
-            .attr('fill', 'none');
+        edgeHover.transition().duration(_behavior.parent().transitionDuration())
+            .attr('d', function(d) { return genPath(d, false); });
     };
 
     function add_behavior(diagram, node, edge, ehover) {
