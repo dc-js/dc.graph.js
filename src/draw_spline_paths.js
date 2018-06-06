@@ -14,7 +14,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
             var nidpaths = localPaths.map(function(lpath) {
-                return {nodes: path_keys(lpath)};
+                return {nodes: path_keys(lpath), strength: _hoverpaths && _hoverpaths.find(lpath) ? 10 : 1};
             });
             engine.paths(nidpaths);
         } else {
@@ -264,7 +264,6 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         _layer.enter().append('g').attr('class', 'spline-layer');
 
         drawSpline(_paths);
-
     }
 
     function remove_behavior(diagram, node, edge, ehover) {
@@ -273,7 +272,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     highlight_paths_group
         .on('hover_changed.draw-spline-paths', function(hpaths) {
             _hoverpaths = hpaths;
-            drawSpline(_paths);
+            _behavior.parent().redraw();
         });
 
     var _behavior = dc_graph.behavior('draw-spline-paths', {
