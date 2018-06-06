@@ -25,6 +25,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             if(_savedPositions)
                 engine.restorePositions(_savedPositions);
         }
+        if(_selected)
+            _selected = _selected.filter(function(p) { return localPaths.indexOf(p) !== -1; });
         _behavior.parent().redraw();
     }
 
