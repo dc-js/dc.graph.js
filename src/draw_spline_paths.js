@@ -272,14 +272,22 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             .attr('stroke', 'green')
             .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
             .attr('fill', 'none')
-            .on('mouseover', function(d, i) {
+            .on('mouseover', function(d) {
                 highlight_paths_group.hover_changed([d]);
              })
-            .on('mouseout', function(d, i) {
+            .on('mouseout', function(d) {
                 highlight_paths_group.hover_changed(null);
              })
-            .on('click', function(d, i) {
-                highlight_paths_group.select_changed([d]);
+            .on('click', function(d) {
+                var selected = _selected && _selected.slice(0) || [],
+                    i = selected.indexOf(d);
+                if(i !== -1)
+                    selected.splice(i, 1);
+                else if(d3.event.shiftKey)
+                    selected.push(d);
+                else
+                    selected = [d];
+                highlight_paths_group.select_changed(selected);
              });
         edgeHover.transition().duration(_behavior.parent().transitionDuration())
             .attr('d', function(d) { return genPath(d, false); });
@@ -314,7 +322,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
                 } : null);
         }
     });
-    _behavior.selectedStrength = property(1)
+    _behavior.selectedStrength = property(1);
 
     return _behavior;
 };
