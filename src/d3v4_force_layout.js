@@ -178,7 +178,9 @@ dc_graph.d3v4_force_layout = function(id) {
         var report = [];
         paths.forEach(function(path, i) {
             var nodes = path.nodes,
-                strength = path.strength || 1;
+                strength = path.strength;
+            if(typeof strength !== 'number')
+                strength = 1;
             // ignore path where any nodes have gone away
             if(!nodes.every(function(k) { return _nodes[k]; }))
                 return;

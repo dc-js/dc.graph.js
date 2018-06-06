@@ -1,8 +1,8 @@
-dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgroup) {
+dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
-    var _paths = null, _hoverpaths = null;
+    var _paths = null, _hoverpaths = null, _selected = null;
     var _anchor;
     var _layer = null;
     var _savedPositions = null;
@@ -14,7 +14,15 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
             var nidpaths = localPaths.map(function(lpath) {
-                return {nodes: path_keys(lpath)};
+                var strength = pathreader.pathStrength.eval(lpath);
+                if(typeof strength !== 'number')
+                    strength = 1;
+                if(_selected && _selected.indexOf(lpath) !== -1)
+                    strength *= _behavior.selectedStrength();
+                return {
+                    nodes: path_keys(lpath),
+                    strength: strength
+                };
             });
             engine.paths(nidpaths);
         } else {
@@ -22,7 +30,16 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             if(_savedPositions)
                 engine.restorePositions(_savedPositions);
         }
+        if(_selected)
+            _selected = _selected.filter(function(p) { return localPaths.indexOf(p) !== -1; });
         _behavior.parent().redraw();
+    }
+
+    function select_changed(sp) {
+        if(sp !== _selected) {
+            _selected = sp;
+            paths_changed(null, null, _paths);
+        }
     }
 
     function path_keys(path) {
@@ -208,7 +225,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         }
 
         paths = paths.filter(pathIsPresent);
-        var hoverpaths = _hoverpaths || [];
+        var hoverpaths = _hoverpaths || [],
+            selected = _selected || [];
 
         // edge spline
         var edge = _layer.selectAll(".spline-edge").data(paths, function(path) { return path_keys(path).join(','); });
@@ -221,15 +239,23 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .attr('d', function(d) { return genPath(d, true, pathprops.lineTension); });
         edge
             .attr('stroke', function(p) {
-                return hoverpaths.indexOf(p) !== -1 && hoverprops.edgeStroke ||
+                return selected.indexOf(p) !== -1 && selectprops.edgeStroke ||
+                    hoverpaths.indexOf(p) !== -1 && hoverprops.edgeStroke ||
                     pathprops.edgeStroke || 'black';
             })
             .attr('opacity', function(p) {
-                return hoverpaths.indexOf(p) !== -1 && hoverprops.edgeOpacity ||
+                return selected.indexOf(p) !== -1 && selectprops.edgeOpacity ||
+                    hoverpaths.indexOf(p) !== -1 && hoverprops.edgeOpacity ||
                     pathprops.edgeOpacity || 1;
             });
-        edge.filter(function(p) { return hoverpaths.indexOf(p) !== -1; })
-            .each(function() {this.parentNode.appendChild(this);});
+        function path_order(p) {
+            return hoverpaths.indexOf(p) !== -1 ? 2 :
+                selected.indexOf(p) !== -1 ? 1 :
+                0;
+        }
+        edge.sort(function(a, b) {
+            return path_order(a) - path_order(b);
+        });
         _layer.selectAll('.spline-edge-hover')
             .each(function() {this.parentNode.appendChild(this);});
         edge.transition().duration(_behavior.parent().transitionDuration())
@@ -246,14 +272,22 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .attr('stroke', 'green')
             .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
             .attr('fill', 'none')
-            .on('mouseover', function(d, i) {
-                highlight_paths_group.hover_changed([paths[i]]);
+            .on('mouseover', function(d) {
+                highlight_paths_group.hover_changed([d]);
              })
-            .on('mouseout', function(d, i) {
+            .on('mouseout', function(d) {
                 highlight_paths_group.hover_changed(null);
              })
-            .on('click', function(d, i) {
-                highlight_paths_group.select_changed([paths[i]]);
+            .on('click', function(d) {
+                var selected = _selected && _selected.slice(0) || [],
+                    i = selected.indexOf(d);
+                if(i !== -1)
+                    selected.splice(i, 1);
+                else if(d3.event.shiftKey)
+                    selected.push(d);
+                else
+                    selected = [d];
+                highlight_paths_group.select_changed(selected);
              });
         edgeHover.transition().duration(_behavior.parent().transitionDuration())
             .attr('d', function(d) { return genPath(d, false); });
@@ -264,17 +298,10 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         _layer.enter().append('g').attr('class', 'spline-layer');
 
         drawSpline(_paths);
-
     }
 
     function remove_behavior(diagram, node, edge, ehover) {
     }
-
-    highlight_paths_group
-        .on('hover_changed.draw-spline-paths', function(hpaths) {
-            _hoverpaths = hpaths;
-            drawSpline(_paths);
-        });
 
     var _behavior = dc_graph.behavior('draw-spline-paths', {
         laterDraw: true,
@@ -286,9 +313,16 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         parent: function(p) {
             if(p)
                 _anchor = p.anchorName();
-            highlight_paths_group.on('paths_changed.spline-' + _anchor, p ? paths_changed : null);
+            highlight_paths_group
+                .on('paths_changed.draw-spline-paths-' + _anchor, p ? paths_changed : null)
+                .on('select_changed.draw-spline-paths-' + _anchor, p ? select_changed : null)
+                .on('hover_changed.draw-spline-paths-' + _anchor, p ? function(hpaths) {
+                    _hoverpaths = hpaths;
+                    drawSpline(_paths);
+                } : null);
         }
     });
+    _behavior.selectedStrength = property(1);
 
     return _behavior;
 };

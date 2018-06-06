@@ -22,6 +22,7 @@ dc_graph.path_reader = function(pathsgroup) {
     var reader = {
         pathList: property(identity, false),
         timeRange: property(null, false),
+        pathStrength: property(null, false),
         elementList: property(identity, false),
         elementType: property(null, false),
         nodeKey: property(null, false),
