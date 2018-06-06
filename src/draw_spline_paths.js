@@ -14,9 +14,14 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
             var nidpaths = localPaths.map(function(lpath) {
+                var strength = pathreader.pathStrength.eval(lpath);
+                if(typeof strength !== 'number')
+                    strength = 1;
+                if(_selected && _selected.indexOf(lpath) !== -1)
+                    strength *= _behavior.selectedStrength();
                 return {
                     nodes: path_keys(lpath),
-                    strength: _selected && _selected.indexOf(lpath) !== -1 ? _behavior.selectedStrength() : 1
+                    strength: strength
                 };
             });
             engine.paths(nidpaths);
