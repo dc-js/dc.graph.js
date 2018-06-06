@@ -241,8 +241,14 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
                     hoverpaths.indexOf(p) !== -1 && hoverprops.edgeOpacity ||
                     pathprops.edgeOpacity || 1;
             });
-        edge.filter(function(p) { return hoverpaths.indexOf(p) !== -1; })
-            .each(function() {this.parentNode.appendChild(this);});
+        function path_order(p) {
+            return hoverpaths.indexOf(p) !== -1 ? 2 :
+                selected.indexOf(p) !== -1 ? 1 :
+                0;
+        }
+        edge.sort(function(a, b) {
+            return path_order(a) - path_order(b);
+        });
         _layer.selectAll('.spline-edge-hover')
             .each(function() {this.parentNode.appendChild(this);});
         edge.transition().duration(_behavior.parent().transitionDuration())
