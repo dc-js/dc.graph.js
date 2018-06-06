@@ -1,8 +1,8 @@
-dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgroup) {
+dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
-    var _paths = null, _hoverpaths = null;
+    var _paths = null, _hoverpaths = null, _selected = null;
     var _anchor;
     var _layer = null;
     var _savedPositions = null;
@@ -14,7 +14,10 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
             var nidpaths = localPaths.map(function(lpath) {
-                return {nodes: path_keys(lpath), strength: _hoverpaths && _hoverpaths.find(lpath) ? 10 : 1};
+                return {
+                    nodes: path_keys(lpath),
+                    strength: _selected && _selected.indexOf(lpath) !== -1 ? _behavior.selectedStrength() : 1
+                };
             });
             engine.paths(nidpaths);
         } else {
@@ -23,6 +26,13 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
                 engine.restorePositions(_savedPositions);
         }
         _behavior.parent().redraw();
+    }
+
+    function select_changed(sp) {
+        if(sp !== _selected) {
+            _selected = sp;
+            paths_changed(null, null, _paths);
+        }
     }
 
     function path_keys(path) {
@@ -208,7 +218,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         }
 
         paths = paths.filter(pathIsPresent);
-        var hoverpaths = _hoverpaths || [];
+        var hoverpaths = _hoverpaths || [],
+            selected = _selected || [];
 
         // edge spline
         var edge = _layer.selectAll(".spline-edge").data(paths, function(path) { return path_keys(path).join(','); });
@@ -221,11 +232,13 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .attr('d', function(d) { return genPath(d, true, pathprops.lineTension); });
         edge
             .attr('stroke', function(p) {
-                return hoverpaths.indexOf(p) !== -1 && hoverprops.edgeStroke ||
+                return selected.indexOf(p) !== -1 && selectprops.edgeStroke ||
+                    hoverpaths.indexOf(p) !== -1 && hoverprops.edgeStroke ||
                     pathprops.edgeStroke || 'black';
             })
             .attr('opacity', function(p) {
-                return hoverpaths.indexOf(p) !== -1 && hoverprops.edgeOpacity ||
+                return selected.indexOf(p) !== -1 && selectprops.edgeOpacity ||
+                    hoverpaths.indexOf(p) !== -1 && hoverprops.edgeOpacity ||
                     pathprops.edgeOpacity || 1;
             });
         edge.filter(function(p) { return hoverpaths.indexOf(p) !== -1; })
@@ -247,13 +260,13 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
             .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
             .attr('fill', 'none')
             .on('mouseover', function(d, i) {
-                highlight_paths_group.hover_changed([paths[i]]);
+                highlight_paths_group.hover_changed([d]);
              })
             .on('mouseout', function(d, i) {
                 highlight_paths_group.hover_changed(null);
              })
             .on('click', function(d, i) {
-                highlight_paths_group.select_changed([paths[i]]);
+                highlight_paths_group.select_changed([d]);
              });
         edgeHover.transition().duration(_behavior.parent().transitionDuration())
             .attr('d', function(d) { return genPath(d, false); });
@@ -269,12 +282,6 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     function remove_behavior(diagram, node, edge, ehover) {
     }
 
-    highlight_paths_group
-        .on('hover_changed.draw-spline-paths', function(hpaths) {
-            _hoverpaths = hpaths;
-            _behavior.parent().redraw();
-        });
-
     var _behavior = dc_graph.behavior('draw-spline-paths', {
         laterDraw: true,
         add_behavior: add_behavior,
@@ -285,9 +292,16 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         parent: function(p) {
             if(p)
                 _anchor = p.anchorName();
-            highlight_paths_group.on('paths_changed.spline-' + _anchor, p ? paths_changed : null);
+            highlight_paths_group
+                .on('paths_changed.draw-spline-paths-' + _anchor, p ? paths_changed : null)
+                .on('select_changed.draw-spline-paths-' + _anchor, p ? select_changed : null)
+                .on('hover_changed.draw-spline-paths-' + _anchor, p ? function(hpaths) {
+                    _hoverpaths = hpaths;
+                    drawSpline(_paths);
+                } : null);
         }
     });
+    _behavior.selectedStrength = property(1)
 
     return _behavior;
 };
