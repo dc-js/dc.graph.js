@@ -236,7 +236,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             .attr('id', function(d, i) { return "spline-path-"+i; })
             .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
             .attr('fill', 'none')
-            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension); });
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _behavior.avoidSharpTurns()); });
         edge
             .attr('stroke', function(p) {
                 return selected.indexOf(p) !== -1 && selectprops.edgeStroke ||
@@ -259,7 +259,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         _layer.selectAll('.spline-edge-hover')
             .each(function() {this.parentNode.appendChild(this);});
         edge.transition().duration(_behavior.parent().transitionDuration())
-            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension); });
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
 
         // another wider copy of the edge just for hover events
         var edgeHover = _layer.selectAll('.spline-edge-hover')
@@ -267,7 +267,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         edgeHover.exit().remove();
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
-            .attr('d', function(d) { return genPath(d, true); })
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _behavior.avoidSharpTurns()); })
             .attr('opacity', 0)
             .attr('stroke', 'green')
             .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
@@ -290,7 +290,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
                 highlight_paths_group.select_changed(selected);
              });
         edgeHover.transition().duration(_behavior.parent().transitionDuration())
-            .attr('d', function(d) { return genPath(d, false); });
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
     };
 
     function add_behavior(diagram, node, edge, ehover) {
@@ -323,6 +323,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         }
     });
     _behavior.selectedStrength = property(1);
+    _behavior.avoidSharpTurns = property(true);
 
     return _behavior;
 };
