@@ -199,8 +199,9 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
           if(angle <= angleThreshold ){
             var m_x = (1-c)*(points[i].x - points[i-1].x)/2;
             var m_y = (1-c)*(points[i].y - points[i-1].y)/2;
-            c0 = {x: p0.x+(-m_y/3), y:p0.y+(m_x/3)};
-            segments[segments.length-1][1] = {x: p0.x-(-m_y/3), y:p0.y-(m_x/3)};
+            var k = 2;
+            c0 = {x: p0.x+k*(-m_y/3), y:p0.y+k*(m_x/3)};
+            segments[segments.length-1][1] = {x: p0.x-k*(-m_y/3), y:p0.y-k*(m_x/3)};
           }
         }
 
