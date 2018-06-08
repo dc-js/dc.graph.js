@@ -1,30 +1,45 @@
-dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgroup) {
+dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
-    var _paths = null;
+    var _paths = null, _hoverpaths = null, _selected = null;
     var _anchor;
     var _layer = null;
     var _savedPositions = null;
 
     function paths_changed(nop, eop, paths) {
-        // clear old paths
-        _layer.selectAll('.spline-edge').remove();
-        _layer.selectAll('.spline-edge-hover').remove();
-
         _paths = paths;
 
         var engine = _behavior.parent().layoutEngine(),
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
-            var nidpaths = localPaths.map(path_keys);
+            var nidpaths = localPaths.map(function(lpath) {
+                var strength = pathreader.pathStrength.eval(lpath);
+                if(typeof strength !== 'number')
+                    strength = 1;
+                if(_selected && _selected.indexOf(lpath) !== -1)
+                    strength *= _behavior.selectedStrength();
+                return {
+                    nodes: path_keys(lpath),
+                    strength: strength
+                };
+            });
             engine.paths(nidpaths);
         } else {
             engine.paths(null);
             if(_savedPositions)
                 engine.restorePositions(_savedPositions);
         }
+        if(_selected)
+            _selected = _selected.filter(function(p) { return localPaths.indexOf(p) !== -1; });
         _behavior.parent().redraw();
+    }
+
+    function select_changed(sp) {
+        if(sp !== _selected) {
+            _selected = sp;
+            paths_changed(null, null, _paths);
+        }
     }
 
     function path_keys(path) {
@@ -44,10 +59,11 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // get the positions of nodes on path
-    function getNodePositions(path) {
+    function getNodePositions(path, old) {
         return path_keys(path).map(function(key) {
             var node = _behavior.parent().getWholeNode(key);
-            return {'x': node.cola.x, 'y': node.cola.y};
+            return {x: old && node.prevX !== undefined ? node.prevX : node.cola.x,
+                    y: old && node.prevY !== undefined ? node.prevY : node.cola.y};
         });
     };
 
@@ -134,7 +150,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // convert original path data into <d>
-    function genPath(path, lineTension, avoidSharpTurn, angleThreshold) {
+    function genPath(path, old, lineTension, avoidSharpTurn, angleThreshold) {
       var c = lineTension || 0;
       avoidSharpTurn = avoidSharpTurn !== false;
       angleThreshold = angleThreshold || 0.02;
@@ -144,7 +160,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
       var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
 
       // get coordinates
-      var path_coord = getNodePositions(path);
+      var path_coord = getNodePositions(path, old);
       if(path_coord.length < 2) return "";
 
       // repeat first and last node
@@ -178,13 +194,27 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         if(avoidSharpTurn) {
           var v0 = {x:points[i-1].x - points[i].x, y:points[i-1].y - points[i].y};
           var v1 = {x:points[i+1].x - points[i].x, y:points[i+1].y - points[i].y};
-          var angle = Math.acos( vecDot(v0,v1) / (vecMag(v0)*vecMag(v1)) );
+          var acosValue = vecDot(v0,v1) / (vecMag(v0)*vecMag(v1));
+          acosValue = Math.max(-1, Math.min(1, acosValue));
+          var angle = Math.acos( acosValue );
 
           if(angle <= angleThreshold ){
             var m_x = (1-c)*(points[i].x - points[i-1].x)/2;
             var m_y = (1-c)*(points[i].y - points[i-1].y)/2;
-            c0 = {x: p0.x+(-m_y/3), y:p0.y+(m_x/3)};
-            segments[segments.length-1][1] = {x: p0.x-(-m_y/3), y:p0.y-(m_x/3)};
+            var k = 2;
+
+            var cp1 = {x: p0.x+k*(-m_y/3), y:p0.y+k*(m_x/3)};
+            var cp2 = {x: p0.x-k*(-m_y/3), y:p0.y-k*(m_x/3)};
+            // CP_1CP_2
+            var vCP = {x: cp1.x-cp2.x, y:cp1.y-cp2.y}; // vector cp1->cp2
+            var vPN = {x: points[i-2].x - points[i+2].x, y:points[i-2].y-points[i+2].y} // vector Previous->Next
+            if(vecDot(vCP, vPN) > 0) {
+              c0 = cp1;
+              segments[segments.length-1][1] = cp2;
+            } else {
+              c0 = cp2;
+              segments[segments.length-1][1] = cp1;
+            }
           }
         }
 
@@ -202,81 +232,90 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
     }
 
     // draw the spline for paths
-    function drawSpline(paths, pathprops) {
+    function drawSpline(paths) {
         if(paths === null) {
             _savedPositions = _behavior.parent().layoutEngine().savePositions();
             return;
         }
 
+        paths = paths.filter(pathIsPresent);
+        var hoverpaths = _hoverpaths || [],
+            selected = _selected || [];
+
         // edge spline
-        var edge = _layer.selectAll(".spline-edge").data(paths);
+        var edge = _layer.selectAll(".spline-edge").data(paths, function(path) { return path_keys(path).join(','); });
+        edge.exit().remove();
         var edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
             .attr('id', function(d, i) { return "spline-path-"+i; })
-            .attr('d', function(d) { return genPath(d, pathprops.lineTension); })
-            .attr('stroke', pathprops.edgeStroke || 'black')
             .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
-            .attr('opacity', pathprops.edgeOpacity || 1)
-            .attr('fill', 'none');
+            .attr('fill', 'none')
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _behavior.avoidSharpTurns()); });
+        edge
+            .attr('stroke', function(p) {
+                return selected.indexOf(p) !== -1 && selectprops.edgeStroke ||
+                    hoverpaths.indexOf(p) !== -1 && hoverprops.edgeStroke ||
+                    pathprops.edgeStroke || 'black';
+            })
+            .attr('opacity', function(p) {
+                return selected.indexOf(p) !== -1 && selectprops.edgeOpacity ||
+                    hoverpaths.indexOf(p) !== -1 && hoverprops.edgeOpacity ||
+                    pathprops.edgeOpacity || 1;
+            });
+        function path_order(p) {
+            return hoverpaths.indexOf(p) !== -1 ? 2 :
+                selected.indexOf(p) !== -1 ? 1 :
+                0;
+        }
+        edge.sort(function(a, b) {
+            return path_order(a) - path_order(b);
+        });
+        _layer.selectAll('.spline-edge-hover')
+            .each(function() {this.parentNode.appendChild(this);});
+        edge.transition().duration(_behavior.parent().transitionDuration())
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
 
         // another wider copy of the edge just for hover events
         var edgeHover = _layer.selectAll('.spline-edge-hover')
-            .data(paths);
+            .data(paths, function(path) { return path_keys(path).join(','); });
+        edgeHover.exit().remove();
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
-            .attr('d', function(d) { return genPath(d); })
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _behavior.avoidSharpTurns()); })
             .attr('opacity', 0)
             .attr('stroke', 'green')
             .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
             .attr('fill', 'none')
-            .on('mouseover', function(d, i) {
-                highlight_paths_group.hover_changed([paths[i]]);
+            .on('mouseover', function(d) {
+                highlight_paths_group.hover_changed([d]);
              })
-            .on('mouseout', function(d, i) {
+            .on('mouseout', function(d) {
                 highlight_paths_group.hover_changed(null);
              })
-            .on('click', function(d, i) {
-                highlight_paths_group.select_changed([paths[i]]);
+            .on('click', function(d) {
+                var selected = _selected && _selected.slice(0) || [],
+                    i = selected.indexOf(d);
+                if(i !== -1)
+                    selected.splice(i, 1);
+                else if(d3.event.shiftKey)
+                    selected.push(d);
+                else
+                    selected = [d];
+                highlight_paths_group.select_changed(selected);
              });
+        edgeHover.transition().duration(_behavior.parent().transitionDuration())
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
     };
 
-    function draw_hovered(hoversplines) {
-        if(hoversplines === null) {
-            d3.selectAll('.spline-edge')
-                .attr('stroke', pathprops.edgeStroke || 'black')
-                .attr('opacity', pathprops.edgeOpacity || 1);
-        } else {
-            for(var i = 0; i < hoversplines.length; i ++) {
-                var path_id = _paths.indexOf(hoversplines[i]);
-                var sel_path = d3.select("#spline-path-"+path_id)
-                    .attr('stroke', hoverprops.edgeStroke || pathprops.edgeStroke || 'black')
-                    .attr('opacity', hoverprops.edgeOpacity || pathprops.edgeOpacity || 1);
-                sel_path.each(function() {this.parentNode.appendChild(this);});
-            }
-            // bring all hovers to front
-            _layer.selectAll('.spline-edge-hover')
-                .each(function() {this.parentNode.appendChild(this);});
-        }
-    }
-
     function add_behavior(diagram, node, edge, ehover) {
-        // create the layer if it's null
-        if(_layer === null) {
-            _layer = _behavior.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
-            _layer.enter().append('g').attr('class', 'spline-layer');
-        }
+        _layer = _behavior.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
+        _layer.enter().append('g').attr('class', 'spline-layer');
 
-        drawSpline(_paths, pathprops);
-
+        drawSpline(_paths);
     }
 
     function remove_behavior(diagram, node, edge, ehover) {
     }
-
-    highlight_paths_group
-        .on('hover_changed.draw-spline-paths', function(hpaths) {
-            draw_hovered(hpaths);
-        });
 
     var _behavior = dc_graph.behavior('draw-spline-paths', {
         laterDraw: true,
@@ -288,9 +327,17 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, pathsgr
         parent: function(p) {
             if(p)
                 _anchor = p.anchorName();
-            highlight_paths_group.on('paths_changed.spline-' + _anchor, p ? paths_changed : null);
+            highlight_paths_group
+                .on('paths_changed.draw-spline-paths-' + _anchor, p ? paths_changed : null)
+                .on('select_changed.draw-spline-paths-' + _anchor, p ? select_changed : null)
+                .on('hover_changed.draw-spline-paths-' + _anchor, p ? function(hpaths) {
+                    _hoverpaths = hpaths;
+                    drawSpline(_paths);
+                } : null);
         }
     });
+    _behavior.selectedStrength = property(1);
+    _behavior.avoidSharpTurns = property(true);
 
     return _behavior;
 };

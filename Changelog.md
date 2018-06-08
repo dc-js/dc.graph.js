@@ -1,3 +1,15 @@
+## 0.6.0 beta 8
+* new graphical path selector shows paths as little straight-line node-link diagrams, by Zhe Wang
+* displace center node for path straightening forces; bugs fixed and path straightening works
+* path straightening is proportional to the square of the angle
+* generate angle force report for debugging using [force-debugger](https://github.com/gordonwoodhull/force-debugger)
+* path spliner is more tolerant of changes to the graph ([#81](https://github.com/dc-js/dc.graph.js/issues/81) mostly fixed but not entirely)
+* path splines animate to new position
+* paths can be selected via their splines in `draw_spline_paths`
+* selected path can be straightened more with `selectedStrength`
+* Zhe Wang's `avoidSharpTurns` exposed as option; it consistently loops instead of sometimes double-crossing, and the loop is wider
+* eliminate poorly-performing comma selector used to update arrowhead/tail marker fills
+
 ## 0.6 beta 7
 * deparallelize transform
 * detect sharp turns in path splines, and modify the control points to make the spline smooth, by Zhe Wang
