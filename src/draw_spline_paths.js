@@ -194,7 +194,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         if(avoidSharpTurn) {
           var v0 = {x:points[i-1].x - points[i].x, y:points[i-1].y - points[i].y};
           var v1 = {x:points[i+1].x - points[i].x, y:points[i+1].y - points[i].y};
-          var angle = Math.acos( vecDot(v0,v1) / (vecMag(v0)*vecMag(v1)) );
+          var angle = Math.acos( Math.min(vecDot(v0,v1) / (vecMag(v0)*vecMag(v1)), 1) );
 
           if(angle <= angleThreshold ){
             var m_x = (1-c)*(points[i].x - points[i-1].x)/2;
