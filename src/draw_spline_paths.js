@@ -202,8 +202,19 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             var m_x = (1-c)*(points[i].x - points[i-1].x)/2;
             var m_y = (1-c)*(points[i].y - points[i-1].y)/2;
             var k = 2;
-            c0 = {x: p0.x+k*(-m_y/3), y:p0.y+k*(m_x/3)};
-            segments[segments.length-1][1] = {x: p0.x-k*(-m_y/3), y:p0.y-k*(m_x/3)};
+
+            var cp1 = {x: p0.x+k*(-m_y/3), y:p0.y+k*(m_x/3)};
+            var cp2 = {x: p0.x-k*(-m_y/3), y:p0.y-k*(m_x/3)};
+            // CP_1CP_2
+            var vCP = {x: cp1.x-cp2.x, y:cp1.y-cp2.y}; // vector cp1->cp2
+            var vPN = {x: points[i-2].x - points[i+2].x, y:points[i-2].y-points[i+2].y} // vector Previous->Next
+            if(vecDot(vCP, vPN) > 0) {
+              c0 = cp1;
+              segments[segments.length-1][1] = cp2;
+            } else {
+              c0 = cp2;
+              segments[segments.length-1][1] = cp1;
+            }
           }
         }
 
