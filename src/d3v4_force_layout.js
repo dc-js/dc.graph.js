@@ -7,7 +7,7 @@
  **/
 var pathStraighten = function(paths) {
     var _nodes, _inputPaths = paths || [], _paths, _id = function(n) { return n.index; };
-    var _angleForce = 0.01, _accessNodes, _accessStrength;
+    var _angleForce = 0.01, _pathNodes, _pathStrength, _debug = false;
     var force = function(alpha) {
         function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
         function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
@@ -53,22 +53,24 @@ var pathStraighten = function(paths) {
             if(typeof strength !== 'number')
                 strength = 1;
             if(pnodes.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
-            report.push({
-                action: 'init',
-                nodes: pnodes.map(function(n) {
-                    return {
-                        id: _id(n),
-                        x: n.x,
-                        y: n.y
-                    };
-                }),
-                edges: pnodes.reduce(function(p, n) {
-                    if(!Array.isArray(p))
-                        return [{source: _id(p), target: _id(n)}];
-                    p.push({source: p[p.length-1].target, target: _id(n)});
-                    return p;
-                })
-            });
+            if(_debug) {
+                report.push({
+                    action: 'init',
+                    nodes: pnodes.map(function(n) {
+                        return {
+                            id: _id(n),
+                            x: n.x,
+                            y: n.y
+                        };
+                    }),
+                    edges: pnodes.reduce(function(p, n) {
+                        if(!Array.isArray(p))
+                            return [{source: _id(p), target: _id(n)}];
+                        p.push({source: p[p.length-1].target, target: _id(n)});
+                        return p;
+                    })
+                });
+            }
             for(var i = 1; i < pnodes.length-1; ++i) {
                 var current = pnodes[i];
                 var prev = pnodes[i-1];
@@ -105,32 +107,34 @@ var pathStraighten = function(paths) {
                 var prevDisp = _displaceAdjacent(prev, angle, pvecPrev, strength * _angleForce);
                 var nextDisp = _displaceAdjacent(next, angle, pvecNext, strength * _angleForce);
                 var centerDisp = _displaceCenter(prevDisp, nextDisp);
-                report.push({
-                    action: 'force',
-                    nodes: [{
-                        id: _id(prev),
-                        x: prev.x,
-                        y: prev.y,
-                        force: prevDisp
-                    }, {
-                        id: _id(current),
-                        x: current.x,
-                        y: current.y,
-                        force: centerDisp
-                    }, {
-                        id: _id(next),
-                        x: next.x,
-                        y: next.y,
-                        force: nextDisp
-                    }],
-                    edges: [{
-                        source: _id(prev),
-                        target: _id(current)
-                    }, {
-                        source: _id(current),
-                        target: _id(next)
-                    }]
-                });
+                if(_debug) {
+                    report.push({
+                        action: 'force',
+                        nodes: [{
+                            id: _id(prev),
+                            x: prev.x,
+                            y: prev.y,
+                            force: prevDisp
+                        }, {
+                            id: _id(current),
+                            x: current.x,
+                            y: current.y,
+                            force: centerDisp
+                        }, {
+                            id: _id(next),
+                            x: next.x,
+                            y: next.y,
+                            force: nextDisp
+                        }],
+                        edges: [{
+                            source: _id(prev),
+                            target: _id(current)
+                        }, {
+                            source: _id(current),
+                            target: _id(next)
+                        }]
+                    });
+                }
                 _offsetNode(prev, prevDisp);
                 _offsetNode(next, nextDisp);
                 _offsetNode(current, centerDisp);
@@ -150,12 +154,12 @@ var pathStraighten = function(paths) {
         var nodeById = d3.map(_nodes, _id);
         _paths = _inputPaths.map(function(path) {
             return {
-                nodes: _accessNodes(path).map(function(n) {
+                nodes: _pathNodes(path).map(function(n) {
                     return typeof n !== 'object' ?
                         find(nodeById, n) :
                         n;
                 }),
-                strength: _accessStrength(path)
+                strength: _pathStrength(path)
             };
         });
     }
@@ -179,14 +183,19 @@ var pathStraighten = function(paths) {
         _angleForce = angleForce;
         return this;
     };
-    force.accessNodes = function(accessNodes) {
-        if(!arguments.length) return _accessNodes;
-        _accessNodes = accessNodes;
+    force.pathNodes = function(pathNodes) {
+        if(!arguments.length) return _pathNodes;
+        _pathNodes = pathNodes;
         return this;
     };
-    force.accessStrength = function(accessStrength) {
-        if(!arguments.length) return _accessStrength;
-        _accessStrength = accessStrength;
+    force.pathStrength = function(pathStrength) {
+        if(!arguments.length) return _pathStrength;
+        _pathStrength = pathStrength;
+        return this;
+    };
+    force.debug = function(debug) {
+        if(!arguments.length) return _debug;
+        _debug = debug;
         return this;
     };
     return force;
@@ -316,8 +325,8 @@ dc_graph.d3v4_force_layout = function(id) {
             _simulation.force('straighten', pathStraighten()
                               .id(function(n) { return n.dcg_nodeKey; })
                               .angleForce(_options.angleForce)
-                              .accessNodes(function(p) { return p.nodes; })
-                              .accessStrength(function(p) { return p.strength; })
+                              .pathNodes(function(p) { return p.nodes; })
+                              .pathStrength(function(p) { return p.strength; })
                               .paths(paths));
         }
     };
