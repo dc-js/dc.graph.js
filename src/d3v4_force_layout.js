@@ -48,31 +48,31 @@ var pathStraighten = function(paths) {
         }
         var report = [];
         _paths.forEach(function(path, i) {
-            var nodes = path.nodes,
+            var pnodes = path.nodes,
                 strength = path.strength;
             if(typeof strength !== 'number')
                 strength = 1;
-            if(nodes.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
+            if(pnodes.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
             report.push({
                 action: 'init',
-                nodes: nodes.map(function(n) {
+                nodes: pnodes.map(function(n) {
                     return {
                         id: _id(n),
                         x: n.x,
                         y: n.y
                     };
                 }),
-                edges: nodes.reduce(function(p, n) {
+                edges: pnodes.reduce(function(p, n) {
                     if(!Array.isArray(p))
                         return [{source: _id(p), target: _id(n)}];
                     p.push({source: p[p.length-1].target, target: _id(n)});
                     return p;
                 })
             });
-            for(var i = 1; i < nodes.length-1; ++i) {
-                var current = _nodes[i];
-                var prev = _nodes[i-1];
-                var next = _nodes[i+1];
+            for(var i = 1; i < pnodes.length-1; ++i) {
+                var current = pnodes[i];
+                var prev = pnodes[i-1];
+                var next = pnodes[i+1];
 
                 // we can't do anything for two-cycles
                 if(prev === next)
