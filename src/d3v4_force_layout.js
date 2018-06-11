@@ -284,7 +284,11 @@ dc_graph.d3v4_force_layout = function(id) {
         });
     }
     function installForces(paths) {
-        if(paths === null) {
+        if(paths)
+            paths = paths.filter(function(path) {
+                return path.nodes.every(function(nk) { return _nodes[nk]; });
+            });
+        if(paths === null || !paths.length) {
             _simulation.force('charge').strength(_options.initialCharge);
         } else {
             var nodesOnPath;
