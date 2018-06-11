@@ -108,27 +108,27 @@ var pathStraighten = function(paths) {
                 report.push({
                     action: 'force',
                     nodes: [{
-                        id: _id(nodes[i-1]),
+                        id: _id(prev),
                         x: prev.x,
                         y: prev.y,
                         force: prevDisp
                     }, {
-                        id: _id(nodes[i]),
+                        id: _id(current),
                         x: current.x,
                         y: current.y,
                         force: centerDisp
                     }, {
-                        id: _id(nodes[i+1]),
+                        id: _id(next),
                         x: next.x,
                         y: next.y,
                         force: nextDisp
                     }],
                     edges: [{
-                        source: _id(nodes[i-1]),
-                        target: _id(nodes[i])
+                        source: _id(prev),
+                        target: _id(current)
                     }, {
-                        source: _id(nodes[i]),
-                        target: _id(nodes[i+1])
+                        source: _id(current),
+                        target: _id(next)
                     }]
                 });
                 _offsetNode(prev, prevDisp);
