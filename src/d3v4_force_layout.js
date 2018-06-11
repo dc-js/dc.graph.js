@@ -140,7 +140,8 @@ var pathStraighten = function(paths) {
     };
     function find(nodeById, nodeId) {
         var node = nodeById.get(nodeId);
-        if(!node) throw new Error('node missing: ' + nodeId);
+        if(!node)
+            throw new Error('node missing: ' + nodeId);
         return node;
     }
     function init() {
@@ -252,6 +253,7 @@ dc_graph.d3v4_force_layout = function(id) {
             e1.dcg_edgeLength = e.dcg_edgeLength;
         });
 
+        _simulation.force('straighten', null);
         _simulation.nodes(_wnodes);
         _simulation.force('link').links(_wedges);
     }
@@ -284,7 +286,6 @@ dc_graph.d3v4_force_layout = function(id) {
     function installForces(paths) {
         if(paths === null) {
             _simulation.force('charge').strength(_options.initialCharge);
-            _simulation.force('straighten', null);
         } else {
             var nodesOnPath;
             if(_options.fixOffPathNodes) {
