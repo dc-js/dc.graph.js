@@ -322,14 +322,10 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
       var result = "";
       // process the points and treat them differently:
       // 1. sub-path without self loop
-      if(drawOverallPath) {
-        result += drawCardinalSpline(path_coord, lineTension, avoidSharpTurn, angleThreshold);
-      }
+      result += drawCardinalSpline(path_coord, lineTension, avoidSharpTurn, angleThreshold);
 
       // 2. a list of loop segments
-      if(drawLoops) {
-        result += drawDedicatedLoops(path_coord, lineTension, avoidSharpTurn, angleThreshold);
-      }
+      result += drawDedicatedLoops(path_coord, lineTension, avoidSharpTurn, angleThreshold);
 
       return result;
     }
@@ -353,7 +349,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             .attr('id', function(d, i) { return "spline-path-"+i; })
             .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
             .attr('fill', 'none')
-            .attr('d', function(d) { return genPath(d, true, true, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _behavior.avoidSharpTurns()); });
         edge
             .attr('stroke', function(p) {
                 return selected.indexOf(p) !== -1 && selectprops.edgeStroke ||
@@ -376,27 +372,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         _layer.selectAll('.spline-edge-hover')
             .each(function() {this.parentNode.appendChild(this);});
         edge.transition().duration(_behavior.parent().transitionDuration())
-            .attr('d', function(d) { return genPath(d, false, true, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
-
-       // self loops
-        var loops = _layer.selectAll(".spline-loop").data(paths, function(path) { return path_keys(path, false).join(','); });
-        loops.exit().remove();
-        var edgeEnter = edge.enter().append("svg:path")
-            .attr('class', 'spline-loop')
-            .attr('id', function(d, i) { return "spline-loop-"+i; })
-            .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
-            .attr('fill', 'none')
-            .attr('d', function(d) { return genPath(d, true, false, true, pathprops.lineTension, _behavior.avoidSharpTurns()); });
-       loops
-            .attr('stroke', function(p) {
-                return pathprops.edgeStroke || 'black';
-            })
-            .attr('opacity', function(p) {
-                return pathprops.edgeOpacity || 1;
-            });
-        loops.transition().duration(_behavior.parent().transitionDuration())
-            .attr('d', function(d) { return genPath(d, false, false, true, pathprops.lineTension, _behavior.avoidSharpTurns()); });
-
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
 
         // another wider copy of the edge just for hover events
         var edgeHover = _layer.selectAll('.spline-edge-hover')
