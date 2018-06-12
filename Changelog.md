@@ -1,3 +1,6 @@
+## 0.6.0 beta 9
+* depend on external [att/d3-force-straighten-paths](https://github.com/att/d3-force-straighten-paths) module
+
 ## 0.6.0 beta 8
 * new graphical path selector shows paths as little straight-line node-link diagrams, by Zhe Wang
 * displace center node for path straightening forces; bugs fixed and path straightening works
