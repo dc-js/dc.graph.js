@@ -39,7 +39,7 @@
     "bootstrap": "~3.3",
     "d3-force": "~1",
     "d3-tip": "~0.7",
-    "grunt": "~1.0",
+    "grunt": "^1.0.3",
     "grunt-browserify": "~5.2.0",
     "grunt-cli": "~1.2",
     "grunt-contrib-concat": "~1.0",
@@ -65,7 +65,7 @@
     "rollup-plugin-commonjs": "~8",
     "rollup-plugin-node-resolve": "~2",
     "time-grunt": "~1.4",
-    "uglify-js": "^3.3.24",
+    "uglify-js": "^3.4.0",
     "x-editable": "1.5.x"
   },
   "scripts": {
