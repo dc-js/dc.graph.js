@@ -314,7 +314,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     }
 
     // convert original path data into <d>
-    function genPath(originalPoints, old, drawOverallPath, drawLoops, lineTension, avoidSharpTurn, angleThreshold) {
+    function genPath(originalPoints, old, lineTension, avoidSharpTurn, angleThreshold) {
       // get coordinates
       var path_coord = getNodePositions(originalPoints, old);
       if(path_coord.length < 2) return "";
@@ -380,7 +380,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         edgeHover.exit().remove();
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
-            .attr('d', function(d) { return genPath(d, true, true, false, pathprops.lineTension, _behavior.avoidSharpTurns()); })
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _behavior.avoidSharpTurns()); })
             .attr('opacity', 0)
             .attr('stroke', 'green')
             .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
@@ -403,7 +403,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
                 highlight_paths_group.select_changed(selected);
              });
         edgeHover.transition().duration(_behavior.parent().transitionDuration())
-            .attr('d', function(d) { return genPath(d, false, true, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
     };
 
     function add_behavior(diagram, node, edge, ehover) {
