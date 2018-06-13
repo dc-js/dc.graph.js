@@ -151,17 +151,17 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         return new_path_coord;
     }
 
+    // helper functions
+    var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y; };
+    var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
+    var l2Dist = function(p1, p2) {
+        return Math.sqrt((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y));
+    };
+
     function drawCardinalSpline(points, lineTension, avoidSharpTurn, angleThreshold) {
       var c = lineTension || 0;
-      var avoidSharpTurn = avoidSharpTurn !== false;
-      var angleThreshold = angleThreshold || 0.02;
-
-      // helper functions
-      var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y };
-      var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y) };
-      var l2Dist = function(p1, p2) {
-        return Math.sqrt((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y));
-      };
+      avoidSharpTurn = avoidSharpTurn !== false;
+      angleThreshold = angleThreshold || 0.02;
 
       // get the path without self loops
       var path_list = [points[0]];
@@ -172,7 +172,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
       }
 
       // repeat first and last node
-      var points = [path_list[0]];
+      points = [path_list[0]];
       points = points.concat(path_list);
       points.push(path_list[path_list.length-1]);
 
@@ -215,7 +215,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             var cp2 = {x: p0.x-k*(-m_y/3), y:p0.y-k*(m_x/3)};
             // CP_1CP_2
             var vCP = {x: cp1.x-cp2.x, y:cp1.y-cp2.y}; // vector cp1->cp2
-            var vPN = {x: points[i-2].x - points[i+2].x, y:points[i-2].y-points[i+2].y} // vector Previous->Next
+            var vPN = {x: points[i-2].x - points[i+2].x, y:points[i-2].y-points[i+2].y}; // vector Previous->Next
             if(vecDot(vCP, vPN) > 0) {
               c0 = cp1;
               segments[segments.length-1][1] = cp2;
@@ -240,13 +240,6 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     }
 
     function drawDedicatedLoops(points, lineTension, avoidSharpTurn, angleThreshold) {
-      // helper functions
-      var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y };
-      var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y) };
-      var l2Dist = function(p1, p2) {
-        return Math.sqrt((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y));
-      };
-
       // get loops as segments
       var p1 = 0, p2 = 1;
       var seg_list = []; // (start, end)
