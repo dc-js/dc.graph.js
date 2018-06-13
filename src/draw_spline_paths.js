@@ -300,7 +300,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
           // change the sharp turn parameter every time this loop appears
           var sharpTurnK = 2+j;
 
-          loopCurves += drawCardinalSpline([anchorPoint, insertP, anchorPoint], lineTension, avoidSharpTurn, angleThreshold, sharpTurnK);
+          loopCurves += drawCardinalSpline([anchorPoint, insertP, anchorPoint], lineTension, true, angleThreshold, sharpTurnK);
         }
       }
       return loopCurves;
