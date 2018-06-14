@@ -262,9 +262,16 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         var loopCount = segment.end - segment.start - 2;
         var anchorPoint = points[segment.start+1];
 
+        // the vector from previous node to next node
         var vec_pre_next = {
           x: points[segment.end].x-points[segment.start].x,
           y: points[segment.end].y-points[segment.start].y
+        };
+
+        // unit length vector
+        var vec_pre_next_unit = {
+          x: vec_pre_next.x / vecMag(vec_pre_next),
+          y: vec_pre_next.y / vecMag(vec_pre_next)
         };
         var vec_pre_next_perp = {
           x: -vec_pre_next.y / vecMag(vec_pre_next),
@@ -273,9 +280,24 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
 
         var insertP;
         for(var j = 0; j < loopCount; j ++) {
+          var c1,c2,c3,c4;
+
+          // change the control points every time this loop appears
+          var cp_k = 15+2*j;
+
+          // calculate c1 and c4, their tangent match the tangent at anchorPoint
+          c1 = {
+            x: anchorPoint.x + cp_k*vec_pre_next_unit.x,
+            y: anchorPoint.y + cp_k*vec_pre_next_unit.y
+          };
+
+          c4 = {
+            x: anchorPoint.x - cp_k*vec_pre_next_unit.x,
+            y: anchorPoint.y - cp_k*vec_pre_next_unit.y
+          };
 
           // change the location of inserted virtual point every time this loop appears
-          var control_k = 35+5*j;
+          var control_k = 25+5*j;
           var insertP1 = {
             x: anchorPoint.x+vec_pre_next_perp.x*control_k,
             y: anchorPoint.y+vec_pre_next_perp.y*control_k
@@ -297,10 +319,22 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             insertP = insertP2;
           }
 
-          // change the sharp turn parameter every time this loop appears
-          var sharpTurnK = 2+j;
+          // calculate c2 and c3 based on insertP
+          c2 = {
+            x: insertP.x + cp_k*vec_pre_next_unit.x,
+            y: insertP.y + cp_k*vec_pre_next_unit.y
+          };
 
-          loopCurves += drawCardinalSpline([anchorPoint, insertP, anchorPoint], lineTension, true, angleThreshold, sharpTurnK);
+          c3 = {
+            x: insertP.x - cp_k*vec_pre_next_unit.x,
+            y: insertP.y - cp_k*vec_pre_next_unit.y
+          };
+
+          var curve = "M"+anchorPoint.x+","+anchorPoint.y;
+          curve += "C"+c1.x+","+c1.y+","+c2.x+","+c2.y+","+insertP.x+","+insertP.y;
+          curve += "C"+c3.x+","+c3.y+","+c4.x+","+c4.y+","+anchorPoint.x+","+anchorPoint.y;
+
+          loopCurves += curve;
         }
       }
       return loopCurves;
