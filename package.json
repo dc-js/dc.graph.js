@@ -29,6 +29,7 @@
     "d3": "3.x",
     "dagre": "0.7.x",
     "dc": "~2.1.0",
+    "metagraph": "^0.0.6",
     "queue-async": "~1.x",
     "viz.js": "^1.8.2",
     "webcola": "3.3.x"

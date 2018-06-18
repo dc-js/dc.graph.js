@@ -221,6 +221,7 @@ module.exports = function (grunt) {
                             'node_modules/jquery/dist/jquery.js',
                             'node_modules/jquery-ui-dist/jquery-ui.js',
                             'node_modules/lodash/lodash.js',
+                            'node_modules/metagraph/metagraph.js',
                             'node_modules/queue-async/build/queue.js',
                             'node_modules/dagre/dist/dagre.js',
                             'node_modules/promise-polyfill/dist/promise.js',
