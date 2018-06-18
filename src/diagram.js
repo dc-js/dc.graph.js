@@ -1281,22 +1281,22 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.selectAllNodes = function(selector) {
         selector = selector || '.node';
-        return _nodeLayer.selectAll(selector).filter(function(n) {
+        return _nodeLayer && _nodeLayer.selectAll(selector).filter(function(n) {
             return !n.deleted;
-        });
+        }) || d3.selectAll('.foo-this-does-not-exist');
     };
 
     _diagram.selectAllEdges = function(selector) {
         selector = selector || '.edge';
-        return _edgeLayer.selectAll(selector).filter(function(e) {
+        return _edgeLayer && _edgeLayer.selectAll(selector).filter(function(e) {
             return !e.deleted;
-        });
+        }) || d3.selectAll('.foo-this-does-not-exist');
     };
 
     _diagram.selectAllDefs = function(selector) {
-        return _defs.selectAll(selector).filter(function(def) {
+        return _defs && _defs.selectAll(selector).filter(function(def) {
             return !def.deleted;
-        });
+        }) || d3.selectAll('.foo-this-does-not-exist');
     };
 
     _diagram.isRunning = function() {
