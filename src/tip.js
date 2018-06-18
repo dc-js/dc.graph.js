@@ -16,6 +16,7 @@ dc_graph.tip = function(options) {
     var _namespace = options.namespace || 'tip';
     var _d3tip = null;
     var _showTimeout, _hideTimeout;
+    var _dispatch = d3.dispatch('tipped');
 
     function init(parent) {
         if(!_d3tip) {
@@ -138,6 +139,10 @@ dc_graph.tip = function(options) {
         k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
     });
 
+    _behavior.on = function(event, f) {
+        return _dispatch.on(event, f);
+    };
+
     _behavior.displayTip = function(filter, n) {
         var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
             .filter(filter);
@@ -145,6 +150,7 @@ dc_graph.tip = function(options) {
             var action = fetch_and_show_content('content');
             var which = (n || 0) % found.size();
             action.call(found[0][which], d3.select(found[0][which]).datum());
+            _dispatch.tipped(d3.select(found[0][which]).datum());
         }
     };
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
