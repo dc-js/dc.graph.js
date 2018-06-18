@@ -153,6 +153,10 @@ dc_graph.tip = function(options) {
             _dispatch.tipped(d3.select(found[0][which]).datum());
         }
     };
+    _behavior.hideTip = function() {
+        if(_d3tip)
+            hide_tip();
+    };
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
     _behavior.showDelay = _behavior.delay = property(0);
     _behavior.hideDelay = property(200);
