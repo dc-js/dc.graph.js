@@ -1,12 +1,27 @@
-dc_graph.highlight_neighbors = function(includeprops, excludeprops) {
+dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgroup) {
+    var highlight_neighbors_group = dc_graph.register_highlight_neighbors_group(neighborsgroup || 'highlight-neighbors-group');
     var _hovered = false;
-    function clear_all_highlights(edge) {
-        edge.each(function(e) {
-            e.dcg_highlighted = false;
-        });
-        _hovered = false;
-    }
 
+    function highlight_node(nodeid) {
+        _behavior.parent().selectAllNodes().each(function(n) {
+            n.dcg_highlighted = false;
+        });
+        if(nodeid) {
+            _behavior.parent().selectAllEdges().each(function(e) {
+                e.dcg_highlighted = _behavior.parent().nodeKey.eval(e.source) === nodeid ||
+                    _behavior.parent().nodeKey.eval(e.target) === nodeid;
+                if(e.dcg_highlighted)
+                    e.source.dcg_highlighted = e.target.dcg_highlighted = true;
+            });
+            _hovered = true;
+        } else {
+            _behavior.parent().selectAllEdges().each(function(e) {
+                e.dcg_highlighted = false;
+            });
+            _hovered = false;
+        }
+        _behavior.parent().refresh();
+    }
     function add_behavior(diagram, node, edge) {
         diagram.cascade(100, true, node_edge_conditions(
             function(n) {
@@ -22,19 +37,10 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops) {
             }, excludeprops));
         node
             .on('mouseover.highlight-neighbors', function(n) {
-                node.each(function(n) {
-                    n.dcg_highlighted = false;
-                });
-                edge.each(function(e) {
-                    e.dcg_highlighted = e.source === n || e.target === n;
-                    if(e.dcg_highlighted)
-                        e.source.dcg_highlighted = e.target.dcg_highlighted = true;
-                });
-                _hovered = true;
-                diagram.refresh(node, edge);
+                highlight_neighbors_group.highlight_node(_behavior.parent().nodeKey.eval(n));
             })
             .on('mouseout.highlight-neighbors', function(n) {
-                clear_all_highlights(edge);
+                highlight_neighbors_group.highlight_node(null); //clear_all_highlights(edge);
                 diagram.refresh(node, edge);
             });
     }
@@ -43,15 +49,19 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops) {
         node
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
-        clear_all_highlights(edge);
+        highlight_neighbors_group.highlight_node(null); // clear_all_highlights(edge);
         diagram.cascade(100, false, includeprops);
     }
 
-    return dc_graph.behavior('highlight-neighbors', {
+    var _behavior = dc_graph.behavior('highlight-neighbors', {
         add_behavior: add_behavior,
         remove_behavior: function(diagram, node, edge) {
             remove_behavior(diagram, node, edge);
+        },
+        parent: function(p) {
+            highlight_neighbors_group.on('highlight_node.highlight', p ? highlight_node : null);
         }
     });
+    return _behavior;
 };
 

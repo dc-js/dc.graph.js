@@ -370,6 +370,7 @@ module.exports.jsFiles = [
     'src/label_things.js',
     'src/label_nodes.js',
     'src/label_edges.js',
+    'src/highlight_neighbors_group.js',
     'src/highlight_neighbors.js',
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',
