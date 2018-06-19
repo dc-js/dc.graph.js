@@ -20,7 +20,14 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
             });
             _hovered = false;
         }
+        var transdur;
+        if(_behavior.durationOverride() !== undefined) {
+            transdur = _behavior.parent().transitionDuration();
+            _behavior.parent().transitionDuration(_behavior.durationOverride());
+        }
         _behavior.parent().refresh();
+        if(_behavior.durationOverride() !== undefined)
+            _behavior.parent().transitionDuration(transdur);
     }
     function add_behavior(diagram, node, edge) {
         diagram.cascade(100, true, node_edge_conditions(
@@ -40,8 +47,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
                 highlight_neighbors_group.highlight_node(_behavior.parent().nodeKey.eval(n));
             })
             .on('mouseout.highlight-neighbors', function(n) {
-                highlight_neighbors_group.highlight_node(null); //clear_all_highlights(edge);
-                diagram.refresh(node, edge);
+                highlight_neighbors_group.highlight_node(null);
             });
     }
 
@@ -49,7 +55,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
         node
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
-        highlight_neighbors_group.highlight_node(null); // clear_all_highlights(edge);
+        highlight_neighbors_group.highlight_node(null);
         diagram.cascade(100, false, includeprops);
     }
 
@@ -62,6 +68,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
             highlight_neighbors_group.on('highlight_node.highlight', p ? highlight_node : null);
         }
     });
+    _behavior.durationOverride = property(undefined);
     return _behavior;
 };
 
