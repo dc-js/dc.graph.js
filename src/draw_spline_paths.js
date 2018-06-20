@@ -268,6 +268,17 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
           y: points[segment.end].y-points[segment.start].y
         };
 
+        // when previous node and next node are the same node, we need to handle
+        // them differently.
+        // e.g. for a loop segment A->B->B->A, we use the perpendicular vector perp_AB
+        // instead of vector AA(which is vec_pre_next in this case).
+        if(vecMag(vec_pre_next) == 0) {
+          vec_pre_next = {
+            x: -points[segment.end].y-anchorPoint.y,
+            y: points[segment.end].x-anchorPoint.x
+          };
+        }
+
         // unit length vector
         var vec_pre_next_unit = {
           x: vec_pre_next.x / vecMag(vec_pre_next),
