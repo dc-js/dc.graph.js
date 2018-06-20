@@ -274,7 +274,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         // instead of vector AA(which is vec_pre_next in this case).
         if(vecMag(vec_pre_next) == 0) {
           vec_pre_next = {
-            x: -points[segment.end].y-anchorPoint.y,
+            x: -(points[segment.end].y-anchorPoint.y),
             y: points[segment.end].x-anchorPoint.x
           };
         }
