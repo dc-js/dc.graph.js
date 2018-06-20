@@ -2252,8 +2252,16 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         var etrans = edge
                 .each(function(e) {
+                    var oldang = +e.pos.old.orienthead.slice(0, -3), newang = +e.pos.new.orienthead.slice(0, -3);
+                    if(Math.abs(oldang - newang) > Math.PI) {
+                        if(newang > oldang)
+                            oldang += 2*Math.PI;
+                        else oldang -= 2*Math.PI;
+                    }
+                    console.assert(Math.abs(oldang-newang) < Math.PI);
                     if(_diagram.edgeArrowhead.eval(e))
                         d3.select('#' + _diagram.arrowId(e, 'head'))
+                            .attr('orient', oldang + 'rad')
                             .transition().duration(_diagram.stagedDuration())
                             .delay(_diagram.stagedDelay(false))
                             .attr('orient', function() {
