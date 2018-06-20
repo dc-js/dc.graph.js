@@ -53,7 +53,7 @@ dc_graph._default_engine = 'cola';
 dc_graph.engines = {
     entry_pred: function(layoutName) {
         return function(e) {
-            return e.name === layoutName || e.names && e.names.includes(layoutName);
+            return e.name && e.name === layoutName || e.names && e.names.includes(layoutName);
         };
     },
     get: function(layoutName) {
