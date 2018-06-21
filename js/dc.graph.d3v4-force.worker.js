@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-beta.8
+ *  dc.graph 0.6.0-beta.10
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-beta.8
+ * @version 0.6.0-beta.10
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-beta.8',
+    version: '0.6.0-beta.10',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -338,6 +338,7 @@ dc_graph.d3v4_force_layout = function(id) {
             e1.dcg_edgeLength = e.dcg_edgeLength;
         });
 
+        _simulation.force('straighten', null);
         _simulation.nodes(_wnodes);
         _simulation.force('link').links(_wedges);
     }
@@ -368,9 +369,12 @@ dc_graph.d3v4_force_layout = function(id) {
         });
     }
     function installForces(paths) {
-        if(paths === null) {
+        if(paths)
+            paths = paths.filter(function(path) {
+                return path.nodes.every(function(nk) { return _nodes[nk]; });
+            });
+        if(paths === null || !paths.length) {
             _simulation.force('charge').strength(_options.initialCharge);
-            _simulation.force('angle', null);
         } else {
             var nodesOnPath;
             if(_options.fixOffPathNodes) {
@@ -394,9 +398,12 @@ dc_graph.d3v4_force_layout = function(id) {
             });
 
             _simulation.force('charge').strength(_options.chargeForce);
-            _simulation.force('angle', function(alpha) {
-                angleForces(alpha, paths);
-            });
+            _simulation.force('straighten', d3v4.forceStraightenPaths()
+                              .id(function(n) { return n.dcg_nodeKey; })
+                              .angleForce(_options.angleForce)
+                              .pathNodes(function(p) { return p.nodes; })
+                              .pathStrength(function(p) { return p.strength; })
+                              .paths(paths));
         }
     };
 
@@ -407,140 +414,6 @@ dc_graph.d3v4_force_layout = function(id) {
             dispatchState('tick');
         }
         dispatchState('end');
-    }
-
-    function angleForces(alpha, paths) {
-        function _dot(v1, v2) { return  v1.x*v2.x + v1.y*v2.y; };
-        function _len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
-        function _angle(v1, v2) {
-            var a = _dot(v1, v2) / (_len(v1)*_len(v2));
-            a = Math.min(a, 1);
-            a = Math.max(a, -1);
-            return Math.acos(a);
-        };
-        // perpendicular unit length vector
-        function _pVec(v) {
-            var xx = -v.y/v.x, yy = 1;
-            var length = _len({x: xx, y: yy});
-            return {x: xx/length, y: yy/length};
-        };
-
-        function _displaceAdjacent(node, angle, pVec, k) {
-            var turn = Math.PI-angle,
-                turn2 = turn*turn;
-            return {
-                kind: 'adjacent',
-                x: pVec.x*turn2*k,
-                y: pVec.y*turn2*k
-            };
-        }
-
-        function _displaceCenter(dadj1, dadj2) {
-            return {
-                kind: 'center',
-                x: -(dadj1.x + dadj2.x),
-                y: -(dadj1.y + dadj2.y)
-            };
-        }
-
-        function _offsetNode(node, disp) {
-            node.x += disp.x;
-            node.y += disp.y;
-        }
-        var report = [];
-        paths.forEach(function(path, i) {
-            var nodes = path.nodes,
-                strength = path.strength;
-            if(typeof strength !== 'number')
-                strength = 1;
-            // ignore path where any nodes have gone away
-            if(!nodes.every(function(k) { return _nodes[k]; }))
-                return;
-            if(nodes.length < 3) return; // at least 3 nodes (and 2 edges):  A->B->C
-            report.push({
-                action: 'init',
-                nodes: nodes.map(function(n) {
-                    return {
-                        id: n,
-                        x: _nodes[n].x,
-                        y: _nodes[n].y
-                    };
-                }),
-                edges: nodes.reduce(function(p, n) {
-                    if(typeof p === 'string')
-                        return [{source: p, target: n}];
-                    p.push({source: p[p.length-1].target, target: n});
-                    return p;
-                })
-            });
-            for(var i = 1; i < nodes.length-1; ++i) {
-                var current = _nodes[nodes[i]];
-                var prev = _nodes[nodes[i-1]];
-                var next = _nodes[nodes[i+1]];
-
-                // we can't do anything for two-cycles
-                if(prev === next)
-                    continue;
-
-                // calculate the angle
-                var vPrev = {x: prev.x - current.x, y: prev.y - current.y};
-                var vNext = {x: next.x - current.x, y: next.y - current.y};
-
-                var angle = _angle(vPrev, vNext); // angle in [0, PI]
-
-                var pvecPrev = _pVec(vPrev);
-                var pvecNext = _pVec(vNext);
-
-                // make sure the perpendicular vector is in the
-                // direction that makes the angle more towards 180 degree
-                // 1. calculate the middle point of node 'prev' and 'next'
-                var mid = {x: (prev.x+next.x)/2.0, y: (prev.y+next.y)/2.0};
-
-                // 2. calculate the vectors: 'prev' pointing to 'mid', 'next' pointing to 'mid'
-                var prev_mid = {x: mid.x-prev.x, y: mid.y-prev.y};
-                var next_mid = {x: mid.x-next.x, y: mid.y-next.y};
-
-                // 3. the 'correct' vector: the angle between pvec and prev_mid(next_mid) should
-                //    be an obtuse angle
-                pvecPrev = _angle(prev_mid, pvecPrev) >= Math.PI/2.0 ? pvecPrev : {x: -pvecPrev.x, y: -pvecPrev.y};
-                pvecNext = _angle(next_mid, pvecNext) >= Math.PI/2.0 ? pvecNext : {x: -pvecNext.x, y: -pvecNext.y};
-
-                // modify positions of nodes
-                var prevDisp = _displaceAdjacent(prev, angle, pvecPrev, strength * _options.angleForce);
-                var nextDisp = _displaceAdjacent(next, angle, pvecNext, strength * _options.angleForce);
-                var centerDisp = _displaceCenter(prevDisp, nextDisp);
-                report.push({
-                    action: 'force',
-                    nodes: [{
-                        id: nodes[i-1],
-                        x: prev.x,
-                        y: prev.y,
-                        force: prevDisp
-                    }, {
-                        id: nodes[i],
-                        x: current.x,
-                        y: current.y,
-                        force: centerDisp
-                    }, {
-                        id: nodes[i+1],
-                        x: next.x,
-                        y: next.y,
-                        force: nextDisp
-                    }],
-                    edges: [{
-                        source: nodes[i-1],
-                        target: nodes[i]
-                    }, {
-                        source: nodes[i],
-                        target: nodes[i+1]
-                    }]
-                });
-                _offsetNode(prev, prevDisp);
-                _offsetNode(next, nextDisp);
-                _offsetNode(current, centerDisp);
-            }
-        });
-        console.log(report);
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
@@ -598,6 +471,7 @@ dc_graph.d3v4_force_layout = function(id) {
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {}
     });
+    engine.pathStraightenForce = engine.angleForce;
     return engine;
 };
 
