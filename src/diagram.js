@@ -2157,6 +2157,18 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
+    // determine pre-transition orientation that won't spin a lot going to new orientation
+    function unsurprising_orient(oldorient, neworient) {
+        var oldang = +oldorient.slice(0, -3),
+            newang = +neworient.slice(0, -3);
+        if(Math.abs(oldang - newang) > Math.PI) {
+            if(newang > oldang)
+                oldang += 2*Math.PI;
+            else oldang -= 2*Math.PI;
+        }
+        return oldang + 'rad';
+    }
+
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, animatePositions) {
         console.assert(edge.data().every(has_source_and_target));
 
@@ -2255,16 +2267,9 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         var etrans = edge
                 .each(function(e) {
-                    var oldang = +e.pos.old.orienthead.slice(0, -3), newang = +e.pos.new.orienthead.slice(0, -3);
-                    if(Math.abs(oldang - newang) > Math.PI) {
-                        if(newang > oldang)
-                            oldang += 2*Math.PI;
-                        else oldang -= 2*Math.PI;
-                    }
-                    console.assert(Math.abs(oldang-newang) < Math.PI);
                     if(_diagram.edgeArrowhead.eval(e))
                         d3.select('#' + _diagram.arrowId(e, 'head'))
-                            .attr('orient', oldang + 'rad')
+                            .attr('orient', unsurprising_orient(e.pos.old.orienthead, e.pos.new.orienthead))
                             .transition().duration(_diagram.stagedDuration())
                             .delay(_diagram.stagedDelay(false))
                             .attr('orient', function() {
@@ -2272,6 +2277,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                             });
                     if(_diagram.edgeArrowtail.eval(e))
                         d3.select('#' + _diagram.arrowId(e, 'tail'))
+                            .attr('orient', unsurprising_orient(e.pos.old.orienttail, e.pos.new.orienttail))
                             .transition().duration(_diagram.stagedDuration())
                             .delay(_diagram.stagedDelay(false))
                             .attr('orient', function() {
