@@ -82,16 +82,21 @@
             .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
         diagram.child('fix-nodes', fix_nodes);
 
-        // add tooltips using d3-tip
-        var tip = dc_graph.tip()
-        // tip.content(function(d, k) {
-        //     // you can do an asynchronous call here, e.g. d3.json, if you need
-        //     // to fetch data to show the tooltip - just call k() with the content
-        //     k(d.orig.value.name);
-        // });
-        tip.content(dc_graph.tip.table());
-        diagram.child('tip', tip)
-            .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+        if(qs.tips !== 'false') {
+            // add tooltips using d3-tip
+            var tip = dc_graph.tip()
+            // tip.content(function(d, k) {
+            //     // you can do an asynchronous call here, e.g. d3.json, if you need
+            //     // to fetch data to show the tooltip - just call k() with the content
+            //     k(d.orig.value.name);
+            // });
+            tip.content(dc_graph.tip.table());
+            diagram.child('tip', tip);
+        }
+        if(qs.neighbors != 'false') {
+            diagram
+                .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+        }
 
         diagram.render();
 
