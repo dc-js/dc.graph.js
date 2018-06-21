@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.6.0-beta.9",
+  "version": "0.6.0-beta.10",
   "license": "Apache-2.0",
   "copyright": "2017",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
@@ -29,8 +29,7 @@
     "d3": "3.x",
     "dagre": "0.7.x",
     "dc": "~2.1.0",
-    "font-awesome": "~4.7",
-    "lodash": "4.x",
+    "metagraph": "^0.0.6",
     "queue-async": "~1.x",
     "viz.js": "^1.8.2",
     "webcola": "3.3.x"
@@ -40,6 +39,7 @@
     "d3-force": "~1",
     "d3-force-straighten-paths": "^1.0.2",
     "d3-tip": "~0.7",
+    "font-awesome": "~4.7",
     "grunt": "^1.0.3",
     "grunt-browserify": "~5.2.0",
     "grunt-cli": "~1.2",
@@ -60,6 +60,7 @@
     "jquery-ui-dist": "~1.12",
     "jsdifflib": "~1.1",
     "load-grunt-tasks": "~3.5",
+    "lodash": "4.x",
     "marked": "~0.3",
     "promise-polyfill": "7.x",
     "rollup": "~0.56",

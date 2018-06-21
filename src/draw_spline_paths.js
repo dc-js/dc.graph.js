@@ -42,12 +42,14 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         }
     }
 
-    function path_keys(path) {
-        return uniq(pathreader.elementList.eval(path).filter(function(elem) {
+    function path_keys(path, unique) {
+        unique = unique !== false;
+        var keys = pathreader.elementList.eval(path).filter(function(elem) {
             return pathreader.elementType.eval(elem) === 'node';
         }).map(function(elem) {
             return pathreader.nodeKey.eval(elem);
-        }));
+        });
+        return unique ? uniq(keys) : keys;
     }
 
     // check if entire path is present in this view
@@ -60,7 +62,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
 
     // get the positions of nodes on path
     function getNodePositions(path, old) {
-        return path_keys(path).map(function(key) {
+        return path_keys(path, false).map(function(key) {
             var node = _behavior.parent().getWholeNode(key);
             return {x: old && node.prevX !== undefined ? node.prevX : node.cola.x,
                     y: old && node.prevY !== undefined ? node.prevY : node.cola.y};
@@ -149,24 +151,30 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         return new_path_coord;
     }
 
-    // convert original path data into <d>
-    function genPath(path, old, lineTension, avoidSharpTurn, angleThreshold) {
+    // helper functions
+    var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y; };
+    var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
+    var l2Dist = function(p1, p2) {
+        return Math.sqrt((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y));
+    };
+
+    function drawCardinalSpline(points, lineTension, avoidSharpTurn, angleThreshold) {
       var c = lineTension || 0;
       avoidSharpTurn = avoidSharpTurn !== false;
       angleThreshold = angleThreshold || 0.02;
 
-      // helper functions
-      var vecDot = function(v0, v1) { return v0.x*v1.x+v0.y*v1.y; };
-      var vecMag = function(v) { return Math.sqrt(v.x*v.x + v.y*v.y); };
-
-      // get coordinates
-      var path_coord = getNodePositions(path, old);
-      if(path_coord.length < 2) return "";
+      // get the path without self loops
+      var path_list = [points[0]];
+      for(var i = 1; i < points.length; i ++) {
+        if(l2Dist(points[i], path_list[path_list.length-1]) > 1e-6) {
+          path_list.push(points[i]);
+        }
+      }
 
       // repeat first and last node
-      var points = [path_coord[0]];
-      points = points.concat(path_coord);
-      points.push(path_coord[path_coord.length-1]);
+      points = [path_list[0]];
+      points = points.concat(path_list);
+      points.push(path_list[path_list.length-1]);
 
       // a segment is a list of three points: [c0, c1, p1],
       // representing the coordinates in "C x0,y0,x1,y1,x,y" in svg:path
@@ -207,7 +215,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             var cp2 = {x: p0.x-k*(-m_y/3), y:p0.y-k*(m_x/3)};
             // CP_1CP_2
             var vCP = {x: cp1.x-cp2.x, y:cp1.y-cp2.y}; // vector cp1->cp2
-            var vPN = {x: points[i-2].x - points[i+2].x, y:points[i-2].y-points[i+2].y} // vector Previous->Next
+            var vPN = {x: points[i-2].x - points[i+2].x, y:points[i-2].y-points[i+2].y}; // vector Previous->Next
             if(vecDot(vCP, vPN) > 0) {
               c0 = cp1;
               segments[segments.length-1][1] = cp2;
@@ -229,6 +237,135 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         path_d += ","+s[2].x+","+s[2].y;
       }
       return path_d;
+    }
+
+    function drawDedicatedLoops(points, lineTension, avoidSharpTurn, angleThreshold) {
+      // get loops as segments
+      var p1 = 0, p2 = 1;
+      var seg_list = []; // (start, end)
+      while(p1 < points.length-1 && p2 < points.length) {
+        if(l2Dist(points[p1], points[p2]) < 1e-6) {
+          var repeated = points[p2];
+          while(p2 < points.length && l2Dist(points[p2], repeated) < 1e-6) p2++;
+          seg_list.push({'start': Math.max(0, p1-1), 'end': Math.min(points.length-1, p2)});
+          p1 = p2;
+          p2 = p1+1;
+        } else {
+          p1++;
+          p2++;
+        }
+      }
+
+      var loopCurves = "";
+      for(var i = 0; i < seg_list.length; i ++) {
+        var segment = seg_list[i];
+        var loopCount = segment.end - segment.start - 2;
+        var anchorPoint = points[segment.start+1];
+
+        // the vector from previous node to next node
+        var vec_pre_next = {
+          x: points[segment.end].x-points[segment.start].x,
+          y: points[segment.end].y-points[segment.start].y
+        };
+
+        // when previous node and next node are the same node, we need to handle
+        // them differently.
+        // e.g. for a loop segment A->B->B->A, we use the perpendicular vector perp_AB
+        // instead of vector AA(which is vec_pre_next in this case).
+        if(vecMag(vec_pre_next) == 0) {
+          vec_pre_next = {
+            x: -(points[segment.end].y-anchorPoint.y),
+            y: points[segment.end].x-anchorPoint.x
+          };
+        }
+
+        // unit length vector
+        var vec_pre_next_unit = {
+          x: vec_pre_next.x / vecMag(vec_pre_next),
+          y: vec_pre_next.y / vecMag(vec_pre_next)
+        };
+        var vec_pre_next_perp = {
+          x: -vec_pre_next.y / vecMag(vec_pre_next),
+          y: vec_pre_next.x / vecMag(vec_pre_next)
+        };
+
+        var insertP;
+        for(var j = 0; j < loopCount; j ++) {
+          var c1,c2,c3,c4;
+
+          // change the control points every time this loop appears
+          var cp_k = 15+2*j;
+
+          // calculate c1 and c4, their tangent match the tangent at anchorPoint
+          c1 = {
+            x: anchorPoint.x + cp_k*vec_pre_next_unit.x,
+            y: anchorPoint.y + cp_k*vec_pre_next_unit.y
+          };
+
+          c4 = {
+            x: anchorPoint.x - cp_k*vec_pre_next_unit.x,
+            y: anchorPoint.y - cp_k*vec_pre_next_unit.y
+          };
+
+          // change the location of inserted virtual point every time this loop appears
+          var control_k = 25+5*j;
+          var insertP1 = {
+            x: anchorPoint.x+vec_pre_next_perp.x*control_k,
+            y: anchorPoint.y+vec_pre_next_perp.y*control_k
+          };
+          var insertP2 = {
+            x: anchorPoint.x-vec_pre_next_perp.x*control_k,
+            y: anchorPoint.y-vec_pre_next_perp.y*control_k
+          };
+          var vec_i_to_next = {
+            x: points[segment.end].x - anchorPoint.x,
+            y: points[segment.end].y - anchorPoint.y
+          };
+          var vec_i_to_insert = {
+            x: insertP1.x - anchorPoint.x,
+            y: insertP1.y - anchorPoint.y
+          };
+          insertP = insertP1;
+          if(vecDot(vec_i_to_insert, vec_i_to_next) > 0) {
+            insertP = insertP2;
+          }
+
+          // calculate c2 and c3 based on insertP
+          c2 = {
+            x: insertP.x + cp_k*vec_pre_next_unit.x,
+            y: insertP.y + cp_k*vec_pre_next_unit.y
+          };
+
+          c3 = {
+            x: insertP.x - cp_k*vec_pre_next_unit.x,
+            y: insertP.y - cp_k*vec_pre_next_unit.y
+          };
+
+          var curve = "M"+anchorPoint.x+","+anchorPoint.y;
+          curve += "C"+c1.x+","+c1.y+","+c2.x+","+c2.y+","+insertP.x+","+insertP.y;
+          curve += "C"+c3.x+","+c3.y+","+c4.x+","+c4.y+","+anchorPoint.x+","+anchorPoint.y;
+
+          loopCurves += curve;
+        }
+      }
+      return loopCurves;
+    }
+
+    // convert original path data into <d>
+    function genPath(originalPoints, old, lineTension, avoidSharpTurn, angleThreshold) {
+      // get coordinates
+      var path_coord = getNodePositions(originalPoints, old);
+      if(path_coord.length < 2) return "";
+
+      var result = "";
+      // process the points and treat them differently:
+      // 1. sub-path without self loop
+      result += drawCardinalSpline(path_coord, lineTension, avoidSharpTurn, angleThreshold);
+
+      // 2. a list of loop segments
+      result += drawDedicatedLoops(path_coord, lineTension, avoidSharpTurn, angleThreshold);
+
+      return result;
     }
 
     // draw the spline for paths

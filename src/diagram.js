@@ -1281,22 +1281,22 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.selectAllNodes = function(selector) {
         selector = selector || '.node';
-        return _nodeLayer.selectAll(selector).filter(function(n) {
+        return _nodeLayer && _nodeLayer.selectAll(selector).filter(function(n) {
             return !n.deleted;
-        });
+        }) || d3.selectAll('.foo-this-does-not-exist');
     };
 
     _diagram.selectAllEdges = function(selector) {
         selector = selector || '.edge';
-        return _edgeLayer.selectAll(selector).filter(function(e) {
+        return _edgeLayer && _edgeLayer.selectAll(selector).filter(function(e) {
             return !e.deleted;
-        });
+        }) || d3.selectAll('.foo-this-does-not-exist');
     };
 
     _diagram.selectAllDefs = function(selector) {
-        return _defs.selectAll(selector).filter(function(def) {
+        return _defs && _defs.selectAll(selector).filter(function(def) {
             return !def.deleted;
-        });
+        }) || d3.selectAll('.foo-this-does-not-exist');
     };
 
     _diagram.isRunning = function() {
@@ -2157,6 +2157,18 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
+    // determine pre-transition orientation that won't spin a lot going to new orientation
+    function unsurprising_orient(oldorient, neworient) {
+        var oldang = +oldorient.slice(0, -3),
+            newang = +neworient.slice(0, -3);
+        if(Math.abs(oldang - newang) > Math.PI) {
+            if(newang > oldang)
+                oldang += 2*Math.PI;
+            else oldang -= 2*Math.PI;
+        }
+        return oldang + 'rad';
+    }
+
     function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, animatePositions) {
         console.assert(edge.data().every(has_source_and_target));
 
@@ -2257,6 +2269,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .each(function(e) {
                     if(_diagram.edgeArrowhead.eval(e))
                         d3.select('#' + _diagram.arrowId(e, 'head'))
+                            .attr('orient', unsurprising_orient(e.pos.old.orienthead, e.pos.new.orienthead))
                             .transition().duration(_diagram.stagedDuration())
                             .delay(_diagram.stagedDelay(false))
                             .attr('orient', function() {
@@ -2264,6 +2277,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                             });
                     if(_diagram.edgeArrowtail.eval(e))
                         d3.select('#' + _diagram.arrowId(e, 'tail'))
+                            .attr('orient', unsurprising_orient(e.pos.old.orienttail, e.pos.new.orienttail))
                             .transition().duration(_diagram.stagedDuration())
                             .delay(_diagram.stagedDelay(false))
                             .attr('orient', function() {

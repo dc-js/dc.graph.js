@@ -18,6 +18,7 @@ dc_graph.label_things = function(options) {
     function edit_label_listener(diagram) {
         return function(thing, eventOptions) {
             var box = options.thing_box(thing);
+            options.hide_thing_label(thing, true);
             dc_graph.edit_text(
                 diagram.g(),
                 {
@@ -28,7 +29,10 @@ dc_graph.label_things = function(options) {
                     accept: function(text) {
                         return options.accept(thing, text);
                     },
-                    finally: grab_focus
+                    finally: function() {
+                        options.hide_thing_label(thing, false);
+                        grab_focus();
+                    }
                 });
         };
     }

@@ -17,7 +17,9 @@
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dagre.js"></script>
+  <script type="text/javascript" src="js/d3v4-force.js"></script>
   <script type="text/javascript" src="js/viz.js"></script>
+  <script type="text/javascript" src="js/chart.registry.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
 
   <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
@@ -62,7 +64,9 @@
             .height($(window).height())
             .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
             .edgeDimension(edges.dimension).edgeGroup(edges.group)
+            .altKeyZoom(true)
         // aesthetics
+            .nodeFixed(n => n.value.fixedPos)
             .nodeStrokeWidthAccessor(0) // turn off outlines
             .nodeFillAccessor(function(kv) {
                 return '#2E54A2';
@@ -71,17 +75,28 @@
             .nodeTitleAccessor(null) // deactivate basic tooltips
             .edgeArrowheadAccessor(qs.arrows ? 'vee' : null);
 
+        var move_nodes = dc_graph.move_nodes();
+        diagram.child('move-nodes', move_nodes);
 
-        // add tooltips using d3-tip
-        var tip = dc_graph.tip()
-        // tip.content(function(d, k) {
-        //     // you can do an asynchronous call here, e.g. d3.json, if you need
-        //     // to fetch data to show the tooltip - just call k() with the content
-        //     k(d.orig.value.name);
-        // });
-        tip.content(dc_graph.tip.table());
-        diagram.child('tip', tip)
-            .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+        var fix_nodes = dc_graph.fix_nodes()
+            .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
+        diagram.child('fix-nodes', fix_nodes);
+
+        if(qs.tips !== 'false') {
+            // add tooltips using d3-tip
+            var tip = dc_graph.tip()
+            // tip.content(function(d, k) {
+            //     // you can do an asynchronous call here, e.g. d3.json, if you need
+            //     // to fetch data to show the tooltip - just call k() with the content
+            //     k(d.orig.value.name);
+            // });
+            tip.content(dc_graph.tip.table());
+            diagram.child('tip', tip);
+        }
+        if(qs.neighbors != 'false') {
+            diagram
+                .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+        }
 
         diagram.render();
 

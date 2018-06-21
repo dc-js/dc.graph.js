@@ -1,3 +1,12 @@
+## 0.6.0 beta 10
+* draw self-loops in paths, by Zhe Wang
+* `highlight_neighbors` can highlight nodes and also lowlight (fade) everything else. it can be invoked programmatically through the corresponding event group. it can transition quicker using `durationOverride`
+* programmatic tip fires event telling which item was tipped. `hideTip` method.
+* arrowheads and arrowtails don't spin around when crossing &#960; (#49)
+* previous label hidden while editing node/edge labels
+* `spawn_engine` / `engines.instantiate` no longer think `undefined` is a match if there are entries with multiple names
+* updates to `signle-file.html`: supports move-nodes, d3v4force, can disable tips and highlight-neighbors
+
 ## 0.6.0 beta 9
 * depend on external [att/d3-force-straighten-paths](https://github.com/att/d3-force-straighten-paths) module
 

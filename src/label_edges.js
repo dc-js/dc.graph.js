@@ -12,6 +12,10 @@ dc_graph.label_edges = function(options) {
             return _behavior.parent().edgeKey.eval(e) === key;
         });
     };
+    options.hide_thing_label = function(edge, whether) {
+        var label = _behavior.parent().selectAll('#' + _behavior.parent().edgeId(edge.datum()) + '-label textPath');
+        label.attr('visibility', whether ? 'hidden' : 'visible');
+    };
     options.thing_box = function(edge, eventOptions) {
         var points = edge.datum().pos.new.path.points,
             x = (points[0].x + points[1].x)/2,

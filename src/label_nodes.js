@@ -12,6 +12,10 @@ dc_graph.label_nodes = function(options) {
             return _behavior.parent().nodeKey.eval(n) === key;
         });
     };
+    options.hide_thing_label = function(node, whether) {
+        var contents = _behavior.parent().content(_behavior.parent().nodeContent.eval(node.datum()));
+        contents.selectContent(node).attr('visibility', whether ? 'hidden' : 'visible');
+    };
     options.thing_box = function(node, eventOptions) {
         var contents = _behavior.parent().content(_behavior.parent().nodeContent.eval(node.datum())),
             box = contents.textbox(node);
