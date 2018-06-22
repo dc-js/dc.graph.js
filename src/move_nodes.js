@@ -4,6 +4,7 @@ dc_graph.move_nodes = function(options) {
     var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
+    var _maybeSelect = null;
 
     function isUnion(event) {
         return event.shiftKey;
@@ -19,8 +20,9 @@ dc_graph.move_nodes = function(options) {
             _selected = selection;
         };
     }
-    function for_each_selected(f) {
-        _selected.forEach(function(key) {
+    function for_each_selected(f, selected) {
+        selected = selected || _selected;
+        selected.forEach(function(key) {
             var n = _behavior.parent().getWholeNode(key);
             f(n, key);
         });
@@ -35,16 +37,22 @@ dc_graph.move_nodes = function(options) {
             // if the node under the mouse is not in the selection, need to
             // make that node selected
             var key = diagram.nodeKey.eval(n);
-            if(_selected.indexOf(key)<0)
-                select_nodes_group.set_changed([key]);
+            var selected = _selected;
+            if(_selected.indexOf(key)<0) {
+                selected = [key];
+                _maybeSelect = key;
+            }
+            else _maybeSelect = null;
             for_each_selected(function(n) {
                 n.original_position = [n.cola.x, n.cola.y];
-            });
+            }, selected);
             if(_brush)
                 _brush.deactivate();
         });
         function mouse_move() {
             if(_startPos) {
+                if(_maybeSelect)
+                    select_nodes_group.set_changed([_maybeSelect]);
                 var pos = dc_graph.event_coords(diagram);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
