@@ -2,7 +2,7 @@ dc_graph.highlight_radius = function(options) {
     options = options || {};
     var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
     var highlight_things_group = dc_graph.register_highlight_things_group(options.select_things_group || 'highlight-things-group');
-    var _graph;
+    var _graph, _selection = [];
 
     function recurse(n, r, nodeset, edgeset) {
         nodeset[n.key()] = true;
@@ -22,6 +22,7 @@ dc_graph.highlight_radius = function(options) {
         }
     }
     function selection_changed(nodes) {
+        _selection = nodes;
         console.assert(_graph);
         var nodeset = {}, edgeset = {};
         nodes.forEach(function(nkey) {
@@ -39,6 +40,13 @@ dc_graph.highlight_radius = function(options) {
             edgeSource: diagram.edgeSource.eval,
             edgeTarget: diagram.edgeTarget.eval
         });
+        var sel2 = _selection.filter(function(nk) {
+            return !!_graph.node(nk);
+        });
+        if(sel2.length < _selection.length)
+            window.setTimeout(function() {
+                select_nodes_group.set_changed(sel2);
+            }, 0);
     }
     var _behavior = {
         parent: function(p) {
