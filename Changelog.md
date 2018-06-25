@@ -1,3 +1,10 @@
+## 0.6.0 beta 11
+* `highlight_things` separates the display of highlights out from `highlight_neighbors`. (`highlight_paths` is not yet compliant though)
+* `highlight_radius` highlights nodes/edges up to a certain radius from the current node selection
+* `move_nodes` only changes the selection after drag has started, not on mouse down. still ugly but the right behavior this case.
+* `with_icon_contents` positioning was broken, icon was overlapping the text
+* drag-drop-composition demo has icons now
+
 ## 0.6.0 beta 10
 * draw self-loops in paths, by Zhe Wang
 * `highlight_neighbors` can highlight nodes and also lowlight (fade) everything else. it can be invoked programmatically through the corresponding event group. it can transition quicker using `durationOverride`

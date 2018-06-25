@@ -1,47 +1,27 @@
-dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgroup) {
+dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgroup, thingsgroup) {
     var highlight_neighbors_group = dc_graph.register_highlight_neighbors_group(neighborsgroup || 'highlight-neighbors-group');
-    var _hovered = false;
+    var highlight_things_group = dc_graph.register_highlight_things_group(thingsgroup || 'highlight-things-group');
 
     function highlight_node(nodeid) {
-        _behavior.parent().selectAllNodes().each(function(n) {
-            n.dcg_highlighted = false;
-        });
+        var diagram = _behavior.parent();
+        var nodeset = {}, edgeset = {};
         if(nodeid) {
+            nodeset[nodeid] = true;
             _behavior.parent().selectAllEdges().each(function(e) {
-                e.dcg_highlighted = _behavior.parent().nodeKey.eval(e.source) === nodeid ||
-                    _behavior.parent().nodeKey.eval(e.target) === nodeid;
-                if(e.dcg_highlighted)
-                    e.source.dcg_highlighted = e.target.dcg_highlighted = true;
+                if(diagram.nodeKey.eval(e.source) === nodeid) {
+                    edgeset[diagram.edgeKey.eval(e)] = true;
+                    nodeset[diagram.nodeKey.eval(e.target)] = true;
+                }
+                if(diagram.nodeKey.eval(e.target) === nodeid) {
+                    edgeset[diagram.edgeKey.eval(e)] = true;
+                    nodeset[diagram.nodeKey.eval(e.source)] = true;
+                }
             });
-            _hovered = true;
-        } else {
-            _behavior.parent().selectAllEdges().each(function(e) {
-                e.dcg_highlighted = false;
-            });
-            _hovered = false;
+            highlight_things_group.highlight(nodeset, edgeset);
         }
-        var transdur;
-        if(_behavior.durationOverride() !== undefined) {
-            transdur = _behavior.parent().transitionDuration();
-            _behavior.parent().transitionDuration(_behavior.durationOverride());
-        }
-        _behavior.parent().refresh();
-        if(_behavior.durationOverride() !== undefined)
-            _behavior.parent().transitionDuration(transdur);
+        else highlight_things_group.highlight(null, null);
     }
     function add_behavior(diagram, node, edge) {
-        diagram.cascade(100, true, node_edge_conditions(
-            function(n) {
-                return n.dcg_highlighted;
-            }, function(e) {
-                return e.dcg_highlighted;
-            }, includeprops));
-        diagram.cascade(110, true, node_edge_conditions(
-            function(n) {
-                return _hovered && !n.dcg_highlighted;
-            }, function(e) {
-                return _hovered && !e.dcg_highlighted;
-            }, excludeprops));
         node
             .on('mouseover.highlight-neighbors', function(n) {
                 highlight_neighbors_group.highlight_node(_behavior.parent().nodeKey.eval(n));
@@ -56,7 +36,6 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
         highlight_neighbors_group.highlight_node(null);
-        diagram.cascade(100, false, includeprops);
     }
 
     var _behavior = dc_graph.behavior('highlight-neighbors', {
@@ -66,6 +45,10 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
         },
         parent: function(p) {
             highlight_neighbors_group.on('highlight_node.highlight', p ? highlight_node : null);
+            if(!p.child('highlight-things'))
+                p.child('highlight-things',
+                        dc_graph.highlight_things(includeprops, excludeprops)
+                          .durationOverride(_behavior.durationOverride()));
         }
     });
     _behavior.durationOverride = property(undefined);

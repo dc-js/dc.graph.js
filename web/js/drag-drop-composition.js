@@ -439,7 +439,7 @@ function update_palette(catalog) {
     _palette.data(categories);
 }
 
-https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
+// https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
 function hashCode(s) {
   var hash = 0, i, chr;
   if (s.length === 0) return hash;
@@ -450,17 +450,13 @@ function hashCode(s) {
   }
   return hash;
 };
-var _icons = [
-    'iconmonstr-car-4.svg',
-    'iconmonstr-flip-chart-3.svg',
-    'iconmonstr-paper-plane-2.svg'
-];
-
-function hashIcon(icons) {
-    return function(d) {
-        var h = hashCode(_diagram.nodeKey()(d));
-        return _icons[h%icons.length];
-    };
+var _icons;
+d3.text('iconlist.txt', function(error, list) {
+    _icons = list.split(/\n/);
+});
+function hashIcon(icons, type) {
+    var h = hashCode(type);
+    return _icons[h%icons.length];
 }
 
 var _ionicons = {
@@ -540,7 +536,7 @@ get_catalog().then(function(catalog) {
         .nodePadding(20)
         .nodeContent('text-with-icon')
         .nodeIcon(function(d) {
-            return _ionicons[d.value.type];
+            return hashIcon(_icons, d.value.type);
         })
         .nodeFixed(function(n) { return n.value.fixedPos; })
         .portNodeKey(p => p.value.nodeId)
@@ -562,7 +558,7 @@ get_catalog().then(function(catalog) {
     _diagram.child('place-ports', dc_graph.place_ports());
 
     var symbolPorts = dc_graph.symbol_port_style()
-        .outline(dc_graph.symbol_port_style.outline.square())
+        //.outline(dc_graph.symbol_port_style.outline.square())
         .outlineStrokeWidth(1)
 //        .portLabel(p => p.value.portname)
         .symbol(p => p.orig.value.type)

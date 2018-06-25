@@ -99,7 +99,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
                 href: _contents.parent().nodeIcon.eval,
                 x: function(n) {
                     var totwid = width + contents.textbox(d3.select(this.parentNode)).width;
-                    return -totwid/2 - node_label_padding(_contents.parent(), n);
+                    return -totwid/2 - node_label_padding(_contents.parent(), n).x;
                 },
                 y: -height/2
             });

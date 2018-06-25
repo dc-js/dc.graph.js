@@ -184,7 +184,8 @@ module.exports = function (grunt) {
                         flatten: true,
                         nonull: true,
                         src: [
-                            'node_modules/x-editable/dist/jqueryui-editable/img/*'
+                            'node_modules/x-editable/dist/jqueryui-editable/img/*',
+                            'node_modules/ionicons/dist/ionicons/svg/md-*'
                         ],
                         dest: '<%= conf.web %>/img'
                     },
@@ -370,8 +371,11 @@ module.exports.jsFiles = [
     'src/label_things.js',
     'src/label_nodes.js',
     'src/label_edges.js',
+    'src/highlight_things_group.js',
+    'src/highlight_things.js',
     'src/highlight_neighbors_group.js',
     'src/highlight_neighbors.js',
+    'src/highlight_radius.js',
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',
     'src/draw_spline_paths.js',

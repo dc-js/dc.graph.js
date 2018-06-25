@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-beta.10
+ *  dc.graph 0.6.0-beta.11
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-beta.10
+ * @version 0.6.0-beta.11
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-beta.10',
+    version: '0.6.0-beta.11',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1325,7 +1325,7 @@ dc_graph.with_icon_contents = function(contents, width, height) {
                 href: _contents.parent().nodeIcon.eval,
                 x: function(n) {
                     var totwid = width + contents.textbox(d3.select(this.parentNode)).width;
-                    return -totwid/2 - node_label_padding(_contents.parent(), n);
+                    return -totwid/2 - node_label_padding(_contents.parent(), n).x;
                 },
                 y: -height/2
             });
@@ -7655,6 +7655,7 @@ dc_graph.move_nodes = function(options) {
     var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
+    var _maybeSelect = null;
 
     function isUnion(event) {
         return event.shiftKey;
@@ -7670,8 +7671,9 @@ dc_graph.move_nodes = function(options) {
             _selected = selection;
         };
     }
-    function for_each_selected(f) {
-        _selected.forEach(function(key) {
+    function for_each_selected(f, selected) {
+        selected = selected || _selected;
+        selected.forEach(function(key) {
             var n = _behavior.parent().getWholeNode(key);
             f(n, key);
         });
@@ -7686,16 +7688,22 @@ dc_graph.move_nodes = function(options) {
             // if the node under the mouse is not in the selection, need to
             // make that node selected
             var key = diagram.nodeKey.eval(n);
-            if(_selected.indexOf(key)<0)
-                select_nodes_group.set_changed([key]);
+            var selected = _selected;
+            if(_selected.indexOf(key)<0) {
+                selected = [key];
+                _maybeSelect = key;
+            }
+            else _maybeSelect = null;
             for_each_selected(function(n) {
                 n.original_position = [n.cola.x, n.cola.y];
-            });
+            }, selected);
             if(_brush)
                 _brush.deactivate();
         });
         function mouse_move() {
             if(_startPos) {
+                if(_maybeSelect)
+                    select_nodes_group.set_changed([_maybeSelect]);
                 var pos = dc_graph.event_coords(diagram);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
@@ -8355,36 +8363,22 @@ dc_graph.label_edges = function(options) {
     return _behavior;
 };
 
-dc_graph.register_highlight_neighbors_group = function(neighborsgroup) {
-    window.chart_registry.create_type('highlight-neighbors', function() {
-        return d3.dispatch('highlight_node');
+dc_graph.register_highlight_things_group = function(thingsgroup) {
+    window.chart_registry.create_type('highlight-things', function() {
+        return d3.dispatch('highlight');
     });
 
-    return window.chart_registry.create_group('highlight-neighbors', neighborsgroup);
+    return window.chart_registry.create_group('highlight-things', thingsgroup);
 };
 
-dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgroup) {
-    var highlight_neighbors_group = dc_graph.register_highlight_neighbors_group(neighborsgroup || 'highlight-neighbors-group');
-    var _hovered = false;
+dc_graph.highlight_things = function(includeprops, excludeprops, thingsgroup) {
+    var highlight_things_group = dc_graph.register_highlight_things_group(thingsgroup || 'highlight-things-group');
+    var _active, _nodeset = {}, _edgeset = {};
 
-    function highlight_node(nodeid) {
-        _behavior.parent().selectAllNodes().each(function(n) {
-            n.dcg_highlighted = false;
-        });
-        if(nodeid) {
-            _behavior.parent().selectAllEdges().each(function(e) {
-                e.dcg_highlighted = _behavior.parent().nodeKey.eval(e.source) === nodeid ||
-                    _behavior.parent().nodeKey.eval(e.target) === nodeid;
-                if(e.dcg_highlighted)
-                    e.source.dcg_highlighted = e.target.dcg_highlighted = true;
-            });
-            _hovered = true;
-        } else {
-            _behavior.parent().selectAllEdges().each(function(e) {
-                e.dcg_highlighted = false;
-            });
-            _hovered = false;
-        }
+    function highlight(nodeset, edgeset) {
+        _active = nodeset || edgeset;
+        _nodeset = nodeset;
+        _edgeset = edgeset;
         var transdur;
         if(_behavior.durationOverride() !== undefined) {
             transdur = _behavior.parent().transitionDuration();
@@ -8394,19 +8388,67 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
         if(_behavior.durationOverride() !== undefined)
             _behavior.parent().transitionDuration(transdur);
     }
-    function add_behavior(diagram, node, edge) {
-        diagram.cascade(100, true, node_edge_conditions(
+    function add_behavior(diagram) {
+        diagram.cascade(150, true, node_edge_conditions(
             function(n) {
-                return n.dcg_highlighted;
+                return _nodeset[_behavior.parent().nodeKey.eval(n)];
             }, function(e) {
-                return e.dcg_highlighted;
+                return _edgeset[_behavior.parent().edgeKey.eval(e)];
             }, includeprops));
-        diagram.cascade(110, true, node_edge_conditions(
+        diagram.cascade(160, true, node_edge_conditions(
             function(n) {
-                return _hovered && !n.dcg_highlighted;
+                return _active && !_nodeset[_behavior.parent().nodeKey.eval(n)];
             }, function(e) {
-                return _hovered && !e.dcg_highlighted;
+                return _active && !_edgeset[_behavior.parent().edgeKey.eval(e)];
             }, excludeprops));
+    }
+    function remove_behavior(diagram) {
+        diagram.cascade(150, false, includeprops);
+        diagram.cascade(160, false, excludeprops);
+    }
+    var _behavior = dc_graph.behavior('highlight-things', {
+        add_behavior: add_behavior,
+        remove_behavior: remove_behavior,
+        parent: function(p) {
+            highlight_things_group.on('highlight.highlight-things', p ? highlight : null);
+        }
+    });
+    _behavior.durationOverride = property(undefined);
+    return _behavior;
+};
+
+dc_graph.register_highlight_neighbors_group = function(neighborsgroup) {
+    window.chart_registry.create_type('highlight-neighbors', function() {
+        return d3.dispatch('highlight_node');
+    });
+
+    return window.chart_registry.create_group('highlight-neighbors', neighborsgroup);
+};
+
+dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgroup, thingsgroup) {
+    var highlight_neighbors_group = dc_graph.register_highlight_neighbors_group(neighborsgroup || 'highlight-neighbors-group');
+    var highlight_things_group = dc_graph.register_highlight_things_group(thingsgroup || 'highlight-things-group');
+
+    function highlight_node(nodeid) {
+        var diagram = _behavior.parent();
+        var nodeset = {}, edgeset = {};
+        if(nodeid) {
+            nodeset[nodeid] = true;
+            _behavior.parent().selectAllEdges().each(function(e) {
+                if(diagram.nodeKey.eval(e.source) === nodeid) {
+                    edgeset[diagram.edgeKey.eval(e)] = true;
+                    nodeset[diagram.nodeKey.eval(e.target)] = true;
+                }
+                if(diagram.nodeKey.eval(e.target) === nodeid) {
+                    edgeset[diagram.edgeKey.eval(e)] = true;
+                    nodeset[diagram.nodeKey.eval(e.source)] = true;
+                }
+            });
+            highlight_things_group.highlight(nodeset, edgeset);
+        }
+        else highlight_things_group.highlight(null, null);
+    }
+    function add_behavior(diagram, node, edge) {
         node
             .on('mouseover.highlight-neighbors', function(n) {
                 highlight_neighbors_group.highlight_node(_behavior.parent().nodeKey.eval(n));
@@ -8421,7 +8463,6 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
         highlight_neighbors_group.highlight_node(null);
-        diagram.cascade(100, false, includeprops);
     }
 
     var _behavior = dc_graph.behavior('highlight-neighbors', {
@@ -8431,12 +8472,79 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
         },
         parent: function(p) {
             highlight_neighbors_group.on('highlight_node.highlight', p ? highlight_node : null);
+            if(!p.child('highlight-things'))
+                p.child('highlight-things',
+                        dc_graph.highlight_things(includeprops, excludeprops)
+                          .durationOverride(_behavior.durationOverride()));
         }
     });
     _behavior.durationOverride = property(undefined);
     return _behavior;
 };
 
+
+dc_graph.highlight_radius = function(options) {
+    options = options || {};
+    var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    var highlight_things_group = dc_graph.register_highlight_things_group(options.select_things_group || 'highlight-things-group');
+    var _graph, _selection = [];
+
+    function recurse(n, r, nodeset, edgeset) {
+        nodeset[n.key()] = true;
+        if(r) {
+            n.outs().filter(function(e) {
+                return !edgeset[e.key()];
+            }).forEach(function(e) {
+                edgeset[e.key()] = true;
+                recurse(e.target(), r-1, nodeset, edgeset);
+            });
+            n.ins().filter(function(e) {
+                return !edgeset[e.key()];
+            }).forEach(function(e) {
+                edgeset[e.key()] = true;
+                recurse(e.source(), r-1, nodeset, edgeset);
+            });
+        }
+    }
+    function selection_changed(nodes) {
+        _selection = nodes;
+        console.assert(_graph);
+        var nodeset = {}, edgeset = {};
+        nodes.forEach(function(nkey) {
+            recurse(_graph.node(nkey), _behavior.radius(), nodeset, edgeset);
+        });
+        if(!Object.keys(nodeset).length && !Object.keys(edgeset).length)
+            nodeset = edgeset = null;
+        highlight_things_group.highlight(nodeset, edgeset);
+    }
+
+    function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
+        _graph = metagraph.graph(wnodes, wedges, {
+            nodeKey: diagram.nodeKey.eval,
+            edgeKey: diagram.edgeKey.eval,
+            edgeSource: diagram.edgeSource.eval,
+            edgeTarget: diagram.edgeTarget.eval
+        });
+        var sel2 = _selection.filter(function(nk) {
+            return !!_graph.node(nk);
+        });
+        if(sel2.length < _selection.length)
+            window.setTimeout(function() {
+                select_nodes_group.set_changed(sel2);
+            }, 0);
+    }
+    var _behavior = {
+        parent: function(p) {
+            if(p) {
+                p.on('data.fix-nodes', on_data);
+            } else if(_behavior.parent())
+                _behavior.parent().on('data.fix-nodes', null);
+            select_nodes_group.on('set_changed', selection_changed);
+        }
+    };
+    _behavior.radius = property(1);
+    return _behavior;
+};
 
 dc_graph.register_highlight_paths_group = function(pathsgroup) {
     window.chart_registry.create_type('highlight-paths', function() {
