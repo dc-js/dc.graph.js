@@ -184,7 +184,8 @@ module.exports = function (grunt) {
                         flatten: true,
                         nonull: true,
                         src: [
-                            'node_modules/x-editable/dist/jqueryui-editable/img/*'
+                            'node_modules/x-editable/dist/jqueryui-editable/img/*',
+                            'node_modules/ionicons/dist/ionicons/svg/md-*'
                         ],
                         dest: '<%= conf.web %>/img'
                     },
