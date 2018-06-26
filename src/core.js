@@ -51,7 +51,7 @@ var property = function (defaultValue, unwrap) {
             if(cascade[i].n === n) {
                 if(f)
                     cascade[i].f = f;
-                else delete cascade[i];
+                else cascade.splice(i, 1);
                 return ret;
             } else if(cascade[i].n > n) {
                 cascade.splice(i, 0, {n: n, f: f});
