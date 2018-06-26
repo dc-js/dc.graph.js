@@ -183,7 +183,7 @@ dc_graph.tip = function(options) {
  **/
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
-        d = d.orig.value;
+        d = gen.fetch()(d);
         var keys = Object.keys(d).filter(d3.functor(gen.filter()))
                 .filter(function(k) {
                     return d[k];
@@ -196,6 +196,9 @@ dc_graph.tip.table = function() {
         k(table.node().outerHTML); // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
+    gen.fetch = property(function(d) {
+        return d.orig.value;
+    });
     return gen;
 };
 
