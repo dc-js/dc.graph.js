@@ -21,6 +21,9 @@ dc_graph.behavior = function(event_namespace, options) {
                     else if(options.rest)
                         options.rest(diagram, node, edge, ehover);
                 });
+                p.on('reset.' + event_namespace, function() {
+                    options.remove_behavior(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
+                });
             }
             else if(_behavior.parent()) {
                 diagram = _behavior.parent();
