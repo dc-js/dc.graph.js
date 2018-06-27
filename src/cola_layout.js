@@ -8,7 +8,6 @@
 dc_graph.cola_layout = function(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
-    var _setcola = null;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _flowLayout;
     // node and edge objects shared with cola.js, preserved from one iteration
@@ -106,35 +105,25 @@ dc_graph.cola_layout = function(id) {
             dispatchState('end');
         });
 
-        var setcolaSpec = [
-          {
-            "name": "layer",
-            "sets": {"partition": "depth"},
-            "forEach": [{"constraint": "align", "axis": "x"}]
-          },
-          {
-            "name": "sort",
-            "sets": ["layer"],
-            "forEach": [{"constraint": "order", "axis": "y", "by": "depth"}]
-          }
-        ];
+        if(engine.setcolaSpec !== []) {
+            var setcola_result = setcola
+                .nodes(wnodes)        // Set the graph nodes
+                .links(wedges)        // Set the graph links
+                .constraints(engine.setcolaSpec)  // Set the constraints
+                .gap(10)
+                .layout();
 
-        var setcola_result = setcola
-            .nodes(wnodes)        // Set the graph nodes
-            .links(wedges)        // Set the graph links
-            .constraints(setcolaSpec)  // Set the constraints
-            .gap(10)
-            .layout();
+            _d3cola.nodes(setcola_result.nodes)
+                .links(setcola_result.links)
+                .constraints(setcola_result.constraints)
+                .groups(groups);
+        } else {
+            _d3cola.nodes(wnodes)
+                .links(wedges)
+                .constraints(constraints)
+                .groups(groups);
+        }
 
-        _d3cola.nodes(setcola_result.nodes)
-            .links(setcola_result.links)
-            .constraints(setcola_result.constraints)
-            .groups(groups);
-
-        //_d3cola.nodes(wnodes)
-            //.links(wedges)
-            //.constraints(constraints)
-            //.groups(groups);
     }
 
     function start() {
@@ -265,7 +254,8 @@ dc_graph.cola_layout = function(id) {
         allConstraintsIterations: property(20),
         gridSnapIterations: property(0),
         tickSize: property(1),
-        groupConnected: property(false)
+        groupConnected: property(false),
+        setcolaSpec: property([]),
     });
     return engine;
 };
