@@ -8,6 +8,7 @@
 dc_graph.cola_layout = function(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
+    var _setcola = null;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _flowLayout;
     // node and edge objects shared with cola.js, preserved from one iteration
@@ -20,6 +21,7 @@ dc_graph.cola_layout = function(id) {
             .avoidOverlaps(true)
             .size([options.width, options.height])
             .handleDisconnected(options.handleDisconnected);
+
         if(_d3cola.tickSize) // non-standard
             _d3cola.tickSize(options.tickSize);
 
@@ -103,10 +105,36 @@ dc_graph.cola_layout = function(id) {
         }).on('end', /* _done = */ function() {
             dispatchState('end');
         });
-        _d3cola.nodes(wnodes)
-            .links(wedges)
-            .constraints(constraints)
+
+        var setcolaSpec = [
+          {
+            "name": "layer",
+            "sets": {"partition": "depth"},
+            "forEach": [{"constraint": "align", "axis": "x"}]
+          },
+          {
+            "name": "sort",
+            "sets": ["layer"],
+            "forEach": [{"constraint": "order", "axis": "y", "by": "depth"}]
+          }
+        ];
+
+        var setcola_result = setcola
+            .nodes(wnodes)        // Set the graph nodes
+            .links(wedges)        // Set the graph links
+            .constraints(setcolaSpec)  // Set the constraints
+            .gap(10)
+            .layout();
+
+        _d3cola.nodes(setcola_result.nodes)
+            .links(setcola_result.links)
+            .constraints(setcola_result.constraints)
             .groups(groups);
+
+        //_d3cola.nodes(wnodes)
+            //.links(wedges)
+            //.constraints(constraints)
+            //.groups(groups);
     }
 
     function start() {
@@ -245,4 +273,4 @@ dc_graph.cola_layout = function(id) {
     return engine;
 };
 
-dc_graph.cola_layout.scripts = ['d3.js', 'cola.js'];
+dc_graph.cola_layout.scripts = ['d3.js', 'cola.js', 'setcola.js'];
