@@ -52,6 +52,7 @@ dc_graph.cola_layout = function(id) {
             v1.width = v.width;
             v1.height = v.height;
             v1.fixed = !!v.dcg_nodeFixed;
+            v1.attrs = v.attrs;
 
             if(v1.fixed && typeof v.dcg_nodeFixed === 'object') {
                 v1.x = v.dcg_nodeFixed.x;
@@ -74,11 +75,14 @@ dc_graph.cola_layout = function(id) {
             e1.source = _nodes[e.dcg_edgeSource];
             e1.target = _nodes[e.dcg_edgeTarget];
             e1.dcg_edgeLength = e.dcg_edgeLength;
+            e1.attrs = e.attrs;
         });
 
         // cola needs each node object to have an index property
         wnodes.forEach(function(v, i) {
             v.index = i;
+            //use user defined attribute extractor to get needed attributes
+            engine.extractNodeAttrs(v, v.attrs);
         });
 
         var groups = null;
@@ -110,8 +114,10 @@ dc_graph.cola_layout = function(id) {
                 .nodes(wnodes)        // Set the graph nodes
                 .links(wedges)        // Set the graph links
                 .constraints(engine.setcolaSpec)  // Set the constraints
-                .gap(10)
+                .gap(10) //default value is 10, can be customized in setcolaSpec
                 .layout();
+
+             console.log('applying setcola constrains');
 
             _d3cola.nodes(setcola_result.nodes)
                 .links(setcola_result.links)
@@ -256,6 +262,8 @@ dc_graph.cola_layout = function(id) {
         tickSize: property(1),
         groupConnected: property(false),
         setcolaSpec: property([]),
+        extractNodeAttrs: function(_node, _attrs) {}, //add new attributes to _node from _attrs
+        extractEdgeAttrs: function(_edge, _attrs) {},
     });
     return engine;
 };
