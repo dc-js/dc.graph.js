@@ -42,6 +42,7 @@ dc_graph.tip = function(options) {
                                  if(_behavior.linkCallback())
                                      _behavior.linkCallback()(this.id);
                              });
+                         _dispatch.tipped(d);
                      });
                  };
              if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
@@ -143,14 +144,16 @@ dc_graph.tip = function(options) {
         return _dispatch.on(event, f);
     };
 
-    _behavior.displayTip = function(filter, n) {
+    _behavior.displayTip = function(filter, n, cb) {
         var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
             .filter(filter);
         if(found.size() > 0) {
             var action = fetch_and_show_content('content');
             var which = (n || 0) % found.size();
             action.call(found[0][which], d3.select(found[0][which]).datum());
-            _dispatch.tipped(d3.select(found[0][which]).datum());
+            var d = d3.select(found[0][which]).datum();
+            if(cb)
+                cb(d);
         }
     };
     _behavior.hideTip = function() {
