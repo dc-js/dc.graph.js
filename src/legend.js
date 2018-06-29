@@ -136,7 +136,18 @@ dc_graph.legend = function() {
                     return (_legend.nodeWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width + 5;
                 })
                 .on('mouseenter', function() {
-                    console.log('drop down!');
+                    var bbox = getBBoxNoThrow(this);
+                    var dropdown = _legend.parent().root().selectAll('div.dropdown').data([0]);
+                    dropdown
+                      .enter().append('div')
+                        .attr('class', 'dropdown');
+                    dropdown
+                        .style('left', bbox.x + 'px')
+                        .style('top', bbox.y + 'px')
+                        .selectAll('div.dropdown-item').data(['foo', 'bar', 'qux'])
+                      .enter().append('div')
+                        .attr('class', 'dropdown-item')
+                        .text(function(x) { return x; });
                 });
         }
 
