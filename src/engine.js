@@ -1,5 +1,6 @@
 dc_graph.spawn_engine = function(layout, args, worker) {
     args = args || {};
+    worker = worker && !!window.Worker;
     var engine = dc_graph.engines.instantiate(layout, args, worker);
     if(!engine) {
         console.warn('layout engine ' + layout + ' not found; using default ' + dc_graph._default_engine);
