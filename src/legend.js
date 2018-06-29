@@ -124,6 +124,22 @@ dc_graph.legend = function() {
         if(_legend.noLabel())
             node.selectAll('.node-label').remove();
 
+        if(_legend.showDropdowns()) {
+            nodeEnter.append('text')
+                .attr('dy', '0.3em')
+                .attr('font-size', '75%')
+                .attr('fill', 'blue')
+                .attr('class', 'dropdown-caret')
+                .html('&#x25BC;');
+            node.select('text.dropdown-caret')
+                .attr('dx', function(d) {
+                    return (_legend.nodeWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width + 5;
+                })
+                .on('mouseenter', function() {
+                    console.log('drop down!');
+                });
+        }
+
         if(_legend.dimension()) {
             node.attr('cursor', 'pointer')
                 .on('click.legend', function(d) {
@@ -168,6 +184,8 @@ dc_graph.legend = function() {
         }
         _legend.redraw();
     };
+
+    _legend.showDropdowns = property(false);
 
     /* enables filtering */
     _legend.dimension = property(null)
