@@ -1749,6 +1749,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
             })
             .on('end', function(nodes, edges) {
+                console.log('algo ' + _diagram.layoutEngine().layoutAlgorithm() + ' completed.');
                 if(!_diagram.showLayoutSteps()) {
                     if(!_diagram.initialOnly())
                         populate_cola(nodes, edges);
