@@ -6,6 +6,7 @@ The dc_graph.legend will show labeled examples of nodes (and someday edges), wit
 dc_graph.legend = function() {
     var _legend = {}, _items, _included = [];
     var _dispatch = d3.dispatch('filtered');
+    var _dropdown;
     var _totals, _counts;
 
     function apply_filter() {
@@ -125,29 +126,26 @@ dc_graph.legend = function() {
             node.selectAll('.node-label').remove();
 
         if(_legend.showDropdowns()) {
-            nodeEnter.append('text')
+            if(!(_dropdown = _legend.parent().child('dropdown')))
+                _legend.parent().child('dropdown', _dropdown = dc_graph.dropdown());
+            var caret = node.selectAll('text.dropdown-caret').data(function(x) { return [x]; });
+            caret
+              .enter().append('text')
                 .attr('dy', '0.3em')
                 .attr('font-size', '75%')
                 .attr('fill', 'blue')
                 .attr('class', 'dropdown-caret')
                 .html('&#x25BC;');
-            node.select('text.dropdown-caret')
+            caret
                 .attr('dx', function(d) {
                     return (_legend.nodeWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width + 5;
                 })
-                .on('mouseenter', function() {
-                    var bbox = getBBoxNoThrow(this);
-                    var dropdown = _legend.parent().root().selectAll('div.dropdown').data([0]);
-                    dropdown
-                      .enter().append('div')
-                        .attr('class', 'dropdown');
-                    dropdown
-                        .style('left', bbox.x + 'px')
-                        .style('top', bbox.y + 'px')
-                        .selectAll('div.dropdown-item').data(['foo', 'bar', 'qux'])
-                      .enter().append('div')
-                        .attr('class', 'dropdown-item')
-                        .text(function(x) { return x; });
+                .on('mouseenter', function(d) {
+                    var rect = this.getBoundingClientRect();
+                    var values = _legend.showDropdowns()(_legend.parent().nodeKey.eval(d));
+                    _dropdown
+                        .values(values)
+                        .show(rect.x, rect.y);
                 });
         }
 
@@ -196,7 +194,10 @@ dc_graph.legend = function() {
         _legend.redraw();
     };
 
-    _legend.showDropdowns = property(false);
+    _legend.showDropdowns = property(false).react(function(v) {
+        if(!!v !== !!_legend.showDropdowns())
+            window.setTimeout(_legend.redraw, 0);
+    });
 
     /* enables filtering */
     _legend.dimension = property(null)
