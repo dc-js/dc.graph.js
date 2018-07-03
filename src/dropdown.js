@@ -19,6 +19,19 @@ dc_graph.dropdown = function() {
                     dropdown.style('visibility', 'hidden');
                 });
                 break;
+            case 'click':
+                var diagram = _dropdown.parent();
+                var capture = diagram.svg().append('rect')
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('width', diagram.width())
+                    .attr('height', diagram.height())
+                    .attr('opacity', 0)
+                    .on('click', function() {
+                        capture.remove();
+                        dropdown.style('visibility', 'hidden');
+                    });
+                break;
             }
             var container = dropdown;
             if(_dropdown.scrollHeight()) {
@@ -46,7 +59,7 @@ dc_graph.dropdown = function() {
                     .on('click', _dropdown.itemSelected());
             });
         },
-        hide: property('leave'),
+        hide: property('click'),
         height: property(10),
         itemText: property(function(x) { return x; }),
         itemSelected: property(function() {}),
