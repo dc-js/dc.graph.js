@@ -13,6 +13,7 @@ dc_graph.dropdown = function() {
                 .style('visibility', 'visible')
                 .style('left', x + 'px')
                 .style('top', y + 'px');
+            var capture;
             switch(_dropdown.hide()) {
             case 'leave':
                 dropdown.on('mouseleave', function() {
@@ -20,8 +21,9 @@ dc_graph.dropdown = function() {
                 });
                 break;
             case 'click':
+            case 'clickout':
                 var diagram = _dropdown.parent();
-                var capture = diagram.svg().append('rect')
+                capture = diagram.svg().append('rect')
                     .attr('x', 0)
                     .attr('y', 0)
                     .attr('width', diagram.width())
@@ -56,7 +58,13 @@ dc_graph.dropdown = function() {
                 items.exit().remove();
                 items
                     .text(function(item) { return _dropdown.itemText()(item); })
-                    .on('click', _dropdown.itemSelected());
+                    .on('click', function(d) {
+                        _dropdown.itemSelected()(d);
+                        if(_dropdown.hide() === 'click') {
+                            capture.remove();
+                            dropdown.style('visibility', 'hidden');
+                        }
+                    });
             });
         },
         hide: property('click'),
