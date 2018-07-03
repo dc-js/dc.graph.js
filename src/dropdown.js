@@ -14,14 +14,12 @@ dc_graph.dropdown = function() {
                 .style('left', x + 'px')
                 .style('top', y + 'px');
             var capture;
-            switch(_dropdown.hide()) {
-            case 'leave':
+            var hides = _dropdown.hideOn().split('|');
+            if(hides.includes('leave'))
                 dropdown.on('mouseleave', function() {
                     dropdown.style('visibility', 'hidden');
                 });
-                break;
-            case 'click':
-            case 'clickout':
+            else if(hides.includes('clickout')) {
                 var diagram = _dropdown.parent();
                 capture = diagram.svg().append('rect')
                     .attr('x', 0)
@@ -33,7 +31,6 @@ dc_graph.dropdown = function() {
                         capture.remove();
                         dropdown.style('visibility', 'hidden');
                     });
-                break;
             }
             var container = dropdown;
             if(_dropdown.scrollHeight()) {
@@ -60,14 +57,14 @@ dc_graph.dropdown = function() {
                     .text(function(item) { return _dropdown.itemText()(item); })
                     .on('click', function(d) {
                         _dropdown.itemSelected()(d);
-                        if(_dropdown.hide() === 'click') {
+                        if(hides.includes('select')) {
                             capture.remove();
                             dropdown.style('visibility', 'hidden');
                         }
                     });
             });
         },
-        hide: property('click'),
+        hideOn: property('clickout|select'),
         height: property(10),
         itemText: property(function(x) { return x; }),
         itemSelected: property(function() {}),
