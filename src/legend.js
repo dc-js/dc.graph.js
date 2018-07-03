@@ -6,7 +6,6 @@ The dc_graph.legend will show labeled examples of nodes (and someday edges), wit
 dc_graph.legend = function() {
     var _legend = {}, _items, _included = [];
     var _dispatch = d3.dispatch('filtered');
-    var _dropdown;
     var _totals, _counts;
 
     function apply_filter() {
@@ -125,9 +124,7 @@ dc_graph.legend = function() {
         if(_legend.noLabel())
             node.selectAll('.node-label').remove();
 
-        if(_legend.showDropdowns()) {
-            if(!(_dropdown = _legend.parent().child('dropdown')))
-                _legend.parent().child('dropdown', _dropdown = dc_graph.dropdown());
+        if(_legend.dropdown()) {
             var caret = node.selectAll('text.dropdown-caret').data(function(x) { return [x]; });
             caret
               .enter().append('text')
@@ -142,10 +139,9 @@ dc_graph.legend = function() {
                 })
                 .on('mouseenter', function(d) {
                     var rect = this.getBoundingClientRect();
-                    var values = _legend.showDropdowns()(_legend.parent().nodeKey.eval(d));
-                    _dropdown
-                        .values(values)
-                        .show(rect.x, rect.y);
+                    var key = _legend.parent().nodeKey.eval(d);
+                    _legend.dropdown()
+                        .show(key, rect.x, rect.y);
                 });
         }
 
@@ -194,8 +190,8 @@ dc_graph.legend = function() {
         _legend.redraw();
     };
 
-    _legend.showDropdowns = property(false).react(function(v) {
-        if(!!v !== !!_legend.showDropdowns())
+    _legend.dropdown = property(null).react(function(v) {
+        if(!!v !== !!_legend.dropdown() && _legend.parent() && _legend.parent().svg())
             window.setTimeout(_legend.redraw, 0);
     });
 
