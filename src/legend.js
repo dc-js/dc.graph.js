@@ -132,16 +132,26 @@ dc_graph.legend = function() {
                 .attr('font-size', '75%')
                 .attr('fill', 'blue')
                 .attr('class', 'dropdown-caret')
-                .html('&#x25BC;');
+                .style('visibility', 'hidden')
+                .html('&emsp;&#x25BC;');
             caret
                 .attr('dx', function(d) {
-                    return (_legend.nodeWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width + 5;
+                    return (_legend.nodeWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width;
                 })
                 .on('mouseenter', function(d) {
                     var rect = this.getBoundingClientRect();
                     var key = _legend.parent().nodeKey.eval(d);
                     _legend.dropdown()
                         .show(key, rect.x, rect.y);
+                });
+            node
+                .on('mouseenter', function(d) {
+                    d3.select(this).selectAll('.dropdown-caret')
+                        .style('visibility', 'visible');
+                })
+                .on('mouseleave', function(d) {
+                    d3.select(this).selectAll('.dropdown-caret')
+                        .style('visibility', 'hidden');
                 });
         }
 
