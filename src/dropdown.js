@@ -10,8 +10,17 @@ dc_graph.dropdown = function() {
                 .enter().append('div')
                 .attr('class', 'dropdown ' + _dropdown.id);
             dropdown
+                .style('visibility', 'visible')
                 .style('left', x + 'px')
                 .style('top', y + 'px');
+            switch(_dropdown.hide()) {
+            case 'leave':
+                dropdown.on('mouseleave', function() {
+                    dropdown.style('visibility', 'hidden');
+                });
+                break;
+            }
+            var container = dropdown;
             if(_dropdown.scrollHeight()) {
                 var height = _dropdown.scrollHeight();
                 if(typeof height === 'number')
@@ -23,10 +32,10 @@ dc_graph.dropdown = function() {
                     .style('overflow-y', 'auto')
                   .append('div')
                     .attr('class', 'scroller');
-                dropdown = dropdown.selectAll('div.scroller');
+                container = dropdown.selectAll('div.scroller');
             }
             var values = _dropdown.fetchValues()(key, function(values) {
-                var items = dropdown
+                var items = container
                     .selectAll('div.dropdown-item').data(values);
                 items
                     .enter().append('div')
@@ -37,6 +46,7 @@ dc_graph.dropdown = function() {
                     .on('click', _dropdown.itemSelected());
             });
         },
+        hide: property('leave'),
         height: property(10),
         itemText: property(function(x) { return x; }),
         itemSelected: property(function() {}),
