@@ -51,6 +51,21 @@
     background-color: rgba(210, 240, 255, 0.8);
 }
 
+.dc-graph .dropdown::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+.dc-graph .dropdown::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
 .dc-graph .dropdown .dropdown-item {
     padding: 0.1em;
+}
+
+.dc-graph .dropdown .dropdown-item:hover {
+    background-color: rgba(105, 120, 127, 0.9);
+    color: white;
 }

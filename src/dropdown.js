@@ -3,12 +3,22 @@ dc_graph.dropdown = function() {
         parent: property(null),
         show: function(x, y) {
             var dropdown = _dropdown.parent().root().selectAll('div.dropdown').data([0]);
-            dropdown
+            var dropdownEnter = dropdown
                 .enter().append('div')
                 .attr('class', 'dropdown');
-            var items = dropdown
+            dropdown
                 .style('left', x + 'px')
-                .style('top', y + 'px')
+                .style('top', y + 'px');
+            if(_dropdown.scrolling()) {
+                dropdown
+                    .style('height', '10em');
+                dropdownEnter
+                    .style('overflow-y', 'auto')
+                  .append('div')
+                    .attr('class', 'scroller');
+                dropdown = dropdown.selectAll('div.scroller');
+            }
+            var items = dropdown
                 .selectAll('div.dropdown-item').data(_dropdown.values());
             items
               .enter().append('div')
@@ -21,7 +31,8 @@ dc_graph.dropdown = function() {
         height: property(10),
         itemText: property(function(x) { return x; }),
         itemSelected: property(function() {}),
-        values: property([])
+        values: property([]),
+        scrolling: property(true)
     };
     return _dropdown;
 };
