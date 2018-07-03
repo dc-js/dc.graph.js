@@ -15,6 +15,7 @@ dc_graph.dropdown = function() {
                 .style('top', y + 'px');
             var capture;
             var hides = _dropdown.hideOn().split('|');
+            var selects = _dropdown.selectOn().split('|');
             if(hides.includes('leave'))
                 dropdown.on('mouseleave', function() {
                     dropdown.style('visibility', 'hidden');
@@ -53,18 +54,30 @@ dc_graph.dropdown = function() {
                     .enter().append('div')
                     .attr('class', 'dropdown-item');
                 items.exit().remove();
+                var select_event = null;
+                if(selects.includes('click'))
+                    select_event = 'click';
+                else if(selects.includes('hover'))
+                    select_event = 'mouseenter';
                 items
-                    .text(function(item) { return _dropdown.itemText()(item); })
-                    .on('click', function(d) {
-                        _dropdown.itemSelected()(d);
-                        if(hides.includes('select')) {
+                    .text(function(item) { return _dropdown.itemText()(item); });
+                if(select_event) {
+                    items
+                        .on(select_event + '.select', function(d) {
+                            _dropdown.itemSelected()(d);
+                        });
+                }
+                if(hides.includes('clickitem')) {
+                    items
+                        .on('click.hide', function(d) {
                             capture.remove();
                             dropdown.style('visibility', 'hidden');
-                        }
-                    });
+                        });
+                }
             });
         },
-        hideOn: property('clickout|select'),
+        hideOn: property('clickout|clickitem'),
+        selectOn: property('click'),
         height: property(10),
         itemText: property(function(x) { return x; }),
         itemSelected: property(function() {}),
