@@ -9,9 +9,12 @@ dc_graph.dropdown = function() {
             dropdown
                 .style('left', x + 'px')
                 .style('top', y + 'px');
-            if(_dropdown.scrolling()) {
+            if(_dropdown.scrollHeight()) {
+                var height = _dropdown.scrollHeight();
+                if(typeof height === 'number')
+                    height = height + 'px';
                 dropdown
-                    .style('height', '10em');
+                    .style('height', height);
                 dropdownEnter
                     .style('overflow-y', 'auto')
                   .append('div')
@@ -32,7 +35,7 @@ dc_graph.dropdown = function() {
         itemText: property(function(x) { return x; }),
         itemSelected: property(function() {}),
         values: property([]),
-        scrolling: property(true)
+        scrollHeight: property('12em')
     };
     return _dropdown;
 };
