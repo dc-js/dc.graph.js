@@ -146,8 +146,10 @@ dc_graph.legend = function() {
                 });
             node
                 .on('mouseenter', function(n) {
-                    d3.select(this).selectAll('.dropdown-caret')
-                        .style('visibility', 'visible');
+                    if(_counts && _counts[n.name]) {
+                        d3.select(this).selectAll('.dropdown-caret')
+                            .style('visibility', 'visible');
+                    }
                 })
                 .on('mouseleave', function(n) {
                     d3.select(this).selectAll('.dropdown-caret')
