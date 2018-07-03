@@ -17,7 +17,7 @@ dc_graph.dropdown = function() {
                 if(typeof height === 'number')
                     height = height + 'px';
                 dropdown
-                    .style('height', height)
+                    .style('max-height', height)
                     .property('scrollTop', 0);
                 dropdownEnter
                     .style('overflow-y', 'auto')
