@@ -138,18 +138,18 @@ dc_graph.legend = function() {
                 .attr('dx', function(d) {
                     return (_legend.nodeWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width;
                 })
-                .on('mouseenter', function(d) {
+                .on('mouseenter', function(n) {
                     var rect = this.getBoundingClientRect();
-                    var key = _legend.parent().nodeKey.eval(d);
+                    var key = _legend.parent().nodeKey.eval(n);
                     _legend.dropdown()
                         .show(key, rect.x, rect.y);
                 });
             node
-                .on('mouseenter', function(d) {
+                .on('mouseenter', function(n) {
                     d3.select(this).selectAll('.dropdown-caret')
                         .style('visibility', 'visible');
                 })
-                .on('mouseleave', function(d) {
+                .on('mouseleave', function(n) {
                     d3.select(this).selectAll('.dropdown-caret')
                         .style('visibility', 'hidden');
                 });
