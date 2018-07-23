@@ -47,7 +47,13 @@ dc_graph._engines = [
         instantiate: function() {
             return dc_graph.cola_layout();
         }
-    }
+    },
+    {
+        name: 'multiAlg',
+        instantiate: function() {
+            return dc_graph.multi_layout();
+        }
+    },
 ];
 dc_graph._default_engine = 'cola';
 
