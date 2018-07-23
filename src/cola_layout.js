@@ -82,7 +82,7 @@ dc_graph.cola_layout = function(id) {
         wnodes.forEach(function(v, i) {
             v.index = i;
             //use user defined attribute extractor to get needed attributes
-            engine.extractNodeAttrs(v, v.attrs);
+            engine.extractNodeAttrs()(v, v.attrs);
         });
 
         var groups = null;
@@ -109,12 +109,12 @@ dc_graph.cola_layout = function(id) {
             dispatchState('end');
         });
 
-        if(engine.setcolaContraints()) {
+        if(engine.setcolaConstraints()) {
             var setcola_result = setcola
                 .nodes(wnodes)        // Set the graph nodes
                 .links(wedges)        // Set the graph links
                 .guides(engine.setcolaGuides() || [])  // Set the guides
-                .constraints(engine.setcolaContraints())  // Set the constraints
+                .constraints(engine.setcolaConstraints())  // Set the constraints
                 .gap(10) //default value is 10, can be customized in setcolaSpec
                 .layout();
 
@@ -185,7 +185,7 @@ dc_graph.cola_layout = function(id) {
             stop();
         },
         optionNames: function() {
-            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize', 'groupConnected']
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize', 'groupConnected', 'setcolaConstraints', 'setcolaGuides']
                 .concat(graphviz_keys);
         },
         populateLayoutNode: function() {},
@@ -267,8 +267,8 @@ dc_graph.cola_layout = function(id) {
         groupConnected: property(false),
         setcolaConstraints: property(null),
         setcolaGuides: property(null),
-        extractNodeAttrs: function(_node, _attrs) {}, //add new attributes to _node from _attrs
-        extractEdgeAttrs: function(_edge, _attrs) {}
+        extractNodeAttrs: property(function(_node, _attrs) {}), //add new attributes to _node from _attrs
+        extractEdgeAttrs: property(function(_edge, _attrs) {})
     });
     return engine;
 };
