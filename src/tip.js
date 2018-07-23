@@ -62,7 +62,7 @@ dc_graph.tip = function(options) {
     function hide_tip() {
         if(d3.event.relatedTarget &&
            (!_behavior.selection().exclude || !_behavior.selection().exclude(d3.event.target)) &&
-           (this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
+           (this && this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
             _behavior.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
             return;
         if(_showTimeout) {
