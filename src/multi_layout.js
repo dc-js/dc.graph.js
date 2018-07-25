@@ -1,36 +1,58 @@
 dc_graph.multi_layout = function(id) {
     var _layoutId = id || uuid();
-    var _engine = null;
+    var _engines = [];
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _flowLayout;
     var _nodes = {}, _edges = {};
+    var onEnd = null;
 
     function init(options) {
-        // width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize
-        _engine = dc_graph.d3v4_force_layout();
-        _engine.init(options);
-        _engine.on('end', function(nodes, edges) {
-          _dispatch['end'](nodes, edges);
+        //
+        _engines = [];
+        _engines.push(dc_graph.d3v4_force_layout());
+        _engines[0].init(options);
+        // TODO use promises
+        onEnd = new Promise(function(resolve){
+          _engines[0].on('end', function(nodes, edges) {
+            resolve([nodes, edges]);
+          });
         });
+        onEnd.then(function(args) {
+          _dispatch['end'](args[0], args[1]);
+        });
+        //_engines[0].on('end', function(nodes, edges) {
+          //_dispatch['end'](nodes, edges);
+        //});
+
+        //_engines.push(dc_graph.cola_layout());
+        //_engines[1].init(options);
+        //_engines[1].on('end', function(nodes, edges) {
+          //_dispatch['end'](nodes, edges);
+        //});
+
     }
 
     function data(nodes, edges, constraints) {
         // TODO creat a set of different layouts hierarchically
         _nodes = nodes;
         _edges = edges;
-        _engine.data({}, nodes, edges, constraints);
+        _engines[0].data({}, nodes, edges, constraints);
     }
 
     function start() {
         // TODO execute the layout algorithms bottom-up
-        _engine.start();
+        for(var i = 0; i < _engines.length; i ++) {
+          _engines[i].start();
+        }
         // get the positions of nodes
         // _d3cola._ndoes
     }
 
     function stop() {
-        if(_engine)
-            _engine.stop();
+        for(var i = 0; i < _engines.length; i ++) {
+          if(_engines[i])
+              _engines[i].stop();
+        }
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
