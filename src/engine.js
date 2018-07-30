@@ -49,9 +49,9 @@ dc_graph._engines = [
         }
     },
     {
-        name: 'multiAlg',
+        name: 'nested',
         instantiate: function() {
-            return dc_graph.multi_layout();
+            return dc_graph.nested_layout();
         }
     },
 ];
