@@ -1,12 +1,13 @@
 dc_graph.nested_layout = function(id) {
     var _layoutId = id || uuid();
-    var _engines = [];
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _flowLayout;
     var _nodes = {}, _edges = {};
     var _options = null;
-    var _level1 = [];
-    var _level2 = []; // TODO support multiple levels
+    var _engines_l1 = []; // level1 engines
+    var _engines_l2 = []; // level2 engines
+    var _level1 = []; // level1 promises
+    var _level2 = []; // level2 promises
     //var _nodes = {}, _edges = {};
 
     function init(options) {
@@ -36,7 +37,8 @@ dc_graph.nested_layout = function(id) {
           }
         }
 
-        _engines = [];
+        _engines_l1 = [];
+        _engines_l2 = [];
         _level1 = [];
         _level2 = [];
 
@@ -54,14 +56,14 @@ dc_graph.nested_layout = function(id) {
           var _e = dc_graph.d3v4_force_layout();
           _e.init(_options);
           _e.data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
-          _engines.push(_e);
-
+          _engines_l1.push(_e);
           _level1.push(createOnEndPromise(_e, type));
         }
 
         // create layout engine for level2
         var _l2e = dc_graph.d3v4_force_layout();
         _l2e.init(_options);
+        _engines_l2.push(_l2e);
         _level2.push(createOnEndPromise(_l2e, 'level2'));
 
         Promise.all(_level1).then(function(results){
@@ -74,9 +76,12 @@ dc_graph.nested_layout = function(id) {
             superNodes.push(sn);
           }
           console.log(superNodes);
-          // create layout engine for super nodes
-          _l2e.data(null, superNodes, [], constraints);
-          _l2e.start();
+
+          // now we have data for higher level layouts
+          _engines_l2[0].data(null, superNodes, [], constraints);
+          for(var i = 0; i < _engines_l2.length; i ++) {
+            _engines_l2[i].start();
+          }
 
         });
 
@@ -99,17 +104,21 @@ dc_graph.nested_layout = function(id) {
     }
 
     function start() {
-        // TODO execute the layout algorithms bottom-up
-        for(var i = 0; i < _engines.length; i ++) {
-          _engines[i].start();
+        // execute the layout algorithms
+        for(var i = 0; i < _engines_l1.length; i ++) {
+          _engines_l1[i].start();
         }
     }
 
     function stop() {
+      var stopEngines = function(_engines) {
         for(var i = 0; i < _engines.length; i ++) {
           if(_engines[i])
               _engines[i].stop();
         }
+      }
+      stopEngines(_engines_l1);
+      stopEngines(_engines_l2);
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
@@ -241,4 +250,4 @@ dc_graph.nested_layout = function(id) {
     return engine;
 };
 
-dc_graph.multi_layout.scripts = ['d3.js', 'cola.js', 'setcola.js', 'd3v4-force.js'];
+dc_graph.nested_layout.scripts = ['d3.js', 'cola.js', 'setcola.js', 'd3v4-force.js'];
