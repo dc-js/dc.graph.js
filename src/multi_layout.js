@@ -4,39 +4,98 @@ dc_graph.multi_layout = function(id) {
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _flowLayout;
     var _nodes = {}, _edges = {};
-    var onEnd = null;
+    var _options = null;
+    var _level1 = [];
+    var _level2 = []; // TODO support multiple levels
+    //var _nodes = {}, _edges = {};
 
     function init(options) {
-        //
-        _engines = [];
-        _engines.push(dc_graph.d3v4_force_layout());
-        _engines[0].init(options);
-        // TODO use promises
-        onEnd = new Promise(function(resolve){
-          _engines[0].on('end', function(nodes, edges) {
-            resolve([nodes, edges]);
-          });
-        });
-        onEnd.then(function(args) {
-          _dispatch['end'](args[0], args[1]);
-        });
-        //_engines[0].on('end', function(nodes, edges) {
-          //_dispatch['end'](nodes, edges);
-        //});
-
-        //_engines.push(dc_graph.cola_layout());
-        //_engines[1].init(options);
-        //_engines[1].on('end', function(nodes, edges) {
-          //_dispatch['end'](nodes, edges);
-        //});
-
+        console.log(options);
+        _options = options;
     }
 
     function data(nodes, edges, constraints) {
-        // TODO creat a set of different layouts hierarchically
-        _nodes = nodes;
-        _edges = edges;
-        _engines[0].data({}, nodes, edges, constraints);
+
+        var subgroups = {};
+        var nodeTypeMap = {};
+
+        for(var i = 0; i < nodes.length; i ++) {
+          var tp = engine.getNodeType(nodes[i]);
+          nodeTypeMap[nodes[i].dcg_nodeKey] = tp;
+          if( !(tp in subgroups)) {
+            subgroups[tp] = {'nodes':[], 'edges':[]};
+          }
+          subgroups[tp].nodes.push(nodes[i]);
+        }
+
+        for(var i = 0; i < edges.length; i ++) {
+          var sourceType = nodeTypeMap[edges[i].dcg_edgeSource];
+          var targetType = nodeTypeMap[edges[i].dcg_edgeTarget];
+          if( sourceType === targetType ) {
+            subgroups[sourceType].edges.push(edges[i]);
+          }
+        }
+
+        _engines = [];
+        _level1 = [];
+        _level2 = [];
+
+        var createOnEndPromise = function(_e, _key) {
+          var onEnd = new Promise(function(resolve){
+            _e.on('end', function(nodes, edges) {
+              resolve([nodes, edges, _key]);
+            });
+          });
+          return onEnd;
+        };
+
+        // create layout engine for each subgroups in level1
+        for(var type in subgroups) {
+          var _e = dc_graph.d3v4_force_layout();
+          _e.init(_options);
+          _e.data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
+          _engines.push(_e);
+
+          _level1.push(createOnEndPromise(_e, type));
+        }
+
+        // create layout engine for level2
+        var _l2e = dc_graph.d3v4_force_layout();
+        _l2e.init(_options);
+        _level2.push(createOnEndPromise(_l2e, 'level2'));
+
+        Promise.all(_level1).then(function(results){
+          var superNodes = [];
+          for(var i = 0; i < results.length; i ++) {
+            subgroups[results[i][2]].nodes = results[i][0];
+            subgroups[results[i][2]].edges = results[i][1];
+            var sn = calSuperNode(results[i][0]);
+            sn.dcg_nodeKey = 'superNode'+i;
+            superNodes.push(sn);
+          }
+          console.log(superNodes);
+          // create layout engine for super nodes
+          _l2e.data(null, superNodes, [], constraints);
+          _l2e.start();
+
+        });
+
+        Promise.all(_level2).then(function(results){
+          console.log("level2 done");
+          console.log(results);
+          // TODO add offsets to subgroups
+          // TODO assemble all nodes and edges
+          //_dispatch['end'](nodes, edges);
+        });
+    }
+
+    function calSuperNode(nodes) {
+      var minX = Math.min.apply(null, nodes.map(function(e){return e.x}));
+      var maxX = Math.max.apply(null, nodes.map(function(e){return e.x}));
+      var minY = Math.min.apply(null, nodes.map(function(e){return e.y}));
+      var maxY = Math.max.apply(null, nodes.map(function(e){return e.y}));
+      var n = {x: (maxX+minX)/2, y: (minY+maxY)/2, r: Math.max((maxX-minX)/2, (maxY-minY)/2)};
+      return n;
     }
 
     function start() {
@@ -44,8 +103,6 @@ dc_graph.multi_layout = function(id) {
         for(var i = 0; i < _engines.length; i ++) {
           _engines[i].start();
         }
-        // get the positions of nodes
-        // _d3cola._ndoes
     }
 
     function stop() {
@@ -179,6 +236,7 @@ dc_graph.multi_layout = function(id) {
         setcolaGuides: undefined,
         extractNodeAttrs: function(_node, _attrs) {}, //add new attributes to _node from _attrs
         extractEdgeAttrs: function(_edge, _attrs) {},
+        getNodeType: function(_node) {},
     });
     return engine;
 };
