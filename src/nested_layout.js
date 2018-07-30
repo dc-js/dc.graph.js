@@ -1,4 +1,4 @@
-dc_graph.multi_layout = function(id) {
+dc_graph.nested_layout = function(id) {
     var _layoutId = id || uuid();
     var _engines = [];
     var _dispatch = d3.dispatch('tick', 'start', 'end');
