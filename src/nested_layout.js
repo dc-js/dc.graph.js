@@ -70,12 +70,11 @@ dc_graph.nested_layout = function(id) {
           var superNodes = [];
           for(var i = 0; i < results.length; i ++) {
             subgroups[results[i][2]].nodes = results[i][0];
-            subgroups[results[i][2]].edges = results[i][1];
+            //subgroups[results[i][2]].edges = results[i][1];
             var sn = calSuperNode(results[i][0]);
-            sn.dcg_nodeKey = 'superNode'+i;
+            sn.dcg_nodeKey = results[i][2];
             superNodes.push(sn);
           }
-          console.log(superNodes);
 
           // now we have data for higher level layouts
           _engines_l2[0].data(null, superNodes, [], constraints);
@@ -86,11 +85,30 @@ dc_graph.nested_layout = function(id) {
         });
 
         Promise.all(_level2).then(function(results){
-          console.log("level2 done");
-          console.log(results);
-          // TODO add offsets to subgroups
-          // TODO assemble all nodes and edges
-          //_dispatch['end'](nodes, edges);
+          // add offsets to subgroups
+          // only support one higher level
+          for(var level = 0; level < results.length; level++) {
+            for(var i = 0; i < results[level][0].length; i ++) {
+              var sn = results[level][0][i];
+              var groupName = sn.dcg_nodeKey;
+              var offX = sn.x;
+              var offY = sn.y;
+
+              for(var j = 0; j < subgroups[groupName].nodes.length; j ++) {
+                subgroups[groupName].nodes[j].x += offX;
+                subgroups[groupName].nodes[j].y += offY;
+              }
+            }
+          }
+
+          // assemble all nodes and edges
+          console.log(subgroups);
+          var allNodes = [];
+          for(var key in subgroups) {
+            allNodes = allNodes.concat(subgroups[key].nodes);
+          }
+
+          _dispatch['end'](allNodes, edges);
         });
     }
 
@@ -99,7 +117,15 @@ dc_graph.nested_layout = function(id) {
       var maxX = Math.max.apply(null, nodes.map(function(e){return e.x}));
       var minY = Math.min.apply(null, nodes.map(function(e){return e.y}));
       var maxY = Math.max.apply(null, nodes.map(function(e){return e.y}));
-      var n = {x: (maxX+minX)/2, y: (minY+maxY)/2, r: Math.max((maxX-minX)/2, (maxY-minY)/2)};
+      // center nodes
+      var centerX = (maxX+minX)/2;
+      var centerY = (maxY+minY)/2;
+      for(var i = 0; i < nodes.length; i ++) {
+        nodes[i].x -= centerX;
+        nodes[i].y -= centerY;
+      }
+
+      var n = {width: maxX-minX, height: maxY-minY};
       return n;
     }
 
