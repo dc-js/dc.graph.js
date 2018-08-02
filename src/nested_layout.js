@@ -79,23 +79,32 @@ dc_graph.nested_layout = function(id) {
           _l2e.getNodeType = engine.getNodeType;
           _l2e.lengthStrategy = engine.lengthStrategy;
         }
-
-        _l2e.init(_options);
         _engines_l2.push(_l2e);
         _level2.push(createOnEndPromise(_l2e, 'level2'));
 
         Promise.all(_level1).then(function(results){
           var superNodes = [];
+          var maxRadius = 0;
           for(var i = 0; i < results.length; i ++) {
             subgroups[results[i][2]].nodes = results[i][0];
             //subgroups[results[i][2]].edges = results[i][1];
             var sn = calSuperNode(results[i][0]);
             sn.dcg_nodeKey = results[i][2];
             superNodes.push(sn);
+            maxRadius = Math.max(maxRadius, sn.r);
+          }
+          if(engine.nestedSpec.level2 === 'd3v4force') {
+            // TODO set accessor for each super nodes
+            //_options.radiusAccessor = function(e){
+              //return e.r;
+            //};
+            _options.collisionRadius = maxRadius+10;
           }
 
+          _engines_l2[0].init(_options);
           // now we have data for higher level layouts
           _engines_l2[0].data(null, superNodes, superEdges, constraints);
+
           for(var i = 0; i < _engines_l2.length; i ++) {
             _engines_l2[i].start();
           }
