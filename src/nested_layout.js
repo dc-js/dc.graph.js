@@ -11,14 +11,15 @@ dc_graph.nested_layout = function(id) {
     //var _nodes = {}, _edges = {};
 
     function init(options) {
-        console.log(options);
         _options = options;
+        console.log('applying nested layout');
     }
 
     function data(nodes, edges, constraints) {
 
         var subgroups = {};
         var nodeTypeMap = {};
+        var superEdges = [];
 
         for(var i = 0; i < nodes.length; i ++) {
           var tp = engine.getNodeType(nodes[i]);
@@ -34,6 +35,13 @@ dc_graph.nested_layout = function(id) {
           var targetType = nodeTypeMap[edges[i].dcg_edgeTarget];
           if( sourceType === targetType ) {
             subgroups[sourceType].edges.push(edges[i]);
+          } else {
+            superEdges.push({
+              dcg_edgeKey: edges[i].dcg_edgeKey,
+              dcg_edgeSource: sourceType,
+              dcg_edgeTarget: targetType,
+              dcg_edgeLength: edges[i].dcg_edgeLength,
+            });
           }
         }
 
@@ -53,7 +61,8 @@ dc_graph.nested_layout = function(id) {
 
         // create layout engine for each subgroups in level1
         for(var type in subgroups) {
-          var _e = dc_graph.d3v4_force_layout();
+          //var _e = dc_graph.d3v4_force_layout();
+          var _e = dc_graph.spawn_engine(engine.nestedSpec.level1, {}, false);
           _e.init(_options);
           _e.data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
           _engines_l1.push(_e);
@@ -61,7 +70,16 @@ dc_graph.nested_layout = function(id) {
         }
 
         // create layout engine for level2
-        var _l2e = dc_graph.d3v4_force_layout();
+        var _l2e = dc_graph.spawn_engine(engine.nestedSpec.level2, {}, false);
+        if(engine.nestedSpec.level2 === 'cola') {
+          _l2e.setcolaSpec = engine.setcolaSpec;
+          _l2e.setcolaGuides = engine.setcolaGuides;
+          _l2e.extractNodeAttrs = engine.extractNodeAttrs;
+          _l2e.extractEdgeAttrs = engine.extractEdgeAttrs;
+          _l2e.getNodeType = engine.getNodeType;
+          _l2e.lengthStrategy = engine.lengthStrategy;
+        }
+
         _l2e.init(_options);
         _engines_l2.push(_l2e);
         _level2.push(createOnEndPromise(_l2e, 'level2'));
@@ -77,7 +95,7 @@ dc_graph.nested_layout = function(id) {
           }
 
           // now we have data for higher level layouts
-          _engines_l2[0].data(null, superNodes, [], constraints);
+          _engines_l2[0].data(null, superNodes, superEdges, constraints);
           for(var i = 0; i < _engines_l2.length; i ++) {
             _engines_l2[i].start();
           }
@@ -102,7 +120,6 @@ dc_graph.nested_layout = function(id) {
           }
 
           // assemble all nodes and edges
-          console.log(subgroups);
           var allNodes = [];
           for(var key in subgroups) {
             allNodes = allNodes.concat(subgroups[key].nodes);
@@ -125,7 +142,8 @@ dc_graph.nested_layout = function(id) {
         nodes[i].y -= centerY;
       }
 
-      var n = {width: maxX-minX, height: maxY-minY};
+      var n = {r: Math.max((maxX-minX)/2, (maxY-minY)/2)};
+      //var n = {};
       return n;
     }
 
@@ -272,6 +290,7 @@ dc_graph.nested_layout = function(id) {
         extractNodeAttrs: function(_node, _attrs) {}, //add new attributes to _node from _attrs
         extractEdgeAttrs: function(_edge, _attrs) {},
         getNodeType: function(_node) {},
+        nestedSpec: undefined,
     });
     return engine;
 };
