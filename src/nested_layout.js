@@ -62,10 +62,14 @@ dc_graph.nested_layout = function(id) {
         // create layout engine for each subgroups in level1
         for(var type in subgroups) {
           //var _e = dc_graph.d3v4_force_layout();
-          var _e = dc_graph.spawn_engine(engine.nestedSpec.level1.engine, {}, false);
-          if(engine.nestedSpec.level1.engine == 'cola') {
-            _e.setcolaSpec = engine.nestedSpec.level1.setcolaSpec || undefined;
-            _e.setcolaGuides = engine.nestedSpec.level1.setcolaGuides || [];
+          var current_engine = engine.nestedSpec.level1.default_engine;
+          if(engine.nestedSpec.level1.engines && type in engine.nestedSpec.level1.engines) {
+            current_engine = engine.nestedSpec.level1.engines[type];
+          }
+          var _e = dc_graph.spawn_engine(current_engine.engine, {}, false);
+          if(current_engine.engine == 'cola') {
+            _e.setcolaSpec = current_engine.setcolaSpec || undefined;
+            _e.setcolaGuides = current_engine.setcolaGuides || [];
           }
           _e.init(_options);
           _e.data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
