@@ -94,11 +94,10 @@ dc_graph.nested_layout = function(id) {
             maxRadius = Math.max(maxRadius, sn.r);
           }
           if(engine.nestedSpec.level2 === 'd3v4force') {
-            // TODO set accessor for each super nodes
-            //_options.radiusAccessor = function(e){
-              //return e.r;
-            //};
-            _options.collisionRadius = maxRadius+10;
+            // set accessor for each super nodes
+            _options.radiusAccessor = function(e){
+              return e.r+50;
+            };
           }
 
           _engines_l2[0].init(_options);
