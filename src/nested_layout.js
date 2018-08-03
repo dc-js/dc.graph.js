@@ -62,7 +62,11 @@ dc_graph.nested_layout = function(id) {
         // create layout engine for each subgroups in level1
         for(var type in subgroups) {
           //var _e = dc_graph.d3v4_force_layout();
-          var _e = dc_graph.spawn_engine(engine.nestedSpec.level1, {}, false);
+          var _e = dc_graph.spawn_engine(engine.nestedSpec.level1.engine, {}, false);
+          if(engine.nestedSpec.level1.engine == 'cola') {
+            _e.setcolaSpec = engine.nestedSpec.level1.setcolaSpec || undefined;
+            _e.setcolaGuides = engine.nestedSpec.level1.setcolaGuides || [];
+          }
           _e.init(_options);
           _e.data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
           _engines_l1.push(_e);
@@ -70,14 +74,13 @@ dc_graph.nested_layout = function(id) {
         }
 
         // create layout engine for level2
-        var _l2e = dc_graph.spawn_engine(engine.nestedSpec.level2, {}, false);
-        if(engine.nestedSpec.level2 === 'cola') {
-          _l2e.setcolaSpec = engine.setcolaSpec;
-          _l2e.setcolaGuides = engine.setcolaGuides;
-          _l2e.extractNodeAttrs = engine.extractNodeAttrs;
-          _l2e.extractEdgeAttrs = engine.extractEdgeAttrs;
-          _l2e.getNodeType = engine.getNodeType;
-          _l2e.lengthStrategy = engine.lengthStrategy;
+        var _l2e = dc_graph.spawn_engine(engine.nestedSpec.level2.engine, {}, false);
+        if(engine.nestedSpec.level2.engine === 'cola') {
+          // TODO generate secolaSpec
+          _l2e.setcolaSpec = engine.nestedSpec.level2.setcolaSpec;
+          _l2e.setcolaGuides = engine.nestedSpec.level2.setcolaGuides || [];
+          _l2e.getNodeType = engine.nestedSpec.level2.getNodeType;
+          //_l2e.lengthStrategy = engine.lengthStrategy;
         }
         _engines_l2.push(_l2e);
         _level2.push(createOnEndPromise(_l2e, 'level2'));
@@ -93,10 +96,10 @@ dc_graph.nested_layout = function(id) {
             superNodes.push(sn);
             maxRadius = Math.max(maxRadius, sn.r);
           }
-          if(engine.nestedSpec.level2 === 'd3v4force') {
+          if(engine.nestedSpec.level2.engine === 'd3v4force') {
             // set accessor for each super nodes
             _options.radiusAccessor = function(e){
-              return e.r+50;
+              return e.r + engine.nestedSpec.level2.collisionMargin || 0;
             };
           }
 
