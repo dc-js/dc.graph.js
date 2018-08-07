@@ -151,8 +151,11 @@ dc_graph.draw_graphs = function(options) {
                                 newNode = _targetMove && _targetMove.node;
                              change = oldNode !== newNode;
                         }
-                        if(change && !_behavior.conduct().changeDragTarget(_sourceDown, _targetMove))
+                        if(change && !_behavior.conduct().changeDragTarget(_sourceDown, _targetMove)) {
+                            _targetMove && _behavior.conduct().invalidTargetMessage &&
+                                console.log(_behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove));
                             _targetMove = null;
+                        }
                     }
                     if(_targetMove) {
                         if(_targetMove.port)

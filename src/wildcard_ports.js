@@ -30,6 +30,10 @@ dc_graph.wildcard_ports = function(options) {
             return get_type(p1) === null ^ get_type(p2) === null ||
                 get_type(p1) !== null && get_type(p1) === get_type(p2);
         },
+        whyInvalid: function(p1, p2) {
+            return get_type(p1) === null && get_type(p2) === null && "can't connect wildcard to wildcard" ||
+                get_type(p1) !== get_type(p2) && "the types of ports must match";
+        },
         copyLinked: function(n, port) {
             linked_ports(n, port).forEach(function(lp) {
                 set_type(lp, port);
