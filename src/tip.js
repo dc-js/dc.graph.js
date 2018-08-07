@@ -145,13 +145,17 @@ dc_graph.tip = function(options) {
     };
 
     _behavior.displayTip = function(filter, n, cb) {
+        if(typeof filter !== 'function') {
+            var d = filter;
+            filter = function(d2) { return d2 === d; };
+        }
         var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
             .filter(filter);
         if(found.size() > 0) {
             var action = fetch_and_show_content('content');
             var which = (n || 0) % found.size();
             action.call(found[0][which], d3.select(found[0][which]).datum());
-            var d = d3.select(found[0][which]).datum();
+            d = d3.select(found[0][which]).datum();
             if(cb)
                 cb(d);
         }
