@@ -284,7 +284,6 @@ dc_graph.symbol_port_style = function() {
                 fill: 'white',
                 opacity: 0
             });
-        _style.enableHover(true);
         return _style;
     };
 

@@ -5,6 +5,9 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         _wports = wports;
         _wedges = wedges;
     });
+    diagram.on('transitionsStarted', function() {
+        symbolPorts.enableHover(true);
+    });
     function change_state(ports, state) {
         return ports.map(function(p) {
             p.state = state;
