@@ -115,8 +115,11 @@ dc_graph.draw_graphs = function(options) {
                     _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
                 }
                 if(_behavior.conduct().startDragEdge) {
-                    if(!_behavior.conduct().startDragEdge(_sourceDown))
+                    if(!_behavior.conduct().startDragEdge(_sourceDown)) {
+                        if(_behavior.conduct().invalidSourceMessage)
+                            console.log(_behavior.conduct().invalidSourceMessage(_sourceDown));
                         erase_hint();
+                    }
                 }
             })
             .on('mousemove.draw-graphs', function(n) {
