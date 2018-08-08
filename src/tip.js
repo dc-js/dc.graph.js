@@ -153,9 +153,14 @@ dc_graph.tip = function(options) {
             .filter(filter);
         if(found.size() > 0) {
             var action = fetch_and_show_content('content');
-            var which = (n || 0) % found.size();
-            action.call(found[0][which], d3.select(found[0][which]).datum());
-            d = d3.select(found[0][which]).datum();
+            // we need to flatten e.g. for ports, which will have nested selections
+            // .nodes() does this better in D3v4
+            var flattened = found.reduce(function(p, v) {
+                return p.concat(v);
+            }, []);
+            var which = (n || 0) % flattened.length;
+            action.call(flattened[which], d3.select(flattened[which]).datum());
+            d = d3.select(flattened[which]).datum();
             if(cb)
                 cb(d);
         }
