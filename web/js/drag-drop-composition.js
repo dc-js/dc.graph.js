@@ -605,6 +605,12 @@ get_catalog().then(function(catalog) {
             targetPort.orig.value.bounds !== xtrabounds &&
             sourcePort.orig.value.bounds !== targetPort.orig.value.bounds);
 
+    portMatcher.whyInvalid(
+        (sourcePort, targetPort) =>
+            sourcePort.orig.value.bounds === xtrabounds && "can't connect to that type of source port" ||
+            targetPort.orig.value.bounds === xtrabounds && "can't connect to that type of target port" ||
+            sourcePort.orig.value.bounds === targetPort.orig.value.bounds && "can't connect ports facing the same direction" ||
+            wildcard.whyInvalid(sourcePort, targetPort));
     _drawGraphs = dc_graph.draw_graphs({
         idTag: 'id',
         sourceTag: 'sourcename',
