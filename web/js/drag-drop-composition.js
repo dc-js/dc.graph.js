@@ -611,7 +611,8 @@ get_catalog().then(function(catalog) {
             targetPort.orig.value.bounds === xtrabounds && "can't connect to that type of target port" ||
             sourcePort.orig.value.bounds === targetPort.orig.value.bounds && "can't connect ports facing the same direction" ||
             wildcard.whyInvalid(sourcePort, targetPort));
-    _drawGraphs = dc_graph.draw_graphs({
+    var gropts;
+    _drawGraphs = dc_graph.draw_graphs(gropts = {
         idTag: 'id',
         sourceTag: 'sourcename',
         targetTag: 'targetname'
@@ -784,6 +785,7 @@ get_catalog().then(function(catalog) {
             .linkCallback(function(id) {
                 alert(id);
             });
+    gropts.tip = port_tips;
 
     _diagram.child('port-tips', port_tips);
 
