@@ -4,18 +4,52 @@ dc_graph.nested_layout = function(id) {
     var _flowLayout;
     var _nodes = {}, _edges = {};
     var _options = null;
-    var _engines_l1 = []; // level1 engines
+    var _engines_l1 = {}; // level1 engines
     var _engines_l2 = []; // level2 engines
+    var _engines_l1_p2 = {}; // level1 engines
+    var _engines_l2_p2 = []; // level2 engines
     var _level1 = []; // level1 promises
     var _level2 = []; // level2 promises
-    //var _nodes = {}, _edges = {};
+    var _level1_p2 = []; // level1 promises
+    var _level2_p2 = []; // level2 promises
 
     function init(options) {
         _options = options;
         console.log('applying nested layout');
     }
 
-    function data(nodes, edges, constraints) {
+    function createEngines(subgroups, constraints) {
+        // create layout engine for each subgroups in level1
+        for(var type in subgroups) {
+          //var _e = dc_graph.d3v4_force_layout();
+          var current_engine = engine.nestedSpec.level1.default_engine;
+          if(engine.nestedSpec.level1.engines && type in engine.nestedSpec.level1.engines) {
+            current_engine = engine.nestedSpec.level1.engines[type];
+          }
+          var _e = dc_graph.spawn_engine(current_engine.engine, {}, false);
+          if(current_engine.engine == 'cola') {
+            _e.setcolaSpec = current_engine.setcolaSpec || undefined;
+            _e.setcolaGuides = current_engine.setcolaGuides || [];
+          }
+          _e.init(_options);
+          _engines_l1[type] = _e;
+          _engines_l1_p2[type] = Object.assign(_e);
+        }
+
+        // create layout engine for level2
+        var _l2e = dc_graph.spawn_engine(engine.nestedSpec.level2.engine, {}, false);
+        if(engine.nestedSpec.level2.engine === 'cola') {
+          // TODO generate secolaSpec
+          _l2e.setcolaSpec = engine.nestedSpec.level2.setcolaSpec;
+          _l2e.setcolaGuides = engine.nestedSpec.level2.setcolaGuides || [];
+          _l2e.getNodeType = engine.nestedSpec.level2.getNodeType;
+          //_l2e.lengthStrategy = engine.lengthStrategy;
+        }
+        _engines_l2.push(_l2e);
+        _engines_l2_p2.push(Object.assign(_l2e));
+    }
+
+    function runLayout(nodes, edges, constraints) {
 
         var subgroups = {};
         var nodeTypeMap = {};
@@ -45,11 +79,6 @@ dc_graph.nested_layout = function(id) {
           }
         }
 
-        _engines_l1 = [];
-        _engines_l2 = [];
-        _level1 = [];
-        _level2 = [];
-
         var createOnEndPromise = function(_e, _key) {
           var onEnd = new Promise(function(resolve){
             _e.on('end', function(nodes, edges) {
@@ -59,35 +88,16 @@ dc_graph.nested_layout = function(id) {
           return onEnd;
         };
 
-        // create layout engine for each subgroups in level1
         for(var type in subgroups) {
-          //var _e = dc_graph.d3v4_force_layout();
-          var current_engine = engine.nestedSpec.level1.default_engine;
-          if(engine.nestedSpec.level1.engines && type in engine.nestedSpec.level1.engines) {
-            current_engine = engine.nestedSpec.level1.engines[type];
-          }
-          var _e = dc_graph.spawn_engine(current_engine.engine, {}, false);
-          if(current_engine.engine == 'cola') {
-            _e.setcolaSpec = current_engine.setcolaSpec || undefined;
-            _e.setcolaGuides = current_engine.setcolaGuides || [];
-          }
-          _e.init(_options);
-          _e.data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
-          _engines_l1.push(_e);
-          _level1.push(createOnEndPromise(_e, type));
+          _engines_l1[type].data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
+          _level1.push(createOnEndPromise(_engines_l1[type], type));
+          _level1_p2.push(createOnEndPromise(_engines_l1_p2[type], type));
         }
 
-        // create layout engine for level2
-        var _l2e = dc_graph.spawn_engine(engine.nestedSpec.level2.engine, {}, false);
-        if(engine.nestedSpec.level2.engine === 'cola') {
-          // TODO generate secolaSpec
-          _l2e.setcolaSpec = engine.nestedSpec.level2.setcolaSpec;
-          _l2e.setcolaGuides = engine.nestedSpec.level2.setcolaGuides || [];
-          _l2e.getNodeType = engine.nestedSpec.level2.getNodeType;
-          //_l2e.lengthStrategy = engine.lengthStrategy;
+        for(var i = 0; i < _engines_l2.length; i ++) {
+          _level2.push(createOnEndPromise(_engines_l2[i], 'level2'));
+          _level2_p2.push(createOnEndPromise(_engines_l2_p2[i], 'level2'));
         }
-        _engines_l2.push(_l2e);
-        _level2.push(createOnEndPromise(_l2e, 'level2'));
 
         Promise.all(_level1).then(function(results){
           var superNodes = [];
@@ -140,15 +150,158 @@ dc_graph.nested_layout = function(id) {
             allNodes = allNodes.concat(subgroups[key].nodes);
           }
 
+          secondPass(allNodes, edges, constraints);
+
+          for(var key in _engines_l1_p2) {
+            _engines_l1_p2[key].start();
+          }
+            //_dispatch['end'](allNodes, edges);
+        });
+
+        Promise.all(_level1_p2).then(function(results) {
+          console.log('level1 p2 finished');
+          console.log(results);
+          var superNodes = [];
+          var maxRadius = 0;
+          for(var i = 0; i < results.length; i ++) {
+            subgroups[results[i][2]].nodes = results[i][0];
+            //subgroups[results[i][2]].edges = results[i][1];
+            var sn = calSuperNode(results[i][0]);
+            sn.dcg_nodeKey = results[i][2];
+            superNodes.push(sn);
+            maxRadius = Math.max(maxRadius, sn.r);
+          }
+          if(engine.nestedSpec.level2.engine === 'd3v4force') {
+            // set accessor for each super nodes
+            _options.radiusAccessor = function(e){
+              return e.r + engine.nestedSpec.level2.collisionMargin || 0;
+            };
+          }
+
+          _engines_l2_p2[0].init(_options);
+          // now we have data for higher level layouts
+          _engines_l2_p2[0].data(null, superNodes, superEdges, constraints);
+
+          for(var i = 0; i < _engines_l2.length; i ++) {
+            _engines_l2_p2[i].start();
+          }
+
+        });
+
+        Promise.all(_level2_p2).then(function(results){
+          console.log('level2 p2 finished');
+          for(var level = 0; level < results.length; level++) {
+            for(var i = 0; i < results[level][0].length; i ++) {
+              var sn = results[level][0][i];
+              var groupName = sn.dcg_nodeKey;
+              var offX = sn.x;
+              var offY = sn.y;
+
+              for(var j = 0; j < subgroups[groupName].nodes.length; j ++) {
+                subgroups[groupName].nodes[j].x += offX;
+                subgroups[groupName].nodes[j].y += offY;
+              }
+            }
+          }
+
+          // assemble all nodes and edges
+          var allNodes = [];
+          for(var key in subgroups) {
+            allNodes = allNodes.concat(subgroups[key].nodes);
+          }
+
           _dispatch['end'](allNodes, edges);
         });
     }
 
+    function secondPass(nodes, edges, constraints) {
+          _level1_p2 = []; // level1 promises
+          _level2_p2 = []; // level2 promises
+
+          var subgroups = {};
+          var nodeTypeMap = {};
+          var nodeMap = {};
+          var superEdges = [];
+
+          for(var i = 0; i < nodes.length; i ++) {
+            var tp = engine.getNodeType(nodes[i]);
+            nodeTypeMap[nodes[i].dcg_nodeKey] = tp;
+            nodeMap[nodes[i].dcg_nodeKey] = nodes[i];
+            if( !(tp in subgroups)) {
+              subgroups[tp] = {'nodes':[], 'edges':[]};
+            }
+            subgroups[tp].nodes.push(nodes[i]);
+          }
+
+          for(var i = 0; i < edges.length; i ++) {
+            var sourceType = nodeTypeMap[edges[i].dcg_edgeSource];
+            var targetType = nodeTypeMap[edges[i].dcg_edgeTarget];
+            if( sourceType === targetType ) {
+              subgroups[sourceType].edges.push(edges[i]);
+            } else {
+              // insert virtual nodes
+              var sourceNode = nodeMap[edges[i].dcg_edgeSource];
+              var targetNode = nodeMap[edges[i].dcg_edgeTarget];
+
+              var sourceVirtualNode = Object.assign(
+                sourceNode,
+                {
+                  'virtual': true,
+                  'dcg_nodeFixed': {'x': sourceNode.x, 'y': sourceNode.y}
+                }
+              );
+
+              var targetVirtualNode = Object.assign(
+                targetNode,
+                {
+                  'virtual': true,
+                  'dcg_nodeFixed': {'x': targetNode.x, 'y': targetNode.y}
+                }
+              );
+
+              subgroups[sourceType].nodes.push(targetVirtualNode);
+              subgroups[sourceType].edges.push(edges[i]);
+
+              subgroups[targetType].nodes.push(sourceVirtualNode);
+              subgroups[targetType].edges.push(edges[i]);
+
+              superEdges.push({
+                dcg_edgeKey: edges[i].dcg_edgeKey,
+                dcg_edgeSource: sourceType,
+                dcg_edgeTarget: targetType,
+                dcg_edgeLength: edges[i].dcg_edgeLength,
+              });
+            }
+          }
+
+        for(var type in subgroups) {
+          _engines_l1_p2[type].data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
+        }
+    }
+
+    function data(nodes, edges, constraints) {
+        // reset engines
+        _engines_l1 = {}; // level1 engines
+        _engines_l2 = []; // level2 engines
+        _level1 = []; // level1 promises
+        _level2 = []; // level2 promises
+
+        var groups = {};
+        for(var i = 0; i < nodes.length; i ++) {
+          var tp = engine.getNodeType(nodes[i]);
+          if( !(tp in groups)) {
+            groups[tp] = true;
+          }
+        }
+        createEngines(groups, constraints);
+        runLayout(nodes, edges, constraints);
+    }
+
     function calSuperNode(nodes) {
-      var minX = Math.min.apply(null, nodes.map(function(e){return e.x}));
-      var maxX = Math.max.apply(null, nodes.map(function(e){return e.x}));
-      var minY = Math.min.apply(null, nodes.map(function(e){return e.y}));
-      var maxY = Math.max.apply(null, nodes.map(function(e){return e.y}));
+      var minX = Math.min.apply(null, nodes.filter(function(d){return d.virtual !== true}).map(function(e){return e.x}));
+      var maxX = Math.max.apply(null, nodes.filter(function(d){return d.virtual !== true}).map(function(e){return e.x}));
+      var minY = Math.min.apply(null, nodes.filter(function(d){return d.virtual !== true}).map(function(e){return e.y}));
+      var maxY = Math.max.apply(null, nodes.filter(function(d){return d.virtual !== true}).map(function(e){return e.y}));
       // center nodes
       var centerX = (maxX+minX)/2;
       var centerY = (maxY+minY)/2;
@@ -164,9 +317,10 @@ dc_graph.nested_layout = function(id) {
 
     function start() {
         // execute the layout algorithms
-        for(var i = 0; i < _engines_l1.length; i ++) {
-          _engines_l1[i].start();
+        for(var key in  _engines_l1) {
+          _engines_l1[key].start();
         }
+
     }
 
     function stop() {

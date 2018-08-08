@@ -57,6 +57,7 @@ dc_graph.d3v4_force_layout = function(id) {
             v1.height = v.height;
             v1.id = v.dcg_nodeKey;
             v1.r = v.r;
+            v1.attrs = v.attrs;
             if(v.dcg_nodeFixed) {
                 v1.fx = v.dcg_nodeFixed.x;
                 v1.fy = v.dcg_nodeFixed.y;
