@@ -143,6 +143,8 @@ dc_graph.draw_graphs = function(options) {
                 if(_sourceDown) {
                     var oldTarget = _targetMove;
                     if(n === _sourceDown.node) {
+                        _behavior.conduct().invalidTargetMessage &&
+                            console.log(_behavior.conduct().invalidTargetMessage(_sourceDown, _sourceDown));
                         _targetMove = null;
                         _hintData[0].target = null;
                     }
