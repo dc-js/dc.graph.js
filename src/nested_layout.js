@@ -345,7 +345,7 @@ dc_graph.nested_layout = function(id) {
             return _layoutId;
         },
         supportsWebworker: function() {
-            return true;
+            return false;
         },
         needsStage: function(stage) { // stopgap until we have engine chaining
             return stage === 'ports' || stage === 'edgepos';
