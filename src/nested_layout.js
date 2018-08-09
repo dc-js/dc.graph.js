@@ -250,6 +250,7 @@ dc_graph.nested_layout = function(id) {
               var targetNode = nodeMap[edges[i].dcg_edgeTarget];
 
               var sourceVirtualNode = Object.assign(
+                {},
                 sourceNode,
                 {
                   'virtual': true,
@@ -258,6 +259,7 @@ dc_graph.nested_layout = function(id) {
               );
 
               var targetVirtualNode = Object.assign(
+                {},
                 targetNode,
                 {
                   'virtual': true,
