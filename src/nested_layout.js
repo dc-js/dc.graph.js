@@ -20,25 +20,40 @@ dc_graph.nested_layout = function(id) {
           if(engine.nestedSpec.level1.engines && type in engine.nestedSpec.level1.engines) {
             current_engine = engine.nestedSpec.level1.engines[type];
           }
-          var _e = dc_graph.spawn_engine(current_engine.engine, {}, false);
+          var e = dc_graph.spawn_engine(current_engine.engine, {}, false);
           if(current_engine.engine == 'cola') {
-            _e.setcolaSpec = current_engine.setcolaSpec || undefined;
-            _e.setcolaGuides = current_engine.setcolaGuides || [];
+            e.setcolaSpec = current_engine.setcolaSpec || undefined;
+            e.setcolaGuides = current_engine.setcolaGuides || [];
           }
-          _e.init(_options);
-          _engines_l1[type] = _e;
+          dc_graph.time_limit()
+            .engine(e)
+            .limit(5000);
+          e.init(_options);
+          _engines_l1[type] = e;
+          (function(type, e) {
+            e.on('start.log', function() {
+              console.log('started nested level 1 type ' + type + ' algo ' + e.layoutAlgorithm());
+            }).on('end.log', function() {
+              console.log('completed nested level 1 type ' + type + ' algo ' + e.layoutAlgorithm());
+            });
+          })(type, e);
         }
 
         // create layout engine for level2
-        var _l2e = dc_graph.spawn_engine(engine.nestedSpec.level2.engine, {}, false);
+        var e2 = dc_graph.spawn_engine(engine.nestedSpec.level2.engine, {}, false);
         if(engine.nestedSpec.level2.engine === 'cola') {
           // TODO generate secolaSpec
-          _l2e.setcolaSpec = engine.nestedSpec.level2.setcolaSpec;
-          _l2e.setcolaGuides = engine.nestedSpec.level2.setcolaGuides || [];
-          _l2e.getNodeType = engine.nestedSpec.level2.getNodeType;
-          //_l2e.lengthStrategy = engine.lengthStrategy;
+          e2.setcolaSpec = engine.nestedSpec.level2.setcolaSpec;
+          e2.setcolaGuides = engine.nestedSpec.level2.setcolaGuides || [];
+          e2.getNodeType = engine.nestedSpec.level2.getNodeType;
+          //e2.lengthStrategy = engine.lengthStrategy;
         }
-        _engines_l2.push(_l2e);
+        e2.on('start.log', function() {
+          console.log('started nested level 2 algo ' + e2.layoutAlgorithm());
+        }).on('end.log', function() {
+          console.log('completed nested level 2 algo ' + e2.layoutAlgorithm());
+        });
+        _engines_l2.push(e2);
     }
 
     function runLayout(nodes, edges, constraints) {
@@ -74,6 +89,7 @@ dc_graph.nested_layout = function(id) {
         var createOnEndPromise = function(_e, _key) {
           var onEnd = new Promise(function(resolve){
             _e.on('end', function(nodes, edges) {
+              console.log('whux');
               resolve([nodes, edges, _key]);
             });
           });
@@ -104,9 +120,10 @@ dc_graph.nested_layout = function(id) {
             };
           }
 
-          _engines_l2[0].init(_options);
+          var e2 = _engines_l2[0];
+          e2.init(_options);
           // now we have data for higher level layouts
-          _engines_l2[0].data(null, superNodes, superEdges, constraints);
+          e2.data(null, superNodes, superEdges, constraints);
 
           var level2_p1 = _engines_l2.map(function(e) {
             var p = createOnEndPromise(e, 'level2');
@@ -168,9 +185,10 @@ dc_graph.nested_layout = function(id) {
             };
           }
 
-          _engines_l2[0].init(_options);
+          var e2 = _engines_l2[0];
+          e2.init(_options);
           // now we have data for higher level layouts
-          _engines_l2[0].data(null, superNodes, superEdges, constraints);
+          e2.data(null, superNodes, superEdges, constraints);
 
           var level2_p2 = _engines_l2.map(function(e) {
             var p = createOnEndPromise(e, 'level2');
