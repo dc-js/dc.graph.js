@@ -27,7 +27,7 @@ dc_graph.nested_layout = function(id) {
           }
           dc_graph.time_limit()
             .engine(e)
-            .limit(5000);
+            .limit(100);
           e.init(_options);
           _engines_l1[type] = e;
           (function(type, e) {
