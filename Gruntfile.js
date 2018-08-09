@@ -338,6 +338,7 @@ module.exports.jsFiles = [
     'src/diagram.js',
     'src/engine.js',
     'src/webworker_layout.js',
+    'src/time_limit.js',
     'src/graphviz_attrs.js',
     'src/cola_layout.js',
     'src/dagre_layout.js',
