@@ -6,12 +6,6 @@ dc_graph.nested_layout = function(id) {
     var _options = null;
     var _engines_l1 = {}; // level1 engines
     var _engines_l2 = []; // level2 engines
-    var _engines_l1_p2 = {}; // level1 engines
-    var _engines_l2_p2 = []; // level2 engines
-    var _level1 = []; // level1 promises
-    var _level2 = []; // level2 promises
-    var _level1_p2 = []; // level1 promises
-    var _level2_p2 = []; // level2 promises
 
     function init(options) {
         _options = options;
@@ -33,7 +27,6 @@ dc_graph.nested_layout = function(id) {
           }
           _e.init(_options);
           _engines_l1[type] = _e;
-          _engines_l1_p2[type] = Object.assign(_e);
         }
 
         // create layout engine for level2
@@ -46,7 +39,6 @@ dc_graph.nested_layout = function(id) {
           //_l2e.lengthStrategy = engine.lengthStrategy;
         }
         _engines_l2.push(_l2e);
-        _engines_l2_p2.push(Object.assign(_l2e));
     }
 
     function runLayout(nodes, edges, constraints) {
@@ -88,18 +80,13 @@ dc_graph.nested_layout = function(id) {
           return onEnd;
         };
 
+        var level1_p1 = [];
         for(var type in subgroups) {
           _engines_l1[type].data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
-          _level1.push(createOnEndPromise(_engines_l1[type], type));
-          _level1_p2.push(createOnEndPromise(_engines_l1_p2[type], type));
+          level1_p1.push(createOnEndPromise(_engines_l1[type], type));
         }
 
-        for(var i = 0; i < _engines_l2.length; i ++) {
-          _level2.push(createOnEndPromise(_engines_l2[i], 'level2'));
-          _level2_p2.push(createOnEndPromise(_engines_l2_p2[i], 'level2'));
-        }
-
-        Promise.all(_level1).then(function(results){
+        Promise.all(level1_p1).then(function(results){
           var superNodes = [];
           var maxRadius = 0;
           for(var i = 0; i < results.length; i ++) {
@@ -121,13 +108,14 @@ dc_graph.nested_layout = function(id) {
           // now we have data for higher level layouts
           _engines_l2[0].data(null, superNodes, superEdges, constraints);
 
-          for(var i = 0; i < _engines_l2.length; i ++) {
-            _engines_l2[i].start();
-          }
-
-        });
-
-        Promise.all(_level2).then(function(results){
+          var level2_p1 = _engines_l2.map(function(e) {
+            var p = createOnEndPromise(e, 'level2');
+            e.start();
+            return p;
+          });
+          return Promise.all(level2_p1);
+        })
+        .then(function(results){
           // add offsets to subgroups
           // only support one higher level
           for(var level = 0; level < results.length; level++) {
@@ -152,13 +140,15 @@ dc_graph.nested_layout = function(id) {
 
           secondPass(allNodes, edges, constraints);
 
-          for(var key in _engines_l1_p2) {
-            _engines_l1_p2[key].start();
+          var level1_p2 = [];
+          for(var type in subgroups) {
+            level1_p2.push(createOnEndPromise(_engines_l1[type], type));
+            _engines_l1[type].start();
           }
-            //_dispatch['end'](allNodes, edges);
-        });
-
-        Promise.all(_level1_p2).then(function(results) {
+          //_dispatch['end'](allNodes, edges);
+          return Promise.all(level1_p2);
+        })
+        .then(function(results) {
           console.log('level1 p2 finished');
           console.log(results);
           var superNodes = [];
@@ -178,17 +168,18 @@ dc_graph.nested_layout = function(id) {
             };
           }
 
-          _engines_l2_p2[0].init(_options);
+          _engines_l2[0].init(_options);
           // now we have data for higher level layouts
-          _engines_l2_p2[0].data(null, superNodes, superEdges, constraints);
+          _engines_l2[0].data(null, superNodes, superEdges, constraints);
 
-          for(var i = 0; i < _engines_l2.length; i ++) {
-            _engines_l2_p2[i].start();
-          }
-
-        });
-
-        Promise.all(_level2_p2).then(function(results){
+          var level2_p2 = _engines_l2.map(function(e) {
+            var p = createOnEndPromise(e, 'level2');
+            e.start();
+            return p;
+          });
+          return Promise.all(level2_p2);
+        })
+        .then(function(results){
           console.log('level2 p2 finished');
           for(var level = 0; level < results.length; level++) {
             for(var i = 0; i < results[level][0].length; i ++) {
@@ -215,9 +206,6 @@ dc_graph.nested_layout = function(id) {
     }
 
     function secondPass(nodes, edges, constraints) {
-          _level1_p2 = []; // level1 promises
-          _level2_p2 = []; // level2 promises
-
           var subgroups = {};
           var nodeTypeMap = {};
           var nodeMap = {};
@@ -275,7 +263,7 @@ dc_graph.nested_layout = function(id) {
           }
 
         for(var type in subgroups) {
-          _engines_l1_p2[type].data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
+          _engines_l1[type].data(null, subgroups[type].nodes, subgroups[type].edges, constraints);
         }
     }
 
@@ -283,8 +271,6 @@ dc_graph.nested_layout = function(id) {
         // reset engines
         _engines_l1 = {}; // level1 engines
         _engines_l2 = []; // level2 engines
-        _level1 = []; // level1 promises
-        _level2 = []; // level2 promises
 
         var groups = {};
         for(var i = 0; i < nodes.length; i ++) {
