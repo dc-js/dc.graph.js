@@ -85,7 +85,7 @@ dc_graph.d3v4_force_layout = function(id) {
     }
 
     function stop() {
-        // not running asynchronously, no _simulation.stop();
+        _simulation.alpha(0);
     }
 
     function savePositions() {
@@ -144,7 +144,7 @@ dc_graph.d3v4_force_layout = function(id) {
 
     function runSimulation(iterations) {
         _simulation.alpha(1);
-        for (var i = 0; i < iterations; ++i) {
+        for (var i = 0; i < iterations && _simulation.alpha() > _simulation.alphaMin(); ++i) {
             _simulation.tick();
             dispatchState('tick');
         }
