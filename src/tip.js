@@ -30,10 +30,11 @@ dc_graph.tip = function(options) {
         }
     }
     function fetch_and_show_content(fetcher) {
+        fetcher = fetcher || _behavior.content();
         return function(d) {
              var target = this,
                  next = function() {
-                     _behavior[fetcher]()(d, function(content) {
+                     fetcher(d, function(content) {
                          _d3tip.show.call(target, content, target);
                          d3.select('div.d3-tip')
                              .selectAll('a.tip-link')
@@ -80,7 +81,7 @@ dc_graph.tip = function(options) {
     function add_behavior(diagram, node, edge, ehover) {
         init(diagram);
         _behavior.selection().select(diagram, node, edge, ehover)
-            .on('mouseover.' + _namespace, fetch_and_show_content('content'))
+            .on('mouseover.' + _namespace, fetch_and_show_content())
             .on('mouseout.' + _namespace, hide_tip);
         if(_behavior.clickable()) {
             d3.select('div.d3-tip')
@@ -152,7 +153,7 @@ dc_graph.tip = function(options) {
         var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
             .filter(filter);
         if(found.size() > 0) {
-            var action = fetch_and_show_content('content');
+            var action = fetch_and_show_content();
             // we need to flatten e.g. for ports, which will have nested selections
             // .nodes() does this better in D3v4
             var flattened = found.reduce(function(p, v) {
