@@ -29,35 +29,32 @@ dc_graph.tip = function(options) {
             parent.svg().call(_d3tip);
         }
     }
-    function fetch_and_show_content(fetcher) {
-        fetcher = fetcher || _behavior.content();
-        return function(d) {
-             var target = this,
-                 next = function() {
-                     fetcher(d, function(content) {
-                         _d3tip.show.call(target, content, target);
-                         d3.select('div.d3-tip')
-                             .selectAll('a.tip-link')
-                             .on('click', function() {
-                                 d3.event.preventDefault();
-                                 if(_behavior.linkCallback())
-                                     _behavior.linkCallback()(this.id);
-                             });
-                         _dispatch.tipped(d);
-                     });
-                 };
-             if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
-                 hide_tip.call(this);
-                 return;
-             }
-             if(_hideTimeout)
-                 window.clearTimeout(_hideTimeout);
-             if(_behavior.delay()) {
-                 window.clearTimeout(_showTimeout);
-                 _showTimeout = window.setTimeout(next, _behavior.delay());
-             }
-             else next();
-         };
+    function fetch_and_show_content(d) {
+        var target = this,
+            next = function() {
+                _behavior.content()(d, function(content) {
+                    _d3tip.show.call(target, content, target);
+                    d3.select('div.d3-tip')
+                        .selectAll('a.tip-link')
+                        .on('click', function() {
+                            d3.event.preventDefault();
+                            if(_behavior.linkCallback())
+                                _behavior.linkCallback()(this.id);
+                        });
+                    _dispatch.tipped(d);
+                });
+            };
+        if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
+            hide_tip.call(this);
+            return;
+        }
+        if(_hideTimeout)
+            window.clearTimeout(_hideTimeout);
+        if(_behavior.delay()) {
+            window.clearTimeout(_showTimeout);
+            _showTimeout = window.setTimeout(next, _behavior.delay());
+        }
+        else next();
     }
 
     function hide_tip() {
@@ -81,7 +78,7 @@ dc_graph.tip = function(options) {
     function add_behavior(diagram, node, edge, ehover) {
         init(diagram);
         _behavior.selection().select(diagram, node, edge, ehover)
-            .on('mouseover.' + _namespace, fetch_and_show_content())
+            .on('mouseover.' + _namespace, fetch_and_show_content)
             .on('mouseout.' + _namespace, hide_tip);
         if(_behavior.clickable()) {
             d3.select('div.d3-tip')
@@ -153,7 +150,7 @@ dc_graph.tip = function(options) {
         var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
             .filter(filter);
         if(found.size() > 0) {
-            var action = fetch_and_show_content();
+            var action = fetch_and_show_content;
             // we need to flatten e.g. for ports, which will have nested selections
             // .nodes() does this better in D3v4
             var flattened = found.reduce(function(p, v) {
