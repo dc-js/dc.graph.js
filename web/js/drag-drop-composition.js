@@ -448,7 +448,7 @@ function hashCode(s) {
     hash  = ((hash << 5) - hash) + chr;
     hash |= 0; // Convert to 32bit integer
   }
-  return hash;
+  return hash >>> 0; // convert to unsigned
 };
 var _icons;
 d3.text('iconlist.txt', function(error, list) {
@@ -760,10 +760,10 @@ get_catalog().then(function(catalog) {
     var operations = ['run', 'jump', 'talk', 'sleep'];
     var messages = ['hill', 'storm', 'furiously', 'stile', 'mile'];
 
-    function generate_operation() {
-        var op = operations[Math.floor(Math.random()*operations.length)],
-            msgs = d3.range(Math.floor(Math.random()*3)).map(function() {
-                return messages[Math.floor(Math.random()*messages.length)];
+    function generate_operation(id) {
+        var op = operations[Math.floor(id%operations.length)],
+            msgs = d3.range(Math.floor(id%3)).map(function() {
+                return messages[Math.floor(id%messages.length)];
             });
         return op + '(' + msgs.map(function(msg) {
             return '<a href="#" class="tip-link" id="' + op + '_' + msg + '">' + msg + '</a>';
@@ -775,7 +775,7 @@ get_catalog().then(function(catalog) {
             .clickable(true)
             .selection(dc_graph.tip.select_port())
             .content(function(d, k) {
-                k(generate_operation());
+                k(generate_operation(hashCode(d.node.orig.key + '-' + d.name)));
             })
             .offset(function() {
                 // I don't entirely understand how d3-tip is calculating position
