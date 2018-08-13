@@ -14,7 +14,7 @@
 dc_graph.tip = function(options) {
     options = options || {};
     var _namespace = options.namespace || 'tip';
-    var _d3tip = null;
+    var _d3tip = null, _disabled;
     var _showTimeout, _hideTimeout;
     var _dispatch = d3.dispatch('tipped');
 
@@ -30,6 +30,10 @@ dc_graph.tip = function(options) {
         }
     }
     function fetch_and_show_content(d) {
+        if(_disabled) {
+            hide_tip.call(this);
+            return;
+        }
         var target = this,
             next = function() {
                 _behavior.content()(d, function(content) {
@@ -142,6 +146,13 @@ dc_graph.tip = function(options) {
         return _dispatch.on(event, f);
     };
 
+    _behavior.disabled = function(whether) {
+        if(!arguments.length)
+            return _disabled;
+        _disabled = whether;
+        return _behavior;
+    };
+
     _behavior.displayTip = function(filter, n, cb) {
         if(typeof filter !== 'function') {
             var d = filter;
@@ -163,6 +174,7 @@ dc_graph.tip = function(options) {
                 cb(d);
         }
     };
+
     _behavior.hideTip = function() {
         if(_d3tip)
             hide_tip();
