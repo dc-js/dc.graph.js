@@ -27,30 +27,35 @@
   ],
   "edges": [
     {
+      "id": "e1",
       "sourcename": "I1",
       "targetname": "D1",
       "sourceport": "cap1",
       "targetport": "cap1"
     },
     {
+      "id": "e2",
       "sourcename": "F1",
       "targetname": "I1",
       "sourceport": "cap4",
       "targetport": "cap4"
     },
     {
+      "id": "e3",
       "sourcename": "D1",
       "targetname": "K1",
       "sourceport": "cap2",
       "targetport": "cap2"
     },
     {
+      "id": "e4",
       "sourcename": "D1",
       "targetname": "J1",
       "sourceport": "cap2",
       "targetport": "cap2"
     },
     {
+      "id": "e5",
       "sourcename": "L1",
       "targetname": "J1",
       "sourceport": "cap2",
