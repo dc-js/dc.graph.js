@@ -100,6 +100,10 @@ dc_graph.draw_graphs = function(options) {
                 d3.event.stopPropagation();
                 if(!_behavior.dragCreatesEdges())
                     return;
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip.disabled(true);
+                    });
                 if(_behavior.usePorts()) {
                     var activePort;
                     if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
@@ -192,6 +196,10 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function(n) {
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip.disabled(false);
+                    });
                 // allow keyboard mode to hear this one (again, we need better cooperation)
                 // d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
@@ -229,6 +237,10 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function() {
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip.disabled(false);
+                    });
                 if(_sourceDown) { // drag-edge
                     if(_behavior.conduct().cancelDragEdge)
                         _behavior.conduct().cancelDragEdge(_sourceDown);

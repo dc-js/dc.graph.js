@@ -785,7 +785,6 @@ get_catalog().then(function(catalog) {
             .linkCallback(function(id) {
                 alert(id);
             });
-    gropts.tip = port_tips;
 
     _diagram.child('port-tips', port_tips);
 
@@ -796,6 +795,8 @@ get_catalog().then(function(catalog) {
             });
 
     _diagram.child('node-tips', node_tips);
+
+    gropts.tipsDisable = [port_tips, node_tips];
 
     if(qs.debug) {
         var troubleshoot = dc_graph.troubleshoot();
