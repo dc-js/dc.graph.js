@@ -3,8 +3,9 @@
 
 The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
 **/
-dc_graph.legend = function() {
-    var _legend = {}, _items, _included = [];
+dc_graph.legend = function(legend_namespace) {
+    legend_namespace = legend_namespace || 'node-legend';
+    var _items, _included = [];
     var _dispatch = d3.dispatch('filtered');
     var _totals, _counts;
 
@@ -13,10 +14,26 @@ dc_graph.legend = function() {
             _legend.dimension().filterFunction(function(k) {
                 return !_included.length || _included.includes(k);
             });
-            _legend.redraw();
             _legend.parent().redraw();
         }
     }
+
+    var _legend = dc_graph.behavior(legend_namespace, {
+        add_behavior: redraw,
+        remove_behavior: function() {},
+        parent: function(p) {
+            if(p) {
+                p
+                    .on('render.' + legend_namespace, render)
+                    .on('data.' + legend_namespace, on_data);
+            }
+            else {
+                _legend.parent()
+                    .on('render.' + legend_namespace, null)
+                    .on('data.' + legend_namespace, null);
+            }
+        }
+    });
 
     /**
      #### .x([value])
@@ -82,18 +99,12 @@ dc_graph.legend = function() {
      **/
     _legend.exemplars = property({});
 
-    _legend.parent = property(null).react(function(p) {
-        if(p)
-            p.on('data.legend', on_data);
-        else _legend.parent().on('data.legend', null);
-    });
-
     function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         if(_legend.counter())
             _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original));
     }
 
-    _legend.redraw = function() {
+    function redraw() {
         var legend = _legend.parent().svg()
                 .selectAll('g.dc-graph-legend')
                 .data([0]);
@@ -188,7 +199,7 @@ dc_graph.legend = function() {
                 _legend.parent().portGroup() && _legend.parent().portGroup().all());
     };
 
-    _legend.render = function() {
+    function render() {
         var exemplars = _legend.exemplars();
         _legend.countBaseline();
         if(exemplars instanceof Array) {
@@ -199,7 +210,7 @@ dc_graph.legend = function() {
             for(var item in exemplars)
                 _items.push({name: item, orig: {key: item, value: exemplars[item]}, cola: {}});
         }
-        _legend.redraw();
+        redraw();
     };
 
     _legend.dropdown = property(null).react(function(v) {

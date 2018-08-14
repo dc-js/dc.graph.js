@@ -22,7 +22,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.__dcFlag__ = dc.utils.uniqueId();
     _diagram.margins({left: 10, top: 10, right: 10, bottom: 10});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
+    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
     var _nodePorts; // ports sorted by node id
@@ -1054,9 +1054,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Object}
      * @return {dc_graph.diagram}
      **/
-    _diagram.legend = property(null).react(function(l) {
-        l.parent(_diagram);
-    });
+    // (pre-deprecated; see below)
 
     /**
      * Specifies another kind of child layer or interface. For example, this can
@@ -1080,6 +1078,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.mode = _diagram.child = named_children();
+
+    // for backward compatibility; use .child() for more control & multiple legends
+    _diagram.legend = function(_) {
+        if(!arguments.length)
+            return _diagram.child('node-legend');
+        _diagram.child('node-legend', _);
+        return _diagram;
+    };
 
     /**
      * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
@@ -1700,8 +1706,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
             });
         });
-        if(_diagram.legend())
-            _diagram.legend().redraw();
         if(skip_layout) {
             _running = false;
             _dispatch.end(false);
@@ -2399,8 +2403,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _edgeLayer = _g.selectAll('g.edge-layer');
         _nodeLayer = _g.selectAll('g.node-layer');
 
-        if(_diagram.legend())
-            _diagram.legend().render();
+        _dispatch.render();
         _diagram.redraw();
         return this;
     };
