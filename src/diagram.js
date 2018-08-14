@@ -1509,7 +1509,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     class: 'edge',
                     id: _diagram.edgeId,
                     opacity: 0
-                });
+                })
+            .each(function(e) {
+                e.deleted = false;
+            });
 
         edge.exit().each(function(e) {
             e.deleted = true;
@@ -1584,7 +1587,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(wnodes, _diagram.nodeKey.eval);
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
-                .attr('opacity', '0'); // don't show until has layout
+                .attr('opacity', '0') // don't show until has layout
+            .each(function(n) {
+                n.deleted = false;
+            });
         // .call(_d3cola.drag);
 
         _diagram._enterNode(nodeEnter);
