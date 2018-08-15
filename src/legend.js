@@ -112,15 +112,15 @@ dc_graph.legend = function(legend_namespace) {
 
     function redraw() {
         var legend = _legend.parent().svg()
-                .selectAll('g.dc-graph-legend')
+                .selectAll('g.dc-graph-legend.' + legend_namespace)
                 .data([0]);
         legend.enter().append('g')
-            .attr('class', 'dc-graph-legend')
+            .attr('class', 'dc-graph-legend ' + legend_namespace)
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
         var item = legend.selectAll(_legend.type().itemSelector())
                 .data(_items, function(n) { return n.name; });
-        var itemEnter = _legend.type().create(item.enter());
+        var itemEnter = _legend.type().create(item.enter(), _legend.itemWidth(), _legend.itemHeight());
         itemEnter.append('text')
             .attr('dy', '0.3em')
             .attr('class', 'legend-label');
@@ -255,7 +255,7 @@ dc_graph.legend.node_legend = function() {
 };
 
 dc_graph.legend.edge_legend = function() {
-    return {
+    var _type = {
         itemSelector: function() {
             return '.edge-container';
         },
@@ -263,10 +263,39 @@ dc_graph.legend.edge_legend = function() {
             return '.edge-label';
         },
         create: function(selection) {
-            return selection.append('g')
+            var edgeEnter = selection.append('g')
                 .attr('class', 'edge-container');
+            edgeEnter
+                .selectAll('circle')
+                .data([-1, 1])
+              .enter()
+                .append('circle')
+                .attr({
+                    r: _type.fakeNodeRadius(),
+                    fill: 'none',
+                    stroke: 'black',
+                    opacity: 0.25,
+                    transform: function(d) {
+                        return 'translate(' + [d * _type.length() / 2, 0].join(',') + ')';
+                    }
+                });
+            edgeEnter = edgeEnter.append('svg:path')
+                .attr({
+                    class: 'edge',
+                    id: function(d) { return d.name; },
+                    opacity: 0
+                })
+            .each(function(e) {
+                e.deleted = false;
+            });
+
+            return edgeEnter;
         },
+        fakeNodeRadius: property(10),
+        length: property(50),
         draw: function(diagram, itemEnter, item) {
+            diagram._enterEdge(itemEnter);
         }
     };
+    return _type;
 };
