@@ -1,7 +1,7 @@
 /**
 ## Legend
 
-The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
+The dc_graph.legend shows labeled examples of nodes & edges, within the frame of a dc_graph.diagram.
 **/
 dc_graph.legend = function(legend_namespace) {
     legend_namespace = legend_namespace || 'node-legend';
@@ -36,6 +36,12 @@ dc_graph.legend = function(legend_namespace) {
     });
 
     /**
+     #### .type([value])
+     Set or get the handler for the specific type of item to be displayed. Default: dc_graph.legend.node_legend()
+     **/
+    _legend.type = property(dc_graph.legend.node_legend());
+
+    /**
      #### .x([value])
      Set or get x coordinate for legend widget. Default: 0.
      **/
@@ -54,20 +60,20 @@ dc_graph.legend = function(legend_namespace) {
     _legend.gap = property(5);
 
     /**
-     #### .nodeWidth([value])
-     Set or get legend node width. Default: 30.
+     #### .itemWidth([value])
+     Set or get width to reserve for legend item. Default: 30.
      **/
-    _legend.nodeWidth = property(40);
+    _legend.itemWidth = _legend.nodeWidth = property(40);
 
     /**
-     #### .nodeHeight([value])
-     Set or get legend node height. Default: 30.
+     #### .itemHeight([value])
+     Set or get height to reserve for legend item. Default: 30.
     **/
-    _legend.nodeHeight = property(40);
+    _legend.itemHeight = _legend.nodeHeight = property(40);
 
     /**
      #### .noLabel([value])
-     Remove node labels, since legend labels are displayed outside of nodes instead. Default: true
+     Remove item labels, since legend labels are displayed outside of the items. Default: true
     **/
     _legend.noLabel = property(true);
 
@@ -112,31 +118,28 @@ dc_graph.legend = function(legend_namespace) {
             .attr('class', 'dc-graph-legend')
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
-        var node = legend.selectAll('.node')
+        var item = legend.selectAll(_legend.type().itemSelector())
                 .data(_items, function(n) { return n.name; });
-        var nodeEnter = node.enter().append('g')
-                .attr('class', 'node');
-        nodeEnter.append('text')
+        var itemEnter = _legend.type().create(item.enter());
+        itemEnter.append('text')
             .attr('dy', '0.3em')
             .attr('class', 'legend-label');
-        node
+        item
             .attr('transform', function(n, i) {
-                return 'translate(' + _legend.nodeWidth()/2 + ',' + (_legend.nodeHeight() + _legend.gap())*(i+0.5) + ')';
+                return 'translate(' + _legend.itemWidth()/2 + ',' + (_legend.itemHeight() + _legend.gap())*(i+0.5) + ')';
             });
-        node.select('text.legend-label')
-            .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
+        item.select('text.legend-label')
+            .attr('transform', 'translate(' + (_legend.itemWidth()/2+_legend.gap()) + ',0)')
             .attr('pointer-events', _legend.dimension() ? 'auto' : 'none')
             .text(function(n) {
                 return n.name + (_legend.counter() && _counts ? (' (' + (_counts[n.name] || 0) + (_counts[n.name] !== _totals[n.name] ? '/' + (_totals[n.name] || 0) : '') + ')') : '');
             });
-        _legend.parent()
-            ._enterNode(nodeEnter)
-            ._updateNode(node);
+        _legend.type().draw(_legend.parent(), itemEnter, item);
         if(_legend.noLabel())
-            node.selectAll('.node-label').remove();
+            item.selectAll(_legend.type().labelSelector()).remove();
 
         if(_legend.dropdown()) {
-            var caret = node.selectAll('text.dropdown-caret').data(function(x) { return [x]; });
+            var caret = item.selectAll('text.dropdown-caret').data(function(x) { return [x]; });
             caret
               .enter().append('text')
                 .attr('dy', '0.3em')
@@ -147,7 +150,7 @@ dc_graph.legend = function(legend_namespace) {
                 .html('&emsp;&#x25BC;');
             caret
                 .attr('dx', function(d) {
-                    return (_legend.nodeWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width;
+                    return (_legend.itemWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width;
                 })
                 .on('mouseenter', function(n) {
                     var rect = this.getBoundingClientRect();
@@ -155,7 +158,7 @@ dc_graph.legend = function(legend_namespace) {
                     _legend.dropdown()
                         .show(key, rect.x, rect.y);
                 });
-            node
+            item
                 .on('mouseenter', function(n) {
                     if(_counts && _counts[n.name]) {
                         d3.select(this).selectAll('.dropdown-caret')
@@ -169,7 +172,7 @@ dc_graph.legend = function(legend_namespace) {
         }
 
         if(_legend.dimension()) {
-            node.attr('cursor', 'pointer')
+            item.attr('cursor', 'pointer')
                 .on('click.legend', function(d) {
                     var key = _legend.parent().nodeKey.eval(d);
                     if(!_included.length)
@@ -182,10 +185,10 @@ dc_graph.legend = function(legend_namespace) {
                     _dispatch.filtered(_legend, key);
                 });
         } else {
-            node.attr('cursor', 'auto')
+            item.attr('cursor', 'auto')
                 .on('click.legend', null);
         }
-        node.transition().duration(1000)
+        item.transition().duration(1000)
             .attr('opacity', function(d) {
                 return (!_included.length || _included.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25;
             });
@@ -228,4 +231,42 @@ dc_graph.legend = function(legend_namespace) {
         });
 
     return _legend;
+};
+
+
+dc_graph.legend.node_legend = function() {
+    return {
+        itemSelector: function() {
+            return '.node';
+        },
+        labelSelector: function() {
+            return '.node-label';
+        },
+        create: function(selection) {
+            return selection.append('g')
+                .attr('class', 'node');
+        },
+        draw: function(diagram, itemEnter, item) {
+            diagram
+                ._enterNode(itemEnter)
+                ._updateNode(item);
+        }
+    };
+};
+
+dc_graph.legend.edge_legend = function() {
+    return {
+        itemSelector: function() {
+            return '.edge-container';
+        },
+        labelSelector: function() {
+            return '.edge-label';
+        },
+        create: function(selection) {
+            return selection.append('g')
+                .attr('class', 'edge-container');
+        },
+        draw: function(diagram, itemEnter, item) {
+        }
+    };
 };
