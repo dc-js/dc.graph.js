@@ -262,10 +262,20 @@ dc_graph.legend.edge_legend = function() {
         labelSelector: function() {
             return '.edge-label';
         },
-        create: function(selection) {
+        create: function(selection, w, h) {
             var edgeEnter = selection.append('g')
                 .attr('class', 'edge-container')
                 .attr('opacity', 0);
+            edgeEnter
+                .append('rect')
+                .attr({
+                    x: -w/2,
+                    y: -h/2,
+                    width: w,
+                    height: h,
+                    fill: 'green',
+                    opacity: 0
+                });
             edgeEnter
                 .selectAll('circle')
                 .data([-1, 1])
