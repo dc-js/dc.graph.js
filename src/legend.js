@@ -279,7 +279,7 @@ dc_graph.legend.edge_legend = function() {
                         return 'translate(' + [d * _type.length() / 2, 0].join(',') + ')';
                     }
                 });
-            edgeEnter = edgeEnter.append('svg:path')
+            edgeEnter.append('svg:path')
                 .attr({
                     class: 'edge',
                     id: function(d) { return d.name; },
