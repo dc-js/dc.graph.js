@@ -275,7 +275,8 @@ dc_graph.legend.edge_legend = function() {
                     r: _type.fakeNodeRadius(),
                     fill: 'none',
                     stroke: 'black',
-                    opacity: 0.25,
+                    "stroke-dasharray": "4,4",
+                    opacity: 0.15,
                     transform: function(d) {
                         return 'translate(' + [d * _type.length() / 2, 0].join(',') + ')';
                     }
