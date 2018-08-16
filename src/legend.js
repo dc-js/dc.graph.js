@@ -264,7 +264,8 @@ dc_graph.legend.edge_legend = function() {
         },
         create: function(selection) {
             var edgeEnter = selection.append('g')
-                .attr('class', 'edge-container');
+                .attr('class', 'edge-container')
+                .attr('opacity', 0);
             edgeEnter
                 .selectAll('circle')
                 .data([-1, 1])
@@ -279,22 +280,20 @@ dc_graph.legend.edge_legend = function() {
                         return 'translate(' + [d * _type.length() / 2, 0].join(',') + ')';
                     }
                 });
+            var edgex = _type.length()/2 - _type.fakeNodeRadius();
             edgeEnter.append('svg:path')
                 .attr({
                     class: 'edge',
                     id: function(d) { return d.name; },
-                    opacity: 0
-                })
-            .each(function(e) {
-                e.deleted = false;
-            });
+                    d: 'M' + -edgex + ',0 L' + edgex + ',0'
+                });
 
             return edgeEnter;
         },
         fakeNodeRadius: property(10),
         length: property(50),
         draw: function(diagram, itemEnter, item) {
-            diagram._enterEdge(itemEnter);
+            diagram._updateEdge(itemEnter.select('path.edge'));
         }
     };
     return _type;
