@@ -1266,6 +1266,30 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         return _diagram;
     };
+    _diagram.redrawEdge = _diagram._updateEdge = function(edge) {
+        edge
+            .attr('stroke', _diagram.edgeStroke.eval)
+            .attr('stroke-width', _diagram.edgeStrokeWidth.eval)
+            .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
+            .attr('opacity', _diagram.edgeOpacity.eval)
+            .attr('marker-end', function(e) {
+                var name = _diagram.edgeArrowhead.eval(e),
+                    id = edgeArrow(e, 'head', name);
+                return id ? 'url(#' + id + ')' : null;
+            })
+            .attr('marker-start', function(e) {
+                var name = _diagram.edgeArrowtail.eval(e),
+                    arrow_id = edgeArrow(e, 'tail', name);
+                return name ? 'url(#' + arrow_id + ')' : null;
+            })
+            .each(function(e) {
+                var fillEdgeStroke = _diagram.edgeStroke.eval(e);
+                d3.selectAll('#' + _diagram.arrowId(e, 'head'))
+                    .attr('fill', _diagram.edgeStroke.eval(e));
+                d3.selectAll('#' + _diagram.arrowId(e, 'tail'))
+                    .attr('fill', _diagram.edgeStroke.eval(e));
+            });
+    };
 
     function has_source_and_target(e) {
         return !!e.source && !!e.target;
@@ -1871,28 +1895,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function _refresh(node, edge) {
-        edge
-            .attr('stroke', _diagram.edgeStroke.eval)
-            .attr('stroke-width', _diagram.edgeStrokeWidth.eval)
-            .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
-            .attr('marker-end', function(e) {
-                var name = _diagram.edgeArrowhead.eval(e),
-                    id = edgeArrow(e, 'head', name);
-                return id ? 'url(#' + id + ')' : null;
-            })
-            .attr('marker-start', function(e) {
-                var name = _diagram.edgeArrowtail.eval(e),
-                    arrow_id = edgeArrow(e, 'tail', name);
-                return name ? 'url(#' + arrow_id + ')' : null;
-            })
-            .each(function(e) {
-                var fillEdgeStroke = _diagram.edgeStroke.eval(e);
-                d3.selectAll('#' + _diagram.arrowId(e, 'head'))
-                    .attr('fill', _diagram.edgeStroke.eval(e));
-                d3.selectAll('#' + _diagram.arrowId(e, 'tail'))
-                    .attr('fill', _diagram.edgeStroke.eval(e));
-            });
-
+        _diagram._updateEdge(edge);
         _diagram._updateNode(node);
         draw_ports(node);
     }
