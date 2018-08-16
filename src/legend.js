@@ -120,7 +120,7 @@ dc_graph.legend = function(legend_namespace) {
 
         var item = legend.selectAll(_legend.type().itemSelector())
                 .data(_items, function(n) { return n.name; });
-        var itemEnter = _legend.type().create(item.enter(), _legend.itemWidth(), _legend.itemHeight());
+        var itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
         itemEnter.append('text')
             .attr('dy', '0.3em')
             .attr('class', 'legend-label');
@@ -242,7 +242,7 @@ dc_graph.legend.node_legend = function() {
         labelSelector: function() {
             return '.node-label';
         },
-        create: function(selection) {
+        create: function(diagram, selection) {
             return selection.append('g')
                 .attr('class', 'node');
         },
@@ -262,7 +262,7 @@ dc_graph.legend.edge_legend = function() {
         labelSelector: function() {
             return '.edge-label';
         },
-        create: function(selection, w, h) {
+        create: function(diagram, selection, w, h) {
             var edgeEnter = selection.append('g')
                 .attr('class', 'edge-container')
                 .attr('opacity', 0);
@@ -296,7 +296,8 @@ dc_graph.legend.edge_legend = function() {
                 .attr({
                     class: 'edge',
                     id: function(d) { return d.name; },
-                    d: 'M' + -edgex + ',0 L' + edgex + ',0'
+                    d: 'M' + -edgex + ',0 L' + edgex + ',0',
+                    opacity: diagram.edgeOpacity.eval
                 });
 
             return edgeEnter;

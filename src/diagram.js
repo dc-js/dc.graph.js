@@ -1271,7 +1271,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke', _diagram.edgeStroke.eval)
             .attr('stroke-width', _diagram.edgeStrokeWidth.eval)
             .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
-            .attr('opacity', _diagram.edgeOpacity.eval)
             .attr('marker-end', function(e) {
                 var name = _diagram.edgeArrowhead.eval(e),
                     id = edgeArrow(e, 'head', name);
