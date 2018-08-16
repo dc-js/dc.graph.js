@@ -131,8 +131,8 @@ dc_graph.legend = function(legend_namespace) {
         item.select('text.legend-label')
             .attr('transform', 'translate(' + (_legend.itemWidth()/2+_legend.gap()) + ',0)')
             .attr('pointer-events', _legend.dimension() ? 'auto' : 'none')
-            .text(function(n) {
-                return n.name + (_legend.counter() && _counts ? (' (' + (_counts[n.name] || 0) + (_counts[n.name] !== _totals[n.name] ? '/' + (_totals[n.name] || 0) : '') + ')') : '');
+            .text(function(d) {
+                return d.name + (_legend.counter() && _counts ? (' (' + (_counts[d.orig.key] || 0) + (_counts[d.orig.key] !== _totals[d.orig.key] ? '/' + (_totals[d.orig.key] || 0) : '') + ')') : '');
             });
         _legend.type().draw(_legend.parent(), itemEnter, item);
         if(_legend.noLabel())
@@ -159,13 +159,13 @@ dc_graph.legend = function(legend_namespace) {
                         .show(key, rect.x, rect.y);
                 });
             item
-                .on('mouseenter', function(n) {
-                    if(_counts && _counts[n.name]) {
+                .on('mouseenter', function(d) {
+                    if(_counts && _counts[d.orig.key]) {
                         d3.select(this).selectAll('.dropdown-caret')
                             .style('visibility', 'visible');
                     }
                 })
-                .on('mouseleave', function(n) {
+                .on('mouseleave', function(d) {
                     d3.select(this).selectAll('.dropdown-caret')
                         .style('visibility', 'hidden');
                 });
