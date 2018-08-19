@@ -1,7 +1,6 @@
 dc_graph.line_breaks = function(charexp, max_line_length) {
     var regexp = new RegExp(charexp, 'g');
-    return function(n) {
-        var s = n.key;
+    return function(s) {
         var result;
         var line = '', lines = [], part, i = 0;
         do {
