@@ -164,11 +164,13 @@ dc_graph.tip = function(options) {
             if(cb)
                 cb(d);
         }
+        return _behavior;
     };
 
     _behavior.hideTip = function() {
         if(_d3tip)
             hide_tip();
+        return _behavior;
     };
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
     _behavior.showDelay = _behavior.delay = property(0);
