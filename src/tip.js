@@ -181,6 +181,8 @@ dc_graph.tip = function(options) {
             d = d3.select(flattened[which]).datum();
             if(cb)
                 cb(d);
+            if(_behavior.programmatic())
+                found.on('mouseout', hide_tip_delay);
         }
         return _behavior;
     };
