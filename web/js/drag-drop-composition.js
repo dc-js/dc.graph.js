@@ -804,7 +804,7 @@ get_catalog().then(function(catalog) {
     _diagram.child('hint-tips', hint_tips);
 
     gropts.tipsDisable = [port_tips, node_tips];
-    gropts.tip = hint_tips;
+    gropts.hintTip = hint_tips;
 
     if(qs.debug) {
         var troubleshoot = dc_graph.troubleshoot();
