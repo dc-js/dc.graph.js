@@ -205,7 +205,7 @@ dc_graph.draw_graphs = function(options) {
             })
             .on('mouseup.draw-graphs', function(n) {
                 if(options.hintTip)
-                    options.hintTip.hideTip();
+                    options.hintTip.hideTip(true);
                 if(options.tipsDisable)
                     options.tipsDisable.forEach(function(tip) {
                         tip.disabled(false);
@@ -248,7 +248,7 @@ dc_graph.draw_graphs = function(options) {
             })
             .on('mouseup.draw-graphs', function() {
                 if(options.hintTip)
-                    options.hintTip.hideTip();
+                    options.hintTip.hideTip(true);
                 if(options.tipsDisable)
                     options.tipsDisable.forEach(function(tip) {
                         tip.disabled(false);

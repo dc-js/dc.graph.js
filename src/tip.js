@@ -187,9 +187,13 @@ dc_graph.tip = function(options) {
         return _behavior;
     };
 
-    _behavior.hideTip = function() {
-        if(_d3tip)
-            hide_tip();
+    _behavior.hideTip = function(delay) {
+        if(_d3tip) {
+            if(delay)
+                hide_tip_delay();
+            else
+                hide_tip();
+        }
         return _behavior;
     };
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
