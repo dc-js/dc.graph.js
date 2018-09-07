@@ -798,7 +798,8 @@ get_catalog().then(function(catalog) {
 
     var hint_tips = dc_graph.tip({namespace: 'hint-tips'})
             .selection(dc_graph.tip.select_port())
-            .programmatic(true);
+            .programmatic(true)
+            .hideDelay(1000);
 
     _diagram.child('hint-tips', hint_tips);
 
