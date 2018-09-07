@@ -84,7 +84,7 @@ dc_graph.tip = function(options) {
         if(!check_hide_tip())
             return;
         preempt_tip();
-        if(_behavior.clickable())
+        if(_behavior.hideDelay())
             _hideTimeout = window.setTimeout(function () {
                 _d3tip.hide();
             }, _behavior.hideDelay());
