@@ -120,24 +120,32 @@ dc_graph.draw_graphs = function(options) {
                     _sourceDown = {node: n};
                     _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
                 }
-                if(_behavior.conduct().startDragEdge) {
-                    if(!_behavior.conduct().startDragEdge(_sourceDown)) {
-                        if(_behavior.conduct().invalidSourceMessage) {
-                            var msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
-                            console.log(msg);
-                            if(options.tip) {
-                                options.tip
-                                    .content(function(_, k) { k(msg); })
-                                    .displayTip(_behavior.usePorts() ? activePort : n);
-                            }
-                        }
-                        erase_hint();
-                    }
-                }
             })
             .on('mousemove.draw-graphs', function(n) {
                 d3.event.stopPropagation();
                 if(_sourceDown) {
+                    var coords = dc_graph.event_coords(diagram);
+                    if(!_sourceDown.started && Math.hypot(coords[0] - _hintData[0].source.x, coords[1] - _hintData[0].source.y) > _behavior.dragSize()) {
+                        if(_behavior.conduct().startDragEdge) {
+                            if(_behavior.conduct().startDragEdge(_sourceDown))
+                                _sourceDown.started = true;
+                            else {
+                                if(_behavior.conduct().invalidSourceMessage) {
+                                    var msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
+                                    console.log(msg);
+                                    if(options.tip) {
+                                        options.tip
+                                            .content(function(_, k) { k(msg); })
+                                            .displayTip(_behavior.usePorts() ? _sourceDown.port : _sourceDown.node);
+                                    }
+                                }
+                                erase_hint();
+                                return;
+                            }
+                        }
+                    }
+                    if(!_sourceDown.started)
+                        return;
                     var oldTarget = _targetMove;
                     if(n === _sourceDown.node) {
                         _behavior.conduct().invalidTargetMessage &&
@@ -182,7 +190,6 @@ dc_graph.draw_graphs = function(options) {
                             _hintData[0].target = {x: n.cola.x, y: n.cola.y};
                     }
                     else {
-                        var coords = dc_graph.event_coords(diagram);
                         _hintData[0].target = {x: coords[0], y: coords[1]};
                     }
                     update_hint();
@@ -271,6 +278,7 @@ dc_graph.draw_graphs = function(options) {
     _behavior.usePorts = property(null);
     _behavior.clickCreatesNodes = property(true);
     _behavior.dragCreatesEdges = property(true);
+    _behavior.dragSize = property(5);
 
     // really this is a behavior, and what we've been calling behaviors are modes
     // but i'm on a deadline
