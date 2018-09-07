@@ -796,7 +796,14 @@ get_catalog().then(function(catalog) {
 
     _diagram.child('node-tips', node_tips);
 
+    var hint_tips = dc_graph.tip({namespace: 'hint-tips'})
+            .selection(dc_graph.tip.select_port())
+            .programmatic(true);
+
+    _diagram.child('hint-tips', hint_tips);
+
     gropts.tipsDisable = [port_tips, node_tips];
+    gropts.tip = hint_tips;
 
     if(qs.debug) {
         var troubleshoot = dc_graph.troubleshoot();
