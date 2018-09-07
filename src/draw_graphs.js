@@ -102,7 +102,9 @@ dc_graph.draw_graphs = function(options) {
                     return;
                 if(options.tipsDisable)
                     options.tipsDisable.forEach(function(tip) {
-                        tip.disabled(true);
+                        tip
+                            .hideTip()
+                            .disabled(true);
                     });
                 if(_behavior.usePorts()) {
                     var activePort;
