@@ -122,6 +122,7 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mousemove.draw-graphs', function(n) {
+                var msg;
                 d3.event.stopPropagation();
                 if(_sourceDown) {
                     var coords = dc_graph.event_coords(diagram);
@@ -131,7 +132,7 @@ dc_graph.draw_graphs = function(options) {
                                 _sourceDown.started = true;
                             else {
                                 if(_behavior.conduct().invalidSourceMessage) {
-                                    var msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
+                                    msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
                                     console.log(msg);
                                     if(options.tip) {
                                         options.tip
@@ -178,8 +179,15 @@ dc_graph.draw_graphs = function(options) {
                              change = oldNode !== newNode;
                         }
                         if(change && !_behavior.conduct().changeDragTarget(_sourceDown, _targetMove)) {
-                            _targetMove && _behavior.conduct().invalidTargetMessage &&
-                                console.log(_behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove));
+                            if(_targetMove && _behavior.conduct().invalidTargetMessage) {
+                                msg = _behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove);
+                                console.log(msg);
+                                if(options.tip) {
+                                    options.tip
+                                        .content(function(_, k) { k(msg); })
+                                        .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
+                                }
+                            }
                             _targetMove = null;
                         }
                     }
