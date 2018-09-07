@@ -30,7 +30,7 @@ dc_graph.tip = function(options) {
         }
     }
     function fetch_and_show_content(d) {
-        if(_behavior.disabled()) {
+        if(_behavior.disabled() || _behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
             hide_tip.call(this);
             return;
         }
@@ -48,10 +48,6 @@ dc_graph.tip = function(options) {
                     _dispatch.tipped(d);
                 });
             };
-        if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
-            hide_tip.call(this);
-            return;
-        }
         if(_hideTimeout)
             window.clearTimeout(_hideTimeout);
         if(_behavior.delay()) {
