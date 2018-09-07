@@ -129,7 +129,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         remove_behavior: remove_behavior,
         parent: function(p) {
             things_group.on('set_changed.' + things_name, p ? selection_changed(p) : null);
-            if(p) {
+            if(p && _behavior.multipleSelect()) {
                 var brush_mode = p.child('brush');
                 if(!brush_mode) {
                     brush_mode = dc_graph.brush();
