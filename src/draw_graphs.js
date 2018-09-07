@@ -124,18 +124,9 @@ dc_graph.draw_graphs = function(options) {
                             var msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
                             console.log(msg);
                             if(options.tip) {
-                                var oldcont = options.tip.content(),
-                                    oldShowDelay = options.tip.showDelay(),
-                                    oldHideDelay = options.tip.hideDelay();
                                 options.tip
-                                    .showDelay(0)
-                                    .hideDelay(1000)
                                     .content(function(_, k) { k(msg); })
                                     .displayTip(_behavior.usePorts() ? activePort : n);
-                                options.tip
-                                    .showDelay(oldShowDelay)
-                                    .hideDelay(oldHideDelay)
-                                    .content(oldcont);
                             }
                         }
                         erase_hint();
