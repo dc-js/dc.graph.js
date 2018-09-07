@@ -57,16 +57,33 @@ dc_graph.tip = function(options) {
         else next();
     }
 
-    function hide_tip() {
+    function check_hide_tip() {
         if(d3.event.relatedTarget &&
            (!_behavior.selection().exclude || !_behavior.selection().exclude(d3.event.target)) &&
            (this && this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
             _behavior.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
-            return;
+            return false;
+        return true;
+    }
+
+    function preempt_tip() {
         if(_showTimeout) {
             window.clearTimeout(_showTimeout);
             _showTimeout = null;
         }
+    }
+
+    function hide_tip() {
+        if(!check_hide_tip())
+            return;
+        preempt_tip();
+        _d3tip.hide();
+    }
+
+    function hide_tip_delay() {
+        if(!check_hide_tip())
+            return;
+        preempt_tip();
         if(_behavior.clickable())
             _hideTimeout = window.setTimeout(function () {
                 _d3tip.hide();
@@ -77,20 +94,20 @@ dc_graph.tip = function(options) {
 
     function add_behavior(diagram, node, edge, ehover) {
         init(diagram);
-        _behavior.selection().select(diagram, node, edge, ehover)
+        _behavior.programmatic() || _behavior.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, fetch_and_show_content)
-            .on('mouseout.' + _namespace, hide_tip);
+            .on('mouseout.' + _namespace, hide_tip_delay);
         if(_behavior.clickable()) {
             d3.select('div.d3-tip')
                 .on('mouseover.' + _namespace, function() {
                     if(_hideTimeout)
                         window.clearTimeout(_hideTimeout);
                 })
-                .on('mouseout.' + _namespace, hide_tip);
+                .on('mouseout.' + _namespace, hide_tip_delay);
         }
     }
     function remove_behavior(diagram, node, edge, ehover) {
-        _behavior.selection().select(diagram, node, edge, ehover)
+        _behavior.programmatic() || _behavior.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, null)
             .on('mouseout.' + _namespace, null);
     }
@@ -143,6 +160,7 @@ dc_graph.tip = function(options) {
     };
 
     _behavior.disabled = property(false);
+    _behavior.programmatic = property(false);
 
     _behavior.displayTip = function(filter, n, cb) {
         if(typeof filter !== 'function') {
