@@ -178,18 +178,22 @@ dc_graph.draw_graphs = function(options) {
                                 newNode = _targetMove && _targetMove.node;
                              change = oldNode !== newNode;
                         }
-                        if(change && !_behavior.conduct().changeDragTarget(_sourceDown, _targetMove)) {
-                            if(_targetMove && _behavior.conduct().invalidTargetMessage) {
-                                msg = _behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove);
-                                console.log(msg);
-                                if(options.hintTip) {
-                                    options.hintTip
-                                        .content(function(_, k) { k(msg); })
-                                        .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
+                        if(change)
+                            if(_behavior.conduct().changeDragTarget(_sourceDown, _targetMove)) {
+                                if(options.hintTip)
+                                    options.hintTip.hideTip();
+                            } else {
+                                if(_targetMove && _behavior.conduct().invalidTargetMessage) {
+                                    msg = _behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove);
+                                    console.log(msg);
+                                    if(options.hintTip) {
+                                        options.hintTip
+                                            .content(function(_, k) { k(msg); })
+                                            .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
+                                    }
                                 }
+                                _targetMove = null;
                             }
-                            _targetMove = null;
-                        }
                     }
                     if(_targetMove) {
                         if(_targetMove.port)
