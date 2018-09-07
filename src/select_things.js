@@ -58,6 +58,8 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         }
     }
     function brushmove(ext) {
+        if(!thinginess.intersectRect)
+            return;
         var rectSelect = thinginess.intersectRect(ext);
         var newSelected;
         if(isUnion(d3.event.sourceEvent))
