@@ -21,7 +21,7 @@ dc_graph.tip = function(options) {
     function init(parent) {
         if(!_d3tip) {
             _d3tip = d3.tip()
-                .attr('class', 'd3-tip')
+                .attr('class', options.class || 'd3-tip')
                 .html(function(d) { return "<span>" + d + "</span>"; })
                 .direction(_behavior.direction());
             if(_behavior.offset())
