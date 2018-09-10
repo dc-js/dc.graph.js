@@ -89,6 +89,30 @@ dc_graph.draw_graphs = function(options) {
         });
     }
 
+    function check_invalid_drag(coords) {
+        var msg;
+        if(!_sourceDown.started && Math.hypot(coords[0] - _hintData[0].source.x, coords[1] - _hintData[0].source.y) > _behavior.dragSize()) {
+            if(_behavior.conduct().startDragEdge) {
+                if(_behavior.conduct().startDragEdge(_sourceDown)) {
+                    _sourceDown.started = true;
+                } else {
+                    if(_behavior.conduct().invalidSourceMessage) {
+                        msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
+                        console.log(msg);
+                        if(options.hintTip) {
+                            options.hintTip
+                                .content(function(_, k) { k(msg); })
+                                .displayTip(_behavior.usePorts() ? _sourceDown.port : _sourceDown.node);
+                        }
+                    }
+                    erase_hint();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function add_behavior(diagram, node, edge, ehover) {
         var select_nodes = diagram.child('select-nodes');
         if(select_nodes) {
@@ -126,26 +150,7 @@ dc_graph.draw_graphs = function(options) {
                 d3.event.stopPropagation();
                 if(_sourceDown) {
                     var coords = dc_graph.event_coords(diagram);
-                    if(!_sourceDown.started && Math.hypot(coords[0] - _hintData[0].source.x, coords[1] - _hintData[0].source.y) > _behavior.dragSize()) {
-                        if(_behavior.conduct().startDragEdge) {
-                            if(_behavior.conduct().startDragEdge(_sourceDown))
-                                _sourceDown.started = true;
-                            else {
-                                if(_behavior.conduct().invalidSourceMessage) {
-                                    msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
-                                    console.log(msg);
-                                    if(options.hintTip) {
-                                        options.hintTip
-                                            .content(function(_, k) { k(msg); })
-                                            .displayTip(_behavior.usePorts() ? _sourceDown.port : _sourceDown.node);
-                                    }
-                                }
-                                erase_hint();
-                                return;
-                            }
-                        }
-                    }
-                    if(!_sourceDown.started)
+                    if(check_invalid_drag(coords))
                         return;
                     var oldTarget = _targetMove;
                     if(n === _sourceDown.node) {
@@ -241,6 +246,8 @@ dc_graph.draw_graphs = function(options) {
                 var data = [];
                 if(_sourceDown) { // drawing edge
                     var coords = dc_graph.event_coords(diagram);
+                    if(check_invalid_drag(coords))
+                        return;
                     if(_behavior.conduct().dragCanvas)
                         _behavior.conduct().dragCanvas(_sourceDown, coords);
                     if(_behavior.conduct().changeDragTarget && _targetMove)
