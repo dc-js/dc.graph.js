@@ -1,5 +1,17 @@
 ## 0.6.0 beta 12
+* edge legend
+* legend is an ordinary mode/behavior/child like any other
+* hints to tell the user why an edge can't be drawn due to mismatched ports
+* dropdown menus in legend for choosing individual nodes, with various click/hide behaviors; dropdown menus as a general utility using html overlays
+* improved support for programmatic tooltips: callback when tooltip displayed, purely programmatic tips, different styles for different tips, immediate/delayed tip hiding, disabling of tooltips, etc
+* `select_things` could cause brush to appear when `multipleSelect` was disabled
+* port selection was throwing exceptions when brush was enabled
+* nodes and edges were sometimes drawn wrong if removed and then inserted again
+* improved compatibility with IE10+
+* `spawn_engine` won't try to use a WebWorker if the browser (IE) doesn't support it
+* `reset` event for diagrams, when rendering on existing canvas; behaviors uninstall themselves on reset so that their elements don't become stale
 * `dc_graph.line_breaks` deprecates the old behavior of taking an object with field `key` - instead clients should pass a string
+* removing listeners from a cascade resulted in empty spots (use `splice` not `delete`)
 
 ## 0.6.0 beta 11
 * `highlight_things` separates the display of highlights out from `highlight_neighbors`. (`highlight_paths` is not yet compliant though)
