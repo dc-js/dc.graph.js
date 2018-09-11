@@ -100,7 +100,7 @@ dc_graph.tip = function(options) {
     function init(parent) {
         if(!_d3tip) {
             _d3tip = d3.tip()
-                .attr('class', 'd3-tip')
+                .attr('class', options.class || 'd3-tip')
                 .html(function(d) { return "&lt;span>" + d + "&lt;/span>"; })
                 .direction(_behavior.direction());
             if(_behavior.offset())
@@ -108,46 +108,62 @@ dc_graph.tip = function(options) {
             parent.svg().call(_d3tip);
         }
     }
-    function fetch_and_show_content(fetcher) {
-        return function(d) {
-             var target = this,
-                 next = function() {
-                     _behavior[fetcher]()(d, function(content) {
-                         _d3tip.show.call(target, content, target);
-                         d3.select('div.d3-tip')
-                             .selectAll('a.tip-link')
-                             .on('click', function() {
-                                 d3.event.preventDefault();
-                                 if(_behavior.linkCallback())
-                                     _behavior.linkCallback()(this.id);
-                             });
-                     });
-                 };
-             if(_behavior.selection().exclude &amp;&amp; _behavior.selection().exclude(d3.event.target)) {
-                 hide_tip.call(this);
-                 return;
-             }
-             if(_hideTimeout)
-                 window.clearTimeout(_hideTimeout);
-             if(_behavior.delay()) {
-                 window.clearTimeout(_showTimeout);
-                 _showTimeout = window.setTimeout(next, _behavior.delay());
-             }
-             else next();
-         };
+    function fetch_and_show_content(d) {
+        if(_behavior.disabled() || _behavior.selection().exclude &amp;&amp; _behavior.selection().exclude(d3.event.target)) {
+            hide_tip.call(this);
+            return;
+        }
+        var target = this,
+            next = function() {
+                _behavior.content()(d, function(content) {
+                    _d3tip.show.call(target, content, target);
+                    d3.select('div.d3-tip')
+                        .selectAll('a.tip-link')
+                        .on('click', function() {
+                            d3.event.preventDefault();
+                            if(_behavior.linkCallback())
+                                _behavior.linkCallback()(this.id);
+                        });
+                    _dispatch.tipped(d);
+                });
+            };
+        if(_hideTimeout)
+            window.clearTimeout(_hideTimeout);
+        if(_behavior.delay()) {
+            window.clearTimeout(_showTimeout);
+            _showTimeout = window.setTimeout(next, _behavior.delay());
+        }
+        else next();
     }
 
-    function hide_tip() {
+    function check_hide_tip() {
         if(d3.event.relatedTarget &amp;&amp;
            (!_behavior.selection().exclude || !_behavior.selection().exclude(d3.event.target)) &amp;&amp;
-           (this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
+           (this &amp;&amp; this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
             _behavior.clickable() &amp;&amp; d3.event.relatedTarget.classList.contains('d3-tip')))
-            return;
+            return false;
+        return true;
+    }
+
+    function preempt_tip() {
         if(_showTimeout) {
             window.clearTimeout(_showTimeout);
             _showTimeout = null;
         }
-        if(_behavior.clickable())
+    }
+
+    function hide_tip() {
+        if(!check_hide_tip())
+            return;
+        preempt_tip();
+        _d3tip.hide();
+    }
+
+    function hide_tip_delay() {
+        if(!check_hide_tip())
+            return;
+        preempt_tip();
+        if(_behavior.hideDelay())
             _hideTimeout = window.setTimeout(function () {
                 _d3tip.hide();
             }, _behavior.hideDelay());
@@ -157,20 +173,20 @@ dc_graph.tip = function(options) {
 
     function add_behavior(diagram, node, edge, ehover) {
         init(diagram);
-        _behavior.selection().select(diagram, node, edge, ehover)
-            .on('mouseover.' + _namespace, fetch_and_show_content('content'))
-            .on('mouseout.' + _namespace, hide_tip);
+        _behavior.programmatic() || _behavior.selection().select(diagram, node, edge, ehover)
+            .on('mouseover.' + _namespace, fetch_and_show_content)
+            .on('mouseout.' + _namespace, hide_tip_delay);
         if(_behavior.clickable()) {
             d3.select('div.d3-tip')
                 .on('mouseover.' + _namespace, function() {
                     if(_hideTimeout)
                         window.clearTimeout(_hideTimeout);
                 })
-                .on('mouseout.' + _namespace, hide_tip);
+                .on('mouseout.' + _namespace, hide_tip_delay);
         }
     }
     function remove_behavior(diagram, node, edge, ehover) {
-        _behavior.selection().select(diagram, node, edge, ehover)
+        _behavior.programmatic() || _behavior.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, null)
             .on('mouseout.' + _namespace, null);
     }
@@ -222,19 +238,42 @@ dc_graph.tip = function(options) {
         return _dispatch.on(event, f);
     };
 
-    _behavior.displayTip = function(filter, n) {
+    _behavior.disabled = property(false);
+    _behavior.programmatic = property(false);
+
+    _behavior.displayTip = function(filter, n, cb) {
+        if(typeof filter !== 'function') {
+            var d = filter;
+            filter = function(d2) { return d2 === d; };
+        }
         var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
             .filter(filter);
         if(found.size() > 0) {
-            var action = fetch_and_show_content('content');
-            var which = (n || 0) % found.size();
-            action.call(found[0][which], d3.select(found[0][which]).datum());
-            _dispatch.tipped(d3.select(found[0][which]).datum());
+            var action = fetch_and_show_content;
+            // we need to flatten e.g. for ports, which will have nested selections
+            // .nodes() does this better in D3v4
+            var flattened = found.reduce(function(p, v) {
+                return p.concat(v);
+            }, []);
+            var which = (n || 0) % flattened.length;
+            action.call(flattened[which], d3.select(flattened[which]).datum());
+            d = d3.select(flattened[which]).datum();
+            if(cb)
+                cb(d);
+            if(_behavior.programmatic())
+                found.on('mouseout', hide_tip_delay);
         }
+        return _behavior;
     };
-    _behavior.hideTip = function() {
-        if(_d3tip)
-            hide_tip();
+
+    _behavior.hideTip = function(delay) {
+        if(_d3tip) {
+            if(delay)
+                hide_tip_delay();
+            else
+                hide_tip();
+        }
+        return _behavior;
     };
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
     _behavior.showDelay = _behavior.delay = property(0);
@@ -262,7 +301,7 @@ dc_graph.tip = function(options) {
  **/
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
-        d = d.orig.value;
+        d = gen.fetch()(d);
         var keys = Object.keys(d).filter(d3.functor(gen.filter()))
                 .filter(function(k) {
                     return d[k];
@@ -275,6 +314,9 @@ dc_graph.tip.table = function() {
         k(table.node().outerHTML); // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
+    gen.fetch = property(function(d) {
+        return d.orig.value;
+    });
     return gen;
 };
 
@@ -363,7 +405,7 @@ dc_graph.tip.select_port = function() {
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on Mon Jun 25th 2018
+		on Tue Sep 11th 2018
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
