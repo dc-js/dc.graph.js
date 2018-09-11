@@ -127,6 +127,15 @@ function deprecated_property(message, defaultValue) {
     return ret;
 }
 
+function deprecation_warning(message) {
+    var said = false;
+    return function() {
+        if(said)
+            return;
+        console.warn(message);
+    };
+}
+
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 function uuid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

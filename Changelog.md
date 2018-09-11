@@ -1,5 +1,5 @@
 ## 0.6.0 beta 12
-* **BREAKING CHANGE**: `dc_graph.line_breaks` takes the string instead of extracting `n.key` - clients must now fetch the data they want broken into lines
+* `dc_graph.line_breaks` deprecates the old behavior of taking an object with field `key` - instead clients should pass a string
 
 ## 0.6.0 beta 11
 * `highlight_things` separates the display of highlights out from `highlight_neighbors`. (`highlight_paths` is not yet compliant though)
