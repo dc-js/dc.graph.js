@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-beta.11
+ *  dc.graph 0.6.0-beta.12
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-beta.11
+ * @version 0.6.0-beta.12
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-beta.11',
+    version: '0.6.0-beta.12',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -70,7 +70,7 @@ var property = function (defaultValue, unwrap) {
             if(cascade[i].n === n) {
                 if(f)
                     cascade[i].f = f;
-                else delete cascade[i];
+                else cascade.splice(i, 1);
                 return ret;
             } else if(cascade[i].n > n) {
                 cascade.splice(i, 0, {n: n, f: f});
@@ -144,6 +144,15 @@ function deprecated_property(message, defaultValue) {
         ret[method] = prop[method];
     });
     return ret;
+}
+
+function deprecation_warning(message) {
+    var said = false;
+    return function() {
+        if(said)
+            return;
+        console.warn(message);
+    };
 }
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
