@@ -217,3 +217,7 @@ function ancestor_has_class(element, classname) {
         return true;
     return element.parentElement && ancestor_has_class(element.parentElement, classname);
 }
+
+if (typeof SVGElement.prototype.contains == 'undefined') {
+    SVGElement.prototype.contains = HTMLDivElement.prototype.contains;
+}

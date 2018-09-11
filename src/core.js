@@ -51,7 +51,7 @@ var property = function (defaultValue, unwrap) {
             if(cascade[i].n === n) {
                 if(f)
                     cascade[i].f = f;
-                else delete cascade[i];
+                else cascade.splice(i, 1);
                 return ret;
             } else if(cascade[i].n > n) {
                 cascade.splice(i, 0, {n: n, f: f});
@@ -125,6 +125,15 @@ function deprecated_property(message, defaultValue) {
         ret[method] = prop[method];
     });
     return ret;
+}
+
+function deprecation_warning(message) {
+    var said = false;
+    return function() {
+        if(said)
+            return;
+        console.warn(message);
+    };
 }
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript

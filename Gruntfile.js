@@ -356,6 +356,7 @@ module.exports.jsFiles = [
     'src/tree_constraints.js',
     'src/behavior.js',
     'src/tip.js',
+    'src/dropdown.js',
     'src/keyboard.js',
     'src/edit_text.js',
     'src/brush.js',

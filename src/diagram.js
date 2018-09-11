@@ -22,7 +22,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.__dcFlag__ = dc.utils.uniqueId();
     _diagram.margins({left: 10, top: 10, right: 10, bottom: 10});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed');
+    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
     var _nodePorts; // ports sorted by node id
@@ -1054,9 +1054,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Object}
      * @return {dc_graph.diagram}
      **/
-    _diagram.legend = property(null).react(function(l) {
-        l.parent(_diagram);
-    });
+    // (pre-deprecated; see below)
 
     /**
      * Specifies another kind of child layer or interface. For example, this can
@@ -1080,6 +1078,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.mode = _diagram.child = named_children();
+
+    // for backward compatibility; use .child() for more control & multiple legends
+    _diagram.legend = function(_) {
+        if(!arguments.length)
+            return _diagram.child('node-legend');
+        _diagram.child('node-legend', _);
+        return _diagram;
+    };
 
     /**
      * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
@@ -1259,6 +1265,29 @@ dc_graph.diagram = function (parent, chartGroup) {
                 fill: compose(_diagram.nodeFillScale() || identity, _diagram.nodeFill.eval)
             });
         return _diagram;
+    };
+    _diagram.redrawEdge = _diagram._updateEdge = function(edge) {
+        edge
+            .attr('stroke', _diagram.edgeStroke.eval)
+            .attr('stroke-width', _diagram.edgeStrokeWidth.eval)
+            .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
+            .attr('marker-end', function(e) {
+                var name = _diagram.edgeArrowhead.eval(e),
+                    id = edgeArrow(e, 'head', name);
+                return id ? 'url(#' + id + ')' : null;
+            })
+            .attr('marker-start', function(e) {
+                var name = _diagram.edgeArrowtail.eval(e),
+                    arrow_id = edgeArrow(e, 'tail', name);
+                return name ? 'url(#' + arrow_id + ')' : null;
+            })
+            .each(function(e) {
+                var fillEdgeStroke = _diagram.edgeStroke.eval(e);
+                d3.selectAll('#' + _diagram.arrowId(e, 'head'))
+                    .attr('fill', _diagram.edgeStroke.eval(e));
+                d3.selectAll('#' + _diagram.arrowId(e, 'tail'))
+                    .attr('fill', _diagram.edgeStroke.eval(e));
+            });
     };
 
     function has_source_and_target(e) {
@@ -1503,7 +1532,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     class: 'edge',
                     id: _diagram.edgeId,
                     opacity: 0
-                });
+                })
+            .each(function(e) {
+                e.deleted = false;
+            });
 
         edge.exit().each(function(e) {
             e.deleted = true;
@@ -1578,7 +1610,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(wnodes, _diagram.nodeKey.eval);
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
-                .attr('opacity', '0'); // don't show until has layout
+                .attr('opacity', '0') // don't show until has layout
+            .each(function(n) {
+                n.deleted = false;
+            });
         // .call(_d3cola.drag);
 
         _diagram._enterNode(nodeEnter);
@@ -1700,8 +1735,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
             });
         });
-        if(_diagram.legend())
-            _diagram.legend().redraw();
         if(skip_layout) {
             _running = false;
             _dispatch.end(false);
@@ -1861,28 +1894,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function _refresh(node, edge) {
-        edge
-            .attr('stroke', _diagram.edgeStroke.eval)
-            .attr('stroke-width', _diagram.edgeStrokeWidth.eval)
-            .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
-            .attr('marker-end', function(e) {
-                var name = _diagram.edgeArrowhead.eval(e),
-                    id = edgeArrow(e, 'head', name);
-                return id ? 'url(#' + id + ')' : null;
-            })
-            .attr('marker-start', function(e) {
-                var name = _diagram.edgeArrowtail.eval(e),
-                    arrow_id = edgeArrow(e, 'tail', name);
-                return name ? 'url(#' + arrow_id + ')' : null;
-            })
-            .each(function(e) {
-                var fillEdgeStroke = _diagram.edgeStroke.eval(e);
-                d3.selectAll('#' + _diagram.arrowId(e, 'head'))
-                    .attr('fill', _diagram.edgeStroke.eval(e));
-                d3.selectAll('#' + _diagram.arrowId(e, 'tail'))
-                    .attr('fill', _diagram.edgeStroke.eval(e));
-            });
-
+        _diagram._updateEdge(edge);
         _diagram._updateNode(node);
         draw_ports(node);
     }
@@ -2382,6 +2394,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.render = function () {
+        if(_svg)
+            _dispatch.reset();
         if(!_diagram.initLayoutOnRedraw())
             initLayout();
         _diagram.resetSvg();
@@ -2397,8 +2411,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _edgeLayer = _g.selectAll('g.edge-layer');
         _nodeLayer = _g.selectAll('g.node-layer');
 
-        if(_diagram.legend())
-            _diagram.legend().render();
+        _dispatch.render();
         _diagram.redraw();
         return this;
     };
@@ -2564,7 +2577,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.resetSvg = function () {
-        _diagram.select('svg').remove();
+        if(_svg) {
+            _svg.remove();
+            _svg = null;
+        }
         return generateSvg();
     };
 

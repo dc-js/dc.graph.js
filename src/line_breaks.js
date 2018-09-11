@@ -1,7 +1,12 @@
+var dont_use_key = deprecation_warning('dc_graph.line_breaks now takes a string - d.key behavior is deprecated and will be removed in a later version');
+
 dc_graph.line_breaks = function(charexp, max_line_length) {
     var regexp = new RegExp(charexp, 'g');
-    return function(n) {
-        var s = n.key;
+    return function(s) {
+        if(typeof s === 'object') { // backward compatibility
+            dont_use_key();
+            s = s.key;
+        }
         var result;
         var line = '', lines = [], part, i = 0;
         do {

@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0-beta.11
+ *  dc.graph 0.6.0-beta.12
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0-beta.11
+ * @version 0.6.0-beta.12
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0-beta.11',
+    version: '0.6.0-beta.12',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -73,7 +73,7 @@ var property = function (defaultValue, unwrap) {
             if(cascade[i].n === n) {
                 if(f)
                     cascade[i].f = f;
-                else delete cascade[i];
+                else cascade.splice(i, 1);
                 return ret;
             } else if(cascade[i].n > n) {
                 cascade.splice(i, 0, {n: n, f: f});
@@ -147,6 +147,15 @@ function deprecated_property(message, defaultValue) {
         ret[method] = prop[method];
     });
     return ret;
+}
+
+function deprecation_warning(message) {
+    var said = false;
+    return function() {
+        if(said)
+            return;
+        console.warn(message);
+    };
 }
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
@@ -417,6 +426,10 @@ function ancestor_has_class(element, classname) {
     if(d3.select(element).classed(classname))
         return true;
     return element.parentElement && ancestor_has_class(element.parentElement, classname);
+}
+
+if (typeof SVGElement.prototype.contains == 'undefined') {
+    SVGElement.prototype.contains = HTMLDivElement.prototype.contains;
 }
 
 // arguably depth first search is a stupid algorithm to modularize -
@@ -1367,7 +1380,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.__dcFlag__ = dc.utils.uniqueId();
     _diagram.margins({left: 10, top: 10, right: 10, bottom: 10});
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed');
+    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
     var _nodePorts; // ports sorted by node id
@@ -2399,9 +2412,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Object}
      * @return {dc_graph.diagram}
      **/
-    _diagram.legend = property(null).react(function(l) {
-        l.parent(_diagram);
-    });
+    // (pre-deprecated; see below)
 
     /**
      * Specifies another kind of child layer or interface. For example, this can
@@ -2425,6 +2436,14 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.mode = _diagram.child = named_children();
+
+    // for backward compatibility; use .child() for more control & multiple legends
+    _diagram.legend = function(_) {
+        if(!arguments.length)
+            return _diagram.child('node-legend');
+        _diagram.child('node-legend', _);
+        return _diagram;
+    };
 
     /**
      * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
@@ -2604,6 +2623,29 @@ dc_graph.diagram = function (parent, chartGroup) {
                 fill: compose(_diagram.nodeFillScale() || identity, _diagram.nodeFill.eval)
             });
         return _diagram;
+    };
+    _diagram.redrawEdge = _diagram._updateEdge = function(edge) {
+        edge
+            .attr('stroke', _diagram.edgeStroke.eval)
+            .attr('stroke-width', _diagram.edgeStrokeWidth.eval)
+            .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
+            .attr('marker-end', function(e) {
+                var name = _diagram.edgeArrowhead.eval(e),
+                    id = edgeArrow(e, 'head', name);
+                return id ? 'url(#' + id + ')' : null;
+            })
+            .attr('marker-start', function(e) {
+                var name = _diagram.edgeArrowtail.eval(e),
+                    arrow_id = edgeArrow(e, 'tail', name);
+                return name ? 'url(#' + arrow_id + ')' : null;
+            })
+            .each(function(e) {
+                var fillEdgeStroke = _diagram.edgeStroke.eval(e);
+                d3.selectAll('#' + _diagram.arrowId(e, 'head'))
+                    .attr('fill', _diagram.edgeStroke.eval(e));
+                d3.selectAll('#' + _diagram.arrowId(e, 'tail'))
+                    .attr('fill', _diagram.edgeStroke.eval(e));
+            });
     };
 
     function has_source_and_target(e) {
@@ -2848,7 +2890,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     class: 'edge',
                     id: _diagram.edgeId,
                     opacity: 0
-                });
+                })
+            .each(function(e) {
+                e.deleted = false;
+            });
 
         edge.exit().each(function(e) {
             e.deleted = true;
@@ -2923,7 +2968,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .data(wnodes, _diagram.nodeKey.eval);
         var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
-                .attr('opacity', '0'); // don't show until has layout
+                .attr('opacity', '0') // don't show until has layout
+            .each(function(n) {
+                n.deleted = false;
+            });
         // .call(_d3cola.drag);
 
         _diagram._enterNode(nodeEnter);
@@ -3045,8 +3093,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
             });
         });
-        if(_diagram.legend())
-            _diagram.legend().redraw();
         if(skip_layout) {
             _running = false;
             _dispatch.end(false);
@@ -3206,28 +3252,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function _refresh(node, edge) {
-        edge
-            .attr('stroke', _diagram.edgeStroke.eval)
-            .attr('stroke-width', _diagram.edgeStrokeWidth.eval)
-            .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
-            .attr('marker-end', function(e) {
-                var name = _diagram.edgeArrowhead.eval(e),
-                    id = edgeArrow(e, 'head', name);
-                return id ? 'url(#' + id + ')' : null;
-            })
-            .attr('marker-start', function(e) {
-                var name = _diagram.edgeArrowtail.eval(e),
-                    arrow_id = edgeArrow(e, 'tail', name);
-                return name ? 'url(#' + arrow_id + ')' : null;
-            })
-            .each(function(e) {
-                var fillEdgeStroke = _diagram.edgeStroke.eval(e);
-                d3.selectAll('#' + _diagram.arrowId(e, 'head'))
-                    .attr('fill', _diagram.edgeStroke.eval(e));
-                d3.selectAll('#' + _diagram.arrowId(e, 'tail'))
-                    .attr('fill', _diagram.edgeStroke.eval(e));
-            });
-
+        _diagram._updateEdge(edge);
         _diagram._updateNode(node);
         draw_ports(node);
     }
@@ -3727,6 +3752,8 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.render = function () {
+        if(_svg)
+            _dispatch.reset();
         if(!_diagram.initLayoutOnRedraw())
             initLayout();
         _diagram.resetSvg();
@@ -3742,8 +3769,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _edgeLayer = _g.selectAll('g.edge-layer');
         _nodeLayer = _g.selectAll('g.node-layer');
 
-        if(_diagram.legend())
-            _diagram.legend().render();
+        _dispatch.render();
         _diagram.redraw();
         return this;
     };
@@ -3909,7 +3935,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.resetSvg = function () {
-        _diagram.select('svg').remove();
+        if(_svg) {
+            _svg.remove();
+            _svg = null;
+        }
         return generateSvg();
     };
 
@@ -4285,6 +4314,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
 dc_graph.spawn_engine = function(layout, args, worker) {
     args = args || {};
+    worker = worker && !!window.Worker;
     var engine = dc_graph.engines.instantiate(layout, args, worker);
     if(!engine) {
         console.warn('layout engine ' + layout + ' not found; using default ' + dc_graph._default_engine);
@@ -6400,10 +6430,11 @@ dc_graph.troubleshoot = function() {
 /**
 ## Legend
 
-The dc_graph.legend will show labeled examples of nodes (and someday edges), within the frame of a dc_graph.diagram.
+The dc_graph.legend shows labeled examples of nodes & edges, within the frame of a dc_graph.diagram.
 **/
-dc_graph.legend = function() {
-    var _legend = {}, _items, _included = [];
+dc_graph.legend = function(legend_namespace) {
+    legend_namespace = legend_namespace || 'node-legend';
+    var _items, _included = [];
     var _dispatch = d3.dispatch('filtered');
     var _totals, _counts;
 
@@ -6412,10 +6443,32 @@ dc_graph.legend = function() {
             _legend.dimension().filterFunction(function(k) {
                 return !_included.length || _included.includes(k);
             });
-            _legend.redraw();
             _legend.parent().redraw();
         }
     }
+
+    var _legend = dc_graph.behavior(legend_namespace, {
+        add_behavior: redraw,
+        remove_behavior: function() {},
+        parent: function(p) {
+            if(p) {
+                p
+                    .on('render.' + legend_namespace, render)
+                    .on('data.' + legend_namespace, on_data);
+            }
+            else {
+                _legend.parent()
+                    .on('render.' + legend_namespace, null)
+                    .on('data.' + legend_namespace, null);
+            }
+        }
+    });
+
+    /**
+     #### .type([value])
+     Set or get the handler for the specific type of item to be displayed. Default: dc_graph.legend.node_legend()
+     **/
+    _legend.type = property(dc_graph.legend.node_legend());
 
     /**
      #### .x([value])
@@ -6436,20 +6489,20 @@ dc_graph.legend = function() {
     _legend.gap = property(5);
 
     /**
-     #### .nodeWidth([value])
-     Set or get legend node width. Default: 30.
+     #### .itemWidth([value])
+     Set or get width to reserve for legend item. Default: 30.
      **/
-    _legend.nodeWidth = property(40);
+    _legend.itemWidth = _legend.nodeWidth = property(40);
 
     /**
-     #### .nodeHeight([value])
-     Set or get legend node height. Default: 30.
+     #### .itemHeight([value])
+     Set or get height to reserve for legend item. Default: 30.
     **/
-    _legend.nodeHeight = property(40);
+    _legend.itemHeight = _legend.nodeHeight = property(40);
 
     /**
      #### .noLabel([value])
-     Remove node labels, since legend labels are displayed outside of nodes instead. Default: true
+     Remove item labels, since legend labels are displayed outside of the items. Default: true
     **/
     _legend.noLabel = property(true);
 
@@ -6481,50 +6534,74 @@ dc_graph.legend = function() {
      **/
     _legend.exemplars = property({});
 
-    _legend.parent = property(null).react(function(p) {
-        if(p)
-            p.on('data.legend', on_data);
-        else _legend.parent().on('data.legend', null);
-    });
-
     function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         if(_legend.counter())
             _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original));
     }
 
-    _legend.redraw = function() {
+    function redraw() {
         var legend = _legend.parent().svg()
-                .selectAll('g.dc-graph-legend')
+                .selectAll('g.dc-graph-legend.' + legend_namespace)
                 .data([0]);
         legend.enter().append('g')
-            .attr('class', 'dc-graph-legend')
+            .attr('class', 'dc-graph-legend ' + legend_namespace)
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
-        var node = legend.selectAll('.node')
+        var item = legend.selectAll(_legend.type().itemSelector())
                 .data(_items, function(n) { return n.name; });
-        var nodeEnter = node.enter().append('g')
-                .attr('class', 'node');
-        nodeEnter.append('text')
+        var itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
+        itemEnter.append('text')
             .attr('dy', '0.3em')
             .attr('class', 'legend-label');
-        node
+        item
             .attr('transform', function(n, i) {
-                return 'translate(' + _legend.nodeWidth()/2 + ',' + (_legend.nodeHeight() + _legend.gap())*(i+0.5) + ')';
+                return 'translate(' + _legend.itemWidth()/2 + ',' + (_legend.itemHeight() + _legend.gap())*(i+0.5) + ')';
             });
-        node.select('text.legend-label')
-            .attr('transform', 'translate(' + (_legend.nodeWidth()/2+_legend.gap()) + ',0)')
+        item.select('text.legend-label')
+            .attr('transform', 'translate(' + (_legend.itemWidth()/2+_legend.gap()) + ',0)')
             .attr('pointer-events', _legend.dimension() ? 'auto' : 'none')
-            .text(function(n) {
-                return n.name + (_legend.counter() && _counts ? (' (' + (_counts[n.name] || 0) + (_counts[n.name] !== _totals[n.name] ? '/' + (_totals[n.name] || 0) : '') + ')') : '');
+            .text(function(d) {
+                return d.name + (_legend.counter() && _counts ? (' (' + (_counts[d.orig.key] || 0) + (_counts[d.orig.key] !== _totals[d.orig.key] ? '/' + (_totals[d.orig.key] || 0) : '') + ')') : '');
             });
-        _legend.parent()
-            ._enterNode(nodeEnter)
-            ._updateNode(node);
+        _legend.type().draw(_legend.parent(), itemEnter, item);
         if(_legend.noLabel())
-            node.selectAll('.node-label').remove();
+            item.selectAll(_legend.type().labelSelector()).remove();
+
+        if(_legend.dropdown()) {
+            var caret = item.selectAll('text.dropdown-caret').data(function(x) { return [x]; });
+            caret
+              .enter().append('text')
+                .attr('dy', '0.3em')
+                .attr('font-size', '75%')
+                .attr('fill', 'blue')
+                .attr('class', 'dropdown-caret')
+                .style('visibility', 'hidden')
+                .html('&emsp;&#x25BC;');
+            caret
+                .attr('dx', function(d) {
+                    return (_legend.itemWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width;
+                })
+                .on('mouseenter', function(n) {
+                    var rect = this.getBoundingClientRect();
+                    var key = _legend.parent().nodeKey.eval(n);
+                    _legend.dropdown()
+                        .show(key, rect.x, rect.y);
+                });
+            item
+                .on('mouseenter', function(d) {
+                    if(_counts && _counts[d.orig.key]) {
+                        d3.select(this).selectAll('.dropdown-caret')
+                            .style('visibility', 'visible');
+                    }
+                })
+                .on('mouseleave', function(d) {
+                    d3.select(this).selectAll('.dropdown-caret')
+                        .style('visibility', 'hidden');
+                });
+        }
 
         if(_legend.dimension()) {
-            node.attr('cursor', 'pointer')
+            item.attr('cursor', 'pointer')
                 .on('click.legend', function(d) {
                     var key = _legend.parent().nodeKey.eval(d);
                     if(!_included.length)
@@ -6537,10 +6614,10 @@ dc_graph.legend = function() {
                     _dispatch.filtered(_legend, key);
                 });
         } else {
-            node.attr('cursor', 'auto')
+            item.attr('cursor', 'auto')
                 .on('click.legend', null);
         }
-        node.transition().duration(1000)
+        item.transition().duration(1000)
             .attr('opacity', function(d) {
                 return (!_included.length || _included.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25;
             });
@@ -6554,7 +6631,7 @@ dc_graph.legend = function() {
                 _legend.parent().portGroup() && _legend.parent().portGroup().all());
     };
 
-    _legend.render = function() {
+    function render() {
         var exemplars = _legend.exemplars();
         _legend.countBaseline();
         if(exemplars instanceof Array) {
@@ -6565,8 +6642,13 @@ dc_graph.legend = function() {
             for(var item in exemplars)
                 _items.push({name: item, orig: {key: item, value: exemplars[item]}, cola: {}});
         }
-        _legend.redraw();
+        redraw();
     };
+
+    _legend.dropdown = property(null).react(function(v) {
+        if(!!v !== !!_legend.dropdown() && _legend.parent() && _legend.parent().svg())
+            window.setTimeout(_legend.redraw, 0);
+    });
 
     /* enables filtering */
     _legend.dimension = property(null)
@@ -6578,6 +6660,84 @@ dc_graph.legend = function() {
         });
 
     return _legend;
+};
+
+
+dc_graph.legend.node_legend = function() {
+    return {
+        itemSelector: function() {
+            return '.node';
+        },
+        labelSelector: function() {
+            return '.node-label';
+        },
+        create: function(diagram, selection) {
+            return selection.append('g')
+                .attr('class', 'node');
+        },
+        draw: function(diagram, itemEnter, item) {
+            diagram
+                ._enterNode(itemEnter)
+                ._updateNode(item);
+        }
+    };
+};
+
+dc_graph.legend.edge_legend = function() {
+    var _type = {
+        itemSelector: function() {
+            return '.edge-container';
+        },
+        labelSelector: function() {
+            return '.edge-label';
+        },
+        create: function(diagram, selection, w, h) {
+            var edgeEnter = selection.append('g')
+                .attr('class', 'edge-container')
+                .attr('opacity', 0);
+            edgeEnter
+                .append('rect')
+                .attr({
+                    x: -w/2,
+                    y: -h/2,
+                    width: w,
+                    height: h,
+                    fill: 'green',
+                    opacity: 0
+                });
+            edgeEnter
+                .selectAll('circle')
+                .data([-1, 1])
+              .enter()
+                .append('circle')
+                .attr({
+                    r: _type.fakeNodeRadius(),
+                    fill: 'none',
+                    stroke: 'black',
+                    "stroke-dasharray": "4,4",
+                    opacity: 0.15,
+                    transform: function(d) {
+                        return 'translate(' + [d * _type.length() / 2, 0].join(',') + ')';
+                    }
+                });
+            var edgex = _type.length()/2 - _type.fakeNodeRadius();
+            edgeEnter.append('svg:path')
+                .attr({
+                    class: 'edge',
+                    id: function(d) { return d.name; },
+                    d: 'M' + -edgex + ',0 L' + edgex + ',0',
+                    opacity: diagram.edgeOpacity.eval
+                });
+
+            return edgeEnter;
+        },
+        fakeNodeRadius: property(10),
+        length: property(50),
+        draw: function(diagram, itemEnter, item) {
+            diagram._updateEdge(itemEnter.select('path.edge'));
+        }
+    };
+    return _type;
 };
 
 /**
@@ -6934,6 +7094,9 @@ dc_graph.behavior = function(event_namespace, options) {
                     else if(options.rest)
                         options.rest(diagram, node, edge, ehover);
                 });
+                p.on('reset.' + event_namespace, function() {
+                    options.remove_behavior(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
+                });
             }
             else if(_behavior.parent()) {
                 diagram = _behavior.parent();
@@ -6970,7 +7133,7 @@ dc_graph.tip = function(options) {
     function init(parent) {
         if(!_d3tip) {
             _d3tip = d3.tip()
-                .attr('class', 'd3-tip')
+                .attr('class', options.class || 'd3-tip')
                 .html(function(d) { return "<span>" + d + "</span>"; })
                 .direction(_behavior.direction());
             if(_behavior.offset())
@@ -6978,46 +7141,62 @@ dc_graph.tip = function(options) {
             parent.svg().call(_d3tip);
         }
     }
-    function fetch_and_show_content(fetcher) {
-        return function(d) {
-             var target = this,
-                 next = function() {
-                     _behavior[fetcher]()(d, function(content) {
-                         _d3tip.show.call(target, content, target);
-                         d3.select('div.d3-tip')
-                             .selectAll('a.tip-link')
-                             .on('click', function() {
-                                 d3.event.preventDefault();
-                                 if(_behavior.linkCallback())
-                                     _behavior.linkCallback()(this.id);
-                             });
-                     });
-                 };
-             if(_behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
-                 hide_tip.call(this);
-                 return;
-             }
-             if(_hideTimeout)
-                 window.clearTimeout(_hideTimeout);
-             if(_behavior.delay()) {
-                 window.clearTimeout(_showTimeout);
-                 _showTimeout = window.setTimeout(next, _behavior.delay());
-             }
-             else next();
-         };
+    function fetch_and_show_content(d) {
+        if(_behavior.disabled() || _behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
+            hide_tip.call(this);
+            return;
+        }
+        var target = this,
+            next = function() {
+                _behavior.content()(d, function(content) {
+                    _d3tip.show.call(target, content, target);
+                    d3.select('div.d3-tip')
+                        .selectAll('a.tip-link')
+                        .on('click', function() {
+                            d3.event.preventDefault();
+                            if(_behavior.linkCallback())
+                                _behavior.linkCallback()(this.id);
+                        });
+                    _dispatch.tipped(d);
+                });
+            };
+        if(_hideTimeout)
+            window.clearTimeout(_hideTimeout);
+        if(_behavior.delay()) {
+            window.clearTimeout(_showTimeout);
+            _showTimeout = window.setTimeout(next, _behavior.delay());
+        }
+        else next();
     }
 
-    function hide_tip() {
+    function check_hide_tip() {
         if(d3.event.relatedTarget &&
            (!_behavior.selection().exclude || !_behavior.selection().exclude(d3.event.target)) &&
-           (this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
+           (this && this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
             _behavior.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
-            return;
+            return false;
+        return true;
+    }
+
+    function preempt_tip() {
         if(_showTimeout) {
             window.clearTimeout(_showTimeout);
             _showTimeout = null;
         }
-        if(_behavior.clickable())
+    }
+
+    function hide_tip() {
+        if(!check_hide_tip())
+            return;
+        preempt_tip();
+        _d3tip.hide();
+    }
+
+    function hide_tip_delay() {
+        if(!check_hide_tip())
+            return;
+        preempt_tip();
+        if(_behavior.hideDelay())
             _hideTimeout = window.setTimeout(function () {
                 _d3tip.hide();
             }, _behavior.hideDelay());
@@ -7027,20 +7206,20 @@ dc_graph.tip = function(options) {
 
     function add_behavior(diagram, node, edge, ehover) {
         init(diagram);
-        _behavior.selection().select(diagram, node, edge, ehover)
-            .on('mouseover.' + _namespace, fetch_and_show_content('content'))
-            .on('mouseout.' + _namespace, hide_tip);
+        _behavior.programmatic() || _behavior.selection().select(diagram, node, edge, ehover)
+            .on('mouseover.' + _namespace, fetch_and_show_content)
+            .on('mouseout.' + _namespace, hide_tip_delay);
         if(_behavior.clickable()) {
             d3.select('div.d3-tip')
                 .on('mouseover.' + _namespace, function() {
                     if(_hideTimeout)
                         window.clearTimeout(_hideTimeout);
                 })
-                .on('mouseout.' + _namespace, hide_tip);
+                .on('mouseout.' + _namespace, hide_tip_delay);
         }
     }
     function remove_behavior(diagram, node, edge, ehover) {
-        _behavior.selection().select(diagram, node, edge, ehover)
+        _behavior.programmatic() || _behavior.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, null)
             .on('mouseout.' + _namespace, null);
     }
@@ -7092,19 +7271,42 @@ dc_graph.tip = function(options) {
         return _dispatch.on(event, f);
     };
 
-    _behavior.displayTip = function(filter, n) {
+    _behavior.disabled = property(false);
+    _behavior.programmatic = property(false);
+
+    _behavior.displayTip = function(filter, n, cb) {
+        if(typeof filter !== 'function') {
+            var d = filter;
+            filter = function(d2) { return d2 === d; };
+        }
         var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
             .filter(filter);
         if(found.size() > 0) {
-            var action = fetch_and_show_content('content');
-            var which = (n || 0) % found.size();
-            action.call(found[0][which], d3.select(found[0][which]).datum());
-            _dispatch.tipped(d3.select(found[0][which]).datum());
+            var action = fetch_and_show_content;
+            // we need to flatten e.g. for ports, which will have nested selections
+            // .nodes() does this better in D3v4
+            var flattened = found.reduce(function(p, v) {
+                return p.concat(v);
+            }, []);
+            var which = (n || 0) % flattened.length;
+            action.call(flattened[which], d3.select(flattened[which]).datum());
+            d = d3.select(flattened[which]).datum();
+            if(cb)
+                cb(d);
+            if(_behavior.programmatic())
+                found.on('mouseout', hide_tip_delay);
         }
+        return _behavior;
     };
-    _behavior.hideTip = function() {
-        if(_d3tip)
-            hide_tip();
+
+    _behavior.hideTip = function(delay) {
+        if(_d3tip) {
+            if(delay)
+                hide_tip_delay();
+            else
+                hide_tip();
+        }
+        return _behavior;
     };
     _behavior.selection = property(dc_graph.tip.select_node_and_edge());
     _behavior.showDelay = _behavior.delay = property(0);
@@ -7132,7 +7334,7 @@ dc_graph.tip = function(options) {
  **/
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
-        d = d.orig.value;
+        d = gen.fetch()(d);
         var keys = Object.keys(d).filter(d3.functor(gen.filter()))
                 .filter(function(k) {
                     return d[k];
@@ -7145,6 +7347,9 @@ dc_graph.tip.table = function() {
         k(table.node().outerHTML); // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
+    gen.fetch = property(function(d) {
+        return d.orig.value;
+    });
     return gen;
 };
 
@@ -7187,6 +7392,95 @@ dc_graph.tip.select_port = function() {
             return node.selectAll('g.port');
         }
     };
+};
+
+dc_graph.dropdown = function() {
+    dc_graph.dropdown.unique_id = (dc_graph.dropdown.unique_id || 16) + 1;
+    var _dropdown = {
+        id: 'id' + dc_graph.dropdown.unique_id,
+        parent: property(null),
+        show: function(key, x, y) {
+            var dropdown = _dropdown.parent().root()
+                .selectAll('div.dropdown.' + _dropdown.id).data([0]);
+            var dropdownEnter = dropdown
+                .enter().append('div')
+                .attr('class', 'dropdown ' + _dropdown.id);
+            dropdown
+                .style('visibility', 'visible')
+                .style('left', x + 'px')
+                .style('top', y + 'px');
+            var capture;
+            var hides = _dropdown.hideOn().split('|');
+            var selects = _dropdown.selectOn().split('|');
+            if(hides.includes('leave'))
+                dropdown.on('mouseleave', function() {
+                    dropdown.style('visibility', 'hidden');
+                });
+            else if(hides.includes('clickout')) {
+                var diagram = _dropdown.parent();
+                capture = diagram.svg().append('rect')
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('width', diagram.width())
+                    .attr('height', diagram.height())
+                    .attr('opacity', 0)
+                    .on('click', function() {
+                        capture.remove();
+                        dropdown.style('visibility', 'hidden');
+                    });
+            }
+            var container = dropdown;
+            if(_dropdown.scrollHeight()) {
+                var height = _dropdown.scrollHeight();
+                if(typeof height === 'number')
+                    height = height + 'px';
+                dropdown
+                    .style('max-height', height)
+                    .property('scrollTop', 0);
+                dropdownEnter
+                    .style('overflow-y', 'auto')
+                  .append('div')
+                    .attr('class', 'scroller');
+                container = dropdown.selectAll('div.scroller');
+            }
+            var values = _dropdown.fetchValues()(key, function(values) {
+                var items = container
+                    .selectAll('div.dropdown-item').data(values);
+                items
+                    .enter().append('div')
+                    .attr('class', 'dropdown-item');
+                items.exit().remove();
+                var select_event = null;
+                if(selects.includes('click'))
+                    select_event = 'click';
+                else if(selects.includes('hover'))
+                    select_event = 'mouseenter';
+                items
+                    .text(function(item) { return _dropdown.itemText()(item); });
+                if(select_event) {
+                    items
+                        .on(select_event + '.select', function(d) {
+                            _dropdown.itemSelected()(d);
+                        });
+                }
+                if(hides.includes('clickitem')) {
+                    items
+                        .on('click.hide', function(d) {
+                            capture.remove();
+                            dropdown.style('visibility', 'hidden');
+                        });
+                }
+            });
+        },
+        hideOn: property('clickout|clickitem'),
+        selectOn: property('click'),
+        height: property(10),
+        itemText: property(function(x) { return x; }),
+        itemSelected: property(function() {}),
+        fetchValues: property(function(key, k) { k([]); }),
+        scrollHeight: property('12em')
+    };
+    return _dropdown;
 };
 
 dc_graph.keyboard = function() {
@@ -7442,6 +7736,8 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         }
     }
     function brushmove(ext) {
+        if(!thinginess.intersectRect)
+            return;
         var rectSelect = thinginess.intersectRect(ext);
         var newSelected;
         if(isUnion(d3.event.sourceEvent))
@@ -7511,7 +7807,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         remove_behavior: remove_behavior,
         parent: function(p) {
             things_group.on('set_changed.' + things_name, p ? selection_changed(p) : null);
-            if(p) {
+            if(p && _behavior.multipleSelect()) {
                 var brush_mode = p.child('brush');
                 if(!brush_mode) {
                     brush_mode = dc_graph.brush();
@@ -9511,6 +9807,30 @@ dc_graph.draw_graphs = function(options) {
         });
     }
 
+    function check_invalid_drag(coords) {
+        var msg;
+        if(!_sourceDown.started && Math.hypot(coords[0] - _hintData[0].source.x, coords[1] - _hintData[0].source.y) > _behavior.dragSize()) {
+            if(_behavior.conduct().startDragEdge) {
+                if(_behavior.conduct().startDragEdge(_sourceDown)) {
+                    _sourceDown.started = true;
+                } else {
+                    if(_behavior.conduct().invalidSourceMessage) {
+                        msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
+                        console.log(msg);
+                        if(options.hintTip) {
+                            options.hintTip
+                                .content(function(_, k) { k(msg); })
+                                .displayTip(_behavior.usePorts() ? _sourceDown.port : _sourceDown.node);
+                        }
+                    }
+                    erase_hint();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function add_behavior(diagram, node, edge, ehover) {
         var select_nodes = diagram.child('select-nodes');
         if(select_nodes) {
@@ -9522,6 +9842,12 @@ dc_graph.draw_graphs = function(options) {
                 d3.event.stopPropagation();
                 if(!_behavior.dragCreatesEdges())
                     return;
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip
+                            .hideTip()
+                            .disabled(true);
+                    });
                 if(_behavior.usePorts()) {
                     var activePort;
                     if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
@@ -9536,16 +9862,18 @@ dc_graph.draw_graphs = function(options) {
                     _sourceDown = {node: n};
                     _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
                 }
-                if(_behavior.conduct().startDragEdge) {
-                    if(!_behavior.conduct().startDragEdge(_sourceDown))
-                        erase_hint();
-                }
             })
             .on('mousemove.draw-graphs', function(n) {
+                var msg;
                 d3.event.stopPropagation();
                 if(_sourceDown) {
+                    var coords = dc_graph.event_coords(diagram);
+                    if(check_invalid_drag(coords))
+                        return;
                     var oldTarget = _targetMove;
                     if(n === _sourceDown.node) {
+                        _behavior.conduct().invalidTargetMessage &&
+                            console.log(_behavior.conduct().invalidTargetMessage(_sourceDown, _sourceDown));
                         _targetMove = null;
                         _hintData[0].target = null;
                     }
@@ -9573,8 +9901,22 @@ dc_graph.draw_graphs = function(options) {
                                 newNode = _targetMove && _targetMove.node;
                              change = oldNode !== newNode;
                         }
-                        if(change && !_behavior.conduct().changeDragTarget(_sourceDown, _targetMove))
-                            _targetMove = null;
+                        if(change)
+                            if(_behavior.conduct().changeDragTarget(_sourceDown, _targetMove)) {
+                                if(options.hintTip)
+                                    options.hintTip.hideTip();
+                            } else {
+                                if(_targetMove && _behavior.conduct().invalidTargetMessage) {
+                                    msg = _behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove);
+                                    console.log(msg);
+                                    if(options.hintTip) {
+                                        options.hintTip
+                                            .content(function(_, k) { k(msg); })
+                                            .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
+                                    }
+                                }
+                                _targetMove = null;
+                            }
                     }
                     if(_targetMove) {
                         if(_targetMove.port)
@@ -9583,13 +9925,18 @@ dc_graph.draw_graphs = function(options) {
                             _hintData[0].target = {x: n.cola.x, y: n.cola.y};
                     }
                     else {
-                        var coords = dc_graph.event_coords(diagram);
                         _hintData[0].target = {x: coords[0], y: coords[1]};
                     }
                     update_hint();
                 }
             })
             .on('mouseup.draw-graphs', function(n) {
+                if(options.hintTip)
+                    options.hintTip.hideTip(true);
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip.disabled(false);
+                    });
                 // allow keyboard mode to hear this one (again, we need better cooperation)
                 // d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
@@ -9617,6 +9964,8 @@ dc_graph.draw_graphs = function(options) {
                 var data = [];
                 if(_sourceDown) { // drawing edge
                     var coords = dc_graph.event_coords(diagram);
+                    if(check_invalid_drag(coords))
+                        return;
                     if(_behavior.conduct().dragCanvas)
                         _behavior.conduct().dragCanvas(_sourceDown, coords);
                     if(_behavior.conduct().changeDragTarget && _targetMove)
@@ -9627,6 +9976,12 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function() {
+                if(options.hintTip)
+                    options.hintTip.hideTip(true);
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip.disabled(false);
+                    });
                 if(_sourceDown) { // drag-edge
                     if(_behavior.conduct().cancelDragEdge)
                         _behavior.conduct().cancelDragEdge(_sourceDown);
@@ -9664,6 +10019,7 @@ dc_graph.draw_graphs = function(options) {
     _behavior.usePorts = property(null);
     _behavior.clickCreatesNodes = property(true);
     _behavior.dragCreatesEdges = property(true);
+    _behavior.dragSize = property(5);
 
     // really this is a behavior, and what we've been calling behaviors are modes
     // but i'm on a deadline
@@ -9690,6 +10046,9 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         _wports = wports;
         _wedges = wedges;
     });
+    diagram.on('transitionsStarted', function() {
+        symbolPorts.enableHover(true);
+    });
     function change_state(ports, state) {
         return ports.map(function(p) {
             p.state = state;
@@ -9702,14 +10061,26 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         nids.push(diagram.portNodeKey.eval(source.port));
         symbolPorts.animateNodes(nids);
     }
-    function is_valid(sourcePort, targetPort) {
-        return (_behavior.allowParallel() || !_wedges.some(function(e) {
+    function has_parallel(sourcePort, targetPort) {
+        return _wedges.some(function(e) {
             return sourcePort.edges.indexOf(e) >= 0 && targetPort.edges.indexOf(e) >= 0;
-        })) && _behavior.isValid()(sourcePort, targetPort);
+        });
+    }
+    function is_valid(sourcePort, targetPort) {
+        return (_behavior.allowParallel() || !has_parallel(sourcePort, targetPort))
+            && _behavior.isValid()(sourcePort, targetPort);
+    }
+    function why_invalid(sourcePort, targetPort) {
+        return !_behavior.allowParallel() && has_parallel(sourcePort, targetPort) && "can't connect two edges between the same two ports" ||
+            _behavior.whyInvalid()(sourcePort, targetPort);
     }
     var _behavior = {
         isValid: property(function(sourcePort, targetPort) {
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
+        }),
+        whyInvalid: property(function(sourcePort, targetPort) {
+            return targetPort === sourcePort && "can't connect port to itself" ||
+                targetPort.name !== sourcePort.name && "must connect ports of the same type";
         }),
         allowParallel: property(false),
         hoverPort: function(port) {
@@ -9733,6 +10104,9 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             console.log('valid targets', nids);
             return _validTargets.length !== 0;
         },
+        invalidSourceMessage: function(source) {
+            return "no valid matches for this port";
+        },
         changeDragTarget: function(source, target) {
             var nids, valid = target && is_valid(source.port, target.port), before;
             if(valid) {
@@ -9746,6 +10120,9 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             }
             symbolPorts.animateNodes(nids, before);
             return valid;
+        },
+        invalidTargetMessage: function(source, target) {
+            return why_invalid(source.port, target.port);
         },
         finishDragEdge: function(source, target) {
             symbolPorts.enableHover(true);
@@ -9902,6 +10279,10 @@ dc_graph.wildcard_ports = function(options) {
         isValid: function(p1, p2) {
             return get_type(p1) === null ^ get_type(p2) === null ||
                 get_type(p1) !== null && get_type(p1) === get_type(p2);
+        },
+        whyInvalid: function(p1, p2) {
+            return get_type(p1) === null && get_type(p2) === null && "can't connect wildcard to wildcard" ||
+                get_type(p1) !== get_type(p2) && "the types of ports must match";
         },
         copyLinked: function(n, port) {
             linked_ports(n, port).forEach(function(lp) {
@@ -10245,7 +10626,6 @@ dc_graph.symbol_port_style = function() {
                 fill: 'white',
                 opacity: 0
             });
-        _style.enableHover(true);
         return _style;
     };
 
@@ -11299,10 +11679,15 @@ dc_graph.random_graph = function(options) {
     };
 };
 
+var dont_use_key = deprecation_warning('dc_graph.line_breaks now takes a string - d.key behavior is deprecated and will be removed in a later version');
+
 dc_graph.line_breaks = function(charexp, max_line_length) {
     var regexp = new RegExp(charexp, 'g');
-    return function(n) {
-        var s = n.key;
+    return function(s) {
+        if(typeof s === 'object') { // backward compatibility
+            dont_use_key();
+            s = s.key;
+        }
         var result;
         var line = '', lines = [], part, i = 0;
         do {

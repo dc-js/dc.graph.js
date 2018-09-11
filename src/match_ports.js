@@ -5,6 +5,9 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         _wports = wports;
         _wedges = wedges;
     });
+    diagram.on('transitionsStarted', function() {
+        symbolPorts.enableHover(true);
+    });
     function change_state(ports, state) {
         return ports.map(function(p) {
             p.state = state;
@@ -17,14 +20,26 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         nids.push(diagram.portNodeKey.eval(source.port));
         symbolPorts.animateNodes(nids);
     }
-    function is_valid(sourcePort, targetPort) {
-        return (_behavior.allowParallel() || !_wedges.some(function(e) {
+    function has_parallel(sourcePort, targetPort) {
+        return _wedges.some(function(e) {
             return sourcePort.edges.indexOf(e) >= 0 && targetPort.edges.indexOf(e) >= 0;
-        })) && _behavior.isValid()(sourcePort, targetPort);
+        });
+    }
+    function is_valid(sourcePort, targetPort) {
+        return (_behavior.allowParallel() || !has_parallel(sourcePort, targetPort))
+            && _behavior.isValid()(sourcePort, targetPort);
+    }
+    function why_invalid(sourcePort, targetPort) {
+        return !_behavior.allowParallel() && has_parallel(sourcePort, targetPort) && "can't connect two edges between the same two ports" ||
+            _behavior.whyInvalid()(sourcePort, targetPort);
     }
     var _behavior = {
         isValid: property(function(sourcePort, targetPort) {
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
+        }),
+        whyInvalid: property(function(sourcePort, targetPort) {
+            return targetPort === sourcePort && "can't connect port to itself" ||
+                targetPort.name !== sourcePort.name && "must connect ports of the same type";
         }),
         allowParallel: property(false),
         hoverPort: function(port) {
@@ -48,6 +63,9 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             console.log('valid targets', nids);
             return _validTargets.length !== 0;
         },
+        invalidSourceMessage: function(source) {
+            return "no valid matches for this port";
+        },
         changeDragTarget: function(source, target) {
             var nids, valid = target && is_valid(source.port, target.port), before;
             if(valid) {
@@ -61,6 +79,9 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             }
             symbolPorts.animateNodes(nids, before);
             return valid;
+        },
+        invalidTargetMessage: function(source, target) {
+            return why_invalid(source.port, target.port);
         },
         finishDragEdge: function(source, target) {
             symbolPorts.enableHover(true);

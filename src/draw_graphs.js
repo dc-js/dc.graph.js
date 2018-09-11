@@ -89,6 +89,30 @@ dc_graph.draw_graphs = function(options) {
         });
     }
 
+    function check_invalid_drag(coords) {
+        var msg;
+        if(!_sourceDown.started && Math.hypot(coords[0] - _hintData[0].source.x, coords[1] - _hintData[0].source.y) > _behavior.dragSize()) {
+            if(_behavior.conduct().startDragEdge) {
+                if(_behavior.conduct().startDragEdge(_sourceDown)) {
+                    _sourceDown.started = true;
+                } else {
+                    if(_behavior.conduct().invalidSourceMessage) {
+                        msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
+                        console.log(msg);
+                        if(options.hintTip) {
+                            options.hintTip
+                                .content(function(_, k) { k(msg); })
+                                .displayTip(_behavior.usePorts() ? _sourceDown.port : _sourceDown.node);
+                        }
+                    }
+                    erase_hint();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function add_behavior(diagram, node, edge, ehover) {
         var select_nodes = diagram.child('select-nodes');
         if(select_nodes) {
@@ -100,6 +124,12 @@ dc_graph.draw_graphs = function(options) {
                 d3.event.stopPropagation();
                 if(!_behavior.dragCreatesEdges())
                     return;
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip
+                            .hideTip()
+                            .disabled(true);
+                    });
                 if(_behavior.usePorts()) {
                     var activePort;
                     if(typeof _behavior.usePorts() === 'object' && _behavior.usePorts().eventPort)
@@ -114,16 +144,18 @@ dc_graph.draw_graphs = function(options) {
                     _sourceDown = {node: n};
                     _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
                 }
-                if(_behavior.conduct().startDragEdge) {
-                    if(!_behavior.conduct().startDragEdge(_sourceDown))
-                        erase_hint();
-                }
             })
             .on('mousemove.draw-graphs', function(n) {
+                var msg;
                 d3.event.stopPropagation();
                 if(_sourceDown) {
+                    var coords = dc_graph.event_coords(diagram);
+                    if(check_invalid_drag(coords))
+                        return;
                     var oldTarget = _targetMove;
                     if(n === _sourceDown.node) {
+                        _behavior.conduct().invalidTargetMessage &&
+                            console.log(_behavior.conduct().invalidTargetMessage(_sourceDown, _sourceDown));
                         _targetMove = null;
                         _hintData[0].target = null;
                     }
@@ -151,8 +183,22 @@ dc_graph.draw_graphs = function(options) {
                                 newNode = _targetMove && _targetMove.node;
                              change = oldNode !== newNode;
                         }
-                        if(change && !_behavior.conduct().changeDragTarget(_sourceDown, _targetMove))
-                            _targetMove = null;
+                        if(change)
+                            if(_behavior.conduct().changeDragTarget(_sourceDown, _targetMove)) {
+                                if(options.hintTip)
+                                    options.hintTip.hideTip();
+                            } else {
+                                if(_targetMove && _behavior.conduct().invalidTargetMessage) {
+                                    msg = _behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove);
+                                    console.log(msg);
+                                    if(options.hintTip) {
+                                        options.hintTip
+                                            .content(function(_, k) { k(msg); })
+                                            .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
+                                    }
+                                }
+                                _targetMove = null;
+                            }
                     }
                     if(_targetMove) {
                         if(_targetMove.port)
@@ -161,13 +207,18 @@ dc_graph.draw_graphs = function(options) {
                             _hintData[0].target = {x: n.cola.x, y: n.cola.y};
                     }
                     else {
-                        var coords = dc_graph.event_coords(diagram);
                         _hintData[0].target = {x: coords[0], y: coords[1]};
                     }
                     update_hint();
                 }
             })
             .on('mouseup.draw-graphs', function(n) {
+                if(options.hintTip)
+                    options.hintTip.hideTip(true);
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip.disabled(false);
+                    });
                 // allow keyboard mode to hear this one (again, we need better cooperation)
                 // d3.event.stopPropagation();
                 if(_sourceDown && _targetMove) {
@@ -195,6 +246,8 @@ dc_graph.draw_graphs = function(options) {
                 var data = [];
                 if(_sourceDown) { // drawing edge
                     var coords = dc_graph.event_coords(diagram);
+                    if(check_invalid_drag(coords))
+                        return;
                     if(_behavior.conduct().dragCanvas)
                         _behavior.conduct().dragCanvas(_sourceDown, coords);
                     if(_behavior.conduct().changeDragTarget && _targetMove)
@@ -205,6 +258,12 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function() {
+                if(options.hintTip)
+                    options.hintTip.hideTip(true);
+                if(options.tipsDisable)
+                    options.tipsDisable.forEach(function(tip) {
+                        tip.disabled(false);
+                    });
                 if(_sourceDown) { // drag-edge
                     if(_behavior.conduct().cancelDragEdge)
                         _behavior.conduct().cancelDragEdge(_sourceDown);
@@ -242,6 +301,7 @@ dc_graph.draw_graphs = function(options) {
     _behavior.usePorts = property(null);
     _behavior.clickCreatesNodes = property(true);
     _behavior.dragCreatesEdges = property(true);
+    _behavior.dragSize = property(5);
 
     // really this is a behavior, and what we've been calling behaviors are modes
     // but i'm on a deadline
