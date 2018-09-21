@@ -203,6 +203,8 @@ dc_graph.draw_graphs = function(options) {
                                 }
                             } else {
                                 if(_targetMove && _behavior.conduct().invalidTargetMessage) {
+                                    if(options.positiveTip)
+                                        options.positiveTip.hideTip();
                                     msg = _behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove);
                                     console.log(msg);
                                     if(options.negativeTip) {
