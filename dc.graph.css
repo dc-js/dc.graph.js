@@ -69,3 +69,9 @@
     background-color: rgba(0, 25, 180, 0.9);
     color: white;
 }
+
+.dc-graph .graph-draw-crossout {
+    fill: rgba(255, 16, 16, 0.7);
+    stroke: none;
+    pointer-events: none;
+}
