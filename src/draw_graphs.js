@@ -11,7 +11,7 @@ dc_graph.draw_graphs = function(options) {
         _nodeLabelTag = options.labelTag || 'label',
         _edgeLabelTag = options.edgeLabelTag || _nodeLabelTag;
 
-    var _sourceDown = null, _targetMove = null, _edgeLayer = null, _hintData = [], _crossout;
+    var _sourceDown = null, _targetMove = null, _targetValid = false, _edgeLayer = null, _hintData = [], _crossout;
 
     function update_hint() {
         var data = _hintData.filter(function(h) {
@@ -65,6 +65,7 @@ dc_graph.draw_graphs = function(options) {
     }
     function erase_hint() {
         _hintData = [];
+        _targetValid = false;
         _sourceDown = _targetMove = null;
         update_hint();
     }
@@ -232,6 +233,7 @@ dc_graph.draw_graphs = function(options) {
                                         .content(function(_, k) { k(msg); })
                                         .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
                                 }
+                                _targetValid = true;
                             } else {
                                 _crossout = _behavior.usePorts() ?
                                     _targetMove && _targetMove.port :
@@ -247,7 +249,7 @@ dc_graph.draw_graphs = function(options) {
                                             .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
                                     }
                                 }
-                                _targetMove = null;
+                                _targetValid = false;
                             }
                     }
                     if(_targetMove) {
@@ -275,7 +277,7 @@ dc_graph.draw_graphs = function(options) {
                     });
                 // allow keyboard mode to hear this one (again, we need better cooperation)
                 // d3.event.stopPropagation();
-                if(_sourceDown && _targetMove) {
+                if(_sourceDown && _targetValid) {
                     var finishPromise;
                     if(_behavior.conduct().finishDragEdge)
                         finishPromise = _behavior.conduct().finishDragEdge(_sourceDown, _targetMove);
