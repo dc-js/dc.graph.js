@@ -91,6 +91,13 @@ dc_graph.draw_graphs = function(options) {
 
     function check_invalid_drag(coords) {
         var msg;
+        if(!(d3.event.buttons & 1)) {
+            // mouse button was released but we missed it
+            if(_behavior.conduct().cancelDragEdge)
+                _behavior.conduct().cancelDragEdge(_sourceDown);
+            erase_hint();
+            return true;
+        }
         if(!_sourceDown.started && Math.hypot(coords[0] - _hintData[0].source.x, coords[1] - _hintData[0].source.y) > _behavior.dragSize()) {
             if(_behavior.conduct().startDragEdge) {
                 if(_behavior.conduct().startDragEdge(_sourceDown)) {
