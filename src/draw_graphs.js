@@ -194,9 +194,11 @@ dc_graph.draw_graphs = function(options) {
                             if(_behavior.conduct().changeDragTarget(_sourceDown, _targetMove)) {
                                 if(options.negativeTip)
                                     options.negativeTip.hideTip();
+                                msg = _behavior.conduct().validTargetMessage && _behavior.conduct().validTargetMessage() ||
+                                    'matches';
                                 if(options.positiveTip) {
                                     options.positiveTip
-                                        .content(function(_, k) { k('YES!'); })
+                                        .content(function(_, k) { k(msg); })
                                         .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
                                 }
                             } else {

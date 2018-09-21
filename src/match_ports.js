@@ -80,6 +80,9 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             symbolPorts.animateNodes(nids, before);
             return valid;
         },
+        validTargetMessage: function(source, target) {
+            return "it's a match!";
+        },
         invalidTargetMessage: function(source, target) {
             return why_invalid(source.port, target.port);
         },
