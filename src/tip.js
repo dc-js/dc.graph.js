@@ -74,14 +74,14 @@ dc_graph.tip = function(options) {
     }
 
     function hide_tip() {
-        if(!check_hide_tip())
+        if(!check_hide_tip.apply(this))
             return;
         preempt_tip();
         _d3tip.hide();
     }
 
     function hide_tip_delay() {
-        if(!check_hide_tip())
+        if(!check_hide_tip.apply(this))
             return;
         preempt_tip();
         if(_behavior.hideDelay())
