@@ -71,7 +71,7 @@
 }
 
 .dc-graph .graph-draw-crossout {
-    fill: rgba(255, 16, 16, 0.7);
+    fill: rgba(240, 16, 8, 0.85);
     stroke: none;
     pointer-events: none;
 }
