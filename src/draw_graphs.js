@@ -99,8 +99,8 @@ dc_graph.draw_graphs = function(options) {
                     if(_behavior.conduct().invalidSourceMessage) {
                         msg = _behavior.conduct().invalidSourceMessage(_sourceDown);
                         console.log(msg);
-                        if(options.hintTip) {
-                            options.hintTip
+                        if(options.negativeTip) {
+                            options.negativeTip
                                 .content(function(_, k) { k(msg); })
                                 .displayTip(_behavior.usePorts() ? _sourceDown.port : _sourceDown.node);
                         }
@@ -185,14 +185,19 @@ dc_graph.draw_graphs = function(options) {
                         }
                         if(change)
                             if(_behavior.conduct().changeDragTarget(_sourceDown, _targetMove)) {
-                                if(options.hintTip)
-                                    options.hintTip.hideTip();
+                                if(options.negativeTip)
+                                    options.negativeTip.hideTip();
+                                if(options.positiveTip) {
+                                    options.positiveTip
+                                        .content(function(_, k) { k('YES!'); })
+                                        .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
+                                }
                             } else {
                                 if(_targetMove && _behavior.conduct().invalidTargetMessage) {
                                     msg = _behavior.conduct().invalidTargetMessage(_sourceDown, _targetMove);
                                     console.log(msg);
-                                    if(options.hintTip) {
-                                        options.hintTip
+                                    if(options.negativeTip) {
+                                        options.negativeTip
                                             .content(function(_, k) { k(msg); })
                                             .displayTip(_behavior.usePorts() ? _targetMove.port : _targetMove.node);
                                     }
@@ -213,8 +218,8 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function(n) {
-                if(options.hintTip)
-                    options.hintTip.hideTip(true);
+                if(options.negativeTip)
+                    options.negativeTip.hideTip(true);
                 if(options.tipsDisable)
                     options.tipsDisable.forEach(function(tip) {
                         tip.disabled(false);
@@ -258,8 +263,8 @@ dc_graph.draw_graphs = function(options) {
                 }
             })
             .on('mouseup.draw-graphs', function() {
-                if(options.hintTip)
-                    options.hintTip.hideTip(true);
+                if(options.negativeTip)
+                    options.negativeTip.hideTip(true);
                 if(options.tipsDisable)
                     options.tipsDisable.forEach(function(tip) {
                         tip.disabled(false);

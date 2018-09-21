@@ -796,15 +796,24 @@ get_catalog().then(function(catalog) {
 
     _diagram.child('node-tips', node_tips);
 
-    var hint_tips = dc_graph.tip({namespace: 'hint-tips', class: 'd3-tip hint'})
+    var negative_tips = dc_graph.tip({namespace: 'hint-negative-tips', class: 'd3-tip hint-negative'})
             .selection(dc_graph.tip.select_port())
             .programmatic(true)
             .hideDelay(1000);
 
-    _diagram.child('hint-tips', hint_tips);
+    _diagram.child('hint-negative-tips', negative_tips);
+
+    var positive_tips = dc_graph.tip({namespace: 'hint-positive-tips', class: 'd3-tip hint-positive'})
+            .selection(dc_graph.tip.select_port())
+            .direction('s')
+            .programmatic(true)
+            .hideDelay(1000);
+
+    _diagram.child('hint-positive-tips', positive_tips);
 
     gropts.tipsDisable = [port_tips, node_tips];
-    gropts.hintTip = hint_tips;
+    gropts.negativeTip = negative_tips;
+    gropts.positiveTip = positive_tips;
 
     if(qs.debug) {
         var troubleshoot = dc_graph.troubleshoot();
