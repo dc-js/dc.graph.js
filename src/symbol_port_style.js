@@ -31,6 +31,13 @@ dc_graph.symbol_port_style = function() {
     _style.portLabelPadding = property({x: 5, y: 5});
     _style.cascade = cascade(_style);
 
+    _style.portPosition = function(p) {
+        var l = Math.hypot(p.pos.x, p.pos.y),
+            u = {x: p.pos.x / l, y: p.pos.y / l},
+            disp = _style.displacement.eval(p);
+        return {x: p.pos.x + disp * u.x, y: p.pos.y + disp * u.y};
+    };
+
     function symbol_fill(p) {
         var symcolor = _style.color.eval(p);
         return symcolor ?
@@ -38,10 +45,7 @@ dc_graph.symbol_port_style = function() {
         'none';
     }
     function port_transform(p) {
-        var l = Math.hypot(p.pos.x, p.pos.y),
-            u = {x: p.pos.x / l, y: p.pos.y / l},
-            disp = _style.displacement.eval(p),
-            pos = {x: p.pos.x + disp * u.x, y: p.pos.y + disp * u.y};
+        var pos = _style.portPosition(p);
         return 'translate(' + pos.x + ',' + pos.y + ')';
     }
     function port_symbol(p) {
