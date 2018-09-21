@@ -35,11 +35,19 @@ dc_graph.draw_graphs = function(options) {
         });
     }
 
+    function port_pos(p) {
+        var style = _behavior.parent().portStyle(_behavior.parent().portStyleName.eval(p));
+        var pos = style.portPosition(p);
+        pos.x += p.node.cola.x;
+        pos.y += p.node.cola.y;
+        return pos;
+    }
+
     function update_crossout() {
         var data;
         if(_crossout) {
             if(_behavior.usePorts())
-                data = [{x: _crossout.node.cola.x + _crossout.pos.x, y: _crossout.node.cola.y + _crossout.pos.y}];
+                data = [port_pos(_crossout)];
             else
                 data = [{x: _crossout.node.cola.x, y: _crossout.node.cola.y}];
         }
@@ -177,7 +185,7 @@ dc_graph.draw_graphs = function(options) {
                     if(!activePort)
                         return;
                     _sourceDown = {node: n, port: activePort};
-                    _hintData = [{source: {x: n.cola.x + activePort.pos.x, y: n.cola.y + activePort.pos.y}}];
+                    _hintData = [{source: port_pos(activePort)}];
                 } else {
                     _sourceDown = {node: n};
                     _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
@@ -254,7 +262,7 @@ dc_graph.draw_graphs = function(options) {
                     }
                     if(_targetMove) {
                         if(_targetMove.port)
-                            _hintData[0].target = {x: n.cola.x + activePort.pos.x, y: n.cola.y + activePort.pos.y};
+                            _hintData[0].target = port_pos(activePort);
                         else
                             _hintData[0].target = {x: n.cola.x, y: n.cola.y};
                     }
