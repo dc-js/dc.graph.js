@@ -232,7 +232,7 @@ source(function(error, data) {
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
-        .nodeLabel(function(n) { return n.value.name.split('/'); })
+        .nodeLabel(qs.label ? function(n) { return n.value.value[qs.label]; } : function(n) { return n.value.name.split('/'); })
         .nodeShape(shape)
         .nodeRadius(radius)
         .nodeFill(appLayout && app_layouts[appLayout].colors || fill)
