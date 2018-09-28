@@ -3,3 +3,7 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+.edge-label {
+    visibility: visible;
+}
