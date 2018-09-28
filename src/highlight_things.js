@@ -4,8 +4,8 @@ dc_graph.highlight_things = function(includeprops, excludeprops, thingsgroup) {
 
     function highlight(nodeset, edgeset) {
         _active = nodeset || edgeset;
-        _nodeset = nodeset;
-        _edgeset = edgeset;
+        _nodeset = nodeset || {};
+        _edgeset = edgeset || {};
         var transdur;
         if(_behavior.durationOverride() !== undefined) {
             transdur = _behavior.parent().transitionDuration();
