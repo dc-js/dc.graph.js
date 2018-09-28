@@ -289,6 +289,12 @@ source(function(error, data) {
                 return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
             });
         }
+        var nodelist = diagram.nodeGroup().all().map(function(n) {
+            return {
+                value: n.key,
+                label: diagram.nodeLabel()(n)
+            };
+        });
         apply_expander_filter();
         diagram.child('expand-collapse',
                       dc_graph.expand_collapse(function(key) { // get_degree
@@ -310,12 +316,18 @@ source(function(error, data) {
             .show();
         $('#search')
             .autocomplete({
-                source: nodes.map(function(n) { return n.name; }),
+                source: nodelist,
+                focus: function( event, ui ) {
+                    $( "#search" ).val( ui.item.label );
+                    return false;
+                },
                 select: function(event, ui) {
+                    $( "#search" ).val( ui.item.label );
                     expanded = {};
                     expanded[ui.item.value] = true;
                     apply_expander_filter();
                     run();
+                    return false;
                 }
             })
             .attr("autocomplete", "on");
