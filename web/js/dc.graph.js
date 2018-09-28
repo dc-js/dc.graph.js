@@ -10905,12 +10905,12 @@ function process_dot(callback, error, text) {
         edges = [];
         edgeNames.forEach(function(e) {
             var edge = digraph._edges[e];
-            edges.push({
+            edges.push(Object.assign({}, edge.value, {
                 source: digraph._nodes[edge.u].id,
                 target: digraph._nodes[edge.v].id,
                 sourcename: edge.u,
                 targetname: edge.v
-            });
+            }));
         });
     } else { // graphlib-dot 0.6
         digraph = graphlibDot.read(text);
@@ -10925,12 +10925,12 @@ function process_dot(callback, error, text) {
 
         edges = [];
         digraph.edges().forEach(function(e) {
-            edges.push({
+            edges.push(Object.assign({}, e.value, {
                 source: digraph._nodes[e.v].id,
                 target: digraph._nodes[e.w].id,
                 sourcename: e.v,
                 targetname: e.w
-            });
+            }));
         });
     }
     var graph = {nodes: nodes, links: edges};
