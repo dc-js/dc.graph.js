@@ -1371,7 +1371,21 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        _diagram.resizeSvg();
+        var oldw = _diagram.width(), oldh = _diagram.height();
+        _diagram.width(null).height(null);
+        var neww = _diagram.width(), newh = _diagram.height();
+        if(oldw !== neww || oldh !== newh) {
+            var oldxd = _diagram.x().domain(), oldyd = _diagram.y().domain();
+            _diagram.x().domain([oldxd[0], oldxd[0] + (oldxd[1] - oldxd[0])*neww/oldw])
+                .range([0, neww]);
+            _diagram.y().domain([oldyd[0], oldyd[0] + (oldyd[1] - oldyd[0])*newh/oldh])
+                .range([0, newh]);
+            var oldt = _zoom.translate(), olds = _zoom.scale();
+            _zoom
+                .x(_diagram.x()).y(_diagram.y())
+                .translate(oldt).scale(olds);
+        }
+
         if(_diagram.initLayoutOnRedraw())
             initLayout();
         _diagram.layoutEngine().stop();
