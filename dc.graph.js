@@ -9625,7 +9625,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         draw_selected(diagram, node, edge);
     }
 
-    function collapsible(diagram, edge, key, dir) {
+    function collapsible(diagram, edge, dir, key) {
         return view_degree(diagram, edge, dir, key) === 1;
     }
 
@@ -9677,7 +9677,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                     n.dcg_expanded[dir] = true;
                 }
                 else {
-                    collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, dir), dir);
+                    collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, 'both'), dir);
                     n.dcg_expanded[dir] = false;
                 }
                 draw_selected(diagram, node, edge);
