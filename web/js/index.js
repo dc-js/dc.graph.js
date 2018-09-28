@@ -253,6 +253,9 @@ source(function(error, data) {
         })
         .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
 
+    if(qs.elabel)
+        diagram.edgeLabel(function(e) { return e.value[qs.elabel]; });
+
     if(engine.layoutAlgorithm() === 'cola') {
         diagram
             .showLayoutSteps(showSteps);
