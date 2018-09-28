@@ -546,10 +546,6 @@ get_catalog().then(function(catalog) {
         .edgeSourcePortName(e => e.value.sourceport)
         .edgeTargetPortName(e => e.value.targetport);
 
-    $(window).resize(function() {
-        _diagram.width(null).height(null).redraw();
-    });
-
     if(qs.showFixed)
         _diagram.nodeStrokeDashArray(n => n.value.fixedPos ? null : '5,5');
 
