@@ -220,7 +220,7 @@ source(function(error, data) {
         return Array.prototype.concat.apply([], constraintses);
     }
 
-    var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
+    var engine = dc_graph.spawn_engine(qs.layout || 'cola', qs, qs.worker != 'false');
     diagram
         .width($(window).width())
         .height($(window).height())
