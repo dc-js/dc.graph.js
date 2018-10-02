@@ -22,8 +22,11 @@ if(!options.file)
 var diagram = dc_graph.diagram('#graph');
 dc_graph.load_graph(options.file, function(error, data) {
     if(error) {
-        console.log(error);
-        return;
+        var message = '';
+        if(error.status)
+            message = 'Error ' + error.status + ': ';
+        message += 'Could not load file ' + options.file;
+        display_error(message);
     }
     var graph_data = dc_graph.munge_graph(data),
         nodes = graph_data.nodes,
