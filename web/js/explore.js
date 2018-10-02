@@ -9,11 +9,15 @@ var options = Object.assign({
     timeLimit: 10000
 }, qs);
 
-if(!options.file) {
+function display_error(message) {
     d3.select('#message')
         .style('display', null)
-        .html('<h1>Need <code>?file=</code> in URL!</h1>');
+        .html('<h1>' + message + '</h1>');
+    throw new Error(message);
 }
+if(!options.file)
+    display_error('Need <code>?file=</code> in URL!');
+
 
 var diagram = dc_graph.diagram('#graph');
 dc_graph.load_graph(options.file, function(error, data) {
