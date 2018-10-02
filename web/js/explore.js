@@ -10,8 +10,9 @@ var options = Object.assign({
 }, qs);
 
 if(!options.file) {
-    d3.select('#message').style('display', null);
-    d3.select('#message .centered').html('Need <code>?file=</code>');
+    d3.select('#message')
+        .style('display', null)
+        .html('<h1>Need <code>?file=</code> in URL!</h1>');
 }
 
 var diagram = dc_graph.diagram('#graph');
