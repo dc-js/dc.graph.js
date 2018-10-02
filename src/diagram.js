@@ -2188,8 +2188,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     }
                 });
             }
-            else if(fitS === 'zoom')
+            else if(fitS === 'zoom') {
+                scale = _zoom.scale();
                 translate = bring_in_bounds(_zoom.translate());
+            }
             else
                 throw new Error('unknown fitStrategy type ' + typeof fitS);
 
