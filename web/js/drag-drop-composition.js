@@ -64,7 +64,6 @@ function json_promise(url) {
             if(error)
                 reject(error);
             else {
-                console.log(data);
                 resolve(data);
             }
         });
