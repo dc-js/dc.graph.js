@@ -168,6 +168,25 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                 };
                 node.each(function(n2) {
                     n2.dcg_expand_selected = n2 === n ? spikes : null;
+                    if(n2 === n && n.dcg_expanded && n.dcg_expanded[dir])
+                        edge.filter(function(e) {
+                            var other;
+                            return (diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n) && (other = diagram.edgeTarget.eval(e)) ||
+                                    diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n) && (other = diagram.edgeSource.eval(e))) &&
+                                collapsible(diagram, edge, 'both', other);
+                        })
+                        .transition()
+                        .duration(500)
+                        .attr({
+                            stroke: 'red',
+                            'stroke-width': 5
+                        })
+                        .transition()
+                        .duration(500)
+                        .attr({
+                            stroke: diagram.edgeStroke.eval,
+                            'stroke-width': diagram.edgeStrokeWidth.eval
+                        });
                 });
                 draw_selected(diagram, node, edge);
             });
