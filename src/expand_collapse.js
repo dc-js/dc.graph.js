@@ -77,7 +77,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         }
     }
 
-    function draw_selected(diagram, node, edge) {
+    function draw_stubs(diagram, node, edge) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(n) {
@@ -129,7 +129,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
         node.each(function(n) {
             n.dcg_expand_selected = null;
         });
-        draw_selected(diagram, node, edge);
+        draw_stubs(diagram, node, edge);
     }
 
     function collapsible(diagram, edge, dir, key) {
@@ -188,7 +188,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                             'stroke-width': diagram.edgeStrokeWidth.eval
                         });
                 });
-                draw_selected(diagram, node, edge);
+                draw_stubs(diagram, node, edge);
             });
         }
 
@@ -206,7 +206,7 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
                     collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, 'both'), dir);
                     n.dcg_expanded[dir] = false;
                 }
-                draw_selected(diagram, node, edge);
+                draw_stubs(diagram, node, edge);
                 n.dcg_dblclk_timeout = null;
             }
             return action();
