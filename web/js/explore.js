@@ -180,6 +180,16 @@ dc_graph.load_graph(options.file, function(error, data) {
             }
         });
     diagram.child('expand-collapse', expand_collapse);
+    diagram.child('highlight-deletions', dc_graph.highlight_things(
+        {
+            nodeOpacity: 0.2,
+            nodeStroke: 'darkred',
+            edgeOpacity: 0.2,
+            edgeStroke: 'darkred'
+        },
+        {},
+        'deletion-highlight-group'
+    ).durationOverride(0));
     var starter = d3.select('#start-from');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')

@@ -7,6 +7,7 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
+    var deletion_highlight_group = dc_graph.register_highlight_things_group(options.deletion_highlight_group || 'deletion-highlight-group');
     options.dirs = options.dirs || ['both'];
     if(options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
@@ -174,29 +175,24 @@ dc_graph.expand_collapse = function(options) {
                     dir: dir,
                     n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
                 };
+                var del_edges_set = {}, del_nodes_set = {};
                 node.each(function(n2) {
                     n2.dcg_expand_selected = n2 === n ? spikes : null;
                     if(n2 === n && n.dcg_expanded && n.dcg_expanded[dir])
-                        edge.filter(function(e) {
+                        edge.each(function(e) {
                             var other;
-                            return (diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n) && (other = diagram.edgeTarget.eval(e)) ||
-                                    diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n) && (other = diagram.edgeSource.eval(e))) &&
-                                collapsible(diagram, edge, 'both', other);
-                        })
-                        .transition()
-                        .duration(500)
-                        .attr({
-                            stroke: 'red',
-                            'stroke-width': 5
-                        })
-                        .transition()
-                        .duration(500)
-                        .attr({
-                            stroke: diagram.edgeStroke.eval,
-                            'stroke-width': diagram.edgeStrokeWidth.eval
+                            if(diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
+                               other = diagram.edgeTarget.eval(e);
+                            if(diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
+                                other = diagram.edgeSource.eval(e);
+                            if(other && collapsible(diagram, edge, 'both', other)) {
+                                del_nodes_set[other] = true;
+                                del_edges_set[diagram.edgeKey.eval(e)] = true;
+                            }
                         });
                 });
                 draw_stubs(diagram, node, edge);
+                deletion_highlight_group.highlight(del_nodes_set, del_edges_set);
             });
         }
 
@@ -235,6 +231,7 @@ dc_graph.expand_collapse = function(options) {
             .on('mousemove.expand-collapse', mousemove)
             .on('mouseout.expand-collapse', function(n) {
                 clear_selected(diagram, node, edge);
+                deletion_highlight_group.highlight({}, {});
             })
             .on('click', click)
             .on('dblclick', click);
