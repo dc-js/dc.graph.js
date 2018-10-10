@@ -7,8 +7,12 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
-    var deletion_highlight_group = dc_graph.register_highlight_things_group(options.deletion_highlight_group || 'deletion-highlight-group');
+    var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
+    var hide_highlight_group = options.hide_highlight_group ?
+        dc_graph.register_highlight_things_group(options.hide_highlight_group) :
+        collapse_highlight_group;
     options.dirs = options.dirs || ['both'];
+    options.hideKey = options.hideKey || 'Alt';
     if(options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
 
@@ -165,34 +169,59 @@ dc_graph.expand_collapse = function(options) {
         throw new Error('unknown rankdir ' + diagram.layoutEngine().rankdir());
     }
 
+    function detect_key(key) {
+        switch(key) {
+        case 'Alt':
+            return d3.event.altKey;
+        case 'Meta':
+            return d3.event.metaKey;
+        case 'Shift':
+            return d3.event.shiftKey;
+        case 'Control':
+            return d3.event.ctrlKey;
+        }
+        return false;
+    }
+
+    function highlight_hiding(diagram, nk, edge) {
+        var hide_nodes_set = {}, hide_edges_set = {};
+        hide_nodes_set[nk] = true;
+        edge.each(function(e) {
+            if(diagram.edgeSource.eval(e) === nk || diagram.edgeTarget.eval(e) === nk)
+                hide_edges_set[diagram.edgeKey.eval(e)] = true;
+        });
+        hide_highlight_group.highlight(hide_nodes_set, hide_edges_set);
+    }
 
     function add_behavior(diagram, node, edge) {
         function mousemove(n) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             var nk = diagram.nodeKey.eval(n);
-            Promise.resolve(options.get_degree(nk, dir)).then(function(degree) {
+            if(options.hide && detect_key(options.hideKey))
+                highlight_hiding(diagram, nk, edge);
+            else Promise.resolve(options.get_degree(nk, dir)).then(function(degree) {
                 var spikes = {
                     dir: dir,
                     n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
                 };
-                var del_edges_set = {}, del_nodes_set = {};
+                var collapse_nodes_set = {}, collapse_edges_set = {};
                 node.each(function(n2) {
                     n2.dcg_expand_selected = n2 === n ? spikes : null;
                     if(n2 === n && n.dcg_expanded && n.dcg_expanded[dir])
                         edge.each(function(e) {
                             var other;
                             if(diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
-                               other = diagram.edgeTarget.eval(e);
+                                other = diagram.edgeTarget.eval(e);
                             if(diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
                                 other = diagram.edgeSource.eval(e);
                             if(other && collapsible(diagram, edge, 'both', other)) {
-                                del_nodes_set[other] = true;
-                                del_edges_set[diagram.edgeKey.eval(e)] = true;
+                                collapse_nodes_set[other] = true;
+                                collapse_edges_set[diagram.edgeKey.eval(e)] = true;
                             }
                         });
                 });
                 draw_stubs(diagram, node, edge);
-                deletion_highlight_group.highlight(del_nodes_set, del_edges_set);
+                collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
             });
         }
 
@@ -200,18 +229,22 @@ dc_graph.expand_collapse = function(options) {
             var event = d3.event;
             console.log(event.type);
             function action() {
-                var dir = zonedir(diagram, event, options.dirs, n);
-                n.dcg_expanded = n.dcg_expanded || {};
-                if(!n.dcg_expanded[dir]) {
-                    options.expand(diagram.nodeKey.eval(n), dir, event.type === 'dblclick');
-                    n.dcg_expanded[dir] = true;
-                }
+                if(options.hide && detect_key(options.hideKey))
+                    options.hide(diagram.nodeKey.eval(n));
                 else {
-                    options.collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, 'both'), dir);
-                    n.dcg_expanded[dir] = false;
+                    var dir = zonedir(diagram, event, options.dirs, n);
+                    n.dcg_expanded = n.dcg_expanded || {};
+                    if(!n.dcg_expanded[dir]) {
+                        options.expand(diagram.nodeKey.eval(n), dir, event.type === 'dblclick');
+                        n.dcg_expanded[dir] = true;
+                    }
+                    else {
+                        options.collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, 'both'), dir);
+                        n.dcg_expanded[dir] = false;
+                    }
+                    draw_stubs(diagram, node, edge);
+                    n.dcg_dblclk_timeout = null;
                 }
-                draw_stubs(diagram, node, edge);
-                n.dcg_dblclk_timeout = null;
             }
             return action();
             // distinguish click and double click - kind of fishy but seems to work
@@ -231,7 +264,8 @@ dc_graph.expand_collapse = function(options) {
             .on('mousemove.expand-collapse', mousemove)
             .on('mouseout.expand-collapse', function(n) {
                 clear_selected(diagram, node, edge);
-                deletion_highlight_group.highlight({}, {});
+                collapse_highlight_group.highlight({}, {});
+                hide_highlight_group.highlight({}, {});
             })
             .on('click', click)
             .on('dblclick', click);

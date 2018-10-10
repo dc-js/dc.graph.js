@@ -72,7 +72,7 @@ dc_graph.load_graph(options.file, function(error, data) {
         engine.baseLength(+options.linkLength);
     }
 
-    var expander = null, expanded = {};
+    var expander = null, expanded = {}, hidden = {};
 
     // second dimension on keys so that first will observe it
     expander = node_flat.crossfilter.dimension(function(d) { return d.name; });
@@ -125,12 +125,14 @@ dc_graph.load_graph(options.file, function(error, data) {
                 switch(dir) {
                 case 'out':
                     out_edges(key).forEach(function(e) {
-                        expanded[e.value[targetattr]] = true;
+                        if(!hidden[e.value[targetattr]])
+                            expanded[e.value[targetattr]] = true;
                     });
                     break;
                 case 'in':
                     in_edges(key).forEach(function(e) {
-                        expanded[e.value[sourceattr]] = true;
+                        if(!hidden[e.value[sourceattr]])
+                            expanded[e.value[sourceattr]] = true;
                     });
                     break;
                 default: throw new Error('unknown direction ' + dir);
@@ -157,6 +159,12 @@ dc_graph.load_graph(options.file, function(error, data) {
                 apply_expander_filter();
                 dc.redrawAll();
             },
+            hide: function(key) {
+                hidden[key] = true;
+                expanded[key] = false;
+                apply_expander_filter();
+                dc.redrawAll();
+            },
             dirs: ['out', 'in']
         });
     else
@@ -166,7 +174,8 @@ dc_graph.load_graph(options.file, function(error, data) {
             },
             expand: function(key) {
                 adjacent_nodes(key).forEach(function(nk) {
-                    expanded[nk] = true;
+                    if(!hidden[nk])
+                        expanded[nk] = true;
                 });
                 apply_expander_filter();
                 dc.redrawAll();
@@ -175,6 +184,12 @@ dc_graph.load_graph(options.file, function(error, data) {
                 adjacent_nodes(key).filter(collapsible).forEach(function(nk) {
                     expanded[nk] = false;
                 });
+                apply_expander_filter();
+                dc.redrawAll();
+            },
+            hide: function(key) {
+                hidden[key] = true;
+                expanded[key] = false;
                 apply_expander_filter();
                 dc.redrawAll();
             }
@@ -188,7 +203,7 @@ dc_graph.load_graph(options.file, function(error, data) {
             edgeStroke: 'darkred'
         },
         {},
-        'deletion-highlight-group'
+        'collapse-highlight-group'
     ).durationOverride(0));
     var starter = d3.select('#start-from');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
