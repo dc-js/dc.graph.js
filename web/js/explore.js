@@ -111,67 +111,75 @@ dc_graph.load_graph(options.file, function(error, data) {
     apply_expander_filter();
     dc.renderAll();
 
-    if(qs.directional) {
-        diagram.child('expand-collapse',
-                      dc_graph.expand_collapse(function(key, dir) { // get_degree
-                          switch(dir) {
-                          case 'out': return out_edges(key).length;
-                          case 'in': return in_edges(key).length;
-                          default: throw new Error('unknown direction ' + dir);
-                          }
-                      }, function(key, dir) { // expand
-                          switch(dir) {
-                          case 'out':
-                              out_edges(key).forEach(function(e) {
-                                  expanded[e.value[targetattr]] = true;
-                              });
-                              break;
-                          case 'in':
-                              in_edges(key).forEach(function(e) {
-                                  expanded[e.value[sourceattr]] = true;
-                              });
-                              break;
-                          default: throw new Error('unknown direction ' + dir);
-                          }
-                          apply_expander_filter();
-                          dc.redrawAll();
-                      }, function(key, collapsible, dir) { // collapse
-                          switch(dir) {
-                          case 'out':
-                              out_edges(key).forEach(function(e) {
-                                  if(collapsible(e.value[targetattr]))
-                                      expanded[e.value[targetattr]] = false;
-                              });
-                              break;
-                          case 'in':
-                              in_edges(key).forEach(function(e) {
-                                  if(collapsible(e.value[sourceattr]))
-                                      expanded[e.value[sourceattr]] = false;
-                              });
-                              break;
-                          default: throw new Error('unknown direction ' + dir);
-                          }
-                          apply_expander_filter();
-                          dc.redrawAll();
-                      }, ['out', 'in']));
-    } else {
-        diagram.child('expand-collapse',
-                      dc_graph.expand_collapse(function(key) { // get_degree
-                          return adjacent_edges(key).length;
-                      }, function(key) { // expand
-                          adjacent_nodes(key).forEach(function(nk) {
-                              expanded[nk] = true;
-                          });
-                          apply_expander_filter();
-                          dc.redrawAll();
-                      }, function(key, collapsible) { // collapse
-                          adjacent_nodes(key).filter(collapsible).forEach(function(nk) {
-                              expanded[nk] = false;
-                          });
-                          apply_expander_filter();
-                          dc.redrawAll();
-                      }));
-    }
+    var expand_collapse;
+    if(qs.directional)
+        expand_collapse = dc_graph.expand_collapse({
+            get_degree: function(key, dir) {
+                switch(dir) {
+                case 'out': return out_edges(key).length;
+                case 'in': return in_edges(key).length;
+                default: throw new Error('unknown direction ' + dir);
+                }
+            },
+            expand: function(key, dir) {
+                switch(dir) {
+                case 'out':
+                    out_edges(key).forEach(function(e) {
+                        expanded[e.value[targetattr]] = true;
+                    });
+                    break;
+                case 'in':
+                    in_edges(key).forEach(function(e) {
+                        expanded[e.value[sourceattr]] = true;
+                    });
+                    break;
+                default: throw new Error('unknown direction ' + dir);
+                }
+                apply_expander_filter();
+                dc.redrawAll();
+            },
+            collapse: function(key, collapsible, dir) {
+                switch(dir) {
+                case 'out':
+                    out_edges(key).forEach(function(e) {
+                        if(collapsible(e.value[targetattr]))
+                            expanded[e.value[targetattr]] = false;
+                    });
+                    break;
+                case 'in':
+                    in_edges(key).forEach(function(e) {
+                        if(collapsible(e.value[sourceattr]))
+                            expanded[e.value[sourceattr]] = false;
+                    });
+                    break;
+                default: throw new Error('unknown direction ' + dir);
+                }
+                apply_expander_filter();
+                dc.redrawAll();
+            },
+            dirs: ['out', 'in']
+        });
+    else
+        expand_collapse = dc_graph.expand_collapse({
+            get_degree: function(key) {
+                return adjacent_edges(key).length;
+            },
+            expand: function(key) {
+                adjacent_nodes(key).forEach(function(nk) {
+                    expanded[nk] = true;
+                });
+                apply_expander_filter();
+                dc.redrawAll();
+            },
+            collapse: function(key, collapsible) {
+                adjacent_nodes(key).filter(collapsible).forEach(function(nk) {
+                    expanded[nk] = false;
+                });
+                apply_expander_filter();
+                dc.redrawAll();
+            }
+        });
+    diagram.child('expand-collapse', expand_collapse);
     var starter = d3.select('#start-from');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')
