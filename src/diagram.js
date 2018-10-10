@@ -33,6 +33,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _translate = [0,0], _scale = 1;
     var _zoom, _animateZoom;
     var _anchor, _chartGroup;
+    var _animating = false; // do not refresh during animations
 
     var _minWidth = 200;
     var _defaultWidthCalc = function (element) {
@@ -1900,6 +1901,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     _diagram.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
+        if(_animating)
+            return this; // but what about changed attributes?
         node = node || _diagram.selectAllNodes();
         edge = edge || _diagram.selectAllEdges();
         _refresh(node, edge);
@@ -2352,8 +2355,13 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // signal layout done when all transitions complete
         // because otherwise client might start another layout and lock the processor
+        _animating = true;
         if(!_diagram.showLayoutSteps())
-            endall([ntrans, etrans, textTrans], function() { layout_done(true); });
+            endall([ntrans, etrans, textTrans],
+                   function() {
+                       _animating = false;
+                       layout_done(true);
+                   });
 
         if(animatePositions)
             edgeHover.attr('d', render_edge_path('new'));
@@ -2362,6 +2370,10 @@ dc_graph.diagram = function (parent, chartGroup) {
             e.pos.old = e.pos.new;
         });
     }
+
+    _diagram.animating = function() {
+        return _animating;
+    };
 
     _diagram.selectNodePortsOfStyle = function(node, style) {
         return node.selectAll('g.port').filter(function(p) {
