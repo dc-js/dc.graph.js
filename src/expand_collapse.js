@@ -1,6 +1,14 @@
-dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
-    dirs = dirs || ['both'];
-    if(dirs.length > 2)
+dc_graph.expand_collapse = function(options) {
+    if(typeof options === 'function') {
+        options = {
+            get_degree: arguments[0],
+            expand: arguments[1],
+            collapse: arguments[2],
+            dirs: arguments[3]
+        };
+    }
+    options.dirs = options.dirs || ['both'];
+    if(options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
 
     function add_gradient_def(diagram) {
@@ -159,9 +167,9 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
 
     function add_behavior(diagram, node, edge) {
         function mousemove(n) {
-            var dir = zonedir(diagram, d3.event, dirs, n);
+            var dir = zonedir(diagram, d3.event, options.dirs, n);
             var nk = diagram.nodeKey.eval(n);
-            Promise.resolve(get_degree(nk, dir)).then(function(degree) {
+            Promise.resolve(options.get_degree(nk, dir)).then(function(degree) {
                 var spikes = {
                     dir: dir,
                     n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
@@ -196,14 +204,14 @@ dc_graph.expand_collapse = function(get_degree, expand, collapse, dirs) {
             var event = d3.event;
             console.log(event.type);
             function action() {
-                var dir = zonedir(diagram, event, dirs, n);
+                var dir = zonedir(diagram, event, options.dirs, n);
                 n.dcg_expanded = n.dcg_expanded || {};
                 if(!n.dcg_expanded[dir]) {
-                    expand(diagram.nodeKey.eval(n), dir, event.type === 'dblclick');
+                    options.expand(diagram.nodeKey.eval(n), dir, event.type === 'dblclick');
                     n.dcg_expanded[dir] = true;
                 }
                 else {
-                    collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, 'both'), dir);
+                    options.collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, 'both'), dir);
                     n.dcg_expanded[dir] = false;
                 }
                 draw_stubs(diagram, node, edge);
