@@ -206,9 +206,9 @@ dc_graph.expand_collapse = function(options) {
                 if(n2 === n && n.dcg_expanded && n.dcg_expanded[dir])
                     edge.each(function(e) {
                         var other;
-                        if(diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
+                        if(['both', 'out'].includes(dir) && diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
                             other = diagram.edgeTarget.eval(e);
-                        if(diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
+                        if(['both', 'in'].includes(dir) && diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
                             other = diagram.edgeSource.eval(e);
                         if(other && collapsible(diagram, edge, 'both', other)) {
                             collapse_nodes_set[other] = true;
