@@ -2329,15 +2329,15 @@ dc_graph.diagram = function (parent, chartGroup) {
           .selectAll('textPath')
             .text(function(e){
                 return _diagram.edgeLabel.eval(e);
-            });
+            })
+            .attr('opacity', _diagram.edgeOpacity.eval);
         textPathsEnter
             .attr('d', render_edge_label_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
         var textTrans = textPaths.transition()
             .duration(_diagram.stagedDuration())
             .delay(function(e) {
                 return _diagram.stagedDelay(edgeEntered[_diagram.edgeKey.eval(e)]);
-            })
-            .attr('opacity', _diagram.edgeOpacity.eval);
+            });
         if(animatePositions)
             textTrans
             .attr('d', function(e) {
