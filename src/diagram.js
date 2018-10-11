@@ -1915,6 +1915,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
+    _diagram.requestRefresh = function(durationOverride) {
+        window.requestAnimationFrame(function() {
+            var transdur;
+            if(durationOverride !== undefined) {
+                transdur = _diagram.transitionDuration();
+                _diagram.transitionDuration(durationOverride);
+            }
+            _diagram.refresh();
+            if(durationOverride !== undefined)
+                _diagram.transitionDuration(transdur);
+        });
+    };
+
     _diagram.reposition = function(node, edge) {
         node
             .attr('transform', function (n) {

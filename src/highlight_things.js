@@ -7,14 +7,7 @@ dc_graph.highlight_things = function(includeprops, excludeprops, modename, group
         _active = nodeset || edgeset;
         _nodeset = nodeset || {};
         _edgeset = edgeset || {};
-        var transdur;
-        if(_behavior.durationOverride() !== undefined) {
-            transdur = _behavior.parent().transitionDuration();
-            _behavior.parent().transitionDuration(_behavior.durationOverride());
-        }
-        _behavior.parent().refresh();
-        if(_behavior.durationOverride() !== undefined)
-            _behavior.parent().transitionDuration(transdur);
+        _behavior.parent().requestRefresh(_behavior.durationOverride());
     }
     function add_behavior(diagram) {
         diagram.cascade(cascbase, true, node_edge_conditions(
