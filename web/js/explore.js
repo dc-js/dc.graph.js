@@ -6,7 +6,8 @@ var options = Object.assign({
     stage: 'insmod',
     linkLength: 30,
     layout: 'cola',
-    timeLimit: 10000
+    timeLimit: 10000,
+    start: null
 }, qs);
 
 function display_error(message) {
@@ -74,6 +75,8 @@ dc_graph.load_graph(options.file, function(error, data) {
 
     var expander = null, expanded = {}, hidden = {};
 
+    if(options.start)
+        expanded[options.start] = true;
     // second dimension on keys so that first will observe it
     expander = node_flat.crossfilter.dimension(function(d) { return d.name; });
     function apply_expander_filter() {
@@ -108,8 +111,6 @@ dc_graph.load_graph(options.file, function(error, data) {
         };
     });
     nodelist.sort((a,b) => a.label < b.label ? -1 : 1);
-    apply_expander_filter();
-    dc.renderAll();
 
     var expand_collapse;
     if(qs.directional)
@@ -215,6 +216,8 @@ dc_graph.load_graph(options.file, function(error, data) {
         {},
         'hide-highlight-group', 1
     ).durationOverride(0));
+    apply_expander_filter();
+    dc.renderAll();
     var starter = d3.select('#start-from');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')
