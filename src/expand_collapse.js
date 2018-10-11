@@ -223,6 +223,7 @@ dc_graph.expand_collapse = function(options) {
 
     function add_behavior(diagram, node, edge) {
         function mousemove(n) {
+            console.log('collapse mousemove');
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             var nk = diagram.nodeKey.eval(n);
             _overNode = n;
@@ -271,6 +272,7 @@ dc_graph.expand_collapse = function(options) {
             .on('mouseover.expand-collapse', mousemove)
             .on('mousemove.expand-collapse', mousemove)
             .on('mouseout.expand-collapse', function(n) {
+                console.log('collapse mouseout');
                 _overNode = null;
                 clear_stubs(diagram, node, edge);
                 collapse_highlight_group.highlight({}, {});
