@@ -195,7 +195,7 @@ dc_graph.load_graph(options.file, function(error, data) {
             }
         });
     diagram.child('expand-collapse', expand_collapse);
-    diagram.child('highlight-deletions', dc_graph.highlight_things(
+    diagram.child('highlight-collapse', dc_graph.highlight_things(
         {
             nodeOpacity: 0.2,
             nodeStroke: 'darkred',
@@ -203,7 +203,17 @@ dc_graph.load_graph(options.file, function(error, data) {
             edgeStroke: 'darkred'
         },
         {},
-        'collapse-highlight-group'
+        'collapse-highlight-group', 0
+    ).durationOverride(0));
+    diagram.child('highlight-hide', dc_graph.highlight_things(
+        {
+            nodeOpacity: 0.2,
+            nodeStroke: 'darkred',
+            edgeOpacity: 0.2,
+            edgeStroke: 'darkred'
+        },
+        {},
+        'hide-highlight-group', 1
     ).durationOverride(0));
     var starter = d3.select('#start-from');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));

@@ -1,8 +1,9 @@
-dc_graph.highlight_things = function(includeprops, excludeprops, thingsgroup) {
+dc_graph.highlight_things = function(includeprops, excludeprops, thingsgroup, ofs) {
     var highlight_things_group = dc_graph.register_highlight_things_group(thingsgroup || 'highlight-things-group');
     var _active, _nodeset = {}, _edgeset = {};
 
     function highlight(nodeset, edgeset) {
+        console.log('highlight', thingsgroup, ofs, _nodeset);
         _active = nodeset || edgeset;
         _nodeset = nodeset || {};
         _edgeset = edgeset || {};
@@ -16,13 +17,13 @@ dc_graph.highlight_things = function(includeprops, excludeprops, thingsgroup) {
             _behavior.parent().transitionDuration(transdur);
     }
     function add_behavior(diagram) {
-        diagram.cascade(150, true, node_edge_conditions(
+        diagram.cascade(150 + ofs, true, node_edge_conditions(
             function(n) {
                 return _nodeset[_behavior.parent().nodeKey.eval(n)];
             }, function(e) {
                 return _edgeset[_behavior.parent().edgeKey.eval(e)];
             }, includeprops));
-        diagram.cascade(160, true, node_edge_conditions(
+        diagram.cascade(160 + ofs, true, node_edge_conditions(
             function(n) {
                 return _active && !_nodeset[_behavior.parent().nodeKey.eval(n)];
             }, function(e) {
@@ -30,8 +31,8 @@ dc_graph.highlight_things = function(includeprops, excludeprops, thingsgroup) {
             }, excludeprops));
     }
     function remove_behavior(diagram) {
-        diagram.cascade(150, false, includeprops);
-        diagram.cascade(160, false, excludeprops);
+        diagram.cascade(150 + ofs, false, includeprops);
+        diagram.cascade(160 + ofs, false, excludeprops);
     }
     var _behavior = dc_graph.behavior('highlight-things', {
         add_behavior: add_behavior,

@@ -7,10 +7,9 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
+    var _keyboard, _overNode, _overDir;
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
-    var hide_highlight_group = options.hide_highlight_group ?
-        dc_graph.register_highlight_things_group(options.hide_highlight_group) :
-        collapse_highlight_group;
+    var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
     options.dirs = options.dirs || ['both'];
     options.hideKey = options.hideKey || 'Alt';
     if(options.dirs.length > 2)
@@ -138,7 +137,7 @@ dc_graph.expand_collapse = function(options) {
         rect.exit().remove();
     }
 
-    function clear_selected(diagram, node, edge) {
+    function clear_stubs(diagram, node, edge) {
         node.each(function(n) {
             n.dcg_expand_selected = null;
         });
@@ -183,7 +182,8 @@ dc_graph.expand_collapse = function(options) {
         return false;
     }
 
-    function highlight_hiding(diagram, nk, edge) {
+    function highlight_hiding(diagram, n, edge) {
+        var nk = diagram.nodeKey.eval(n);
         var hide_nodes_set = {}, hide_edges_set = {};
         hide_nodes_set[nk] = true;
         edge.each(function(e) {
@@ -193,36 +193,44 @@ dc_graph.expand_collapse = function(options) {
         hide_highlight_group.highlight(hide_nodes_set, hide_edges_set);
     }
 
+    function highlight_collapse(diagram, n, node, edge, dir) {
+        var nk = diagram.nodeKey.eval(n);
+        Promise.resolve(options.get_degree(nk, dir)).then(function(degree) {
+            var spikes = {
+                dir: dir,
+                n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
+            };
+            var collapse_nodes_set = {}, collapse_edges_set = {};
+            node.each(function(n2) {
+                n2.dcg_expand_selected = n2 === n ? spikes : null;
+                if(n2 === n && n.dcg_expanded && n.dcg_expanded[dir])
+                    edge.each(function(e) {
+                        var other;
+                        if(diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
+                            other = diagram.edgeTarget.eval(e);
+                        if(diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
+                            other = diagram.edgeSource.eval(e);
+                        if(other && collapsible(diagram, edge, 'both', other)) {
+                            collapse_nodes_set[other] = true;
+                            collapse_edges_set[diagram.edgeKey.eval(e)] = true;
+                        }
+                    });
+            });
+            draw_stubs(diagram, node, edge);
+            collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
+        });
+    }
+
     function add_behavior(diagram, node, edge) {
         function mousemove(n) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             var nk = diagram.nodeKey.eval(n);
+            _overNode = n;
+            _overDir = dir;
             if(options.hide && detect_key(options.hideKey))
-                highlight_hiding(diagram, nk, edge);
-            else Promise.resolve(options.get_degree(nk, dir)).then(function(degree) {
-                var spikes = {
-                    dir: dir,
-                    n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
-                };
-                var collapse_nodes_set = {}, collapse_edges_set = {};
-                node.each(function(n2) {
-                    n2.dcg_expand_selected = n2 === n ? spikes : null;
-                    if(n2 === n && n.dcg_expanded && n.dcg_expanded[dir])
-                        edge.each(function(e) {
-                            var other;
-                            if(diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
-                                other = diagram.edgeTarget.eval(e);
-                            if(diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
-                                other = diagram.edgeSource.eval(e);
-                            if(other && collapsible(diagram, edge, 'both', other)) {
-                                collapse_nodes_set[other] = true;
-                                collapse_edges_set[diagram.edgeKey.eval(e)] = true;
-                            }
-                        });
-                });
-                draw_stubs(diagram, node, edge);
-                collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
-            });
+                highlight_hiding(diagram, n, edge);
+            else
+                highlight_collapse(diagram, n, node, edge, dir);
         }
 
         function click(n) {
@@ -263,24 +271,47 @@ dc_graph.expand_collapse = function(options) {
             .on('mouseover.expand-collapse', mousemove)
             .on('mousemove.expand-collapse', mousemove)
             .on('mouseout.expand-collapse', function(n) {
-                clear_selected(diagram, node, edge);
+                _overNode = null;
+                clear_stubs(diagram, node, edge);
                 collapse_highlight_group.highlight({}, {});
                 hide_highlight_group.highlight({}, {});
             })
             .on('click', click)
             .on('dblclick', click);
+
+        _keyboard
+            .on('keydown.expand-collapse', function() {
+                if(d3.event.key === options.hideKey && _overNode) {
+                    clear_stubs(diagram, node, edge);
+                    collapse_highlight_group.highlight({}, {});
+                    highlight_hiding(diagram, _overNode, edge);
+                }
+            })
+            .on('keyup.expand_collapse', function() {
+                if(d3.event.key === options.hideKey && _overNode) {
+                    hide_highlight_group.highlight({}, {});
+                    highlight_collapse(diagram, _overNode, node, edge, _overDir);
+                }
+            });
     }
 
     function remove_behavior(diagram, node, edge) {
         node
             .on('mouseover.expand-collapse', null)
             .on('mouseout.expand-collapse', null);
-        clear_selected(diagram, node);
+        clear_stubs(diagram, node, edge);
     }
 
     return dc_graph.behavior('expand-collapse', {
         add_behavior: add_behavior,
         first: add_gradient_def,
-        remove_behavior: remove_behavior
+        remove_behavior: remove_behavior,
+        parent: function(p) {
+            if(p) {
+                _keyboard = p.child('keyboard');
+                if(!_keyboard)
+                    p.child('keyboard', _keyboard = dc_graph.keyboard());
+            }
+        }
     });
 };
