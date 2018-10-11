@@ -204,7 +204,7 @@ dc_graph.load_graph(options.file, function(error, data) {
             edgeStroke: 'darkred'
         },
         {},
-        'collapse-highlight-group', 0
+        'collapse-highlight', 'collapse-highlight-group', 150
     ).durationOverride(0));
     diagram.child('highlight-hide', dc_graph.highlight_things(
         {
@@ -214,7 +214,7 @@ dc_graph.load_graph(options.file, function(error, data) {
             edgeStroke: 'darkred'
         },
         {},
-        'hide-highlight-group', 1
+        'hide-highlight', 'hide-highlight-group', 160
     ).durationOverride(0));
     apply_expander_filter();
     dc.renderAll();
