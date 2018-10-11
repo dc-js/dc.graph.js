@@ -282,9 +282,9 @@ dc_graph.expand_collapse = function(options) {
         _keyboard
             .on('keydown.expand-collapse', function() {
                 if(d3.event.key === options.hideKey && _overNode) {
+                    highlight_hiding(diagram, _overNode, edge);
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
-                    highlight_hiding(diagram, _overNode, edge);
                 }
             })
             .on('keyup.expand_collapse', function() {
