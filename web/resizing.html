@@ -165,10 +165,8 @@
 
         diagram
             .layoutEngine(engine)
-            .width(null)
-            .height(null)
-            .minWidth(sync_url.vals.minWidth)
-            .minHeight(sync_url.vals.minHeight)
+            .width('auto')
+            .height('auto')
             .restrictPan(true)
             .autoZoom('always')
             .zoomExtent([0.1, 1.5])
@@ -213,11 +211,7 @@
 
         $('#resize').resizable({
             resize: function(event, ui) {
-                diagram
-                    .width(null)
-                    .height(null)
-                    .resizeSvg()
-                    .zoomToFit();
+                diagram.redraw();
             },
             minWidth: sync_url.vals.minWidth,
             minHeight: sync_url.vals.minHeight

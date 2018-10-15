@@ -509,8 +509,8 @@ get_catalog().then(function(catalog) {
             });
 
     _diagram
-        .width(null)
-        .height(null)
+        .width('auto')
+        .height('auto')
         .layoutEngine(layout)
         .timeLimit(500)
         .margins({left: 5, top: 5, right: 5, bottom: 5})
