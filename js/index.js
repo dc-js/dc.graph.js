@@ -220,7 +220,7 @@ source(function(error, data) {
         return Array.prototype.concat.apply([], constraintses);
     }
 
-    var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
+    var engine = dc_graph.spawn_engine(qs.layout || 'cola', qs, qs.worker != 'false');
     diagram
         .width($(window).width())
         .height($(window).height())
@@ -232,7 +232,7 @@ source(function(error, data) {
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
-        .nodeLabel(function(n) { return n.value.name.split('/'); })
+        .nodeLabel(qs.label ? function(n) { return n.value.value[qs.label]; } : function(n) { return n.value.name.split('/'); })
         .nodeShape(shape)
         .nodeRadius(radius)
         .nodeFill(appLayout && app_layouts[appLayout].colors || fill)
@@ -252,6 +252,9 @@ source(function(error, data) {
             show_stats({totnodes: nodes.length, totedges: edges.length}, diagram.getStats());
         })
         .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+
+    if(qs.elabel)
+        diagram.edgeLabel(function(e) { return e.value[qs.elabel]; });
 
     if(engine.layoutAlgorithm() === 'cola') {
         diagram
@@ -284,38 +287,105 @@ source(function(error, data) {
                 return kv.value[sourceattr] === key || kv.value[targetattr] === key;
             });
         }
+        function out_edges(key) {
+            return edge_flat.group.all().filter(function(kv) {
+                return kv.value[sourceattr] === key;
+            });
+        }
+        function in_edges(key) {
+            return edge_flat.group.all().filter(function(kv) {
+                return kv.value[targetattr] === key;
+            });
+        }
         function adjacent_nodes(key) {
             return adjacent_edges(key).map(function(kv) {
                 return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
             });
         }
+        var nodelist = diagram.nodeGroup().all().map(function(n) {
+            return {
+                value: n.key,
+                label: diagram.nodeLabel()(n)
+            };
+        });
         apply_expander_filter();
-        diagram.child('expand-collapse',
-                      dc_graph.expand_collapse(function(key) { // get_degree
-                          return adjacent_edges(key).length;
-                      }, function(key) { // expand
-                          adjacent_nodes(key).forEach(function(nk) {
-                              expanded[nk] = true;
-                          });
-                          apply_expander_filter();
-                          run();
-                      }, function(key, collapsible) { // collapse
-                          adjacent_nodes(key).filter(collapsible).forEach(function(nk) {
-                              expanded[nk] = false;
-                          });
-                          apply_expander_filter();
-                          run();
-                      }));
+        if(qs.directional) {
+            diagram.child('expand-collapse',
+                          dc_graph.expand_collapse(function(key, dir) { // get_degree
+                              switch(dir) {
+                              case 'out': return out_edges(key).length;
+                              case 'in': return in_edges(key).length;
+                              default: throw new Error('unknown direction ' + dir);
+                              }
+                          }, function(key, dir) { // expand
+                              switch(dir) {
+                              case 'out':
+                                  out_edges(key).forEach(function(e) {
+                                      expanded[e.value[targetattr]] = true;
+                                  });
+                                  break;
+                              case 'in':
+                                  in_edges(key).forEach(function(e) {
+                                      expanded[e.value[sourceattr]] = true;
+                                  });
+                                  break;
+                              default: throw new Error('unknown direction ' + dir);
+                              }
+                              apply_expander_filter();
+                              run();
+                          }, function(key, collapsible, dir) { // collapse
+                              switch(dir) {
+                              case 'out':
+                                  out_edges(key).forEach(function(e) {
+                                      if(collapsible(e.value[targetattr]))
+                                          expanded[e.value[targetattr]] = false;
+                                  });
+                                  break;
+                              case 'in':
+                                  in_edges(key).forEach(function(e) {
+                                      if(collapsible(e.value[sourceattr]))
+                                          expanded[e.value[sourceattr]] = false;
+                                  });
+                                  break;
+                              default: throw new Error('unknown direction ' + dir);
+                              }
+                              apply_expander_filter();
+                              run();
+                          }, ['out', 'in']));
+        } else {
+            diagram.child('expand-collapse',
+                          dc_graph.expand_collapse(function(key) { // get_degree
+                              return adjacent_edges(key).length;
+                          }, function(key) { // expand
+                              adjacent_nodes(key).forEach(function(nk) {
+                                  expanded[nk] = true;
+                              });
+                              apply_expander_filter();
+                              run();
+                          }, function(key, collapsible) { // collapse
+                              adjacent_nodes(key).filter(collapsible).forEach(function(nk) {
+                                  expanded[nk] = false;
+                              });
+                              apply_expander_filter();
+                              run();
+                          }));
+        }
         $('#search-wrapper')
             .show();
         $('#search')
             .autocomplete({
-                source: nodes.map(function(n) { return n.name; }),
+                source: nodelist,
+                focus: function( event, ui ) {
+                    $( "#search" ).val( ui.item.label );
+                    return false;
+                },
                 select: function(event, ui) {
+                    $( "#search" ).val( ui.item.label );
                     expanded = {};
                     expanded[ui.item.value] = true;
                     apply_expander_filter();
                     run();
+                    return false;
                 }
             })
             .attr("autocomplete", "on");
