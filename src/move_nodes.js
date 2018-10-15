@@ -51,6 +51,10 @@ dc_graph.move_nodes = function(options) {
         });
         function mouse_move() {
             if(_startPos) {
+                if(!(d3.event.buttons & 1)) {
+                    mouse_up();
+                    return;
+                }
                 if(_maybeSelect)
                     select_nodes_group.set_changed([_maybeSelect]);
                 var pos = dc_graph.event_coords(diagram);

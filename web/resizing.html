@@ -67,7 +67,7 @@
 
   <div id="dashboard">
     <div id="controls">
-      <select id="layout"></select>&emsp;&emsp;<select id="number"></select>
+      <select id="layout"></select>&emsp;&emsp;<select id="number"></select>&emsp;&emsp;<select id="fit"></select>
     </div>
   </div>
   <div id="resize">
@@ -108,6 +108,24 @@
         minHeight: {
             default: 200,
             query: 'minh'
+        },
+        fit: {
+            default: 'default',
+            selector: '#fit',
+            values: [
+                'default',
+                'vertical',
+                'horizontal',
+                'align_tl',
+                'align_tr',
+                'align_bl',
+                'align_br',
+                'zoom'
+            ],
+            needs_redraw: true,
+            exert: function(val, diagram) {
+                diagram.fitStrategy(val);
+            }
         }
     };
     var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram),
@@ -165,11 +183,10 @@
 
         diagram
             .layoutEngine(engine)
-            .width(null)
-            .height(null)
-            .minWidth(sync_url.vals.minWidth)
-            .minHeight(sync_url.vals.minHeight)
+            .width('auto')
+            .height('auto')
             .restrictPan(true)
+            .fitStrategy(sync_url.vals.fit || 'default')
             .autoZoom('always')
             .zoomExtent([0.1, 1.5])
             .nodeShape({shape: sync_url.vals.shape})
@@ -213,11 +230,7 @@
 
         $('#resize').resizable({
             resize: function(event, ui) {
-                diagram
-                    .width(null)
-                    .height(null)
-                    .resizeSvg()
-                    .zoomToFit();
+                diagram.redraw();
             },
             minWidth: sync_url.vals.minWidth,
             minHeight: sync_url.vals.minHeight

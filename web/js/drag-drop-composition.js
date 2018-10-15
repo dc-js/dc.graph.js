@@ -64,7 +64,6 @@ function json_promise(url) {
             if(error)
                 reject(error);
             else {
-                console.log(data);
                 resolve(data);
             }
         });
@@ -510,14 +509,15 @@ get_catalog().then(function(catalog) {
             });
 
     _diagram
-        .width(null)
-        .height(null)
+        .width('auto')
+        .height('auto')
         .layoutEngine(layout)
         .timeLimit(500)
         .margins({left: 5, top: 5, right: 5, bottom: 5})
         .modKeyZoom(options.mkzoom || null)
         .transitionDuration(1000)
-        .fitStrategy('align_tl')
+        .fitStrategy('zoom')
+        .autoZoom('always')
         .restrictPan(true)
         .stageTransitions('insmod')
         .enforceEdgeDirection(options.rankdir || 'LR')
@@ -544,10 +544,6 @@ get_catalog().then(function(catalog) {
         .portBounds(p => p.value.bounds)
         .edgeSourcePortName(e => e.value.sourceport)
         .edgeTargetPortName(e => e.value.targetport);
-
-    $(window).resize(function() {
-        _diagram.width(null).height(null).redraw();
-    });
 
     if(qs.showFixed)
         _diagram.nodeStrokeDashArray(n => n.value.fixedPos ? null : '5,5');
@@ -796,15 +792,24 @@ get_catalog().then(function(catalog) {
 
     _diagram.child('node-tips', node_tips);
 
-    var hint_tips = dc_graph.tip({namespace: 'hint-tips', class: 'd3-tip hint'})
+    var negative_tips = dc_graph.tip({namespace: 'hint-negative-tips', class: 'd3-tip hint-negative'})
             .selection(dc_graph.tip.select_port())
             .programmatic(true)
             .hideDelay(1000);
 
-    _diagram.child('hint-tips', hint_tips);
+    _diagram.child('hint-negative-tips', negative_tips);
+
+    var positive_tips = dc_graph.tip({namespace: 'hint-positive-tips', class: 'd3-tip hint-positive'})
+            .selection(dc_graph.tip.select_port())
+            .direction('s')
+            .programmatic(true)
+            .hideDelay(1000);
+
+    _diagram.child('hint-positive-tips', positive_tips);
 
     gropts.tipsDisable = [port_tips, node_tips];
-    gropts.hintTip = hint_tips;
+    gropts.negativeTip = negative_tips;
+    gropts.positiveTip = positive_tips;
 
     if(qs.debug) {
         var troubleshoot = dc_graph.troubleshoot();

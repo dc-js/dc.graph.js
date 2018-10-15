@@ -4,7 +4,7 @@ dc_graph.troubleshoot = function() {
     function add_behavior(diagram, node, edge, ehover) {
         if(!_debugLayer)
             _debugLayer = diagram.g().append('g').attr({
-                class: 'draw-graphs',
+                class: 'troubleshoot',
                 'pointer-events': 'none'
             });
         var centers = node.data().map(function(n) {
@@ -48,6 +48,21 @@ dc_graph.troubleshoot = function() {
         }).filter(function(n) { return !!n; });
         var radiiboundary = _debugLayer.selectAll('path.radiiboundary').data(radiibounds);
         draw_corners(radiiboundary, 'radiiboundary');
+
+        var domain = _debugLayer.selectAll('rect.domain').data([0]);
+        domain.enter().append('rect');
+        var xd = _behavior.parent().x().domain(), yd = _behavior.parent().y().domain();
+        domain.attr({
+            class: 'domain',
+            fill: 'none',
+            opacity: _behavior.domainOpacity(),
+            stroke: _behavior.domainColor(),
+            'stroke-width': _behavior.domainStrokeWidth(),
+            x: xd[0],
+            y: yd[0],
+            width: xd[1] - xd[0],
+            height: yd[1] - yd[0]
+        });
     }
     function boundary(point, wid, hei) {
         return {
@@ -100,6 +115,10 @@ dc_graph.troubleshoot = function() {
     _behavior.boundsWidth = property(10);
     _behavior.boundsHeight = property(10);
     _behavior.boundsColor = property('green');
+
+    _behavior.domainOpacity = property(0.6);
+    _behavior.domainColor = property('darkorange');
+    _behavior.domainStrokeWidth = property(11);
 
     return _behavior;
 };

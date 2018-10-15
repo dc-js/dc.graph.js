@@ -1,3 +1,18 @@
+## 0.6.0
+* new "explore" demo which refines a feature previously hidden in "main" demo
+* various improvements to "main" demo (index.html)
+* collapse feedback, showing what will be removed
+* ability to hide nodes in explore mode
+* resizing of the canvas seems finally to work right
+* width/height "auto" for SVG at 100% width/height
+* node moving and edge drawing cancel if they see movement with no buttons down, since button up messages can get lost
+* more refinements to port-to-port edge drawing hints: positive feedback when a match is made, ports crossed out when invalid
+* ability to read the `portPosition` from the `symbol_port_style`
+* `requestRefresh` to ask for refresh after code is finished executing - esp when there are multiple things that might be redrawing, but is this is a good practice anyway.
+* box and rect are synonyms for rectangle shape
+* opacity of edge is applied correctly to edge labels
+* edge attributes are kept when reading dot format
+
 ## 0.6.0 beta 12
 * edge legend
 * legend is an ordinary mode/behavior/child like any other
