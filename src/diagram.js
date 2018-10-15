@@ -1797,6 +1797,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(skip_layout) {
             _running = false;
             _dispatch.end(false);
+            check_zoom(node, edge);
             return this;
         }
         var startTime = Date.now();
@@ -1852,26 +1853,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _dispatch.transitionsStarted(node, edge, edgeHover);
                 }
                 else layout_done(true);
-                var do_zoom, animate = true;
-                switch(_diagram.autoZoom()) {
-                case 'always-skipanimonce':
-                    animate = false;
-                    _diagram.autoZoom('always');
-                case 'always':
-                    do_zoom = true;
-                    break;
-                case 'once-noanim':
-                    animate = false;
-                case 'once':
-                    do_zoom = true;
-                    _diagram.autoZoom(null);
-                    break;
-                default:
-                    do_zoom = false;
-                }
-                calc_bounds(node, edge);
-                if(do_zoom)
-                    auto_zoom(animate);
+                check_zoom(node, edge);
             })
             .on('start', function() {
                 console.log('algo ' + _diagram.layoutEngine().layoutAlgorithm() + ' started.');
@@ -1892,6 +1874,29 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return this;
     };
+
+    function check_zoom(node, edge) {
+        var do_zoom, animate = true;
+        switch(_diagram.autoZoom()) {
+        case 'always-skipanimonce':
+            animate = false;
+            _diagram.autoZoom('always');
+        case 'always':
+            do_zoom = true;
+            break;
+        case 'once-noanim':
+            animate = false;
+        case 'once':
+            do_zoom = true;
+            _diagram.autoZoom(null);
+            break;
+        default:
+            do_zoom = false;
+        }
+        calc_bounds(node, edge);
+        if(do_zoom)
+            auto_zoom(animate);
+    }
 
     function norm(v) {
         var len = Math.hypot(v[0], v[1]);
