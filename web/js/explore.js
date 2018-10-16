@@ -225,7 +225,7 @@ dc_graph.load_graph(options.file, function(error, data) {
             edgeStroke: 'darkred'
         },
         {},
-        'hide-highlight', 'hide-highlight-group', 160
+        'hide-highlight', 'hide-highlight-group', 155
     ).durationOverride(0));
     apply_expander_filter();
     dc.renderAll();
