@@ -73,7 +73,14 @@ dc_graph.load_graph(options.file, function(error, data) {
         engine.baseLength(+options.linkLength);
     }
 
-    var expander = null, expanded = {}, hidden = {};
+    var ec_strategy = dc_graph.expand_collapse.shown_hidden({
+        nodeCrossfilter: node_flat.crossfilter,
+        edgeGroup: edge_flat.group,
+        nodeKey: n => n.name,
+        edgeSource: e => e.value[sourceattr],
+        edgeTarget: e => e.value[targetattr],
+        directional: qs.directional
+    });
 
     if(options.start) {
         if(!nodes.find(n => n.name === options.start)) {
@@ -86,34 +93,7 @@ dc_graph.load_graph(options.file, function(error, data) {
             }
         }
         if(options.start)
-            expanded[options.start] = true;
-    }
-    // second dimension on keys so that first will observe it
-    expander = node_flat.crossfilter.dimension(function(d) { return d.name; });
-    function apply_expander_filter() {
-        expander.filterFunction(function(key) {
-            return expanded[key];
-        });
-    }
-    function adjacent_edges(key) {
-        return edge_flat.group.all().filter(function(kv) {
-            return kv.value[sourceattr] === key || kv.value[targetattr] === key;
-        });
-    }
-    function out_edges(key) {
-        return edge_flat.group.all().filter(function(kv) {
-            return kv.value[sourceattr] === key;
-        });
-    }
-    function in_edges(key) {
-        return edge_flat.group.all().filter(function(kv) {
-            return kv.value[targetattr] === key;
-        });
-    }
-    function adjacent_nodes(key) {
-        return adjacent_edges(key).map(function(kv) {
-            return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
-        });
+            ec_strategy.start(options.start);
     }
     var nodelist = diagram.nodeGroup().all().map(function(n) {
         return {
@@ -123,89 +103,7 @@ dc_graph.load_graph(options.file, function(error, data) {
     });
     nodelist.sort((a,b) => a.label < b.label ? -1 : 1);
 
-    var expand_collapse;
-    if(qs.directional)
-        expand_collapse = dc_graph.expand_collapse({
-            get_degree: function(key, dir) {
-                switch(dir) {
-                case 'out': return out_edges(key).length;
-                case 'in': return in_edges(key).length;
-                default: throw new Error('unknown direction ' + dir);
-                }
-            },
-            expand: function(key, dir) {
-                switch(dir) {
-                case 'out':
-                    out_edges(key).forEach(function(e) {
-                        if(!hidden[e.value[targetattr]])
-                            expanded[e.value[targetattr]] = true;
-                    });
-                    break;
-                case 'in':
-                    in_edges(key).forEach(function(e) {
-                        if(!hidden[e.value[sourceattr]])
-                            expanded[e.value[sourceattr]] = true;
-                    });
-                    break;
-                default: throw new Error('unknown direction ' + dir);
-                }
-                apply_expander_filter();
-                dc.redrawAll();
-            },
-            collapse: function(key, collapsible, dir) {
-                switch(dir) {
-                case 'out':
-                    out_edges(key).forEach(function(e) {
-                        if(collapsible(e.value[targetattr]))
-                            expanded[e.value[targetattr]] = false;
-                    });
-                    break;
-                case 'in':
-                    in_edges(key).forEach(function(e) {
-                        if(collapsible(e.value[sourceattr]))
-                            expanded[e.value[sourceattr]] = false;
-                    });
-                    break;
-                default: throw new Error('unknown direction ' + dir);
-                }
-                apply_expander_filter();
-                dc.redrawAll();
-            },
-            hide: function(key) {
-                hidden[key] = true;
-                expanded[key] = false;
-                apply_expander_filter();
-                dc.redrawAll();
-            },
-            dirs: ['out', 'in']
-        });
-    else
-        expand_collapse = dc_graph.expand_collapse({
-            get_degree: function(key) {
-                return adjacent_edges(key).length;
-            },
-            expand: function(key) {
-                adjacent_nodes(key).forEach(function(nk) {
-                    if(!hidden[nk])
-                        expanded[nk] = true;
-                });
-                apply_expander_filter();
-                dc.redrawAll();
-            },
-            collapse: function(key, collapsible) {
-                adjacent_nodes(key).filter(collapsible).forEach(function(nk) {
-                    expanded[nk] = false;
-                });
-                apply_expander_filter();
-                dc.redrawAll();
-            },
-            hide: function(key) {
-                hidden[key] = true;
-                expanded[key] = false;
-                apply_expander_filter();
-                dc.redrawAll();
-            }
-        });
+    var expand_collapse = dc_graph.expand_collapse(ec_strategy);
     diagram.child('expand-collapse', expand_collapse);
     diagram.child('highlight-collapse', dc_graph.highlight_things(
         {
@@ -227,7 +125,6 @@ dc_graph.load_graph(options.file, function(error, data) {
         {},
         'hide-highlight', 'hide-highlight-group', 155
     ).durationOverride(0));
-    apply_expander_filter();
     dc.renderAll();
     var starter = d3.select('#start-from');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
@@ -237,9 +134,7 @@ dc_graph.load_graph(options.file, function(error, data) {
         .text(function(d) { return d.label; });
 
     starter.on('change', function() {
-        expanded = {};
-        expanded[this.value] = true;
-        apply_expander_filter();
+        ec_strategy.start(this.value);
         dc.redrawAll();
     });
     // respond to browser resize (not necessary if width/height is static)
