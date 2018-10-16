@@ -200,22 +200,23 @@ dc_graph.expand_collapse = function(options) {
                 dir: dir,
                 n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
             };
-            var collapse_nodes_set = {}, collapse_edges_set = {};
             node.each(function(n2) {
                 n2.dcg_expand_selected = n2 === n ? spikes : null;
-                if(n2 === n && n.dcg_expanded && n.dcg_expanded[dir])
-                    edge.each(function(e) {
-                        var other;
-                        if(['both', 'out'].includes(dir) && diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
-                            other = diagram.edgeTarget.eval(e);
-                        if(['both', 'in'].includes(dir) && diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
-                            other = diagram.edgeSource.eval(e);
-                        if(other && collapsible(diagram, edge, 'both', other)) {
-                            collapse_nodes_set[other] = true;
-                            collapse_edges_set[diagram.edgeKey.eval(e)] = true;
-                        }
-                    });
             });
+            var collapse_nodes_set = {}, collapse_edges_set = {};
+            if(n.dcg_expanded && n.dcg_expanded[dir])
+                edge.each(function(e) {
+                    var other;
+                    if(['both', 'out'].includes(dir) && diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
+                        other = diagram.edgeTarget.eval(e);
+                    if(['both', 'in'].includes(dir) && diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
+                        other = diagram.edgeSource.eval(e);
+                    if(other && collapsible(diagram, edge, 'both', other)) {
+                        collapse_nodes_set[other] = true;
+                        collapse_edges_set[diagram.edgeKey.eval(e)] = true;
+                    }
+                });
+
             draw_stubs(diagram, node, edge);
             collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
         });
