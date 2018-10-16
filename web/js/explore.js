@@ -75,8 +75,19 @@ dc_graph.load_graph(options.file, function(error, data) {
 
     var expander = null, expanded = {}, hidden = {};
 
-    if(options.start)
-        expanded[options.start] = true;
+    if(options.start) {
+        if(!nodes.find(n => n.name === options.start)) {
+            let found = nodes.find(n => n.value.label.includes(options.start));
+            if(found)
+                options.start = found.name;
+            else {
+                console.log("didn't find '" + options.start + "' by nodeKey or nodeLabel");
+                options.start = null;
+            }
+        }
+        if(options.start)
+            expanded[options.start] = true;
+    }
     // second dimension on keys so that first will observe it
     expander = node_flat.crossfilter.dimension(function(d) { return d.name; });
     function apply_expander_filter() {
@@ -222,6 +233,7 @@ dc_graph.load_graph(options.file, function(error, data) {
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')
         .attr('value', function(d) { return d.value; })
+        .attr('selected', function(d) { return d.value === options.start ? 'selected' : null; })
         .text(function(d) { return d.label; });
 
     starter.on('change', function() {
