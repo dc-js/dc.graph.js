@@ -81,7 +81,8 @@ dc_graph.load_graph(options.file, function(error, data) {
     });
     nodelist.sort((a,b) => a.label < b.label ? -1 : 1);
 
-    var ec_strategy = dc_graph.expand_collapse.shown_hidden({
+    var expand_strategy = options.expand_strategy || 'expanded_hidden';
+    var ec_strategy = dc_graph.expand_collapse[expand_strategy]({
         nodeCrossfilter: node_flat.crossfilter,
         edgeGroup: edge_flat.group,
         nodeKey: n => n.name,
