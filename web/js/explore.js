@@ -73,6 +73,14 @@ dc_graph.load_graph(options.file, function(error, data) {
         engine.baseLength(+options.linkLength);
     }
 
+    var nodelist = diagram.nodeGroup().all().map(function(n) {
+        return {
+            value: n.key,
+            label: diagram.nodeLabel()(n)
+        };
+    });
+    nodelist.sort((a,b) => a.label < b.label ? -1 : 1);
+
     var ec_strategy = dc_graph.expand_collapse.shown_hidden({
         nodeCrossfilter: node_flat.crossfilter,
         edgeGroup: edge_flat.group,
@@ -92,16 +100,8 @@ dc_graph.load_graph(options.file, function(error, data) {
                 options.start = null;
             }
         }
-        if(options.start)
-            ec_strategy.start(options.start);
     }
-    var nodelist = diagram.nodeGroup().all().map(function(n) {
-        return {
-            value: n.key,
-            label: diagram.nodeLabel()(n)
-        };
-    });
-    nodelist.sort((a,b) => a.label < b.label ? -1 : 1);
+    ec_strategy.start(options.start || null);
 
     var expand_collapse = dc_graph.expand_collapse(ec_strategy);
     diagram.child('expand-collapse', expand_collapse);

@@ -37,7 +37,8 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
     var _strategy = {
         start: function(nk) {
             _shown = {};
-            _shown[nk] = true;
+            if(nk)
+                _shown[nk] = true;
             apply_filter();
             return _strategy;
         }
