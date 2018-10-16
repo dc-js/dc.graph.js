@@ -18,6 +18,11 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
             return options.edgeSource(e) === nk || options.edgeTarget(e) === nk;
         });
     }
+    function adjacent_nodes(nk) {
+        return adjacent_edges(nk).map(function(e) {
+            return options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
+        });
+    }
     function out_edges(nk) {
         return options.edgeGroup.all().filter(function(e) {
             return options.edgeSource(e) === nk;
@@ -26,11 +31,6 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
     function in_edges(nk) {
         return options.edgeGroup.all().filter(function(e) {
             return options.edgeTarget(e) === nk;
-        });
-    }
-    function adjacent_nodes(nk) {
-        return adjacent_edges(nk).map(function(e) {
-            return options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
         });
     }
 
