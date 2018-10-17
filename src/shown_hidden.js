@@ -87,22 +87,23 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 apply_filter();
                 dc.redrawAll();
             },
-            collapse: function(nk, collapsible, dir) {
-                switch(dir) {
-                case 'out':
-                    out_edges(nk).forEach(function(e) {
-                        if(collapsible(options.edgeTarget(e)))
-                            _shown[options.edgeTarget(e)] = false;
-                    });
-                    break;
-                case 'in':
-                    in_edges(nk).forEach(function(e) {
-                        if(collapsible(options.edgeSource(e)))
-                            _shown[options.edgeSource(e)] = false;
-                    });
-                    break;
-                default: throw new Error('unknown direction ' + dir);
-                }
+            collapsibles: function(nk, dir) {
+                var nodes = {}, edges = {};
+                (dir === 'out' ? out_edges(nk) : in_edges(nk)).forEach(function(e) {
+                    var n2 = dir === 'out' ? options.edgeTarget(e) : options.edgeSource(e);
+                    if(is_collapsible(nk, n2)) {
+                        nodes[n2] = true;
+                        adjacent_edges(n2).forEach(function(e) {
+                            edges[options.edgeKey(e)] = true;
+                        });
+                    }
+                });
+                return {nodes: nodes, edges: edges};
+            },
+            collapse: function(nk, dir) {
+                Object.keys(this.collapsibles(nk, dir).nodes).forEach(function(nk) {
+                    _shown[nk] = false;
+                });
                 apply_filter();
                 dc.redrawAll();
             },
