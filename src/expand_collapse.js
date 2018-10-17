@@ -220,25 +220,14 @@ dc_graph.expand_collapse = function(options) {
             else
                 highlight_collapse(diagram, n, node, edge, dir);
         }
-
         function click(n) {
             var nk = diagram.nodeKey.eval(n);
             if(options.hide && detect_key(options.hideKey))
                 options.hide(nk);
             else {
-                var dir = zonedir(diagram, d3.event, options.dirs, n);
-                var exec;
-                if(!_expanded[dir][nk]) {
-                    exec = options.expand;
-                    _expanded[dir][nk] = true;
-                }
-                else {
-                    exec = options.collapse;
-                    _expanded[dir][nk] = false;
-                }
                 clear_stubs(diagram, node, edge);
-                expanded_highlight_group.highlight(_expanded.both, {});
-                exec.call(options, nk, dir); // delayed so that expanded-highlight gets in before redraw
+                var dir = zonedir(diagram, d3.event, options.dirs, n);
+                expand(dir, nk, !_expanded[dir][nk]);
             }
         }
 
@@ -278,7 +267,17 @@ dc_graph.expand_collapse = function(options) {
         clear_stubs(diagram, node, edge);
     }
 
-    return dc_graph.behavior('expand-collapse', {
+    function expand(dir, nk, whether) {
+        var exec;
+        _expanded[dir][nk] = whether;
+        expanded_highlight_group.highlight(_expanded.both, {});
+        if(whether)
+            options.expand(nk, dir);
+        else
+            options.collapse(nk, dir);
+    }
+
+    var _behavior = dc_graph.behavior('expand-collapse', {
         add_behavior: add_behavior,
         first: add_gradient_def,
         remove_behavior: remove_behavior,
@@ -290,4 +289,7 @@ dc_graph.expand_collapse = function(options) {
             }
         }
     });
+
+    _behavior.expand = expand;
+    return _behavior;
 };

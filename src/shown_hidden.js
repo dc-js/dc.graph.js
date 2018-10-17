@@ -49,16 +49,8 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
             return !n3 || n3 === n1 || !_shown[n3];
         });
     }
-    var _strategy = {
-        start: function(nk) {
-            _shown = {};
-            if(nk)
-                _shown[nk] = true;
-            apply_filter();
-            return _strategy;
-        }
-
-    };
+    apply_filter();
+    var _strategy = {};
     if(options.directional)
         Object.assign(_strategy, {
             get_degree: function(nk, dir) {
@@ -69,6 +61,7 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 }
             },
             expand: function(nk, dir) {
+                _shown[nk] = true;
                 switch(dir) {
                 case 'out':
                     out_edges(nk).forEach(function(e) {
@@ -121,6 +114,7 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 return adjacent_edges(nk).length;
             },
             expand: function(nk) {
+                _shown[nk] = true;
                 adjacent_nodes(nk).forEach(function(nk) {
                     if(!_hidden[nk])
                         _shown[nk] = true;
