@@ -222,36 +222,20 @@ dc_graph.expand_collapse = function(options) {
 
         function click(n) {
             var nk = diagram.nodeKey.eval(n);
-            var event = d3.event;
-            console.log(event.type);
-            function action() {
-                if(options.hide && detect_key(options.hideKey))
-                    options.hide(nk);
-                else {
-                    var dir = zonedir(diagram, event, options.dirs, n);
-                    if(!_expanded[dir][nk]) {
-                        options.expand(nk, dir, event.type === 'dblclick');
-                        _expanded[dir][nk] = true;
-                    }
-                    else {
-                        options.collapse(nk, dir);
-                        _expanded[dir][nk] = false;
-                    }
-                    clear_stubs(diagram, node, edge);
-                    n.dcg_dblclk_timeout = null;
+            if(options.hide && detect_key(options.hideKey))
+                options.hide(nk);
+            else {
+                var dir = zonedir(diagram, d3.event, options.dirs, n);
+                if(!_expanded[dir][nk]) {
+                    options.expand(nk, dir);
+                    _expanded[dir][nk] = true;
                 }
+                else {
+                    options.collapse(nk, dir);
+                    _expanded[dir][nk] = false;
+                }
+                clear_stubs(diagram, node, edge);
             }
-            return action();
-            // distinguish click and double click - kind of fishy but seems to work
-            // basically, wait to see if a click becomes a dblclick - but it's even worse
-            // because you'll receive a second click before the dblclick on most browsers
-            if(n.dcg_dblclk_timeout) {
-                window.clearTimeout(n.dcg_dblclk_timeout);
-                if(event.type === 'dblclick')
-                    action();
-                n.dcg_dblclk_timeout = null;
-            }
-            else n.dcg_dblclk_timeout = window.setTimeout(action, 200);
         }
 
         node
