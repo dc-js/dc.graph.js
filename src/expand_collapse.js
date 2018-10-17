@@ -8,6 +8,7 @@ dc_graph.expand_collapse = function(options) {
         };
     }
     var _keyboard, _overNode, _overDir, _expanded = {};
+    var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
     var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
     options.dirs = options.dirs || ['both'];
@@ -226,15 +227,18 @@ dc_graph.expand_collapse = function(options) {
                 options.hide(nk);
             else {
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
+                var exec;
                 if(!_expanded[dir][nk]) {
-                    options.expand(nk, dir);
+                    exec = options.expand;
                     _expanded[dir][nk] = true;
                 }
                 else {
-                    options.collapse(nk, dir);
+                    exec = options.collapse;
                     _expanded[dir][nk] = false;
                 }
                 clear_stubs(diagram, node, edge);
+                expanded_highlight_group.highlight(_expanded.both, {});
+                exec.call(options, nk, dir); // delayed so that expanded-highlight gets in before redraw
             }
         }
 

@@ -106,6 +106,14 @@ dc_graph.load_graph(options.file, function(error, data) {
 
     var expand_collapse = dc_graph.expand_collapse(ec_strategy);
     diagram.child('expand-collapse', expand_collapse);
+    diagram.child('highlight-expanded', dc_graph.highlight_things(
+        {
+            nodeStrokeWidth: 5,
+            nodeStroke: 'darkblue',
+        },
+        {},
+        'expanded-highlight', 'expanded-highlight-group', 147
+    ).durationOverride(0));
     diagram.child('highlight-collapse', dc_graph.highlight_things(
         {
             nodeOpacity: 0.2,
