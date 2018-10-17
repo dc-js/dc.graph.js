@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.1
+ *  dc.graph 0.6.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.1
+ * @version 0.6.2
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.1',
+    version: '0.6.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1260,6 +1260,9 @@ dc_graph.text_contents = function() {
             tspan.enter().append('tspan');
             tspan.attr({
                 'text-anchor': 'start',
+                'text-decoration': function(line) {
+                    return _contents.parent().nodeLabelDecoration.eval(line.node);
+                },
                 x: 0
             }).text(function(s) { return s.line; });
             text
@@ -1915,6 +1918,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     _diagram.nodeLabelAlignment = property('center');
+    _diagram.nodeLabelDecoration = property(null);
 
     /**
      * Set or get the function which will be used to retrieve the label fill color. Default: null
@@ -9614,6 +9618,7 @@ dc_graph.expand_collapse = function(options) {
         _expanded[dir] = {};
     });
     options.hideKey = options.hideKey || 'Alt';
+    options.linkKey = options.linkKey || (is_a_mac ? 'Meta' : 'Control');
     if(options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
 
@@ -9815,6 +9820,13 @@ dc_graph.expand_collapse = function(options) {
             _overDir = dir;
             if(options.hide && detect_key(options.hideKey))
                 highlight_hiding(diagram, n, edge);
+            else if(_overNode.orig.value.value.URL && detect_key(options.linkKey)) {
+                diagram.selectAllNodes()
+                    .filter(function(n) {
+                        return n === _overNode;
+                    }).attr('cursor', 'pointer');
+                diagram.requestRefresh(0);
+            }
             else
                 highlight_collapse(diagram, n, node, edge, dir);
         }
@@ -9822,7 +9834,10 @@ dc_graph.expand_collapse = function(options) {
             var nk = diagram.nodeKey.eval(n);
             if(options.hide && detect_key(options.hideKey))
                 options.hide(nk);
-            else {
+            else if(detect_key(options.linkKey)) {
+                if(n.orig.value.value.URL)
+                    window.open(n.orig.value.value.URL, 'dcgraphlink');
+            } else {
                 clear_stubs(diagram, node, edge);
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
                 expand(dir, nk, !_expanded[dir][nk]);
@@ -9834,6 +9849,10 @@ dc_graph.expand_collapse = function(options) {
             .on('mousemove.expand-collapse', mousemove)
             .on('mouseout.expand-collapse', function(n) {
                 console.log('collapse mouseout');
+                diagram.selectAllNodes()
+                    .filter(function(n) {
+                        return n === _overNode;
+                    }).attr('cursor', null);
                 _overNode = null;
                 clear_stubs(diagram, node, edge);
                 collapse_highlight_group.highlight({}, {});
@@ -9849,13 +9868,38 @@ dc_graph.expand_collapse = function(options) {
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
                 }
+                else if(d3.event.key === options.linkKey && _overNode) {
+                    if(_overNode && _overNode.orig.value.value.URL) {
+                        diagram.selectAllNodes()
+                            .filter(function(n) {
+                                return n === _overNode;
+                            }).attr('cursor', 'pointer');
+                    }
+                    hide_highlight_group.highlight({}, {});
+                    clear_stubs(diagram, node, edge);
+                    collapse_highlight_group.highlight({}, {});
+                }
             })
             .on('keyup.expand_collapse', function() {
-                if(d3.event.key === options.hideKey && _overNode) {
+                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey) && _overNode) {
                     hide_highlight_group.highlight({}, {});
                     highlight_collapse(diagram, _overNode, node, edge, _overDir);
+                    if(_overNode && _overNode.orig.value.value.URL) {
+                        diagram.selectAllNodes()
+                            .filter(function(n) {
+                                return n === _overNode;
+                            }).attr('cursor', null);
+                    }
                 }
             });
+        diagram.cascade(97, true, conditional_properties(
+            function(n) {
+                return n === _overNode && n.orig.value.value.URL;
+            },
+            {
+                nodeLabelDecoration: 'underline'
+            }
+        ));
     }
 
     function remove_behavior(diagram, node, edge) {
@@ -9889,6 +9933,7 @@ dc_graph.expand_collapse = function(options) {
     });
 
     _behavior.expand = expand;
+    _behavior.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
     return _behavior;
 };
 
