@@ -1,3 +1,6 @@
+## 0.6.2
+* `linkKey` hack in `expand_collapse` - definitely not the right way to do this but we can call it motivation for breaking up into smaller, more cooperative modes
+
 ## 0.6.1
 * expand/collapse now has different "strategies" for dealing with in-memory graphs - the (poorly named) `dc_graph.expand_collapse.shown_hidden` statefully expands and collapses (and hides) with the old behavior, while the (also poorly named) `dc_graph.expand_collapse.expanded_hidden` declaratively defines expansion as "one hop from a selected set of nodes".
 * in addition to the prior `expand_collapse` highlight groups "collapse-highlight-group" and "hide-highlight-group", it also supports "expanded-highlight-group" showing the expanded/selected nodes
