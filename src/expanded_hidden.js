@@ -8,15 +8,19 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
 
     // independent dimension on keys so that the diagram dimension will observe it
     var _filter = options.nodeCrossfilter.dimension(options.nodeKey);
-    function apply_filter() {
-        var _shown = {};
-        Object.keys(_expanded).forEach(function(nk) {
-            _shown[nk] = true;
+
+    function get_shown(expanded) {
+        return Object.keys(expanded).reduce(function(p, nk) {
+            p[nk] = true;
             adjacent_nodes(nk).forEach(function(nk2) {
                 if(!_hidden[nk2])
-                    _shown[nk2] = true;
+                    p[nk2] = true;
             });
-        });
+            return p;
+        }, {});
+    }
+    function apply_filter() {
+        var _shown = get_shown(_expanded);
         _filter.filterFunction(function(nk) {
             return _shown[nk];
         });
@@ -51,6 +55,19 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             _expanded[nk] = true;
             apply_filter();
             dc.redrawAll();
+        },
+        collapsibles: function(nk, dir) {
+            var whatif = Object.assign({}, _expanded);
+            delete whatif[nk];
+            var shown = get_shown(_expanded), would = get_shown(whatif);
+            var going = Object.keys(shown).filter(function(nk2) { return !would[nk2]; });
+            return {
+                nodes: going.reduce(function(p, v) {
+                    p[v] = true;
+                    return p;
+                }, {}),
+                edges: {}
+            };
         },
         collapse: function(nk, collapsible) {
             delete _expanded[nk];
