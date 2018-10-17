@@ -200,7 +200,7 @@ dc_graph.expand_collapse = function(options) {
             };
             draw_stubs(diagram, node, edge, n, spikes);
             var collapse_nodes_set = {}, collapse_edges_set = {};
-            if(_expanded[dir][nk]) {
+            if(_expanded[dir][nk] && options.collapsibles) {
                 var clps = options.collapsibles(nk, dir);
                 collapse_nodes_set = clps.nodes;
                 collapse_edges_set = clps.edges;

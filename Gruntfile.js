@@ -382,6 +382,7 @@ module.exports.jsFiles = [
     'src/draw_spline_paths.js',
     'src/expand_collapse.js',
     'src/shown_hidden.js',
+    'src/expanded_hidden.js',
     'src/draw_graphs.js',
     'src/match_ports.js',
     'src/match_opposites.js',
