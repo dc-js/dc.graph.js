@@ -144,10 +144,6 @@ dc_graph.expand_collapse = function(options) {
         draw_stubs(diagram, node, edge);
     }
 
-    function collapsible(diagram, edge, dir, key) {
-        return view_degree(diagram, edge, dir, key) === 1;
-    }
-
     function zonedir(diagram, event, dirs, n) {
         if(dirs.length === 1) // we assume it's ['out', 'in']
             return dirs[0];
@@ -203,21 +199,13 @@ dc_graph.expand_collapse = function(options) {
             node.each(function(n2) {
                 n2.dcg_expand_selected = n2 === n ? spikes : null;
             });
-            var collapse_nodes_set = {}, collapse_edges_set = {};
-            if(n.dcg_expanded && n.dcg_expanded[dir])
-                edge.each(function(e) {
-                    var other;
-                    if(['both', 'out'].includes(dir) && diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
-                        other = diagram.edgeTarget.eval(e);
-                    if(['both', 'in'].includes(dir) && diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
-                        other = diagram.edgeSource.eval(e);
-                    if(other && collapsible(diagram, edge, 'both', other)) {
-                        collapse_nodes_set[other] = true;
-                        collapse_edges_set[diagram.edgeKey.eval(e)] = true;
-                    }
-                });
-
             draw_stubs(diagram, node, edge);
+            var collapse_nodes_set = {}, collapse_edges_set = {};
+            if(n.dcg_expanded && n.dcg_expanded[dir]) {
+                var clps = options.collapsibles(diagram.nodeKey.eval(n), dir);
+                collapse_nodes_set = clps.nodes;
+                collapse_edges_set = clps.edges;
+            }
             collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
         });
     }
@@ -249,7 +237,7 @@ dc_graph.expand_collapse = function(options) {
                         n.dcg_expanded[dir] = true;
                     }
                     else {
-                        options.collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, 'both'), dir);
+                        options.collapse(diagram.nodeKey.eval(n), dir);
                         n.dcg_expanded[dir] = false;
                     }
                     draw_stubs(diagram, node, edge);

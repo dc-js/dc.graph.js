@@ -1,6 +1,7 @@
 dc_graph.expand_collapse.shown_hidden = function(opts) {
     var options = Object.assign({
-        nodeKey: function(n) { return n.key; },
+        nodeKey: function(n) { return n.key; }, // this one is raw rows, others are post-crossfilter-group
+        edgeKey: function(e) { return e.key; },
         edgeSource: function(e) { return e.value.source; },
         edgeTarget: function(e) { return e.value.target; }
     }, opts);
@@ -33,7 +34,16 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
             return options.edgeTarget(e) === nk;
         });
     }
-
+    function is_collapsible(n1, n2) {
+        return options.edgeGroup.all().every(function(e2) {
+            var n3;
+            if(options.edgeSource(e2) === n2)
+                n3 = options.edgeTarget(e2);
+            else if(options.edgeTarget(e2) === n2)
+                n3 = options.edgeSource(e2);
+            return !n3 || n3 === n1 || !_shown[n3];
+        });
+    }
     var _strategy = {
         start: function(nk) {
             _shown = {};
@@ -112,8 +122,23 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 apply_filter();
                 dc.redrawAll();
             },
-            collapse: function(nk, collapsible) {
-                adjacent_nodes(nk).filter(collapsible).forEach(function(nk) {
+            collapsibles: function(nk, dir) {
+                var nodes = {}, edges = {};
+                options.edgeGroup.all().forEach(function(e) {
+                    var n2;
+                    if(['both', 'out'].includes(dir) && options.edgeSource(e) === nk)
+                        n2 = options.edgeTarget(e);
+                    if(['both', 'in'].includes(dir) && options.edgeTarget(e) === nk)
+                        n2 = options.edgeSource(e);
+                    if(n2 && is_collapsible(nk, n2)) {
+                        nodes[n2] = true;
+                        edges[options.edgeKey(e)] = true;
+                    }
+                });
+                return {nodes: nodes, edges: edges};
+            },
+            collapse: function(nk, dir) {
+                Object.keys(this.collapsibles(nk, dir).nodes).forEach(function(nk) {
                     _shown[nk] = false;
                 });
                 apply_filter();
