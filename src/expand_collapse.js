@@ -89,13 +89,12 @@ dc_graph.expand_collapse = function(options) {
         }
     }
 
-    function draw_stubs(diagram, node, edge) {
+    function draw_stubs(diagram, node, edge, n, spikes) {
         var spike = node
             .selectAll('g.spikes')
-            .data(function(n) {
-                return (n.dcg_expand_selected &&
-                        (!n.dcg_expanded || !n.dcg_expanded[n.dcg_expand_selected.dir])) ?
-                    [n] : [];
+            .data(function(n2) {
+                return spikes && n === n2 && (!n2.dcg_expanded || !n2.dcg_expanded[spikes.dir]) ?
+                    [n2] : [];
             });
         spike.exit().remove();
         spike
@@ -105,8 +104,8 @@ dc_graph.expand_collapse = function(options) {
           .selectAll('rect.spike')
             .data(function(n) {
                 var key = diagram.nodeKey.eval(n);
-                var dir = n.dcg_expand_selected.dir,
-                    N = n.dcg_expand_selected.n,
+                var dir = spikes.dir,
+                    N = spikes.n,
                     af = spike_directioner(diagram.layoutEngine().rankdir(), dir, N),
                     ret = Array(N);
                 for(var i = 0; i<N; ++i) {
@@ -138,10 +137,7 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function clear_stubs(diagram, node, edge) {
-        node.each(function(n) {
-            n.dcg_expand_selected = null;
-        });
-        draw_stubs(diagram, node, edge);
+        draw_stubs(diagram, node, edge, null, null);
     }
 
     function zonedir(diagram, event, dirs, n) {
@@ -196,10 +192,7 @@ dc_graph.expand_collapse = function(options) {
                 dir: dir,
                 n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
             };
-            node.each(function(n2) {
-                n2.dcg_expand_selected = n2 === n ? spikes : null;
-            });
-            draw_stubs(diagram, node, edge);
+            draw_stubs(diagram, node, edge, n, spikes);
             var collapse_nodes_set = {}, collapse_edges_set = {};
             if(n.dcg_expanded && n.dcg_expanded[dir]) {
                 var clps = options.collapsibles(diagram.nodeKey.eval(n), dir);
@@ -240,7 +233,7 @@ dc_graph.expand_collapse = function(options) {
                         options.collapse(diagram.nodeKey.eval(n), dir);
                         n.dcg_expanded[dir] = false;
                     }
-                    draw_stubs(diagram, node, edge);
+                    clear_stubs(diagram, node, edge);
                     n.dcg_dblclk_timeout = null;
                 }
             }
