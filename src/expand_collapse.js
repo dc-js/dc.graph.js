@@ -90,10 +90,12 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function draw_stubs(diagram, node, edge, n, spikes) {
+        if(n && n.dcg_expanded && n.dcg_expanded[spikes.dir])
+            spikes = null;
         var spike = node
             .selectAll('g.spikes')
             .data(function(n2) {
-                return spikes && n === n2 && (!n2.dcg_expanded || !n2.dcg_expanded[spikes.dir]) ?
+                return spikes && n === n2 ?
                     [n2] : [];
             });
         spike.exit().remove();
