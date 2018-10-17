@@ -19,6 +19,10 @@
     flex: 1;
 }
 
+#controls {
+    margin: 1em;
+}
+
 #message {
     position: absolute;
     left: 0; top: 0; right: 0; bottom: 0;

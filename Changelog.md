@@ -1,3 +1,8 @@
+## 0.6.1
+* expand/collapse now has different "strategies" for dealing with in-memory graphs - the (poorly named) `dc_graph.expand_collapse.shown_hidden` statefully expands and collapses (and hides) with the old behavior, while the (also poorly named) `dc_graph.expand_collapse.expanded_hidden` declaratively defines expansion as "one hop from a selected set of nodes".
+* in addition to the prior `expand_collapse` highlight groups "collapse-highlight-group" and "hide-highlight-group", it also supports "expanded-highlight-group" showing the expanded/selected nodes
+* `expand_collapse` no longer annotates nodes to keep track of its state; it politely uses a key->boolean mapping object
+
 ## 0.6.0
 * new "explore" demo which refines a feature previously hidden in "main" demo
 * various improvements to "main" demo (index.html)
