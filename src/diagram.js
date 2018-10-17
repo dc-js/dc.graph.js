@@ -555,6 +555,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     });
 
     _diagram.nodeLabelAlignment = property('center');
+    _diagram.nodeLabelDecoration = property(null);
 
     /**
      * Set or get the function which will be used to retrieve the label fill color. Default: null

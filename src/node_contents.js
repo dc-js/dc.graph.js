@@ -19,6 +19,9 @@ dc_graph.text_contents = function() {
             tspan.enter().append('tspan');
             tspan.attr({
                 'text-anchor': 'start',
+                'text-decoration': function(line) {
+                    return _contents.parent().nodeLabelDecoration.eval(line.node);
+                },
                 x: 0
             }).text(function(s) { return s.line; });
             text
