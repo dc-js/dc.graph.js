@@ -24,6 +24,11 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
             return options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
         });
     }
+    function adjacencies(nk) {
+        return adjacent_edges(nk).map(function(e) {
+            return options.edgeSource(e) === nk ? [e,options.edgeTarget(e)] : [e,options.edgeSource(e)];
+        });
+    }
     function out_edges(nk) {
         return options.edgeGroup.all().filter(function(e) {
             return options.edgeSource(e) === nk;
@@ -124,13 +129,9 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
             },
             collapsibles: function(nk, dir) {
                 var nodes = {}, edges = {};
-                options.edgeGroup.all().forEach(function(e) {
-                    var n2;
-                    if(['both', 'out'].includes(dir) && options.edgeSource(e) === nk)
-                        n2 = options.edgeTarget(e);
-                    if(['both', 'in'].includes(dir) && options.edgeTarget(e) === nk)
-                        n2 = options.edgeSource(e);
-                    if(n2 && is_collapsible(nk, n2)) {
+                adjacencies(nk).forEach(function(adj) {
+                    var e = adj[0], n2 = adj[1];
+                    if(is_collapsible(nk, n2)) {
                         nodes[n2] = true;
                         edges[options.edgeKey(e)] = true;
                     }
