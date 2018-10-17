@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.0
+ *  dc.graph 0.6.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.0
+ * @version 0.6.1
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.0',
+    version: '0.6.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -9605,10 +9605,14 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
-    var _keyboard, _overNode, _overDir;
+    var _keyboard, _overNode, _overDir, _expanded = {};
+    var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
     var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
     options.dirs = options.dirs || ['both'];
+    options.dirs.forEach(function(dir) {
+        _expanded[dir] = {};
+    });
     options.hideKey = options.hideKey || 'Alt';
     if(options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
@@ -9687,13 +9691,14 @@ dc_graph.expand_collapse = function(options) {
         }
     }
 
-    function draw_stubs(diagram, node, edge) {
+    function draw_stubs(diagram, node, edge, n, spikes) {
+        if(n && _expanded[spikes.dir][diagram.nodeKey.eval(n)])
+            spikes = null;
         var spike = node
             .selectAll('g.spikes')
-            .data(function(n) {
-                return (n.dcg_expand_selected &&
-                        (!n.dcg_expanded || !n.dcg_expanded[n.dcg_expand_selected.dir])) ?
-                    [n] : [];
+            .data(function(n2) {
+                return spikes && n === n2 ?
+                    [n2] : [];
             });
         spike.exit().remove();
         spike
@@ -9703,8 +9708,8 @@ dc_graph.expand_collapse = function(options) {
           .selectAll('rect.spike')
             .data(function(n) {
                 var key = diagram.nodeKey.eval(n);
-                var dir = n.dcg_expand_selected.dir,
-                    N = n.dcg_expand_selected.n,
+                var dir = spikes.dir,
+                    N = spikes.n,
                     af = spike_directioner(diagram.layoutEngine().rankdir(), dir, N),
                     ret = Array(N);
                 for(var i = 0; i<N; ++i) {
@@ -9736,14 +9741,7 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function clear_stubs(diagram, node, edge) {
-        node.each(function(n) {
-            n.dcg_expand_selected = null;
-        });
-        draw_stubs(diagram, node, edge);
-    }
-
-    function collapsible(diagram, edge, dir, key) {
-        return view_degree(diagram, edge, dir, key) === 1;
+        draw_stubs(diagram, node, edge, null, null);
     }
 
     function zonedir(diagram, event, dirs, n) {
@@ -9798,23 +9796,13 @@ dc_graph.expand_collapse = function(options) {
                 dir: dir,
                 n: Math.max(0, degree - view_degree(diagram, edge, dir, nk)) // be tolerant of inconsistencies
             };
+            draw_stubs(diagram, node, edge, n, spikes);
             var collapse_nodes_set = {}, collapse_edges_set = {};
-            node.each(function(n2) {
-                n2.dcg_expand_selected = n2 === n ? spikes : null;
-                if(n2 === n && n.dcg_expanded && n.dcg_expanded[dir])
-                    edge.each(function(e) {
-                        var other;
-                        if(['both', 'out'].includes(dir) && diagram.edgeSource.eval(e) === diagram.nodeKey.eval(n))
-                            other = diagram.edgeTarget.eval(e);
-                        if(['both', 'in'].includes(dir) && diagram.edgeTarget.eval(e) === diagram.nodeKey.eval(n))
-                            other = diagram.edgeSource.eval(e);
-                        if(other && collapsible(diagram, edge, 'both', other)) {
-                            collapse_nodes_set[other] = true;
-                            collapse_edges_set[diagram.edgeKey.eval(e)] = true;
-                        }
-                    });
-            });
-            draw_stubs(diagram, node, edge);
+            if(_expanded[dir][nk] && options.collapsibles) {
+                var clps = options.collapsibles(nk, dir);
+                collapse_nodes_set = clps.nodes;
+                collapse_edges_set = clps.edges;
+            }
             collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
         });
     }
@@ -9823,7 +9811,6 @@ dc_graph.expand_collapse = function(options) {
         function mousemove(n) {
             console.log('collapse mousemove');
             var dir = zonedir(diagram, d3.event, options.dirs, n);
-            var nk = diagram.nodeKey.eval(n);
             _overNode = n;
             _overDir = dir;
             if(options.hide && detect_key(options.hideKey))
@@ -9831,39 +9818,15 @@ dc_graph.expand_collapse = function(options) {
             else
                 highlight_collapse(diagram, n, node, edge, dir);
         }
-
         function click(n) {
-            var event = d3.event;
-            console.log(event.type);
-            function action() {
-                if(options.hide && detect_key(options.hideKey))
-                    options.hide(diagram.nodeKey.eval(n));
-                else {
-                    var dir = zonedir(diagram, event, options.dirs, n);
-                    n.dcg_expanded = n.dcg_expanded || {};
-                    if(!n.dcg_expanded[dir]) {
-                        options.expand(diagram.nodeKey.eval(n), dir, event.type === 'dblclick');
-                        n.dcg_expanded[dir] = true;
-                    }
-                    else {
-                        options.collapse(diagram.nodeKey.eval(n), collapsible.bind(null, diagram, edge, 'both'), dir);
-                        n.dcg_expanded[dir] = false;
-                    }
-                    draw_stubs(diagram, node, edge);
-                    n.dcg_dblclk_timeout = null;
-                }
+            var nk = diagram.nodeKey.eval(n);
+            if(options.hide && detect_key(options.hideKey))
+                options.hide(nk);
+            else {
+                clear_stubs(diagram, node, edge);
+                var dir = zonedir(diagram, d3.event, options.dirs, n);
+                expand(dir, nk, !_expanded[dir][nk]);
             }
-            return action();
-            // distinguish click and double click - kind of fishy but seems to work
-            // basically, wait to see if a click becomes a dblclick - but it's even worse
-            // because you'll receive a second click before the dblclick on most browsers
-            if(n.dcg_dblclk_timeout) {
-                window.clearTimeout(n.dcg_dblclk_timeout);
-                if(event.type === 'dblclick')
-                    action();
-                n.dcg_dblclk_timeout = null;
-            }
-            else n.dcg_dblclk_timeout = window.setTimeout(action, 200);
         }
 
         node
@@ -9902,7 +9865,17 @@ dc_graph.expand_collapse = function(options) {
         clear_stubs(diagram, node, edge);
     }
 
-    return dc_graph.behavior('expand-collapse', {
+    function expand(dir, nk, whether) {
+        var exec;
+        _expanded[dir][nk] = whether;
+        expanded_highlight_group.highlight(_expanded.both, {});
+        if(whether)
+            options.expand(nk, dir);
+        else
+            options.collapse(nk, dir);
+    }
+
+    var _behavior = dc_graph.behavior('expand-collapse', {
         add_behavior: add_behavior,
         first: add_gradient_def,
         remove_behavior: remove_behavior,
@@ -9914,6 +9887,253 @@ dc_graph.expand_collapse = function(options) {
             }
         }
     });
+
+    _behavior.expand = expand;
+    return _behavior;
+};
+
+dc_graph.expand_collapse.shown_hidden = function(opts) {
+    var options = Object.assign({
+        nodeKey: function(n) { return n.key; }, // this one is raw rows, others are post-crossfilter-group
+        edgeKey: function(e) { return e.key; },
+        edgeSource: function(e) { return e.value.source; },
+        edgeTarget: function(e) { return e.value.target; }
+    }, opts);
+    var _shown = {}, _hidden = {};
+
+    // independent dimension on keys so that the diagram dimension will observe it
+    var _filter = options.nodeCrossfilter.dimension(options.nodeKey);
+    function apply_filter() {
+        _filter.filterFunction(function(nk) {
+            return _shown[nk];
+        });
+    }
+    function adjacent_edges(nk) {
+        return options.edgeGroup.all().filter(function(e) {
+            return options.edgeSource(e) === nk || options.edgeTarget(e) === nk;
+        });
+    }
+    function adjacent_nodes(nk) {
+        return adjacent_edges(nk).map(function(e) {
+            return options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
+        });
+    }
+    function adjacencies(nk) {
+        return adjacent_edges(nk).map(function(e) {
+            return options.edgeSource(e) === nk ? [e,options.edgeTarget(e)] : [e,options.edgeSource(e)];
+        });
+    }
+    function out_edges(nk) {
+        return options.edgeGroup.all().filter(function(e) {
+            return options.edgeSource(e) === nk;
+        });
+    }
+    function in_edges(nk) {
+        return options.edgeGroup.all().filter(function(e) {
+            return options.edgeTarget(e) === nk;
+        });
+    }
+    function is_collapsible(n1, n2) {
+        return options.edgeGroup.all().every(function(e2) {
+            var n3;
+            if(options.edgeSource(e2) === n2)
+                n3 = options.edgeTarget(e2);
+            else if(options.edgeTarget(e2) === n2)
+                n3 = options.edgeSource(e2);
+            return !n3 || n3 === n1 || !_shown[n3];
+        });
+    }
+    apply_filter();
+    var _strategy = {};
+    if(options.directional)
+        Object.assign(_strategy, {
+            get_degree: function(nk, dir) {
+                switch(dir) {
+                case 'out': return out_edges(nk).length;
+                case 'in': return in_edges(nk).length;
+                default: throw new Error('unknown direction ' + dir);
+                }
+            },
+            expand: function(nk, dir) {
+                _shown[nk] = true;
+                switch(dir) {
+                case 'out':
+                    out_edges(nk).forEach(function(e) {
+                        if(!_hidden[options.edgeTarget(e)])
+                            _shown[options.edgeTarget(e)] = true;
+                    });
+                    break;
+                case 'in':
+                    in_edges(nk).forEach(function(e) {
+                        if(!_hidden[options.edgeSource(e)])
+                            _shown[options.edgeSource(e)] = true;
+                    });
+                    break;
+                default: throw new Error('unknown direction ' + dir);
+                }
+                apply_filter();
+                dc.redrawAll();
+            },
+            collapsibles: function(nk, dir) {
+                var nodes = {}, edges = {};
+                (dir === 'out' ? out_edges(nk) : in_edges(nk)).forEach(function(e) {
+                    var n2 = dir === 'out' ? options.edgeTarget(e) : options.edgeSource(e);
+                    if(is_collapsible(nk, n2)) {
+                        nodes[n2] = true;
+                        adjacent_edges(n2).forEach(function(e) {
+                            edges[options.edgeKey(e)] = true;
+                        });
+                    }
+                });
+                return {nodes: nodes, edges: edges};
+            },
+            collapse: function(nk, dir) {
+                Object.keys(this.collapsibles(nk, dir).nodes).forEach(function(nk) {
+                    _shown[nk] = false;
+                });
+                apply_filter();
+                dc.redrawAll();
+            },
+            hide: function(nk) {
+                _hidden[nk] = true;
+                _shown[nk] = false;
+                apply_filter();
+                dc.redrawAll();
+            },
+            dirs: ['out', 'in']
+        });
+    else
+        Object.assign(_strategy, {
+            get_degree: function(nk) {
+                return adjacent_edges(nk).length;
+            },
+            expand: function(nk) {
+                _shown[nk] = true;
+                adjacent_nodes(nk).forEach(function(nk) {
+                    if(!_hidden[nk])
+                        _shown[nk] = true;
+                });
+                apply_filter();
+                dc.redrawAll();
+            },
+            collapsibles: function(nk, dir) {
+                var nodes = {}, edges = {};
+                adjacencies(nk).forEach(function(adj) {
+                    var e = adj[0], n2 = adj[1];
+                    if(is_collapsible(nk, n2)) {
+                        nodes[n2] = true;
+                        edges[options.edgeKey(e)] = true;
+                    }
+                });
+                return {nodes: nodes, edges: edges};
+            },
+            collapse: function(nk, dir) {
+                Object.keys(_strategy.collapsibles(nk, dir).nodes).forEach(function(nk) {
+                    _shown[nk] = false;
+                });
+                apply_filter();
+                dc.redrawAll();
+            },
+            hide: function(nk) {
+                _hidden[nk] = true;
+                _shown[nk] = false;
+                apply_filter();
+                dc.redrawAll();
+            }
+        });
+    return _strategy;
+};
+
+dc_graph.expand_collapse.expanded_hidden = function(opts) {
+    var options = Object.assign({
+        nodeKey: function(n) { return n.key; },
+        edgeKey: function(e) { return e.key; },
+        edgeSource: function(e) { return e.value.source; },
+        edgeTarget: function(e) { return e.value.target; }
+    }, opts);
+    var _expanded = {}, _hidden = {};
+
+    // independent dimension on keys so that the diagram dimension will observe it
+    var _filter = options.nodeCrossfilter.dimension(options.nodeKey);
+
+    function get_shown(expanded) {
+        return Object.keys(expanded).reduce(function(p, nk) {
+            p[nk] = true;
+            adjacent_nodes(nk).forEach(function(nk2) {
+                if(!_hidden[nk2])
+                    p[nk2] = true;
+            });
+            return p;
+        }, {});
+    }
+    function apply_filter() {
+        var _shown = get_shown(_expanded);
+        _filter.filterFunction(function(nk) {
+            return _shown[nk];
+        });
+    }
+    function adjacent_edges(nk) {
+        return options.edgeGroup.all().filter(function(e) {
+            return options.edgeSource(e) === nk || options.edgeTarget(e) === nk;
+        });
+    }
+    // function out_edges(nk) {
+    //     return options.edgeGroup.all().filter(function(e) {
+    //         return options.edgeSource(e) === nk;
+    //     });
+    // }
+    // function in_edges(nk) {
+    //     return options.edgeGroup.all().filter(function(e) {
+    //         return options.edgeTarget(e) === nk;
+    //     });
+    // }
+    function adjacent_nodes(nk) {
+        return adjacent_edges(nk).map(function(e) {
+            return options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
+        });
+    }
+
+    apply_filter();
+    var _strategy = {
+        get_degree: function(nk) {
+            return adjacent_edges(nk).length;
+        },
+        expand: function(nk) {
+            _expanded[nk] = true;
+            apply_filter();
+            dc.redrawAll();
+        },
+        collapsibles: function(nk, dir) {
+            var whatif = Object.assign({}, _expanded);
+            delete whatif[nk];
+            var shown = get_shown(_expanded), would = get_shown(whatif);
+            var going = Object.keys(shown)
+                .filter(function(nk2) { return !would[nk2]; })
+                .reduce(function(p, v) {
+                    p[v] = true;
+                    return p;
+                }, {});
+            return {
+                nodes: going,
+                edges: options.edgeGroup.all().filter(function(e) {
+                    return going[options.edgeSource(e)] || going[options.edgeTarget(e)];
+                }).reduce(function(p, e) {
+                    p[options.edgeKey(e)] = true;
+                    return p;
+                }, {})
+            };
+        },
+        collapse: function(nk, collapsible) {
+            delete _expanded[nk];
+            apply_filter();
+            dc.redrawAll();
+        },
+        hide: function(nk) {
+            _hidden[nk] = true;
+            this.collapse(nk); // in case
+        }
+    };
+    return _strategy;
 };
 
 dc_graph.draw_graphs = function(options) {
