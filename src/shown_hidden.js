@@ -140,7 +140,7 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 return {nodes: nodes, edges: edges};
             },
             collapse: function(nk, dir) {
-                Object.keys(this.collapsibles(nk, dir).nodes).forEach(function(nk) {
+                Object.keys(_strategy.collapsibles(nk, dir).nodes).forEach(function(nk) {
                     _shown[nk] = false;
                 });
                 apply_filter();
