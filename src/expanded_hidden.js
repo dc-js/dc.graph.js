@@ -1,6 +1,7 @@
 dc_graph.expand_collapse.expanded_hidden = function(opts) {
     var options = Object.assign({
         nodeKey: function(n) { return n.key; },
+        edgeKey: function(e) { return e.key; },
         edgeSource: function(e) { return e.value.source; },
         edgeTarget: function(e) { return e.value.target; }
     }, opts);
@@ -60,13 +61,20 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             var whatif = Object.assign({}, _expanded);
             delete whatif[nk];
             var shown = get_shown(_expanded), would = get_shown(whatif);
-            var going = Object.keys(shown).filter(function(nk2) { return !would[nk2]; });
-            return {
-                nodes: going.reduce(function(p, v) {
+            var going = Object.keys(shown)
+                .filter(function(nk2) { return !would[nk2]; })
+                .reduce(function(p, v) {
                     p[v] = true;
                     return p;
-                }, {}),
-                edges: {}
+                }, {});
+            return {
+                nodes: going,
+                edges: options.edgeGroup.all().filter(function(e) {
+                    return going[options.edgeSource(e)] || going[options.edgeTarget(e)];
+                }).reduce(function(p, e) {
+                    p[options.edgeKey(e)] = true;
+                    return p;
+                }, {})
             };
         },
         collapse: function(nk, collapsible) {
