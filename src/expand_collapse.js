@@ -244,7 +244,7 @@ dc_graph.expand_collapse = function(options) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             _overNode = n;
             _overDir = dir;
-            if(options.hide && detect_key(options.hideKey))
+            if(options.hideNode && detect_key(options.hideKey))
                 highlight_hiding(diagram, n, edge);
             else if(_overNode.orig.value.value.URL && detect_key(options.linkKey)) {
                 diagram.selectAllNodes()
@@ -268,8 +268,8 @@ dc_graph.expand_collapse = function(options) {
         }
         function click_node(n) {
             var nk = diagram.nodeKey.eval(n);
-            if(options.hide && detect_key(options.hideKey))
-                options.hide(nk);
+            if(options.hideNode && detect_key(options.hideKey))
+                options.hideNode(nk);
             else if(detect_key(options.linkKey)) {
                 if(n.orig.value.value.URL)
                     window.open(n.orig.value.value.URL, 'dcgraphlink');

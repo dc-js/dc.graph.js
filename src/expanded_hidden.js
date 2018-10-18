@@ -5,24 +5,24 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         edgeSource: function(e) { return e.value.source; },
         edgeTarget: function(e) { return e.value.target; }
     }, opts);
-    var _expanded = {}, _hidden = {};
+    var _nodeExpanded = {}, _nodeHidden = {};
 
     // independent dimension on keys so that the diagram dimension will observe it
-    var _filter = options.nodeCrossfilter.dimension(options.nodeKey);
+    var _nodeDim = options.nodeCrossfilter.dimension(options.nodeKey);
 
     function get_shown(expanded) {
         return Object.keys(expanded).reduce(function(p, nk) {
             p[nk] = true;
             adjacent_nodes(nk).forEach(function(nk2) {
-                if(!_hidden[nk2])
+                if(!_nodeHidden[nk2])
                     p[nk2] = true;
             });
             return p;
         }, {});
     }
     function apply_filter() {
-        var _shown = get_shown(_expanded);
-        _filter.filterFunction(function(nk) {
+        var _shown = get_shown(_nodeExpanded);
+        _nodeDim.filterFunction(function(nk) {
             return _shown[nk];
         });
     }
@@ -56,14 +56,14 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             return adjacent_edges(nk);
         },
         expand: function(nk) {
-            _expanded[nk] = true;
+            _nodeExpanded[nk] = true;
             apply_filter();
             dc.redrawAll();
         },
         collapsibles: function(nk, dir) {
-            var whatif = Object.assign({}, _expanded);
+            var whatif = Object.assign({}, _nodeExpanded);
             delete whatif[nk];
-            var shown = get_shown(_expanded), would = get_shown(whatif);
+            var shown = get_shown(_nodeExpanded), would = get_shown(whatif);
             var going = Object.keys(shown)
                 .filter(function(nk2) { return !would[nk2]; })
                 .reduce(function(p, v) {
@@ -81,12 +81,12 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             };
         },
         collapse: function(nk, collapsible) {
-            delete _expanded[nk];
+            delete _nodeExpanded[nk];
             apply_filter();
             dc.redrawAll();
         },
-        hide: function(nk) {
-            _hidden[nk] = true;
+        hideNode: function(nk) {
+            _nodeHidden[nk] = true;
             this.collapse(nk); // in case
         }
     };
