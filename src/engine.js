@@ -47,7 +47,13 @@ dc_graph._engines = [
         instantiate: function() {
             return dc_graph.cola_layout();
         }
-    }
+    },
+    {
+        name: 'nested',
+        instantiate: function() {
+            return dc_graph.nested_layout();
+        }
+    },
 ];
 dc_graph._default_engine = 'cola';
 

@@ -19,12 +19,17 @@ dc_graph.d3v4_force_layout = function(id) {
     function init(options) {
         _options = options;
 
+        var collideFunc = d3v4.forceCollide(_options.collisionRadius);
+        if(_options.radiusAccessor) {
+          collideFunc = d3v4.forceCollide().radius(_options.radiusAccessor);
+        }
+
         _simulation = d3v4.forceSimulation()
             .force('link', d3v4.forceLink())
             .force('center', d3v4.forceCenter(options.width / 2, options.height / 2))
             .force('gravityX', d3v4.forceX(options.width / 2).strength(_options.gravityStrength))
             .force('gravityY', d3v4.forceY(options.height / 2).strength(_options.gravityStrength))
-            .force('collision', d3v4.forceCollide(_options.collisionRadius))
+            .force('collision', collideFunc)
             .force('charge', d3v4.forceManyBody())
             .stop();
     }
@@ -51,6 +56,8 @@ dc_graph.d3v4_force_layout = function(id) {
             v1.width = v.width;
             v1.height = v.height;
             v1.id = v.dcg_nodeKey;
+            v1.r = v.r;
+            v1.attrs = v.attrs;
             if(v.dcg_nodeFixed) {
                 v1.fx = v.dcg_nodeFixed.x;
                 v1.fy = v.dcg_nodeFixed.y;
