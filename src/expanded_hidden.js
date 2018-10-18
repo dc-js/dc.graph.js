@@ -52,6 +52,9 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         get_degree: function(nk) {
             return adjacent_edges(nk).length;
         },
+        get_edges: function(nk) {
+            return adjacent_edges(nk);
+        },
         expand: function(nk) {
             _expanded[nk] = true;
             apply_filter();
