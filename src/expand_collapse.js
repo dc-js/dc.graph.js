@@ -239,9 +239,8 @@ dc_graph.expand_collapse = function(options) {
         });
     }
 
-    function add_behavior(diagram, node, edge) {
-        function mousemove(n) {
-            console.log('collapse mousemove');
+    function add_behavior(diagram, node, edge, ehover) {
+        function enter_node(n) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             _overNode = n;
             _overDir = dir;
@@ -257,7 +256,17 @@ dc_graph.expand_collapse = function(options) {
             else
                 highlight_collapse(diagram, n, node, edge, dir);
         }
-        function click(n) {
+        function leave_node(n)  {
+            diagram.selectAllNodes()
+                .filter(function(n) {
+                    return n === _overNode;
+                }).attr('cursor', null);
+            _overNode = null;
+            clear_stubs(diagram, node, edge);
+            collapse_highlight_group.highlight({}, {});
+            hide_highlight_group.highlight({}, {});
+        }
+        function click_node(n) {
             var nk = diagram.nodeKey.eval(n);
             if(options.hide && detect_key(options.hideKey))
                 options.hide(nk);
@@ -272,21 +281,10 @@ dc_graph.expand_collapse = function(options) {
         }
 
         node
-            .on('mouseover.expand-collapse', mousemove)
-            .on('mousemove.expand-collapse', mousemove)
-            .on('mouseout.expand-collapse', function(n) {
-                console.log('collapse mouseout');
-                diagram.selectAllNodes()
-                    .filter(function(n) {
-                        return n === _overNode;
-                    }).attr('cursor', null);
-                _overNode = null;
-                clear_stubs(diagram, node, edge);
-                collapse_highlight_group.highlight({}, {});
-                hide_highlight_group.highlight({}, {});
-            })
-            .on('click', click)
-            .on('dblclick', click);
+            .on('mouseenter.expand-collapse', enter_node)
+            .on('mouseout.expand-collapse', leave_node)
+            .on('click', click_node)
+            .on('dblclick', click_node);
 
         _keyboard
             .on('keydown.expand-collapse', function() {
