@@ -53,7 +53,7 @@ dc_graph.load_graph(options.file, function(error, data) {
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
-        .nodeLabel(function(n) { return n.value.value.label.split('\n'); })
+        .nodeLabel(function(n) { return n.value.value.label.split(/\n|\\n/); })
         .nodeShape(function(n) { return n.value.value.shape; })
         .nodeFill(function(n) { return n.value.value.fillcolor || 'white'; })
         .edgeLabel(function(e) { return e.value.label; })
