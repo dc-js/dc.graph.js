@@ -5,13 +5,13 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
         edgeSource: function(e) { return e.value.source; },
         edgeTarget: function(e) { return e.value.target; }
     }, opts);
-    var _shown = {}, _hidden = {};
+    var _nodeShown = {}, _nodeHidden = {};
 
     // independent dimension on keys so that the diagram dimension will observe it
     var _filter = options.nodeCrossfilter.dimension(options.nodeKey);
     function apply_filter() {
         _filter.filterFunction(function(nk) {
-            return _shown[nk];
+            return _nodeShown[nk];
         });
     }
     function adjacent_edges(nk) {
@@ -46,7 +46,7 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 n3 = options.edgeTarget(e2);
             else if(options.edgeTarget(e2) === n2)
                 n3 = options.edgeSource(e2);
-            return !n3 || n3 === n1 || !_shown[n3];
+            return !n3 || n3 === n1 || !_nodeShown[n3];
         });
     }
     apply_filter();
@@ -61,18 +61,18 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 }
             },
             expand: function(nk, dir) {
-                _shown[nk] = true;
+                _nodeShown[nk] = true;
                 switch(dir) {
                 case 'out':
                     out_edges(nk).forEach(function(e) {
-                        if(!_hidden[options.edgeTarget(e)])
-                            _shown[options.edgeTarget(e)] = true;
+                        if(!_nodeHidden[options.edgeTarget(e)])
+                            _nodeShown[options.edgeTarget(e)] = true;
                     });
                     break;
                 case 'in':
                     in_edges(nk).forEach(function(e) {
-                        if(!_hidden[options.edgeSource(e)])
-                            _shown[options.edgeSource(e)] = true;
+                        if(!_nodeHidden[options.edgeSource(e)])
+                            _nodeShown[options.edgeSource(e)] = true;
                     });
                     break;
                 default: throw new Error('unknown direction ' + dir);
@@ -95,14 +95,14 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
             },
             collapse: function(nk, dir) {
                 Object.keys(this.collapsibles(nk, dir).nodes).forEach(function(nk) {
-                    _shown[nk] = false;
+                    _nodeShown[nk] = false;
                 });
                 apply_filter();
                 dc.redrawAll();
             },
-            hide: function(nk) {
-                _hidden[nk] = true;
-                _shown[nk] = false;
+            hideNode: function(nk) {
+                _nodeHidden[nk] = true;
+                _nodeShown[nk] = false;
                 apply_filter();
                 dc.redrawAll();
             },
@@ -114,10 +114,10 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 return adjacent_edges(nk).length;
             },
             expand: function(nk) {
-                _shown[nk] = true;
+                _nodeShown[nk] = true;
                 adjacent_nodes(nk).forEach(function(nk) {
-                    if(!_hidden[nk])
-                        _shown[nk] = true;
+                    if(!_nodeHidden[nk])
+                        _nodeShown[nk] = true;
                 });
                 apply_filter();
                 dc.redrawAll();
@@ -135,14 +135,14 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
             },
             collapse: function(nk, dir) {
                 Object.keys(_strategy.collapsibles(nk, dir).nodes).forEach(function(nk) {
-                    _shown[nk] = false;
+                    _nodeShown[nk] = false;
                 });
                 apply_filter();
                 dc.redrawAll();
             },
-            hide: function(nk) {
-                _hidden[nk] = true;
-                _shown[nk] = false;
+            hideNode: function(nk) {
+                _nodeHidden[nk] = true;
+                _nodeShown[nk] = false;
                 apply_filter();
                 dc.redrawAll();
             }

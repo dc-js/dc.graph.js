@@ -2317,7 +2317,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             if(e.pos.old) {
                 if(e.pos.old.path.bezDegree !== e.pos.new.path.bezDegree ||
                    e.pos.old.path.points.length !== e.pos.new.path.points.length) {
-                    console.log('old', e.pos.old.path.points.length, 'new', e.pos.new.path.points.length);
+                    //console.log('old', e.pos.old.path.points.length, 'new', e.pos.new.path.points.length);
                     if(is_one_segment(e.pos.old.path)) {
                         e.pos.new.path.points = as_bezier3(e.pos.new.path);
                         e.pos.old.path.points = split_bezier_n(as_bezier3(e.pos.old.path),
