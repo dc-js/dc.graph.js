@@ -49,6 +49,12 @@ dc_graph.troubleshoot = function() {
         var radiiboundary = _debugLayer.selectAll('path.radiiboundary').data(radiibounds);
         draw_corners(radiiboundary, 'radiiboundary');
 
+        var heads = edge.data().map(function(e) {
+            return {pos: e.pos.new.path.points[e.pos.new.path.points.length-1], orient: e.pos.new.orienthead};
+        });
+        var headOrients = _debugLayer.selectAll('line.heads').data(heads);
+        draw_arrow_orient(headOrients, 'heads');
+
         var domain = _debugLayer.selectAll('rect.domain').data([0]);
         domain.enter().append('rect');
         var xd = _behavior.parent().x().domain(), yd = _behavior.parent().y().domain();
@@ -93,6 +99,19 @@ dc_graph.troubleshoot = function() {
             fill: 'none'
         });
     }
+    function draw_arrow_orient(binding, classname) {
+        binding.exit().remove();
+        binding.enter().append('line').attr('class', classname);
+        binding.attr({
+            x1: function(d) { return d.pos.x; },
+            y1: function(d) { return d.pos.y; },
+            x2: function(d) { return d.pos.x - Math.cos(+d.orient.replace('rad',''))*_behavior.arrowLength(); },
+            y2: function(d) { return d.pos.y - Math.sin(+d.orient.replace('rad',''))*_behavior.arrowLength(); },
+            stroke: _behavior.arrowColor(),
+            'stroke-width': _behavior.arrowStrokeWidth(),
+            opacity: _behavior.arrowOpacity() !== null ? _behavior.arrowOpacity() : _behavior.opacity()
+        });
+    }
 
     function remove_behavior(diagram, node, edge, ehover) {
         if(_debugLayer)
@@ -115,6 +134,11 @@ dc_graph.troubleshoot = function() {
     _behavior.boundsWidth = property(10);
     _behavior.boundsHeight = property(10);
     _behavior.boundsColor = property('green');
+
+    _behavior.arrowOpacity = property(null);
+    _behavior.arrowStrokeWidth = property(3);
+    _behavior.arrowColor = property('orangered');
+    _behavior.arrowLength = property(100);
 
     _behavior.domainOpacity = property(0.6);
     _behavior.domainColor = property('darkorange');
