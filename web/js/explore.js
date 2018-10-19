@@ -113,7 +113,7 @@ dc_graph.load_graph(options.file, function(error, data) {
     diagram.child('highlight-expanded', dc_graph.highlight_things(
         {
             nodeStrokeWidth: 5,
-            nodeStroke: 'steelblue',
+            nodeStroke: 'steelblue'
         },
         {},
         'expanded-highlight', 'expanded-highlight-group', 147
