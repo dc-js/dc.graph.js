@@ -44,8 +44,8 @@ dc_graph.load_graph(options.file, function(error, data) {
 
     var engine = dc_graph.spawn_engine(options.layout, qs, options.worker != 'false');
     diagram
-        .width(null)
-        .height(null)
+        .width('auto')
+        .height('auto')
         .layoutEngine(engine)
         .timeLimit(+options.timeLimit)
         .transitionDuration(+options.transition)
@@ -150,11 +150,5 @@ dc_graph.load_graph(options.file, function(error, data) {
         expand_collapse.expand('both', this.value, true);
         dc.redrawAll();
     });
-    // respond to browser resize (not necessary if width/height is static)
-    // $(window).resize(function() {
-    //     diagram
-    //         .width($(window).width())
-    //         .height($(window).height());
-    // });
 });
 
