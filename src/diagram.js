@@ -2793,12 +2793,20 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
             .attr('stroke-width', '0px');
     });
-    _diagram.defineArrow('dot', 7, 7, 0, 0, function(marker) {
+    _diagram.defineArrow('dot', 10, 10, 0, 0, function(marker) {
         marker.append('svg:circle')
             .attr('r', 5)
             .attr('cx', 5)
             .attr('cy', 0)
             .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('odot', 10, 10, 10, 0, function(marker) {
+        marker.append('svg:circle')
+            .attr('r', 4)
+            .attr('cx', 5)
+            .attr('cy', 0)
+            .attr('fill', 'white')
+            .attr('stroke-width', '1px');
     });
 
     function globalTransform(pos, scale, animate) {
