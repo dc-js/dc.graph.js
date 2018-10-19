@@ -106,6 +106,11 @@ dc_graph.load_graph(options.file, function(error, data) {
         }
     }
 
+    if(options.debug) {
+        var troubleshoot = dc_graph.troubleshoot();
+        diagram.child('troubleshoot', troubleshoot);
+    }
+
     var expand_collapse = dc_graph.expand_collapse(ec_strategy);
     if(options.start)
         expand_collapse.expand('both', options.start, true);
