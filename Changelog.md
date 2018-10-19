@@ -1,3 +1,7 @@
+## 0.6.3
+* edge hiding in `expand_collapse` - uses a dimension on the edge crossfilter
+* if the edges that would appear are colored, the spikes are too
+
 ## 0.6.2
 * `linkKey` hack in `expand_collapse` - definitely not the right way to do this but we can call it motivation for breaking up into smaller, more cooperative modes
 
