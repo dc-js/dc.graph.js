@@ -112,8 +112,6 @@ dc_graph.load_graph(options.file, function(error, data) {
     }
 
     var expand_collapse = dc_graph.expand_collapse(ec_strategy);
-    if(options.start)
-        expand_collapse.expand('both', options.start, true);
     diagram.child('expand-collapse', expand_collapse);
     diagram.child('highlight-expanded', dc_graph.highlight_things(
         {
@@ -155,5 +153,7 @@ dc_graph.load_graph(options.file, function(error, data) {
         expand_collapse.expand('both', this.value, true);
         dc.redrawAll();
     });
+    if(options.start)
+        expand_collapse.expand('both', options.start, true);
 });
 
