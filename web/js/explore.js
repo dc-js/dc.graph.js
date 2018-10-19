@@ -36,9 +36,10 @@ dc_graph.load_graph(options.file, function(error, data) {
         targetattr = graph_data.targetattr,
         nodekeyattr = graph_data.nodekeyattr;
 
-    var edge_flat = dc_graph.flat_group.make(edges, function(d) {
+    var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
-    }),
+    };
+    var edge_flat = dc_graph.flat_group.make(edges, edge_key),
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
     var engine = dc_graph.spawn_engine(options.layout, qs, options.worker != 'false');
@@ -84,8 +85,10 @@ dc_graph.load_graph(options.file, function(error, data) {
     var expand_strategy = options.expand_strategy || 'expanded_hidden';
     var ec_strategy = dc_graph.expand_collapse[expand_strategy]({
         nodeCrossfilter: node_flat.crossfilter,
+        edgeCrossfilter: edge_flat.crossfilter,
         edgeGroup: edge_flat.group,
         nodeKey: n => n.name,
+        edgeRawKey: e => edge_key(e),
         edgeSource: e => e.value[sourceattr],
         edgeTarget: e => e.value[targetattr],
         directional: qs.directional

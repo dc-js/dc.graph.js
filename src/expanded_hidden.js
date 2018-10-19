@@ -5,10 +5,11 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         edgeSource: function(e) { return e.value.source; },
         edgeTarget: function(e) { return e.value.target; }
     }, opts);
-    var _nodeExpanded = {}, _nodeHidden = {};
+    var _nodeExpanded = {}, _nodeHidden = {}, _edgeHidden = {};
 
     // independent dimension on keys so that the diagram dimension will observe it
-    var _nodeDim = options.nodeCrossfilter.dimension(options.nodeKey);
+    var _nodeDim = options.nodeCrossfilter.dimension(options.nodeKey),
+        _edgeDim = options.edgeCrossfilter && options.edgeCrossfilter.dimension(options.edgeRawKey);
 
     function get_shown(expanded) {
         return Object.keys(expanded).reduce(function(p, nk) {
@@ -24,6 +25,9 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         var _shown = get_shown(_nodeExpanded);
         _nodeDim.filterFunction(function(nk) {
             return _shown[nk];
+        });
+        _edgeDim && _edgeDim.filterFunction(function(ek) {
+            return !_edgeHidden[ek];
         });
     }
     function adjacent_edges(nk) {
@@ -88,6 +92,13 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         hideNode: function(nk) {
             _nodeHidden[nk] = true;
             this.collapse(nk); // in case
+        },
+        hideEdge: function(ek) {
+            if(!options.edgeCrossfilter)
+                console.warn('expanded_hidden needs edgeCrossfilter to hide edges');
+            _edgeHidden[ek] = true;
+            apply_filter();
+            dc.redrawAll();
         }
     };
     return _strategy;

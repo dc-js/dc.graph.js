@@ -7,7 +7,7 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
-    var _keyboard, _overNode, _overDir, _expanded = {};
+    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {};
     var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
     var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
@@ -190,7 +190,7 @@ dc_graph.expand_collapse = function(options) {
         return false;
     }
 
-    function highlight_hiding(diagram, n, edge) {
+    function highlight_hiding_node(diagram, n, edge) {
         var nk = diagram.nodeKey.eval(n);
         var hide_nodes_set = {}, hide_edges_set = {};
         hide_nodes_set[nk] = true;
@@ -199,6 +199,11 @@ dc_graph.expand_collapse = function(options) {
                 hide_edges_set[diagram.edgeKey.eval(e)] = true;
         });
         hide_highlight_group.highlight(hide_nodes_set, hide_edges_set);
+    }
+    function highlight_hiding_edge(diagram, e) {
+        var hide_edges_set = {};
+        hide_edges_set[diagram.edgeKey.eval(e)] = true;
+        hide_highlight_group.highlight({}, hide_edges_set);
     }
 
     function highlight_collapse(diagram, n, node, edge, dir) {
@@ -245,7 +250,7 @@ dc_graph.expand_collapse = function(options) {
             _overNode = n;
             _overDir = dir;
             if(options.hideNode && detect_key(options.hideKey))
-                highlight_hiding(diagram, n, edge);
+                highlight_hiding_node(diagram, n, edge);
             else if(_overNode.orig.value.value.URL && detect_key(options.linkKey)) {
                 diagram.selectAllNodes()
                     .filter(function(n) {
@@ -280,16 +285,38 @@ dc_graph.expand_collapse = function(options) {
             }
         }
 
+        function enter_edge(e) {
+            _overEdge = e;
+            if(options.hideEdge && detect_key(options.hideKey))
+                highlight_hiding_edge(diagram, e);
+        }
+        function leave_edge(e) {
+            _overEdge = null;
+            hide_highlight_group.highlight({}, {});
+        }
+        function click_edge(e) {
+            if(options.hideEdge && detect_key(options.hideKey))
+                options.hideEdge(diagram.edgeKey.eval(e));
+        }
+
         node
             .on('mouseenter.expand-collapse', enter_node)
             .on('mouseout.expand-collapse', leave_node)
             .on('click', click_node)
             .on('dblclick', click_node);
 
+        ehover
+            .on('mouseenter.expand-collapse', enter_edge)
+            .on('mouseout.expand-collapse', leave_edge)
+            .on('click.expand-collapse', click_edge);
+
         _keyboard
             .on('keydown.expand-collapse', function() {
-                if(d3.event.key === options.hideKey && _overNode) {
-                    highlight_hiding(diagram, _overNode, edge);
+                if(d3.event.key === options.hideKey && (_overNode || _overEdge)) {
+                    if(_overNode)
+                        highlight_hiding_node(diagram, _overNode, edge);
+                    if(_overEdge)
+                        highlight_hiding_edge(diagram, _overEdge);
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
                 }
@@ -306,14 +333,16 @@ dc_graph.expand_collapse = function(options) {
                 }
             })
             .on('keyup.expand_collapse', function() {
-                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey) && _overNode) {
+                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey) && (_overNode || _overEdge)) {
                     hide_highlight_group.highlight({}, {});
-                    highlight_collapse(diagram, _overNode, node, edge, _overDir);
-                    if(_overNode && _overNode.orig.value.value.URL) {
-                        diagram.selectAllNodes()
-                            .filter(function(n) {
-                                return n === _overNode;
-                            }).attr('cursor', null);
+                    if(_overNode) {
+                        highlight_collapse(diagram, _overNode, node, edge, _overDir);
+                        if(_overNode.orig.value.value.URL) {
+                            diagram.selectAllNodes()
+                                .filter(function(n) {
+                                    return n === _overNode;
+                                }).attr('cursor', null);
+                        }
                     }
                 }
             });
