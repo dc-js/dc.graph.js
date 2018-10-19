@@ -137,7 +137,7 @@ dc_graph.expand_collapse = function(options) {
                 width: 25,
                 height: 3,
                 fill: function(s) {
-                    var color = s.edge ? s.edge.value.color : 'black';
+                    var color = s.edge ? diagram.edgeStroke()(s.edge) : 'black';
                     add_gradient_def(color, diagram);
                     return 'url(#spike-gradient-' + color + ')';
                 },
