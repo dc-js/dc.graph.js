@@ -2758,12 +2758,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         return selEnter;
     };
 
+    var unknown_styles = {};
     function edgeArrow(e, kind, name) {
         var id = _diagram.arrowId(e, kind),
             markerEnter = _diagram.addOrRemoveDef(id, !!name, 'svg:marker');
 
         if(name) {
-            markerEnter
+            if(!_arrows[name]) {
+                if(!unknown_styles[name])
+                    console.warn('arrow style "' + name + '" unknown; ignoring');
+                unknown_styles[name] = true;
+                name = null;
+            }
+            else markerEnter
                 .attr('viewBox', '0 -5 10 10')
                 .attr('refX', _arrows[name].refX)
                 .attr('refY', _arrows[name].refY)
