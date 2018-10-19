@@ -2783,6 +2783,23 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return name ? id : null;
     }
+    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+        marker.append('svg:path')
+            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+            .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
+        marker.append('svg:path')
+            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+            .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('dot', 7, 7, 0, 0, function(marker) {
+        marker.append('svg:circle')
+            .attr('r', 5)
+            .attr('cx', 5)
+            .attr('cy', 0)
+            .attr('stroke-width', '0px');
+    });
 
     function globalTransform(pos, scale, animate) {
         _translate = pos;
@@ -2971,24 +2988,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.y().invert(clientCoord[1])
         ];
     };
-
-    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('dot', 7, 7, 0, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 5)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('stroke-width', '0px');
-    });
 
     /**
      * Set the root SVGElement to either be any valid [d3 single
