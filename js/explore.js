@@ -1,14 +1,32 @@
-var qs = querystring.parse();
-
-var options = Object.assign({
+var options = {
+    file: null,
     tickSize: 1,
     transition: 1000,
     stage: 'insmod',
     linkLength: 30,
     layout: 'cola',
     timeLimit: 10000,
-    start: null
-}, qs);
+    start: null,
+    directional: false,
+    expanded: {
+        default: [],
+        subscribe: function(k) {
+            var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
+            expanded_highlight_group.on('highlight.sync-url', function(nodeset, edgeset) {
+                k(Object.keys(nodeset).filter(function(nk) {
+                    return nodeset[nk];
+                }));
+            });
+        },
+        dont_exert_after_subscribe: true,
+        exert: function(val, diagram) {
+            expand_collapse
+                .expandNodes(val);
+        }
+    }
+};
+var diagram = dc_graph.diagram('#graph');
+var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
 
 function display_error(message) {
     d3.select('#message')
@@ -16,17 +34,16 @@ function display_error(message) {
         .html('<h1>' + message + '</h1>');
     throw new Error(message);
 }
-if(!options.file)
+if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL!');
 
-
-var diagram = dc_graph.diagram('#graph');
-dc_graph.load_graph(options.file, function(error, data) {
+    var expand_collapse;
+dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     if(error) {
         var message = '';
         if(error.status)
             message = 'Error ' + error.status + ': ';
-        message += 'Could not load file ' + options.file;
+        message += 'Could not load file ' + sync_url.vals.file;
         display_error(message);
     }
     var graph_data = dc_graph.munge_graph(data),
@@ -42,14 +59,14 @@ dc_graph.load_graph(options.file, function(error, data) {
     var edge_flat = dc_graph.flat_group.make(edges, edge_key),
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
-    var engine = dc_graph.spawn_engine(options.layout, qs, options.worker != 'false');
+    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
     diagram
-        .width(null)
-        .height(null)
+        .width('auto')
+        .height('auto')
         .layoutEngine(engine)
-        .timeLimit(+options.timeLimit)
-        .transitionDuration(+options.transition)
-        .stageTransitions(options.stage)
+        .timeLimit(sync_url.vals.timeLimit)
+        .transitionDuration(sync_url.vals.transition)
+        .stageTransitions(sync_url.vals.stage)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
@@ -70,8 +87,8 @@ dc_graph.load_graph(options.file, function(error, data) {
 //        .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
     if(engine.layoutAlgorithm() === 'cola') {
         engine
-            .tickSize(+options.tickSize);
-        engine.baseLength(+options.linkLength);
+            .tickSize(sync_url.vals.tickSize);
+        engine.baseLength(sync_url.vals.linkLength);
     }
 
     var nodelist = diagram.nodeGroup().all().map(function(n) {
@@ -82,7 +99,7 @@ dc_graph.load_graph(options.file, function(error, data) {
     });
     nodelist.sort((a,b) => a.label < b.label ? -1 : 1);
 
-    var expand_strategy = options.expand_strategy || 'expanded_hidden';
+    var expand_strategy = sync_url.vals.expand_strategy || 'expanded_hidden';
     var ec_strategy = dc_graph.expand_collapse[expand_strategy]({
         nodeCrossfilter: node_flat.crossfilter,
         edgeCrossfilter: edge_flat.crossfilter,
@@ -91,29 +108,32 @@ dc_graph.load_graph(options.file, function(error, data) {
         edgeRawKey: e => edge_key(e),
         edgeSource: e => e.value[sourceattr],
         edgeTarget: e => e.value[targetattr],
-        directional: qs.directional
+        directional: sync_url.vals.directional
     });
 
-    if(options.start) {
-        if(!nodes.find(n => n.name === options.start)) {
-            let found = nodes.find(n => n.value.label.includes(options.start));
+    if(sync_url.vals.start) {
+        if(!nodes.find(n => n.name === sync_url.vals.start)) {
+            let found = nodes.find(n => n.value.label.includes(sync_url.vals.start));
             if(found)
-                options.start = found.name;
+                sync_url.vals.start = found.name;
             else {
-                console.log("didn't find '" + options.start + "' by nodeKey or nodeLabel");
-                options.start = null;
+                console.log("didn't find '" + sync_url.vals.start + "' by nodeKey or nodeLabel");
+                sync_url.vals.start = null;
             }
         }
     }
 
-    var expand_collapse = dc_graph.expand_collapse(ec_strategy);
-    if(options.start)
-        expand_collapse.expand('both', options.start, true);
+    if(sync_url.vals.debug) {
+        var troubleshoot = dc_graph.troubleshoot();
+        diagram.child('troubleshoot', troubleshoot);
+    }
+
+    expand_collapse = dc_graph.expand_collapse(ec_strategy);
     diagram.child('expand-collapse', expand_collapse);
     diagram.child('highlight-expanded', dc_graph.highlight_things(
         {
             nodeStrokeWidth: 5,
-            nodeStroke: 'steelblue',
+            nodeStroke: 'steelblue'
         },
         {},
         'expanded-highlight', 'expanded-highlight-group', 147
@@ -143,18 +163,15 @@ dc_graph.load_graph(options.file, function(error, data) {
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')
         .attr('value', function(d) { return d.value; })
-        .attr('selected', function(d) { return d.value === options.start ? 'selected' : null; })
+        .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
         .text(function(d) { return d.label; });
 
     starter.on('change', function() {
         expand_collapse.expand('both', this.value, true);
         dc.redrawAll();
     });
-    // respond to browser resize (not necessary if width/height is static)
-    // $(window).resize(function() {
-    //     diagram
-    //         .width($(window).width())
-    //         .height($(window).height());
-    // });
+    if(sync_url.vals.start)
+        expand_collapse.expand('both', sync_url.vals.start, true);
+    else sync_url.exert();
 });
 
