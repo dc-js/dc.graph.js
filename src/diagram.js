@@ -1405,15 +1405,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         else return _diagram.startLayout();
     };
 
-    _diagram.startLayout = function () {
-        var nodes = _diagram.nodeGroup().all();
-        var edges = _diagram.edgeGroup().all();
-        var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
-        if(_running) {
-            throw new Error('dc_graph.diagram.redraw already running!');
-        }
-        _running = true;
-
+    function detect_size_change() {
         var oldWidth = _lastWidth, oldHeight = _lastHeight;
         var newWidth = _diagram.width(), newHeight = _diagram.height();
         if(oldWidth !== newWidth || oldHeight !== newHeight) {
@@ -1430,6 +1422,21 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .x(_diagram.x()).y(_diagram.y())
                 .translate(translate).scale(scale);
         }
+    }
+
+    _diagram.startLayout = function () {
+        var nodes = _diagram.nodeGroup().all();
+        var edges = _diagram.edgeGroup().all();
+        var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
+        if(_running) {
+            throw new Error('dc_graph.diagram.redraw already running!');
+        }
+        _running = true;
+
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
+        else
+            diagram.resizeSvg();
 
         if(_diagram.initLayoutOnRedraw())
             initLayout();
@@ -2031,10 +2038,14 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function calculate_arrowhead_orientation(points, end) {
         var spos = points[0], tpos = points[points.length-1];
-        var partial = bezier_point(points, end === 'tail' ? 0.25 : 0.75);
-        return (end === 'head' ?
-                Math.atan2(tpos.y - partial.y, tpos.x - partial.x) :
-                Math.atan2(spos.y - partial.y, spos.x - partial.x)) + 'rad';
+        var ref = end === 'head' ? tpos : spos;
+        var partial, t = 0.5;
+        do {
+            t = (end === 'head' ? 1 + t : t) / 2;
+            partial = bezier_point(points, t);
+        }
+        while(Math.hypot(ref.x - partial.x, ref.y - partial.y) > 25);
+        return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
     }
 
     function enforce_path_direction(path, spos, tpos) {
@@ -2668,10 +2679,11 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.resetSvg = function () {
-        if(_svg) {
-            _svg.remove();
-            _svg = null;
-        }
+        // we might be re-initialized in a div, in which case
+        // we already have an <svg> element to delete
+        var svg = _svg || _diagram.select('svg');
+        svg.remove();
+        _svg = null;
         return generateSvg();
     };
 
@@ -2754,12 +2766,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         return selEnter;
     };
 
+    var unknown_styles = {};
     function edgeArrow(e, kind, name) {
         var id = _diagram.arrowId(e, kind),
             markerEnter = _diagram.addOrRemoveDef(id, !!name, 'svg:marker');
 
         if(name) {
-            markerEnter
+            if(!_arrows[name]) {
+                if(!unknown_styles[name])
+                    console.warn('arrow style "' + name + '" unknown; ignoring');
+                unknown_styles[name] = true;
+                name = null;
+            }
+            else markerEnter
                 .attr('viewBox', '0 -5 10 10')
                 .attr('refX', _arrows[name].refX)
                 .attr('refY', _arrows[name].refY)
@@ -2772,6 +2791,31 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return name ? id : null;
     }
+    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+        marker.append('svg:path')
+            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+            .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
+        marker.append('svg:path')
+            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+            .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('dot', 10, 10, 0, 0, function(marker) {
+        marker.append('svg:circle')
+            .attr('r', 5)
+            .attr('cx', 5)
+            .attr('cy', 0)
+            .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('odot', 10, 10, 10, 0, function(marker) {
+        marker.append('svg:circle')
+            .attr('r', 4)
+            .attr('cx', 5)
+            .attr('cy', 0)
+            .attr('fill', 'white')
+            .attr('stroke-width', '1px');
+    });
 
     function globalTransform(pos, scale, animate) {
         _translate = pos;
@@ -2859,6 +2903,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     }
     function doZoom() {
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
         var translate, scale = d3.event.scale;
         if(_diagram.restrictPan())
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));
@@ -2960,24 +3006,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.y().invert(clientCoord[1])
         ];
     };
-
-    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('dot', 7, 7, 0, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 5)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('stroke-width', '0px');
-    });
 
     /**
      * Set the root SVGElement to either be any valid [d3 single

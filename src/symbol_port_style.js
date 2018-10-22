@@ -412,10 +412,10 @@ dc_graph.symbol_port_style.content.d3symbol = function() {
             return function(symbols) {
                 symbols.attr('d', function(p) {
                     var sym = symf(p), r = rf(p);
-                    return d3.svg.symbol()
+                    return sym ? d3.svg.symbol()
                         .type(sym)
                         .size(r*r)
-                    ();
+                    () : '';
                 });
                 symbols.attr('transform', function(p) {
                     switch(symf(p)) {

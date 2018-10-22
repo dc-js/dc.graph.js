@@ -64,6 +64,14 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             apply_filter();
             dc.redrawAll();
         },
+        expandedNodes: function(_) {
+            if(!arguments.length)
+                return _nodeExpanded;
+            _nodeExpanded = _;
+            apply_filter();
+            dc.redrawAll();
+            return this;
+        },
         collapsibles: function(nk, dir) {
             var whatif = Object.assign({}, _nodeExpanded);
             delete whatif[nk];

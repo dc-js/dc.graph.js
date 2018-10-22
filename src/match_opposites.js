@@ -65,7 +65,7 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
             source.port.edges.forEach(function(e) {
                 e.deleting = 1 - options.multiplier * closest[0].distance / Math.hypot(cpos.x - spos.x, cpos.y - spos.y);
             });
-            diagram.refresh();
+            diagram.requestRefresh(0);
         },
         changeDragTarget: function(source, target) {
             var valid = target && is_valid(source.port, target.port);
@@ -79,7 +79,7 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                 reset_deletables(null, _validTargets.filter(function(p) {
                     return p !== target.port;
                 }));
-                diagram.refresh();
+                diagram.requestRefresh(0);
             }
             return valid;
         },

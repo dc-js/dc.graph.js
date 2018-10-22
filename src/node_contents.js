@@ -67,6 +67,9 @@ dc_graph.text_contents = function() {
         },
         selectContent: function(container) {
             return container.select('text.node-label');
+        },
+        selectText: function(container) {
+            return selectContent(container);
         }
     };
     return _contents;
@@ -114,6 +117,9 @@ dc_graph.with_icon_contents = function(contents, width, height) {
         },
         selectContent: function(container) {
             return container.select('g.with-icon');
+        },
+        selectText: function(container) {
+            return this.selectContent(container).select('text.node-label');
         }
     };
     return _contents;

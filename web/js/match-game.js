@@ -93,7 +93,7 @@ var layout = dc_graph.flexbox_layout()
 
 var diagram = dc_graph.diagram('#graph')
         .layoutEngine(layout)
-        .width(null).height(null)
+        .width('auto').height('auto')
         .transitionDuration(250)
         .layoutUnchanged(true)
         .mouseZoomable(false)
@@ -187,8 +187,6 @@ dc.renderAll();
 $('#resize').resizable({
     resize: function(event, ui) {
         diagram
-            .width(null)
-            .height(null)
             .redraw();
     }
 });
