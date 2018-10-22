@@ -8,6 +8,8 @@ var options = {
     timeLimit: 10000,
     start: null,
     directional: false,
+    edgeCat: null,
+    edgeExpn: null,
     expanded: {
         default: [],
         subscribe: function(k) {
@@ -89,6 +91,46 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         engine
             .tickSize(sync_url.vals.tickSize);
         engine.baseLength(sync_url.vals.linkLength);
+    }
+
+    if(sync_url.vals.edgeCat) {
+        var eregex = sync_url.vals.edgeExpn ? new RegExp(sync_url.vals.edgeExpn) : null;
+        var edge_cat = eregex ?
+                function(e) {
+                    var match = eregex.exec(e[sync_url.vals.edgeCat]);
+                    return match ? match[0] : '';
+                } :
+            function(e) {
+                return e[sync_url.vals.edgeCat] || '';
+            };
+        var edge_dim = edge_flat.crossfilter.dimension(edge_cat),
+            edge_group = edge_dim.group().reduce(
+                function(p, v) {
+                    return v.color;
+                },
+                function(p, v) {
+                    return p;
+                },
+                function() {
+                    return null;
+                }
+            );
+        var edge_legend = dc_graph.legend('edge-legend')
+                .x(20).y(20)
+                .itemWidth(75).itemHeight(20)
+                .type(dc_graph.legend.edge_legend())
+                .exemplars(edge_group.all().map(function(kv) {
+                    return {name: kv.key, key: kv.key, value: {color: kv.value} };
+                }));
+        edge_legend.counter(function(wnodes, wedges, wports) {
+            var counts = {};
+            wedges.forEach(function(e) {
+                counts[edge_cat(e.value)] = (counts[edge_cat(e.value)] || 0) + 1;
+            });
+            return counts;
+        });
+        edge_legend.dimension(edge_dim);
+        diagram.child('edge-legend', edge_legend);
     }
 
     var nodelist = diagram.nodeGroup().all().map(function(n) {
