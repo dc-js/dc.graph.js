@@ -23,7 +23,12 @@ var options = {
             expand_collapse
                 .expandNodes(val);
         }
-    }
+    },
+    hiddenNodes: {
+        default: [],
+        dont_exert_after_subscribe: true,
+        exert: function(val, diagram) {
+            expand_collapse.on('hideNode'
 };
 var diagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);

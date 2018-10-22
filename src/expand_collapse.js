@@ -8,6 +8,7 @@ dc_graph.expand_collapse = function(options) {
         };
     }
     var _keyboard, _overNode, _overDir, _overEdge, _expanded = {};
+    var _dispatch = d3.dispatch('hideNode', 'hideEdge');
     var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
     var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
@@ -273,8 +274,10 @@ dc_graph.expand_collapse = function(options) {
         }
         function click_node(n) {
             var nk = diagram.nodeKey.eval(n);
-            if(options.hideNode && detect_key(options.hideKey))
+            if(options.hideNode && detect_key(options.hideKey)) {
+                _dispatch.on('hideNode', nk);
                 options.hideNode(nk);
+            }
             else if(detect_key(options.linkKey)) {
                 if(n.orig.value.value.URL)
                     window.open(n.orig.value.value.URL, 'dcgraphlink');
@@ -295,8 +298,11 @@ dc_graph.expand_collapse = function(options) {
             hide_highlight_group.highlight({}, {});
         }
         function click_edge(e) {
-            if(options.hideEdge && detect_key(options.hideKey))
-                options.hideEdge(diagram.edgeKey.eval(e));
+            if(options.hideEdge && detect_key(options.hideKey)) {
+                var ek = diagram.edgeKey.eval(e);
+                _dispatch.on('hideEdge', ek);
+                options.hideEdge(ek);
+            }
         }
 
         node
@@ -397,6 +403,10 @@ dc_graph.expand_collapse = function(options) {
         }
     });
 
+    _behavior.on = function(event, f) {
+        _dispatch.on(event, f);
+        return _behavior;
+    };
     _behavior.expand = expand;
     _behavior.expandNodes = expandNodes;
     _behavior.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
