@@ -121,7 +121,7 @@ dc_graph.legend = function(legend_namespace) {
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
         var items = !_legend.omitEmpty() || !_counts ? _items : _items.filter(function(i) {
-            return _counts[i.orig.key];
+            return _included.length && !_included.includes(i.orig.key) || _counts[i.orig.key];
         });
         var item = legend.selectAll(_legend.type().itemSelector())
                 .data(items, function(n) { return n.name; });
