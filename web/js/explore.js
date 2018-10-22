@@ -119,6 +119,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
                 .x(20).y(20)
                 .itemWidth(75).itemHeight(20)
                 .type(dc_graph.legend.edge_legend())
+                .omitEmpty(true)
                 .exemplars(edge_group.all().map(function(kv) {
                     return {name: kv.key, key: kv.key, value: {color: kv.value} };
                 }));
