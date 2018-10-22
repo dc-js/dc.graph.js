@@ -2676,10 +2676,11 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.resetSvg = function () {
-        if(_svg) {
-            _svg.remove();
-            _svg = null;
-        }
+        // we might be re-initialized in a div, in which case
+        // we already have an <svg> element to delete
+        var svg = _svg || _diagram.select('svg');
+        svg.remove();
+        _svg = null;
         return generateSvg();
     };
 
