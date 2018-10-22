@@ -719,6 +719,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.edgeLabel = _diagram.edgeLabelAccessor = property(function(e) {
         return _diagram.edgeKey()(e);
     });
+    // vertical spacing when there are multiple lines of edge label
+    _diagram.edgeLabelSpacing = property(12);
 
     /**
      * Set or get the function which will be used to retrieve the name of the arrowhead to use
@@ -1642,24 +1644,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         edgeHover.exit().remove();
 
-        var edgeLabels = _edgeLayer.selectAll('.edge-label')
-                .data(wedges, _diagram.edgeKey.eval);
+        var edgeLabels = _edgeLayer.selectAll('g.edge-label-wrapper')
+            .data(wedges, _diagram.edgeKey.eval);
         var edgeLabelsEnter = edgeLabels.enter()
-              .append('text')
-                .attr('id', function(e) {
-                    return _diagram.edgeId(e) + '-label';
-                })
-                .attr('visibility', 'hidden')
-                .attr({'class':'edge-label',
-                       'text-anchor': 'middle',
-                       dy:-2})
-              .append('textPath')
-                .attr('startOffset', '50%')
-                .attr('xlink:href', function(e) {
-                    var id = _diagram.textpathId(e);
-                    // angular on firefox needs absolute paths for fragments
-                    return window.location.href.split('#')[0] + '#' + id;
-                });
+            .append('g')
+              .attr('class', 'edge-label-wrapper')
+              .attr('visibility', 'hidden')
+              .attr('id', function(e) {
+                  return _diagram.edgeId(e) + '-label';
+              });
         var textPaths = _defs.selectAll('path.edge-label-path')
                 .data(wedges, _diagram.textpathId);
         var textPathsEnter = textPaths.enter()
@@ -1979,7 +1972,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _refresh(node, edge);
 
         edgeHover = edgeHover || _diagram.selectAllEdges('.edge-hover');
-        edgeLabels = edgeLabels || _diagram.selectAllEdges('.edge-label');
+        edgeLabels = edgeLabels || _diagram.selectAllEdges('.edge-label-wrapper');
         textPaths = textPaths || _diagram.selectAllDefs('path.edge-label-path');
         var nullSel = d3.select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel, false);
@@ -2402,12 +2395,37 @@ dc_graph.diagram = function (parent, chartGroup) {
                             edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
                     return render_edge_path(when)(e);
                 });
-        edgeLabels
-          .selectAll('textPath')
-            .text(function(e){
-                return _diagram.edgeLabel.eval(e);
+        var elabels = edgeLabels
+            .selectAll('text').data(function(e) {
+                var labels = _diagram.edgeLabel.eval(e);
+                if(!labels)
+                    return [];
+                else if(typeof labels === 'string')
+                    return [labels];
+                else return labels;
+            });
+        elabels.enter()
+          .append('text')
+            .attr({
+                'class': 'edge-label',
+                'text-anchor': 'middle',
+                dy: function(_, i) {
+                    return i * _diagram.edgeLabelSpacing.eval(this.parentNode) -2;
+                }
             })
-            .attr('opacity', _diagram.edgeOpacity.eval);
+          .append('textPath')
+            .attr('startOffset', '50%')
+            .attr('xlink:href', function(e) {
+                var id = _diagram.textpathId(d3.select(this.parentNode.parentNode).datum());
+                // angular on firefox needs absolute paths for fragments
+                return window.location.href.split('#')[0] + '#' + id;
+            });
+        elabels
+          .select('textPath')
+            .text(function(t) { return t; })
+            .attr('opacity', function() {
+                _diagram.edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
+            });
         textPathsEnter
             .attr('d', render_edge_label_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
         var textTrans = textPaths.transition()

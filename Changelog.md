@@ -1,3 +1,6 @@
+## 0.6.6
+* multi-line edge labels. each edge's labels are in a `g.edge-label-wrapper`; the first line is positioned as before; the next lines have `dy` set to the line number times the new `edgeLabelSpacing` (default 12) minus 2.
+
 ## 0.6.5
 * fix typo
 
