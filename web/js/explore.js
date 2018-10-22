@@ -74,7 +74,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         .nodeLabel(function(n) { return n.value.value.label.split(/\n|\\n/); })
         .nodeShape(function(n) { return n.value.value.shape; })
         .nodeFill(function(n) { return n.value.value.fillcolor || 'white'; })
-        .edgeLabel(function(e) { return e.value.label.split(/\n|\\n/); })
+        .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
         .edgeArrowhead('vee')
         .edgeStroke(function(e) { return e.value.color || 'black'; })
         .edgeStrokeDashArray(function(e) {
