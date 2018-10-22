@@ -13,7 +13,9 @@ var options = {
         subscribe: function(k) {
             var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
             expanded_highlight_group.on('highlight.sync-url', function(nodeset, edgeset) {
-                k(Object.keys(nodeset));
+                k(Object.keys(nodeset).filter(function(nk) {
+                    return nodeset[nk];
+                }));
             });
         },
         dont_exert_after_subscribe: true,
