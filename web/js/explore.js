@@ -37,7 +37,7 @@ function display_error(message) {
 if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL!');
 
-    var expand_collapse;
+var expand_collapse;
 dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     if(error) {
         var message = '';
