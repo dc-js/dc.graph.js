@@ -1433,7 +1433,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _running = true;
 
-        detect_size_change();
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
+        else
+            diagram.resizeSvg();
 
         if(_diagram.initLayoutOnRedraw())
             initLayout();
