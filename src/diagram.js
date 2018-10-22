@@ -2903,7 +2903,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     }
     function doZoom() {
-        detect_size_change();
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
         var translate, scale = d3.event.scale;
         if(_diagram.restrictPan())
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));

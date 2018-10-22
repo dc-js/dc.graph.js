@@ -1,3 +1,15 @@
+## 0.6.4
+* in width/height auto mode, check for size change on zoom event (as well as redraw)
+* do not detect size changes unless in width/height auto mode. restore old `resizeSvg` behavior to redraw, so that `.width(null).height(null)` still works (although not recommended
+* don't hide the icon when editing node text
+* `symbol_port_style` obey null symbol and don't display a little dot
+* remove any previous `<svg>` when rendering, since client may not have cleaned up old one
+* `match_opposites` displays deletion hints instantly - they were not reliable before hints because refreshes don't interrupt each other any more
+* stop drag-drop-composition demo sidebar from getting too big
+* explore demo keeps expanded nodes in URL, to facillitate sharing (but not hidden nodes/edges yet)
+* arrow head/tail orientation is much closer (looks for point 25px out along edge)
+* first draft of odot arrowhead/tail.. needs work though
+
 ## 0.6.3
 * edge hiding in `expand_collapse` - uses a dimension on the edge crossfilter
 * if the edges that would appear are colored, the spikes are too
@@ -20,6 +32,7 @@
 * node moving and edge drawing cancel if they see movement with no buttons down, since button up messages can get lost
 * more refinements to port-to-port edge drawing hints: positive feedback when a match is made, ports crossed out when invalid
 * ability to read the `portPosition` from the `symbol_port_style`
+* `refresh` no longer interrupts animated transitions from `redraw` or earlier refreshes
 * `requestRefresh` to ask for refresh after code is finished executing - esp when there are multiple things that might be redrawing, but is this is a good practice anyway.
 * box and rect are synonyms for rectangle shape
 * opacity of edge is applied correctly to edge labels

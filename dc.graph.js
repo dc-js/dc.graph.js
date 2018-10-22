@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.3
+ *  dc.graph 0.6.4
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.3
+ * @version 0.6.4
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.3',
+    version: '0.6.4',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1308,6 +1308,9 @@ dc_graph.text_contents = function() {
         },
         selectContent: function(container) {
             return container.select('text.node-label');
+        },
+        selectText: function(container) {
+            return selectContent(container);
         }
     };
     return _contents;
@@ -1355,6 +1358,9 @@ dc_graph.with_icon_contents = function(contents, width, height) {
         },
         selectContent: function(container) {
             return container.select('g.with-icon');
+        },
+        selectText: function(container) {
+            return this.selectContent(container).select('text.node-label');
         }
     };
     return _contents;
@@ -2768,15 +2774,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         else return _diagram.startLayout();
     };
 
-    _diagram.startLayout = function () {
-        var nodes = _diagram.nodeGroup().all();
-        var edges = _diagram.edgeGroup().all();
-        var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
-        if(_running) {
-            throw new Error('dc_graph.diagram.redraw already running!');
-        }
-        _running = true;
-
+    function detect_size_change() {
         var oldWidth = _lastWidth, oldHeight = _lastHeight;
         var newWidth = _diagram.width(), newHeight = _diagram.height();
         if(oldWidth !== newWidth || oldHeight !== newHeight) {
@@ -2793,6 +2791,21 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .x(_diagram.x()).y(_diagram.y())
                 .translate(translate).scale(scale);
         }
+    }
+
+    _diagram.startLayout = function () {
+        var nodes = _diagram.nodeGroup().all();
+        var edges = _diagram.edgeGroup().all();
+        var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
+        if(_running) {
+            throw new Error('dc_graph.diagram.redraw already running!');
+        }
+        _running = true;
+
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
+        else
+            diagram.resizeSvg();
 
         if(_diagram.initLayoutOnRedraw())
             initLayout();
@@ -3394,10 +3407,14 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function calculate_arrowhead_orientation(points, end) {
         var spos = points[0], tpos = points[points.length-1];
-        var partial = bezier_point(points, end === 'tail' ? 0.25 : 0.75);
-        return (end === 'head' ?
-                Math.atan2(tpos.y - partial.y, tpos.x - partial.x) :
-                Math.atan2(spos.y - partial.y, spos.x - partial.x)) + 'rad';
+        var ref = end === 'head' ? tpos : spos;
+        var partial, t = 0.5;
+        do {
+            t = (end === 'head' ? 1 + t : t) / 2;
+            partial = bezier_point(points, t);
+        }
+        while(Math.hypot(ref.x - partial.x, ref.y - partial.y) > 25);
+        return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
     }
 
     function enforce_path_direction(path, spos, tpos) {
@@ -4031,10 +4048,11 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.resetSvg = function () {
-        if(_svg) {
-            _svg.remove();
-            _svg = null;
-        }
+        // we might be re-initialized in a div, in which case
+        // we already have an <svg> element to delete
+        var svg = _svg || _diagram.select('svg');
+        svg.remove();
+        _svg = null;
         return generateSvg();
     };
 
@@ -4117,12 +4135,19 @@ dc_graph.diagram = function (parent, chartGroup) {
         return selEnter;
     };
 
+    var unknown_styles = {};
     function edgeArrow(e, kind, name) {
         var id = _diagram.arrowId(e, kind),
             markerEnter = _diagram.addOrRemoveDef(id, !!name, 'svg:marker');
 
         if(name) {
-            markerEnter
+            if(!_arrows[name]) {
+                if(!unknown_styles[name])
+                    console.warn('arrow style "' + name + '" unknown; ignoring');
+                unknown_styles[name] = true;
+                name = null;
+            }
+            else markerEnter
                 .attr('viewBox', '0 -5 10 10')
                 .attr('refX', _arrows[name].refX)
                 .attr('refY', _arrows[name].refY)
@@ -4135,6 +4160,31 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return name ? id : null;
     }
+    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
+        marker.append('svg:path')
+            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+            .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
+        marker.append('svg:path')
+            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+            .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('dot', 10, 10, 0, 0, function(marker) {
+        marker.append('svg:circle')
+            .attr('r', 5)
+            .attr('cx', 5)
+            .attr('cy', 0)
+            .attr('stroke-width', '0px');
+    });
+    _diagram.defineArrow('odot', 10, 10, 10, 0, function(marker) {
+        marker.append('svg:circle')
+            .attr('r', 4)
+            .attr('cx', 5)
+            .attr('cy', 0)
+            .attr('fill', 'white')
+            .attr('stroke-width', '1px');
+    });
 
     function globalTransform(pos, scale, animate) {
         _translate = pos;
@@ -4222,6 +4272,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     }
     function doZoom() {
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
         var translate, scale = d3.event.scale;
         if(_diagram.restrictPan())
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));
@@ -4323,24 +4375,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.y().invert(clientCoord[1])
         ];
     };
-
-    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('dot', 7, 7, 0, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 5)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('stroke-width', '0px');
-    });
 
     /**
      * Set the root SVGElement to either be any valid [d3 single
@@ -6361,6 +6395,12 @@ dc_graph.troubleshoot = function() {
         var radiiboundary = _debugLayer.selectAll('path.radiiboundary').data(radiibounds);
         draw_corners(radiiboundary, 'radiiboundary');
 
+        var heads = edge.data().map(function(e) {
+            return {pos: e.pos.new.path.points[e.pos.new.path.points.length-1], orient: e.pos.new.orienthead};
+        });
+        var headOrients = _debugLayer.selectAll('line.heads').data(heads);
+        draw_arrow_orient(headOrients, 'heads');
+
         var domain = _debugLayer.selectAll('rect.domain').data([0]);
         domain.enter().append('rect');
         var xd = _behavior.parent().x().domain(), yd = _behavior.parent().y().domain();
@@ -6405,6 +6445,19 @@ dc_graph.troubleshoot = function() {
             fill: 'none'
         });
     }
+    function draw_arrow_orient(binding, classname) {
+        binding.exit().remove();
+        binding.enter().append('line').attr('class', classname);
+        binding.attr({
+            x1: function(d) { return d.pos.x; },
+            y1: function(d) { return d.pos.y; },
+            x2: function(d) { return d.pos.x - Math.cos(+d.orient.replace('rad',''))*_behavior.arrowLength(); },
+            y2: function(d) { return d.pos.y - Math.sin(+d.orient.replace('rad',''))*_behavior.arrowLength(); },
+            stroke: _behavior.arrowColor(),
+            'stroke-width': _behavior.arrowStrokeWidth(),
+            opacity: _behavior.arrowOpacity() !== null ? _behavior.arrowOpacity() : _behavior.opacity()
+        });
+    }
 
     function remove_behavior(diagram, node, edge, ehover) {
         if(_debugLayer)
@@ -6427,6 +6480,11 @@ dc_graph.troubleshoot = function() {
     _behavior.boundsWidth = property(10);
     _behavior.boundsHeight = property(10);
     _behavior.boundsColor = property('green');
+
+    _behavior.arrowOpacity = property(null);
+    _behavior.arrowStrokeWidth = property(3);
+    _behavior.arrowColor = property('orangered');
+    _behavior.arrowLength = property(100);
 
     _behavior.domainOpacity = property(0.6);
     _behavior.domainColor = property('darkorange');
@@ -8707,7 +8765,7 @@ dc_graph.label_nodes = function(options) {
     };
     options.hide_thing_label = function(node, whether) {
         var contents = _behavior.parent().content(_behavior.parent().nodeContent.eval(node.datum()));
-        contents.selectContent(node).attr('visibility', whether ? 'hidden' : 'visible');
+        contents.selectText(node).attr('visibility', whether ? 'hidden' : 'visible');
     };
     options.thing_box = function(node, eventOptions) {
         var contents = _behavior.parent().content(_behavior.parent().nodeContent.eval(node.datum())),
@@ -9975,6 +10033,18 @@ dc_graph.expand_collapse = function(options) {
             options.collapse(nk, dir);
     }
 
+    function expandNodes(nks) {
+        var map = nks.reduce(function(p, v) {
+            p[v] = true;
+            return p;
+        }, {});
+        options.dirs.forEach(function(dir) {
+            _expanded[dir] = Object.assign({}, map);
+        });
+        expanded_highlight_group.highlight(map, {});
+        options.expandedNodes(map);
+    }
+
     var _behavior = dc_graph.behavior('expand-collapse', {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
@@ -9988,6 +10058,7 @@ dc_graph.expand_collapse = function(options) {
     });
 
     _behavior.expand = expand;
+    _behavior.expandNodes = expandNodes;
     _behavior.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
     return _behavior;
 };
@@ -10209,6 +10280,14 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             _nodeExpanded[nk] = true;
             apply_filter();
             dc.redrawAll();
+        },
+        expandedNodes: function(_) {
+            if(!arguments.length)
+                return _nodeExpanded;
+            _nodeExpanded = _;
+            apply_filter();
+            dc.redrawAll();
+            return this;
         },
         collapsibles: function(nk, dir) {
             var whatif = Object.assign({}, _nodeExpanded);
@@ -10817,7 +10896,7 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
             source.port.edges.forEach(function(e) {
                 e.deleting = 1 - options.multiplier * closest[0].distance / Math.hypot(cpos.x - spos.x, cpos.y - spos.y);
             });
-            diagram.refresh();
+            diagram.requestRefresh(0);
         },
         changeDragTarget: function(source, target) {
             var valid = target && is_valid(source.port, target.port);
@@ -10831,7 +10910,7 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                 reset_deletables(null, _validTargets.filter(function(p) {
                     return p !== target.port;
                 }));
-                diagram.refresh();
+                diagram.requestRefresh(0);
             }
             return valid;
         },
@@ -11366,10 +11445,10 @@ dc_graph.symbol_port_style.content.d3symbol = function() {
             return function(symbols) {
                 symbols.attr('d', function(p) {
                     var sym = symf(p), r = rf(p);
-                    return d3.svg.symbol()
+                    return sym ? d3.svg.symbol()
                         .type(sym)
                         .size(r*r)
-                    ();
+                    () : '';
                 });
                 symbols.attr('transform', function(p) {
                     switch(symf(p)) {
