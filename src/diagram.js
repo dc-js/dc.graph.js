@@ -1436,7 +1436,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(_width === 'auto' || _height === 'auto')
             detect_size_change();
         else
-            diagram.resizeSvg();
+            _diagram.resizeSvg();
 
         if(_diagram.initLayoutOnRedraw())
             initLayout();

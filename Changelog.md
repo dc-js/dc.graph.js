@@ -1,3 +1,6 @@
+## 0.6.5
+* fix typo
+
 ## 0.6.4
 * in width/height auto mode, check for size change on zoom event (as well as redraw)
 * do not detect size changes unless in width/height auto mode. restore old `resizeSvg` behavior to redraw, so that `.width(null).height(null)` still works (although not recommended
