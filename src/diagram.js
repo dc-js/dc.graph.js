@@ -1405,15 +1405,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         else return _diagram.startLayout();
     };
 
-    _diagram.startLayout = function () {
-        var nodes = _diagram.nodeGroup().all();
-        var edges = _diagram.edgeGroup().all();
-        var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
-        if(_running) {
-            throw new Error('dc_graph.diagram.redraw already running!');
-        }
-        _running = true;
-
+    function detect_size_change() {
         var oldWidth = _lastWidth, oldHeight = _lastHeight;
         var newWidth = _diagram.width(), newHeight = _diagram.height();
         if(oldWidth !== newWidth || oldHeight !== newHeight) {
@@ -1430,6 +1422,18 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .x(_diagram.x()).y(_diagram.y())
                 .translate(translate).scale(scale);
         }
+    }
+
+    _diagram.startLayout = function () {
+        var nodes = _diagram.nodeGroup().all();
+        var edges = _diagram.edgeGroup().all();
+        var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
+        if(_running) {
+            throw new Error('dc_graph.diagram.redraw already running!');
+        }
+        _running = true;
+
+        detect_size_change();
 
         if(_diagram.initLayoutOnRedraw())
             initLayout();
@@ -2895,6 +2899,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     }
     function doZoom() {
+        detect_size_change();
         var translate, scale = d3.event.scale;
         if(_diagram.restrictPan())
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));
