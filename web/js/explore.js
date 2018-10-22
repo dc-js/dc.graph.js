@@ -1,5 +1,3 @@
-var qs = querystring.parse();
-
 var options = {
     file: null,
     tickSize: 1,
@@ -8,7 +6,22 @@ var options = {
     linkLength: 30,
     layout: 'cola',
     timeLimit: 10000,
-    start: null
+    start: null,
+    directional: false,
+    expanded: {
+        default: [],
+        subscribe: function(k) {
+            var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
+            expanded_highlight_group.on('highlight.sync-url', function(nodeset, edgeset) {
+                k(Object.keys(nodeset));
+            });
+        },
+        dont_exert_after_subscribe: true,
+        exert: function(val, diagram) {
+            expand_collapse
+                .expandNodes(val);
+        }
+    }
 };
 var diagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
@@ -22,7 +35,7 @@ function display_error(message) {
 if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL!');
 
-
+    var expand_collapse;
 dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     if(error) {
         var message = '';
@@ -44,7 +57,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     var edge_flat = dc_graph.flat_group.make(edges, edge_key),
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
-    var engine = dc_graph.spawn_engine(sync_url.vals.layout, qs, sync_url.vals.worker != 'false');
+    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
     diagram
         .width('auto')
         .height('auto')
@@ -93,7 +106,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         edgeRawKey: e => edge_key(e),
         edgeSource: e => e.value[sourceattr],
         edgeTarget: e => e.value[targetattr],
-        directional: qs.directional
+        directional: sync_url.vals.directional
     });
 
     if(sync_url.vals.start) {
@@ -113,7 +126,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         diagram.child('troubleshoot', troubleshoot);
     }
 
-    var expand_collapse = dc_graph.expand_collapse(ec_strategy);
+    expand_collapse = dc_graph.expand_collapse(ec_strategy);
     diagram.child('expand-collapse', expand_collapse);
     diagram.child('highlight-expanded', dc_graph.highlight_things(
         {
@@ -157,5 +170,6 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     });
     if(sync_url.vals.start)
         expand_collapse.expand('both', sync_url.vals.start, true);
+    else sync_url.exert();
 });
 
