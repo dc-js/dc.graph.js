@@ -213,6 +213,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
 
     starter.on('change', function() {
         expand_collapse.expand('both', this.value, true);
+        diagram.autoZoom('once-noanim');
         dc.redrawAll();
     });
     if(sync_url.vals.start)
