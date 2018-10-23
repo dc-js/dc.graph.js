@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.5
+ *  dc.graph 0.6.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.5
+ * @version 0.6.6
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.5',
+    version: '0.6.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1583,27 +1583,26 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.modKeyZoom = _diagram.altKeyZoom = property(false);
 
     /**
-     * Set or get the fitting strategy for the canvas, which affects how the
-     * [viewBox](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox) and
-     * [preserveAspectRatio](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio)
-     * attributes get set. All options except `null` set the `viewBox` attribute.
+     * Set or get the fitting strategy for the canvas, which affects how the translate
+     * and scale get calculated when `autoZoom` is triggered.
      *
-     * These options set the `viewBox` and adjust the scale and translate to implement the margins.
-     * * `'default'` - uses the default behavior of `xMidYMid meet` (but with margins)
-     * * `'vertical'` - fits the canvas vertically (with vertical margins) and centers it
-     * horizontally. If the canvas is taller than the viewport, it will meet vertically and
-     * there will be blank areas to the left and right. If the canvas is wider than the
-     * viewport, it will be sliced.
-     * * `'horizontal'` - fitst the canvas horizontally (with horizontal margins) and centers
-     * it vertically. If the canvas is wider than the viewport, it will meet horizontally and
-     * there will be blank areas above and below. If the canvas is taller than the viewport, it
-     * will be sliced.
+     * * `'default'` - simulates the preserveAspectRatio behavior of `xMidYMid meet`, but
+     *   with margins - the content is stretched or squished in the more constrained
+     *   direction, and centered in the other direction
+     * * `'vertical'` - fits the canvas vertically (with vertical margins) and centers
+     *   it horizontally. If the canvas is taller than the viewport, it will meet
+     *   vertically and there will be blank areas to the left and right. If the canvas
+     *   is wider than the viewport, it will be sliced.
+     * * `'horizontal'` - fits the canvas horizontally (with horizontal margins) and
+     *   centers it vertically. If the canvas is wider than the viewport, it will meet
+     *   horizontally and there will be blank areas above and below. If the canvas is
+     *   taller than the viewport, it will be sliced.
      *
      * Other options
-     * * `null` - no attempt is made to fit the canvas to the svg element, `viewBox` is unset.
-     * * another string - sets the `viewBox` and uses the string for `preserveAspectRatio`.
-     * * function - will be called with (viewport width, viewport height, canvas width, canvas
-     * height) and result will be used to set `preserveAspectRatio`.
+     * * `null` - no attempt is made to fit the content in the viewport
+     * * `'zoom'` - does not scale the content, but attempts to bring as much content
+     *   into view as possible, using using the same algorithm as `restrictPan`
+     * * `'align_{tlbrc}[2]'` - does not scale; aligns up to two sides or centers them
      * @method fitStrategy
      * @memberof dc_graph.diagram
      * @instance
@@ -2088,6 +2087,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.edgeLabel = _diagram.edgeLabelAccessor = property(function(e) {
         return _diagram.edgeKey()(e);
     });
+    // vertical spacing when there are multiple lines of edge label
+    _diagram.edgeLabelSpacing = property(12);
 
     /**
      * Set or get the function which will be used to retrieve the name of the arrowhead to use
@@ -3011,24 +3012,15 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         edgeHover.exit().remove();
 
-        var edgeLabels = _edgeLayer.selectAll('.edge-label')
-                .data(wedges, _diagram.edgeKey.eval);
+        var edgeLabels = _edgeLayer.selectAll('g.edge-label-wrapper')
+            .data(wedges, _diagram.edgeKey.eval);
         var edgeLabelsEnter = edgeLabels.enter()
-              .append('text')
-                .attr('id', function(e) {
-                    return _diagram.edgeId(e) + '-label';
-                })
-                .attr('visibility', 'hidden')
-                .attr({'class':'edge-label',
-                       'text-anchor': 'middle',
-                       dy:-2})
-              .append('textPath')
-                .attr('startOffset', '50%')
-                .attr('xlink:href', function(e) {
-                    var id = _diagram.textpathId(e);
-                    // angular on firefox needs absolute paths for fragments
-                    return window.location.href.split('#')[0] + '#' + id;
-                });
+            .append('g')
+              .attr('class', 'edge-label-wrapper')
+              .attr('visibility', 'hidden')
+              .attr('id', function(e) {
+                  return _diagram.edgeId(e) + '-label';
+              });
         var textPaths = _defs.selectAll('path.edge-label-path')
                 .data(wedges, _diagram.textpathId);
         var textPathsEnter = textPaths.enter()
@@ -3348,7 +3340,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _refresh(node, edge);
 
         edgeHover = edgeHover || _diagram.selectAllEdges('.edge-hover');
-        edgeLabels = edgeLabels || _diagram.selectAllEdges('.edge-label');
+        edgeLabels = edgeLabels || _diagram.selectAllEdges('.edge-label-wrapper');
         textPaths = textPaths || _diagram.selectAllDefs('path.edge-label-path');
         var nullSel = d3.select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, textPaths, nullSel, false);
@@ -3599,24 +3591,37 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var bounds = margined_bounds();
                 translate = _zoom.translate();
                 scale = _zoom.scale();
+                var vertalign = false, horzalign = false;
                 sides.forEach(function(s) {
                     switch(s) {
                     case 'l':
                         translate[0] = align_left(translate, bounds.left);
+                        horzalign = true;
                         break;
                     case 't':
                         translate[1] = align_top(translate, bounds.top);
+                        vertalign = true;
                         break;
                     case 'r':
                         translate[0] = align_right(translate, bounds.right);
+                        horzalign = true;
                         break;
                     case 'b':
                         translate[1] = align_bottom(translate, bounds.bottom);
+                        vertalign = true;
+                        break;
+                    case 'c': // handled below
                         break;
                     default:
-                        throw new Error("align_ expecting l t r or b, not '" + s + "'");
+                        throw new Error("align_ expecting l t r b or c, not '" + s + "'");
                     }
                 });
+                if(sides.includes('c')) {
+                    if(!horzalign)
+                        translate[0] = center_horizontally(translate, bounds);
+                    if(!vertalign)
+                        translate[1] = center_vertically(translate, bounds);
+                }
             }
             else if(fitS === 'zoom') {
                 scale = _zoom.scale();
@@ -3771,12 +3776,37 @@ dc_graph.diagram = function (parent, chartGroup) {
                             edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
                     return render_edge_path(when)(e);
                 });
-        edgeLabels
-          .selectAll('textPath')
-            .text(function(e){
-                return _diagram.edgeLabel.eval(e);
+        var elabels = edgeLabels
+            .selectAll('text').data(function(e) {
+                var labels = _diagram.edgeLabel.eval(e);
+                if(!labels)
+                    return [];
+                else if(typeof labels === 'string')
+                    return [labels];
+                else return labels;
+            });
+        elabels.enter()
+          .append('text')
+            .attr({
+                'class': 'edge-label',
+                'text-anchor': 'middle',
+                dy: function(_, i) {
+                    return i * _diagram.edgeLabelSpacing.eval(this.parentNode) -2;
+                }
             })
-            .attr('opacity', _diagram.edgeOpacity.eval);
+          .append('textPath')
+            .attr('startOffset', '50%')
+            .attr('xlink:href', function(e) {
+                var id = _diagram.textpathId(d3.select(this.parentNode.parentNode).datum());
+                // angular on firefox needs absolute paths for fragments
+                return window.location.href.split('#')[0] + '#' + id;
+            });
+        elabels
+          .select('textPath')
+            .text(function(t) { return t; })
+            .attr('opacity', function() {
+                _diagram.edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
+            });
         textPathsEnter
             .attr('d', render_edge_label_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
         var textTrans = textPaths.transition()
@@ -4218,6 +4248,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
     function align_bottom(translate, y) {
         return translate[1] - _diagram.y()(y) + _diagram.y().range()[1];;
+    }
+    function center_horizontally(translate, bounds) {
+        return (align_left(translate, bounds.left) + align_right(translate, bounds.right))/2;
+    }
+    function center_vertically(translate, bounds) {
+        return (align_top(translate, bounds.top) + align_bottom(translate, bounds.bottom))/2;
     }
 
     function bring_in_bounds(translate) {
@@ -6673,6 +6709,8 @@ dc_graph.legend = function(legend_namespace) {
     **/
     _legend.itemHeight = _legend.nodeHeight = property(40);
 
+    _legend.omitEmpty = property(false);
+
     /**
      #### .noLabel([value])
      Remove item labels, since legend labels are displayed outside of the items. Default: true
@@ -6720,8 +6758,12 @@ dc_graph.legend = function(legend_namespace) {
             .attr('class', 'dc-graph-legend ' + legend_namespace)
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
+        var items = !_legend.omitEmpty() || !_counts ? _items : _items.filter(function(i) {
+            return _included.length && !_included.includes(i.orig.key) || _counts[i.orig.key];
+        });
         var item = legend.selectAll(_legend.type().itemSelector())
-                .data(_items, function(n) { return n.name; });
+                .data(items, function(n) { return n.name; });
+        item.exit().remove();
         var itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
         itemEnter.append('text')
             .attr('dy', '0.3em')

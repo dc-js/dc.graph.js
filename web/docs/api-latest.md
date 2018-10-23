@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.6.5  
+**Version**: 0.6.6  
 **Example**  
 ```js
 // Example chaining
@@ -322,27 +322,26 @@ Whether zooming should only be enabled when the alt key is pressed.
 <a name="dc_graph.diagram+fitStrategy"></a>
 
 #### diagram.fitStrategy([fitStrategy]) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
-Set or get the fitting strategy for the canvas, which affects how the
-[viewBox](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox) and
-[preserveAspectRatio](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio)
-attributes get set. All options except `null` set the `viewBox` attribute.
+Set or get the fitting strategy for the canvas, which affects how the translate
+and scale get calculated when `autoZoom` is triggered.
 
-These options set the `viewBox` and adjust the scale and translate to implement the margins.
-* `'default'` - uses the default behavior of `xMidYMid meet` (but with margins)
-* `'vertical'` - fits the canvas vertically (with vertical margins) and centers it
-horizontally. If the canvas is taller than the viewport, it will meet vertically and
-there will be blank areas to the left and right. If the canvas is wider than the
-viewport, it will be sliced.
-* `'horizontal'` - fitst the canvas horizontally (with horizontal margins) and centers
-it vertically. If the canvas is wider than the viewport, it will meet horizontally and
-there will be blank areas above and below. If the canvas is taller than the viewport, it
-will be sliced.
+* `'default'` - simulates the preserveAspectRatio behavior of `xMidYMid meet`, but
+  with margins - the content is stretched or squished in the more constrained
+  direction, and centered in the other direction
+* `'vertical'` - fits the canvas vertically (with vertical margins) and centers
+  it horizontally. If the canvas is taller than the viewport, it will meet
+  vertically and there will be blank areas to the left and right. If the canvas
+  is wider than the viewport, it will be sliced.
+* `'horizontal'` - fits the canvas horizontally (with horizontal margins) and
+  centers it vertically. If the canvas is wider than the viewport, it will meet
+  horizontally and there will be blank areas above and below. If the canvas is
+  taller than the viewport, it will be sliced.
 
 Other options
-* `null` - no attempt is made to fit the canvas to the svg element, `viewBox` is unset.
-* another string - sets the `viewBox` and uses the string for `preserveAspectRatio`.
-* function - will be called with (viewport width, viewport height, canvas width, canvas
-height) and result will be used to set `preserveAspectRatio`.
+* `null` - no attempt is made to fit the content in the viewport
+* `'zoom'` - does not scale the content, but attempts to bring as much content
+  into view as possible, using using the same algorithm as `restrictPan`
+* `'align_{tlbrc}[2]'` - does not scale; aligns up to two sides or centers them
 
 **Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
 
