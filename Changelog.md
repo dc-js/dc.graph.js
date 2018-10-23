@@ -1,3 +1,9 @@
+## 0.6.6
+* `legend.omitEmpty` allows removing items for which no instances are shown, unless they were filtered out using the legend
+* ability to align vertical-center or horizontal-center. [`fitStrategy` documentation](http://dc-js.github.io/dc.graph.js/docs/html/dc_graph.diagram.html#fitStrategy__anchor) brought up to date (yes there is a lot else that needs updating...)
+* explore demo will show an edge legend if `edgeCat` (name of field to use) and optionally `egeExpn` (regex for extracting category from field)
+* multi-line edge labels. each edge's labels are in a `g.edge-label-wrapper`; the first line is positioned as before; the next lines have `dy` set to the line number times the new `edgeLabelSpacing` (default 12) minus 2.
+
 ## 0.6.5
 * fix typo
 

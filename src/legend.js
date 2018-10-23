@@ -71,6 +71,8 @@ dc_graph.legend = function(legend_namespace) {
     **/
     _legend.itemHeight = _legend.nodeHeight = property(40);
 
+    _legend.omitEmpty = property(false);
+
     /**
      #### .noLabel([value])
      Remove item labels, since legend labels are displayed outside of the items. Default: true
@@ -118,8 +120,12 @@ dc_graph.legend = function(legend_namespace) {
             .attr('class', 'dc-graph-legend ' + legend_namespace)
             .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
 
+        var items = !_legend.omitEmpty() || !_counts ? _items : _items.filter(function(i) {
+            return _included.length && !_included.includes(i.orig.key) || _counts[i.orig.key];
+        });
         var item = legend.selectAll(_legend.type().itemSelector())
-                .data(_items, function(n) { return n.name; });
+                .data(items, function(n) { return n.name; });
+        item.exit().remove();
         var itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
         itemEnter.append('text')
             .attr('dy', '0.3em')
