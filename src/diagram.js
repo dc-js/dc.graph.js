@@ -233,6 +233,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * * `null` - no attempt is made to fit the content in the viewport
      * * `'zoom'` - does not scale the content, but attempts to bring as much content
      *   into view as possible, using using the same algorithm as `restrictPan`
+     * * `'align_{tlbrc}[2]'` - does not scale; aligns up to two sides or centers them
      * @method fitStrategy
      * @memberof dc_graph.diagram
      * @instance
@@ -2221,24 +2222,37 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var bounds = margined_bounds();
                 translate = _zoom.translate();
                 scale = _zoom.scale();
+                var vertalign = false, horzalign = false;
                 sides.forEach(function(s) {
                     switch(s) {
                     case 'l':
                         translate[0] = align_left(translate, bounds.left);
+                        horzalign = true;
                         break;
                     case 't':
                         translate[1] = align_top(translate, bounds.top);
+                        vertalign = true;
                         break;
                     case 'r':
                         translate[0] = align_right(translate, bounds.right);
+                        horzalign = true;
                         break;
                     case 'b':
                         translate[1] = align_bottom(translate, bounds.bottom);
+                        vertalign = true;
+                        break;
+                    case 'c': // handled below
                         break;
                     default:
-                        throw new Error("align_ expecting l t r or b, not '" + s + "'");
+                        throw new Error("align_ expecting l t r b or c, not '" + s + "'");
                     }
                 });
+                if(sides.includes('c')) {
+                    if(!horzalign)
+                        translate[0] = center_horizontally(translate, bounds);
+                    if(!vertalign)
+                        translate[1] = center_vertically(translate, bounds);
+                }
             }
             else if(fitS === 'zoom') {
                 scale = _zoom.scale();
@@ -2865,6 +2879,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
     function align_bottom(translate, y) {
         return translate[1] - _diagram.y()(y) + _diagram.y().range()[1];;
+    }
+    function center_horizontally(translate, bounds) {
+        return (align_left(translate, bounds.left) + align_right(translate, bounds.right))/2;
+    }
+    function center_vertically(translate, bounds) {
+        return (align_top(translate, bounds.top) + align_bottom(translate, bounds.bottom))/2;
     }
 
     function bring_in_bounds(translate) {

@@ -66,6 +66,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         .width('auto')
         .height('auto')
         .layoutEngine(engine)
+        .fitStrategy('align_tc')
         .timeLimit(sync_url.vals.timeLimit)
         .transitionDuration(sync_url.vals.transition)
         .stageTransitions(sync_url.vals.stage)
@@ -202,6 +203,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         'hide-highlight', 'hide-highlight-group', 155
     ).durationOverride(0));
     dc.renderAll();
+    diagram.autoZoom('once-noanim');
     var starter = d3.select('#start-from');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')
