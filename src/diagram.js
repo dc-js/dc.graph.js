@@ -2364,6 +2364,16 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .attr('d', render_edge_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
 
+        edge
+            .each(function(e) {
+                var totlength = this.getTotalLength();
+                var headlength = arrow_length(arrow_parts(_diagram.edgeArrowhead.eval(e))),
+                    taillength = arrow_length(arrow_parts(_diagram.edgeArrowhead.eval(e)));
+                d3.select(this)
+                    .attr('stroke-dasharray', (totlength-headlength-taillength) + ' ' + totlength*2)
+                    .attr('stroke-dashoffset', -taillength);
+            });
+
         var etrans = edge
                 .each(function(e) {
                     if(_diagram.edgeArrowhead.eval(e))
@@ -2787,28 +2797,27 @@ dc_graph.diagram = function (parent, chartGroup) {
         return selEnter;
     };
 
-    var unknown_styles = {};
     function edgeArrow(e, kind, name) {
         var id = _diagram.arrowId(e, kind),
             markerEnter = _diagram.addOrRemoveDef(id, !!name, 'svg:marker');
 
         if(name) {
-            if(!_arrows[name]) {
-                if(!unknown_styles[name])
-                    console.warn('arrow style "' + name + '" unknown; ignoring');
-                unknown_styles[name] = true;
-                name = null;
-            }
-            else markerEnter
-                .attr('viewBox', '0 -5 10 10')
-                .attr('refX', _arrows[name].refX)
-                .attr('refY', _arrows[name].refY)
+            var parts = arrow_parts(name);
+            markerEnter
+                .attr('viewBox', '0 -5 ' + arrow_length(parts) + ' 10')
+                .attr('refX', arrow_length(parts.slice(0, parts.length-1)) + _arrows[parts[0]].refX)
+                .attr('refY', _arrows[parts[0]].refY)
                 .attr('markerUnits', 'userSpaceOnUse')
-                .attr('markerWidth', _arrows[name].width*_diagram.edgeArrowSize.eval(e))
-                .attr('markerHeight', _arrows[name].height*_diagram.edgeArrowSize.eval(e))
+                .attr('markerWidth', arrow_length(parts)*_diagram.edgeArrowSize.eval(e))
+                .attr('markerHeight', d3.max(parts, function(p) { return _arrows[p].height; })*_diagram.edgeArrowSize.eval(e))
                 .attr('stroke', _diagram.edgeStroke.eval(e))
-                .attr('fill', _diagram.edgeStroke.eval(e))
-                .call(_arrows[name].drawFunction);
+                .attr('fill', _diagram.edgeStroke.eval(e));
+            var ofsx = 0;
+            parts.forEach(function(p) {
+                markerEnter
+                    .call(_arrows[p].drawFunction, ofsx);
+                ofsx -= _arrows[p].slength;
+            });
         }
         return name ? id : null;
     }

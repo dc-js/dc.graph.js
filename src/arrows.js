@@ -16,7 +16,8 @@ dc_graph.builtin_arrows = {
         height: 12,
         refX: 10,
         refY: 0,
-        drawFunction: function(marker) {
+        slength: 10,
+        drawFunction: function(marker, ofsx) {
             marker.append('svg:path')
                 .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
                 .attr('stroke-width', '0px');
@@ -25,9 +26,10 @@ dc_graph.builtin_arrows = {
     crow: {
         width: 12,
         height: 12,
-        refX: 0,
+        refX: 10,
         refY: 0,
-        drawFunction: function(marker) {
+        slength: 10,
+        drawFunction: function(marker, ofsx) {
             marker.append('svg:path')
                 .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
                 .attr('stroke-width', '0px');
@@ -38,10 +40,11 @@ dc_graph.builtin_arrows = {
         height: 10,
         refX: 10,
         refY: 0,
-        drawFunction: function(marker) {
+        slength: 8,
+        drawFunction: function(marker, ofsx) {
             marker.append('svg:circle')
                 .attr('r', 4)
-                .attr('cx', 5)
+                .attr('cx', 5 + ofsx)
                 .attr('cy', 0)
                 .attr('stroke-width', '0px');
         }
@@ -51,13 +54,40 @@ dc_graph.builtin_arrows = {
         height: 10,
         refX: 10,
         refY: 0,
-        drawFunction: function(marker) {
+        slength: 8,
+        drawFunction: function(marker, ofsx) {
             marker.append('svg:circle')
                 .attr('r', 4)
-                .attr('cx', 5)
+                .attr('cx', 5 + ofsx)
                 .attr('cy', 0)
-                .attr('fill', 'white')
+                .attr('fill', 'none')
                 .attr('stroke-width', '1px');
         }
     }
 };
+
+function arrow_parts(desc) {
+    // graphviz appears to use a real parser for this
+    var parts = [];
+    while(desc && desc.length) {
+        var ok = false;
+        for(var an in dc_graph.builtin_arrows)
+            if(desc.substring(0, an.length) === an) {
+                ok = true;
+                parts.push(an);
+                desc = desc.slice(an.length);
+                break;
+            }
+        if(!ok) {
+            console.warn("couldn't find arrow name in " + desc);
+            break;
+        }
+    }
+    return parts;
+}
+
+function arrow_length(parts) {
+    return d3.sum(parts, function(p) {
+        return dc_graph.builtin_arrows[p].slength;
+    });
+}
