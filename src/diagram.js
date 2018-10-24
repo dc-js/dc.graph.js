@@ -2028,18 +2028,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
-    function calculate_arrowhead_orientation(points, end) {
-        var spos = points[0], tpos = points[points.length-1];
-        var ref = end === 'head' ? tpos : spos;
-        var partial, t = 0.5;
-        do {
-            t = (end === 'head' ? 1 + t : t) / 2;
-            partial = bezier_point(points, t);
-        }
-        while(Math.hypot(ref.x - partial.x, ref.y - partial.y) > 25);
-        return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
-    }
-
     function enforce_path_direction(path, spos, tpos) {
         var points = path.points, first = points[0], last = points[points.length-1];
         switch(_diagram.enforceEdgeDirection()) {
