@@ -8,6 +8,7 @@ var options = {
     timeLimit: 10000,
     start: null,
     directional: false,
+    rndarrow: false,
     edgeCat: null,
     edgeExpn: null,
     expanded: {
@@ -62,6 +63,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
     var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
+
     diagram
         .width('auto')
         .height('auto')
@@ -87,7 +89,13 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             }
             return null;
         });
-//        .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+    if(sync_url.vals.rndarrow) {
+        var arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+        var arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+        diagram
+            .edgeArrowhead(e => arrowheadscale(e.value.label))
+            .edgeArrowtail(e => arrowtailscale(e.value.label));
+    }
     if(engine.layoutAlgorithm() === 'cola') {
         engine
             .tickSize(sync_url.vals.tickSize);
