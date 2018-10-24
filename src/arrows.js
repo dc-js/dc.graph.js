@@ -36,11 +36,11 @@ dc_graph.builtin_arrows = {
     dot: {
         width: 10,
         height: 10,
-        refX: 0,
+        refX: 10,
         refY: 0,
         drawFunction: function(marker) {
             marker.append('svg:circle')
-                .attr('r', 5)
+                .attr('r', 4)
                 .attr('cx', 5)
                 .attr('cy', 0)
                 .attr('stroke-width', '0px');
