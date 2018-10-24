@@ -2761,15 +2761,17 @@ dc_graph.diagram = function (parent, chartGroup) {
      * });
      * @return {dc_graph.diagram}
      **/
-    _diagram.defineArrow = function(name, width, height, refX, refY, drawf) {
-        _arrows[name] = {
-            name: name,
-            width: width,
-            height: height,
-            refX: refX,
-            refY: refY,
-            drawFunction: drawf
-        };
+    _diagram.defineArrow = function(defn, width, height, refX, refY, drawf) {
+        if(typeof defn === 'string')
+            defn = {
+                name: defn,
+                width: width,
+                height: height,
+                refX: refX,
+                refY: refY,
+                drawFunction: drawf
+            };
+        _arrows[defn.name] = defn;
         return _diagram;
     };
 
@@ -2809,30 +2811,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return name ? id : null;
     }
-    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('dot', 10, 10, 0, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 5)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('odot', 10, 10, 10, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 4)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('fill', 'white')
-            .attr('stroke-width', '1px');
+
+    Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
+        var defn = dc_graph.builtin_arrows[aname];
+        defn.name = aname;
+        _diagram.defineArrow(defn);
     });
 
     function globalTransform(pos, scale, animate) {
