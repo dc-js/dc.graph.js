@@ -48,6 +48,9 @@ var sync_url_options = (function() {
     function option_synchronizer(options, domain, args) {
         var qs = querystring.parse();
         var settings = {};
+        var _output = function(m) {
+            querystring.update(m);
+        };
 
         function update_interesting(qs) {
             var interesting = Object.keys(options)
@@ -57,7 +60,7 @@ var sync_url_options = (function() {
                         return options[k].query || k;
                     });
             var interested = pick(qs, interesting);
-            querystring.update(interested);
+            _output(interested);
         }
 
         function do_option(key, opt, callback) {
@@ -152,6 +155,12 @@ var sync_url_options = (function() {
                         args[0] = settings[key];
                         options[key].exert.apply(options[key], args);
                     }
+            },
+            output: function(_) {
+                if(!arguments.length)
+                    return _output;
+                _output = _;
+                return this;
             }
         };
     }
