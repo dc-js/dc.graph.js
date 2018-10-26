@@ -33,6 +33,34 @@ var options = {
 var diagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
 
+// https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript#47593316
+function xfnv1a(k) {
+    for(var i = 0, h = 2166136261 >>> 0; i < k.length; i++)
+        h = Math.imul(h ^ k.charCodeAt(i), 16777619);
+    return function() {
+        h += h << 13; h ^= h >>> 7;
+        h += h << 3;  h ^= h >>> 17;
+        return (h += h << 5) >>> 0;
+    };
+}
+function sfc32(a, b, c, d) {
+    return function() {
+      a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
+      var t = (a + b) | 0;
+      a = b ^ b >>> 9;
+      b = c + (c << 3) | 0;
+      c = (c << 21 | c >>> 11);
+      d = d + 1 | 0;
+      t = t + d | 0;
+      c = c + t | 0;
+      return (t >>> 0) / 4294967296;
+    };
+}
+function rand(s) {
+    var seed = xfnv1a(s);
+    return sfc32(seed(), seed(), seed(), seed());
+}
+
 function display_error(message) {
     d3.select('#message')
         .style('display', null)
@@ -96,15 +124,17 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         diagram.zoomExtent([0.001, 200]);
     if(sync_url.vals.rndarrow) {
         var arrowheadscale, arrowtailscale;
+        var anames = Object.keys(dc_graph.builtin_arrows);
         switch(sync_url.vals.rndarrow) {
         case 'one':
             arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
             arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
             break;
         case 'lots':
-            arrowheadscale = arrowtailscale = function() {
-                return d3.range(Math.floor(Math.random()*5))
-                    .map(i => Object.keys(dc_graph.builtin_arrows)[i])
+            arrowheadscale = arrowtailscale = function(label) {
+                var rnd = rand(label);
+                return d3.range(Math.floor(rnd()*5))
+                    .map(i => anames[Math.floor(rnd()*anames.length)])
                     .join('');
             };
             break;
