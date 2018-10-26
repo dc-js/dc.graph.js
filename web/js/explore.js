@@ -8,6 +8,7 @@ var options = {
     timeLimit: 10000,
     start: null,
     directional: false,
+    bigzoom: false,
     rndarrow: null,
     edgeCat: null,
     edgeExpn: null,
@@ -91,6 +92,8 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             }
             return null;
         });
+    if(sync_url.vals.bigzoom)
+        diagram.zoomExtent([0.001, 200]);
     if(sync_url.vals.rndarrow) {
         var arrowheadscale, arrowtailscale;
         switch(sync_url.vals.rndarrow) {
