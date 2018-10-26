@@ -8,7 +8,7 @@ var options = {
     timeLimit: 10000,
     start: null,
     directional: false,
-    rndarrow: false,
+    rndarrow: null,
     edgeCat: null,
     edgeExpn: null,
     expand_strategy: null,
@@ -92,8 +92,22 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             return null;
         });
     if(sync_url.vals.rndarrow) {
-        var arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
-        var arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+        var arrowheadscale, arrowtailscale;
+        switch(sync_url.vals.rndarrow) {
+        case 'one':
+            arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+            arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+            break;
+        case 'lots':
+            arrowheadscale = arrowtailscale = function() {
+                return d3.range(Math.floor(Math.random()*5))
+                    .map(i => Object.keys(dc_graph.builtin_arrows)[i])
+                    .join('');
+            };
+            break;
+        default:
+            throw new Error('unknown rndarrow "' + sync_url.vals.rndarrow + '"');
+        }
         diagram
             .edgeArrowhead(e => arrowheadscale(e.value.label))
             .edgeArrowtail(e => arrowtailscale(e.value.label));
