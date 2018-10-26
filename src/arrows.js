@@ -91,3 +91,28 @@ function arrow_length(parts) {
         return dc_graph.builtin_arrows[p].slength;
     });
 }
+
+function edgeArrow(diagram, arrdefs, e, kind, name) {
+    var id = diagram.arrowId(e, kind),
+        markerEnter = diagram.addOrRemoveDef(id, !!name, 'svg:marker');
+
+    if(name) {
+        var parts = arrow_parts(name);
+        markerEnter
+            .attr('viewBox', '0 -5 ' + arrow_length(parts) + ' 10')
+            .attr('refX', arrow_length(parts.slice(0, parts.length-1)) + arrdefs[parts[0]].refX)
+            .attr('refY', arrdefs[parts[0]].refY)
+            .attr('markerUnits', 'userSpaceOnUse')
+            .attr('markerWidth', arrow_length(parts)*diagram.edgeArrowSize.eval(e))
+            .attr('markerHeight', d3.max(parts, function(p) { return arrdefs[p].height; })*diagram.edgeArrowSize.eval(e))
+            .attr('stroke', diagram.edgeStroke.eval(e))
+            .attr('fill', diagram.edgeStroke.eval(e));
+        var ofsx = 0;
+        parts.forEach(function(p) {
+            markerEnter
+                .call(arrdefs[p].drawFunction, ofsx);
+            ofsx -= arrdefs[p].slength;
+        });
+    }
+    return name ? id : null;
+}

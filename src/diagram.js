@@ -1319,12 +1319,12 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
             .attr('marker-end', function(e) {
                 var name = _diagram.edgeArrowhead.eval(e),
-                    id = edgeArrow(e, 'head', name);
+                    id = edgeArrow(_diagram, _arrows, e, 'head', name);
                 return id ? 'url(#' + id + ')' : null;
             })
             .attr('marker-start', function(e) {
                 var name = _diagram.edgeArrowtail.eval(e),
-                    arrow_id = edgeArrow(e, 'tail', name);
+                    arrow_id = edgeArrow(_diagram, _arrows, e, 'tail', name);
                 return name ? 'url(#' + arrow_id + ')' : null;
             })
             .each(function(e) {
@@ -1613,8 +1613,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             .delay(_diagram.deleteDelay())
             .attr('opacity', 0)
             .each(function(e) {
-                edgeArrow(e, 'head', null);
-                edgeArrow(e, 'head', null);
+                edgeArrow(_diagram, _arrows, e, 'head', null);
+                edgeArrow(_diagram, _arrows, e, 'head', null);
             })
             .remove();
 
@@ -2796,31 +2796,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         sel.exit().remove();
         return selEnter;
     };
-
-    function edgeArrow(e, kind, name) {
-        var id = _diagram.arrowId(e, kind),
-            markerEnter = _diagram.addOrRemoveDef(id, !!name, 'svg:marker');
-
-        if(name) {
-            var parts = arrow_parts(name);
-            markerEnter
-                .attr('viewBox', '0 -5 ' + arrow_length(parts) + ' 10')
-                .attr('refX', arrow_length(parts.slice(0, parts.length-1)) + _arrows[parts[0]].refX)
-                .attr('refY', _arrows[parts[0]].refY)
-                .attr('markerUnits', 'userSpaceOnUse')
-                .attr('markerWidth', arrow_length(parts)*_diagram.edgeArrowSize.eval(e))
-                .attr('markerHeight', d3.max(parts, function(p) { return _arrows[p].height; })*_diagram.edgeArrowSize.eval(e))
-                .attr('stroke', _diagram.edgeStroke.eval(e))
-                .attr('fill', _diagram.edgeStroke.eval(e));
-            var ofsx = 0;
-            parts.forEach(function(p) {
-                markerEnter
-                    .call(_arrows[p].drawFunction, ofsx);
-                ofsx -= _arrows[p].slength;
-            });
-        }
-        return name ? id : null;
-    }
 
     Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
         var defn = dc_graph.builtin_arrows[aname];
