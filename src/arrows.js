@@ -10,6 +10,12 @@ function calculate_arrowhead_orientation(points, end) {
     return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
 }
 
+function offsetx(ofsx) {
+    return function(p) {
+        return {x: p.x + ofsx, y: p.y};
+    };
+}
+
 dc_graph.builtin_arrows = {
     vee: {
         width: 12,
@@ -18,8 +24,14 @@ dc_graph.builtin_arrows = {
         refY: 0,
         slength: 10,
         drawFunction: function(marker, ofsx) {
+            var points = [
+                {x: 0, y: -5},
+                {x: 10, y: 0},
+                {x: 0, y: 5},
+                {x: 3, y: 0}
+            ].map(offsetx(ofsx));
             marker.append('svg:path')
-                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('d', generate_path(points, 1, true))
                 .attr('stroke-width', '0px');
         }
     },
@@ -30,8 +42,14 @@ dc_graph.builtin_arrows = {
         refY: 0,
         slength: 10,
         drawFunction: function(marker, ofsx) {
+            var points = [
+                {x: 10, y: -5},
+                {x: 0, y: 0},
+                {x: 10, y: 5},
+                {x: 7, y: 0}
+            ].map(offsetx(ofsx));
             marker.append('svg:path')
-                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('d', generate_path(points, 1, true))
                 .attr('stroke-width', '0px');
         }
     },
