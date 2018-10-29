@@ -1797,7 +1797,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         if(skip_layout) {
             _running = false;
-            _dispatch.end(false);
+            draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, true);
+            draw_ports(node);
+            _dispatch.transitionsStarted(node, edge, edgeHover);
             check_zoom(node, edge);
             return this;
         }
