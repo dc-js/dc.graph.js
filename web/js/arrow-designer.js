@@ -9,7 +9,13 @@ var options = {
         selector: '#arrowtail',
         needs_redraw: true
     },
-    zoom: 16
+    zoom: {
+        default: 16,
+        selector: '#zoom',
+        exert: function(val, diagram) {
+            diagram.zoom().scale(+val).event(diagram.svg());
+        }
+    }
 };
 var diagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
