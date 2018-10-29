@@ -110,12 +110,13 @@ function arrow_length(parts) {
     });
 }
 
-function edgeArrow(diagram, arrdefs, e, kind, name) {
+function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind),
-        markerEnter = diagram.addOrRemoveDef(id, !!name, 'svg:marker');
+        parts = arrow_parts(desc),
+        markerEnter = diagram.addOrRemoveDef(id, parts.length, 'svg:marker');
 
-    if(name) {
-        var parts = arrow_parts(name), totlen = arrow_length(parts);
+    if(parts.length) {
+        var totlen = arrow_length(parts);
         markerEnter
             .attr('viewBox', [10-totlen, -5, totlen, 10].join(' '))
             .attr('refX', arrdefs[parts[0]].refX)
@@ -132,5 +133,5 @@ function edgeArrow(diagram, arrdefs, e, kind, name) {
             ofsx -= arrdefs[p].slength;
         });
     }
-    return name ? id : null;
+    return desc ? id : null;
 }
