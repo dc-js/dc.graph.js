@@ -25,26 +25,27 @@ dc_graph.expand_collapse = function(options) {
         if(_gradients_added[color])
             return;
         _gradients_added[color] = true;
-        var gradient = diagram.addOrRemoveDef('spike-gradient-' + color, true, 'linearGradient');
-        gradient.attr({
-            x1: '0%',
-            y1: '0%',
-            x2: '100%',
-            y2: '0%',
-            spreadMethod: 'pad'
-        });
-        gradient.selectAll('stop').data([[0, color, 1], [100, color, '0']])
-            .enter().append('stop').attr({
-                offset: function(d) {
-                    return d[0] + '%';
-                },
-                'stop-color': function(d) {
-                    return d[1];
-                },
-                'stop-opacity': function(d) {
-                    return d[2];
-                }
+        diagram.addOrRemoveDef('spike-gradient-' + color, true, 'linearGradient', function(gradient) {
+            gradient.attr({
+                x1: '0%',
+                y1: '0%',
+                x2: '100%',
+                y2: '0%',
+                spreadMethod: 'pad'
             });
+            gradient.selectAll('stop').data([[0, color, 1], [100, color, '0']])
+                .enter().append('stop').attr({
+                    offset: function(d) {
+                        return d[0] + '%';
+                    },
+                    'stop-color': function(d) {
+                        return d[1];
+                    },
+                    'stop-opacity': function(d) {
+                        return d[2];
+                    }
+                });
+        });
     }
 
     function visible_edges(diagram, edge, dir, key) {

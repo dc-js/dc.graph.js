@@ -111,13 +111,15 @@ function arrow_length(parts) {
 }
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
-    var id = diagram.arrowId(e, kind),
-        parts = arrow_parts(desc),
-        markerEnter = diagram.addOrRemoveDef(id, parts.length, 'svg:marker');
+    var id = diagram.arrowId(e, kind);
+    if(e[kind + 'ArrowLast'] === desc)
+        return id;
+    var parts = arrow_parts(desc),
+        marker = diagram.addOrRemoveDef(id, !!parts.length, 'svg:marker');
 
     if(parts.length) {
         var totlen = arrow_length(parts);
-        markerEnter
+        marker
             .attr('viewBox', [10-totlen, -5, totlen, 10].join(' '))
             .attr('refX', arrdefs[parts[0]].refX)
             .attr('refY', arrdefs[parts[0]].refY)
@@ -126,12 +128,14 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
             .attr('markerHeight', d3.max(parts, function(p) { return arrdefs[p].height; })*diagram.edgeArrowSize.eval(e))
             .attr('stroke', diagram.edgeStroke.eval(e))
             .attr('fill', diagram.edgeStroke.eval(e));
+        marker.html(null);
         var ofsx = 0;
         parts.forEach(function(p) {
-            markerEnter
+            marker
                 .call(arrdefs[p].drawFunction, ofsx);
             ofsx -= arrdefs[p].slength;
         });
     }
+    e[kind + 'ArrowLast'] = desc;
     return desc ? id : null;
 }

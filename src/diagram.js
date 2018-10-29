@@ -2795,15 +2795,17 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _diagram;
     };
 
-    _diagram.addOrRemoveDef = function(id, whether, tag) {
+    _diagram.addOrRemoveDef = function(id, whether, tag, onEnter) {
         var data = whether ? [0] : [];
         var sel = _defs.selectAll('#' + id).data(data);
 
         var selEnter = sel
             .enter().append(tag)
-                .attr('id', id);
+              .attr('id', id);
+        if(selEnter.size() && onEnter)
+            selEnter.call(onEnter);
         sel.exit().remove();
-        return selEnter;
+        return sel;
     };
 
     Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
