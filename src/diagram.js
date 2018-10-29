@@ -2656,6 +2656,13 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.y = property(null);
 
+    _diagram.zoom = function(_) {
+        if(!arguments.length)
+            return _zoom;
+        _zoom = _; // is this a good idea?
+        return _diagram;
+    };
+
     /**
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
