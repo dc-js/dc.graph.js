@@ -60,5 +60,7 @@ diagram
     .edgeArrowhead(() => sync_url.vals.arrowhead)
     .edgeArrowtail(() => sync_url.vals.arrowtail);
 
+diagram.child('grid', dc_graph.grid());
+
 diagram.render();
 sync_url.exert();
