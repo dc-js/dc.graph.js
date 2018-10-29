@@ -125,6 +125,12 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     if(sync_url.vals.rndarrow) {
         var arrowheadscale, arrowtailscale;
         var anames = Object.keys(dc_graph.builtin_arrows);
+
+        function arrowgen(rnd) {
+            return d3.range(Math.floor(rnd()*5))
+                .map(i => anames[Math.floor(rnd()*anames.length)])
+                .join('');
+        };
         switch(sync_url.vals.rndarrow) {
         case 'one':
             arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
@@ -132,10 +138,12 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             break;
         case 'lots':
             arrowheadscale = arrowtailscale = function(label) {
-                var rnd = rand(label);
-                return d3.range(Math.floor(rnd()*5))
-                    .map(i => anames[Math.floor(rnd()*anames.length)])
-                    .join('');
+                return arrowgen(rand(label));
+            };
+            break;
+        case 'changing':
+            arrowheadscale = arrowtailscale = function(label) {
+                return arrowgen(Math.random);
             };
             break;
         default:
