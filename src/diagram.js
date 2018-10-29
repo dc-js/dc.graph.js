@@ -2913,7 +2913,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));
         else translate = d3.event.translate;
         globalTransform(translate, scale, _animateZoom);
-        _dispatch.zoomed(translate, scale);
+        _dispatch.zoomed(translate, scale, _diagram.x().domain(), _diagram.y().domain());
     }
 
     _diagram.resizeSvg = function(w, h) {
