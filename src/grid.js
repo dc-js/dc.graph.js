@@ -13,15 +13,16 @@ dc_graph.grid = function() {
 
     function on_zoom(translate, scale, xDomain, yDomain) {
         if(_gridLayer) {
+            var ofs = _behavior.wholeOnLines() ? 0 : 0.5;
             var vline_data = scale >= _behavior.threshold() ? d3.range(Math.floor(xDomain[0]), Math.ceil(xDomain[1]) + 1) : [];
             var vlines = _gridLayer.selectAll('line.grid-line.vertical').data(vline_data);
             vlines.exit().remove();
             vlines.enter().append('line')
                 .attr('class', 'grid-line vertical');
             vlines.attr({
-                x1: function(d) { return d - 0.5; },
+                x1: function(d) { return d - ofs; },
                 y1: yDomain[0],
-                x2: function(d) { return d - 0.5; },
+                x2: function(d) { return d - ofs; },
                 y2: yDomain[1]
             });
             var hline_data = scale >= _behavior.threshold() ? d3.range(Math.floor(yDomain[0]), Math.ceil(yDomain[1]) + 1) : [];
@@ -31,9 +32,9 @@ dc_graph.grid = function() {
                 .attr('class', 'grid-line horizontal');
             hlines.attr({
                 x1: xDomain[0],
-                y1: function(d) { return d - 0.5; },
+                y1: function(d) { return d - ofs; },
                 x2: xDomain[1],
-                y2: function(d) { return d - 0.5; }
+                y2: function(d) { return d - ofs; }
             });
         }
     }
@@ -48,6 +49,7 @@ dc_graph.grid = function() {
     });
 
     _behavior.threshold = property(4);
+    _behavior.wholeOnLines = property(true);
 
     return _behavior;
 };
