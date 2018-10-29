@@ -10,7 +10,7 @@ var options = {
         needs_redraw: true
     },
     zoom: {
-        default: 16,
+        default: 4,
         selector: '#zoom',
         exert: function(val, diagram) {
             diagram.zoom().scale(+val).event(diagram.svg());
@@ -50,6 +50,7 @@ diagram
     .width('auto')
     .height('auto')
     .layoutEngine(engine)
+    .zoomExtent([1, 256])
     .fitStrategy('align_tl')
     .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
@@ -60,4 +61,4 @@ diagram
     .edgeArrowtail(() => sync_url.vals.arrowtail);
 
 diagram.render();
-
+sync_url.exert();
