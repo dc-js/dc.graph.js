@@ -17,13 +17,13 @@ var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
 var nodes = [
     {
         key: 'tail',
-        x: 35,
-        y: 35
+        x: 15,
+        y: 15
     },
     {
         key: 'head',
-        x: 135,
-        y: 35
+        x: 85,
+        y: 15
     }
 ];
 
@@ -47,6 +47,7 @@ diagram
     .fitStrategy('align_tl')
     .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
+    .nodeRadius(10)
     .nodeLabel(null)
     .edgeLabel(null)
     .edgeArrowhead(() => sync_url.vals.arrowhead)
