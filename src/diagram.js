@@ -1614,7 +1614,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('opacity', 0)
             .each(function(e) {
                 edgeArrow(_diagram, _arrows, e, 'head', null);
-                edgeArrow(_diagram, _arrows, e, 'head', null);
+                edgeArrow(_diagram, _arrows, e, 'tail', null);
             })
             .remove();
 
@@ -2370,7 +2370,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             .each(function(e) {
                 var totlength = this.getTotalLength();
                 var headlength = arrow_length(arrow_parts(_diagram.edgeArrowhead.eval(e))),
-                    taillength = arrow_length(arrow_parts(_diagram.edgeArrowhead.eval(e)));
+                    taillength = arrow_length(arrow_parts(_diagram.edgeArrowtail.eval(e)));
                 d3.select(this)
                     .attr('stroke-dasharray', (totlength-headlength-taillength) + ' ' + totlength*2)
                     .attr('stroke-dashoffset', -taillength);
