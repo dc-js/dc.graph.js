@@ -312,7 +312,7 @@ dc_graph.expand_collapse = function(options) {
 
         _keyboard
             .on('keydown.expand-collapse', function() {
-                if(d3.event.key === options.hideKey && (_overNode || _overEdge)) {
+                if(d3.event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
                     if(_overNode)
                         highlight_hiding_node(diagram, _overNode, edge);
                     if(_overEdge)
