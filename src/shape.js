@@ -169,6 +169,62 @@ dc_graph.shape_presets = {
                 minrx: 30
             };
         }
+    },
+    invhouse: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry/2},
+                        {x: rx, y: -ry*2/3},
+                        {x: -rx, y: -ry*2/3},
+                        {x: -rx, y: ry/2},
+                        {x: 0, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    rarrow: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx, y: ry*1.5},
+                        {x: rx + ry*1.5, y: 0},
+                        {x: rx, y: -ry*1.5},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    larrow: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: -rx, y: ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: -rx - ry*1.5, y: 0},
+                        {x: -rx, y: -ry*1.5},
+                        {x: -rx, y: -ry},
+                        {x: rx, y: -ry},
+                        {x: rx, y: ry},
+                        {x: 0, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
     }
 };
 
