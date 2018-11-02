@@ -78,6 +78,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .nodeLabel(function(n) { return n.value.value.label && n.value.value.label.split(/\n|\\n/); })
+        .nodeLabelPadding(5)
         .nodeShape(function(n) { return n.value.value.shape; })
         .nodeFill(function(n) { return n.value.value.fillcolor || 'white'; })
         .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
