@@ -10058,7 +10058,7 @@ dc_graph.expand_collapse = function(options) {
 
         _keyboard
             .on('keydown.expand-collapse', function() {
-                if(d3.event.key === options.hideKey && (_overNode || _overEdge)) {
+                if(d3.event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
                     if(_overNode)
                         highlight_hiding_node(diagram, _overNode, edge);
                     if(_overEdge)
@@ -10121,7 +10121,7 @@ dc_graph.expand_collapse = function(options) {
             bothmap = _expanded.both;
         else {
             bothmap = Object.keys(_expanded.in).filter(function(nk2) {
-                return _expanded.out[nk2];
+                return _expanded.in[nk2] && _expanded.out[nk2];
             }).reduce(function(p, v) {
                 p[v] = true;
                 return p;
@@ -10129,11 +10129,11 @@ dc_graph.expand_collapse = function(options) {
         }
         expanded_highlight_group.highlight(bothmap, {});
         if(dir === 'both' && !_expanded.both)
-            options.dirs.forEach(function(dir2) {
+            options.dirs.forEach(function(dir2, i) {
                 if(whether)
-                    options.expand(nk, dir2);
+                    options.expand(nk, dir2, i !== options.dirs.length-1);
                 else
-                    options.collapse(nk, dir2);
+                    options.collapse(nk, dir2, i !== options.dirs.length-1);
             });
         else {
             if(whether)
@@ -10235,7 +10235,7 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 default: throw new Error('unknown direction ' + dir);
                 }
             },
-            expand: function(nk, dir) {
+            expand: function(nk, dir, skip_draw) {
                 _nodeShown[nk] = true;
                 switch(dir) {
                 case 'out':
@@ -10252,8 +10252,10 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                     break;
                 default: throw new Error('unknown direction ' + dir);
                 }
-                apply_filter();
-                dc.redrawAll();
+                if(!skip_draw) {
+                    apply_filter();
+                    dc.redrawAll();
+                }
             },
             expandedNodes: function(_) {
                 if(!arguments.length)
@@ -10261,9 +10263,11 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 var that = this;
                 _nodeShown = {};
                 Object.keys(_).forEach(function(nk) {
-                    that.expand(nk, 'out');
-                    that.expand(nk, 'in');
+                    that.expand(nk, 'out', true);
+                    that.expand(nk, 'in', true);
                 });
+                apply_filter();
+                dc.redrawAll();
                 return this;
             },
             collapsibles: function(nk, dir) {
