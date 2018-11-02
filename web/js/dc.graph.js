@@ -742,8 +742,16 @@ dc_graph.available_shapes = function() {
 
 var default_shape = {shape: 'ellipse'};
 
+function normalize_shape_def(n) {
+    var def =  diagram.nodeShape.eval(n);
+    if(!def)
+        return default_shape;
+    if(typeof def === 'string')
+        return {shape: def};
+    return def;
+}
+
 function elaborate_shape(diagram, def) {
-    if(typeof def === 'string') def = {shape: def};
     var shape = def.shape, def2 = Object.assign({}, def);
     delete def2.shape;
     if(shape === 'random') {
@@ -763,7 +771,7 @@ function elaborate_shape(diagram, def) {
 
 function infer_shape(diagram) {
     return function(n) {
-        var def = diagram.nodeShape.eval(n) || default_shape;
+        var def = normalize_shape_def(n);
         n.dcg_shape = elaborate_shape(diagram, def);
         n.dcg_shape.abstract = def;
     };
@@ -771,7 +779,7 @@ function infer_shape(diagram) {
 
 function shape_changed(diagram) {
     return function(n) {
-        var def = diagram.nodeShape.eval(n) || default_shape;
+        var def = normalize_shape_def(n);
         var old = n.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
@@ -1238,6 +1246,70 @@ dc_graph.rounded_rectangle_shape = function() {
     return _shape;
 };
 
+
+function calculate_arrowhead_orientation(points, end) {
+    var spos = points[0], tpos = points[points.length-1];
+    var ref = end === 'head' ? tpos : spos;
+    var partial, t = 0.5;
+    do {
+        t = (end === 'head' ? 1 + t : t) / 2;
+        partial = bezier_point(points, t);
+    }
+    while(Math.hypot(ref.x - partial.x, ref.y - partial.y) > 25);
+    return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
+}
+
+dc_graph.builtin_arrows = {
+    vee: {
+        width: 12,
+        height: 12,
+        refX: 10,
+        refY: 0,
+        drawFunction: function(marker) {
+            marker.append('svg:path')
+                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('stroke-width', '0px');
+        }
+    },
+    crow: {
+        width: 12,
+        height: 12,
+        refX: 0,
+        refY: 0,
+        drawFunction: function(marker) {
+            marker.append('svg:path')
+                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('stroke-width', '0px');
+        }
+    },
+    dot: {
+        width: 10,
+        height: 10,
+        refX: 10,
+        refY: 0,
+        drawFunction: function(marker) {
+            marker.append('svg:circle')
+                .attr('r', 4)
+                .attr('cx', 5)
+                .attr('cy', 0)
+                .attr('stroke-width', '0px');
+        }
+    },
+    odot: {
+        width: 10,
+        height: 10,
+        refX: 10,
+        refY: 0,
+        drawFunction: function(marker) {
+            marker.append('svg:circle')
+                .attr('r', 4)
+                .attr('cx', 5)
+                .attr('cy', 0)
+                .attr('fill', 'white')
+                .attr('stroke-width', '1px');
+        }
+    }
+};
 
 dc_graph.text_contents = function() {
     var _contents = {
@@ -3235,7 +3307,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _dispatch.start(); // cola doesn't seem to fire this itself?
             _diagram.layoutEngine().data(
                 { width: _diagram.width(), height: _diagram.height() },
-                wnodes.map(function(v) { return v.cola; }),
+                wnodes.map(function(v) { return Object.assign({}, v.cola, v.dcg_shape); }),
                 layout_edges.map(function(v) { return v.cola; }),
                 constraints
             );
@@ -3395,18 +3467,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _diagram.redraw();
             }, 0);
         }
-    }
-
-    function calculate_arrowhead_orientation(points, end) {
-        var spos = points[0], tpos = points[points.length-1];
-        var ref = end === 'head' ? tpos : spos;
-        var partial, t = 0.5;
-        do {
-            t = (end === 'head' ? 1 + t : t) / 2;
-            partial = bezier_point(points, t);
-        }
-        while(Math.hypot(ref.x - partial.x, ref.y - partial.y) > 25);
-        return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
     }
 
     function enforce_path_direction(path, spos, tpos) {
@@ -4142,15 +4202,17 @@ dc_graph.diagram = function (parent, chartGroup) {
      * });
      * @return {dc_graph.diagram}
      **/
-    _diagram.defineArrow = function(name, width, height, refX, refY, drawf) {
-        _arrows[name] = {
-            name: name,
-            width: width,
-            height: height,
-            refX: refX,
-            refY: refY,
-            drawFunction: drawf
-        };
+    _diagram.defineArrow = function(defn, width, height, refX, refY, drawf) {
+        if(typeof defn === 'string')
+            defn = {
+                name: defn,
+                width: width,
+                height: height,
+                refX: refX,
+                refY: refY,
+                drawFunction: drawf
+            };
+        _arrows[defn.name] = defn;
         return _diagram;
     };
 
@@ -4190,30 +4252,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return name ? id : null;
     }
-    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('dot', 10, 10, 0, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 5)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('odot', 10, 10, 10, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 4)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('fill', 'white')
-            .attr('stroke-width', '1px');
+
+    Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
+        var defn = dc_graph.builtin_arrows[aname];
+        defn.name = aname;
+        _diagram.defineArrow(defn);
     });
 
     function globalTransform(pos, scale, animate) {
@@ -5333,7 +5376,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             var props = [
                 stringize_property('width', v.width/72),
                 stringize_property('height', v.height/72),
-                stringize_property('fixedsize', 'true')
+                stringize_property('fixedsize', 'shape'),
+                stringize_property('shape', v.abstract.shape)
             ];
             if(v.dcg_nodeFixed)
                 props.push(stringize_property('pos', [
@@ -10066,13 +10110,37 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function expand(dir, nk, whether) {
-        var exec;
-        _expanded[dir][nk] = whether;
-        expanded_highlight_group.highlight(_expanded.both, {});
-        if(whether)
-            options.expand(nk, dir);
+        if(dir === 'both' && !_expanded.both)
+            options.dirs.forEach(function(dir2) {
+                _expanded[dir2][nk] = whether;
+            });
         else
-            options.collapse(nk, dir);
+            _expanded[dir][nk] = whether;
+        var bothmap;
+        if(_expanded.both)
+            bothmap = _expanded.both;
+        else {
+            bothmap = Object.keys(_expanded.in).filter(function(nk2) {
+                return _expanded.out[nk2];
+            }).reduce(function(p, v) {
+                p[v] = true;
+                return p;
+            }, {});
+        }
+        expanded_highlight_group.highlight(bothmap, {});
+        if(dir === 'both' && !_expanded.both)
+            options.dirs.forEach(function(dir2) {
+                if(whether)
+                    options.expand(nk, dir2);
+                else
+                    options.collapse(nk, dir2);
+            });
+        else {
+            if(whether)
+                options.expand(nk, dir);
+            else
+                options.collapse(nk, dir);
+        }
     }
 
     function expandNodes(nks) {
@@ -10187,6 +10255,17 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 apply_filter();
                 dc.redrawAll();
             },
+            expandedNodes: function(_) {
+                if(!arguments.length)
+                    throw new Error('not supported'); // should not be called
+                var that = this;
+                _nodeShown = {};
+                Object.keys(_).forEach(function(nk) {
+                    that.expand(nk, 'out');
+                    that.expand(nk, 'in');
+                });
+                return this;
+            },
             collapsibles: function(nk, dir) {
                 var nodes = {}, edges = {};
                 (dir === 'out' ? out_edges(nk) : in_edges(nk)).forEach(function(e) {
@@ -10228,6 +10307,16 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 });
                 apply_filter();
                 dc.redrawAll();
+            },
+            expandedNodes: function(_) {
+                if(!arguments.length)
+                    throw new Error('not supported'); // should not be called
+                var that = this;
+                _nodeShown = {};
+                Object.keys(_).forEach(function(nk) {
+                    that.expand(nk);
+                });
+                return this;
             },
             collapsibles: function(nk, dir) {
                 var nodes = {}, edges = {};

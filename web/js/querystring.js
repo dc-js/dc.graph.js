@@ -35,12 +35,15 @@ var querystring = (function() {
                 parts.push(k + '=' + encodeURIComponent(m[k]));
             return parts.length ? parts.join('&') : '';
         },
-        update: function(m) {
+        get_url: function(m) {
             var url = window.location.protocol + '//' + window.location.host + window.location.pathname;
             var params = this.generate(m);
             if(params)
                 url += '?' + params;
-            window.history.pushState(null, null, url);
+            return url;
+        },
+        update: function(m) {
+            window.history.pushState(null, null, this.get_url(m));
             return this;
         },
         option_tracker: function() {
