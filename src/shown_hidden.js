@@ -60,7 +60,7 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 default: throw new Error('unknown direction ' + dir);
                 }
             },
-            expand: function(nk, dir) {
+            expand: function(nk, dir, skip_draw) {
                 _nodeShown[nk] = true;
                 switch(dir) {
                 case 'out':
@@ -77,8 +77,10 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                     break;
                 default: throw new Error('unknown direction ' + dir);
                 }
-                apply_filter();
-                dc.redrawAll();
+                if(!skip_draw) {
+                    apply_filter();
+                    dc.redrawAll();
+                }
             },
             expandedNodes: function(_) {
                 if(!arguments.length)
@@ -86,9 +88,11 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 var that = this;
                 _nodeShown = {};
                 Object.keys(_).forEach(function(nk) {
-                    that.expand(nk, 'out');
-                    that.expand(nk, 'in');
+                    that.expand(nk, 'out', true);
+                    that.expand(nk, 'in', true);
                 });
+                apply_filter();
+                dc.redrawAll();
                 return this;
             },
             collapsibles: function(nk, dir) {

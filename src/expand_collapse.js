@@ -383,11 +383,11 @@ dc_graph.expand_collapse = function(options) {
         }
         expanded_highlight_group.highlight(bothmap, {});
         if(dir === 'both' && !_expanded.both)
-            options.dirs.forEach(function(dir2) {
+            options.dirs.forEach(function(dir2, i) {
                 if(whether)
-                    options.expand(nk, dir2);
+                    options.expand(nk, dir2, i !== options.dirs.length-1);
                 else
-                    options.collapse(nk, dir2);
+                    options.collapse(nk, dir2, i !== options.dirs.length-1);
             });
         else {
             if(whether)
