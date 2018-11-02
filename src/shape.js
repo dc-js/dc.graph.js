@@ -159,11 +159,11 @@ dc_graph.shape_presets = {
             return {
                 get_points: function(rx, ry) {
                     return [
-                        {x: rx, y: ry},
-                        {x: rx, y: -ry},
-                        {x: 0, y: -2*ry},
-                        {x: -rx, y: -ry},
-                        {x: -rx, y: ry}
+                        {x: rx, y: ry*2/3},
+                        {x: rx, y: -ry/2},
+                        {x: 0, y: -ry},
+                        {x: -rx, y: -ry/2},
+                        {x: -rx, y: ry*2/3}
                     ];
                 },
                 minrx: 30
