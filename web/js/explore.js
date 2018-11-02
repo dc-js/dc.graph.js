@@ -8,8 +8,10 @@ var options = {
     timeLimit: 10000,
     start: null,
     directional: false,
+    rndarrow: false,
     edgeCat: null,
     edgeExpn: null,
+    expand_strategy: null,
     expanded: {
         default: [],
         subscribe: function(k) {
@@ -62,6 +64,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
     var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
+
     diagram
         .width('auto')
         .height('auto')
@@ -74,7 +77,8 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
-        .nodeLabel(function(n) { return n.value.value.label.split(/\n|\\n/); })
+        .nodeLabel(function(n) { return n.value.value.label && n.value.value.label.split(/\n|\\n/); })
+        .nodeLabelPadding(5)
         .nodeShape(function(n) { return n.value.value.shape; })
         .nodeFill(function(n) { return n.value.value.fillcolor || 'white'; })
         .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
@@ -87,7 +91,13 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             }
             return null;
         });
-//        .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+    if(sync_url.vals.rndarrow) {
+        var arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+        var arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+        diagram
+            .edgeArrowhead(e => arrowheadscale(e.value.label))
+            .edgeArrowtail(e => arrowtailscale(e.value.label));
+    }
     if(engine.layoutAlgorithm() === 'cola') {
         engine
             .tickSize(sync_url.vals.tickSize);
@@ -213,6 +223,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
 
     starter.on('change', function() {
         expand_collapse.expand('both', this.value, true);
+        diagram.autoZoom('once-noanim');
         dc.redrawAll();
     });
     if(sync_url.vals.start)

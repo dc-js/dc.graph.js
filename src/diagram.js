@@ -608,6 +608,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.shape('ellipse', dc_graph.ellipse_shape());
     _diagram.shape('polygon', dc_graph.polygon_shape());
     _diagram.shape('rounded-rect', dc_graph.rounded_rectangle_shape());
+    _diagram.shape('elaborated-rect', dc_graph.elaborated_rectangle_shape());
 
     _diagram.nodeContent = property('text');
     _diagram.content = named_children();
@@ -1866,7 +1867,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _dispatch.start(); // cola doesn't seem to fire this itself?
             _diagram.layoutEngine().data(
                 { width: _diagram.width(), height: _diagram.height() },
-                wnodes.map(function(v) { return v.cola; }),
+                wnodes.map(function(v) { return Object.assign({}, v.cola, v.dcg_shape); }),
                 layout_edges.map(function(v) { return v.cola; }),
                 constraints
             );
@@ -2026,18 +2027,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _diagram.redraw();
             }, 0);
         }
-    }
-
-    function calculate_arrowhead_orientation(points, end) {
-        var spos = points[0], tpos = points[points.length-1];
-        var ref = end === 'head' ? tpos : spos;
-        var partial, t = 0.5;
-        do {
-            t = (end === 'head' ? 1 + t : t) / 2;
-            partial = bezier_point(points, t);
-        }
-        while(Math.hypot(ref.x - partial.x, ref.y - partial.y) > 25);
-        return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
     }
 
     function enforce_path_direction(path, spos, tpos) {
@@ -2773,15 +2762,17 @@ dc_graph.diagram = function (parent, chartGroup) {
      * });
      * @return {dc_graph.diagram}
      **/
-    _diagram.defineArrow = function(name, width, height, refX, refY, drawf) {
-        _arrows[name] = {
-            name: name,
-            width: width,
-            height: height,
-            refX: refX,
-            refY: refY,
-            drawFunction: drawf
-        };
+    _diagram.defineArrow = function(defn, width, height, refX, refY, drawf) {
+        if(typeof defn === 'string')
+            defn = {
+                name: defn,
+                width: width,
+                height: height,
+                refX: refX,
+                refY: refY,
+                drawFunction: drawf
+            };
+        _arrows[defn.name] = defn;
         return _diagram;
     };
 
@@ -2821,30 +2812,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return name ? id : null;
     }
-    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('dot', 10, 10, 0, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 5)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('odot', 10, 10, 10, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 4)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('fill', 'white')
-            .attr('stroke-width', '1px');
+
+    Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
+        var defn = dc_graph.builtin_arrows[aname];
+        defn.name = aname;
+        _diagram.defineArrow(defn);
     });
 
     function globalTransform(pos, scale, animate) {

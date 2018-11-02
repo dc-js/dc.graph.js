@@ -152,7 +152,138 @@ dc_graph.shape_presets = {
                 noshape: true
             };
         }
-    }
+    },
+    house: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry*2/3},
+                        {x: rx, y: -ry/2},
+                        {x: 0, y: -ry},
+                        {x: -rx, y: -ry/2},
+                        {x: -rx, y: ry*2/3}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    invhouse: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry/2},
+                        {x: rx, y: -ry*2/3},
+                        {x: -rx, y: -ry*2/3},
+                        {x: -rx, y: ry/2},
+                        {x: 0, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    rarrow: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx, y: ry*1.5},
+                        {x: rx + ry*1.5, y: 0},
+                        {x: rx, y: -ry*1.5},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    larrow: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: -rx, y: ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: -rx - ry*1.5, y: 0},
+                        {x: -rx, y: -ry*1.5},
+                        {x: -rx, y: -ry},
+                        {x: rx, y: -ry},
+                        {x: rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    rpromoter: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx, y: ry*1.5},
+                        {x: rx + ry*1.5, y: 0},
+                        {x: rx, y: -ry*1.5},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: 0, y: ry*1.5},
+                        {x: 0, y: ry},
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    lpromoter: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: -rx, y: ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: -rx - ry*1.5, y: 0},
+                        {x: -rx, y: -ry*1.5},
+                        {x: -rx, y: -ry},
+                        {x: rx, y: -ry},
+                        {x: rx, y: ry*1.5},
+                        {x: 0, y: ry*1.5},
+                        {x: 0, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    cds: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx + ry, y: 0},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
 };
 
 dc_graph.shape_presets.box = dc_graph.shape_presets.rect = dc_graph.shape_presets.rectangle;
@@ -164,8 +295,16 @@ dc_graph.available_shapes = function() {
 
 var default_shape = {shape: 'ellipse'};
 
+function normalize_shape_def(n) {
+    var def =  diagram.nodeShape.eval(n);
+    if(!def)
+        return default_shape;
+    if(typeof def === 'string')
+        return {shape: def};
+    return def;
+}
+
 function elaborate_shape(diagram, def) {
-    if(typeof def === 'string') def = {shape: def};
     var shape = def.shape, def2 = Object.assign({}, def);
     delete def2.shape;
     if(shape === 'random') {
@@ -185,7 +324,7 @@ function elaborate_shape(diagram, def) {
 
 function infer_shape(diagram) {
     return function(n) {
-        var def = diagram.nodeShape.eval(n) || default_shape;
+        var def = normalize_shape_def(n);
         n.dcg_shape = elaborate_shape(diagram, def);
         n.dcg_shape.abstract = def;
     };
@@ -193,7 +332,7 @@ function infer_shape(diagram) {
 
 function shape_changed(diagram) {
     return function(n) {
-        var def = diagram.nodeShape.eval(n) || default_shape;
+        var def = normalize_shape_def(n);
         var old = n.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
@@ -656,6 +795,36 @@ dc_graph.rounded_rectangle_shape = function() {
                     }
                 });
         }
+    };
+    return _shape;
+};
+
+// this is not all that accurate - idea is that arrows, houses, etc, are rectangles
+// in terms of sizing, but elaborated drawing & clipping. refine until done.
+dc_graph.elaborated_rectangle_shape = function() {
+    var _shape = dc_graph.rounded_rectangle_shape();
+    _shape.intersect_vec = function(n, deltaX, deltaY) {
+        var points = n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry);
+        return point_on_polygon(points, 0, 0, deltaX, deltaY);
+    };
+    delete _shape.useRadius;
+    var orig_radii = _shape.calc_radii;
+    _shape.calc_radii = function(n, ry, bbox) {
+        var ret = orig_radii(n, ry, bbox);
+        return {
+            rx: Math.max(ret.rx, n.dcg_shape.minrx),
+            ry: ret.ry
+        };
+    };
+    _shape.create = function(nodeEnter) {
+        nodeEnter.insert('path', ':first-child')
+            .attr('class', 'node-shape');
+    };
+    _shape.update = function(node) {
+        node.select('path.node-shape')
+            .attr('d', function(n) {
+                return generate_path(n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry), 1, true);
+            });
     };
     return _shape;
 };

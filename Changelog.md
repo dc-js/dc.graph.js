@@ -1,3 +1,10 @@
+## 0.6.7
+* shapes are better communicated with graphviz layout (but still imperfect)
+* abstract shape had inconsistent format if it was specified as a string; now it always becomes an object
+* explore.html supports `&directional=true&expand_strategy=shown_hidden` again, for directional (up/down) exploration of graphs
+* new "elaborated-rect" class of [shapes](https://www.graphviz.org/doc/info/shapes.html#html), including house, invhouse, rarrow, larrow, rpromoter, lpromote, and cds
+* graphviz subgraphs no longer break the explorer
+
 ## 0.6.6
 * `legend.omitEmpty` allows removing items for which no instances are shown, unless they were filtered out using the legend
 * ability to align vertical-center or horizontal-center. [`fitStrategy` documentation](http://dc-js.github.io/dc.graph.js/docs/html/dc_graph.diagram.html#fitStrategy__anchor) brought up to date (yes there is a lot else that needs updating...)

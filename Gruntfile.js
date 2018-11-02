@@ -334,6 +334,7 @@ module.exports.jsFiles = [
     'src/depth_first_traversal.js',
     'src/generate_objects.js',
     'src/shape.js',
+    'src/arrows.js',
     'src/node_contents.js',
     'src/diagram.js',
     'src/engine.js',

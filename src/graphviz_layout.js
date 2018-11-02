@@ -46,7 +46,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             var props = [
                 stringize_property('width', v.width/72),
                 stringize_property('height', v.height/72),
-                stringize_property('fixedsize', 'true')
+                stringize_property('fixedsize', 'shape'),
+                stringize_property('shape', v.abstract.shape)
             ];
             if(v.dcg_nodeFixed)
                 props.push(stringize_property('pos', [

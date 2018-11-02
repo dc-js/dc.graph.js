@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.6
+ *  dc.graph 0.6.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.6
+ * @version 0.6.7
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.6',
+    version: '0.6.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -730,7 +730,138 @@ dc_graph.shape_presets = {
                 noshape: true
             };
         }
-    }
+    },
+    house: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry*2/3},
+                        {x: rx, y: -ry/2},
+                        {x: 0, y: -ry},
+                        {x: -rx, y: -ry/2},
+                        {x: -rx, y: ry*2/3}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    invhouse: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry/2},
+                        {x: rx, y: -ry*2/3},
+                        {x: -rx, y: -ry*2/3},
+                        {x: -rx, y: ry/2},
+                        {x: 0, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    rarrow: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx, y: ry*1.5},
+                        {x: rx + ry*1.5, y: 0},
+                        {x: rx, y: -ry*1.5},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    larrow: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: -rx, y: ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: -rx - ry*1.5, y: 0},
+                        {x: -rx, y: -ry*1.5},
+                        {x: -rx, y: -ry},
+                        {x: rx, y: -ry},
+                        {x: rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    rpromoter: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx, y: ry*1.5},
+                        {x: rx + ry*1.5, y: 0},
+                        {x: rx, y: -ry*1.5},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: 0, y: ry*1.5},
+                        {x: 0, y: ry},
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    lpromoter: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: -rx, y: ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: -rx - ry*1.5, y: 0},
+                        {x: -rx, y: -ry*1.5},
+                        {x: -rx, y: -ry},
+                        {x: rx, y: -ry},
+                        {x: rx, y: ry*1.5},
+                        {x: 0, y: ry*1.5},
+                        {x: 0, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    cds: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx + ry, y: 0},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
 };
 
 dc_graph.shape_presets.box = dc_graph.shape_presets.rect = dc_graph.shape_presets.rectangle;
@@ -742,8 +873,16 @@ dc_graph.available_shapes = function() {
 
 var default_shape = {shape: 'ellipse'};
 
+function normalize_shape_def(n) {
+    var def =  diagram.nodeShape.eval(n);
+    if(!def)
+        return default_shape;
+    if(typeof def === 'string')
+        return {shape: def};
+    return def;
+}
+
 function elaborate_shape(diagram, def) {
-    if(typeof def === 'string') def = {shape: def};
     var shape = def.shape, def2 = Object.assign({}, def);
     delete def2.shape;
     if(shape === 'random') {
@@ -763,7 +902,7 @@ function elaborate_shape(diagram, def) {
 
 function infer_shape(diagram) {
     return function(n) {
-        var def = diagram.nodeShape.eval(n) || default_shape;
+        var def = normalize_shape_def(n);
         n.dcg_shape = elaborate_shape(diagram, def);
         n.dcg_shape.abstract = def;
     };
@@ -771,7 +910,7 @@ function infer_shape(diagram) {
 
 function shape_changed(diagram) {
     return function(n) {
-        var def = diagram.nodeShape.eval(n) || default_shape;
+        var def = normalize_shape_def(n);
         var old = n.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
@@ -1238,6 +1377,100 @@ dc_graph.rounded_rectangle_shape = function() {
     return _shape;
 };
 
+// this is not all that accurate - idea is that arrows, houses, etc, are rectangles
+// in terms of sizing, but elaborated drawing & clipping. refine until done.
+dc_graph.elaborated_rectangle_shape = function() {
+    var _shape = dc_graph.rounded_rectangle_shape();
+    _shape.intersect_vec = function(n, deltaX, deltaY) {
+        var points = n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry);
+        return point_on_polygon(points, 0, 0, deltaX, deltaY);
+    };
+    delete _shape.useRadius;
+    var orig_radii = _shape.calc_radii;
+    _shape.calc_radii = function(n, ry, bbox) {
+        var ret = orig_radii(n, ry, bbox);
+        return {
+            rx: Math.max(ret.rx, n.dcg_shape.minrx),
+            ry: ret.ry
+        };
+    };
+    _shape.create = function(nodeEnter) {
+        nodeEnter.insert('path', ':first-child')
+            .attr('class', 'node-shape');
+    };
+    _shape.update = function(node) {
+        node.select('path.node-shape')
+            .attr('d', function(n) {
+                return generate_path(n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry), 1, true);
+            });
+    };
+    return _shape;
+};
+
+
+function calculate_arrowhead_orientation(points, end) {
+    var spos = points[0], tpos = points[points.length-1];
+    var ref = end === 'head' ? tpos : spos;
+    var partial, t = 0.5;
+    do {
+        t = (end === 'head' ? 1 + t : t) / 2;
+        partial = bezier_point(points, t);
+    }
+    while(Math.hypot(ref.x - partial.x, ref.y - partial.y) > 25);
+    return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
+}
+
+dc_graph.builtin_arrows = {
+    vee: {
+        width: 12,
+        height: 12,
+        refX: 10,
+        refY: 0,
+        drawFunction: function(marker) {
+            marker.append('svg:path')
+                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('stroke-width', '0px');
+        }
+    },
+    crow: {
+        width: 12,
+        height: 12,
+        refX: 0,
+        refY: 0,
+        drawFunction: function(marker) {
+            marker.append('svg:path')
+                .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
+                .attr('stroke-width', '0px');
+        }
+    },
+    dot: {
+        width: 10,
+        height: 10,
+        refX: 10,
+        refY: 0,
+        drawFunction: function(marker) {
+            marker.append('svg:circle')
+                .attr('r', 4)
+                .attr('cx', 5)
+                .attr('cy', 0)
+                .attr('stroke-width', '0px');
+        }
+    },
+    odot: {
+        width: 10,
+        height: 10,
+        refX: 10,
+        refY: 0,
+        drawFunction: function(marker) {
+            marker.append('svg:circle')
+                .attr('r', 4)
+                .attr('cx', 5)
+                .attr('cy', 0)
+                .attr('fill', 'white')
+                .attr('stroke-width', '1px');
+        }
+    }
+};
 
 dc_graph.text_contents = function() {
     var _contents = {
@@ -1977,6 +2210,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.shape('ellipse', dc_graph.ellipse_shape());
     _diagram.shape('polygon', dc_graph.polygon_shape());
     _diagram.shape('rounded-rect', dc_graph.rounded_rectangle_shape());
+    _diagram.shape('elaborated-rect', dc_graph.elaborated_rectangle_shape());
 
     _diagram.nodeContent = property('text');
     _diagram.content = named_children();
@@ -3235,7 +3469,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _dispatch.start(); // cola doesn't seem to fire this itself?
             _diagram.layoutEngine().data(
                 { width: _diagram.width(), height: _diagram.height() },
-                wnodes.map(function(v) { return v.cola; }),
+                wnodes.map(function(v) { return Object.assign({}, v.cola, v.dcg_shape); }),
                 layout_edges.map(function(v) { return v.cola; }),
                 constraints
             );
@@ -3395,18 +3629,6 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _diagram.redraw();
             }, 0);
         }
-    }
-
-    function calculate_arrowhead_orientation(points, end) {
-        var spos = points[0], tpos = points[points.length-1];
-        var ref = end === 'head' ? tpos : spos;
-        var partial, t = 0.5;
-        do {
-            t = (end === 'head' ? 1 + t : t) / 2;
-            partial = bezier_point(points, t);
-        }
-        while(Math.hypot(ref.x - partial.x, ref.y - partial.y) > 25);
-        return Math.atan2(ref.y - partial.y, ref.x - partial.x) + 'rad';
     }
 
     function enforce_path_direction(path, spos, tpos) {
@@ -4142,15 +4364,17 @@ dc_graph.diagram = function (parent, chartGroup) {
      * });
      * @return {dc_graph.diagram}
      **/
-    _diagram.defineArrow = function(name, width, height, refX, refY, drawf) {
-        _arrows[name] = {
-            name: name,
-            width: width,
-            height: height,
-            refX: refX,
-            refY: refY,
-            drawFunction: drawf
-        };
+    _diagram.defineArrow = function(defn, width, height, refX, refY, drawf) {
+        if(typeof defn === 'string')
+            defn = {
+                name: defn,
+                width: width,
+                height: height,
+                refX: refX,
+                refY: refY,
+                drawFunction: drawf
+            };
+        _arrows[defn.name] = defn;
         return _diagram;
     };
 
@@ -4190,30 +4414,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         return name ? id : null;
     }
-    _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('crow', 12, 12, 0, 0, function(marker) {
-        marker.append('svg:path')
-            .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('dot', 10, 10, 0, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 5)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('stroke-width', '0px');
-    });
-    _diagram.defineArrow('odot', 10, 10, 10, 0, function(marker) {
-        marker.append('svg:circle')
-            .attr('r', 4)
-            .attr('cx', 5)
-            .attr('cy', 0)
-            .attr('fill', 'white')
-            .attr('stroke-width', '1px');
+
+    Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
+        var defn = dc_graph.builtin_arrows[aname];
+        defn.name = aname;
+        _diagram.defineArrow(defn);
     });
 
     function globalTransform(pos, scale, animate) {
@@ -5333,7 +5538,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             var props = [
                 stringize_property('width', v.width/72),
                 stringize_property('height', v.height/72),
-                stringize_property('fixedsize', 'true')
+                stringize_property('fixedsize', 'shape'),
+                stringize_property('shape', v.abstract.shape)
             ];
             if(v.dcg_nodeFixed)
                 props.push(stringize_property('pos', [
@@ -10014,7 +10220,7 @@ dc_graph.expand_collapse = function(options) {
 
         _keyboard
             .on('keydown.expand-collapse', function() {
-                if(d3.event.key === options.hideKey && (_overNode || _overEdge)) {
+                if(d3.event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
                     if(_overNode)
                         highlight_hiding_node(diagram, _overNode, edge);
                     if(_overEdge)
@@ -10066,13 +10272,37 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function expand(dir, nk, whether) {
-        var exec;
-        _expanded[dir][nk] = whether;
-        expanded_highlight_group.highlight(_expanded.both, {});
-        if(whether)
-            options.expand(nk, dir);
+        if(dir === 'both' && !_expanded.both)
+            options.dirs.forEach(function(dir2) {
+                _expanded[dir2][nk] = whether;
+            });
         else
-            options.collapse(nk, dir);
+            _expanded[dir][nk] = whether;
+        var bothmap;
+        if(_expanded.both)
+            bothmap = _expanded.both;
+        else {
+            bothmap = Object.keys(_expanded.in).filter(function(nk2) {
+                return _expanded.in[nk2] && _expanded.out[nk2];
+            }).reduce(function(p, v) {
+                p[v] = true;
+                return p;
+            }, {});
+        }
+        expanded_highlight_group.highlight(bothmap, {});
+        if(dir === 'both' && !_expanded.both)
+            options.dirs.forEach(function(dir2, i) {
+                if(whether)
+                    options.expand(nk, dir2, i !== options.dirs.length-1);
+                else
+                    options.collapse(nk, dir2, i !== options.dirs.length-1);
+            });
+        else {
+            if(whether)
+                options.expand(nk, dir);
+            else
+                options.collapse(nk, dir);
+        }
     }
 
     function expandNodes(nks) {
@@ -10167,7 +10397,7 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 default: throw new Error('unknown direction ' + dir);
                 }
             },
-            expand: function(nk, dir) {
+            expand: function(nk, dir, skip_draw) {
                 _nodeShown[nk] = true;
                 switch(dir) {
                 case 'out':
@@ -10184,8 +10414,23 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                     break;
                 default: throw new Error('unknown direction ' + dir);
                 }
+                if(!skip_draw) {
+                    apply_filter();
+                    dc.redrawAll();
+                }
+            },
+            expandedNodes: function(_) {
+                if(!arguments.length)
+                    throw new Error('not supported'); // should not be called
+                var that = this;
+                _nodeShown = {};
+                Object.keys(_).forEach(function(nk) {
+                    that.expand(nk, 'out', true);
+                    that.expand(nk, 'in', true);
+                });
                 apply_filter();
                 dc.redrawAll();
+                return this;
             },
             collapsibles: function(nk, dir) {
                 var nodes = {}, edges = {};
@@ -10228,6 +10473,16 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 });
                 apply_filter();
                 dc.redrawAll();
+            },
+            expandedNodes: function(_) {
+                if(!arguments.length)
+                    throw new Error('not supported'); // should not be called
+                var that = this;
+                _nodeShown = {};
+                Object.keys(_).forEach(function(nk) {
+                    that.expand(nk);
+                });
+                return this;
             },
             collapsibles: function(nk, dir) {
                 var nodes = {}, edges = {};
