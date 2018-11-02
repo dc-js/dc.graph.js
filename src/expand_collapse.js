@@ -375,7 +375,7 @@ dc_graph.expand_collapse = function(options) {
             bothmap = _expanded.both;
         else {
             bothmap = Object.keys(_expanded.in).filter(function(nk2) {
-                return _expanded.out[nk2];
+                return _expanded.in[nk2] && _expanded.out[nk2];
             }).reduce(function(p, v) {
                 p[v] = true;
                 return p;
