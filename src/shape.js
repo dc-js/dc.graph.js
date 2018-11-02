@@ -165,7 +165,8 @@ dc_graph.shape_presets = {
                         {x: -rx, y: -ry},
                         {x: -rx, y: ry}
                     ];
-                }
+                },
+                minrx: 30
             };
         }
     }
@@ -693,6 +694,14 @@ dc_graph.elaborated_rectangle_shape = function() {
         return point_on_polygon(points, 0, 0, deltaX, deltaY);
     };
     delete _shape.useRadius;
+    var orig_radii = _shape.calc_radii;
+    _shape.calc_radii = function(n, ry, bbox) {
+        var ret = orig_radii(n, ry, bbox);
+        return {
+            rx: Math.max(ret.rx, n.dcg_shape.minrx),
+            ry: ret.ry
+        };
+    };
     _shape.create = function(nodeEnter) {
         nodeEnter.insert('path', ':first-child')
             .attr('class', 'node-shape');
