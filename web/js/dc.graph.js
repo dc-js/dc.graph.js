@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.6.6
+ *  dc.graph 0.6.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.6.6
+ * @version 0.6.7
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.6.6',
+    version: '0.6.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -796,14 +796,72 @@ dc_graph.shape_presets = {
                         {x: -rx, y: -ry*1.5},
                         {x: -rx, y: -ry},
                         {x: rx, y: -ry},
+                        {x: rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    rpromoter: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
                         {x: rx, y: ry},
+                        {x: rx, y: ry*1.5},
+                        {x: rx + ry*1.5, y: 0},
+                        {x: rx, y: -ry*1.5},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: 0, y: ry*1.5},
+                        {x: 0, y: ry},
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    lpromoter: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: -rx, y: ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: -rx - ry*1.5, y: 0},
+                        {x: -rx, y: -ry*1.5},
+                        {x: -rx, y: -ry},
+                        {x: rx, y: -ry},
+                        {x: rx, y: ry*1.5},
+                        {x: 0, y: ry*1.5},
                         {x: 0, y: ry}
                     ];
                 },
                 minrx: 30
             };
         }
-    }
+    },
+    cds: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx + ry, y: 0},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
 };
 
 dc_graph.shape_presets.box = dc_graph.shape_presets.rect = dc_graph.shape_presets.rectangle;
