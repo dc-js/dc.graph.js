@@ -11,6 +11,7 @@ var options = {
     rndarrow: false,
     edgeCat: null,
     edgeExpn: null,
+    expand_strategy: null,
     expanded: {
         default: [],
         subscribe: function(k) {

@@ -364,13 +364,37 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function expand(dir, nk, whether) {
-        var exec;
-        _expanded[dir][nk] = whether;
-        expanded_highlight_group.highlight(_expanded.both, {});
-        if(whether)
-            options.expand(nk, dir);
+        if(dir === 'both' && !_expanded.both)
+            options.dirs.forEach(function(dir2) {
+                _expanded[dir2][nk] = whether;
+            });
         else
-            options.collapse(nk, dir);
+            _expanded[dir][nk] = whether;
+        var bothmap;
+        if(_expanded.both)
+            bothmap = _expanded.both;
+        else {
+            bothmap = Object.keys(_expanded.in).filter(function(nk2) {
+                return _expanded.out[nk2];
+            }).reduce(function(p, v) {
+                p[v] = true;
+                return p;
+            }, {});
+        }
+        expanded_highlight_group.highlight(bothmap, {});
+        if(dir === 'both' && !_expanded.both)
+            options.dirs.forEach(function(dir2) {
+                if(whether)
+                    options.expand(nk, dir2);
+                else
+                    options.collapse(nk, dir2);
+            });
+        else {
+            if(whether)
+                options.expand(nk, dir);
+            else
+                options.collapse(nk, dir);
+        }
     }
 
     function expandNodes(nks) {
