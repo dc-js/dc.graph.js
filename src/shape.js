@@ -218,14 +218,72 @@ dc_graph.shape_presets = {
                         {x: -rx, y: -ry*1.5},
                         {x: -rx, y: -ry},
                         {x: rx, y: -ry},
+                        {x: rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    rpromoter: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
                         {x: rx, y: ry},
+                        {x: rx, y: ry*1.5},
+                        {x: rx + ry*1.5, y: 0},
+                        {x: rx, y: -ry*1.5},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: 0, y: ry*1.5},
+                        {x: 0, y: ry},
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
+    lpromoter: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: -rx, y: ry},
+                        {x: -rx, y: ry*1.5},
+                        {x: -rx - ry*1.5, y: 0},
+                        {x: -rx, y: -ry*1.5},
+                        {x: -rx, y: -ry},
+                        {x: rx, y: -ry},
+                        {x: rx, y: ry*1.5},
+                        {x: 0, y: ry*1.5},
                         {x: 0, y: ry}
                     ];
                 },
                 minrx: 30
             };
         }
-    }
+    },
+    cds: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx + ry, y: 0},
+                        {x: rx, y: -ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry}
+                    ];
+                },
+                minrx: 30
+            };
+        }
+    },
 };
 
 dc_graph.shape_presets.box = dc_graph.shape_presets.rect = dc_graph.shape_presets.rectangle;
