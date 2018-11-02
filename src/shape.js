@@ -152,6 +152,22 @@ dc_graph.shape_presets = {
                 noshape: true
             };
         }
+    },
+    house: {
+        generator: 'elaborated-rect',
+        preset: function() {
+            return {
+                get_points: function(rx, ry) {
+                    return [
+                        {x: rx, y: ry},
+                        {x: rx, y: -ry},
+                        {x: 0, y: -2*ry},
+                        {x: -rx, y: -ry},
+                        {x: -rx, y: ry}
+                    ];
+                }
+            };
+        }
     }
 };
 
@@ -664,6 +680,28 @@ dc_graph.rounded_rectangle_shape = function() {
                     }
                 });
         }
+    };
+    return _shape;
+};
+
+// this is not all that accurate - idea is that arrows, houses, etc, are rectangles
+// in terms of sizing, but elaborated drawing & clipping. refine until done.
+dc_graph.elaborated_rectangle_shape = function() {
+    var _shape = dc_graph.rounded_rectangle_shape();
+    _shape.intersect_vec = function(n, deltaX, deltaY) {
+        var points = n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry);
+        return point_on_polygon(points, 0, 0, deltaX, deltaY);
+    };
+    delete _shape.useRadius;
+    _shape.create = function(nodeEnter) {
+        nodeEnter.insert('path', ':first-child')
+            .attr('class', 'node-shape');
+    };
+    _shape.update = function(node) {
+        node.select('path.node-shape')
+            .attr('d', function(n) {
+                return generate_path(n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry), 1, true);
+            });
     };
     return _shape;
 };
