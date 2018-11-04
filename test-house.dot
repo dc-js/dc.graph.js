@@ -1,5 +1,0 @@
-digraph G {
-  node [shape=lpromoter]
-  {Abracadabra Beelzebub Candelabra} -> D
-  D -> {E F}
-}
