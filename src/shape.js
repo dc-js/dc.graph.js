@@ -295,8 +295,8 @@ dc_graph.available_shapes = function() {
 
 var default_shape = {shape: 'ellipse'};
 
-function normalize_shape_def(n) {
-    var def =  diagram.nodeShape.eval(n);
+function normalize_shape_def(diagram, n) {
+    var def = diagram.nodeShape.eval(n);
     if(!def)
         return default_shape;
     if(typeof def === 'string')
@@ -324,7 +324,7 @@ function elaborate_shape(diagram, def) {
 
 function infer_shape(diagram) {
     return function(n) {
-        var def = normalize_shape_def(n);
+        var def = normalize_shape_def(diagram, n);
         n.dcg_shape = elaborate_shape(diagram, def);
         n.dcg_shape.abstract = def;
     };
@@ -332,7 +332,7 @@ function infer_shape(diagram) {
 
 function shape_changed(diagram) {
     return function(n) {
-        var def = normalize_shape_def(n);
+        var def = normalize_shape_def(diagram, n);
         var old = n.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
