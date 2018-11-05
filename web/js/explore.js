@@ -214,7 +214,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     ).durationOverride(0));
     dc.renderAll();
     diagram.autoZoom('once-noanim');
-    var starter = d3.select('#start-from');
+    var starter = d3.select('#add-node');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')
         .attr('value', function(d) { return d.value; })
