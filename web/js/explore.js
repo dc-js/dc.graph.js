@@ -226,6 +226,10 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         diagram.autoZoom('once-noanim');
         dc.redrawAll();
     });
+
+    d3.select('#reset').on('click', function() {
+        sync_url.update('expanded', []);
+    });
     if(sync_url.vals.start)
         expand_collapse.expand('both', sync_url.vals.start, true);
     else sync_url.exert();
