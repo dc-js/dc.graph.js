@@ -84,12 +84,12 @@ dc_graph.builtin_arrows = {
     }
 };
 
-function arrow_parts(desc) {
+function arrow_parts(arrdefs, desc) {
     // graphviz appears to use a real parser for this
     var parts = [];
     while(desc && desc.length) {
         var ok = false;
-        for(var an in dc_graph.builtin_arrows)
+        for(var an in arrdefs)
             if(desc.substring(0, an.length) === an) {
                 ok = true;
                 parts.push(an);
@@ -104,9 +104,9 @@ function arrow_parts(desc) {
     return parts;
 }
 
-function arrow_length(parts) {
+function arrow_length(arrdefs, parts) {
     return d3.sum(parts, function(p) {
-        return dc_graph.builtin_arrows[p].slength;
+        return arrdefs[p].slength;
     });
 }
 
@@ -114,11 +114,11 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
     if(e[kind + 'ArrowLast'] === desc)
         return id;
-    var parts = arrow_parts(desc),
+    var parts = arrow_parts(arrdefs, desc),
         marker = diagram.addOrRemoveDef(id, !!parts.length, 'svg:marker');
 
     if(parts.length) {
-        var totlen = arrow_length(parts);
+        var totlen = arrow_length(arrdefs, parts);
         marker
             .attr('viewBox', [10-totlen, -5, totlen, 10].join(' '))
             .attr('refX', arrdefs[parts[0]].refX)
