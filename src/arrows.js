@@ -18,11 +18,6 @@ function offsetx(ofsx) {
 
 dc_graph.builtin_arrows = {
     vee: {
-        width: 12,
-        height: 12,
-        refX: 10,
-        refY: 0,
-        slength: 10,
         drawFunction: function(marker, ofsx) {
             var points = [
                 {x: 0, y: -5},
@@ -36,11 +31,6 @@ dc_graph.builtin_arrows = {
         }
     },
     crow: {
-        width: 12,
-        height: 12,
-        refX: 10,
-        refY: 0,
-        slength: 10,
         drawFunction: function(marker, ofsx) {
             var points = [
                 {x: 10, y: -5},
@@ -54,11 +44,6 @@ dc_graph.builtin_arrows = {
         }
     },
     dot: {
-        width: 10,
-        height: 10,
-        refX: 10,
-        refY: 0,
-        slength: 8,
         drawFunction: function(marker, ofsx) {
             marker.append('svg:circle')
                 .attr('r', 4)
@@ -68,11 +53,6 @@ dc_graph.builtin_arrows = {
         }
     },
     odot: {
-        width: 10,
-        height: 10,
-        refX: 10,
-        refY: 0,
-        slength: 8,
         drawFunction: function(marker, ofsx) {
             marker.append('svg:circle')
                 .attr('r', 4)
@@ -104,10 +84,50 @@ function arrow_parts(arrdefs, desc) {
     return parts;
 }
 
-function arrow_length(arrdefs, parts) {
-    return d3.sum(parts, function(p) {
-        return arrdefs[p].slength;
+function union_viewbox(vb1, vb2) {
+    var left = Math.min(vb1[0], vb2[0]),
+        bottom = Math.min(vb1[1], vb2[1]),
+        right = Math.max(vb1[0] + vb1[2], vb2[0] + vb2[2]),
+        top = Math.max(vb1[1] + vb1[3], vb2[1] + vb2[3]);
+    return [left, bottom, right - left, top - bottom];
+}
+
+function arrow_offsets(arrdefs, parts) {
+    var frontRef = null, backRef = null;
+    return parts.map(function(p, i) {
+        var fr = arrdefs[p].frontRef || _default_arrow_frontref,
+            br = arrdefs[p].backRef || _default_arrow_backref;
+        if(i === 0) {
+            frontRef = fr;
+            backRef = br;
+            return {backRef: br, frontRef: fr, offset: [0, 0]};
+        } else {
+            var ofs = [backRef[0] - fr[0], backRef[1] - fr[1]];
+            backRef = [br[0] + ofs[0], br[1] + ofs[1]];
+            return {backRef: backRef, frontRef: fr, offset: ofs};
+        }
     });
+}
+var _default_arrow_viewbox = [0, -5, 10, 10],
+    _default_arrow_frontref = [10, 0],
+    _default_arrow_backref = [0, 0];
+
+function arrow_bounds(arrdefs, parts) {
+    var viewBox = null, offsets = arrow_offsets(arrdefs, parts);
+    parts.forEach(function(p, i) {
+        var vb = arrdefs[p].viewBox || _default_arrow_viewbox;
+        var ofs = offsets[i].offset;
+        if(!viewBox)
+            viewBox = vb;
+        else
+            viewBox = union_viewbox(viewBox, [vb[0] + ofs[0], vb[1] + ofs[1], vb[2], vb[3]]);
+    });
+    return {offsets: offsets, viewBox: viewBox};
+}
+
+function arrow_length(arrdefs, parts) {
+    var offsets = arrow_offsets(arrdefs, parts);
+    return offsets[0].frontRef[0] - offsets[offsets.length-1].backRef[0];
 }
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
@@ -118,22 +138,21 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
         marker = diagram.addOrRemoveDef(id, !!parts.length, 'svg:marker');
 
     if(parts.length) {
-        var totlen = arrow_length(arrdefs, parts);
+        var bounds = arrow_bounds(arrdefs, parts),
+            frontRef = bounds.offsets[0].frontRef;
         marker
-            .attr('viewBox', [10-totlen, -5, totlen, 10].join(' '))
-            .attr('refX', arrdefs[parts[0]].refX)
-            .attr('refY', arrdefs[parts[0]].refY)
+            .attr('viewBox', bounds.viewBox.join(' '))
+            .attr('refX', frontRef[0])
+            .attr('refY', frontRef[1])
             .attr('markerUnits', 'userSpaceOnUse')
-            .attr('markerWidth', totlen*diagram.edgeArrowSize.eval(e))
-            .attr('markerHeight', d3.max(parts, function(p) { return arrdefs[p].height; })*diagram.edgeArrowSize.eval(e))
+            .attr('markerWidth', bounds.viewBox[2]*diagram.edgeArrowSize.eval(e))
+            .attr('markerHeight', bounds.viewBox[3]*diagram.edgeArrowSize.eval(e))
             .attr('stroke', diagram.edgeStroke.eval(e))
             .attr('fill', diagram.edgeStroke.eval(e));
         marker.html(null);
-        var ofsx = 0;
-        parts.forEach(function(p) {
+        parts.forEach(function(p, i) {
             marker
-                .call(arrdefs[p].drawFunction, ofsx);
-            ofsx -= arrdefs[p].slength;
+                .call(arrdefs[p].drawFunction, bounds.offsets[i].offset[0]);
         });
     }
     e[kind + 'ArrowLast'] = desc;
