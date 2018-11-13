@@ -25,6 +25,7 @@ dc_graph.grid = function() {
                     x2: function(d) { return d - ofs; }
                 });
             vlines.attr({
+                'stroke-width': 1/scale,
                 y1: yDomain[0],
                 y2: yDomain[1]
             });
@@ -39,6 +40,7 @@ dc_graph.grid = function() {
                     y2: function(d) { return d - ofs; }
                 });
             hlines.attr({
+                'stroke-width': 1/scale,
                 x1: xDomain[0],
                 x2: xDomain[1]
             });
