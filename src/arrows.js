@@ -126,6 +126,8 @@ function arrow_bounds(arrdefs, parts) {
 }
 
 function arrow_length(arrdefs, parts) {
+    if(!parts.length)
+        return 0;
     var offsets = arrow_offsets(arrdefs, parts);
     return offsets[0].frontRef[0] - offsets[offsets.length-1].backRef[0];
 }
