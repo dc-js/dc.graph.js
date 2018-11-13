@@ -18,45 +18,45 @@ function offsetx(ofsx) {
 
 dc_graph.builtin_arrows = {
     vee: {
-        drawFunction: function(marker, ofsx) {
+        drawFunction: function(marker, ofs) {
             var points = [
                 {x: 0, y: -5},
                 {x: 10, y: 0},
                 {x: 0, y: 5},
                 {x: 3, y: 0}
-            ].map(offsetx(ofsx));
+            ].map(offsetx(ofs[0]));
             marker.append('svg:path')
                 .attr('d', generate_path(points, 1, true))
                 .attr('stroke-width', '0px');
         }
     },
     crow: {
-        drawFunction: function(marker, ofsx) {
+        drawFunction: function(marker, ofs) {
             var points = [
                 {x: 10, y: -5},
                 {x: 0, y: 0},
                 {x: 10, y: 5},
                 {x: 7, y: 0}
-            ].map(offsetx(ofsx));
+            ].map(offsetx(ofs[0]));
             marker.append('svg:path')
                 .attr('d', generate_path(points, 1, true))
                 .attr('stroke-width', '0px');
         }
     },
     dot: {
-        drawFunction: function(marker, ofsx) {
+        drawFunction: function(marker, ofs) {
             marker.append('svg:circle')
                 .attr('r', 4)
-                .attr('cx', 5 + ofsx)
+                .attr('cx', 5 + ofs[0])
                 .attr('cy', 0)
                 .attr('stroke-width', '0px');
         }
     },
     odot: {
-        drawFunction: function(marker, ofsx) {
+        drawFunction: function(marker, ofs) {
             marker.append('svg:circle')
                 .attr('r', 4)
-                .attr('cx', 5 + ofsx)
+                .attr('cx', 5 + ofs[0])
                 .attr('cy', 0)
                 .attr('fill', 'none')
                 .attr('stroke-width', '1px');
@@ -165,7 +165,7 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
         marker.html(null);
         parts.forEach(function(p, i) {
             marker
-                .call(arrdefs[p].drawFunction, bounds.offsets[i][0]);
+                .call(arrdefs[p].drawFunction, bounds.offsets[i]);
         });
     }
     e[kind + 'ArrowLast'] = desc;
