@@ -92,31 +92,42 @@ function union_viewbox(vb1, vb2) {
     return [left, bottom, right - left, top - bottom];
 }
 
+function add_points(p1, p2) {
+    return [p1[0] + p2[0], p1[1] + p2[1]];
+}
+
+function defaulted(def) {
+    return function(x) {
+        return x || def;
+    };
+}
+
+var view_box = defaulted([0, -5, 10, 10]),
+    front_ref = defaulted([10, 0]),
+    back_ref = defaulted([0, 0]);
+
 function arrow_offsets(arrdefs, parts) {
     var frontRef = null, backRef = null;
     return parts.map(function(p, i) {
-        var fr = arrdefs[p].frontRef || _default_arrow_frontref,
-            br = arrdefs[p].backRef || _default_arrow_backref;
+        var fr = front_ref(arrdefs[p].frontRef),
+            br = back_ref(arrdefs[p].backRef);
         if(i === 0) {
             frontRef = fr;
             backRef = br;
-            return {backRef: br, frontRef: fr, offset: [0, 0]};
+            return [0, 0];
         } else {
             var ofs = [backRef[0] - fr[0], backRef[1] - fr[1]];
-            backRef = [br[0] + ofs[0], br[1] + ofs[1]];
-            return {backRef: backRef, frontRef: fr, offset: ofs};
+            backRef = add_points(br, ofs);
+            return ofs;
         }
     });
 }
-var _default_arrow_viewbox = [0, -5, 10, 10],
-    _default_arrow_frontref = [10, 0],
-    _default_arrow_backref = [0, 0];
 
 function arrow_bounds(arrdefs, parts) {
     var viewBox = null, offsets = arrow_offsets(arrdefs, parts);
     parts.forEach(function(p, i) {
-        var vb = arrdefs[p].viewBox || _default_arrow_viewbox;
-        var ofs = offsets[i].offset;
+        var vb = view_box(arrdefs[p].viewBox);
+        var ofs = offsets[i];
         if(!viewBox)
             viewBox = vb;
         else
@@ -129,7 +140,7 @@ function arrow_length(arrdefs, parts) {
     if(!parts.length)
         return 0;
     var offsets = arrow_offsets(arrdefs, parts);
-    return offsets[0].frontRef[0] - offsets[offsets.length-1].backRef[0];
+    return front_ref(arrdefs[parts[0]].frontRef)[0] - add_points(back_ref(arrdefs[parts[parts.length-1]].backDef), offsets[parts.length-1])[0];
 }
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
@@ -141,7 +152,7 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
 
     if(parts.length) {
         var bounds = arrow_bounds(arrdefs, parts),
-            frontRef = bounds.offsets[0].frontRef;
+            frontRef = front_ref(arrdefs[parts[0]].frontRef);
         marker
             .attr('viewBox', bounds.viewBox.join(' '))
             .attr('refX', frontRef[0])
@@ -154,7 +165,7 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
         marker.html(null);
         parts.forEach(function(p, i) {
             marker
-                .call(arrdefs[p].drawFunction, bounds.offsets[i].offset[0]);
+                .call(arrdefs[p].drawFunction, bounds.offsets[i][0]);
         });
     }
     e[kind + 'ArrowLast'] = desc;
