@@ -1,5 +1,6 @@
 dc_graph.troubleshoot = function() {
     var _debugLayer = null;
+    var _translate, _scale = 1, _xDomain, _yDomain;
 
     function add_behavior(diagram, node, edge, ehover) {
         if(!_debugLayer)
@@ -70,6 +71,14 @@ dc_graph.troubleshoot = function() {
             height: yd[1] - yd[0]
         });
     }
+    function on_zoom(translate, scale, xDomain, yDomain) {
+        _translate = translate;
+        _scale = scale;
+        _xDomain = xDomain;
+        _yDomain = yDomain;
+        add_behavior(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges());
+    }
+
     function boundary(point, wid, hei) {
         return {
             left: point.x - wid/2,
@@ -121,7 +130,11 @@ dc_graph.troubleshoot = function() {
     var _behavior = dc_graph.behavior('highlight-paths', {
         laterDraw: true,
         add_behavior: add_behavior,
-        remove_behavior: remove_behavior
+        remove_behavior: remove_behavior,
+        parent: function(p) {
+            if(p)
+                p.on('zoomed.troubleshoot', on_zoom);
+        }
     });
     _behavior.opacity = property(0.75);
 
