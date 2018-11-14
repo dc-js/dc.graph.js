@@ -15,7 +15,8 @@ var options = {
         exert: function(val, diagram) {
             diagram.zoom().scale(+val).event(diagram.svg());
         }
-    }
+    },
+    debug: false
 };
 var diagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
@@ -61,6 +62,9 @@ diagram
     .edgeArrowtail(() => sync_url.vals.arrowtail);
 
 diagram.child('grid', dc_graph.grid());
+
+if(sync_url.vals.debug)
+    diagram.child('troubleshoot', dc_graph.troubleshoot());
 
 diagram.render();
 sync_url.exert();
