@@ -92,6 +92,10 @@ function union_viewbox(vb1, vb2) {
     return [left, bottom, right - left, top - bottom];
 }
 
+function subtract_points(p1, p2) {
+    return [p1[0] - p2[0], p1[1] - p2[1]];
+}
+
 function add_points(p1, p2) {
     return [p1[0] + p2[0], p1[1] + p2[1]];
 }
@@ -116,7 +120,7 @@ function arrow_offsets(arrdefs, parts) {
             backRef = br;
             return [0, 0];
         } else {
-            var ofs = [backRef[0] - fr[0], backRef[1] - fr[1]];
+            var ofs = subtract_points(backRef, fr);
             backRef = add_points(br, ofs);
             return ofs;
         }
