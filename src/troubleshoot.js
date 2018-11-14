@@ -71,6 +71,27 @@ dc_graph.troubleshoot = function() {
         var tailOrients = _debugLayer.selectAll('line.tails').data(tails);
         draw_arrow_orient(tailOrients, 'tails', _behavior.arrowTailColor(), '#debug-orient-marker-tail');
 
+        var headpts = edge.data().map(function(e) {
+            var arrows = diagram.arrows(),
+                parts = arrow_parts(arrows, diagram.edgeArrowhead.eval(e)),
+                offsets = arrow_offsets(arrows, parts),
+                orient = unrad(e.pos.new.orienthead),
+                xunit = [Math.cos(orient), Math.sin(orient)],
+                yunit = [xunit[1], -xunit[0]],
+                endp = e.pos.new.path.points[e.pos.new.path.points.length-1];
+            endp = [endp.x, endp.y];
+            return offsets.map(function(ofs, i) {
+                var p = add_points(front_ref(arrows[parts[i]].frontRef), ofs);
+                return add_points(
+                    endp,
+                    [-p[0]*xunit[0] + p[1]*yunit[0], p[1]*xunit[1] - p[0]*yunit[1]]
+                );
+            });
+        }).flat();
+
+        var hp = _debugLayer.selectAll('path.head-point').data(headpts);
+        draw_x(hp, 'head-point', _behavior.arrowHeadColor());
+
         var domain = _debugLayer.selectAll('rect.domain').data([0]);
         domain.enter().append('rect');
         var xd = _behavior.parent().x().domain(), yd = _behavior.parent().y().domain();
@@ -124,14 +145,17 @@ dc_graph.troubleshoot = function() {
             fill: 'none'
         });
     }
+        function unrad(orient) {
+            return +orient.replace('rad','');
+        }
     function draw_arrow_orient(binding, classname, color, markerUrl) {
         binding.exit().remove();
         binding.enter().append('line').attr('class', classname);
         binding.attr({
             x1: function(d) { return d.pos.x; },
             y1: function(d) { return d.pos.y; },
-            x2: function(d) { return d.pos.x - Math.cos(+d.orient.replace('rad',''))*_behavior.arrowLength(); },
-            y2: function(d) { return d.pos.y - Math.sin(+d.orient.replace('rad',''))*_behavior.arrowLength(); },
+            x2: function(d) { return d.pos.x - Math.cos(unrad(d.orient))*_behavior.arrowLength(); },
+            y2: function(d) { return d.pos.y - Math.sin(unrad(d.orient))*_behavior.arrowLength(); },
             stroke: color,
             'stroke-width': _behavior.arrowStrokeWidth()/_scale,
             opacity: _behavior.arrowOpacity() !== null ? _behavior.arrowOpacity() : _behavior.opacity(),
@@ -151,7 +175,23 @@ dc_graph.troubleshoot = function() {
             .attr('fill', 'none')
             .attr('d', 'M0,3 L3,0 L0,-3');
     }
-
+    function draw_x(binding, classname, color) {
+        var xw = _behavior.xWidth()/2, xh = _behavior.xHeight()/2;
+        binding.exit().remove();
+        binding.enter().append('path').attr('class', classname);
+        binding.attr({
+            d: function(pos) {
+                return [[[-xw,-xh],[xw,xh]], [[xw,-xh], [-xw,xh]]].map(function(seg) {
+                    return 'M' + seg.map(function(p) {
+                        return (pos[0] + p[0]) + ',' + (pos[1] + p[1]);
+                    }).join(' L');
+                }).join(' ');
+            },
+            'stroke-width': 1/_scale,
+            stroke: color,
+            opacity: _behavior.xOpacity()
+        });
+    }
     function remove_behavior(diagram, node, edge, ehover) {
         if(_debugLayer)
             _debugLayer.remove();
@@ -183,6 +223,10 @@ dc_graph.troubleshoot = function() {
     _behavior.arrowColor = _behavior.arrowHeadColor = property('orangered');
     _behavior.arrowTailColor = property('darkred');
     _behavior.arrowLength = property(100);
+
+    _behavior.xWidth = property(1);
+    _behavior.xHeight = property(1);
+    _behavior.xOpacity = property(0.5);
 
     _behavior.domainOpacity = property(0.6);
     _behavior.domainColor = property('darkorange');
