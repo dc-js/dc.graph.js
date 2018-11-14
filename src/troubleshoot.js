@@ -33,7 +33,7 @@ dc_graph.troubleshoot = function() {
             return boundary(cola_point(n), n.cola.width, n.cola.height);
         });
         var colaboundary = _debugLayer.selectAll('path.colaboundary').data(colabounds);
-        draw_corners(colaboundary, 'colaboundary');
+        draw_corners(colaboundary, 'colaboundary', _behavior.boundsColor());
 
         var textbounds = node.data().map(function(n) {
             if(!n.bbox)
@@ -41,7 +41,7 @@ dc_graph.troubleshoot = function() {
             return boundary(cola_point(n), n.bbox.width, n.bbox.height);
         }).filter(function(n) { return !!n; });
         var textboundary = _debugLayer.selectAll('path.textboundary').data(textbounds);
-        draw_corners(textboundary, 'textboundary');
+        draw_corners(textboundary, 'textboundary', _behavior.boundsColor());
 
         var radiibounds = node.data().map(function(n) {
             if(!typeof n.dcg_rx === 'number')
@@ -49,7 +49,7 @@ dc_graph.troubleshoot = function() {
             return boundary(cola_point(n), n.dcg_rx*2, n.dcg_ry*2);
         }).filter(function(n) { return !!n; });
         var radiiboundary = _debugLayer.selectAll('path.radiiboundary').data(radiibounds);
-        draw_corners(radiiboundary, 'radiiboundary');
+        draw_corners(radiiboundary, 'radiiboundary', _behavior.boundsColor());
 
         var heads = edge.data().map(function(e) {
             return {pos: e.pos.new.path.points[e.pos.new.path.points.length-1], orient: e.pos.new.orienthead};
@@ -99,13 +99,13 @@ dc_graph.troubleshoot = function() {
             bound_tick(bounds.left, bounds.bottom, _behavior.boundsWidth(), -_behavior.boundsHeight()),
         ].join(' ');
     }
-    function draw_corners(binding, classname) {
+    function draw_corners(binding, classname, color) {
         binding.exit().remove();
         binding.enter().append('path').attr('class', classname);
         binding.attr({
             d: corners,
             opacity: _behavior.boundsOpacity() !== null ? _behavior.boundsOpacity() : _behavior.opacity(),
-            stroke: _behavior.boundsColor(),
+            stroke: color,
             'stroke-width': 1/_scale,
             fill: 'none'
         });
