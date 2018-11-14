@@ -2795,6 +2795,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _diagram;
     };
 
+    // hmm
+    _diagram.arrows = function() {
+        return _arrows;
+    };
+
     _diagram.addOrRemoveDef = function(id, whether, tag, onEnter) {
         var data = whether ? [0] : [];
         var sel = _defs.selectAll('#' + id).data(data);
