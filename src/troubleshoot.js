@@ -23,7 +23,8 @@ dc_graph.troubleshoot = function() {
                     ' M' + c.x + ',' + (c.y - _behavior.xhairHeight()/2) + ' v' + _behavior.xhairHeight();
             },
             opacity: _behavior.xhairOpacity() !== null ? _behavior.xhairOpacity() : _behavior.opacity(),
-            stroke: _behavior.xhairColor()
+            stroke: _behavior.xhairColor(),
+            'stroke-width': 1/_scale
         });
         function cola_point(n) {
             return {x: n.cola.x, y: n.cola.y};
@@ -64,7 +65,7 @@ dc_graph.troubleshoot = function() {
             fill: 'none',
             opacity: _behavior.domainOpacity(),
             stroke: _behavior.domainColor(),
-            'stroke-width': _behavior.domainStrokeWidth(),
+            'stroke-width': _behavior.domainStrokeWidth()/_scale,
             x: xd[0],
             y: yd[0],
             width: xd[1] - xd[0],
@@ -105,6 +106,7 @@ dc_graph.troubleshoot = function() {
             d: corners,
             opacity: _behavior.boundsOpacity() !== null ? _behavior.boundsOpacity() : _behavior.opacity(),
             stroke: _behavior.boundsColor(),
+            'stroke-width': 1/_scale,
             fill: 'none'
         });
     }
@@ -155,7 +157,7 @@ dc_graph.troubleshoot = function() {
 
     _behavior.domainOpacity = property(0.6);
     _behavior.domainColor = property('darkorange');
-    _behavior.domainStrokeWidth = property(11);
+    _behavior.domainStrokeWidth = property(4);
 
     return _behavior;
 };
