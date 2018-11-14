@@ -51,11 +51,25 @@ dc_graph.troubleshoot = function() {
         var radiiboundary = _debugLayer.selectAll('path.radiiboundary').data(radiibounds);
         draw_corners(radiiboundary, 'radiiboundary', _behavior.boundsColor());
 
-        var heads = edge.data().map(function(e) {
+        diagram.addOrRemoveDef('debug-orient-marker-head',
+                               true,
+                               'svg:marker',
+                               orient_marker.bind(null, _behavior.arrowHeadColor()));
+        diagram.addOrRemoveDef('debug-orient-marker-tail',
+                               true,
+                               'svg:marker',
+                               orient_marker.bind(null, _behavior.arrowTailColor()));
+        var heads = _behavior.arrowLength() ? edge.data().map(function(e) {
             return {pos: e.pos.new.path.points[e.pos.new.path.points.length-1], orient: e.pos.new.orienthead};
-        });
+        }) : [];
         var headOrients = _debugLayer.selectAll('line.heads').data(heads);
-        draw_arrow_orient(headOrients, 'heads');
+        draw_arrow_orient(headOrients, 'heads', _behavior.arrowHeadColor(), '#debug-orient-marker-head');
+
+        var tails = _behavior.arrowLength() ? edge.data().map(function(e) {
+            return {pos: e.pos.new.path.points[0], orient: e.pos.new.orienttail};
+        }) : [];
+        var tailOrients = _debugLayer.selectAll('line.tails').data(tails);
+        draw_arrow_orient(tailOrients, 'tails', _behavior.arrowTailColor(), '#debug-orient-marker-tail');
 
         var domain = _debugLayer.selectAll('rect.domain').data([0]);
         domain.enter().append('rect');
@@ -110,7 +124,7 @@ dc_graph.troubleshoot = function() {
             fill: 'none'
         });
     }
-    function draw_arrow_orient(binding, classname) {
+    function draw_arrow_orient(binding, classname, color, markerUrl) {
         binding.exit().remove();
         binding.enter().append('line').attr('class', classname);
         binding.attr({
@@ -118,10 +132,24 @@ dc_graph.troubleshoot = function() {
             y1: function(d) { return d.pos.y; },
             x2: function(d) { return d.pos.x - Math.cos(+d.orient.replace('rad',''))*_behavior.arrowLength(); },
             y2: function(d) { return d.pos.y - Math.sin(+d.orient.replace('rad',''))*_behavior.arrowLength(); },
-            stroke: _behavior.arrowColor(),
-            'stroke-width': _behavior.arrowStrokeWidth(),
-            opacity: _behavior.arrowOpacity() !== null ? _behavior.arrowOpacity() : _behavior.opacity()
+            stroke: color,
+            'stroke-width': _behavior.arrowStrokeWidth()/_scale,
+            opacity: _behavior.arrowOpacity() !== null ? _behavior.arrowOpacity() : _behavior.opacity(),
+            'marker-end': 'url(' + markerUrl + ')'
         });
+    }
+    function orient_marker(color, markerEnter) {
+        markerEnter
+            .attr({
+                viewBox: '0 -3 3 6',
+                refX: 3,
+                refY: 0,
+                orient: 'auto'
+            });
+        markerEnter.append('path')
+            .attr('stroke', color)
+            .attr('fill', 'none')
+            .attr('d', 'M0,3 L3,0 L0,-3');
     }
 
     function remove_behavior(diagram, node, edge, ehover) {
@@ -152,7 +180,8 @@ dc_graph.troubleshoot = function() {
 
     _behavior.arrowOpacity = property(null);
     _behavior.arrowStrokeWidth = property(3);
-    _behavior.arrowColor = property('orangered');
+    _behavior.arrowColor = _behavior.arrowHeadColor = property('orangered');
+    _behavior.arrowTailColor = property('darkred');
     _behavior.arrowLength = property(100);
 
     _behavior.domainOpacity = property(0.6);

@@ -66,7 +66,8 @@ diagram.child('grid', dc_graph.grid());
 if(sync_url.vals.debug) {
     var troubleshoot = dc_graph.troubleshoot()
             .boundsWidth(5)
-            .boundsHeight(5);
+            .boundsHeight(5)
+            .arrowLength(0);
     diagram.child('troubleshoot', troubleshoot);
 }
 
