@@ -72,25 +72,26 @@ dc_graph.troubleshoot = function() {
         draw_arrow_orient(tailOrients, 'tails', _behavior.arrowTailColor(), '#debug-orient-marker-tail');
 
         var headpts = edge.data().map(function(e) {
-            var arrows = diagram.arrows(),
-                parts = arrow_parts(arrows, diagram.edgeArrowhead.eval(e)),
-                offsets = arrow_offsets(arrows, parts),
-                orient = unrad(e.pos.new.orienthead),
-                xunit = [Math.cos(orient), Math.sin(orient)],
-                yunit = [xunit[1], -xunit[0]],
-                endp = e.pos.new.path.points[e.pos.new.path.points.length-1];
-            endp = [endp.x, endp.y];
-            return offsets.map(function(ofs, i) {
-                var p = add_points(front_ref(arrows[parts[i]].frontRef), ofs);
-                return add_points(
-                    endp,
-                    [-p[0]*xunit[0] + p[1]*yunit[0], p[1]*xunit[1] - p[0]*yunit[1]]
-                );
-            });
+            return edge_arrow_points(
+                diagram.arrows(),
+                diagram.edgeArrowhead.eval(e),
+                unrad(e.pos.new.orienthead),
+                e.pos.new.path.points[e.pos.new.path.points.length-1]
+            );
         }).flat();
-
         var hp = _debugLayer.selectAll('path.head-point').data(headpts);
         draw_x(hp, 'head-point', _behavior.arrowHeadColor());
+
+        var tailpts = edge.data().map(function(e) {
+            return edge_arrow_points(
+                diagram.arrows(),
+                diagram.edgeArrowtail.eval(e),
+                unrad(e.pos.new.orienttail),
+                e.pos.new.path.points[0]
+            );
+        }).flat();
+        var tp = _debugLayer.selectAll('path.tail-point').data(tailpts);
+        draw_x(tp, 'tail-point', _behavior.arrowTailColor());
 
         var domain = _debugLayer.selectAll('rect.domain').data([0]);
         domain.enter().append('rect');
@@ -175,6 +176,35 @@ dc_graph.troubleshoot = function() {
             .attr('fill', 'none')
             .attr('d', 'M0,3 L3,0 L0,-3');
     }
+    function edge_arrow_points(arrows, defn, orient, endp) {
+        var parts = arrow_parts(arrows, defn),
+            offsets = arrow_offsets(arrows, parts),
+            xunit = [Math.cos(orient), Math.sin(orient)];
+        endp = [endp.x, endp.y];
+        if(!parts.length)
+            return [endp];
+        var globofs = mult_point(front_ref(arrows[parts[0]].frontRef), -1);
+        var pts = offsets.map(function(ofs, i) {
+            return [
+                globofs,
+                front_ref(arrows[parts[i]].frontRef),
+                ofs
+            ].reduce(add_points);
+        });
+        pts.push([
+            globofs,
+            back_ref(arrows[parts[parts.length-1]].backRef),
+            offsets[parts.length-1]
+        ].reduce(add_points));
+        return pts.map(function(p) {
+            return add_points(
+                endp,
+                [p[0]*xunit[0] - p[1]*xunit[1], p[0]*xunit[1] + p[1]*xunit[0]]
+            );
+        });
+    }
+
+
     function draw_x(binding, classname, color) {
         var xw = _behavior.xWidth()/2, xh = _behavior.xHeight()/2;
         binding.exit().remove();
@@ -187,7 +217,7 @@ dc_graph.troubleshoot = function() {
                     }).join(' L');
                 }).join(' ');
             },
-            'stroke-width': 1/_scale,
+            'stroke-width': 2/_scale,
             stroke: color,
             opacity: _behavior.xOpacity()
         });
@@ -223,13 +253,13 @@ dc_graph.troubleshoot = function() {
 
     _behavior.arrowOpacity = property(null);
     _behavior.arrowStrokeWidth = property(3);
-    _behavior.arrowColor = _behavior.arrowHeadColor = property('orangered');
-    _behavior.arrowTailColor = property('darkred');
+    _behavior.arrowColor = _behavior.arrowHeadColor = property('darkorange');
+    _behavior.arrowTailColor = property('red');
     _behavior.arrowLength = property(100);
 
     _behavior.xWidth = property(1);
     _behavior.xHeight = property(1);
-    _behavior.xOpacity = property(0.5);
+    _behavior.xOpacity = property(0.8);
 
     _behavior.domainOpacity = property(0.6);
     _behavior.domainColor = property('darkorange');

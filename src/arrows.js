@@ -100,6 +100,10 @@ function add_points(p1, p2) {
     return [p1[0] + p2[0], p1[1] + p2[1]];
 }
 
+function mult_point(p, s) {
+    return p.map(function(x) { return x*s; });
+}
+
 function defaulted(def) {
     return function(x) {
         return x || def;
