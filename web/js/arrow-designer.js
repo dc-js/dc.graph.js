@@ -50,9 +50,19 @@ var nodes = [
         y: 15
     },
     {
-        key: 'head',
+        key: 'head1',
         x: 85,
         y: 15
+    },
+    {
+        key: 'head2',
+        x: 15,
+        y: 85
+    },
+    {
+        key: 'head3',
+        x: 85,
+        y: 85
     }
 ];
 
@@ -60,7 +70,17 @@ var edges = [
     {
         key: 'e',
         sourcename: 'tail',
-        targetname: 'head'
+        targetname: 'head1'
+    },
+    {
+        key: 'f',
+        sourcename: 'tail',
+        targetname: 'head2'
+    },
+    {
+        key: 'g',
+        sourcename: 'tail',
+        targetname: 'head3'
     }
 ];
 
