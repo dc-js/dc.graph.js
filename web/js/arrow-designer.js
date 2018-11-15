@@ -28,6 +28,16 @@ var options = {
             diagram.child('troubleshoot', troubleshoot)
                 .redraw();
         }
+    },
+    grid: {
+        default: true,
+        selector: '#grid',
+        needs_redraw: true,
+        exert: function(val, diagram) {
+            var grid = val ? dc_graph.grid() : null;
+            diagram.child('grid', grid)
+                .redraw();
+        }
     }
 };
 var diagram = dc_graph.diagram('#graph');
@@ -72,8 +82,6 @@ diagram
     .edgeLabel(null)
     .edgeArrowhead(() => sync_url.vals.arrowhead)
     .edgeArrowtail(() => sync_url.vals.arrowtail);
-
-diagram.child('grid', dc_graph.grid());
 
 diagram.render();
 sync_url.exert();
