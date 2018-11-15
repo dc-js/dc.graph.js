@@ -44,7 +44,7 @@ dc_graph.troubleshoot = function() {
         draw_corners(textboundary, 'textboundary', _behavior.boundsColor());
 
         var radiibounds = node.data().map(function(n) {
-            if(!typeof n.dcg_rx === 'number')
+            if(typeof n.dcg_rx !== 'number')
                 return null;
             return boundary(cola_point(n), n.dcg_rx*2, n.dcg_ry*2);
         }).filter(function(n) { return !!n; });
