@@ -36,7 +36,7 @@ dc_graph.troubleshoot = function() {
         draw_corners(colaboundary, 'colaboundary', _behavior.boundsColor());
 
         var textbounds = node.data().map(function(n) {
-            if(!n.bbox)
+            if(!n.bbox || (!n.bbox.width && !n.bbox.height))
                 return null;
             return boundary(cola_point(n), n.bbox.width, n.bbox.height);
         }).filter(function(n) { return !!n; });
