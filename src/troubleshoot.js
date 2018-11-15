@@ -202,8 +202,11 @@ dc_graph.troubleshoot = function() {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
-            if(p)
+            if(p) {
+                _translate = p.translate();
+                _scale = p.scale();
                 p.on('zoomed.troubleshoot', on_zoom);
+            }
         }
     });
     _behavior.opacity = property(0.75);

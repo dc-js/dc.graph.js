@@ -16,7 +16,19 @@ var options = {
             diagram.zoom().scale(+val).event(diagram.svg());
         }
     },
-    debug: false
+    debug: {
+        default: false,
+        selector: '#debug',
+        needs_redraw: true,
+        exert: function(val, diagram) {
+            var troubleshoot = val ? dc_graph.troubleshoot()
+                .boundsWidth(5)
+                .boundsHeight(5)
+                .arrowLength(0) : null;
+            diagram.child('troubleshoot', troubleshoot)
+                .redraw();
+        }
+    }
 };
 var diagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
@@ -62,14 +74,6 @@ diagram
     .edgeArrowtail(() => sync_url.vals.arrowtail);
 
 diagram.child('grid', dc_graph.grid());
-
-if(sync_url.vals.debug) {
-    var troubleshoot = dc_graph.troubleshoot()
-            .boundsWidth(5)
-            .boundsHeight(5)
-            .arrowLength(0);
-    diagram.child('troubleshoot', troubleshoot);
-}
 
 diagram.render();
 sync_url.exert();
