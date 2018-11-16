@@ -167,6 +167,24 @@ dc_graph.builtin_arrows = {
                 .attr('stroke-width', '0px');
         }
     },
+    onormal: {
+        frontRef: [8,0],
+        viewBox: [0, -3, 8, 6],
+        kernstems: [0,2],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 0.5, y: 2.28},
+                {x: 6.57, y: 0},
+                {x: 0.5, y: -2.28}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr({
+                    d: generate_path(points, 1, true),
+                    'stroke-width': 1,
+                    fill: 'none'
+                });
+        }
+    },
     inv: {
         frontRef: [8,0],
         viewBox: [0, -3, 8, 6],
@@ -180,6 +198,24 @@ dc_graph.builtin_arrows = {
             marker.append('svg:path')
                 .attr('d', generate_path(points, 1, true))
                 .attr('stroke-width', '0px');
+        }
+    },
+    oinv: {
+        frontRef: [8,0],
+        viewBox: [0, -3, 8, 6],
+        kernstems: [2,0],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 7.5, y: 2.28},
+                {x: 1.43, y: 0},
+                {x: 7.5, y: -2.28}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr({
+                    d: generate_path(points, 1, true),
+                    'stroke-width': 1,
+                    fill: 'none'
+                });
         }
     },
     tee: {
