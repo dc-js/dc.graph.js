@@ -6,32 +6,23 @@
   <link rel="icon" href="img/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" type="text/css" href="css/explore.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
-  <script type="text/javascript" src="js/dc.js"></script>
   <script type="text/javascript" src="js/chart.registry.js"></script>
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/viz.js"></script>
-  <script type="text/javascript" src="js/dc.graph.js"></script>
+  <script type="text/javascript" src="js/dc.graph.js"></script>e
   <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 
   <script type="text/javascript" src="js/querystring.js"></script>
-  <script type="text/javascript" src="js/sync-url-options.js"></script>
-  <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
 </head>
 
 <body>
-  <div id="main">
-    <div id="controls">
-      <label for='#add-node'>Add node&nbsp;</label><select id="add-node"></select>&nbsp;&nbsp;
-      <button id=reset class="btn-xs btn-default">reset</button>
-    </div>
-    <div id="graph"></div>
-  </div>
-  <div id="message" style="display: none;"></div>
+
+  Start from&nbsp;<select id="start-from"></select>
+  <div id="graph"></div>
 
 <script type="text/javascript" src="js/explore.js"></script>
 </body>

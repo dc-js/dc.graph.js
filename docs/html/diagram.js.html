@@ -1398,12 +1398,12 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('stroke-dasharray', _diagram.edgeStrokeDashArray.eval)
             .attr('marker-end', function(e) {
                 var name = _diagram.edgeArrowhead.eval(e),
-                    id = edgeArrow(e, 'head', name);
+                    id = edgeArrow(_diagram, _arrows, e, 'head', name);
                 return id ? 'url(#' + id + ')' : null;
             })
             .attr('marker-start', function(e) {
                 var name = _diagram.edgeArrowtail.eval(e),
-                    arrow_id = edgeArrow(e, 'tail', name);
+                    arrow_id = edgeArrow(_diagram, _arrows, e, 'tail', name);
                 return name ? 'url(#' + arrow_id + ')' : null;
             })
             .each(function(e) {
@@ -1692,8 +1692,8 @@ dc_graph.diagram = function (parent, chartGroup) {
             .delay(_diagram.deleteDelay())
             .attr('opacity', 0)
             .each(function(e) {
-                edgeArrow(e, 'head', null);
-                edgeArrow(e, 'head', null);
+                edgeArrow(_diagram, _arrows, e, 'head', null);
+                edgeArrow(_diagram, _arrows, e, 'tail', null);
             })
             .remove();
 
@@ -1876,7 +1876,9 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         if(skip_layout) {
             _running = false;
-            _dispatch.end(false);
+            draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter, edgeLabels, edgeLabelsEnter, textPaths, textPathsEnter, true);
+            draw_ports(node);
+            _dispatch.transitionsStarted(node, edge, edgeHover);
             check_zoom(node, edge);
             return this;
         }
@@ -2443,6 +2445,20 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .attr('d', render_edge_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
 
+        edge
+            .each(function(e) {
+                var totlength = this.getTotalLength(),
+                    arrowSize = diagram.edgeArrowSize.eval(e);
+                var headlength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e))),
+                    taillength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)));
+                var tailStroke = _diagram.nodeStrokeWidth.eval(e.tail),
+                    headStroke = _diagram.nodeStrokeWidth.eval(e.head),
+                    length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
+                d3.select(this)
+                    .attr('stroke-dasharray', length + ' ' + totlength*2)
+                    .attr('stroke-dashoffset', -(taillength + tailStroke/2));
+            });
+
         var etrans = edge
                 .each(function(e) {
                     if(_diagram.edgeArrowhead.eval(e))
@@ -2725,6 +2741,13 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.y = property(null);
 
+    _diagram.zoom = function(_) {
+        if(!arguments.length)
+            return _zoom;
+        _zoom = _; // is this a good idea?
+        return _diagram;
+    };
+
     /**
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
@@ -2764,6 +2787,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         _g = _;
         return _diagram;
+    };
+
+    _diagram.translate = function() {
+        return _translate;
+    };
+    _diagram.scale = function() {
+        return _scale;
     };
 
     /**
@@ -2855,42 +2885,23 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _diagram;
     };
 
-    _diagram.addOrRemoveDef = function(id, whether, tag) {
+    // hmm
+    _diagram.arrows = function() {
+        return _arrows;
+    };
+
+    _diagram.addOrRemoveDef = function(id, whether, tag, onEnter) {
         var data = whether ? [0] : [];
         var sel = _defs.selectAll('#' + id).data(data);
 
         var selEnter = sel
             .enter().append(tag)
-                .attr('id', id);
+              .attr('id', id);
+        if(selEnter.size() &amp;&amp; onEnter)
+            selEnter.call(onEnter);
         sel.exit().remove();
-        return selEnter;
+        return sel;
     };
-
-    var unknown_styles = {};
-    function edgeArrow(e, kind, name) {
-        var id = _diagram.arrowId(e, kind),
-            markerEnter = _diagram.addOrRemoveDef(id, !!name, 'svg:marker');
-
-        if(name) {
-            if(!_arrows[name]) {
-                if(!unknown_styles[name])
-                    console.warn('arrow style "' + name + '" unknown; ignoring');
-                unknown_styles[name] = true;
-                name = null;
-            }
-            else markerEnter
-                .attr('viewBox', '0 -5 10 10')
-                .attr('refX', _arrows[name].refX)
-                .attr('refY', _arrows[name].refY)
-                .attr('markerUnits', 'userSpaceOnUse')
-                .attr('markerWidth', _arrows[name].width*_diagram.edgeArrowSize.eval(e))
-                .attr('markerHeight', _arrows[name].height*_diagram.edgeArrowSize.eval(e))
-                .attr('stroke', _diagram.edgeStroke.eval(e))
-                .attr('fill', _diagram.edgeStroke.eval(e))
-                .call(_arrows[name].drawFunction);
-        }
-        return name ? id : null;
-    }
 
     Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
         var defn = dc_graph.builtin_arrows[aname];
@@ -2997,7 +3008,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));
         else translate = d3.event.translate;
         globalTransform(translate, scale, _animateZoom);
-        _dispatch.zoomed(translate, scale);
+        _dispatch.zoomed(translate, scale, _diagram.x().domain(), _diagram.y().domain());
     }
 
     _diagram.resizeSvg = function(w, h) {
@@ -3204,7 +3215,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on Sun Nov 4th 2018
+		on Fri Nov 16th 2018
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
