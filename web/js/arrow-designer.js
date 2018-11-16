@@ -30,6 +30,7 @@ var options = {
         }
     },
     strokewidth: 1,
+    arrowsize: 1,
     grid: {
         default: true,
         selector: '#grid',
@@ -102,6 +103,7 @@ diagram
     .nodeLabel(null)
     .nodeStrokeWidth(sync_url.vals.strokewidth)
     .edgeLabel(null)
+    .edgeArrowSize(sync_url.vals.arrowsize)
     .edgeArrowhead(() => sync_url.vals.arrowhead)
     .edgeArrowtail(() => sync_url.vals.arrowtail);
 
