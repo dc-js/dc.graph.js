@@ -44,19 +44,21 @@ dc_graph.builtin_arrows = {
         }
     },
     dot: {
+        frontRef: [8,0],
         drawFunction: function(marker, ofs) {
             marker.append('svg:circle')
                 .attr('r', 4)
-                .attr('cx', 5 + ofs[0])
+                .attr('cx', 4 + ofs[0])
                 .attr('cy', 0)
                 .attr('stroke-width', '0px');
         }
     },
     odot: {
+        frontRef: [8,0],
         drawFunction: function(marker, ofs) {
             marker.append('svg:circle')
-                .attr('r', 4)
-                .attr('cx', 5 + ofs[0])
+                .attr('r', 3.5)
+                .attr('cx', 4 + ofs[0])
                 .attr('cy', 0)
                 .attr('fill', 'none')
                 .attr('stroke-width', '1px');
