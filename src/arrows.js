@@ -17,24 +17,6 @@ function offsetx(ofsx) {
 }
 
 dc_graph.builtin_arrows = {
-    vee: {
-        stems: [true,false],
-        kernstems: [0,1],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0, y: -5},
-                {x: 10, y: 0},
-                {x: 0, y: 5},
-                {x: 4.5, y: 0.5},
-                {x: 0, y: 0.5},
-                {x: 0, y: -0.5},
-                {x: 4.5, y: -0.5}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
-    },
     crow: {
         stems: [false,true],
         kernstems: [1,0],
@@ -72,6 +54,24 @@ dc_graph.builtin_arrows = {
                 .attr('cy', 0)
                 .attr('fill', 'none')
                 .attr('stroke-width', '1px');
+        }
+    },
+    vee: {
+        stems: [true,false],
+        kernstems: [0,1],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 0, y: -5},
+                {x: 10, y: 0},
+                {x: 0, y: 5},
+                {x: 4.5, y: 0.5},
+                {x: 0, y: 0.5},
+                {x: 0, y: -0.5},
+                {x: 4.5, y: -0.5}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr('d', generate_path(points, 1, true))
+                .attr('stroke-width', '0px');
         }
     }
 };
