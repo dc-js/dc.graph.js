@@ -8,7 +8,8 @@ var options = {
     timeLimit: 10000,
     start: null,
     directional: false,
-    rndarrow: false,
+    bigzoom: false,
+    rndarrow: null,
     edgeCat: null,
     edgeExpn: null,
     expand_strategy: null,
@@ -31,6 +32,34 @@ var options = {
 };
 var diagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+
+// https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript#47593316
+function xfnv1a(k) {
+    for(var i = 0, h = 2166136261 >>> 0; i < k.length; i++)
+        h = Math.imul(h ^ k.charCodeAt(i), 16777619);
+    return function() {
+        h += h << 13; h ^= h >>> 7;
+        h += h << 3;  h ^= h >>> 17;
+        return (h += h << 5) >>> 0;
+    };
+}
+function sfc32(a, b, c, d) {
+    return function() {
+      a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
+      var t = (a + b) | 0;
+      a = b ^ b >>> 9;
+      b = c + (c << 3) | 0;
+      c = (c << 21 | c >>> 11);
+      d = d + 1 | 0;
+      t = t + d | 0;
+      c = c + t | 0;
+      return (t >>> 0) / 4294967296;
+    };
+}
+function rand(s) {
+    var seed = xfnv1a(s);
+    return sfc32(seed(), seed(), seed(), seed());
+}
 
 function display_error(message) {
     d3.select('#message')
@@ -91,9 +120,35 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             }
             return null;
         });
+    if(sync_url.vals.bigzoom)
+        diagram.zoomExtent([0.001, 200]);
     if(sync_url.vals.rndarrow) {
-        var arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
-        var arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+        var arrowheadscale, arrowtailscale;
+        var anames = Object.keys(dc_graph.builtin_arrows);
+
+        function arrowgen(rnd) {
+            return d3.range(Math.floor(rnd()*5))
+                .map(i => anames[Math.floor(rnd()*anames.length)])
+                .join('');
+        };
+        switch(sync_url.vals.rndarrow) {
+        case 'one':
+            arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+            arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+            break;
+        case 'lots':
+            arrowheadscale = arrowtailscale = function(label) {
+                return arrowgen(rand(label));
+            };
+            break;
+        case 'changing':
+            arrowheadscale = arrowtailscale = function(label) {
+                return arrowgen(Math.random);
+            };
+            break;
+        default:
+            throw new Error('unknown rndarrow "' + sync_url.vals.rndarrow + '"');
+        }
         diagram
             .edgeArrowhead(e => arrowheadscale(e.value.label))
             .edgeArrowtail(e => arrowtailscale(e.value.label));
@@ -214,7 +269,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     ).durationOverride(0));
     dc.renderAll();
     diagram.autoZoom('once-noanim');
-    var starter = d3.select('#start-from');
+    var starter = d3.select('#add-node');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')
         .attr('value', function(d) { return d.value; })
@@ -225,6 +280,10 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         expand_collapse.expand('both', this.value, true);
         diagram.autoZoom('once-noanim');
         dc.redrawAll();
+    });
+
+    d3.select('#reset').on('click', function() {
+        sync_url.update('expanded', []);
     });
     if(sync_url.vals.start)
         expand_collapse.expand('both', sync_url.vals.start, true);

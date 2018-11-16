@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Explore a large graph</title>
+  <title>Arrow Designer</title>
   <meta charset="UTF-8">
   <link rel="icon" href="img/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" type="text/css" href="css/explore.css"/>
@@ -13,11 +13,9 @@
   <script type="text/javascript" src="js/dc.js"></script>
   <script type="text/javascript" src="js/chart.registry.js"></script>
 
-  <script type="text/javascript" src="js/cola.js"></script>
-  <script type="text/javascript" src="js/viz.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
-  <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 
+  <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/querystring.js"></script>
   <script type="text/javascript" src="js/sync-url-options.js"></script>
   <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
@@ -26,13 +24,25 @@
 <body>
   <div id="main">
     <div id="controls">
-      <label for='#add-node'>Add node&nbsp;</label><select id="add-node"></select>&nbsp;&nbsp;
-      <button id=reset class="btn-xs btn-default">reset</button>
+      <label for='#arrowtail'>Arrow tail:&nbsp;</label><input type=text id="arrowtail"></input>&emsp;&emsp;
+      <label for='#arrowhead'>Arrow head:&nbsp;</label><input type=text id="arrowhead"></input>&emsp;&emsp;
+      <label for='#zoom'>Zoom:&nbsp;</label>
+      <select id="zoom">
+        <option value=1>1x</option>
+        <option value=2>2x</option>
+        <option value=4>4x</option>
+        <option value=8>8x</option>
+        <option value=16>16x</option>
+        <option value=32>32x</option>
+        <option value=64>64x</option>
+      </select>&emsp;&emsp;
+      <input id="debug" type="checkbox"><label for="debug">&nbsp;Debug</label>&emsp;&emsp;
+      <input id="grid" type="checkbox"><label for="grid">&nbsp;Grid</label>
     </div>
     <div id="graph"></div>
   </div>
   <div id="message" style="display: none;"></div>
 
-<script type="text/javascript" src="js/explore.js"></script>
+<script type="text/javascript" src="js/arrow-designer.js"></script>
 </body>
 </html>

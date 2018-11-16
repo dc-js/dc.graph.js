@@ -125,17 +125,18 @@ var sync_url_options = (function() {
             }
             if(opt.set)
                 opt.set(settings[key]);
+            opt.update = function(val, manual) {
+                update_setting(opt, val);
+                callback && callback(val, manual);
+            };
             if(opt.subscribe)
-                opt.subscribe(function(val) {
-                    update_setting(opt, val);
-                    callback && callback(val);
-                });
+                opt.subscribe(opt.update);
         }
 
         for(var key in options) {
-            var callback = function(opt, val) {
+            var callback = function(opt, val, manual) {
                 args[0] = val;
-                if(opt.exert && !opt.dont_exert_after_subscribe)
+                if(opt.exert && (manual || !opt.dont_exert_after_subscribe))
                     opt.exert.apply(opt, args);
                 if(domain && domain.on_exert)
                     domain.on_exert(opt);
@@ -161,6 +162,9 @@ var sync_url_options = (function() {
                     return _output;
                 _output = _;
                 return this;
+            },
+            update: function(k, v) {
+                options[k].update(v, true);
             }
         };
     }

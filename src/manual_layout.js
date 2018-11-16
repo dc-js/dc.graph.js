@@ -25,7 +25,7 @@ dc_graph.manual_layout = function(id) {
 
     var _engine = {
         layoutAlgorithm: function() {
-            return 'cola';
+            return 'manual';
         },
         layoutId: function() {
             return _layoutId;

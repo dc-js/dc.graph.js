@@ -349,6 +349,7 @@ module.exports.jsFiles = [
     'src/flexbox_layout.js',
     'src/manual_layout.js',
     'src/place_ports.js',
+    'src/grid.js',
     'src/troubleshoot.js',
     'src/validate.js',
     'src/legend.js',
