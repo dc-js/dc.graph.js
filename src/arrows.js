@@ -153,7 +153,8 @@ function arrow_length(arrdefs, parts) {
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
-    if(e[kind + 'ArrowLast'] === desc)
+    var strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.tail : e.head)/2;
+    if(e[kind + 'ArrowLast'] === desc + '-' + strokeOfs)
         return id;
     var parts = arrow_parts(arrdefs, desc),
         marker = diagram.addOrRemoveDef(id, !!parts.length, 'svg:marker');
@@ -161,6 +162,8 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
     if(parts.length) {
         var bounds = arrow_bounds(arrdefs, parts),
             frontRef = front_ref(arrdefs[parts[0]].frontRef);
+        bounds.viewBox[0] -= strokeOfs;
+        bounds.viewBox[3] += strokeOfs;
         marker
             .attr('viewBox', bounds.viewBox.join(' '))
             .attr('refX', frontRef[0])
@@ -173,7 +176,8 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
         marker.html(null);
         parts.forEach(function(p, i) {
             marker
-                .call(arrdefs[p].drawFunction, bounds.offsets[i]);
+                .call(arrdefs[p].drawFunction,
+                      add_points([-strokeOfs,0], bounds.offsets[i]));
         });
     }
     e[kind + 'ArrowLast'] = desc;
