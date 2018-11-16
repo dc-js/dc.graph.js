@@ -2368,9 +2368,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         edge
             .each(function(e) {
-                var totlength = this.getTotalLength();
-                var headlength = arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e))),
-                    taillength = arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)));
+                var totlength = this.getTotalLength(),
+                    arrowSize = diagram.edgeArrowSize.eval(e);
+                var headlength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e))),
+                    taillength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)));
                 var tailStroke = _diagram.nodeStrokeWidth.eval(e.tail),
                     headStroke = _diagram.nodeStrokeWidth.eval(e.head),
                     length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);

@@ -327,23 +327,24 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
 
     if(parts.length) {
         var bounds = arrow_bounds(arrdefs, parts),
-            frontRef = front_ref(arrdefs[parts[0]].frontRef);
-        bounds.viewBox[0] -= strokeOfs;
-        bounds.viewBox[3] += strokeOfs;
+            frontRef = front_ref(arrdefs[parts[0]].frontRef),
+            arrowSize = diagram.edgeArrowSize.eval(e);
+        bounds.viewBox[0] -= strokeOfs/arrowSize;
+        bounds.viewBox[3] += strokeOfs/arrowSize;
         marker
             .attr('viewBox', bounds.viewBox.join(' '))
             .attr('refX', frontRef[0])
             .attr('refY', frontRef[1])
             .attr('markerUnits', 'userSpaceOnUse')
-            .attr('markerWidth', bounds.viewBox[2]*diagram.edgeArrowSize.eval(e))
-            .attr('markerHeight', bounds.viewBox[3]*diagram.edgeArrowSize.eval(e))
+            .attr('markerWidth', bounds.viewBox[2]*arrowSize)
+            .attr('markerHeight', bounds.viewBox[3]*arrowSize)
             .attr('stroke', diagram.edgeStroke.eval(e))
             .attr('fill', diagram.edgeStroke.eval(e));
         marker.html(null);
         parts.forEach(function(p, i) {
             marker
                 .call(arrdefs[p].drawFunction,
-                      add_points([-strokeOfs,0], bounds.offsets[i].offset));
+                      add_points([-strokeOfs/arrowSize,0], bounds.offsets[i].offset));
         });
     }
     e[kind + 'ArrowLast'] = desc;

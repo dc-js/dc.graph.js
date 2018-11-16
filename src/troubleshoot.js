@@ -75,6 +75,7 @@ dc_graph.troubleshoot = function() {
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowhead.eval(e),
+                diagram.edgeArrowSize.eval(e),
                 unrad(e.pos.new.orienthead),
                 e.pos.new.path.points[e.pos.new.path.points.length-1],
                 diagram.nodeStrokeWidth.eval(e.head)
@@ -87,6 +88,7 @@ dc_graph.troubleshoot = function() {
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowtail.eval(e),
+                diagram.edgeArrowSize.eval(e),
                 unrad(e.pos.new.orienttail),
                 e.pos.new.path.points[0],
                 diagram.nodeStrokeWidth.eval(e.tail)
@@ -178,7 +180,7 @@ dc_graph.troubleshoot = function() {
             .attr('fill', 'none')
             .attr('d', 'M0,3 L3,0 L0,-3');
     }
-    function edge_arrow_points(arrows, defn, orient, endp, strokeWidth) {
+    function edge_arrow_points(arrows, defn, arrowSize, orient, endp, strokeWidth) {
         var parts = arrow_parts(arrows, defn),
             offsets = arrow_offsets(arrows, parts),
             xunit = [Math.cos(orient), Math.sin(orient)];
@@ -187,20 +189,20 @@ dc_graph.troubleshoot = function() {
             return [[endp[0] - xunit[0]*strokeWidth/2,
                      endp[1] - xunit[1]*strokeWidth/2]];
         var globofs = add_points(
-            [-strokeWidth/2,0],
+            [-strokeWidth/arrowSize/2,0],
             mult_point(front_ref(arrows[parts[0]].frontRef), -1));
         var pts = offsets.map(function(ofs, i) {
-            return [
+            return mult_point([
                 globofs,
                 front_ref(arrows[parts[i]].frontRef),
                 ofs.offset
-            ].reduce(add_points);
+            ].reduce(add_points), arrowSize);
         });
-        pts.push([
+        pts.push(mult_point([
             globofs,
             back_ref(arrows[parts[parts.length-1]].backRef),
             offsets[parts.length-1].offset
-        ].reduce(add_points));
+        ].reduce(add_points), arrowSize));
         return pts.map(function(p) {
             return add_points(
                 endp,
