@@ -137,7 +137,7 @@ function arrow_bounds(arrdefs, parts) {
         var vb = view_box(arrdefs[p].viewBox);
         var ofs = offsets[i];
         if(!viewBox)
-            viewBox = vb;
+            viewBox = vb.slice();
         else
             viewBox = union_viewbox(viewBox, [vb[0] + ofs[0], vb[1] + ofs[1], vb[2], vb[3]]);
     });
