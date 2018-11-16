@@ -1,3 +1,6 @@
+## 0.7.0
+* multiple arrowheads and arrowtails - all [graphviz arrow shapes](https://www.graphviz.org/doc/info/arrows.html) are supported, except for the `l`/`r` modifiers; `o` modifier is supported for all the same shapes and also `normal` and `inv`
+
 ## 0.6.7
 * shapes are better communicated with graphviz layout (but still imperfect)
 * abstract shape had inconsistent format if it was specified as a string; now it always becomes an object
