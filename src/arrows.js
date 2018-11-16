@@ -17,6 +17,33 @@ function offsetx(ofsx) {
 }
 
 dc_graph.builtin_arrows = {
+    box: {
+        frontRef: [8,0],
+        drawFunction: function(marker, ofs) {
+            marker.append('rect')
+                .attr({
+                    x: ofs[0],
+                    y: -4,
+                    width: 8,
+                    height: 8,
+                    'stroke-width': 0
+                });
+        }
+    },
+    obox: {
+        frontRef: [8,0],
+        drawFunction: function(marker, ofs) {
+            marker.append('rect')
+                .attr({
+                    x: ofs[0] + 0.5,
+                    y: -3.5,
+                    width: 7,
+                    height: 7,
+                    'stroke-width': 1,
+                    fill: 'none'
+                });
+        }
+    },
     crow: {
         stems: [false,true],
         kernstems: [1,0],
