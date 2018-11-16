@@ -23,7 +23,10 @@ dc_graph.builtin_arrows = {
                 {x: 0, y: -5},
                 {x: 10, y: 0},
                 {x: 0, y: 5},
-                {x: 3, y: 0}
+                {x: 4.5, y: 0.5},
+                {x: 0, y: 0.5},
+                {x: 0, y: -0.5},
+                {x: 4.5, y: -0.5}
             ].map(offsetx(ofs[0]));
             marker.append('svg:path')
                 .attr('d', generate_path(points, 1, true))
@@ -36,7 +39,10 @@ dc_graph.builtin_arrows = {
                 {x: 10, y: -5},
                 {x: 0, y: 0},
                 {x: 10, y: 5},
-                {x: 7, y: 0}
+                {x: 5.5, y: 0.5},
+                {x: 10, y: 0.5},
+                {x: 10, y: -0.5},
+                {x: 5.5, y: -0.5}
             ].map(offsetx(ofs[0]));
             marker.append('svg:path')
                 .attr('d', generate_path(points, 1, true))
