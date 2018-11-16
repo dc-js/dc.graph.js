@@ -152,6 +152,36 @@ dc_graph.builtin_arrows = {
                 .attr('stroke-width', '1px');
         }
     },
+    normal: {
+        frontRef: [8,0],
+        viewBox: [0, -3, 8, 6],
+        kernstems: [0,2],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 0, y: 3},
+                {x: 8, y: 0},
+                {x: 0, y: -3}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr('d', generate_path(points, 1, true))
+                .attr('stroke-width', '0px');
+        }
+    },
+    inv: {
+        frontRef: [8,0],
+        viewBox: [0, -3, 8, 6],
+        kernstems: [2,0],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 8, y: 3},
+                {x: 0, y: 0},
+                {x: 8, y: -3}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr('d', generate_path(points, 1, true))
+                .attr('stroke-width', '0px');
+        }
+    },
     tee: {
         frontRef: [5,0],
         viewBox: [0, -5, 5, 10],
