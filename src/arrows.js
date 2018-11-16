@@ -62,6 +62,43 @@ dc_graph.builtin_arrows = {
                 .attr('stroke-width', '0px');
         }
     },
+    diamond: {
+        frontRef: [12,0],
+        viewBox: [0, -4, 12, 8],
+        kernstems: [1.5,1.5],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 0, y: 0},
+                {x: 6, y: 4},
+                {x: 12, y: 0},
+                {x: 6, y: -4}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr({
+                    d: generate_path(points, 1, true),
+                    'stroke-width': 0
+                });
+        }
+    },
+    odiamond: {
+        frontRef: [12,0],
+        viewBox: [0, -4, 12, 8],
+        kernstems: [1.5,1.5],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 0.9, y: 0},
+                {x: 6, y: 3.4},
+                {x: 11.1, y: 0},
+                {x: 6, y: -3.4}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr({
+                    d: generate_path(points, 1, true),
+                    'stroke-width': 1,
+                    fill: 'none'
+                });
+        }
+    },
     dot: {
         frontRef: [8,0],
         drawFunction: function(marker, ofs) {
