@@ -71,7 +71,7 @@ dc_graph.troubleshoot = function() {
         var tailOrients = _debugLayer.selectAll('line.tails').data(tails);
         draw_arrow_orient(tailOrients, 'tails', _behavior.arrowTailColor(), '#debug-orient-marker-tail');
 
-        var headpts = edge.data().map(function(e) {
+        var headpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowhead.eval(e),
@@ -79,11 +79,11 @@ dc_graph.troubleshoot = function() {
                 e.pos.new.path.points[e.pos.new.path.points.length-1],
                 diagram.nodeStrokeWidth.eval(e.head)
             );
-        }).flat();
+        }));
         var hp = _debugLayer.selectAll('path.head-point').data(headpts);
         draw_x(hp, 'head-point', _behavior.arrowHeadColor());
 
-        var tailpts = edge.data().map(function(e) {
+        var tailpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowtail.eval(e),
@@ -91,7 +91,7 @@ dc_graph.troubleshoot = function() {
                 e.pos.new.path.points[0],
                 diagram.nodeStrokeWidth.eval(e.tail)
             );
-        }).flat();
+        }));
         var tp = _debugLayer.selectAll('path.tail-point').data(tailpts);
         draw_x(tp, 'tail-point', _behavior.arrowTailColor());
 
