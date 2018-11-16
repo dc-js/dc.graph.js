@@ -76,7 +76,8 @@ dc_graph.troubleshoot = function() {
                 diagram.arrows(),
                 diagram.edgeArrowhead.eval(e),
                 unrad(e.pos.new.orienthead),
-                e.pos.new.path.points[e.pos.new.path.points.length-1]
+                e.pos.new.path.points[e.pos.new.path.points.length-1],
+                diagram.nodeStrokeWidth.eval(e.head)
             );
         }).flat();
         var hp = _debugLayer.selectAll('path.head-point').data(headpts);
@@ -87,7 +88,8 @@ dc_graph.troubleshoot = function() {
                 diagram.arrows(),
                 diagram.edgeArrowtail.eval(e),
                 unrad(e.pos.new.orienttail),
-                e.pos.new.path.points[0]
+                e.pos.new.path.points[0],
+                diagram.nodeStrokeWidth.eval(e.tail)
             );
         }).flat();
         var tp = _debugLayer.selectAll('path.tail-point').data(tailpts);
@@ -176,14 +178,17 @@ dc_graph.troubleshoot = function() {
             .attr('fill', 'none')
             .attr('d', 'M0,3 L3,0 L0,-3');
     }
-    function edge_arrow_points(arrows, defn, orient, endp) {
+    function edge_arrow_points(arrows, defn, orient, endp, strokeWidth) {
         var parts = arrow_parts(arrows, defn),
             offsets = arrow_offsets(arrows, parts),
             xunit = [Math.cos(orient), Math.sin(orient)];
         endp = [endp.x, endp.y];
         if(!parts.length)
-            return [endp];
-        var globofs = mult_point(front_ref(arrows[parts[0]].frontRef), -1);
+            return [[endp[0] - xunit[0]*strokeWidth/2,
+                     endp[1] - xunit[1]*strokeWidth/2]];
+        var globofs = add_points(
+            [-strokeWidth/2,0],
+            mult_point(front_ref(arrows[parts[0]].frontRef), -1));
         var pts = offsets.map(function(ofs, i) {
             return [
                 globofs,
