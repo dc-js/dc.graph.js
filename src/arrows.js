@@ -83,6 +83,26 @@ dc_graph.builtin_arrows = {
                 .attr('stroke-width', '1px');
         }
     },
+    tee: {
+        frontRef: [5,0],
+        viewBox: [0, -5, 5, 10],
+        stems: [true,false],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 2, y: 5},
+                {x: 5, y: 5},
+                {x: 5, y: -5},
+                {x: 2, y: -5},
+                {x: 2, y: -0.5},
+                {x: 0, y: -0.5},
+                {x: 0, y: 0.5},
+                {x: 2, y: 0.5}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr('d', generate_path(points, 1, true))
+                .attr('stroke-width', '0px');
+        }
+    },
     vee: {
         stems: [true,false],
         kernstems: [0,1],
