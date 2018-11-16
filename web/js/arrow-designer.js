@@ -29,6 +29,7 @@ var options = {
                 .redraw();
         }
     },
+    strokewidth: 1,
     grid: {
         default: true,
         selector: '#grid',
@@ -99,6 +100,7 @@ diagram
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
     .nodeRadius(10)
     .nodeLabel(null)
+    .nodeStrokeWidth(sync_url.vals.strokewidth)
     .edgeLabel(null)
     .edgeArrowhead(() => sync_url.vals.arrowhead)
     .edgeArrowtail(() => sync_url.vals.arrowtail);
