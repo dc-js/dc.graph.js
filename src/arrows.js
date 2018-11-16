@@ -18,6 +18,8 @@ function offsetx(ofsx) {
 
 dc_graph.builtin_arrows = {
     vee: {
+        stems: [true,false],
+        kernstems: [0,1],
         drawFunction: function(marker, ofs) {
             var points = [
                 {x: 0, y: -5},
@@ -34,6 +36,8 @@ dc_graph.builtin_arrows = {
         }
     },
     crow: {
+        stems: [false,true],
+        kernstems: [1,0],
         drawFunction: function(marker, ofs) {
             var points = [
                 {x: 10, y: -5},
@@ -125,16 +129,24 @@ var view_box = defaulted([0, -5, 10, 10]),
 function arrow_offsets(arrdefs, parts) {
     var frontRef = null, backRef = null;
     return parts.map(function(p, i) {
-        var fr = front_ref(arrdefs[p].frontRef),
-            br = back_ref(arrdefs[p].backRef);
+        var fr = front_ref(arrdefs[p].frontRef).slice(),
+            br = back_ref(arrdefs[p].backRef).slice();
+        if(arrdefs[p].kernstems) {
+            if(i !== 0 && arrdefs[p].kernstems[1] &&
+               arrdefs[parts[i-1]].stems && arrdefs[parts[i-1]].stems[0])
+                fr[0] -= arrdefs[p].kernstems[1];
+            if(arrdefs[p].kernstems[0] &&
+               (i === parts.length-1 || arrdefs[parts[i+1]].stems && arrdefs[parts[i+1]].stems[1]))
+                br[0] += arrdefs[p].kernstems[0];
+        }
         if(i === 0) {
             frontRef = fr;
             backRef = br;
-            return [0, 0];
+            return {backRef: backRef, offset: [0, 0]};
         } else {
             var ofs = subtract_points(backRef, fr);
             backRef = add_points(br, ofs);
-            return ofs;
+            return {backRef: backRef, offset: ofs};
         }
     });
 }
@@ -143,7 +155,7 @@ function arrow_bounds(arrdefs, parts) {
     var viewBox = null, offsets = arrow_offsets(arrdefs, parts);
     parts.forEach(function(p, i) {
         var vb = view_box(arrdefs[p].viewBox);
-        var ofs = offsets[i];
+        var ofs = offsets[i].offset;
         if(!viewBox)
             viewBox = vb.slice();
         else
@@ -156,7 +168,7 @@ function arrow_length(arrdefs, parts) {
     if(!parts.length)
         return 0;
     var offsets = arrow_offsets(arrdefs, parts);
-    return front_ref(arrdefs[parts[0]].frontRef)[0] - add_points(back_ref(arrdefs[parts[parts.length-1]].backDef), offsets[parts.length-1])[0];
+    return front_ref(arrdefs[parts[0]].frontRef)[0] - offsets[parts.length-1].backRef[0];
 }
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
@@ -185,7 +197,7 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
         parts.forEach(function(p, i) {
             marker
                 .call(arrdefs[p].drawFunction,
-                      add_points([-strokeOfs,0], bounds.offsets[i]));
+                      add_points([-strokeOfs,0], bounds.offsets[i].offset));
         });
     }
     e[kind + 'ArrowLast'] = desc;

@@ -193,13 +193,13 @@ dc_graph.troubleshoot = function() {
             return [
                 globofs,
                 front_ref(arrows[parts[i]].frontRef),
-                ofs
+                ofs.offset
             ].reduce(add_points);
         });
         pts.push([
             globofs,
             back_ref(arrows[parts[parts.length-1]].backRef),
-            offsets[parts.length-1]
+            offsets[parts.length-1].offset
         ].reduce(add_points));
         return pts.map(function(p) {
             return add_points(
