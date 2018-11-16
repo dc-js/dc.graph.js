@@ -2371,9 +2371,12 @@ dc_graph.diagram = function (parent, chartGroup) {
                 var totlength = this.getTotalLength();
                 var headlength = arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e))),
                     taillength = arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)));
+                var tailStroke = _diagram.nodeStrokeWidth.eval(e.tail),
+                    headStroke = _diagram.nodeStrokeWidth.eval(e.head),
+                    length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
                 d3.select(this)
-                    .attr('stroke-dasharray', (totlength-headlength-taillength) + ' ' + totlength*2)
-                    .attr('stroke-dashoffset', -taillength);
+                    .attr('stroke-dasharray', length + ' ' + totlength*2)
+                    .attr('stroke-dashoffset', -(taillength + tailStroke/2));
             });
 
         var etrans = edge
