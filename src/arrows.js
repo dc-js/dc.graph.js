@@ -20,27 +20,33 @@ dc_graph.builtin_arrows = {
     box: function(open, side) {
         if(!open) return {
             frontRef: [8,0],
-            drawFunction: function(marker, ofs) {
+            drawFunction: function(marker, ofs, stemWidth) {
                 marker.append('rect')
                     .attr({
                         x: ofs[0],
-                        y: -4,
+                        y: side==='right' ? -stemWidth/2 : -4,
                         width: 8,
-                        height: 8,
+                        height: side ? 4+stemWidth/2 : 8,
                         'stroke-width': 0
                     });
             }
         };
         else return {
             frontRef: [8,0],
-            drawFunction: function(marker, ofs) {
+            drawFunction: function(marker, ofs, stemWidth) {
                 marker.append('rect')
                     .attr({
                         x: ofs[0] + 0.5,
-                        y: -3.5,
+                        y: side==='right' ? 0 : -3.5,
                         width: 7,
-                        height: 7,
+                        height: side ? 3.5 : 7,
                         'stroke-width': 1,
+                        fill: 'none'
+                    });
+                marker.append('svg:path')
+                    .attr({
+                        d: ['M', ofs[0], 0, 'h',8].join(' '),
+                        'stroke-width': stemWidth,
                         fill: 'none'
                     });
             }
@@ -52,10 +58,17 @@ dc_graph.builtin_arrows = {
             kernstems: [0, 0.25],
             frontRef: [8,0],
             drawFunction: function(marker, ofs, stemWidth) {
+                var instrs = [];
+                instrs.push('M', (side==='left' ? 7.5 : 4) + ofs[0], side==='left' ? stemWidth/2 : 3.5);
+                if(side==='left')
+                    instrs.push('v', -stemWidth/2);
+                instrs.push('A', 3.5, 3.5, 0, 0, 0,
+                            (side==='right' ? 7.5 : 4) + ofs[0], side==='right' ? 0 : -3.5);
+                if(side==='right')
+                    instrs.push('v', -stemWidth/2);
                 marker.append('svg:path')
                     .attr({
-                        d: ['M', 4 + ofs[0], 3.5,
-                            'A', 3.5, 3.5, 0, 0, 0, 4 + ofs[0], -3.5].join(' '),
+                        d: instrs.join(' '),
                         'stroke-width': 1,
                         fill: 'none'
                     });
@@ -75,10 +88,17 @@ dc_graph.builtin_arrows = {
             kernstems: [0.25,0],
             frontRef: [8,0],
             drawFunction: function(marker, ofs, stemWidth) {
+                var instrs = [];
+                instrs.push('M', (side==='left' ? 0.5 : 4) + ofs[0], side==='left' ? stemWidth/2 : 3.5);
+                if(side==='left')
+                    instrs.push('v', -stemWidth/2);
+                instrs.push('A', 3.5, 3.5, 0, 0, 1,
+                            (side==='right' ? 0.5 : 4) + ofs[0], side==='right' ? 0 : -3.5);
+                if(side==='right')
+                    instrs.push('v', -stemWidth/2);
                 marker.append('svg:path')
                     .attr({
-                        d: ['M', 4 + ofs[0], 3.5,
-                            'A', 3.5, 3.5, 0, 0, 1, 4 + ofs[0], -3.5].join(' '),
+                        d: instrs.join(' '),
                         'stroke-width': 1,
                         fill: 'none'
                     });
