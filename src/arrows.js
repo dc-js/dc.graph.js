@@ -44,24 +44,6 @@ dc_graph.builtin_arrows = {
                 });
         }
     },
-    crow: {
-        stems: [false,true],
-        kernstems: [1,0],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 10, y: -5},
-                {x: 0, y: 0},
-                {x: 10, y: 5},
-                {x: 5.5, y: 0.5},
-                {x: 10, y: 0.5},
-                {x: 10, y: -0.5},
-                {x: 5.5, y: -0.5}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
-    },
     curve: {
         stems: [true,false],
         kernstems: [0, 0.25],
@@ -250,6 +232,24 @@ dc_graph.builtin_arrows = {
                 {x: 0, y: 0.5},
                 {x: 0, y: -0.5},
                 {x: 4.5, y: -0.5}
+            ].map(offsetx(ofs[0]));
+            marker.append('svg:path')
+                .attr('d', generate_path(points, 1, true))
+                .attr('stroke-width', '0px');
+        }
+    },
+    crow: {
+        stems: [false,true],
+        kernstems: [1,0],
+        drawFunction: function(marker, ofs) {
+            var points = [
+                {x: 10, y: -5},
+                {x: 0, y: 0},
+                {x: 10, y: 5},
+                {x: 5.5, y: 0.5},
+                {x: 10, y: 0.5},
+                {x: 10, y: -0.5},
+                {x: 5.5, y: -0.5}
             ].map(offsetx(ofs[0]));
             marker.append('svg:path')
                 .attr('d', generate_path(points, 1, true))
