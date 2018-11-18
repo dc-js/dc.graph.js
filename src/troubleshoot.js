@@ -72,10 +72,12 @@ dc_graph.troubleshoot = function() {
         draw_arrow_orient(tailOrients, 'tails', _behavior.arrowTailColor(), '#debug-orient-marker-tail');
 
         var headpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
+            var arrowSize = diagram.edgeArrowSize.eval(e);
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowhead.eval(e),
-                diagram.edgeArrowSize.eval(e),
+                arrowSize,
+                diagram.edgeStrokeWidth.eval(e) / arrowSize,
                 unrad(e.pos.new.orienthead),
                 e.pos.new.path.points[e.pos.new.path.points.length-1],
                 diagram.nodeStrokeWidth.eval(e.target)
@@ -85,10 +87,12 @@ dc_graph.troubleshoot = function() {
         draw_x(hp, 'head-point', _behavior.arrowHeadColor());
 
         var tailpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
+            var arrowSize = diagram.edgeArrowSize.eval(e);
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowtail.eval(e),
-                diagram.edgeArrowSize.eval(e),
+                arrowSize,
+                diagram.edgeStrokeWidth.eval(e) / arrowSize,
                 unrad(e.pos.new.orienttail),
                 e.pos.new.path.points[0],
                 diagram.nodeStrokeWidth.eval(e.source)
@@ -180,9 +184,9 @@ dc_graph.troubleshoot = function() {
             .attr('fill', 'none')
             .attr('d', 'M0,3 L3,0 L0,-3');
     }
-    function edge_arrow_points(arrows, defn, arrowSize, orient, endp, strokeWidth) {
+    function edge_arrow_points(arrows, defn, arrowSize, stemWidth, orient, endp, strokeWidth) {
         var parts = arrow_parts(arrows, defn),
-            offsets = arrow_offsets(arrows, parts),
+            offsets = arrow_offsets(arrows, parts, stemWidth),
             xunit = [Math.cos(orient), Math.sin(orient)];
         endp = [endp.x, endp.y];
         if(!parts.length)
