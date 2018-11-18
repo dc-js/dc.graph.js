@@ -17,283 +17,321 @@ function offsetx(ofsx) {
 }
 
 dc_graph.builtin_arrows = {
-    box: {
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('rect')
-                .attr({
-                    x: ofs[0],
-                    y: -4,
-                    width: 8,
-                    height: 8,
-                    'stroke-width': 0
-                });
-        }
+    box: function(open, side) {
+        if(!open) return {
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs) {
+                marker.append('rect')
+                    .attr({
+                        x: ofs[0],
+                        y: -4,
+                        width: 8,
+                        height: 8,
+                        'stroke-width': 0
+                    });
+            }
+        };
+        else return {
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs) {
+                marker.append('rect')
+                    .attr({
+                        x: ofs[0] + 0.5,
+                        y: -3.5,
+                        width: 7,
+                        height: 7,
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    obox: {
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('rect')
-                .attr({
-                    x: ofs[0] + 0.5,
-                    y: -3.5,
-                    width: 7,
-                    height: 7,
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
+    curve: function(open, side) {
+        return {
+            stems: [true,false],
+            kernstems: [0, 0.25],
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs, stemWidth) {
+                marker.append('svg:path')
+                    .attr({
+                        d: ['M', 4 + ofs[0], 3.5,
+                            'A', 3.5, 3.5, 0, 0, 0, 4 + ofs[0], -3.5].join(' '),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+                marker.append('svg:path')
+                    .attr({
+                        d: ['M', 7 + ofs[0],  0,
+                            'h  -7'].join(' '),
+                        'stroke-width': stemWidth,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    curve: {
-        stems: [true,false],
-        kernstems: [0, 0.25],
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs, stemWidth) {
-            marker.append('svg:path')
-                .attr({
-                    d: ['M', 4 + ofs[0], 3.5,
-                        'A', 3.5, 3.5, 0, 0, 0, 4 + ofs[0], -3.5].join(' '),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-            marker.append('svg:path')
-                .attr({
-                    d: ['M', 7 + ofs[0],  0,
-                        'h  -7'].join(' '),
-                    'stroke-width': stemWidth,
-                    fill: 'none'
-                });
-        }
+    icurve: function(open, side) {
+        return {
+            stems: [false,true],
+            kernstems: [0.25,0],
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs, stemWidth) {
+                marker.append('svg:path')
+                    .attr({
+                        d: ['M', 4 + ofs[0], 3.5,
+                            'A', 3.5, 3.5, 0, 0, 1, 4 + ofs[0], -3.5].join(' '),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+                marker.append('svg:path')
+                    .attr({
+                        d: ['M', 1 + ofs[0],  0,
+                            'h 7'].join(' '),
+                        'stroke-width': stemWidth,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    icurve: {
-        stems: [false,true],
-        kernstems: [0.25,0],
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs, stemWidth) {
-            marker.append('svg:path')
-                .attr({
-                    d: ['M', 4 + ofs[0], 3.5,
-                        'A', 3.5, 3.5, 0, 0, 1, 4 + ofs[0], -3.5].join(' '),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-            marker.append('svg:path')
-                .attr({
-                    d: ['M', 1 + ofs[0],  0,
-                        'h 7'].join(' '),
-                    'stroke-width': stemWidth,
-                    fill: 'none'
-                });
-        }
+    diamond: function(open, side) {
+        if(!open) return {
+            frontRef: [12,0],
+            viewBox: [0, -4, 12, 8],
+            kernstems: function(stemWidth) {
+                return [.75*stemWidth,.75*stemWidth];
+            },
+            drawFunction: function(marker, ofs) {
+                var points = [
+                    {x: 0, y: 0},
+                    {x: 6, y: 4},
+                    {x: 12, y: 0},
+                    {x: 6, y: -4}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr({
+                        d: generate_path(points, 1, true),
+                        'stroke-width': 0
+                    });
+            }
+        };
+        else return {
+            frontRef: [12,0],
+            viewBox: [0, -4, 12, 8],
+            kernstems: function(stemWidth) {
+                return [.75*stemWidth,.75*stemWidth];
+            },
+            drawFunction: function(marker, ofs) {
+                var points = [
+                    {x: 0.9, y: 0},
+                    {x: 6, y: 3.4},
+                    {x: 11.1, y: 0},
+                    {x: 6, y: -3.4}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr({
+                        d: generate_path(points, 1, true),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    diamond: {
-        frontRef: [12,0],
-        viewBox: [0, -4, 12, 8],
-        kernstems: function(stemWidth) {
-            return [.75*stemWidth,.75*stemWidth];
-        },
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0, y: 0},
-                {x: 6, y: 4},
-                {x: 12, y: 0},
-                {x: 6, y: -4}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr({
-                    d: generate_path(points, 1, true),
-                    'stroke-width': 0
-                });
-        }
+    dot: function(open, side) {
+        if(!open) return {
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs) {
+                marker.append('svg:circle')
+                    .attr('r', 4)
+                    .attr('cx', 4 + ofs[0])
+                    .attr('cy', 0)
+                    .attr('stroke-width', '0px');
+            }
+        };
+        else return {
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs) {
+                marker.append('svg:circle')
+                    .attr('r', 3.5)
+                    .attr('cx', 4 + ofs[0])
+                    .attr('cy', 0)
+                    .attr('fill', 'none')
+                    .attr('stroke-width', '1px');
+            }
+        };
     },
-    odiamond: {
-        frontRef: [12,0],
-        viewBox: [0, -4, 12, 8],
-        kernstems: function(stemWidth) {
-            return [.75*stemWidth,.75*stemWidth];
-        },
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0.9, y: 0},
-                {x: 6, y: 3.4},
-                {x: 11.1, y: 0},
-                {x: 6, y: -3.4}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr({
-                    d: generate_path(points, 1, true),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
+    normal: function(open, side) {
+        if(!open) return {
+            frontRef: [8,0],
+            viewBox: [0, -3, 8, 6],
+            kernstems: function(stemWidth) {
+                return [0,stemWidth*4/3];
+            },
+            drawFunction: function(marker, ofs) {
+                var points = [
+                    {x: 0, y: 3},
+                    {x: 8, y: 0},
+                    {x: 0, y: -3}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+            }
+        };
+        else return {
+            frontRef: [8,0],
+            viewBox: [0, -3, 8, 6],
+            kernstems: function(stemWidth) {
+                return [0,stemWidth*4/3];
+            },
+            drawFunction: function(marker, ofs) {
+                var points = [
+                    {x: 0.5, y: 2.28},
+                    {x: 6.57, y: 0},
+                    {x: 0.5, y: -2.28}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr({
+                        d: generate_path(points, 1, true),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    dot: {
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('svg:circle')
-                .attr('r', 4)
-                .attr('cx', 4 + ofs[0])
-                .attr('cy', 0)
-                .attr('stroke-width', '0px');
-        }
+    inv: function(open, side) {
+        if(!open) return {
+            frontRef: [8,0],
+            viewBox: [0, -3, 8, 6],
+            kernstems: function(stemWidth) {
+                return [stemWidth*4/3,0];
+            },
+            drawFunction: function(marker, ofs) {
+                var points = [
+                    {x: 8, y: 3},
+                    {x: 0, y: 0},
+                    {x: 8, y: -3}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+            }
+        };
+        else return {
+            frontRef: [8,0],
+            viewBox: [0, -3, 8, 6],
+            kernstems: function(stemWidth) {
+                return [stemWidth*4/3,0];
+            },
+            drawFunction: function(marker, ofs) {
+                var points = [
+                    {x: 7.5, y: 2.28},
+                    {x: 1.43, y: 0},
+                    {x: 7.5, y: -2.28}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr({
+                        d: generate_path(points, 1, true),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    odot: {
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('svg:circle')
-                .attr('r', 3.5)
-                .attr('cx', 4 + ofs[0])
-                .attr('cy', 0)
-                .attr('fill', 'none')
-                .attr('stroke-width', '1px');
-        }
+    tee: function(open, side) {
+        return {
+            frontRef: [5,0],
+            viewBox: [0, -5, 5, 10],
+            stems: [true,false],
+            drawFunction: function(marker, ofs, stemWidth) {
+                var points = [
+                    {x: 2, y: 5},
+                    {x: 5, y: 5},
+                    {x: 5, y: -5},
+                    {x: 2, y: -5}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+                marker.append('svg:path')
+                    .attr('d', ['M', 2+ofs[0], 0, 'h', -2].join(' '))
+                    .attr('stroke-width', stemWidth)
+                    .attr('fill', 'none');
+            }
+        };
     },
-    normal: {
-        frontRef: [8,0],
-        viewBox: [0, -3, 8, 6],
-        kernstems: function(stemWidth) {
-            return [0,stemWidth*4/3];
-        },
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0, y: 3},
-                {x: 8, y: 0},
-                {x: 0, y: -3}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
+    vee: function(open, side) {
+        return {
+            stems: [true,false],
+            kernstems: function(stemWidth) {
+                return [0,stemWidth];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var points = [
+                    {x: 0, y: -5},
+                    {x: 10, y: 0},
+                    {x: 0, y: 5},
+                    {x: 5, y: 0}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+                marker.append('svg:path')
+                    .attr('d', ['M', ofs[0]+5, 0, 'h',-5].join(' '))
+                    .attr('stroke-width', stemWidth);
+            }
+        };
     },
-    onormal: {
-        frontRef: [8,0],
-        viewBox: [0, -3, 8, 6],
-        kernstems: function(stemWidth) {
-            return [0,stemWidth*4/3];
-        },
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0.5, y: 2.28},
-                {x: 6.57, y: 0},
-                {x: 0.5, y: -2.28}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr({
-                    d: generate_path(points, 1, true),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
-    },
-    inv: {
-        frontRef: [8,0],
-        viewBox: [0, -3, 8, 6],
-        kernstems: function(stemWidth) {
-            return [stemWidth*4/3,0];
-        },
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 8, y: 3},
-                {x: 0, y: 0},
-                {x: 8, y: -3}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
-    },
-    oinv: {
-        frontRef: [8,0],
-        viewBox: [0, -3, 8, 6],
-        kernstems: function(stemWidth) {
-            return [stemWidth*4/3,0];
-        },
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 7.5, y: 2.28},
-                {x: 1.43, y: 0},
-                {x: 7.5, y: -2.28}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr({
-                    d: generate_path(points, 1, true),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
-    },
-    tee: {
-        frontRef: [5,0],
-        viewBox: [0, -5, 5, 10],
-        stems: [true,false],
-        drawFunction: function(marker, ofs, stemWidth) {
-            var points = [
-                {x: 2, y: 5},
-                {x: 5, y: 5},
-                {x: 5, y: -5},
-                {x: 2, y: -5}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-            marker.append('svg:path')
-                .attr('d', ['M', 2+ofs[0], 0, 'h', -2].join(' '))
-                .attr('stroke-width', stemWidth)
-                .attr('fill', 'none');
-        }
-    },
-    vee: {
-        stems: [true,false],
-        kernstems: function(stemWidth) {
-            return [0,stemWidth];
-        },
-        drawFunction: function(marker, ofs, stemWidth) {
-            var points = [
-                {x: 0, y: -5},
-                {x: 10, y: 0},
-                {x: 0, y: 5},
-                {x: 5, y: 0}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-            marker.append('svg:path')
-                .attr('d', ['M', ofs[0]+5, 0, 'h',-5].join(' '))
-                .attr('stroke-width', stemWidth);
-        }
-    },
-    crow: {
-        stems: [false,true],
-        kernstems: function(stemWidth) {
-            return [stemWidth,0];
-        },
-        drawFunction: function(marker, ofs, stemWidth) {
-            var points = [
-                {x: 10, y: -5},
-                {x: 0, y: 0},
-                {x: 10, y: 5},
-                {x: 5, y: 0}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-            marker.append('svg:path')
-                .attr('d', ['M', ofs[0]+5, 0, 'h',5].join(' '))
-                .attr('stroke-width', stemWidth);
-        }
+    crow: function(open, side) {
+        return {
+            stems: [false,true],
+            kernstems: function(stemWidth) {
+                return [stemWidth,0];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var points = [
+                    {x: 10, y: -5},
+                    {x: 0, y: 0},
+                    {x: 10, y: 5},
+                    {x: 5, y: 0}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+                marker.append('svg:path')
+                    .attr('d', ['M', ofs[0]+5, 0, 'h',5].join(' '))
+                    .attr('stroke-width', stemWidth);
+            }
+        };
     }
 };
+
+function arrow_def(arrdefs, shape, open, side) {
+    return arrdefs[shape](open, side);
+}
 
 function arrow_parts(arrdefs, desc) {
     // graphviz appears to use a real parser for this
     var parts = [];
     while(desc && desc.length) {
+        var mods = /^o?(?:l|r)?/.exec(desc);
+        var open = false, side = null;
+        if(mods[0]) {
+            mods = mods[0];
+            desc = desc.slice(mods.length);
+            open = mods[0] === 'o';
+            switch(mods[mods.length-1]) {
+            case 'l':
+                side='left';
+                break;
+            case 'r':
+                side='right';
+            }
+        }
         var ok = false;
-        for(var an in arrdefs)
-            if(desc.substring(0, an.length) === an) {
+        for(var aname in arrdefs)
+            if(desc.substring(0, aname.length) === aname) {
                 ok = true;
-                parts.push(an);
-                desc = desc.slice(an.length);
+                parts.push(arrow_def(arrdefs, aname, open, side));
+                desc = desc.slice(aname.length);
                 break;
             }
         if(!ok) {
@@ -337,18 +375,29 @@ var view_box = defaulted([0, -5, 10, 10]),
 function arrow_offsets(arrdefs, parts, stemWidth) {
     var frontRef = null, backRef = null;
     return parts.map(function(p, i) {
-        var fr = front_ref(arrdefs[p].frontRef).slice(),
-            br = back_ref(arrdefs[p].backRef).slice();
-        if(arrdefs[p].kernstems) {
-            var kernstems = arrdefs[p].kernstems;
+        var fr = front_ref(p.frontRef).slice(),
+            br = back_ref(p.backRef).slice();
+        if(p.kernstems) {
+            var kernstems = p.kernstems;
             if(typeof kernstems === 'function')
                 kernstems = kernstems(stemWidth);
-            if(i !== 0 && kernstems[1] &&
-               arrdefs[parts[i-1]].stems && arrdefs[parts[i-1]].stems[0])
-                fr[0] -= kernstems[1];
-            if(kernstems[0] &&
-               (i === parts.length-1 || arrdefs[parts[i+1]].stems && arrdefs[parts[i+1]].stems[1]))
-                br[0] += kernstems[0];
+            if(i !== 0 && kernstems[1]) {
+                var last = parts[i-1];
+                if(last.stems && last.stems[0])
+                    fr[0] -= kernstems[1];
+            }
+            if(kernstems[0]) {
+                var kern = false;
+                if(i === parts.length-1)
+                    kern = true;
+                else {
+                    var next = parts[i+1];
+                    if(next.stems && next.stems[1])
+                        kern = true;
+                }
+                if(kern)
+                    br[0] += kernstems[0];
+            }
         }
         if(i === 0) {
             frontRef = fr;
@@ -365,7 +414,7 @@ function arrow_offsets(arrdefs, parts, stemWidth) {
 function arrow_bounds(arrdefs, parts, stemWidth) {
     var viewBox = null, offsets = arrow_offsets(arrdefs, parts, stemWidth);
     parts.forEach(function(p, i) {
-        var vb = view_box(arrdefs[p].viewBox);
+        var vb = view_box(p.viewBox);
         var ofs = offsets[i].offset;
         if(!viewBox)
             viewBox = vb.slice();
@@ -379,7 +428,7 @@ function arrow_length(arrdefs, parts, stemWidth) {
     if(!parts.length)
         return 0;
     var offsets = arrow_offsets(arrdefs, parts, stemWidth);
-    return front_ref(arrdefs[parts[0]].frontRef)[0] - offsets[parts.length-1].backRef[0];
+    return front_ref(parts[0].frontRef)[0] - offsets[parts.length-1].backRef[0];
 }
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
@@ -394,7 +443,7 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
         var arrowSize = diagram.edgeArrowSize.eval(e),
             stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize,
             bounds = arrow_bounds(arrdefs, parts, stemWidth),
-            frontRef = front_ref(arrdefs[parts[0]].frontRef);
+            frontRef = front_ref(parts[0].frontRef);
         bounds.viewBox[0] -= strokeOfs/arrowSize;
         bounds.viewBox[3] += strokeOfs/arrowSize;
         marker
@@ -409,7 +458,7 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
         marker.html(null);
         parts.forEach(function(p, i) {
             marker
-                .call(arrdefs[p].drawFunction,
+                .call(p.drawFunction,
                       add_points([-strokeOfs/arrowSize,0], bounds.offsets[i].offset),
                       stemWidth);
         });
