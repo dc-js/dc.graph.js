@@ -2764,46 +2764,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
-     * Creates an svg marker definition for drawing edge arrow tails or heads. The `viewBox` of
-     * the marker is `0 -5 10 10`, so the arrow should be drawn from (0, -5) to (10, 5); it
-     * will be moved and sized based on the other parameters, and rotated based on the
-     * orientation of the edge.
+     * Creates an svg marker definition for drawing edge arrow tails or heads.
      *
-     * (If further customization is required, it is possible to append other `svg:defs` to
-     * `diagram.svg()` and use refer to them by `id`.)
-     * @method defineArrow
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Number} name - the identifier to give the marker, to be used with
-     * {@link #dc_graph.diagram+edgeArrowhead edgeArrowhead} or
-     * {@link #dc_graph.diagram+edgeArrowtail edgeArrowtail}
-     * @param {Number} width - the width, in pixels, to draw the marker
-     * @param {Number} height - the height, in pixels, to draw the marker
-     * @param {Number} refX - the X reference position, in marker coordinates, which will be
-     * aligned to the endpoint of the edge
-     * @param {Number} refY - the Y reference position
-     * @param {Function} drawf - a function to draw the marker using d3 SVG primitives, which
-     * takes the marker object as its parameter.
-     * @example
-     * // the built-in `vee` arrow is defined like so:
-     * _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-     *   marker.append('svg:path')
-     *     .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-     *     .attr('stroke-width', '0px');
-     * });
+     * Sorry, this is not currently documented - please see
+     * [arrows.js](https://github.com/dc-js/dc.graph.js/blob/develop/src/arrows.js)
+     * for examples
      * @return {dc_graph.diagram}
      **/
-    _diagram.defineArrow = function(defn, width, height, refX, refY, drawf) {
-        if(typeof defn === 'string')
-            defn = {
-                name: defn,
-                width: width,
-                height: height,
-                refX: refX,
-                refY: refY,
-                drawFunction: drawf
-            };
-        _arrows[defn.name] = defn;
+    _diagram.defineArrow = function(name, defn) {
+        if(typeof defn !== 'function')
+            throw new Error('sorry, defineArrow no longer takes specific shape parameters, and the parameters have changed too much to convert them. it takes a name and a function returning a definition - please look at arrows.js for new format');
+        _arrows[name] = defn;
         return _diagram;
     };
 
@@ -2827,8 +2798,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
         var defn = dc_graph.builtin_arrows[aname];
-        defn.name = aname;
-        _diagram.defineArrow(defn);
+        _diagram.defineArrow(aname, defn);
     });
 
     function globalTransform(pos, scale, animate) {
