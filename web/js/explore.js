@@ -138,7 +138,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             break;
         case 'lots':
             arrowheadscale = arrowtailscale = function(label) {
-                return arrowgen(rand(label));
+                return arrowgen(rand(label || ''));
             };
             break;
         case 'changing':
