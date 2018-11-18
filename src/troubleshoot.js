@@ -244,6 +244,8 @@ dc_graph.troubleshoot = function() {
                 _scale = p.scale();
                 p.on('zoomed.troubleshoot', on_zoom);
             }
+            else if(_behavior.parent())
+                _behavior.parent().on('zoomed.troubleshoot', null);
         }
     });
     _behavior.opacity = property(0.75);
