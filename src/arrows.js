@@ -372,7 +372,7 @@ var view_box = defaulted([0, -5, 10, 10]),
     front_ref = defaulted([10, 0]),
     back_ref = defaulted([0, 0]);
 
-function arrow_offsets(arrdefs, parts, stemWidth) {
+function arrow_offsets(parts, stemWidth) {
     var frontRef = null, backRef = null;
     return parts.map(function(p, i) {
         var fr = front_ref(p.frontRef).slice(),
@@ -411,8 +411,8 @@ function arrow_offsets(arrdefs, parts, stemWidth) {
     });
 }
 
-function arrow_bounds(arrdefs, parts, stemWidth) {
-    var viewBox = null, offsets = arrow_offsets(arrdefs, parts, stemWidth);
+function arrow_bounds(parts, stemWidth) {
+    var viewBox = null, offsets = arrow_offsets(parts, stemWidth);
     parts.forEach(function(p, i) {
         var vb = view_box(p.viewBox);
         var ofs = offsets[i].offset;
@@ -424,10 +424,10 @@ function arrow_bounds(arrdefs, parts, stemWidth) {
     return {offsets: offsets, viewBox: viewBox};
 }
 
-function arrow_length(arrdefs, parts, stemWidth) {
+function arrow_length(parts, stemWidth) {
     if(!parts.length)
         return 0;
-    var offsets = arrow_offsets(arrdefs, parts, stemWidth);
+    var offsets = arrow_offsets(parts, stemWidth);
     return front_ref(parts[0].frontRef)[0] - offsets[parts.length-1].backRef[0];
 }
 
@@ -442,7 +442,7 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
     if(parts.length) {
         var arrowSize = diagram.edgeArrowSize.eval(e),
             stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize,
-            bounds = arrow_bounds(arrdefs, parts, stemWidth),
+            bounds = arrow_bounds(parts, stemWidth),
             frontRef = front_ref(parts[0].frontRef);
         bounds.viewBox[0] -= strokeOfs/arrowSize;
         bounds.viewBox[3] += strokeOfs/arrowSize;

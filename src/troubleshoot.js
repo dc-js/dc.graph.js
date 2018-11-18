@@ -186,7 +186,7 @@ dc_graph.troubleshoot = function() {
     }
     function edge_arrow_points(arrows, defn, arrowSize, stemWidth, orient, endp, strokeWidth) {
         var parts = arrow_parts(arrows, defn),
-            offsets = arrow_offsets(arrows, parts, stemWidth),
+            offsets = arrow_offsets(parts, stemWidth),
             xunit = [Math.cos(orient), Math.sin(orient)];
         endp = [endp.x, endp.y];
         if(!parts.length)
@@ -194,17 +194,17 @@ dc_graph.troubleshoot = function() {
                      endp[1] - xunit[1]*strokeWidth/2]];
         var globofs = add_points(
             [-strokeWidth/arrowSize/2,0],
-            mult_point(front_ref(arrows[parts[0]].frontRef), -1));
+            mult_point(front_ref(parts[0].frontRef), -1));
         var pts = offsets.map(function(ofs, i) {
             return mult_point([
                 globofs,
-                front_ref(arrows[parts[i]].frontRef),
+                front_ref(parts[i].frontRef),
                 ofs.offset
             ].reduce(add_points), arrowSize);
         });
         pts.push(mult_point([
             globofs,
-            back_ref(arrows[parts[parts.length-1]].backRef),
+            back_ref(parts[parts.length-1].backRef),
             offsets[parts.length-1].offset
         ].reduce(add_points), arrowSize));
         return pts.map(function(p) {
