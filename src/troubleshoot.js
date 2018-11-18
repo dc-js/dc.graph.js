@@ -78,7 +78,7 @@ dc_graph.troubleshoot = function() {
                 diagram.edgeArrowSize.eval(e),
                 unrad(e.pos.new.orienthead),
                 e.pos.new.path.points[e.pos.new.path.points.length-1],
-                diagram.nodeStrokeWidth.eval(e.head)
+                diagram.nodeStrokeWidth.eval(e.target)
             );
         }));
         var hp = _debugLayer.selectAll('path.head-point').data(headpts);
@@ -91,7 +91,7 @@ dc_graph.troubleshoot = function() {
                 diagram.edgeArrowSize.eval(e),
                 unrad(e.pos.new.orienttail),
                 e.pos.new.path.points[0],
-                diagram.nodeStrokeWidth.eval(e.tail)
+                diagram.nodeStrokeWidth.eval(e.source)
             );
         }));
         var tp = _debugLayer.selectAll('path.tail-point').data(tailpts);

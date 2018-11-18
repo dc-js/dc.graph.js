@@ -2372,8 +2372,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     arrowSize = diagram.edgeArrowSize.eval(e);
                 var headlength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e))),
                     taillength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)));
-                var tailStroke = _diagram.nodeStrokeWidth.eval(e.tail),
-                    headStroke = _diagram.nodeStrokeWidth.eval(e.head),
+                var tailStroke = _diagram.nodeStrokeWidth.eval(e.source),
+                    headStroke = _diagram.nodeStrokeWidth.eval(e.target),
                     length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
                 d3.select(this)
                     .attr('stroke-dasharray', length + ' ' + totlength*2)

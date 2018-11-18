@@ -355,7 +355,7 @@ function arrow_length(arrdefs, parts) {
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
-    var strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.tail : e.head)/2;
+    var strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.source : e.target)/2;
     if(e[kind + 'ArrowLast'] === desc + '-' + strokeOfs)
         return id;
     var parts = arrow_parts(arrdefs, desc),
