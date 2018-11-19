@@ -69,7 +69,7 @@ dc_graph.text_contents = function() {
             return container.select('text.node-label');
         },
         selectText: function(container) {
-            return selectContent(container);
+            return this.selectContent(container);
         }
     };
     return _contents;
