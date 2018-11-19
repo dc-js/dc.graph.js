@@ -259,7 +259,7 @@ dc_graph.draw_graphs = function(options) {
                                 }
                                 _targetValid = false;
                             }
-                    }
+                    } else _targetValid = true;
                     if(_targetMove) {
                         if(_targetMove.port)
                             _hintData[0].target = port_pos(activePort);
