@@ -142,8 +142,14 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             };
             break;
         case 'changing':
+            var seed = 1;
+            // will change only when rendering not active
+            window.setInterval(function() {
+                console.log('change arrows');
+                ++seed;
+            }, 500);
             arrowheadscale = arrowtailscale = function(label) {
-                return arrowgen(Math.random);
+                return arrowgen(rand((label || '') + seed));
             };
             break;
         default:
