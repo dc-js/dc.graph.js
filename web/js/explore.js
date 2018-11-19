@@ -128,7 +128,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
 
         function arrowgen(rnd) {
             return d3.range(Math.floor(rnd()*5))
-                .map(i => anames[Math.floor(rnd()*anames.length)])
+                .map(i => (rnd() > 0.5 ? 'o' : '') + anames[Math.floor(rnd()*anames.length)])
                 .join('');
         };
         switch(sync_url.vals.rndarrow) {
