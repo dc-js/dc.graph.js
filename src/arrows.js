@@ -43,6 +43,7 @@ dc_graph.builtin_arrows = {
                         'stroke-width': 1,
                         fill: 'none'
                     });
+                if(side)
                 marker.append('svg:path')
                     .attr({
                         d: ['M', ofs[0], 0, 'h',8].join(' '),
