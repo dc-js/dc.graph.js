@@ -2366,20 +2366,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .attr('d', render_edge_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
 
-        edge
-            .each(function(e) {
-                var totlength = this.getTotalLength(),
-                    arrowSize = diagram.edgeArrowSize.eval(e),
-                    stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize;
-                var headlength = arrowSize*arrow_length(arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e)), stemWidth),
-                    taillength = arrowSize*arrow_length(arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)), stemWidth);
-                var tailStroke = _diagram.nodeStrokeWidth.eval(e.source),
-                    headStroke = _diagram.nodeStrokeWidth.eval(e.target),
-                    length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
-                d3.select(this)
-                    .attr('stroke-dasharray', length + ' ' + totlength*2)
-                    .attr('stroke-dashoffset', -(taillength + tailStroke/2));
-            });
+        edge.each(dash_edges_for_arrows);
 
         var etrans = edge
                 .each(function(e) {
@@ -2485,6 +2472,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_diagram.showLayoutSteps())
             endall([ntrans, etrans, textTrans],
                    function() {
+                       edge.each(dash_edges_for_arrows);
                        _animating = false;
                        layout_done(true);
                    });
@@ -2519,6 +2507,20 @@ dc_graph.diagram = function (parent, chartGroup) {
             var port = _diagram.selectNodePortsOfStyle(node, style);
             _diagram.portStyle(style).drawPorts(port, nodePorts2, node);
         });
+    }
+
+    function dash_edges_for_arrows(e) {
+        var totlength = this.getTotalLength(),
+            arrowSize = _diagram.edgeArrowSize.eval(e),
+            stemWidth = _diagram.edgeStrokeWidth.eval(e) / arrowSize;
+        var headlength = arrowSize*arrow_length(arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e)), stemWidth),
+            taillength = arrowSize*arrow_length(arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)), stemWidth);
+        var tailStroke = _diagram.nodeStrokeWidth.eval(e.source),
+            headStroke = _diagram.nodeStrokeWidth.eval(e.target),
+            length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
+        d3.select(this)
+            .attr('stroke-dasharray', length + ' ' + totlength*2)
+            .attr('stroke-dashoffset', -(taillength + tailStroke/2));
     }
 
     /**
