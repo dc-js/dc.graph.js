@@ -36,7 +36,7 @@ var min = 2, max = 12;
 var begin = 2, end = 12, curr = begin;
 var doRender = true;
 
-var diagram = dc_graph.diagram('#graph'), runner;
+var demoDiagram = dc_graph.diagram('#graph'), runner;
 var overview;
 
 function do_status() {
@@ -163,7 +163,7 @@ source(function(error, data) {
     function run() {
         do_status();
         if(doReinit)
-            diagram.initLayoutOnRedraw(explore || appLayout && useAppLayout);
+            demoDiagram.initLayoutOnRedraw(explore || appLayout && useAppLayout);
         startDim.filterRange([0, curr]);
         $('#run-indicator').show();
         if(doRender) {
@@ -221,7 +221,7 @@ source(function(error, data) {
     }
 
     var engine = dc_graph.spawn_engine(qs.layout || 'cola', qs, qs.worker != 'false');
-    diagram
+    demoDiagram
         .width($(window).width())
         .height($(window).height())
         .layoutEngine(engine)
@@ -249,15 +249,15 @@ source(function(error, data) {
         .on('end', function() {
             $('#run-indicator').hide();
             runner.endStep();
-            show_stats({totnodes: nodes.length, totedges: edges.length}, diagram.getStats());
+            show_stats({totnodes: nodes.length, totedges: edges.length}, demoDiagram.getStats());
         })
         .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
 
     if(qs.elabel)
-        diagram.edgeLabel(function(e) { return e.value[qs.elabel]; });
+        demoDiagram.edgeLabel(function(e) { return e.value[qs.elabel]; });
 
     if(engine.layoutAlgorithm() === 'cola') {
-        diagram
+        demoDiagram
             .showLayoutSteps(showSteps);
         engine
             .tickSize(tickSize)
@@ -267,9 +267,9 @@ source(function(error, data) {
         if(linkLength)
             engine.baseLength(linkLength);
     }
-    appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(diagram);
+    appLayout && app_layouts[appLayout].initDiagram && app_layouts[appLayout].initDiagram(demoDiagram);
     if(randomize) {
-        diagram.nodeOrdering(function(kv) { return kv.value.order; })
+        demoDiagram.nodeOrdering(function(kv) { return kv.value.order; })
             .edgeOrdering(function(kv) { return kv.value.order; });
     }
 
@@ -302,15 +302,15 @@ source(function(error, data) {
                 return kv.value[sourceattr] === key ? kv.value[targetattr] : kv.value[sourceattr];
             });
         }
-        var nodelist = diagram.nodeGroup().all().map(function(n) {
+        var nodelist = demoDiagram.nodeGroup().all().map(function(n) {
             return {
                 value: n.key,
-                label: diagram.nodeLabel()(n)
+                label: demoDiagram.nodeLabel()(n)
             };
         });
         apply_expander_filter();
         if(qs.directional) {
-            diagram.child('expand-collapse',
+            demoDiagram.child('expand-collapse',
                           dc_graph.expand_collapse(function(key, dir) { // get_degree
                               switch(dir) {
                               case 'out': return out_edges(key).length;
@@ -353,7 +353,7 @@ source(function(error, data) {
                               run();
                           }, ['out', 'in']));
         } else {
-            diagram.child('expand-collapse',
+            demoDiagram.child('expand-collapse',
                           dc_graph.expand_collapse(function(key) { // get_degree
                               return adjacent_edges(key).length;
                           }, function(key) { // expand
@@ -393,7 +393,7 @@ source(function(error, data) {
 
     // respond to browser resize (not necessary if width/height is static)
     $(window).resize(function() {
-        diagram
+        demoDiagram
             .width($(window).width())
             .height($(window).height());
     });
@@ -420,7 +420,7 @@ source(function(error, data) {
     });
     $('#use-app-layout').change(function(val) {
         useAppLayout = $(this).is(':checked');
-        diagram.lengthStrategy(useAppLayout ? 'none' : 'symmetric')
+        demoDiagram.lengthStrategy(useAppLayout ? 'none' : 'symmetric')
             .relayout();
         doRender = true;
         if(!runner.isRunning())
@@ -436,6 +436,6 @@ source(function(error, data) {
         runner.toggle();
 
     if(qs.infdraw)
-        diagram.layoutUnchanged(true);
+        demoDiagram.layoutUnchanged(true);
 });
 

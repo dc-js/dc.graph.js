@@ -42,8 +42,8 @@ var options = {
         }
     }
 };
-var diagram = dc_graph.diagram('#graph');
-var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+var arrowDiagram = dc_graph.diagram('#graph');
+var sync_url = sync_url_options(options, dcgraph_domain(arrowDiagram), arrowDiagram);
 
 var nodes = [
     {
@@ -91,7 +91,7 @@ var edge_flat = dc_graph.flat_group.make(edges, e => e.key),
 
 var engine = dc_graph.manual_layout();
 
-diagram
+arrowDiagram
     .width('auto')
     .height('auto')
     .layoutEngine(engine)
@@ -107,5 +107,5 @@ diagram
     .edgeArrowhead(() => sync_url.vals.arrowhead)
     .edgeArrowtail(() => sync_url.vals.arrowtail);
 
-diagram.render();
+arrowDiagram.render();
 sync_url.exert();

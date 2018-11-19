@@ -6,10 +6,10 @@ var options = Object.assign({
 var node_flat = dc_graph.flat_group.make([], function(d) { return d.id; }),
     edge_flat = dc_graph.flat_group.make([], function(d) { return d.id; });
 
-var diagram = dc_graph.diagram('#graph');
+var drawDiagram = dc_graph.diagram('#graph');
 var engine = dc_graph.spawn_engine(options.layout, options, options.worker != 'false');
 
-diagram
+drawDiagram
     .width(window.innerWidth)
     .height(window.innerHeight)
     .layoutEngine(engine)
@@ -28,7 +28,7 @@ diagram
     .nodeFixed(function(n) { return n.value.fixedPos; })
     .edgeArrowhead('vee');
 
-diagram.timeLimit(1000);
+drawDiagram.timeLimit(1000);
 
 var select_nodes = dc_graph.select_nodes({
     nodeFill: '#eeffe0',
@@ -72,7 +72,7 @@ var draw_graphs = dc_graph.draw_graphs({
     edgeCrossfilter: edge_flat.crossfilter
 }).addNode(add_object).addEdge(add_object);
 
-diagram
+drawDiagram
     .child('select-nodes', select_nodes)
     .child('select-edges', select_edges)
     .child('label-nodes', label_nodes)

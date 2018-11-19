@@ -125,7 +125,7 @@ var options = {
         subscribe: function(k) {
             osTypeSelect.on('filtered', function() {
                 var filters = osTypeSelect.filters();
-                diagram.legend() && diagram.legend()
+                vizgemsDiagram.legend() && vizgemsDiagram.legend()
                     .replaceFilter([filters])
                     .redraw();
                 k(filters);
@@ -282,10 +282,10 @@ var options = {
 
 var osTypeSelect = dc.selectMenu('#ostype-select', 'network');
 var filters = {};
-var diagram = dc_graph.diagram('#graph', 'network');
+var vizgemsDiagram = dc_graph.diagram('#graph', 'network');
 var timeline = timeline('#timeline');
 var node_inv = null, edge_inv = null;
-var tracker = sync_url_options(options, dcgraph_domain(diagram, 'network'), diagram, filters);
+var tracker = sync_url_options(options, dcgraph_domain(vizgemsDiagram, 'network'), vizgemsDiagram, filters);
 
 var is_running = tracker.vals.play;
 function display_running() {
@@ -294,9 +294,9 @@ function display_running() {
 display_running();
 $('#play-button').click(function(e) {
     if(e.shiftKey)
-        diagram.transitionDuration(tracker.vals.slow_transition);
+        vizgemsDiagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(tracker.vals.transition);
+        vizgemsDiagram.transitionDuration(tracker.vals.transition);
     if(is_running) {
         runner.pause();
         is_running = false;
@@ -312,9 +312,9 @@ $('#last-button').click(function(e) {
     curr_hist = (curr_hist+hist_files.length-2)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
     if(e.shiftKey)
-        diagram.transitionDuration(tracker.vals.slow_transition);
+        vizgemsDiagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(tracker.vals.transition);
+        vizgemsDiagram.transitionDuration(tracker.vals.transition);
     runner.step();
 });
 
@@ -322,9 +322,9 @@ $('#next-button').click(function(e) {
     //curr_hist = (curr_hist+1)%hist_files.length;
     timeline.events(hist_events).current(hist_events[curr_hist].key).redraw();
     if(e.shiftKey)
-        diagram.transitionDuration(tracker.vals.slow_transition);
+        vizgemsDiagram.transitionDuration(tracker.vals.slow_transition);
     else
-        diagram.transitionDuration(tracker.vals.transition);
+        vizgemsDiagram.transitionDuration(tracker.vals.transition);
     runner.step();
 });
 
@@ -591,7 +591,7 @@ function crossfilters(nodes, edges) {
 
 var selected_node = null;
 function clickiness() {
-    diagram.selectAll('.draw g.node')
+    vizgemsDiagram.selectAll('.draw g.node')
         .on('click.vizgems', function(d) {
             selected_node = d.orig.key;
             dc.redrawAll('network');
@@ -675,7 +675,7 @@ function init() {
         data_stats = {totnodes: vertices.length, totedges: edges.length};
         Object.assign(filters, crossfilters(vertices, edges));
         // basic diagram setup
-        diagram
+        vizgemsDiagram
             .width($(window).width())
             .height($(window).height())
             .transitionDuration(tracker.vals.transition)
@@ -696,7 +696,7 @@ function init() {
                 if(happens)
                     runner.endStep();
                 else runner.skip();
-                show_stats(data_stats, diagram.getStats());
+                show_stats(data_stats, vizgemsDiagram.getStats());
             });
         osTypeSelect
             .promptText('Show all types')
@@ -712,7 +712,7 @@ function init() {
 
         // respond to browser resize (not necessary if width/height is static)
         $(window).resize(function() {
-            diagram
+            vizgemsDiagram
                 .width($(window).width())
                 .height($(window).height());
         });
@@ -725,7 +725,7 @@ function init() {
         }
 
         // aesthetics: look at kv.value for node/edge attributes and return appropriate values
-        diagram
+        vizgemsDiagram
             .initLayoutOnRedraw(true)
             .nodeFitLabel(tracker.vals.fit_labels)
             .nodeRadius(function(n) {
@@ -758,13 +758,13 @@ function init() {
             .exemplars(exs)
             .dimension(filters.filterOSTypes)
             .replaceFilter([osTypeSelect.filters()]);
-        diagram.legend(legend);
+        vizgemsDiagram.legend(legend);
         legend.on('filtered', function() {
             osTypeSelect.replaceFilter([legend.filters()]).redraw();
         });
 
         osTypeSelect.render();
-        diagram.render();
+        vizgemsDiagram.render();
         clickiness();
         data_stats = {totnodes: vertices.length, totedges: edges.length};
     });
@@ -777,7 +777,7 @@ function step() {
         }
         Object.assign(filters, crossfilters(vertices, edges));
         tracker.exert();
-        diagram
+        vizgemsDiagram
             .nodeDimension(filters.nodeDimension).nodeGroup(filters.nodeGroup)
             .edgeDimension(filters.edgeDimension).edgeGroup(filters.edgeGroup);
         dc.redrawAll('network');

@@ -30,8 +30,8 @@ var options = {
         }
     }
 };
-var diagram = dc_graph.diagram('#graph');
-var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+var exploreDiagram = dc_graph.diagram('#graph');
+var sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
 
 // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript#47593316
 function xfnv1a(k) {
@@ -94,7 +94,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
 
     var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
 
-    diagram
+    exploreDiagram
         .width('auto')
         .height('auto')
         .layoutEngine(engine)
@@ -121,7 +121,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             return null;
         });
     if(sync_url.vals.bigzoom)
-        diagram.zoomExtent([0.001, 200]);
+        exploreDiagram.zoomExtent([0.001, 200]);
     if(sync_url.vals.rndarrow) {
         var arrowheadscale, arrowtailscale;
         var anames = Object.keys(dc_graph.builtin_arrows);
@@ -149,7 +149,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         default:
             throw new Error('unknown rndarrow "' + sync_url.vals.rndarrow + '"');
         }
-        diagram
+        exploreDiagram
             .edgeArrowhead(e => arrowheadscale(e.value.label))
             .edgeArrowtail(e => arrowtailscale(e.value.label));
     }
@@ -197,13 +197,13 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             return counts;
         });
         edge_legend.dimension(edge_dim);
-        diagram.child('edge-legend', edge_legend);
+        exploreDiagram.child('edge-legend', edge_legend);
     }
 
-    var nodelist = diagram.nodeGroup().all().map(function(n) {
+    var nodelist = exploreDiagram.nodeGroup().all().map(function(n) {
         return {
             value: n.key,
-            label: diagram.nodeLabel()(n)
+            label: exploreDiagram.nodeLabel()(n)
         };
     });
     nodelist.sort((a,b) => a.label < b.label ? -1 : 1);
@@ -234,12 +234,12 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
 
     if(sync_url.vals.debug) {
         var troubleshoot = dc_graph.troubleshoot();
-        diagram.child('troubleshoot', troubleshoot);
+        exploreDiagram.child('troubleshoot', troubleshoot);
     }
 
     expand_collapse = dc_graph.expand_collapse(ec_strategy);
-    diagram.child('expand-collapse', expand_collapse);
-    diagram.child('highlight-expanded', dc_graph.highlight_things(
+    exploreDiagram.child('expand-collapse', expand_collapse);
+    exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
         {
             nodeStrokeWidth: 5,
             nodeStroke: 'steelblue'
@@ -247,7 +247,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         {},
         'expanded-highlight', 'expanded-highlight-group', 147
     ).durationOverride(0));
-    diagram.child('highlight-collapse', dc_graph.highlight_things(
+    exploreDiagram.child('highlight-collapse', dc_graph.highlight_things(
         {
             nodeOpacity: 0.2,
             nodeStroke: 'darkred',
@@ -257,7 +257,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         {},
         'collapse-highlight', 'collapse-highlight-group', 150
     ).durationOverride(0));
-    diagram.child('highlight-hide', dc_graph.highlight_things(
+    exploreDiagram.child('highlight-hide', dc_graph.highlight_things(
         {
             nodeOpacity: 0.2,
             nodeStroke: 'darkred',
@@ -268,7 +268,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         'hide-highlight', 'hide-highlight-group', 155
     ).durationOverride(0));
     dc.renderAll();
-    diagram.autoZoom('once-noanim');
+    exploreDiagram.autoZoom('once-noanim');
     var starter = d3.select('#add-node');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
     option.enter().append('option')
@@ -278,7 +278,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
 
     starter.on('change', function() {
         expand_collapse.expand('both', this.value, true);
-        diagram.autoZoom('once-noanim');
+        exploreDiagram.autoZoom('once-noanim');
         dc.redrawAll();
     });
 
