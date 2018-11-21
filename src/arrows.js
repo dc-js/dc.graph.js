@@ -121,17 +121,28 @@ dc_graph.builtin_arrows = {
             kernstems: function(stemWidth) {
                 return [.75*stemWidth,.75*stemWidth];
             },
-            drawFunction: function(marker, ofs) {
-                var points = [
-                    {x: 0, y: 0},
-                    {x: 6, y: 4},
-                    {x: 12, y: 0},
-                    {x: 6, y: -4}
-                ].map(offsetx(ofs[0]));
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [{x: 0, y: 0}];
+                if(side !== 'left')
+                    upoints.push({x: 6, y: 4});
+                else
+                    upoints.push({x: 6, y: -4});
+                upoints.push({x: 12, y: 0});
+                if(!side)
+                    upoints.push({x: 6, y: -4});
+                var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr({
                         d: generate_path(points, 1, true),
                         'stroke-width': 0
+                    });
+                if(side)
+                    marker.append('svg:path')
+                    .attr({
+                        d: ['M', ofs[0],  0,
+                            'h 12'].join(' '),
+                        'stroke-width': stemWidth,
+                        fill: 'none'
                     });
             }
         };
