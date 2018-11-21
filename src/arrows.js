@@ -137,14 +137,15 @@ dc_graph.builtin_arrows = {
                         d: generate_path(points, 1, true),
                         'stroke-width': 0
                     });
-                if(side)
+                if(side) {
                     marker.append('svg:path')
-                    .attr({
-                        d: ['M', 0.75 + ofs[0],  0,
-                            'h 10.5'].join(' '),
-                        'stroke-width': stemWidth,
-                        fill: 'none'
-                    });
+                        .attr({
+                            d: ['M', 0.75 + ofs[0],  0,
+                                'h 10.5'].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
             }
         };
         else return {
@@ -171,37 +172,74 @@ dc_graph.builtin_arrows = {
                         'stroke-width': 1,
                         fill: 'none'
                     });
-                if(side)
+                if(side) {
                     marker.append('svg:path')
-                    .attr({
-                        d: ['M', 0.75 + ofs[0],  0,
-                            'h 10.5'].join(' '),
-                        'stroke-width': stemWidth,
-                        fill: 'none'
-                    });
+                        .attr({
+                            d: ['M', 0.75 + ofs[0],  0,
+                                'h 10.5'].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
             }
         };
     },
     dot: function(open, side) {
         if(!open) return {
             frontRef: [8,0],
-            drawFunction: function(marker, ofs) {
-                marker.append('svg:circle')
-                    .attr('r', 4)
-                    .attr('cx', 4 + ofs[0])
-                    .attr('cy', 0)
-                    .attr('stroke-width', '0px');
+            stems: [!!side, !!side],
+            drawFunction: function(marker, ofs, stemWidth) {
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0], 0,
+                                'A', 4, 4, 0, 0, side==='left'?1:0, 8 + ofs[0], 0].join(' '),
+                            'stroke-width': 0
+                        });
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0],  0,
+                                'h 8'].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
+                else {
+                    marker.append('svg:circle')
+                        .attr('r', 4)
+                        .attr('cx', 4 + ofs[0])
+                        .attr('cy', 0)
+                        .attr('stroke-width', '0px');
+                }
             }
         };
         else return {
             frontRef: [8,0],
-            drawFunction: function(marker, ofs) {
-                marker.append('svg:circle')
-                    .attr('r', 3.5)
-                    .attr('cx', 4 + ofs[0])
-                    .attr('cy', 0)
-                    .attr('fill', 'none')
-                    .attr('stroke-width', '1px');
+            stems: [!!side, !!side],
+            drawFunction: function(marker, ofs, stemWidth) {
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', 0.5 + ofs[0], 0,
+                                'A', 3.5, 3.5, 0, 0, side==='left'?1:0, 7.5 + ofs[0], 0].join(' '),
+                            'stroke-width': 1,
+                            fill: 'none'
+                        });
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0],  0,
+                                'h 8'].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                } else {
+                    marker.append('svg:circle')
+                        .attr('r', 3.5)
+                        .attr('cx', 4 + ofs[0])
+                        .attr('cy', 0)
+                        .attr('fill', 'none')
+                        .attr('stroke-width', '1px');
+                }
             }
         };
     },
