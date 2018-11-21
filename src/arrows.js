@@ -117,6 +117,7 @@ dc_graph.builtin_arrows = {
         if(!open) return {
             frontRef: [12,0],
             viewBox: [0, -4, 12, 8],
+            stems: [!!side, !!side],
             kernstems: function(stemWidth) {
                 return [.75*stemWidth,.75*stemWidth];
             },
@@ -137,20 +138,32 @@ dc_graph.builtin_arrows = {
         else return {
             frontRef: [12,0],
             viewBox: [0, -4, 12, 8],
+            stems: [!!side, !!side],
             kernstems: function(stemWidth) {
                 return [.75*stemWidth,.75*stemWidth];
             },
-            drawFunction: function(marker, ofs) {
-                var points = [
-                    {x: 0.9, y: 0},
-                    {x: 6, y: 3.4},
-                    {x: 11.1, y: 0},
-                    {x: 6, y: -3.4}
-                ].map(offsetx(ofs[0]));
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [{x: 0.9, y: 0}];
+                if(side !== 'left')
+                    upoints.push({x: 6, y: 3.4});
+                else
+                    upoints.push({x: 6, y: -3.4});
+                upoints.push({x: 11.1, y: 0});
+                if(!side)
+                    upoints.push({x: 6, y: -3.4});
+                var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr({
-                        d: generate_path(points, 1, true),
+                        d: generate_path(points, 1, !side),
                         'stroke-width': 1,
+                        fill: 'none'
+                    });
+                if(side)
+                    marker.append('svg:path')
+                    .attr({
+                        d: ['M', ofs[0],  0,
+                            'h 12'].join(' '),
+                        'stroke-width': stemWidth,
                         fill: 'none'
                     });
             }
