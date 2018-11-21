@@ -245,40 +245,83 @@ dc_graph.builtin_arrows = {
     },
     normal: function(open, side) {
         if(!open) return {
-            frontRef: [8,0],
+            frontRef: [side ? 8-4/3 : 8, 0],
             viewBox: [0, -3, 8, 6],
             kernstems: function(stemWidth) {
                 return [0,stemWidth*4/3];
             },
-            drawFunction: function(marker, ofs) {
-                var points = [
-                    {x: 0, y: 3},
-                    {x: 8, y: 0},
-                    {x: 0, y: -3}
-                ].map(offsetx(ofs[0]));
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [];
+                if(side === 'left')
+                    upoints.push({x: 0, y: 0});
+                else
+                    upoints.push({x: 0, y: 3});
+                switch(side) {
+                case 'left':
+                    upoints.push({x: 8 - stemWidth*4/3, y: -stemWidth/2});
+                    break;
+                case 'right':
+                    upoints.push({x: 8 - stemWidth*4/3, y: stemWidth/2});
+                    break;
+                default:
+                    upoints.push({x: 8, y: 0});
+                }
+                if(side === 'right')
+                    upoints.push({x: 0, y: 0});
+                else
+                    upoints.push({x: 0, y: -3});
+                var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generate_path(points, 1, true))
                     .attr('stroke-width', '0px');
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0],  0,
+                                'h', 8-4*stemWidth/3].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
             }
         };
         else return {
-            frontRef: [8,0],
+            frontRef: [side ? 8-4/3 : 8, 0],
             viewBox: [0, -3, 8, 6],
             kernstems: function(stemWidth) {
                 return [0,stemWidth*4/3];
             },
-            drawFunction: function(marker, ofs) {
-                var points = [
-                    {x: 0.5, y: 2.28},
-                    {x: 6.57, y: 0},
-                    {x: 0.5, y: -2.28}
-                ].map(offsetx(ofs[0]));
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [];
+                if(!side) {
+                    upoints = [
+                        {x: 0.5, y: 2.28},
+                        {x: 6.57, y: 0},
+                        {x: 0.5, y: -2.28}
+                    ];
+                } else {
+                    upoints = [
+                        {x: 0.5, y: 0},
+                        {x: 0.5, y: side === 'left' ? -2.28 : 2.28},
+                        {x: 8-4/3, y: 0}
+                    ];
+                }
+                var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr({
-                        d: generate_path(points, 1, true),
+                        d: generate_path(points, 1, !side),
                         'stroke-width': 1,
                         fill: 'none'
                     });
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0],  0,
+                                'h', 8-4/3].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
             }
         };
     },
