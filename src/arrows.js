@@ -115,7 +115,8 @@ dc_graph.builtin_arrows = {
     },
     diamond: function(open, side) {
         if(!open) return {
-            frontRef: [12,0],
+            frontRef: [side ? 11.25 : 12, 0],
+            backRef: [side ? 0.75 : 0, 0],
             viewBox: [0, -4, 12, 8],
             stems: [!!side, !!side],
             kernstems: function(stemWidth) {
@@ -139,15 +140,16 @@ dc_graph.builtin_arrows = {
                 if(side)
                     marker.append('svg:path')
                     .attr({
-                        d: ['M', ofs[0],  0,
-                            'h 12'].join(' '),
+                        d: ['M', 0.75 + ofs[0],  0,
+                            'h 10.5'].join(' '),
                         'stroke-width': stemWidth,
                         fill: 'none'
                     });
             }
         };
         else return {
-            frontRef: [12,0],
+            frontRef: [side ? 11.25 : 12, 0],
+            backRef: [side ? 0.75 : 0, 0],
             viewBox: [0, -4, 12, 8],
             stems: [!!side, !!side],
             kernstems: function(stemWidth) {
@@ -172,8 +174,8 @@ dc_graph.builtin_arrows = {
                 if(side)
                     marker.append('svg:path')
                     .attr({
-                        d: ['M', ofs[0],  0,
-                            'h 12'].join(' '),
+                        d: ['M', 0.75 + ofs[0],  0,
+                            'h 10.5'].join(' '),
                         'stroke-width': stemWidth,
                         fill: 'none'
                     });
