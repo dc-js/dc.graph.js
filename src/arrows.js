@@ -415,17 +415,19 @@ dc_graph.builtin_arrows = {
             viewBox: [0, -5, 5, 10],
             stems: [true,false],
             drawFunction: function(marker, ofs, stemWidth) {
+                var b = side === 'right' ? 0 : -5,
+                    t = side === 'left' ? 0 : 5;
                 var points = [
-                    {x: 2, y: 5},
-                    {x: 5, y: 5},
-                    {x: 5, y: -5},
-                    {x: 2, y: -5}
+                    {x: 2, y: t},
+                    {x: 5, y: t},
+                    {x: 5, y: b},
+                    {x: 2, y: b}
                 ].map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generate_path(points, 1, true))
                     .attr('stroke-width', '0px');
                 marker.append('svg:path')
-                    .attr('d', ['M', 2+ofs[0], 0, 'h', -2].join(' '))
+                    .attr('d', ['M', ofs[0], 0, 'h', 5].join(' '))
                     .attr('stroke-width', stemWidth)
                     .attr('fill', 'none');
             }
