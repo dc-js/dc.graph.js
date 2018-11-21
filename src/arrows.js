@@ -120,7 +120,7 @@ dc_graph.builtin_arrows = {
             viewBox: [0, -4, 12, 8],
             stems: [!!side, !!side],
             kernstems: function(stemWidth) {
-                return [.75*stemWidth,.75*stemWidth];
+                return [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth];
             },
             drawFunction: function(marker, ofs, stemWidth) {
                 var upoints = [{x: 0, y: 0}];
@@ -154,7 +154,7 @@ dc_graph.builtin_arrows = {
             viewBox: [0, -4, 12, 8],
             stems: [!!side, !!side],
             kernstems: function(stemWidth) {
-                return [.75*stemWidth,.75*stemWidth];
+                return [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth];
             },
             drawFunction: function(marker, ofs, stemWidth) {
                 var upoints = [{x: 0.9, y: 0}];
