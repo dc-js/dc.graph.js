@@ -440,12 +440,21 @@ dc_graph.builtin_arrows = {
                 return [0,stemWidth];
             },
             drawFunction: function(marker, ofs, stemWidth) {
-                var points = [
+                var upoints = [
                     {x: 0, y: -5},
                     {x: 10, y: 0},
                     {x: 0, y: 5},
                     {x: 5, y: 0}
-                ].map(offsetx(ofs[0]));
+                ];
+                if(side==='right')
+                    upoints.splice(0, 1,
+                                  {x: 5, y: -stemWidth/2},
+                                  {x: 10, y: -stemWidth/2});
+                else if(side==='left')
+                    upoints.splice(2, 1,
+                                  {x: 10, y: stemWidth/2},
+                                  {x: 5, y: stemWidth/2});
+                var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generate_path(points, 1, true))
                     .attr('stroke-width', '0px');
@@ -462,12 +471,21 @@ dc_graph.builtin_arrows = {
                 return [stemWidth,0];
             },
             drawFunction: function(marker, ofs, stemWidth) {
-                var points = [
+                var upoints = [
                     {x: 10, y: -5},
                     {x: 0, y: 0},
                     {x: 10, y: 5},
                     {x: 5, y: 0}
-                ].map(offsetx(ofs[0]));
+                ];
+                if(side==='right')
+                    upoints.splice(0, 1,
+                                  {x: 5, y: -stemWidth/2},
+                                  {x: 0, y: -stemWidth/2});
+                else if(side==='left')
+                    upoints.splice(2, 1,
+                                  {x: 0, y: stemWidth/2},
+                                  {x: 5, y: stemWidth/2});
+                var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generate_path(points, 1, true))
                     .attr('stroke-width', '0px');
