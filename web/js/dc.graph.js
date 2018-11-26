@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.7.0
+ *  dc.graph 0.7.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.0
+ * @version 0.7.1
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.0',
+    version: '0.7.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1427,257 +1427,514 @@ function offsetx(ofsx) {
 }
 
 dc_graph.builtin_arrows = {
-    box: {
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('rect')
-                .attr({
-                    x: ofs[0],
-                    y: -4,
-                    width: 8,
-                    height: 8,
-                    'stroke-width': 0
-                });
-        }
+    box: function(open, side) {
+        if(!open) return {
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs, stemWidth) {
+                marker.append('rect')
+                    .attr({
+                        x: ofs[0],
+                        y: side==='right' ? -stemWidth/2 : -4,
+                        width: 8,
+                        height: side ? 4+stemWidth/2 : 8,
+                        'stroke-width': 0
+                    });
+            }
+        };
+        else return {
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs, stemWidth) {
+                marker.append('rect')
+                    .attr({
+                        x: ofs[0] + 0.5,
+                        y: side==='right' ? 0 : -3.5,
+                        width: 7,
+                        height: side ? 3.5 : 7,
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+                if(side)
+                marker.append('svg:path')
+                    .attr({
+                        d: ['M', ofs[0], 0, 'h',8].join(' '),
+                        'stroke-width': stemWidth,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    obox: {
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('rect')
-                .attr({
-                    x: ofs[0] + 0.5,
-                    y: -3.5,
-                    width: 7,
-                    height: 7,
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
+    curve: function(open, side) {
+        return {
+            stems: [true,false],
+            kernstems: [0, 0.25],
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs, stemWidth) {
+                var instrs = [];
+                instrs.push('M', (side==='left' ? 7.5 : 4) + ofs[0], side==='left' ? stemWidth/2 : 3.5);
+                if(side==='left')
+                    instrs.push('v', -stemWidth/2);
+                instrs.push('A', 3.5, 3.5, 0, 0, 0,
+                            (side==='right' ? 7.5 : 4) + ofs[0], side==='right' ? 0 : -3.5);
+                if(side==='right')
+                    instrs.push('v', -stemWidth/2);
+                marker.append('svg:path')
+                    .attr({
+                        d: instrs.join(' '),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+                marker.append('svg:path')
+                    .attr({
+                        d: ['M', 7 + ofs[0],  0,
+                            'h  -7'].join(' '),
+                        'stroke-width': stemWidth,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    crow: {
-        stems: [false,true],
-        kernstems: [1,0],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 10, y: -5},
-                {x: 0, y: 0},
-                {x: 10, y: 5},
-                {x: 5.5, y: 0.5},
-                {x: 10, y: 0.5},
-                {x: 10, y: -0.5},
-                {x: 5.5, y: -0.5}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
+    icurve: function(open, side) {
+        return {
+            stems: [false,true],
+            kernstems: [0.25,0],
+            frontRef: [8,0],
+            drawFunction: function(marker, ofs, stemWidth) {
+                var instrs = [];
+                instrs.push('M', (side==='left' ? 0.5 : 4) + ofs[0], side==='left' ? stemWidth/2 : 3.5);
+                if(side==='left')
+                    instrs.push('v', -stemWidth/2);
+                instrs.push('A', 3.5, 3.5, 0, 0, 1,
+                            (side==='right' ? 0.5 : 4) + ofs[0], side==='right' ? 0 : -3.5);
+                if(side==='right')
+                    instrs.push('v', -stemWidth/2);
+                marker.append('svg:path')
+                    .attr({
+                        d: instrs.join(' '),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+                marker.append('svg:path')
+                    .attr({
+                        d: ['M', 1 + ofs[0],  0,
+                            'h 7'].join(' '),
+                        'stroke-width': stemWidth,
+                        fill: 'none'
+                    });
+            }
+        };
     },
-    curve: {
-        stems: [true,false],
-        kernstems: [0, 0.25],
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('svg:path')
-                .attr({
-                    d: ['M', 4 + ofs[0], 3.5,
-                        'A', 3.5, 3.5, 0, 0, 0, 4 + ofs[0], -3.5,
-                        'M', 7 + ofs[0],  0,
-                        'h  -7'].join(' '),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
+    diamond: function(open, side) {
+        if(!open) return {
+            frontRef: [side ? 11.25 : 12, 0],
+            backRef: [side ? 0.75 : 0, 0],
+            viewBox: [0, -4, 12, 8],
+            stems: [!!side, !!side],
+            kernstems: function(stemWidth) {
+                return [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [{x: 0, y: 0}];
+                if(side !== 'left')
+                    upoints.push({x: 6, y: 4});
+                else
+                    upoints.push({x: 6, y: -4});
+                upoints.push({x: 12, y: 0});
+                if(!side)
+                    upoints.push({x: 6, y: -4});
+                var points = upoints.map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr({
+                        d: generate_path(points, 1, true),
+                        'stroke-width': 0
+                    });
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', 0.75 + ofs[0],  0,
+                                'h 10.5'].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
+            }
+        };
+        else return {
+            frontRef: [side ? 11.25 : 12, 0],
+            backRef: [side ? 0.75 : 0, 0],
+            viewBox: [0, -4, 12, 8],
+            stems: [!!side, !!side],
+            kernstems: function(stemWidth) {
+                return [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [{x: 0.9, y: 0}];
+                if(side !== 'left')
+                    upoints.push({x: 6, y: 3.4});
+                else
+                    upoints.push({x: 6, y: -3.4});
+                upoints.push({x: 11.1, y: 0});
+                if(!side)
+                    upoints.push({x: 6, y: -3.4});
+                var points = upoints.map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr({
+                        d: generate_path(points, 1, !side),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', 0.75 + ofs[0],  0,
+                                'h 10.5'].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
+            }
+        };
     },
-    icurve: {
-        stems: [false,true],
-        kernstems: [0.25,0],
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('svg:path')
-                .attr({
-                    d: ['M', 4 + ofs[0], 3.5,
-                        'A', 3.5, 3.5, 0, 0, 1, 4 + ofs[0], -3.5,
-                        'M', 1 + ofs[0],  0,
-                        'h  7'].join(' '),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
+    dot: function(open, side) {
+        if(!open) return {
+            frontRef: [8,0],
+            stems: [!!side, !!side],
+            drawFunction: function(marker, ofs, stemWidth) {
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0], 0,
+                                'A', 4, 4, 0, 0, side==='left'?1:0, 8 + ofs[0], 0].join(' '),
+                            'stroke-width': 0
+                        });
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0],  0,
+                                'h 8'].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
+                else {
+                    marker.append('svg:circle')
+                        .attr('r', 4)
+                        .attr('cx', 4 + ofs[0])
+                        .attr('cy', 0)
+                        .attr('stroke-width', '0px');
+                }
+            }
+        };
+        else return {
+            frontRef: [8,0],
+            stems: [!!side, !!side],
+            drawFunction: function(marker, ofs, stemWidth) {
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', 0.5 + ofs[0], 0,
+                                'A', 3.5, 3.5, 0, 0, side==='left'?1:0, 7.5 + ofs[0], 0].join(' '),
+                            'stroke-width': 1,
+                            fill: 'none'
+                        });
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0],  0,
+                                'h 8'].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                } else {
+                    marker.append('svg:circle')
+                        .attr('r', 3.5)
+                        .attr('cx', 4 + ofs[0])
+                        .attr('cy', 0)
+                        .attr('fill', 'none')
+                        .attr('stroke-width', '1px');
+                }
+            }
+        };
     },
-    diamond: {
-        frontRef: [12,0],
-        viewBox: [0, -4, 12, 8],
-        kernstems: [1.5,1.5],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0, y: 0},
-                {x: 6, y: 4},
-                {x: 12, y: 0},
-                {x: 6, y: -4}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr({
-                    d: generate_path(points, 1, true),
-                    'stroke-width': 0
-                });
-        }
+    normal: function(open, side) {
+        if(!open) return {
+            frontRef: [side ? 8-4/3 : 8, 0],
+            viewBox: [0, -3, 8, 6],
+            kernstems: function(stemWidth) {
+                return [0,stemWidth*4/3];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [];
+                if(side === 'left')
+                    upoints.push({x: 0, y: 0});
+                else
+                    upoints.push({x: 0, y: 3});
+                switch(side) {
+                case 'left':
+                    upoints.push({x: 8 - stemWidth*4/3, y: -stemWidth/2});
+                    break;
+                case 'right':
+                    upoints.push({x: 8 - stemWidth*4/3, y: stemWidth/2});
+                    break;
+                default:
+                    upoints.push({x: 8, y: 0});
+                }
+                if(side === 'right')
+                    upoints.push({x: 0, y: 0});
+                else
+                    upoints.push({x: 0, y: -3});
+                var points = upoints.map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0],  0,
+                                'h', 8-4*stemWidth/3].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
+            }
+        };
+        else return {
+            frontRef: [side ? 8-4/3 : 8, 0],
+            viewBox: [0, -3, 8, 6],
+            kernstems: function(stemWidth) {
+                return [0,stemWidth*4/3];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [];
+                if(!side) {
+                    upoints = [
+                        {x: 0.5, y: 2.28},
+                        {x: 6.57, y: 0},
+                        {x: 0.5, y: -2.28}
+                    ];
+                } else {
+                    upoints = [
+                        {x: 0.5, y: 0},
+                        {x: 0.5, y: side === 'left' ? -2.28 : 2.28},
+                        {x: 8-4/3, y: 0}
+                    ];
+                }
+                var points = upoints.map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr({
+                        d: generate_path(points, 1, !side),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', ofs[0],  0,
+                                'h', 8-4/3].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
+            }
+        };
     },
-    odiamond: {
-        frontRef: [12,0],
-        viewBox: [0, -4, 12, 8],
-        kernstems: [1.5,1.5],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0.9, y: 0},
-                {x: 6, y: 3.4},
-                {x: 11.1, y: 0},
-                {x: 6, y: -3.4}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr({
-                    d: generate_path(points, 1, true),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
+    inv: function(open, side) {
+        if(!open) return {
+            frontRef: [8,0],
+            backRef: [side ? 4/3 : 0, 0],
+            viewBox: [0, -3, 8, 6],
+            kernstems: function(stemWidth) {
+                return [stemWidth*4/3,0];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [];
+                if(side === 'left')
+                    upoints.push({x: 8, y: 0});
+                else
+                    upoints.push({x: 8, y: 3});
+                switch(side) {
+                case 'left':
+                    upoints.push({x: stemWidth*4/3, y: -stemWidth/2});
+                    break;
+                case 'right':
+                    upoints.push({x: stemWidth*4/3, y: stemWidth/2});
+                    break;
+                default:
+                    upoints.push({x: 0, y: 0});
+                }
+                if(side === 'right')
+                    upoints.push({x: 8, y: 0});
+                else
+                    upoints.push({x: 8, y: -3});
+                var points = upoints.map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', 4*stemWidth/3 + ofs[0],  0,
+                                'h', 8-4*stemWidth/3].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
+            }
+        };
+        else return {
+            frontRef: [8,0],
+            backRef: [side ? 4/3 : 0, 0],
+            viewBox: [0, -3, 8, 6],
+            kernstems: function(stemWidth) {
+                return [stemWidth*4/3,0];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [];
+                if(!side) {
+                    upoints = [
+                        {x: 7.5, y: 2.28},
+                        {x: 1.43, y: 0},
+                        {x: 7.5, y: -2.28}
+                    ];
+                } else {
+                    upoints = [
+                        {x: 7.5, y: 0},
+                        {x: 7.5, y: side === 'left' ? -2.28 : 2.28},
+                        {x: 1.43, y: 0}
+                    ];
+                }
+                var points = upoints.map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr({
+                        d: generate_path(points, 1, !side),
+                        'stroke-width': 1,
+                        fill: 'none'
+                    });
+                if(side) {
+                    marker.append('svg:path')
+                        .attr({
+                            d: ['M', 4*stemWidth/3 + ofs[0],  0,
+                                'h', 8-4/3].join(' '),
+                            'stroke-width': stemWidth,
+                            fill: 'none'
+                        });
+                }
+            }
+        };
     },
-    dot: {
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('svg:circle')
-                .attr('r', 4)
-                .attr('cx', 4 + ofs[0])
-                .attr('cy', 0)
-                .attr('stroke-width', '0px');
-        }
+    tee: function(open, side) {
+        return {
+            frontRef: [5,0],
+            viewBox: [0, -5, 5, 10],
+            stems: [true,false],
+            drawFunction: function(marker, ofs, stemWidth) {
+                var b = side === 'right' ? 0 : -5,
+                    t = side === 'left' ? 0 : 5;
+                var points = [
+                    {x: 2, y: t},
+                    {x: 5, y: t},
+                    {x: 5, y: b},
+                    {x: 2, y: b}
+                ].map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+                marker.append('svg:path')
+                    .attr('d', ['M', ofs[0], 0, 'h', 5].join(' '))
+                    .attr('stroke-width', stemWidth)
+                    .attr('fill', 'none');
+            }
+        };
     },
-    odot: {
-        frontRef: [8,0],
-        drawFunction: function(marker, ofs) {
-            marker.append('svg:circle')
-                .attr('r', 3.5)
-                .attr('cx', 4 + ofs[0])
-                .attr('cy', 0)
-                .attr('fill', 'none')
-                .attr('stroke-width', '1px');
-        }
+    vee: function(open, side) {
+        return {
+            stems: [true,false],
+            kernstems: function(stemWidth) {
+                return [0,stemWidth];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [
+                    {x: 0, y: -5},
+                    {x: 10, y: 0},
+                    {x: 0, y: 5},
+                    {x: 5, y: 0}
+                ];
+                if(side==='right')
+                    upoints.splice(0, 1,
+                                  {x: 5, y: -stemWidth/2},
+                                  {x: 10, y: -stemWidth/2});
+                else if(side==='left')
+                    upoints.splice(2, 1,
+                                  {x: 10, y: stemWidth/2},
+                                  {x: 5, y: stemWidth/2});
+                var points = upoints.map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+                marker.append('svg:path')
+                    .attr('d', ['M', ofs[0]+5, 0, 'h',-5].join(' '))
+                    .attr('stroke-width', stemWidth);
+            }
+        };
     },
-    normal: {
-        frontRef: [8,0],
-        viewBox: [0, -3, 8, 6],
-        kernstems: [0,2],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0, y: 3},
-                {x: 8, y: 0},
-                {x: 0, y: -3}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
-    },
-    onormal: {
-        frontRef: [8,0],
-        viewBox: [0, -3, 8, 6],
-        kernstems: [0,2],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0.5, y: 2.28},
-                {x: 6.57, y: 0},
-                {x: 0.5, y: -2.28}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr({
-                    d: generate_path(points, 1, true),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
-    },
-    inv: {
-        frontRef: [8,0],
-        viewBox: [0, -3, 8, 6],
-        kernstems: [2,0],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 8, y: 3},
-                {x: 0, y: 0},
-                {x: 8, y: -3}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
-    },
-    oinv: {
-        frontRef: [8,0],
-        viewBox: [0, -3, 8, 6],
-        kernstems: [2,0],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 7.5, y: 2.28},
-                {x: 1.43, y: 0},
-                {x: 7.5, y: -2.28}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr({
-                    d: generate_path(points, 1, true),
-                    'stroke-width': 1,
-                    fill: 'none'
-                });
-        }
-    },
-    tee: {
-        frontRef: [5,0],
-        viewBox: [0, -5, 5, 10],
-        stems: [true,false],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 2, y: 5},
-                {x: 5, y: 5},
-                {x: 5, y: -5},
-                {x: 2, y: -5},
-                {x: 2, y: -0.5},
-                {x: 0, y: -0.5},
-                {x: 0, y: 0.5},
-                {x: 2, y: 0.5}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
-    },
-    vee: {
-        stems: [true,false],
-        kernstems: [0,1],
-        drawFunction: function(marker, ofs) {
-            var points = [
-                {x: 0, y: -5},
-                {x: 10, y: 0},
-                {x: 0, y: 5},
-                {x: 4.5, y: 0.5},
-                {x: 0, y: 0.5},
-                {x: 0, y: -0.5},
-                {x: 4.5, y: -0.5}
-            ].map(offsetx(ofs[0]));
-            marker.append('svg:path')
-                .attr('d', generate_path(points, 1, true))
-                .attr('stroke-width', '0px');
-        }
+    crow: function(open, side) {
+        return {
+            stems: [false,true],
+            kernstems: function(stemWidth) {
+                return [stemWidth,0];
+            },
+            drawFunction: function(marker, ofs, stemWidth) {
+                var upoints = [
+                    {x: 10, y: -5},
+                    {x: 0, y: 0},
+                    {x: 10, y: 5},
+                    {x: 5, y: 0}
+                ];
+                if(side==='right')
+                    upoints.splice(0, 1,
+                                  {x: 5, y: -stemWidth/2},
+                                  {x: 0, y: -stemWidth/2});
+                else if(side==='left')
+                    upoints.splice(2, 1,
+                                  {x: 0, y: stemWidth/2},
+                                  {x: 5, y: stemWidth/2});
+                var points = upoints.map(offsetx(ofs[0]));
+                marker.append('svg:path')
+                    .attr('d', generate_path(points, 1, true))
+                    .attr('stroke-width', '0px');
+                marker.append('svg:path')
+                    .attr('d', ['M', ofs[0]+5, 0, 'h',5].join(' '))
+                    .attr('stroke-width', stemWidth);
+            }
+        };
     }
 };
+
+function arrow_def(arrdefs, shape, open, side) {
+    return arrdefs[shape](open, side);
+}
 
 function arrow_parts(arrdefs, desc) {
     // graphviz appears to use a real parser for this
     var parts = [];
     while(desc && desc.length) {
+        var mods = /^o?(?:l|r)?/.exec(desc);
+        var open = false, side = null;
+        if(mods[0]) {
+            mods = mods[0];
+            desc = desc.slice(mods.length);
+            open = mods[0] === 'o';
+            switch(mods[mods.length-1]) {
+            case 'l':
+                side='left';
+                break;
+            case 'r':
+                side='right';
+            }
+        }
         var ok = false;
-        for(var an in arrdefs)
-            if(desc.substring(0, an.length) === an) {
+        for(var aname in arrdefs)
+            if(desc.substring(0, aname.length) === aname) {
                 ok = true;
-                parts.push(an);
-                desc = desc.slice(an.length);
+                parts.push(arrow_def(arrdefs, aname, open, side));
+                desc = desc.slice(aname.length);
                 break;
             }
         if(!ok) {
@@ -1718,18 +1975,32 @@ var view_box = defaulted([0, -5, 10, 10]),
     front_ref = defaulted([10, 0]),
     back_ref = defaulted([0, 0]);
 
-function arrow_offsets(arrdefs, parts) {
+function arrow_offsets(parts, stemWidth) {
     var frontRef = null, backRef = null;
     return parts.map(function(p, i) {
-        var fr = front_ref(arrdefs[p].frontRef).slice(),
-            br = back_ref(arrdefs[p].backRef).slice();
-        if(arrdefs[p].kernstems) {
-            if(i !== 0 && arrdefs[p].kernstems[1] &&
-               arrdefs[parts[i-1]].stems && arrdefs[parts[i-1]].stems[0])
-                fr[0] -= arrdefs[p].kernstems[1];
-            if(arrdefs[p].kernstems[0] &&
-               (i === parts.length-1 || arrdefs[parts[i+1]].stems && arrdefs[parts[i+1]].stems[1]))
-                br[0] += arrdefs[p].kernstems[0];
+        var fr = front_ref(p.frontRef).slice(),
+            br = back_ref(p.backRef).slice();
+        if(p.kernstems) {
+            var kernstems = p.kernstems;
+            if(typeof kernstems === 'function')
+                kernstems = kernstems(stemWidth);
+            if(i !== 0 && kernstems[1]) {
+                var last = parts[i-1];
+                if(last.stems && last.stems[0])
+                    fr[0] -= kernstems[1];
+            }
+            if(kernstems[0]) {
+                var kern = false;
+                if(i === parts.length-1)
+                    kern = true;
+                else {
+                    var next = parts[i+1];
+                    if(next.stems && next.stems[1])
+                        kern = true;
+                }
+                if(kern)
+                    br[0] += kernstems[0];
+            }
         }
         if(i === 0) {
             frontRef = fr;
@@ -1743,10 +2014,10 @@ function arrow_offsets(arrdefs, parts) {
     });
 }
 
-function arrow_bounds(arrdefs, parts) {
-    var viewBox = null, offsets = arrow_offsets(arrdefs, parts);
+function arrow_bounds(parts, stemWidth) {
+    var viewBox = null, offsets = arrow_offsets(parts, stemWidth);
     parts.forEach(function(p, i) {
-        var vb = view_box(arrdefs[p].viewBox);
+        var vb = view_box(p.viewBox);
         var ofs = offsets[i].offset;
         if(!viewBox)
             viewBox = vb.slice();
@@ -1756,25 +2027,26 @@ function arrow_bounds(arrdefs, parts) {
     return {offsets: offsets, viewBox: viewBox};
 }
 
-function arrow_length(arrdefs, parts) {
+function arrow_length(parts, stemWidth) {
     if(!parts.length)
         return 0;
-    var offsets = arrow_offsets(arrdefs, parts);
-    return front_ref(arrdefs[parts[0]].frontRef)[0] - offsets[parts.length-1].backRef[0];
+    var offsets = arrow_offsets(parts, stemWidth);
+    return front_ref(parts[0].frontRef)[0] - offsets[parts.length-1].backRef[0];
 }
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
-    var strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.tail : e.head)/2;
+    var strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.source : e.target)/2;
     if(e[kind + 'ArrowLast'] === desc + '-' + strokeOfs)
         return id;
     var parts = arrow_parts(arrdefs, desc),
         marker = diagram.addOrRemoveDef(id, !!parts.length, 'svg:marker');
 
     if(parts.length) {
-        var bounds = arrow_bounds(arrdefs, parts),
-            frontRef = front_ref(arrdefs[parts[0]].frontRef),
-            arrowSize = diagram.edgeArrowSize.eval(e);
+        var arrowSize = diagram.edgeArrowSize.eval(e),
+            stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize,
+            bounds = arrow_bounds(parts, stemWidth),
+            frontRef = front_ref(parts[0].frontRef);
         bounds.viewBox[0] -= strokeOfs/arrowSize;
         bounds.viewBox[3] += strokeOfs/arrowSize;
         marker
@@ -1789,8 +2061,9 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
         marker.html(null);
         parts.forEach(function(p, i) {
             marker
-                .call(arrdefs[p].drawFunction,
-                      add_points([-strokeOfs/arrowSize,0], bounds.offsets[i].offset));
+                .call(p.drawFunction,
+                      add_points([-strokeOfs/arrowSize,0], bounds.offsets[i].offset),
+                      stemWidth);
         });
     }
     e[kind + 'ArrowLast'] = desc;
@@ -1868,7 +2141,7 @@ dc_graph.text_contents = function() {
             return container.select('text.node-label');
         },
         selectText: function(container) {
-            return selectContent(container);
+            return this.selectContent(container);
         }
     };
     return _contents;
@@ -4293,19 +4566,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .attr('d', render_edge_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
 
-        edge
-            .each(function(e) {
-                var totlength = this.getTotalLength(),
-                    arrowSize = diagram.edgeArrowSize.eval(e);
-                var headlength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e))),
-                    taillength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)));
-                var tailStroke = _diagram.nodeStrokeWidth.eval(e.tail),
-                    headStroke = _diagram.nodeStrokeWidth.eval(e.head),
-                    length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
-                d3.select(this)
-                    .attr('stroke-dasharray', length + ' ' + totlength*2)
-                    .attr('stroke-dashoffset', -(taillength + tailStroke/2));
-            });
+        edge.each(dash_edges_for_arrows);
 
         var etrans = edge
                 .each(function(e) {
@@ -4411,6 +4672,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_diagram.showLayoutSteps())
             endall([ntrans, etrans, textTrans],
                    function() {
+                       edge.each(dash_edges_for_arrows);
                        _animating = false;
                        layout_done(true);
                    });
@@ -4445,6 +4707,20 @@ dc_graph.diagram = function (parent, chartGroup) {
             var port = _diagram.selectNodePortsOfStyle(node, style);
             _diagram.portStyle(style).drawPorts(port, nodePorts2, node);
         });
+    }
+
+    function dash_edges_for_arrows(e) {
+        var totlength = this.getTotalLength(),
+            arrowSize = _diagram.edgeArrowSize.eval(e),
+            stemWidth = _diagram.edgeStrokeWidth.eval(e) / arrowSize;
+        var headlength = arrowSize*arrow_length(arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e)), stemWidth),
+            taillength = arrowSize*arrow_length(arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)), stemWidth);
+        var tailStroke = _diagram.nodeStrokeWidth.eval(e.source),
+            headStroke = _diagram.nodeStrokeWidth.eval(e.target),
+            length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
+        d3.select(this)
+            .attr('stroke-dasharray', length + ' ' + totlength*2)
+            .attr('stroke-dashoffset', -(taillength + tailStroke/2));
     }
 
     /**
@@ -4690,46 +4966,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
-     * Creates an svg marker definition for drawing edge arrow tails or heads. The `viewBox` of
-     * the marker is `0 -5 10 10`, so the arrow should be drawn from (0, -5) to (10, 5); it
-     * will be moved and sized based on the other parameters, and rotated based on the
-     * orientation of the edge.
+     * Creates an svg marker definition for drawing edge arrow tails or heads.
      *
-     * (If further customization is required, it is possible to append other `svg:defs` to
-     * `diagram.svg()` and use refer to them by `id`.)
-     * @method defineArrow
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Number} name - the identifier to give the marker, to be used with
-     * {@link #dc_graph.diagram+edgeArrowhead edgeArrowhead} or
-     * {@link #dc_graph.diagram+edgeArrowtail edgeArrowtail}
-     * @param {Number} width - the width, in pixels, to draw the marker
-     * @param {Number} height - the height, in pixels, to draw the marker
-     * @param {Number} refX - the X reference position, in marker coordinates, which will be
-     * aligned to the endpoint of the edge
-     * @param {Number} refY - the Y reference position
-     * @param {Function} drawf - a function to draw the marker using d3 SVG primitives, which
-     * takes the marker object as its parameter.
-     * @example
-     * // the built-in `vee` arrow is defined like so:
-     * _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-     *   marker.append('svg:path')
-     *     .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-     *     .attr('stroke-width', '0px');
-     * });
+     * Sorry, this is not currently documented - please see
+     * [arrows.js](https://github.com/dc-js/dc.graph.js/blob/develop/src/arrows.js)
+     * for examples
      * @return {dc_graph.diagram}
      **/
-    _diagram.defineArrow = function(defn, width, height, refX, refY, drawf) {
-        if(typeof defn === 'string')
-            defn = {
-                name: defn,
-                width: width,
-                height: height,
-                refX: refX,
-                refY: refY,
-                drawFunction: drawf
-            };
-        _arrows[defn.name] = defn;
+    _diagram.defineArrow = function(name, defn) {
+        if(typeof defn !== 'function')
+            throw new Error('sorry, defineArrow no longer takes specific shape parameters, and the parameters have changed too much to convert them. it takes a name and a function returning a definition - please look at arrows.js for new format');
+        _arrows[name] = defn;
         return _diagram;
     };
 
@@ -4753,8 +5000,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
         var defn = dc_graph.builtin_arrows[aname];
-        defn.name = aname;
-        _diagram.defineArrow(defn);
+        _diagram.defineArrow(aname, defn);
     });
 
     function globalTransform(pos, scale, animate) {
@@ -7080,26 +7326,30 @@ dc_graph.troubleshoot = function() {
         draw_arrow_orient(tailOrients, 'tails', _behavior.arrowTailColor(), '#debug-orient-marker-tail');
 
         var headpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
+            var arrowSize = diagram.edgeArrowSize.eval(e);
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowhead.eval(e),
-                diagram.edgeArrowSize.eval(e),
+                arrowSize,
+                diagram.edgeStrokeWidth.eval(e) / arrowSize,
                 unrad(e.pos.new.orienthead),
                 e.pos.new.path.points[e.pos.new.path.points.length-1],
-                diagram.nodeStrokeWidth.eval(e.head)
+                diagram.nodeStrokeWidth.eval(e.target)
             );
         }));
         var hp = _debugLayer.selectAll('path.head-point').data(headpts);
         draw_x(hp, 'head-point', _behavior.arrowHeadColor());
 
         var tailpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
+            var arrowSize = diagram.edgeArrowSize.eval(e);
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowtail.eval(e),
-                diagram.edgeArrowSize.eval(e),
+                arrowSize,
+                diagram.edgeStrokeWidth.eval(e) / arrowSize,
                 unrad(e.pos.new.orienttail),
                 e.pos.new.path.points[0],
-                diagram.nodeStrokeWidth.eval(e.tail)
+                diagram.nodeStrokeWidth.eval(e.source)
             );
         }));
         var tp = _debugLayer.selectAll('path.tail-point').data(tailpts);
@@ -7188,9 +7438,9 @@ dc_graph.troubleshoot = function() {
             .attr('fill', 'none')
             .attr('d', 'M0,3 L3,0 L0,-3');
     }
-    function edge_arrow_points(arrows, defn, arrowSize, orient, endp, strokeWidth) {
+    function edge_arrow_points(arrows, defn, arrowSize, stemWidth, orient, endp, strokeWidth) {
         var parts = arrow_parts(arrows, defn),
-            offsets = arrow_offsets(arrows, parts),
+            offsets = arrow_offsets(parts, stemWidth),
             xunit = [Math.cos(orient), Math.sin(orient)];
         endp = [endp.x, endp.y];
         if(!parts.length)
@@ -7198,17 +7448,17 @@ dc_graph.troubleshoot = function() {
                      endp[1] - xunit[1]*strokeWidth/2]];
         var globofs = add_points(
             [-strokeWidth/arrowSize/2,0],
-            mult_point(front_ref(arrows[parts[0]].frontRef), -1));
+            mult_point(front_ref(parts[0].frontRef), -1));
         var pts = offsets.map(function(ofs, i) {
             return mult_point([
                 globofs,
-                front_ref(arrows[parts[i]].frontRef),
+                front_ref(parts[i].frontRef),
                 ofs.offset
             ].reduce(add_points), arrowSize);
         });
         pts.push(mult_point([
             globofs,
-            back_ref(arrows[parts[parts.length-1]].backRef),
+            back_ref(parts[parts.length-1].backRef),
             offsets[parts.length-1].offset
         ].reduce(add_points), arrowSize));
         return pts.map(function(p) {
@@ -7252,6 +7502,8 @@ dc_graph.troubleshoot = function() {
                 _scale = p.scale();
                 p.on('zoomed.troubleshoot', on_zoom);
             }
+            else if(_behavior.parent())
+                _behavior.parent().on('zoomed.troubleshoot', null);
         }
     });
     _behavior.opacity = property(0.75);
@@ -11436,7 +11688,7 @@ dc_graph.draw_graphs = function(options) {
                                 }
                                 _targetValid = false;
                             }
-                    }
+                    } else _targetValid = true;
                     if(_targetMove) {
                         if(_targetMove.port)
                             _hintData[0].target = port_pos(activePort);

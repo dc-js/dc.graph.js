@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.7.0  
+**Version**: 0.7.1  
 **Example**  
 ```js
 // Example chaining
@@ -97,7 +97,6 @@ diagram.width(600)
         * [.resetSvg()](#dc_graph.diagram+resetSvg) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.redrawGroup()](#dc_graph.diagram+redrawGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.renderGroup()](#dc_graph.diagram+renderGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
-        * [.defineArrow(name, width, height, refX, refY, drawf)](#dc_graph.diagram+defineArrow) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
     * [.graphviz_attrs](#dc_graph.graphviz_attrs)
@@ -214,7 +213,6 @@ diagram.width(600)
     * [.resetSvg()](#dc_graph.diagram+resetSvg) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.redrawGroup()](#dc_graph.diagram+redrawGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.renderGroup()](#dc_graph.diagram+renderGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
-    * [.defineArrow(name, width, height, refX, refY, drawf)](#dc_graph.diagram+defineArrow) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
 
@@ -1358,37 +1356,6 @@ Standard dc.js
 method. Causes all charts in the chart group to be rendered.
 
 **Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
-<a name="dc_graph.diagram+defineArrow"></a>
-
-#### diagram.defineArrow(name, width, height, refX, refY, drawf) ⇒ [<code>diagram</code>](#dc_graph.diagram)
-Creates an svg marker definition for drawing edge arrow tails or heads. The `viewBox` of
-the marker is `0 -5 10 10`, so the arrow should be drawn from (0, -5) to (10, 5); it
-will be moved and sized based on the other parameters, and rotated based on the
-orientation of the edge.
-
-(If further customization is required, it is possible to append other `svg:defs` to
-`diagram.svg()` and use refer to them by `id`.)
-
-**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| name | <code>Number</code> | the identifier to give the marker, to be used with [edgeArrowhead](#dc_graph.diagram+edgeArrowhead) or [edgeArrowtail](#dc_graph.diagram+edgeArrowtail) |
-| width | <code>Number</code> | the width, in pixels, to draw the marker |
-| height | <code>Number</code> | the height, in pixels, to draw the marker |
-| refX | <code>Number</code> | the X reference position, in marker coordinates, which will be aligned to the endpoint of the edge |
-| refY | <code>Number</code> | the Y reference position |
-| drawf | <code>function</code> | a function to draw the marker using d3 SVG primitives, which takes the marker object as its parameter. |
-
-**Example**  
-```js
-// the built-in `vee` arrow is defined like so:
-_diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-  marker.append('svg:path')
-    .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-    .attr('stroke-width', '0px');
-});
-```
 <a name="dc_graph.diagram+anchor"></a>
 
 #### diagram.anchor([parent], [chartGroup]) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
