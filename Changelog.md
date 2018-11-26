@@ -1,3 +1,13 @@
+## 0.7.1
+* left and right clipped edge arrowheads for all arrow shapes
+* arrow shapes are now shape families with some open/left/right code shared
+* stem width === edge stroke width / edge arrow size is considered for arrowheads (not perfectly but smaller arrows should work)
+* `defineArrow` syntax has changed - now takes an object (documentation to follow soon, consult `src/arrows.js` for now)
+* fix undefined symbol introduced in 0.7 (`diagram`) & fix examples so this kind of problem is easier to detect
+* fix `draw_graphs` mode for the default, uncustomized case (edges were never valid and never connecting)
+* fix undefined symbol `selectContent` for non-iconed nodes (bug introduced in 0.6.4)
+* fix undefined members `tail` and `head` => `source` and `target` introduced in 0.7
+
 ## 0.7.0
 * multiple arrowheads and arrowtails - all [graphviz arrow shapes](https://www.graphviz.org/doc/info/arrows.html) are supported, except for the `l`/`r` modifiers; `o` modifier is supported for all the same shapes and also `normal` and `inv`
 
