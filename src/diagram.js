@@ -2015,7 +2015,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return e.pos.new.orienttail;
                 });
         })
-            .attr('d', render_edge_path('new'));
+            .attr('d', render_edge_path('new'))
+            .each(dash_edges_for_arrows);
         return this;
     };
 
