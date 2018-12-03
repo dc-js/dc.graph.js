@@ -626,9 +626,11 @@ function arrow_length(parts, stemWidth) {
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
-    var strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.source : e.target)/2;
-    if(e[kind + 'ArrowLast'] === desc + '-' + strokeOfs)
-        return id;
+    if(desc) {
+        var strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.source : e.target)/2;
+        if(e[kind + 'ArrowLast'] === desc + '-' + strokeOfs)
+            return id;
+    }
     var parts = arrow_parts(arrdefs, desc),
         marker = diagram.addOrRemoveDef(id, !!parts.length, 'svg:marker');
 
