@@ -658,6 +658,6 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
                       stemWidth);
         });
     }
-    e[kind + 'ArrowLast'] = desc;
+    e[kind + 'ArrowLast'] = desc && desc + '-' + strokeOfs;
     return desc ? id : null;
 }
