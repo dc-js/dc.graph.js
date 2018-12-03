@@ -2396,11 +2396,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('opacity', _diagram.edgeOpacity.eval);
         if(animatePositions)
             etrans
-                .attr('d', function(e) {
-                    var when = _diagram.stageTransitions() === 'insmod' &&
-                            edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
-                    return render_edge_path(when)(e);
-                });
+            .attr('d', function(e) {
+                var when = _diagram.stageTransitions() === 'insmod' &&
+                        edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
+                return render_edge_path(when)(e);
+            })
+            .tween('dashes', function(e) {
+                var that = this;
+                return function(t) {
+                    dash_edges_for_arrows.call(that, e);
+                };
+            });
         var elabels = edgeLabels
             .selectAll('text').data(function(e) {
                 var labels = _diagram.edgeLabel.eval(e);
@@ -2473,7 +2479,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_diagram.showLayoutSteps())
             endall([ntrans, etrans, textTrans],
                    function() {
-                       edge.each(dash_edges_for_arrows);
                        _animating = false;
                        layout_done(true);
                    });
