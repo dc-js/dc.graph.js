@@ -1880,7 +1880,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function check_zoom(node, edge) {
         var do_zoom, animate = true;
-        detect_size_change();
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
         switch(_diagram.autoZoom()) {
         case 'always-skipanimonce':
             animate = false;
