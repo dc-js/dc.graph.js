@@ -38,6 +38,17 @@ dc_graph.symbol_port_style = function() {
         return {x: p.pos.x + disp * u.x, y: p.pos.y + disp * u.y};
     };
 
+    _style.portBounds = function(p) {
+        var R = _style.largeRadius.eval(p),
+            pos = _style.portPosition(p);
+        return {
+            left: pos.x - R/2,
+            top: pos.y - R/2,
+            right: pos.x + R/2,
+            bottom: pos.y + R/2
+        };
+    };
+
     function symbol_fill(p) {
         var symcolor = _style.color.eval(p);
         return symcolor ?

@@ -1880,6 +1880,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function check_zoom(node, edge) {
         var do_zoom, animate = true;
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
         switch(_diagram.autoZoom()) {
         case 'always-skipanimonce':
             animate = false;
@@ -2015,7 +2017,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return e.pos.new.orienttail;
                 });
         })
-            .attr('d', render_edge_path('new'));
+            .attr('d', render_edge_path('new'))
+            .each(dash_edges_for_arrows);
         return this;
     };
 
@@ -2133,8 +2136,15 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function node_bounds(n) {
-        return {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
-                right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
+        var bounds = {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
+                      right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
+        _nodePorts[_diagram.nodeKey.eval(n)].forEach(function(p) {
+            var pb = _diagram.portStyle(_diagram.portStyleName.eval(p)).portBounds(p);
+            pb.left += n.cola.x; pb.top += n.cola.y;
+            pb.right += n.cola.x; pb.bottom += n.cola.y;
+            bounds = union_bounds(bounds, pb);
+        });
+        return bounds;
     }
 
     function union_bounds(b1, b2) {
@@ -2395,11 +2405,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('opacity', _diagram.edgeOpacity.eval);
         if(animatePositions)
             etrans
-                .attr('d', function(e) {
-                    var when = _diagram.stageTransitions() === 'insmod' &&
-                            edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
-                    return render_edge_path(when)(e);
-                });
+            .attr('d', function(e) {
+                var when = _diagram.stageTransitions() === 'insmod' &&
+                        edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
+                return render_edge_path(when)(e);
+            })
+            .tween('dashes', function(e) {
+                var that = this;
+                return function(t) {
+                    dash_edges_for_arrows.call(that, e);
+                };
+            });
         var elabels = edgeLabels
             .selectAll('text').data(function(e) {
                 var labels = _diagram.edgeLabel.eval(e);
@@ -2472,7 +2488,6 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_diagram.showLayoutSteps())
             endall([ntrans, etrans, textTrans],
                    function() {
-                       edge.each(dash_edges_for_arrows);
                        _animating = false;
                        layout_done(true);
                    });
