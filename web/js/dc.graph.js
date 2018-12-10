@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.7.2
+ *  dc.graph 0.7.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.2
+ * @version 0.7.3
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.2',
+    version: '0.7.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -4340,12 +4340,14 @@ dc_graph.diagram = function (parent, chartGroup) {
     function node_bounds(n) {
         var bounds = {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
                       right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
-        _nodePorts[_diagram.nodeKey.eval(n)].forEach(function(p) {
-            var pb = _diagram.portStyle(_diagram.portStyleName.eval(p)).portBounds(p);
-            pb.left += n.cola.x; pb.top += n.cola.y;
-            pb.right += n.cola.x; pb.bottom += n.cola.y;
-            bounds = union_bounds(bounds, pb);
-        });
+        var ports = _nodePorts[_diagram.nodeKey.eval(n)];
+        if(ports)
+            ports.forEach(function(p) {
+                var pb = _diagram.portStyle(_diagram.portStyleName.eval(p)).portBounds(p);
+                pb.left += n.cola.x; pb.top += n.cola.y;
+                pb.right += n.cola.x; pb.bottom += n.cola.y;
+                bounds = union_bounds(bounds, pb);
+            });
         return bounds;
     }
 
