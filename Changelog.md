@@ -1,3 +1,6 @@
+## 0.7.3
+* fix crash related to nodes without ports
+
 ## 0.7.2
 * detect resize also at end of layout (via `check_zoom`) - we have to `detect_size_change` on every entry point, since there is no resize event yet. auto-resize now seems to work in all known situations.
 * ports contribute to the bounds of the canvas
