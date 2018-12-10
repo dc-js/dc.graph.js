@@ -768,7 +768,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-3029">line 3029</a>
+				 <a href="diagram.js.html#sunlight-1-line-3017">line 3017</a>
 			</li>
 		</ul>
 	</dd>
@@ -900,7 +900,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-3074">line 3074</a>
+				 <a href="diagram.js.html#sunlight-1-line-3062">line 3062</a>
 			</li>
 		</ul>
 	</dd>
@@ -1767,304 +1767,6 @@ this constrain function, specifying the constraints themselves in a graph.</p>
 
 </li>
         </ul>
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="defineArrow"><span class="type-signature"></span>defineArrow(name, width, height, refX, refY, drawf)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Creates an svg marker definition for drawing edge arrow tails or heads. The <code>viewBox</code> of
-the marker is <code>0 -5 10 10</code>, so the arrow should be drawn from (0, -5) to (10, 5); it
-will be moved and sized based on the other parameters, and rotated based on the
-orientation of the edge.</p>
-<p>(If further customization is required, it is possible to append other <code>svg:defs</code> to
-<code>diagram.svg()</code> and use refer to them by <code>id</code>.)</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>name</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the identifier to give the marker, to be used with
-edgeArrowhead or
-edgeArrowtail</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>width</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the width, in pixels, to draw the marker</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>height</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the height, in pixels, to draw the marker</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>refX</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the X reference position, in marker coordinates, which will be
-aligned to the endpoint of the edge</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>refY</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the Y reference position</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>drawf</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>a function to draw the marker using d3 SVG primitives, which
-takes the marker object as its parameter.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2765">line 2765</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="dc_graph.diagram.html">dc_graph.diagram</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-        <h5>Example</h5>
-        
-    <pre class="sunlight-highlight-javascript">// the built-in &#x60;vee&#x60; arrow is defined like so:
-_diagram.defineArrow(&#x27;vee&#x27;, 12, 12, 10, 0, function(marker) {
-  marker.append(&#x27;svg:path&#x27;)
-    .attr(&#x27;d&#x27;, &#x27;M0,-5 L10,0 L0,5 L3,0&#x27;)
-    .attr(&#x27;stroke-width&#x27;, &#x27;0px&#x27;);
-});</pre>
-
 
     
 </dd>
@@ -5782,7 +5484,7 @@ resetting it might produce unpredictable results.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2692">line 2692</a>
+				 <a href="diagram.js.html#sunlight-1-line-2710">line 2710</a>
 			</li>
 		</ul>
 	</dd>
@@ -5912,7 +5614,7 @@ resetting it might produce unpredictable results.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2578">line 2578</a>
+				 <a href="diagram.js.html#sunlight-1-line-2596">line 2596</a>
 			</li>
 		</ul>
 	</dd>
@@ -12329,7 +12031,7 @@ and can be modified through the passed d3 selections.</li>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2556">line 2556</a>
+				 <a href="diagram.js.html#sunlight-1-line-2574">line 2574</a>
 			</li>
 		</ul>
 	</dd>
@@ -12788,7 +12490,7 @@ method. Causes all charts in the chart group to be redrawn.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2739">line 2739</a>
+				 <a href="diagram.js.html#sunlight-1-line-2757">line 2757</a>
 			</li>
 		</ul>
 	</dd>
@@ -13009,7 +12711,7 @@ must be called the first time, and <code>.redraw()</code> can be called after th
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2523">line 2523</a>
+				 <a href="diagram.js.html#sunlight-1-line-2541">line 2541</a>
 			</li>
 		</ul>
 	</dd>
@@ -13119,7 +12821,7 @@ method. Causes all charts in the chart group to be rendered.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2752">line 2752</a>
+				 <a href="diagram.js.html#sunlight-1-line-2770">line 2770</a>
 			</li>
 		</ul>
 	</dd>
@@ -13230,7 +12932,7 @@ element.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2720">line 2720</a>
+				 <a href="diagram.js.html#sunlight-1-line-2738">line 2738</a>
 			</li>
 		</ul>
 	</dd>
@@ -13602,7 +13304,7 @@ calls can be chained after it.)</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2593">line 2593</a>
+				 <a href="diagram.js.html#sunlight-1-line-2611">line 2611</a>
 			</li>
 		</ul>
 	</dd>
@@ -13795,7 +13497,7 @@ calls can be chained after it.)</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2614">line 2614</a>
+				 <a href="diagram.js.html#sunlight-1-line-2632">line 2632</a>
 			</li>
 		</ul>
 	</dd>
@@ -14387,7 +14089,7 @@ svg element, but setting the svg element on a diagram may have unexpected conseq
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2672">line 2672</a>
+				 <a href="diagram.js.html#sunlight-1-line-2690">line 2690</a>
 			</li>
 		</ul>
 	</dd>
@@ -15184,7 +14886,7 @@ method. Gets or sets the x scale.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2637">line 2637</a>
+				 <a href="diagram.js.html#sunlight-1-line-2655">line 2655</a>
 			</li>
 		</ul>
 	</dd>
@@ -15374,7 +15076,7 @@ method. Gets or sets the y scale.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2651">line 2651</a>
+				 <a href="diagram.js.html#sunlight-1-line-2669">line 2669</a>
 			</li>
 		</ul>
 	</dd>
@@ -15495,7 +15197,7 @@ method. Gets or sets the y scale.</p>
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on Fri Nov 16th 2018
+		on Sun Dec 9th 2018
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

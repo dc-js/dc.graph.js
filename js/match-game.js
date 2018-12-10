@@ -91,7 +91,7 @@ var layout = dc_graph.flexbox_layout()
         else throw new Error('couldn\'t parse key: ' + key);
     });
 
-var diagram = dc_graph.diagram('#graph')
+var matchDiagram = dc_graph.diagram('#graph')
         .layoutEngine(layout)
         .width('auto').height('auto')
         .transitionDuration(250)
@@ -100,7 +100,7 @@ var diagram = dc_graph.diagram('#graph')
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .portDimension(port_flat.dimension).portGroup(port_flat.group)
-        .nodeShape(n => layout.keyToAddress()(diagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rounded-rect')
+        .nodeShape(n => layout.keyToAddress()(matchDiagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rounded-rect')
         .nodeLabelPadding({x: 20, y: 0})
         .nodeLabelAlignment(n => /^a/.test(n.key) ? 'right' : 'left')
         .nodeStrokeWidth(0)
@@ -114,17 +114,17 @@ var diagram = dc_graph.diagram('#graph')
         .portBounds(p => p.value.bounds)
         .portElastic(false);
 
-diagram.child('validate', dc_graph.validate());
+matchDiagram.child('validate', dc_graph.validate());
 if(options.trouble)
-    diagram.child('troubleshoot', dc_graph.troubleshoot());
-diagram.child('place-ports', dc_graph.place_ports());
+    matchDiagram.child('troubleshoot', dc_graph.troubleshoot());
+matchDiagram.child('place-ports', dc_graph.place_ports());
 
 var circlePorts = dc_graph.symbol_port_style()
         .portSymbol(null)
         .displacement(0)
         .smallRadius(2).mediumRadius(4).largeRadius(6)
         .outlineStroke('black').outlineStrokeWidth(1);
-diagram.portStyle('circle-ports', circlePorts)
+matchDiagram.portStyle('circle-ports', circlePorts)
     .portStyleName('circle-ports');
 
 var drawGraphs = dc_graph.draw_graphs({
@@ -136,25 +136,25 @@ var drawGraphs = dc_graph.draw_graphs({
         .clickCreatesNodes(false)
         .edgeCrossfilter(edge_flat.crossfilter);
 
-diagram.child('draw-graphs', drawGraphs);
+matchDiagram.child('draw-graphs', drawGraphs);
 
 var select_edges = dc_graph.select_edges({
     edgeStroke: 'lightblue',
     edgeStrokeWidth: 3
 }).multipleSelect(false);
-diagram.child('select-edges', select_edges);
+matchDiagram.child('select-edges', select_edges);
 
 var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
 var delete_edges = dc_graph.delete_things(select_edges_group, 'delete-edges', 'id')
-        .crossfilterAccessor(function(diagram) {
+        .crossfilterAccessor(function(matchDiagram) {
             return edge_flat.crossfilter;
         })
-        .dimensionAccessor(function(diagram) {
-            return diagram.edgeDimension();
+        .dimensionAccessor(function(matchDiagram) {
+            return matchDiagram.edgeDimension();
         });
-diagram.child('delete-edges', delete_edges);
+matchDiagram.child('delete-edges', delete_edges);
 
-var oppositeMatcher = dc_graph.match_opposites(diagram, {
+var oppositeMatcher = dc_graph.match_opposites(matchDiagram, {
     edgeStroke: 'orangered'
 }, {
     delete_edges: delete_edges
@@ -172,7 +172,7 @@ if(qs.selports) {
     }, {
         portStyle: 'circle-ports'
     }).multipleSelect(false);
-    diagram.child('select-ports', select_ports);
+    matchDiagram.child('select-ports', select_ports);
     var select_ports_group = dc_graph.select_things_group('select-ports-group', 'select-ports');
     select_ports_group.on('set_changed.show-info', function(ports) {
         if(ports.length>0) {
@@ -186,7 +186,7 @@ dc.renderAll();
 
 $('#resize').resizable({
     resize: function(event, ui) {
-        diagram
+        matchDiagram
             .redraw();
     }
 });

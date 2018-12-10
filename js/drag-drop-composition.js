@@ -75,7 +75,7 @@ function get_catalog() {
 }
 
 // canvas
-var _diagram, _rendered = false, _drawGraphs, _solution,  _ports = [];
+var _compositionDiagram, _rendered = false, _drawGraphs, _solution,  _ports = [];
 // save-area (needs version too)
 var _currentSoln = null, _solutionName, _description, _dirty = false;
 // palette
@@ -121,12 +121,12 @@ if(options.rankdir === 'TB') {
 }
 function update_ports() {
     var port_flat = dc_graph.flat_group.make(_ports, d => d.nodeId + '/' + d.portname);
-    _diagram
+    _compositionDiagram
         .portDimension(port_flat.dimension).portGroup(port_flat.group);
 }
 var _fakeDB = {};
 function display_solution(catalog, solution) {
-    _diagram.child('fix-nodes')
+    _compositionDiagram.child('fix-nodes')
         .clearFixes();
     _description.editable('setValue', solution.description || null);
     var types = d3.set(solution.nodes.map(n => n.type)).values();
@@ -139,7 +139,7 @@ function display_solution(catalog, solution) {
         });
         var node_flat = dc_graph.flat_group.make(solution.nodes, function(d) { return d.id; }),
             edge_flat = dc_graph.flat_group.make(solution.edges, e => e.id);
-        _diagram
+        _compositionDiagram
             .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
             .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group);
         update_ports();
@@ -147,9 +147,9 @@ function display_solution(catalog, solution) {
             .nodeCrossfilter(node_flat.crossfilter)
             .edgeCrossfilter(edge_flat.crossfilter);
         if(!_rendered) {
-            _diagram.render();
+            _compositionDiagram.render();
             _rendered = true;
-        } else _diagram.redraw();
+        } else _compositionDiagram.redraw();
     });
 }
 
@@ -170,7 +170,7 @@ function load_sol(name, url) {
     });
 }
 function save_solution(catalog, name) {
-    _diagram.child('fix-nodes').fixAllNodes();
+    _compositionDiagram.child('fix-nodes').fixAllNodes();
     _solution.nodes = _drawGraphs.nodeCrossfilter().all();
     _solution.edges = _drawGraphs.edgeCrossfilter().all();
     _fakeDB[name] = _solution;
@@ -491,7 +491,7 @@ get_catalog().then(function(catalog) {
     update_palette(catalog);
 
     // CANVAS
-    _diagram = dc_graph.diagram('#canvas');
+    _compositionDiagram = dc_graph.diagram('#canvas');
     var layout = dc_graph.cola_layout()
             .baseLength(5)
             .groupConnected(true)
@@ -508,7 +508,7 @@ get_catalog().then(function(catalog) {
                 }
             });
 
-    _diagram
+    _compositionDiagram
         .width('auto')
         .height('auto')
         .layoutEngine(layout)
@@ -546,12 +546,12 @@ get_catalog().then(function(catalog) {
         .edgeTargetPortName(e => e.value.targetport);
 
     if(qs.showFixed)
-        _diagram.nodeStrokeDashArray(n => n.value.fixedPos ? null : '5,5');
+        _compositionDiagram.nodeStrokeDashArray(n => n.value.fixedPos ? null : '5,5');
 
 
-    _diagram.content('text-with-icon', dc_graph.with_icon_contents(dc_graph.text_contents(), 35, 35));
+    _compositionDiagram.content('text-with-icon', dc_graph.with_icon_contents(dc_graph.text_contents(), 35, 35));
 
-    _diagram.child('place-ports', dc_graph.place_ports());
+    _compositionDiagram.child('place-ports', dc_graph.place_ports());
 
     var symbolPorts = dc_graph.symbol_port_style()
         //.outline(dc_graph.symbol_port_style.outline.square())
@@ -578,14 +578,14 @@ get_catalog().then(function(catalog) {
         .symbolScale(x => x)
         .color('black')
         .colorScale(null);
-    _diagram
+    _compositionDiagram
         .portStyle('symbols', symbolPorts)
         .portStyle('letters', letterPorts)
         .portStyleName(function(p) {
             return /^xtra-/.test(p.value.portname) ? 'letters' : 'symbols';
         });
 
-    var portMatcher = dc_graph.match_ports(_diagram, symbolPorts)
+    var portMatcher = dc_graph.match_ports(_compositionDiagram, symbolPorts)
             .allowParallel(qs.parallel || false);
 
     var wildcard = dc_graph.wildcard_ports({
@@ -636,14 +636,14 @@ get_catalog().then(function(catalog) {
             return wildcard.copyType(e, sport, tport);
         });
 
-    _diagram.mode('draw-graphs', _drawGraphs);
+    _compositionDiagram.mode('draw-graphs', _drawGraphs);
 
     var select_nodes = dc_graph.select_nodes({
         nodeStroke: 'orange',
         nodeStrokeWidth: 3,
         nodeLabelFill: 'orange'
     }).multipleSelect(false);
-    _diagram.child('select-nodes', select_nodes);
+    _compositionDiagram.child('select-nodes', select_nodes);
 
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
     select_nodes_group.on('set_changed.show-info', function(nodes) {
@@ -653,7 +653,7 @@ get_catalog().then(function(catalog) {
         else if(nodes.length === 1) {
             select_edges_group.set_changed([]);
             select_ports_group.set_changed([]);
-            var type = _diagram.getNode(nodes[0]).value.type;
+            var type = _compositionDiagram.getNode(nodes[0]).value.type;
             var comps = catalog.models().filter(function(comp) {
                 return catalog.fModelName(comp) === type;
             });
@@ -666,14 +666,14 @@ get_catalog().then(function(catalog) {
         edgeStroke: 'lightblue',
         edgeStrokeWidth: 3
     }).multipleSelect(false);
-    _diagram.child('select-edges', select_edges);
+    _compositionDiagram.child('select-edges', select_edges);
     var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
     select_edges_group.on('set_changed.show-info', function(edges) {
         _palette.select(null);
         if(edges.length>0) {
             select_nodes_group.set_changed([]);
             select_ports_group.set_changed([]);
-            var edge = _diagram.getEdge(edges[0]);
+            var edge = _compositionDiagram.getEdge(edges[0]);
             display_properties(catalog, edge);
         } else display_properties(catalog, null);
     });
@@ -683,7 +683,7 @@ get_catalog().then(function(catalog) {
         // portBackgroundStroke: 'lightblue',
         // portBackgroundStrokeWidth: 2
     }).multipleSelect(false);
-    _diagram.child('select-ports', select_ports);
+    _compositionDiagram.child('select-ports', select_ports);
     var select_ports_group = dc_graph.select_things_group('select-ports-group', 'select-ports');
     select_ports_group.on('set_changed.show-info', function(ports) {
         _palette.select(null);
@@ -695,21 +695,21 @@ get_catalog().then(function(catalog) {
     });
 
     var move_nodes = dc_graph.move_nodes();
-    _diagram.child('move-nodes', move_nodes);
+    _compositionDiagram.child('move-nodes', move_nodes);
 
     var fix_nodes = dc_graph.fix_nodes()
             .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
-    _diagram.child('fix-nodes', fix_nodes);
+    _compositionDiagram.child('fix-nodes', fix_nodes);
 
     var label_nodes = dc_graph.label_nodes({
         labelTag: 'name',
         align: 'left'
     }).changeNodeLabel(function(nodeId, text) {
-        var node = _diagram.getNode(nodeId);
+        var node = _compositionDiagram.getNode(nodeId);
         // execute on server first, which could reject or change text
         return Promise.resolve(text);
     });
-    _diagram.child('label-nodes', label_nodes);
+    _compositionDiagram.child('label-nodes', label_nodes);
 
     var label_edges = dc_graph.label_edges({
         labelTag: 'name',
@@ -718,14 +718,14 @@ get_catalog().then(function(catalog) {
         // execute on server first, which could reject or change text
         return Promise.resolve(text);
     });
-    _diagram.child('label-edges', label_edges);
+    _compositionDiagram.child('label-edges', label_edges);
 
     var delete_nodes = dc_graph.delete_nodes()
             .crossfilterAccessor(function(diagram) {
                 return _drawGraphs.nodeCrossfilter();
             })
             .dimensionAccessor(function(diagram) {
-                return _diagram.nodeDimension();
+                return _compositionDiagram.nodeDimension();
             })
             .onDelete(function(nodes) {
                 // confirm with server here
@@ -737,20 +737,20 @@ get_catalog().then(function(catalog) {
                         return nodes;
                     });
             });
-    _diagram.child('delete-nodes', delete_nodes);
+    _compositionDiagram.child('delete-nodes', delete_nodes);
 
     var delete_edges = dc_graph.delete_things(select_edges_group, 'delete-edges', 'id')
             .crossfilterAccessor(function(diagram) {
                 return _drawGraphs.edgeCrossfilter();
             })
             .dimensionAccessor(function(diagram) {
-                return _diagram.edgeDimension();
+                return _compositionDiagram.edgeDimension();
             })
             .onDelete(function(edges) {
                 // confirm with server here, promise-then pass to wildcard
-                return wildcard.resetTypes(_diagram, edges);
+                return wildcard.resetTypes(_compositionDiagram, edges);
             });
-    _diagram.child('delete-edges', delete_edges);
+    _compositionDiagram.child('delete-edges', delete_edges);
 
 
     var operations = ['run', 'jump', 'talk', 'sleep'];
@@ -782,7 +782,7 @@ get_catalog().then(function(catalog) {
                 alert(id);
             });
 
-    _diagram.child('port-tips', port_tips);
+    _compositionDiagram.child('port-tips', port_tips);
 
     var node_tips = dc_graph.tip({namespace: 'node-tips'})
             .selection(dc_graph.tip.select_node())
@@ -790,14 +790,14 @@ get_catalog().then(function(catalog) {
                 k(d.orig.value && d.orig.value.type);
             });
 
-    _diagram.child('node-tips', node_tips);
+    _compositionDiagram.child('node-tips', node_tips);
 
     var negative_tips = dc_graph.tip({namespace: 'hint-negative-tips', class: 'd3-tip hint-negative'})
             .selection(dc_graph.tip.select_port())
             .programmatic(true)
             .hideDelay(1000);
 
-    _diagram.child('hint-negative-tips', negative_tips);
+    _compositionDiagram.child('hint-negative-tips', negative_tips);
 
     var positive_tips = dc_graph.tip({namespace: 'hint-positive-tips', class: 'd3-tip hint-positive'})
             .selection(dc_graph.tip.select_port())
@@ -805,7 +805,7 @@ get_catalog().then(function(catalog) {
             .programmatic(true)
             .hideDelay(1000);
 
-    _diagram.child('hint-positive-tips', positive_tips);
+    _compositionDiagram.child('hint-positive-tips', positive_tips);
 
     gropts.tipsDisable = [port_tips, node_tips];
     gropts.negativeTip = negative_tips;
@@ -813,12 +813,12 @@ get_catalog().then(function(catalog) {
 
     if(qs.debug) {
         var troubleshoot = dc_graph.troubleshoot();
-        _diagram.child('troubleshoot', troubleshoot);
+        _compositionDiagram.child('troubleshoot', troubleshoot);
     }
 
     if(qs.validate) {
         var validate = dc_graph.validate();
-        _diagram.child('validate', validate);
+        _compositionDiagram.child('validate', validate);
     }
 
     $('#canvas').droppable({
@@ -840,8 +840,8 @@ get_catalog().then(function(catalog) {
                 id: type + (max+1),
                 type: type
             };
-            var bound = _diagram.root().node().getBoundingClientRect();
-            var pos = _diagram.invertCoord([event.clientX - bound.left,
+            var bound = _compositionDiagram.root().node().getBoundingClientRect();
+            var pos = _compositionDiagram.invertCoord([event.clientX - bound.left,
                                             event.clientY - bound.top]);
             json_promise(catalog.fModelUrl(_components.get(type))).then(function(def) {
                 _ports = _ports.concat(catalog.ports(data.id, def));

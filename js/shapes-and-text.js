@@ -28,9 +28,9 @@ for(var i=0; i<nshapes; ++i) {
 var node_flat = dc_graph.flat_group.make(nodes, function(d) { return d.id; }),
     edge_flat = dc_graph.flat_group.make([], function(d) { return d.source + '-' + d.target; });
 
-var diagram = dc_graph.diagram('#graph');
+var shapeDiagram = dc_graph.diagram('#graph');
 
-diagram
+shapeDiagram
     .width(window.innerWidth)
     .height(window.innerHeight)
     .layoutAlgorithm('cola')
@@ -46,7 +46,7 @@ diagram
     .nodeShape(function(n) { return n.value.shape; })
     .edgeArrowhead('vee');
 
-diagram.timeLimit(1000);
+shapeDiagram.timeLimit(1000);
 
 dc.renderAll();
 

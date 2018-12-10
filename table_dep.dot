@@ -1,0 +1,242 @@
+digraph table_dependencies{
+n0 [label="l__p_misc__p_ifaces\nq/q_42.sql", shape=diamond]
+n1 [label="aai_vm\nq/q_11.sql q/q_13.sql"]
+n2 [label="l__p_server__p_iface\nq/q_40.sql", shape=diamond]
+n3 [label="vpe_vnf\nq/q_6.sql", shape=square]
+n4 [label="l__p_switch__p_ifaces\nq/q_41.sql", shape=diamond]
+n5 [label="l__v_switch__v_ifaces\nq/q_44.sql", shape=diamond]
+n6 [label="v_cnct\nq/q_74.sql", shape=rarrow]
+n7 [label="host_link\nq/q_63.sql", shape=rarrow]
+n8 [label="tmp_hosting_edges\nq/q_31.sql"]
+n9 [label="tmp_aai_vce_extract\nq/q_0.sql"]
+n10 [label="vce_vnf\nq/q_5.sql", shape=square]
+n11 [label="l__vm__v_ifaces\nq/q_43.sql", shape=diamond]
+n12 [label="service_subscription\nq/q_3.sql", shape=square]
+n13 [label="crs_pnf\nq/q_47.sql", shape=square]
+n14 [label="tmp_edges_pairwise_vlan\nq/q_65.sql"]
+n15 [label="rct_crs_pnf\nq/q_35.sql"]
+n16 [label="rct_vplspe_pnf\nq/q_34.sql"]
+n17 [label="tmp_host_iface\nq/q_38.sql"]
+n18 [label="p_server\nq/q_45.sql", shape=square]
+n19 [label="vplspe_vce_cnct\nq/q_55.sql q/q_56.sql", shape=rarrow]
+n20 [label="composed_of\nq/q_62.sql q/q_61.sql", shape=rarrow]
+n21 [label="rct_unclassified_hostnames\nq/q_30.sql"]
+n22 [label="plp_cnct\nq/q_75.sql q/q_76.sql", shape=rarrow]
+n23 [label="tmp_aai_vpe_extract\nq/q_1.sql"]
+n24 [label="rct_unknown_ctags\nq/q_17.sql"]
+n25 [label="aai_crs_pnf\nq/q_8.sql"]
+n26 [label="v_lan\nq/q_16.sql", shape=square]
+n27 [label="rct_p_server\nq/q_18.sql q/q_25.sql q/q_33.sql"]
+n28 [label="service_resource_map\nq/q_50.sql q/q_54.sql q/q_51.sql q/q_53.sql q/q_52.sql", shape=square]
+n29 [label="tmp_missing_pserver\nq/q_32.sql"]
+n30 [label="vplspe_pnf\nq/q_48.sql", shape=square]
+n31 [label="service_instance\nq/q_4.sql", shape=square]
+n32 [label="tmp_vp_edges\nq/q_72.sql"]
+n33 [label="tmp_pp_edges\nq/q_70.sql"]
+n34 [label="rct_p_switch\nq/q_26.sql q/q_19.sql"]
+n35 [label="tmp_missing_hostnames\nq/q_24.sql"]
+n36 [label="tmp_edges\nq/q_64.sql"]
+n37 [label="vce_vpe_cnct\nq/q_58.sql q/q_57.sql", shape=rarrow]
+n38 [label="tmp_edges_vlan\nq/q_66.sql"]
+n39 [label="tmp_vv_edges\nq/q_69.sql"]
+n40 [label="tmp_ipv4_list\nq/q_36.sql"]
+n41 [label="customer\nq/q_2.sql", shape=square]
+n42 [label="aai_vplspe_pnf\nq/q_7.sql"]
+n43 [label="tmp_pv_edges\nq/q_71.sql"]
+n44 [label="v_switch\nq/q_28.sql q/q_21.sql", shape=square]
+n45 [label="aai_p_switch\nq/q_9.sql q/q_10.sql"]
+n46 [label="aai_p_server\nq/q_15.sql q/q_12.sql q/q_14.sql"]
+n47 [label="vpe_crs_cnct\nq/q_60.sql q/q_59.sql", shape=rarrow]
+n48 [label="p_switch\nq/q_46.sql", shape=square]
+n49 [label="vlan_cnct\nq/q_68.sql q/q_67.sql", shape=rarrow]
+n50 [label="rct_vm\nq/q_20.sql q/q_27.sql"]
+n51 [label="tmp_ipv6_list\nq/q_37.sql"]
+n52 [label="tmp_iface_ip\nq/q_39.sql"]
+n53 [label="vm\nq/q_49.sql", shape=square]
+n54 [label="tmp_missing_host_pre\nq/q_23.sql"]
+n55 [label="p_cnct\nq/q_73.sql", shape=rarrow]
+n56 [label="p_misc\nq/q_29.sql q/q_22.sql", shape=square]
+n57 [label="aai.pserver", shape=invtriangle]
+n58 [label="aai.l_interface", shape=invtriangle]
+n59 [label="rct.connections", shape=invtriangle]
+n60 [label="aai.tosca_relationships_network_bindsto", shape=invtriangle]
+n61 [label="aai.tosca_relationships_hostedon", shape=invtriangle]
+n62 [label="rct.vm_info", shape=invtriangle]
+n63 [label="aai.customer", shape=invtriangle]
+n64 [label="aai.vserver", shape=invtriangle]
+n65 [label="rct.equipment_info", shape=invtriangle]
+n66 [label="aai.service_subscription", shape=invtriangle]
+n67 [label="aai.org_onap_relationships_inventory_composedof", shape=invtriangle]
+n68 [label="aai.vpls_pe", shape=invtriangle]
+n69 [label="aai.pnf", shape=invtriangle]
+n70 [label="aai.newvce", shape=invtriangle]
+n71 [label="aai.vce", shape=invtriangle]
+n72 [label="ref.locid", shape=invtriangle]
+n73 [label="rct.vlan_info", shape=invtriangle]
+n74 [label="aai.generic_vnf", shape=invtriangle]
+n75 [label="rct.c_tag_connections", shape=invtriangle]
+n76 [label="ref.instar_adiod", shape=invtriangle]
+n77 [label="aai.org_onap_relationships_inventory_belongsto", shape=invtriangle]
+n78 [label="aai.service_instance", shape=invtriangle]
+n79 [label="rct.s_tag_connections", shape=invtriangle]
+n52 -> n0
+n9 -> n1
+n72 -> n1
+n23 -> n1
+n52 -> n2
+n23 -> n3
+n52 -> n4
+n52 -> n5
+n39 -> n6
+n9 -> n7
+n53 -> n7
+n18 -> n7
+n23 -> n7
+n8 -> n7
+n62 -> n8
+n63 -> n9
+n66 -> n9
+n78 -> n9
+n77 -> n9
+n71 -> n9
+n70 -> n9
+n67 -> n9
+n61 -> n9
+n64 -> n9
+n57 -> n9
+n9 -> n10
+n52 -> n11
+n9 -> n12
+n23 -> n12
+n25 -> n13
+n15 -> n13
+n79 -> n14
+n72 -> n14
+n75 -> n14
+n26 -> n14
+n34 -> n15
+n34 -> n16
+n59 -> n17
+n75 -> n17
+n79 -> n17
+n27 -> n18
+n46 -> n18
+n76 -> n19
+n30 -> n19
+n10 -> n19
+n30 -> n20
+n48 -> n20
+n13 -> n20
+n9 -> n20
+n10 -> n20
+n53 -> n20
+n23 -> n20
+n3 -> n20
+n35 -> n21
+n65 -> n21
+n62 -> n21
+n32 -> n22
+n43 -> n22
+n63 -> n23
+n66 -> n23
+n78 -> n23
+n77 -> n23
+n74 -> n23
+n67 -> n23
+n61 -> n23
+n60 -> n23
+n64 -> n23
+n57 -> n23
+n58 -> n23
+n75 -> n24
+n72 -> n24
+n26 -> n24
+n69 -> n25
+n73 -> n26
+n79 -> n26
+n72 -> n26
+n65 -> n27
+n35 -> n27
+n72 -> n27
+n29 -> n27
+n76 -> n28
+n31 -> n28
+n30 -> n28
+n10 -> n28
+n13 -> n28
+n3 -> n28
+n8 -> n29
+n42 -> n30
+n16 -> n30
+n9 -> n31
+n23 -> n31
+n36 -> n32
+n50 -> n32
+n27 -> n32
+n34 -> n32
+n56 -> n32
+n44 -> n32
+n36 -> n33
+n27 -> n33
+n34 -> n33
+n56 -> n33
+n35 -> n34
+n72 -> n34
+n65 -> n34
+n54 -> n35
+n59 -> n36
+n76 -> n37
+n10 -> n37
+n3 -> n37
+n79 -> n38
+n72 -> n38
+n75 -> n38
+n26 -> n38
+n36 -> n39
+n50 -> n39
+n44 -> n39
+n59 -> n40
+n9 -> n41
+n23 -> n41
+n68 -> n42
+n36 -> n43
+n27 -> n43
+n50 -> n43
+n44 -> n43
+n34 -> n43
+n56 -> n43
+n35 -> n44
+n72 -> n44
+n65 -> n44
+n69 -> n45
+n72 -> n45
+n68 -> n45
+n57 -> n46
+n72 -> n46
+n9 -> n46
+n23 -> n46
+n76 -> n47
+n3 -> n47
+n13 -> n47
+n34 -> n48
+n45 -> n48
+n38 -> n49
+n62 -> n50
+n35 -> n50
+n72 -> n50
+n59 -> n51
+n17 -> n52
+n40 -> n52
+n51 -> n52
+n1 -> n53
+n50 -> n53
+n59 -> n54
+n75 -> n54
+n79 -> n54
+n73 -> n54
+n33 -> n55
+n35 -> n56
+n72 -> n56
+n65 -> n56
+n80 [label="l__r_node__r_ifaces", shape=diamond, style=dotted]
+}

@@ -1959,6 +1959,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     function check_zoom(node, edge) {
         var do_zoom, animate = true;
+        if(_width === 'auto' || _height === 'auto')
+            detect_size_change();
         switch(_diagram.autoZoom()) {
         case 'always-skipanimonce':
             animate = false;
@@ -2094,7 +2096,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return e.pos.new.orienttail;
                 });
         })
-            .attr('d', render_edge_path('new'));
+            .attr('d', render_edge_path('new'))
+            .each(dash_edges_for_arrows);
         return this;
     };
 
@@ -2212,8 +2215,15 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     function node_bounds(n) {
-        return {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
-                right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
+        var bounds = {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
+                      right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
+        _nodePorts[_diagram.nodeKey.eval(n)].forEach(function(p) {
+            var pb = _diagram.portStyle(_diagram.portStyleName.eval(p)).portBounds(p);
+            pb.left += n.cola.x; pb.top += n.cola.y;
+            pb.right += n.cola.x; pb.bottom += n.cola.y;
+            bounds = union_bounds(bounds, pb);
+        });
+        return bounds;
     }
 
     function union_bounds(b1, b2) {
@@ -2445,19 +2455,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             })
             .attr('d', render_edge_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
 
-        edge
-            .each(function(e) {
-                var totlength = this.getTotalLength(),
-                    arrowSize = diagram.edgeArrowSize.eval(e);
-                var headlength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e))),
-                    taillength = arrowSize*arrow_length(_arrows, arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)));
-                var tailStroke = _diagram.nodeStrokeWidth.eval(e.tail),
-                    headStroke = _diagram.nodeStrokeWidth.eval(e.head),
-                    length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
-                d3.select(this)
-                    .attr('stroke-dasharray', length + ' ' + totlength*2)
-                    .attr('stroke-dashoffset', -(taillength + tailStroke/2));
-            });
+        edge.each(dash_edges_for_arrows);
 
         var etrans = edge
                 .each(function(e) {
@@ -2486,11 +2484,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .attr('opacity', _diagram.edgeOpacity.eval);
         if(animatePositions)
             etrans
-                .attr('d', function(e) {
-                    var when = _diagram.stageTransitions() === 'insmod' &amp;&amp;
-                            edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
-                    return render_edge_path(when)(e);
-                });
+            .attr('d', function(e) {
+                var when = _diagram.stageTransitions() === 'insmod' &amp;&amp;
+                        edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
+                return render_edge_path(when)(e);
+            })
+            .tween('dashes', function(e) {
+                var that = this;
+                return function(t) {
+                    dash_edges_for_arrows.call(that, e);
+                };
+            });
         var elabels = edgeLabels
             .selectAll('text').data(function(e) {
                 var labels = _diagram.edgeLabel.eval(e);
@@ -2597,6 +2601,20 @@ dc_graph.diagram = function (parent, chartGroup) {
             var port = _diagram.selectNodePortsOfStyle(node, style);
             _diagram.portStyle(style).drawPorts(port, nodePorts2, node);
         });
+    }
+
+    function dash_edges_for_arrows(e) {
+        var totlength = this.getTotalLength(),
+            arrowSize = _diagram.edgeArrowSize.eval(e),
+            stemWidth = _diagram.edgeStrokeWidth.eval(e) / arrowSize;
+        var headlength = arrowSize*arrow_length(arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e)), stemWidth),
+            taillength = arrowSize*arrow_length(arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)), stemWidth);
+        var tailStroke = _diagram.nodeStrokeWidth.eval(e.source),
+            headStroke = _diagram.nodeStrokeWidth.eval(e.target),
+            length = Math.max(0, totlength-headlength-taillength - (tailStroke+headStroke)/2);
+        d3.select(this)
+            .attr('stroke-dasharray', length + ' ' + totlength*2)
+            .attr('stroke-dashoffset', -(taillength + tailStroke/2));
     }
 
     /**
@@ -2842,46 +2860,17 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     /**
-     * Creates an svg marker definition for drawing edge arrow tails or heads. The `viewBox` of
-     * the marker is `0 -5 10 10`, so the arrow should be drawn from (0, -5) to (10, 5); it
-     * will be moved and sized based on the other parameters, and rotated based on the
-     * orientation of the edge.
+     * Creates an svg marker definition for drawing edge arrow tails or heads.
      *
-     * (If further customization is required, it is possible to append other `svg:defs` to
-     * `diagram.svg()` and use refer to them by `id`.)
-     * @method defineArrow
-     * @memberof dc_graph.diagram
-     * @instance
-     * @param {Number} name - the identifier to give the marker, to be used with
-     * {@link #dc_graph.diagram+edgeArrowhead edgeArrowhead} or
-     * {@link #dc_graph.diagram+edgeArrowtail edgeArrowtail}
-     * @param {Number} width - the width, in pixels, to draw the marker
-     * @param {Number} height - the height, in pixels, to draw the marker
-     * @param {Number} refX - the X reference position, in marker coordinates, which will be
-     * aligned to the endpoint of the edge
-     * @param {Number} refY - the Y reference position
-     * @param {Function} drawf - a function to draw the marker using d3 SVG primitives, which
-     * takes the marker object as its parameter.
-     * @example
-     * // the built-in `vee` arrow is defined like so:
-     * _diagram.defineArrow('vee', 12, 12, 10, 0, function(marker) {
-     *   marker.append('svg:path')
-     *     .attr('d', 'M0,-5 L10,0 L0,5 L3,0')
-     *     .attr('stroke-width', '0px');
-     * });
+     * Sorry, this is not currently documented - please see
+     * [arrows.js](https://github.com/dc-js/dc.graph.js/blob/develop/src/arrows.js)
+     * for examples
      * @return {dc_graph.diagram}
      **/
-    _diagram.defineArrow = function(defn, width, height, refX, refY, drawf) {
-        if(typeof defn === 'string')
-            defn = {
-                name: defn,
-                width: width,
-                height: height,
-                refX: refX,
-                refY: refY,
-                drawFunction: drawf
-            };
-        _arrows[defn.name] = defn;
+    _diagram.defineArrow = function(name, defn) {
+        if(typeof defn !== 'function')
+            throw new Error('sorry, defineArrow no longer takes specific shape parameters, and the parameters have changed too much to convert them. it takes a name and a function returning a definition - please look at arrows.js for new format');
+        _arrows[name] = defn;
         return _diagram;
     };
 
@@ -2905,8 +2894,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
         var defn = dc_graph.builtin_arrows[aname];
-        defn.name = aname;
-        _diagram.defineArrow(defn);
+        _diagram.defineArrow(aname, defn);
     });
 
     function globalTransform(pos, scale, animate) {
@@ -3215,7 +3203,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on Fri Nov 16th 2018
+		on Sun Dec 9th 2018
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
