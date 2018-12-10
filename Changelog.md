@@ -1,3 +1,10 @@
+## 0.7.2
+* detect resize also at end of layout (via `check_zoom`) - we have to `detect_size_change` on every entry point, since there is no resize event yet. auto-resize now seems to work in all known situations.
+* ports contribute to the bounds of the canvas
+* tween edge dashes and recalculate them on reposition so that dragging and animations don't have parts of edges missing
+* fix crash in edge delete - do not attempt to determine `nodeStrokeWidth` when removing arrowheads
+* fix caching of arrow markers
+
 ## 0.7.1
 * left and right clipped edge arrowheads for all arrow shapes
 * arrow shapes are now shape families with some open/left/right code shared
