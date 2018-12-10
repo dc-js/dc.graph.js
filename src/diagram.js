@@ -98,14 +98,10 @@ dc_graph.diagram = function (parent, chartGroup) {
       **/
     _diagram.height = function (height) {
         if (!arguments.length) {
-            if (!dc.utils.isNumber(_height)) {
-                _lastHeight = _heightCalc(_diagram.root().node());
-                if(_height === 'auto') // 'auto' => calculate every time
-                    return _lastHeight;
-                // null/undefined => calculate once only
-                _height = _lastHeight;
-            }
-            return _height;
+            if(_width === 'auto')
+                return _lastWidth;
+            else
+                return _height;
         }
         if(dc.utils.isNumber(height) || !height || height === 'auto')
             _height = height;
@@ -148,14 +144,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.width = function (width) {
         if (!arguments.length) {
-            if (!dc.utils.isNumber(_width)) {
-                _lastWidth = _widthCalc(_diagram.root().node());
-                if(_width === 'auto') // 'auto' => calculate every time
-                    return _lastWidth;
-                // null/undefined => calculate once only
-                _width = _lastWidth;
-            }
-            return _width;
+            if(_width === 'auto')
+                return _lastWidth;
+            else
+                return _width;
         }
         if(dc.utils.isNumber(width) || !width || width === 'auto')
             _width = width;
@@ -1407,9 +1399,29 @@ dc_graph.diagram = function (parent, chartGroup) {
         else return _diagram.startLayout();
     };
 
-    function detect_size_change() {
+    _diagram.detectSizeChange = function() {
         var oldWidth = _lastWidth, oldHeight = _lastHeight;
-        var newWidth = _diagram.width(), newHeight = _diagram.height();
+        var newWidth, newHeight;
+        if(!dc.utils.isNumber(_width)) {
+            _lastWidth = _widthCalc(_diagram.root().node());
+            // null/undefined => calculate once only
+            // 'auto' => calculate every time
+            if(_width !== 'auto')
+                _width = _lastWidth;
+            newWidth = _lastWidth;
+        }
+        else newWidth = _width;
+
+        if (!dc.utils.isNumber(_height)) {
+            _lastHeight = _heightCalc(_diagram.root().node());
+            if(_height !== 'auto')
+                _height = _lastHeight;
+            newHeight = _lastHeight;
+        }
+        else newHeight = _height;
+
+        if(oldWidth === undefined || oldHeight === undefined)
+            return;
         if(oldWidth !== newWidth || oldHeight !== newHeight) {
             var scale = _zoom.scale(), translate = _zoom.translate();
             _zoom.scale(1).translate([0,0]);
@@ -1424,7 +1436,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 .x(_diagram.x()).y(_diagram.y())
                 .translate(translate).scale(scale);
         }
-    }
+    };
 
     _diagram.startLayout = function () {
         var nodes = _diagram.nodeGroup().all();
@@ -1436,7 +1448,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _running = true;
 
         if(_width === 'auto' || _height === 'auto')
-            detect_size_change();
+            _diagram.detectSizeChange();
         else
             _diagram.resizeSvg();
 
@@ -1881,7 +1893,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     function check_zoom(node, edge) {
         var do_zoom, animate = true;
         if(_width === 'auto' || _height === 'auto')
-            detect_size_change();
+            _diagram.detectSizeChange();
         switch(_diagram.autoZoom()) {
         case 'always-skipanimonce':
             animate = false;
@@ -2549,6 +2561,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.render = function () {
+        _diagram.detectSizeChange();
         if(_svg)
             _dispatch.reset();
         if(!_diagram.initLayoutOnRedraw())
@@ -2911,7 +2924,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
     function doZoom() {
         if(_width === 'auto' || _height === 'auto')
-            detect_size_change();
+            _diagram.detectSizeChange();
         var translate, scale = d3.event.scale;
         if(_diagram.restrictPan())
             _zoom.translate(translate = bring_in_bounds(d3.event.translate));
