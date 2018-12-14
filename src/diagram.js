@@ -2138,14 +2138,19 @@ dc_graph.diagram = function (parent, chartGroup) {
     function node_bounds(n) {
         var bounds = {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
                       right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
-        var ports = _nodePorts[_diagram.nodeKey.eval(n)];
-        if(ports)
-            ports.forEach(function(p) {
-                var pb = _diagram.portStyle(_diagram.portStyleName.eval(p)).portBounds(p);
-                pb.left += n.cola.x; pb.top += n.cola.y;
-                pb.right += n.cola.x; pb.bottom += n.cola.y;
-                bounds = union_bounds(bounds, pb);
-            });
+        if(_diagram.portStyle.enum().length) {
+            var ports = _nodePorts[_diagram.nodeKey.eval(n)];
+            if(ports)
+                ports.forEach(function(p) {
+                    var portStyle =_diagram.portStyleName.eval(p);
+                    if(!portStyle || !_diagram.portStyle(portStyle))
+                        return;
+                    var pb = _diagram.portStyle(portStyle).portBounds(p);
+                    pb.left += n.cola.x; pb.top += n.cola.y;
+                    pb.right += n.cola.x; pb.bottom += n.cola.y;
+                    bounds = union_bounds(bounds, pb);
+                });
+        }
         return bounds;
     }
 
