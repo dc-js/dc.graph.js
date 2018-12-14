@@ -61,10 +61,11 @@ function rand(s) {
     return sfc32(seed(), seed(), seed(), seed());
 }
 
-function display_error(message) {
+function display_error(heading, message) {
     d3.select('#message')
         .style('display', null)
-        .html('<h1>' + message + '</h1>');
+        .html('<div><h1>' + heading + '</h1>' +
+              (message ? '<code>' + message + '</code></div>' : ''));
     throw new Error(message);
 }
 if(!sync_url.vals.file)
@@ -73,11 +74,11 @@ if(!sync_url.vals.file)
 var expand_collapse;
 dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     if(error) {
-        var message = '';
+        var heading = '';
         if(error.status)
-            message = 'Error ' + error.status + ': ';
-        message += 'Could not load file ' + sync_url.vals.file;
-        display_error(message);
+            heading = 'Error ' + error.status + ': ';
+        heading += 'Could not load file ' + sync_url.vals.file;
+        display_error(heading, error.message);
     }
     var graph_data = dc_graph.munge_graph(data),
         nodes = graph_data.nodes,
