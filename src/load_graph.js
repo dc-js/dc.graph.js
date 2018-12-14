@@ -75,6 +75,31 @@ function process_dsv(callback, error, data) {
     });
 }
 
+dc_graph.file_formats = [
+    {
+        exts: 'json',
+        from_url: d3.json
+    },
+    {
+        exts: ['gv', 'dot'],
+        from_url: function(url, callback) {
+            d3.text(url, process_dot.bind(null, callback));
+        }
+    },
+    {
+        exts: 'psv',
+        from_url: function(url, callback) {
+            d3.dsv('|', 'text/plain')(url, process_dsv.bind(null, callback));
+        }
+    },
+    {
+        exts: 'csv',
+        from_url: function(url, callback) {
+            d3.csv(url, process_dsv.bind(null, callback));
+        }
+    }
+];
+
 // load a graph from various formats and return the data in consistent {nodes, links} format
 dc_graph.load_graph = function() {
     // ignore any query parameters for checking extension
@@ -108,18 +133,20 @@ dc_graph.load_graph = function() {
     }
     else {
         var file1noq = ignore_query(file1);
-        if(/\.json$/.test(file1noq))
-            d3.json(file1, callback);
-        else if(/\.gv|\.dot$/.test(file1noq))
-            d3.text(file1, process_dot.bind(null, callback));
-        else if(/\.psv$/.test(file1noq))
-            d3.dsv('|', 'text/plain')(file1, process_dsv.bind(null, callback));
-        else if(/\.csv$/.test(file1noq))
-            d3.csv(file1, process_dsv.bind(null, callback));
+        var format = dc_graph.file_formats.find(function(format) {
+            var exts = format.exts;
+            if(!Array.isArray(exts))
+                exts = [exts];
+            return exts.find(function(ext) {
+                return new RegExp('\.' + ext + '$').test(file1noq);
+            });
+        });
+        if(format)
+            format.from_url(file1, callback);
         else {
             var spl = file1noq.split('.');
-            if(spl[1])
-                callback(new Error('do not know how to process graph extension ' + spl[1]));
+            if(spl.length)
+                callback(new Error('do not know how to process graph extension ' + spl[spl.length-1]));
             else
                 callback(new Error('need file extension to process graph file automatically, filename ' + file1noq));
         }
