@@ -106,12 +106,22 @@ dc_graph.load_graph = function() {
                     callback(null, {nodes: nodes.results, edges: edges.results});
             });
     }
-    else if(/\.json$/.test(ignore_query(file1)))
-        d3.json(file1, callback);
-    else if(/\.gv|\.dot$/.test(ignore_query(file1)))
-        d3.text(file1, process_dot.bind(null, callback));
-    else if(/\.psv$/.test(ignore_query(file1)))
-        d3.dsv('|', 'text/plain')(file1, process_dsv.bind(null, callback));
-    else if(/\.csv$/.test(ignore_query(file1)))
-        d3.csv(file1, process_dsv.bind(null, callback));
+    else {
+        var file1noq = ignore_query(file1);
+        if(/\.json$/.test(file1noq))
+            d3.json(file1, callback);
+        else if(/\.gv|\.dot$/.test(file1noq))
+            d3.text(file1, process_dot.bind(null, callback));
+        else if(/\.psv$/.test(file1noq))
+            d3.dsv('|', 'text/plain')(file1, process_dsv.bind(null, callback));
+        else if(/\.csv$/.test(file1noq))
+            d3.csv(file1, process_dsv.bind(null, callback));
+        else {
+            var spl = file1noq.split('.');
+            if(spl[1])
+                callback(new Error('do not know how to process graph extension ' + spl[1]));
+            else
+                callback(new Error('need file extension to process graph file automatically, filename ' + file1noq));
+        }
+    }
 };
