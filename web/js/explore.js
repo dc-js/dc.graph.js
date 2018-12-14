@@ -292,6 +292,10 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     d3.select('#reset').on('click', function() {
         sync_url.update('expanded', []);
     });
+
+    d3.select('#user-file').on('change', function() {
+        console.log(this.value);
+    });
     if(sync_url.vals.start)
         expand_collapse.expand('both', sync_url.vals.start, true);
     else sync_url.exert();

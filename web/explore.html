@@ -26,8 +26,14 @@
 <body>
   <div id="main">
     <div id="controls">
-      <label for='#add-node'>Add node&nbsp;</label><select id="add-node"></select>&nbsp;&nbsp;
-      <button id=reset class="btn-xs btn-default">reset</button>
+      <div id="left-controls">
+        <label for='#add-node'>Add node&nbsp;</label><select id="add-node"></select>&nbsp;&nbsp;
+        <button id=reset class="btn-xs btn-default">reset</button>&nbsp;&nbsp;
+      </div>
+      <div id="middle-controls"></div>
+      <div id="right-controls">
+        <label for='#user-file' title="in-browser: nothing uploaded to server">Load file&nbsp;</label><input type="file" id="user-file" style="display: inline" title="in-browser: nothing uploaded to server">
+      </div>
     </div>
     <div id="graph"></div>
   </div>
