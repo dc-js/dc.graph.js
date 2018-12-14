@@ -252,7 +252,7 @@ dc_graph.expand_collapse = function(options) {
             _overDir = dir;
             if(options.hideNode && detect_key(options.hideKey))
                 highlight_hiding_node(diagram, n, edge);
-            else if(_overNode.orig.value.value.URL && detect_key(options.linkKey)) {
+            else if(_overNode.orig.value.value && _overNode.orig.value.value.URL && detect_key(options.linkKey)) {
                 diagram.selectAllNodes()
                     .filter(function(n) {
                         return n === _overNode;
@@ -349,7 +349,7 @@ dc_graph.expand_collapse = function(options) {
             });
         diagram.cascade(97, true, conditional_properties(
             function(n) {
-                return n === _overNode && n.orig.value.value.URL;
+                return n === _overNode && n.orig.value.value && n.orig.value.value.URL;
             },
             {
                 nodeLabelDecoration: 'underline'
