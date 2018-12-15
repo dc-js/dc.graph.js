@@ -72,7 +72,7 @@ if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL!');
 
 var expand_collapse;
-dc_graph.load_graph(sync_url.vals.file, function(error, data) {
+function on_load(error, data) {
     if(error) {
         var heading = '';
         if(error.status)
@@ -283,7 +283,9 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     exploreDiagram.autoZoom('once-noanim');
     var starter = d3.select('#add-node');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
-    option.enter().append('option')
+    option.enter().append('option');
+    option.exit().remove();
+    option
         .attr('value', function(d) { return d.value; })
         .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
         .text(function(d) { return d.label; });
@@ -298,11 +300,19 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         sync_url.update('expanded', []);
     });
 
-    d3.select('#user-file').on('change', function() {
-        console.log(this.value);
-    });
     if(sync_url.vals.start)
         expand_collapse.expand('both', sync_url.vals.start, true);
     else sync_url.exert();
+}
+
+d3.select('#user-file').on('change', function() {
+    var filename = this.value;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        sync_url.update('expanded', []);
+        dc_graph.load_graph_text(e.target.result, filename, on_load);
+    };
+    reader.readAsText(this.files[0]);
 });
 
+dc_graph.load_graph(sync_url.vals.file, on_load);
