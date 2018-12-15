@@ -626,9 +626,14 @@ function arrow_length(parts, stemWidth) {
 
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
+    var strokeOfs, edgeStroke;
+    function arrow_sig() {
+        return desc + '-' + strokeOfs + '-' + edgeStroke;
+    }
     if(desc) {
-        var strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.source : e.target)/2;
-        if(e[kind + 'ArrowLast'] === desc + '-' + strokeOfs)
+        strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.source : e.target)/2;
+        edgeStroke = diagram.edgeStroke.eval(e);
+        if(e[kind + 'ArrowLast'] === arrow_sig())
             return id;
     }
     var parts = arrow_parts(arrdefs, desc),
@@ -648,8 +653,8 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
             .attr('markerUnits', 'userSpaceOnUse')
             .attr('markerWidth', bounds.viewBox[2]*arrowSize)
             .attr('markerHeight', bounds.viewBox[3]*arrowSize)
-            .attr('stroke', diagram.edgeStroke.eval(e))
-            .attr('fill', diagram.edgeStroke.eval(e));
+            .attr('stroke', edgeStroke)
+            .attr('fill', edgeStroke);
         marker.html(null);
         parts.forEach(function(p, i) {
             marker
@@ -658,6 +663,6 @@ function edgeArrow(diagram, arrdefs, e, kind, desc) {
                       stemWidth);
         });
     }
-    e[kind + 'ArrowLast'] = desc && desc + '-' + strokeOfs;
+    e[kind + 'ArrowLast'] = arrow_sig();
     return desc ? id : null;
 }
