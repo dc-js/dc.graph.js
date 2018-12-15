@@ -126,7 +126,7 @@ dc_graph.match_file_format = function(filename) {
 function unknown_format_error(filename) {
     var spl = filename.split('.');
     if(spl.length)
-        return new Error('do not know how to process graph extension ' + spl[spl.length-1]);
+        return new Error('do not know how to process graph file extension ' + spl[spl.length-1]);
     else
         return new Error('need file extension to process graph file automatically, filename ' + filename);
 }
