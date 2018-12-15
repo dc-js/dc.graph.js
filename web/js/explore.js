@@ -68,8 +68,22 @@ function display_error(heading, message) {
               (message ? '<code>' + message + '</code></div>' : ''));
     throw new Error(message);
 }
-if(!sync_url.vals.file)
-    display_error('Need <code>?file=</code> in URL!');
+
+function hide_error() {
+    d3.select('#message')
+        .style('display', 'none');
+}
+
+d3.select('#user-file').on('change', function() {
+    var filename = this.value;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        hide_error();
+        dc_graph.load_graph_text(e.target.result, filename, on_load);
+        sync_url.update('expanded', []);
+    };
+    reader.readAsText(this.files[0]);
+});
 
 var expand_collapse;
 function on_load(error, data) {
@@ -305,14 +319,7 @@ function on_load(error, data) {
     else sync_url.exert();
 }
 
-d3.select('#user-file').on('change', function() {
-    var filename = this.value;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        sync_url.update('expanded', []);
-        dc_graph.load_graph_text(e.target.result, filename, on_load);
-    };
-    reader.readAsText(this.files[0]);
-});
+if(!sync_url.vals.file)
+    display_error('Need <code>?file=</code> in URL!');
 
 dc_graph.load_graph(sync_url.vals.file, on_load);

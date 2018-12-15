@@ -29,6 +29,10 @@
     flex: 1;
 }
 
+#right-controls {
+    z-index: 10;
+}
+
 #message {
     position: absolute;
     left: 0; top: 0; right: 0; bottom: 0;
