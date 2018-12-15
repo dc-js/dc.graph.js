@@ -79,19 +79,19 @@ d3.select('#user-file').on('change', function() {
     var reader = new FileReader();
     reader.onload = function(e) {
         hide_error();
-        dc_graph.load_graph_text(e.target.result, filename, on_load);
+        dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
         sync_url.update('expanded', []);
     };
     reader.readAsText(this.files[0]);
 });
 
 var expand_collapse;
-function on_load(error, data) {
+function on_load(filename, error, data) {
     if(error) {
         var heading = '';
         if(error.status)
             heading = 'Error ' + error.status + ': ';
-        heading += 'Could not load file ' + sync_url.vals.file;
+        heading += 'Could not load file ' + filename;
         display_error(heading, error.message);
     }
     var graph_data = dc_graph.munge_graph(data),
@@ -322,4 +322,4 @@ function on_load(error, data) {
 if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL!');
 
-dc_graph.load_graph(sync_url.vals.file, on_load);
+dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
