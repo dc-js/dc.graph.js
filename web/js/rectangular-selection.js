@@ -49,7 +49,9 @@ function apply_engine_parameters(engine) {
         engine
             .gravityStrength(0.1)
             .initialCharge(-1000);
+        break;
     }
+    selectionDiagram.initLayoutOnRedraw(engine.layoutAlgorithm() === 'cola');
     return engine;
 }
 function build_data(nodes, edges) {

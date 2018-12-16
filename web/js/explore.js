@@ -63,6 +63,7 @@ function apply_engine_parameters(engine) {
         engine.lengthStrategy('individual');
         break;
     }
+    exploreDiagram.initLayoutOnRedraw(engine.layoutAlgorithm() === 'cola');
     return engine;
 }
 
