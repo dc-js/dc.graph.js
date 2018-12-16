@@ -20,7 +20,8 @@ dc_graph.d3_force_layout = function(id) {
         _options = options;
 
         _simulation = d3.layout.force()
-            .size([options.width, options.height]);
+            .size([options.width, options.height])
+            .linkDistance(options.linkDistance);
 
         _simulation.on('tick', /* _tick = */ function() {
             dispatchState('tick');
@@ -246,7 +247,7 @@ dc_graph.d3_force_layout = function(id) {
         restorePositions: restorePositions,
         optionNames: function() {
             return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength',
-                    'initialCharge', 'fixOffPathNodes']
+                    'initialCharge', 'linkDistance', 'fixOffPathNodes']
                 .concat(graphviz_keys);
         },
         iterations: property(300),
@@ -254,6 +255,7 @@ dc_graph.d3_force_layout = function(id) {
         chargeForce: property(-500),
         gravityStrength: property(1.0),
         initialCharge: property(-400),
+        linkDistance: property(20),
         fixOffPathNodes: property(false),
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {}
