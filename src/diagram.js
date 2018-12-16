@@ -1471,7 +1471,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             e1.cola.dcg_edgeTarget = _diagram.edgeTarget.eval(e1);
             e1.source = _nodes[e1.cola.dcg_edgeSource];
             e1.target = _nodes[e1.cola.dcg_edgeTarget];
-            e1.cola.dcg_edgeLength = _diagram.edgeLength.eval(e1);
             e1.sourcePort = e1.sourcePort || {};
             e1.targetPort = e1.targetPort || {};
             _diagram.layoutEngine().populateLayoutEdge(e1.cola, e1);
@@ -1709,6 +1708,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             _nodes_snapshot = nodes_snapshot;
             _edges_snapshot = edges_snapshot;
         }
+
+        // edge lengths may be affected by node sizes
+        wedges.forEach(function(e) {
+            e.cola.dcg_edgeLength = _diagram.edgeLength.eval(e);
+        });
 
         // cola constraints always use indices, but node references
         // are more friendly, so translate those

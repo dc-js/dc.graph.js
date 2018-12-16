@@ -57,6 +57,10 @@ function apply_engine_parameters(engine) {
         engine
             .gravityStrength(0.1)
             .initialCharge(-1000);
+        break;
+    case 'cola':
+        engine.lengthStrategy('individual');
+        break;
     }
     return engine;
 }
@@ -161,6 +165,10 @@ function on_load(filename, error, data) {
         .nodeFill(function(n) { return nvalue(n).fillcolor || 'white'; })
         .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
         .edgeArrowhead('vee')
+        .edgeLength(function(e) {
+            var e2 = exploreDiagram.getWholeEdge(e.key);
+            return 15 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
+        })
         .edgeStroke(function(e) { return e.value.color || 'black'; })
         .edgeStrokeDashArray(function(e) {
             switch(e.value.style) {
