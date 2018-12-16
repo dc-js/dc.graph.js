@@ -1,4 +1,4 @@
-var diagram = dc_graph.diagram('#graph'), pie, row;
+var selectionDiagram = dc_graph.diagram('#graph'), pie, row;
 
 var options = {
     layout: {
@@ -35,7 +35,7 @@ var options = {
         default: 'none'
     }
 };
-var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+var sync_url = sync_url_options(options, dcgraph_domain(selectionDiagram), selectionDiagram);
 
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
@@ -79,7 +79,7 @@ var populate = function(n) {
             return e.dash;
         }),
         dashGroup = dashDimension.group();
-    diagram
+    selectionDiagram
         .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
         .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group);
     pie
@@ -98,7 +98,7 @@ var dasheses = [
     {name: 'dot', ray: [1,5]},
     {name: 'dot-dash', ray: [15,10,5,10]}
 ];
-diagram
+selectionDiagram
     .layoutEngine(engine)
     .timeLimit(5000)
     .transitionDuration(sync_url.vals.transition_duration)
@@ -113,7 +113,7 @@ diagram
     .nodeStrokeWidth(0) // turn off outlines
     .nodeLabel('')
     .nodeLabelFill(function(n) {
-        var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
+        var rgb = d3.rgb(selectionDiagram.nodeFillScale()(selectionDiagram.nodeFill()(n))),
             // https://www.w3.org/TR/AERT#color-contrast
             brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
         return brightness > 127 ? 'black' : 'ghostwhite';
@@ -132,26 +132,26 @@ diagram
     .edgeArrowhead(sync_url.vals.arrows === 'head' || sync_url.vals.arrows === 'both' ? 'vee' : null)
     .edgeArrowtail(sync_url.vals.arrows === 'tail' || sync_url.vals.arrows === 'both' ? 'crow' : null);
 
-diagram.child('select-nodes', dc_graph.select_nodes(
+selectionDiagram.child('select-nodes', dc_graph.select_nodes(
     {
         nodeOpacity: 1
     }).noneIsAll(true)
               .autoCropSelection(false));
-diagram.child('filter-selection-nodes', dc_graph.filter_selection('select-nodes-group', 'select-nodes'));
+selectionDiagram.child('filter-selection-nodes', dc_graph.filter_selection('select-nodes-group', 'select-nodes'));
 
-diagram.child('move-nodes', dc_graph.move_nodes());
+selectionDiagram.child('move-nodes', dc_graph.move_nodes());
 
-diagram.child('fix-nodes', dc_graph.fix_nodes({
+selectionDiagram.child('fix-nodes', dc_graph.fix_nodes({
     fixedPosTag: 'fixed'
 }));
 
-diagram.child('select-edges', dc_graph.select_edges(
+selectionDiagram.child('select-edges', dc_graph.select_edges(
     {
         edgeStrokeWidth: 2,
         edgeOpacity: 1
     }).noneIsAll(true)
               .autoCropSelection(false));
-diagram.child('filter-selection-edges',
+selectionDiagram.child('filter-selection-edges',
               dc_graph.filter_selection('select-edges-group', 'select-edges')
               .dimensionAccessor(function(c) { return c.edgeDimension(); }));
 

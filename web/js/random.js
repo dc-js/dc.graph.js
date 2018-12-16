@@ -1,4 +1,4 @@
-var diagram = dc_graph.diagram('#graph');
+var growingDiagram = dc_graph.diagram('#graph');
 var options = {
     layout: {
         default: 'cola',
@@ -25,7 +25,7 @@ var options = {
     content: 'text',
     icon: null
 };
-var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+var sync_url = sync_url_options(options, dcgraph_domain(growingDiagram), growingDiagram);
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
     case 'd3v4-force':
@@ -71,7 +71,7 @@ var random = dc_graph.random_graph({
     log: sync_url.vals.log && sync_url.vals.log !== 'false'
 });
 var data = build_data(random.nodes(), random.edges());
-diagram
+growingDiagram
     .layoutEngine(engine)
     .width(document.documentElement.clientWidth)
     .height(document.documentElement.clientHeight)
@@ -84,7 +84,7 @@ diagram
     .nodeStrokeWidth(0) // turn off outlines
     .nodeLabel(function(kv) { return kv.key; })
     .nodeLabelFill(sync_url.vals.shape === 'plain' ? 'black' : function(n) {
-        var rgb = d3.rgb(diagram.nodeFillScale()(diagram.nodeFill()(n))),
+        var rgb = d3.rgb(growingDiagram.nodeFillScale()(growingDiagram.nodeFill()(n))),
             // https://www.w3.org/TR/AERT#color-contrast
             brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
         return brightness > 127 ? 'black' : 'ghostwhite';
@@ -101,15 +101,15 @@ diagram
     .timeLimit(sync_url.vals.interval - 100);
 
 if(sync_url.vals.ports) {
-    diagram
+    growingDiagram
         .portStyle('symbols', dc_graph.symbol_port_style())
         .portStyleName('symbols');
 }
 var fix_nodes = dc_graph.fix_nodes()
     .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(1));
-diagram.child('fix-nodes', fix_nodes);
+growingDiagram.child('fix-nodes', fix_nodes);
 
-diagram
+growingDiagram
     .render()
     .autoZoom('always-skipanimonce');
 
@@ -123,7 +123,7 @@ function run() {
                 random.generate(1);
         }
         data = build_data(random.nodes(), random.edges());
-        diagram
+        growingDiagram
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
             .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
             .redraw();
