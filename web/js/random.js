@@ -18,7 +18,7 @@ var options = {
     newcomp: 0.1,
     remove: 0,
     remedge: 0.75,
-    interval: 1000,
+    interval: 500,
     opacity: 0.7,
     ports: false,
     shape: 'ellipse',
