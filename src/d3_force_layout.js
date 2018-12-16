@@ -20,8 +20,15 @@ dc_graph.d3_force_layout = function(id) {
         _options = options;
 
         _simulation = d3.layout.force()
-            .size([options.width, options.height])
-            .linkDistance(options.linkDistance);
+            .size([options.width, options.height]);
+        if(options.linkDistance) {
+            if(typeof options.linkDistance === 'number')
+                _simulation.linkDistance(options.linkDistance);
+            else if(options.linkDistance === 'auto')
+                _simulation.linkDistance(function(e) {
+                    return e.dcg_edgeLength;
+                });
+        }
 
         _simulation.on('tick', /* _tick = */ function() {
             dispatchState('tick');

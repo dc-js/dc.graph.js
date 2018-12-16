@@ -56,7 +56,7 @@ function apply_engine_parameters(engine) {
     case 'd3-force':
         engine
             .gravityStrength(0.1)
-            .linkDistance(125)
+            .linkDistance('auto')
             .initialCharge(-5000);
         break;
     case 'cola':
