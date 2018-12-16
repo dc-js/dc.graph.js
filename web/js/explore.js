@@ -4,7 +4,19 @@ var options = {
     transition: 1000,
     stage: 'insmod',
     linkLength: 30,
-    layout: 'cola',
+    layout: {
+        default: 'cola',
+        values: dc_graph.engines.available(),
+        selector: '#layout',
+        needs_relayout: true,
+        exert: function(val, diagram) {
+            var engine = dc_graph.spawn_engine(val);
+            apply_engine_parameters(engine);
+            diagram
+                .layoutEngine(engine);
+        }
+    },
+    worker: true,
     timeLimit: 10000,
     start: null,
     directional: false,
@@ -32,6 +44,22 @@ var options = {
 };
 var exploreDiagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
+
+function apply_engine_parameters(engine) {
+    switch(engine.layoutAlgorithm()) {
+    case 'd3v4-force':
+        engine
+            .collisionRadius(25)
+            .gravityStrength(0.05)
+            .initialCharge(-500);
+        break;
+    case 'd3-force':
+        engine
+            .gravityStrength(0.1)
+            .initialCharge(-1000);
+    }
+    return engine;
+}
 
 // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript#47593316
 function xfnv1a(k) {
@@ -107,7 +135,8 @@ function on_load(filename, error, data) {
     var edge_flat = dc_graph.flat_group.make(edges, edge_key),
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
-    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
+    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+    apply_engine_parameters(engine);
 
     // graphlib-dot seems to wrap nodes in an extra {value} (don't we all)
     function nvalue(n) {
