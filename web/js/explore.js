@@ -49,14 +49,15 @@ function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
     case 'd3v4-force':
         engine
-            .collisionRadius(25)
+            .collisionRadius(125)
             .gravityStrength(0.05)
             .initialCharge(-500);
         break;
     case 'd3-force':
         engine
             .gravityStrength(0.1)
-            .initialCharge(-1000);
+            .linkDistance(125)
+            .initialCharge(-5000);
         break;
     case 'cola':
         engine.lengthStrategy('individual');
