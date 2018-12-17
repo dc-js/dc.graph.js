@@ -28,9 +28,6 @@
   <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
 
   <style>
-    table {
-      border-collapse: collapse;
-    }
     tr {
       border: 1px solid black;
       table-layout: fixed;
@@ -75,6 +72,19 @@
 
     .dc-graph text.node-label {
         font: 24px sans-serif;
+    }
+
+    table {
+        border-spacing: 5px;
+        border-collapse: separate;
+    }
+
+    td {
+        background-color: #f4faff;
+        padding: 3px;
+    }
+    td:empty:after{
+        content: "\200C";
     }
   </style>
 </head>

@@ -140,7 +140,7 @@ select_edges_group.on('set_changed.show-info', function(edges) {
 });
 
 var nodeDim = node_flat.crossfilter.dimension(function(d) { return d.timestamp; });
-var outnodes = dc.dataTable('#output-nodes')
+var outnodes = dc.dataTable('#output-nodes-table')
         .dimension(nodeDim)
         .size(Infinity)
         .group(function() { return ''; })
@@ -158,7 +158,7 @@ function update_node_labels() {
 }
 
 var edgeDim = edge_flat.crossfilter.dimension(function(d) { return d.timestamp; });
-var outedges = dc.dataTable('#output-edges')
+var outedges = dc.dataTable('#output-edges-table')
         .dimension(edgeDim)
         .size(Infinity)
         .group(function() { return ''; })
