@@ -44,6 +44,10 @@ drawDiagram
     .nodeFixed(function(n) { return n.value.fixedPos; })
     .edgeArrowhead('vee');
 
+    .edgeLength(function(e) {
+        var e2 = drawDiagram.getWholeEdge(e.key);
+        return 10 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
+    })
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
     case 'd3v4-force':
