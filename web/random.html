@@ -30,20 +30,18 @@
       overflow: hidden;
       margin: 0;
     }
-    #dashboard {
+    #main {
         position: absolute;
-        left: 1em;
-        top: 1em;
-        min-width: 20em;
-        min-height: 10em;
-
-        background-color: #f4f2fc;
+        left: 0; top: 0; right: 0; bottom: 0;
+        display: flex;
+        flex-direction: column;
     }
     #controls {
+        padding: 10px;
         font-size: 3em;
-        position: absolute;
-        left: 1em;
-        top: 1em;
+    }
+    #graph {
+        flex: 1;
     }
   </style>
 
@@ -52,11 +50,11 @@
 
 <body>
 
-  <div id="graph" class="chart"></div>
-  <div id="dashboard">
+  <div id="main">
     <div id="controls">
       <i id="play-stop" class="fa fa-pause"></i>&emsp;&emsp;<select id="layout"></select>
     </div>
+    <div id="graph" class="chart"></div>
   </div>
 
   <script type="text/javascript" src="js/random.js"></script>

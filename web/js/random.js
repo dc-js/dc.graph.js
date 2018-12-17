@@ -73,8 +73,9 @@ var random = dc_graph.random_graph({
 var data = build_data(random.nodes(), random.edges());
 growingDiagram
     .layoutEngine(engine)
-    .width(document.documentElement.clientWidth)
-    .height(document.documentElement.clientHeight)
+    .width('auto')
+    .height('auto')
+    .restrictPan(true)
     .zoomExtent([0.1, 1.5])
     .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
     .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
@@ -111,7 +112,7 @@ growingDiagram.child('fix-nodes', fix_nodes);
 
 growingDiagram
     .render()
-    .autoZoom('always-skipanimonce');
+    .autoZoom('once-noanim');
 
 var interval = null;
 function run() {
