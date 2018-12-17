@@ -17,8 +17,9 @@ dc_graph.load_graph(qs.file || 'data/process.json', function(error, data) {
     diagram
         .layoutEngine(engine)
         .timeLimit(5000)
-        .width($(window).width())
-        .height($(window).height())
+        .width('auto')
+        .height('auto')
+        .restrictPan(true)
         .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
         .edgeDimension(edges.dimension).edgeGroup(edges.group)
         .altKeyZoom(true)
@@ -56,11 +57,5 @@ dc_graph.load_graph(qs.file || 'data/process.json', function(error, data) {
     }
 
     diagram.render();
-
-    $(window).resize(function() {
-        diagram
-            .width($(window).width())
-            .height($(window).height());
-    });
 });
 
