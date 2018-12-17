@@ -109,8 +109,8 @@ selectionDiagram
     .autoZoom('once-noanim')
     .zoomDuration(sync_url.vals.transition_duration)
     .altKeyZoom(true)
-    .width(null)
-    .height(null)
+    .width('auto')
+    .height('auto')
     .nodeFixed(function(n) { return n.value.fixed; })
     .nodeStrokeWidth(0) // turn off outlines
     .nodeLabel('')
