@@ -17,11 +17,15 @@
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dagre.js"></script>
+  <script type="text/javascript" src="js/d3v4-force.js"></script>
   <script type="text/javascript" src="js/viz.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/chart.registry.js"></script>
 
+  <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/querystring.js"></script>
+  <script type="text/javascript" src="js/sync-url-options.js"></script>
+  <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
 
   <style>
     table {
@@ -39,24 +43,30 @@
         text-align: left;
     }
 
-    #graph {
+    #main {
       position: absolute;
       left: 0;
       top: 0;
       right: 0;
       bottom: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #content {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+    }
+
+    #graph {
+        flex: 1;
     }
 
     #output-nodes {
-        position: absolute;
-        right: 3in;
-        top: 1em;
     }
 
     #output-edges {
-        position: absolute;
-        right: 1em;
-        top: 1em;
     }
 
     text.edge-label {
@@ -67,17 +77,22 @@
 
 <body>
 
-  <div id="graph" class="chart"></div>
-
-  <div id="output-nodes">
-    <h4>Nodes</h4>
-    <table id="output-nodes-table"></table>
+  <div id="main">
+    <div id="controls">
+        <select id="layout"></select>
+    </div>
+    <div id="content">
+      <div id="graph" class="chart"></div>
+      <div id="output-nodes">
+        <h4>Nodes</h4>
+        <table id="output-nodes-table"></table>
+      </div>
+      <div id="output-edges">
+        <h4>Edges</h4>
+        <table id="output-edges-table"></table>
+      </div>
+    </div>
   </div>
-  <div id="output-edges">
-    <h4>Edges</h4>
-    <table id="output-edges-table"></table>
-  </div>
-
-<script type="text/javascript" src="js/network-building.js"></script>
+  <script type="text/javascript" src="js/network-building.js"></script>
 </body>
 </html>

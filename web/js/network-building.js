@@ -1,19 +1,35 @@
-var qs = querystring.parse();
-var options = Object.assign({
-    rankdir: 'TB'
-}, qs);
+var options = {
+    rankdir: 'TB',
+    layout: {
+        default: 'dagre',
+        values: dc_graph.engines.available(),
+        selector: '#layout',
+        needs_relayout: true,
+        exert: function(val, diagram) {
+            var engine = dc_graph.spawn_engine(val);
+            apply_engine_parameters(engine);
+            diagram
+                .layoutEngine(engine);
+        }
+    },
+    shape: 'ellipse',
+    worker: true
+};
+
+var drawDiagram = dc_graph.diagram('#graph');
+var sync_url = sync_url_options(options, dcgraph_domain(drawDiagram), drawDiagram);
 
 var node_flat = dc_graph.flat_group.make([], function(d) { return d.id; }),
     edge_flat = dc_graph.flat_group.make([], function(d) { return d.id; });
 
-var drawDiagram = dc_graph.diagram('#graph');
-var engine = dc_graph.spawn_engine(options.layout, options, options.worker != 'false');
+var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
 
 drawDiagram
-    .width(window.innerWidth)
-    .height(window.innerHeight)
+    .width('auto')
+    .height('auto')
+    .restrictPan(true)
     .layoutEngine(engine)
-    .rankdir(options.rankdir)
+    .rankdir(sync_url.vals.rankdir)
     .transitionDuration(500)
     .stageTransitions('insmod')
     .showLayoutSteps(false)
@@ -21,12 +37,34 @@ drawDiagram
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
     .edgeSource(function(e) { return e.value.source; })
     .edgeTarget(function(e) { return e.value.target; })
-    .nodeShape(qs.shape || 'ellipse')
+    .nodeShape(sync_url.vals.shape || 'ellipse')
     .nodeLabel(function(n) { return n.value.label; })
     .edgeLabel(function(e) { return e.value.label || ''; })
     .nodeLabelPadding({x: 4, y: 4})
     .nodeFixed(function(n) { return n.value.fixedPos; })
     .edgeArrowhead('vee');
+
+function apply_engine_parameters(engine) {
+    switch(engine.layoutAlgorithm()) {
+    case 'd3v4-force':
+        engine
+            .collisionRadius(125)
+            .gravityStrength(0.05)
+            .initialCharge(-500);
+        break;
+    case 'd3-force':
+        engine
+            .gravityStrength(0.1)
+            .linkDistance('auto')
+            .initialCharge(-5000);
+        break;
+    case 'cola':
+        engine.lengthStrategy('individual');
+        break;
+    }
+    drawDiagram.initLayoutOnRedraw(engine.layoutAlgorithm() === 'cola');
+    return engine;
+}
 
 drawDiagram.timeLimit(1000);
 
