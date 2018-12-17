@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
   <link rel="stylesheet" type="text/css" href="css/jquery-ui.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
@@ -32,21 +33,17 @@
       overflow: hidden;
       margin: 0;
     }
-    #dashboard {
+    #main {
         position: absolute;
-        left: 1em;
-        top: 1em;
-        min-width: 20em;
-        min-height: 3em;
-
-        background-color: #f4f2fc;
+        left: 0; top: 0; right: 0; bottom: 0;
+        display: flex;
+        flex-direction: column;
     }
     #controls {
-        position: absolute;
-        left: 1em;
-        top: 1em;
+        padding: 1em;
     }
     #resize {
+        flex: 1;
         position: absolute;
         left: 200px;
         top: 200px;
@@ -65,13 +62,14 @@
 
 <body>
 
-  <div id="dashboard">
+  <div id="main">
+    <script type="text/javascript" src="js/example-header.js"></script>
     <div id="controls">
       <select id="layout"></select>&emsp;&emsp;<select id="number"></select>&emsp;&emsp;<select id="fit"></select>
     </div>
-  </div>
-  <div id="resize">
-    <div id="canvas"></div>
+    <div id="resize">
+      <div id="canvas"></div>
+    </div>
   </div>
 
   <script type="text/javascript">
