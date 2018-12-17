@@ -277,7 +277,7 @@ dc_graph.expand_collapse = function(options) {
             if(options.hideNode && detect_key(options.hideKey))
                 options.hideNode(nk);
             else if(detect_key(options.linkKey)) {
-                if(n.orig.value.value.URL)
+                if(n.orig.value.value && n.orig.value.value.URL)
                     window.open(n.orig.value.value.URL, 'dcgraphlink');
             } else {
                 clear_stubs(diagram, node, edge);
@@ -322,7 +322,7 @@ dc_graph.expand_collapse = function(options) {
                     collapse_highlight_group.highlight({}, {});
                 }
                 else if(d3.event.key === options.linkKey && _overNode) {
-                    if(_overNode && _overNode.orig.value.value.URL) {
+                    if(_overNode && _overNode.orig.value.value && _overNode.orig.value.value.URL) {
                         diagram.selectAllNodes()
                             .filter(function(n) {
                                 return n === _overNode;
@@ -338,7 +338,7 @@ dc_graph.expand_collapse = function(options) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
                         highlight_collapse(diagram, _overNode, node, edge, _overDir);
-                        if(_overNode.orig.value.value.URL) {
+                        if(_overNode.orig.value && _overNode.orig.value.value && _overNode.orig.value.value.URL) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
                                     return n === _overNode;
