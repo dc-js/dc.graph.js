@@ -104,6 +104,7 @@ selectionDiagram
     .layoutEngine(engine)
     .timeLimit(5000)
     .transitionDuration(sync_url.vals.transition_duration)
+    .fitStrategy('horizontal')
     .restrictPan(true)
     .margins({top: 5, left: 5, right: 5, bottom: 5})
     .autoZoom('once-noanim')

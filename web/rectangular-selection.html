@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
   <link rel="stylesheet" type="text/css" href="css/rectangular-selection.css"></style>
 
   <script type="text/javascript" src="js/d3.js"></script>
@@ -30,16 +31,17 @@
 
 <body>
   <div id="main">
-    <div id="dashboard">
-      <div id="controls">
-        <select id="layout"></select>
-        <select id="number"></select>
-      </div>
-      <div id="pie"></div>
-      <div id="row"></div>
+    <script type="text/javascript" src="js/example-header.js"></script>
+    <div id="controls">
+      <select id="layout"></select>
+      <select id="number"></select>
     </div>
-    <div id="canvas">
-      <div id="graph" class="chart"></div>
+    <div id="content">
+      <div id="graph"></div>
+      <div id="charts">
+        <div id="pie"></div>
+        <div id="row"></div>
+      </div>
     </div>
   </div>
   <script type="text/javascript" src="js/rectangular-selection.js"></script>
