@@ -39,15 +39,18 @@ drawDiagram
     .edgeTarget(function(e) { return e.value.target; })
     .nodeShape(sync_url.vals.shape || 'ellipse')
     .nodeLabel(function(n) { return n.value.label; })
-    .edgeLabel(function(e) { return e.value.label || ''; })
+    .nodeStrokeWidth(0)
+    .nodeFill('#001')
+    .nodeLabelFill('#eee')
     .nodeLabelPadding({x: 4, y: 4})
     .nodeFixed(function(n) { return n.value.fixedPos; })
-    .edgeArrowhead('vee');
-
+    .edgeLabel(function(e) { return e.value.label || ''; })
     .edgeLength(function(e) {
         var e2 = drawDiagram.getWholeEdge(e.key);
         return 10 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
     })
+    .edgeArrowhead('vee');
+
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
     case 'd3v4-force':
@@ -73,8 +76,9 @@ function apply_engine_parameters(engine) {
 drawDiagram.timeLimit(1000);
 
 var select_nodes = dc_graph.select_nodes({
-    nodeFill: '#eeffe0',
-    nodeStrokeWidth: 2
+    nodeStroke: '#16b',
+    nodeStrokeWidth: 5,
+    nodeRadius: 22.5
 }).multipleSelect(false);
 
 var select_edges = dc_graph.select_edges({
