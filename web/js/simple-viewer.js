@@ -80,14 +80,10 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     simpleDiagram.child('fix-nodes', fix_nodes);
 
     if(sync_url.vals.tips) {
-        // add tooltips using d3-tip
         var tip = dc_graph.tip();
-        // tip.content(function(d, k) {
-        //     // you can do an asynchronous call here, e.g. d3.json, if you need
-        //     // to fetch data to show the tooltip - just call k() with the content
-        //     k(d.orig.value.name);
-        // });
-        tip.content(dc_graph.tip.table());
+        tip
+            .showDelay(250)
+            .content(dc_graph.tip.table());
         simpleDiagram.child('tip', tip);
     }
     if(sync_url.vals.neighbors) {
