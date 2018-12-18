@@ -13,7 +13,7 @@
 .dc-graph text.node-label {
     font: bold 14px verdana, sans-serif;
     text-anchor: middle;
-    dominant-baseline: text-after-edge;
+    dominant-baseline: central;
     pointer-events: none;
 }
 
