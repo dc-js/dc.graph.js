@@ -11,7 +11,12 @@ var options = {
                 .layoutEngine(engine)
                 .autoZoom('once');
         }
-    }
+    },
+    worker: true,
+    file: 'data/process.json',
+    arrows: false,
+    tips: true,
+    neighbors: true
 };
 
 var simpleDiagram = dc_graph.diagram('#graph');
@@ -35,7 +40,7 @@ function apply_engine_parameters(engine) {
     return engine;
 }
 
-dc_graph.load_graph(sync_url.vals.file || 'data/process.json', function(error, data) {
+dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     if(error) {
         console.log(error);
         return;
@@ -46,7 +51,7 @@ dc_graph.load_graph(sync_url.vals.file || 'data/process.json', function(error, d
     }),
         nodes = dc_graph.flat_group.make(data.nodes, function(d) { return d.name; });
 
-    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
+    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     simpleDiagram
         .layoutEngine(engine)
         .timeLimit(5000)
@@ -74,7 +79,7 @@ dc_graph.load_graph(sync_url.vals.file || 'data/process.json', function(error, d
         .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
     simpleDiagram.child('fix-nodes', fix_nodes);
 
-    if(sync_url.vals.tips !== 'false') {
+    if(sync_url.vals.tips) {
         // add tooltips using d3-tip
         var tip = dc_graph.tip();
         // tip.content(function(d, k) {
@@ -85,7 +90,7 @@ dc_graph.load_graph(sync_url.vals.file || 'data/process.json', function(error, d
         tip.content(dc_graph.tip.table());
         simpleDiagram.child('tip', tip);
     }
-    if(sync_url.vals.neighbors != 'false') {
+    if(sync_url.vals.neighbors) {
         simpleDiagram
             .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
     }
