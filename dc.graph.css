@@ -11,19 +11,19 @@
 }
 
 .dc-graph text.node-label {
-    font: bold 14px verdana, sans-serif;
+    font: 18px sans-serif;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
 }
 
 .dc-graph text.edge-label {
-    font: 10px verdana, sans-serif;
+    font: 10px sans-serif;
     pointer-events: none;
 }
 
 .dc-graph-legend text.legend-label {
-    font: bold 14px verdana, sans-serif;
+    font: 18px sans-serif;
 }
 
 .dc-graph g.brush rect.extent {
