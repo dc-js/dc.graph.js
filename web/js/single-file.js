@@ -19,10 +19,10 @@ dc_graph.load_graph(qs.file || 'data/process.json', function(error, data) {
         .timeLimit(5000)
         .width('auto')
         .height('auto')
+        .autoZoom('once')
         .restrictPan(true)
         .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
         .edgeDimension(edges.dimension).edgeGroup(edges.group)
-        .altKeyZoom(true)
     // aesthetics
         .nodeFixed(n => n.value.fixedPos)
         .nodeStrokeWidthAccessor(0) // turn off outlines
