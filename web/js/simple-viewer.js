@@ -40,10 +40,37 @@ function apply_engine_parameters(engine) {
     return engine;
 }
 
-dc_graph.load_graph(sync_url.vals.file, function(error, data) {
+function display_error(heading, message) {
+    d3.select('#message')
+        .style('display', null)
+        .html('<div><h1>' + heading + '</h1>' +
+              (message ? '<code>' + message + '</code></div>' : ''));
+    throw new Error(message);
+}
+
+function hide_error() {
+    d3.select('#message')
+        .style('display', 'none');
+}
+
+d3.select('#user-file').on('change', function() {
+    var filename = this.value;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        hide_error();
+        dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+        sync_url.update('expanded', []);
+    };
+    reader.readAsText(this.files[0]);
+});
+
+function on_load(filename, error, data) {
     if(error) {
-        console.log(error);
-        return;
+        var heading = '';
+        if(error.status)
+            heading = 'Error ' + error.status + ': ';
+        heading += 'Could not load file ' + filename;
+        display_error(heading, error.message);
     }
 
     var edges = dc_graph.flat_group.make(data.links, function(d) {
@@ -92,5 +119,6 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     }
 
     simpleDiagram.render();
-});
+}
 
+dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));

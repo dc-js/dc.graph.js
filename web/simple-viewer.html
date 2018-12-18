@@ -55,6 +55,14 @@
     #graph {
         flex: 1;
     }
+    #message {
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+        background-color: rgba(255,255,255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
   </style>
 
 </head>
@@ -70,10 +78,12 @@
       </div>
       <div id="middle-controls"></div>
       <div id="right-controls">
+        <label for='#user-file' title="in-browser: nothing uploaded to server">Load file&nbsp;</label><input type="file" id="user-file" style="display: inline" title="in-browser: nothing uploaded to server">
       </div>
     </div>
     <div id="graph" class="chart"></div>
   </div>
+  <div id="message" style="display: none;"></div>
 
   <script type="text/javascript" src="js/simple-viewer.js"></script>
 </body>
