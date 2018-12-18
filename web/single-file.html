@@ -24,7 +24,10 @@
 
   <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 
+  <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/querystring.js"></script>
+  <script type="text/javascript" src="js/sync-url-options.js"></script>
+  <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
 
   <style type="text/css">
     body {
@@ -35,6 +38,19 @@
         left: 0; top: 0; right: 0; bottom: 0;
         display: flex;
         flex-direction: column;
+    }
+    #controls {
+        margin: 1em;
+        display: flex;
+        flex-direction: row;
+    }
+
+    #middle-controls {
+        flex: 1;
+    }
+
+    #right-controls {
+        z-index: 10;
     }
     #graph {
         flex: 1;
@@ -48,9 +64,16 @@
 
   <div id="main">
     <script type="text/javascript" src="js/example-header.js"></script>
+    <div id="controls">
+      <div id="left-controls">
+        <select id="layout"></select>
+      </div>
+      <div id="middle-controls"></div>
+      <div id="right-controls">
+      </div>
+    </div>
     <div id="graph" class="chart"></div>
   </div>
 
   <script type="text/javascript" src="js/single-file.js"></script>
 </body>
-

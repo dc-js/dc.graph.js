@@ -1,8 +1,41 @@
-var diagram = dc_graph.diagram('#graph');
+var options = {
+    layout: {
+        default: 'cola',
+        values: dc_graph.engines.available(),
+        selector: '#layout',
+        needs_relayout: true,
+        exert: function(val, diagram) {
+            var engine = dc_graph.spawn_engine(val);
+            apply_engine_parameters(engine);
+            diagram
+                .layoutEngine(engine)
+                .autoZoom('once');
+        }
+    }
+};
 
-var qs = querystring.parse();
+var simpleDiagram = dc_graph.diagram('#graph');
+var sync_url = sync_url_options(options, dcgraph_domain(simpleDiagram), simpleDiagram);
 
-dc_graph.load_graph(qs.file || 'data/process.json', function(error, data) {
+function apply_engine_parameters(engine) {
+    switch(engine.layoutAlgorithm()) {
+    case 'd3v4-force':
+        engine
+            .collisionRadius(125)
+            .gravityStrength(0.05)
+            .initialCharge(-500);
+        break;
+    case 'd3-force':
+        engine
+            .gravityStrength(0.1)
+            .linkDistance('auto')
+            .initialCharge(-5000);
+        break;
+    }
+    return engine;
+}
+
+dc_graph.load_graph(sync_url.vals.file || 'data/process.json', function(error, data) {
     if(error) {
         console.log(error);
         return;
@@ -13,8 +46,8 @@ dc_graph.load_graph(qs.file || 'data/process.json', function(error, data) {
     }),
         nodes = dc_graph.flat_group.make(data.nodes, function(d) { return d.name; });
 
-    var engine = dc_graph.spawn_engine(qs.layout, qs, qs.worker != 'false');
-    diagram
+    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
+    simpleDiagram
         .layoutEngine(engine)
         .timeLimit(5000)
         .width('auto')
@@ -29,18 +62,19 @@ dc_graph.load_graph(qs.file || 'data/process.json', function(error, data) {
         .nodeFillAccessor(function(kv) {
             return '#2E54A2';
         })
+        .nodeLabelPadding({x: 2, y: 0})
         .nodeLabelFillAccessor('white')
         .nodeTitleAccessor(null) // deactivate basic tooltips
-        .edgeArrowheadAccessor(qs.arrows ? 'vee' : null);
+        .edgeArrowheadAccessor(sync_url.vals.arrows ? 'vee' : null);
 
     var move_nodes = dc_graph.move_nodes();
-    diagram.child('move-nodes', move_nodes);
+    simpleDiagram.child('move-nodes', move_nodes);
 
     var fix_nodes = dc_graph.fix_nodes()
         .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
-    diagram.child('fix-nodes', fix_nodes);
+    simpleDiagram.child('fix-nodes', fix_nodes);
 
-    if(qs.tips !== 'false') {
+    if(sync_url.vals.tips !== 'false') {
         // add tooltips using d3-tip
         var tip = dc_graph.tip();
         // tip.content(function(d, k) {
@@ -49,13 +83,13 @@ dc_graph.load_graph(qs.file || 'data/process.json', function(error, data) {
         //     k(d.orig.value.name);
         // });
         tip.content(dc_graph.tip.table());
-        diagram.child('tip', tip);
+        simpleDiagram.child('tip', tip);
     }
-    if(qs.neighbors != 'false') {
-        diagram
+    if(sync_url.vals.neighbors != 'false') {
+        simpleDiagram
             .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
     }
 
-    diagram.render();
+    simpleDiagram.render();
 });
 
