@@ -45,7 +45,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
         },
         parent: function(p) {
             highlight_neighbors_group.on('highlight_node.highlight', p ? highlight_node : null);
-            if(!p.child('highlight-things'))
+            if(p && !p.child('highlight-things'))
                 p.child('highlight-things',
                         dc_graph.highlight_things(includeprops, excludeprops)
                           .durationOverride(_behavior.durationOverride()));

@@ -116,9 +116,12 @@ dc_graph.move_nodes = function(options) {
         remove_behavior: remove_behavior,
         parent: function(p) {
             select_nodes_group.on('set_changed.move-nodes', p ? selection_changed(p) : null);
-            _brush = p.child('brush');
-            _drawGraphs = p.child('draw-graphs');
-            _selectNodes = p.child('select-nodes');
+            if(p) {
+                _brush = p.child('brush');
+                _drawGraphs = p.child('draw-graphs');
+                _selectNodes = p.child('select-nodes');
+            }
+            else _brush = _drawGraphs = _selectNodes = null;
         }
     });
 
