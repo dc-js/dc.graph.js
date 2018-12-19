@@ -55,13 +55,14 @@ function hide_error() {
 
 d3.select('#user-file').on('change', function() {
     var filename = this.value;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        hide_error();
-        dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
-        sync_url.update('expanded', []);
-    };
-    reader.readAsText(this.files[0]);
+    if(filename) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            hide_error();
+            dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+        };
+        reader.readAsText(this.files[0]);
+    }
 });
 
 function on_load(filename, error, data) {
