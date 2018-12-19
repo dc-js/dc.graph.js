@@ -2762,6 +2762,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var svg = _svg || _diagram.select('svg');
         svg.remove();
         _svg = null;
+        _diagram.x(null).y(null);
         return generateSvg();
     };
 
