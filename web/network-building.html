@@ -87,11 +87,14 @@
     table {
         border-spacing: 5px;
         border-collapse: separate;
+        table-layout: fixed;
     }
 
     td {
         background-color: #f4faff;
         padding: 3px;
+        max-width: 50px;
+        overflow: hidden;
     }
     td:empty:after{
         content: "\200C";
