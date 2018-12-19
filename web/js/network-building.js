@@ -141,12 +141,12 @@ select_edges_group.on('set_changed.show-info', function(edges) {
 
 var nodeDim = node_flat.crossfilter.dimension(function(d) { return d.timestamp; });
 var outnodes = dc.dataTable('#output-nodes-table')
-        .dimension(nodeDim)
-        .size(Infinity)
-        .group(function() { return ''; })
-        .sortBy(function(v) { return  v.timestamp; })
-        .showGroups(false)
-        .columns(['label']);
+    .dimension(nodeDim)
+    .size(Infinity)
+    .group(function() { return ''; })
+    .sortBy(function(v) { return  v.timestamp; })
+    .showGroups(false)
+    .columns(['label']);
 
 var node_labels = {};
 function update_node_labels() {
@@ -159,34 +159,34 @@ function update_node_labels() {
 
 var edgeDim = edge_flat.crossfilter.dimension(function(d) { return d.timestamp; });
 var outedges = dc.dataTable('#output-edges-table')
-        .dimension(edgeDim)
-        .size(Infinity)
-        .group(function() { return ''; })
-        .sortBy(function(e) {
-            return node_labels[e.source] + ',' + node_labels[e.target];
-        })
-        .showGroups(false)
-        .on('preRender', update_node_labels)
-        .on('preRedraw', update_node_labels)
-        .columns([
-            {
-                label: 'Source',
-                format: function(d) {
-                    return node_labels[d.source];
-                }
-            },
-            {
-                label: 'Target',
-                format: function(d) {
-                    return node_labels[d.target];
-                }
-            },
-            {
-                label: 'Label',
-                format: function(d) {
-                    return d.label;
-                }
+    .dimension(edgeDim)
+    .size(Infinity)
+    .group(function() { return ''; })
+    .sortBy(function(e) {
+        return node_labels[e.source] + ',' + node_labels[e.target];
+    })
+    .showGroups(false)
+    .on('preRender', update_node_labels)
+    .on('preRedraw', update_node_labels)
+    .columns([
+        {
+            label: 'Source',
+            format: function(d) {
+                return node_labels[d.source];
             }
-        ]);
+        },
+        {
+            label: 'Target',
+            format: function(d) {
+                return node_labels[d.target];
+            }
+        },
+        {
+            label: 'Label',
+            format: function(d) {
+                return d.label;
+            }
+        }
+    ]);
 
 dc.renderAll();
