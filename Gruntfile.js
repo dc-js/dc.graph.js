@@ -364,7 +364,7 @@ module.exports.jsFiles = [
     'src/constraint_pattern.js',
     'src/tree_positions.js',
     'src/tree_constraints.js',
-    'src/behavior.js',
+    'src/mode.js',
     'src/tip.js',
     'src/dropdown.js',
     'src/keyboard.js',
