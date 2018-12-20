@@ -23,13 +23,13 @@ var node_flat = dc_graph.flat_group.make([], function(d) { return d.id; }),
     edge_flat = dc_graph.flat_group.make([], function(d) { return d.id; });
 
 var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+apply_engine_parameters(engine);
 
 drawDiagram
     .width('auto')
     .height('auto')
     .restrictPan(true)
     .layoutEngine(engine)
-    .rankdir(sync_url.vals.rankdir)
     .transitionDuration(500)
     .stageTransitions('insmod')
     .showLayoutSteps(false)
@@ -70,6 +70,7 @@ function apply_engine_parameters(engine) {
         break;
     }
     drawDiagram.initLayoutOnRedraw(engine.layoutAlgorithm() === 'cola');
+    engine.rankdir(sync_url.vals.rankdir);
     return engine;
 }
 
