@@ -7,10 +7,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     var _anchor;
 
     function refresh() {
-        if(_behavior.doRedraw())
-            _behavior.parent().relayout().redraw();
+        if(_mode.doRedraw())
+            _mode.parent().relayout().redraw();
         else
-            _behavior.parent().refresh();
+            _mode.parent().refresh();
     }
 
     function paths_changed(nop, eop) {
@@ -131,7 +131,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             .cascade(400, false, hoverprops);
     }
 
-    var _behavior = dc_graph.behavior('highlight-paths', {
+    var _mode = dc_graph.mode('highlight-paths', {
         add_behavior: add_behavior,
         remove_behavior: function(diagram, node, edge, ehover) {
             remove_behavior(diagram, node, edge, ehover);
@@ -148,8 +148,8 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     });
 
     // whether to do relayout & redraw (true) or just refresh (false)
-    _behavior.doRedraw = property(false);
+    _mode.doRedraw = property(false);
 
-    return _behavior;
+    return _mode;
 };
 

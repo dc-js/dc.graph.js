@@ -10,7 +10,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     function paths_changed(nop, eop, paths) {
         _paths = paths;
 
-        var engine = _behavior.parent().layoutEngine(),
+        var engine = _mode.parent().layoutEngine(),
             localPaths = paths.filter(pathIsPresent);
         if(localPaths.length) {
             var nidpaths = localPaths.map(function(lpath) {
@@ -18,7 +18,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
                 if(typeof strength !== 'number')
                     strength = 1;
                 if(_selected && _selected.indexOf(lpath) !== -1)
-                    strength *= _behavior.selectedStrength();
+                    strength *= _mode.selectedStrength();
                 return {
                     nodes: path_keys(lpath),
                     strength: strength
@@ -32,7 +32,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         }
         if(_selected)
             _selected = _selected.filter(function(p) { return localPaths.indexOf(p) !== -1; });
-        _behavior.parent().redraw();
+        _mode.parent().redraw();
     }
 
     function select_changed(sp) {
@@ -56,14 +56,14 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     function pathIsPresent(path) {
         return pathreader.elementList.eval(path).every(function(element) {
             return pathreader.elementType.eval(element) !== 'node' ||
-                _behavior.parent().getWholeNode(pathreader.nodeKey.eval(element));
+                _mode.parent().getWholeNode(pathreader.nodeKey.eval(element));
         });
     }
 
     // get the positions of nodes on path
     function getNodePositions(path, old) {
         return path_keys(path, false).map(function(key) {
-            var node = _behavior.parent().getWholeNode(key);
+            var node = _mode.parent().getWholeNode(key);
             return {x: old && node.prevX !== undefined ? node.prevX : node.cola.x,
                     y: old && node.prevY !== undefined ? node.prevY : node.cola.y};
         });
@@ -371,7 +371,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     // draw the spline for paths
     function drawSpline(paths) {
         if(paths === null) {
-            _savedPositions = _behavior.parent().layoutEngine().savePositions();
+            _savedPositions = _mode.parent().layoutEngine().savePositions();
             return;
         }
 
@@ -387,7 +387,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             .attr('id', function(d, i) { return "spline-path-"+i; })
             .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
             .attr('fill', 'none')
-            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _behavior.avoidSharpTurns()); });
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _mode.avoidSharpTurns()); });
         edge
             .attr('stroke', function(p) {
                 return selected.indexOf(p) !== -1 && selectprops.edgeStroke ||
@@ -409,8 +409,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         });
         _layer.selectAll('.spline-edge-hover')
             .each(function() {this.parentNode.appendChild(this);});
-        edge.transition().duration(_behavior.parent().transitionDuration())
-            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
+        edge.transition().duration(_mode.parent().transitionDuration())
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _mode.avoidSharpTurns()); });
 
         // another wider copy of the edge just for hover events
         var edgeHover = _layer.selectAll('.spline-edge-hover')
@@ -418,7 +418,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
         edgeHover.exit().remove();
         var edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
-            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _behavior.avoidSharpTurns()); })
+            .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _mode.avoidSharpTurns()); })
             .attr('opacity', 0)
             .attr('stroke', 'green')
             .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
@@ -440,12 +440,12 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
                     selected = [d];
                 highlight_paths_group.select_changed(selected);
              });
-        edgeHover.transition().duration(_behavior.parent().transitionDuration())
-            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _behavior.avoidSharpTurns()); });
+        edgeHover.transition().duration(_mode.parent().transitionDuration())
+            .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _mode.avoidSharpTurns()); });
     };
 
     function add_behavior(diagram, node, edge, ehover) {
-        _layer = _behavior.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
+        _layer = _mode.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
         _layer.enter().append('g').attr('class', 'spline-layer');
 
         drawSpline(_paths);
@@ -454,7 +454,7 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
     function remove_behavior(diagram, node, edge, ehover) {
     }
 
-    var _behavior = dc_graph.behavior('draw-spline-paths', {
+    var _mode = dc_graph.mode('draw-spline-paths', {
         laterDraw: true,
         add_behavior: add_behavior,
         remove_behavior: function(diagram, node, edge, ehover) {
@@ -473,8 +473,8 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
                 } : null);
         }
     });
-    _behavior.selectedStrength = property(1);
-    _behavior.avoidSharpTurns = property(true);
+    _mode.selectedStrength = property(1);
+    _mode.avoidSharpTurns = property(true);
 
-    return _behavior;
+    return _mode;
 };

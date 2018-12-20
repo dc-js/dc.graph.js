@@ -23,7 +23,7 @@ dc_graph.move_nodes = function(options) {
     function for_each_selected(f, selected) {
         selected = selected || _selected;
         selected.forEach(function(key) {
-            var n = _behavior.parent().getWholeNode(key);
+            var n = _mode.parent().getWholeNode(key);
             f(n, key);
         });
     }
@@ -60,7 +60,7 @@ dc_graph.move_nodes = function(options) {
                 var pos = dc_graph.event_coords(diagram);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
-                if(!_moveStarted && Math.hypot(dx, dy) > _behavior.dragSize()) {
+                if(!_moveStarted && Math.hypot(dx, dy) > _mode.dragSize()) {
                     _moveStarted = true;
                     // prevent click event for this node setting selection just to this
                     if(_downNode)
@@ -111,7 +111,7 @@ dc_graph.move_nodes = function(options) {
         node.on('mouseup.move-nodes', null);
     }
 
-    var _behavior = dc_graph.behavior('move-nodes', {
+    var _mode = dc_graph.mode('move-nodes', {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
@@ -126,7 +126,7 @@ dc_graph.move_nodes = function(options) {
     });
 
     // minimum distance that is considered a drag, not a click
-    _behavior.dragSize = property(5);
+    _mode.dragSize = property(5);
 
-    return _behavior;
+    return _mode;
 };

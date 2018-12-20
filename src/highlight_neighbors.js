@@ -3,11 +3,11 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
     var highlight_things_group = dc_graph.register_highlight_things_group(thingsgroup || 'highlight-things-group');
 
     function highlight_node(nodeid) {
-        var diagram = _behavior.parent();
+        var diagram = _mode.parent();
         var nodeset = {}, edgeset = {};
         if(nodeid) {
             nodeset[nodeid] = true;
-            _behavior.parent().selectAllEdges().each(function(e) {
+            _mode.parent().selectAllEdges().each(function(e) {
                 if(diagram.nodeKey.eval(e.source) === nodeid) {
                     edgeset[diagram.edgeKey.eval(e)] = true;
                     nodeset[diagram.nodeKey.eval(e.target)] = true;
@@ -24,7 +24,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
     function add_behavior(diagram, node, edge) {
         node
             .on('mouseover.highlight-neighbors', function(n) {
-                highlight_neighbors_group.highlight_node(_behavior.parent().nodeKey.eval(n));
+                highlight_neighbors_group.highlight_node(_mode.parent().nodeKey.eval(n));
             })
             .on('mouseout.highlight-neighbors', function(n) {
                 highlight_neighbors_group.highlight_node(null);
@@ -38,7 +38,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
         highlight_neighbors_group.highlight_node(null);
     }
 
-    var _behavior = dc_graph.behavior('highlight-neighbors', {
+    var _mode = dc_graph.mode('highlight-neighbors', {
         add_behavior: add_behavior,
         remove_behavior: function(diagram, node, edge) {
             remove_behavior(diagram, node, edge);
@@ -48,10 +48,10 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
             if(p && !p.child('highlight-things'))
                 p.child('highlight-things',
                         dc_graph.highlight_things(includeprops, excludeprops)
-                          .durationOverride(_behavior.durationOverride()));
+                          .durationOverride(_mode.durationOverride()));
         }
     });
-    _behavior.durationOverride = property(undefined);
-    return _behavior;
+    _mode.durationOverride = property(undefined);
+    return _mode;
 };
 

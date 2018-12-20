@@ -6,16 +6,16 @@ dc_graph.fix_nodes = function(options) {
 
     var _execute = {
         nodeid: function(n) {
-            return _behavior.parent().nodeKey.eval(n);
+            return _mode.parent().nodeKey.eval(n);
         },
         sourceid: function(e) {
-            return _behavior.parent().edgeSource.eval(e);
+            return _mode.parent().edgeSource.eval(e);
         },
         targetid: function(e) {
-            return _behavior.parent().edgeTarget.eval(e);
+            return _mode.parent().edgeTarget.eval(e);
         },
         get_fix: function(n) {
-            return _behavior.parent().nodeFixed.eval(n);
+            return _mode.parent().nodeFixed.eval(n);
         },
         fix_node: function(n, pos) {
             n[_fixedPosTag] = pos;
@@ -32,22 +32,22 @@ dc_graph.fix_nodes = function(options) {
     };
 
     function request_fixes(fixes) {
-        _behavior.strategy().request_fixes(_execute, fixes);
+        _mode.strategy().request_fixes(_execute, fixes);
         tell_then_set(find_changes()).then(function() {
-            _behavior.parent().redraw();
+            _mode.parent().redraw();
         });
     }
     function new_node(nid, n, pos) {
-        _behavior.strategy().new_node(_execute, nid, n, pos);
+        _mode.strategy().new_node(_execute, nid, n, pos);
     }
     function new_edge(eid, sourceid, targetid) {
         var source = _nodes[sourceid], target = _nodes[targetid];
-        _behavior.strategy().new_edge(_execute, eid, source, target);
+        _mode.strategy().new_edge(_execute, eid, source, target);
     }
     function find_changes() {
         var changes = [];
         _wnodes.forEach(function(n) {
-            var key = _behavior.parent().nodeKey.eval(n),
+            var key = _mode.parent().nodeKey.eval(n),
                 fixPos = _fixes[key],
                 oldFixed = n.orig.value[_fixedPosTag],
                 changed = false;
@@ -68,9 +68,9 @@ dc_graph.fix_nodes = function(options) {
             _execute.unfix_node(n.orig.value);
     }
     function tell_then_set(changes) {
-        var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
+        var callback = _mode.fixNode() || function(n, pos) { return Promise.resolve(pos); };
         var promises = changes.map(function(change) {
-            var key = _behavior.parent().nodeKey.eval(change.n);
+            var key = _mode.parent().nodeKey.eval(change.n);
             return callback(key, change.fixed)
                 .then(function(fixed) {
                     execute_change(change.n, fixed);
@@ -84,9 +84,9 @@ dc_graph.fix_nodes = function(options) {
         });
     }
     function tell_changes(changes) {
-        var callback = _behavior.fixNode() || function(n, pos) { return Promise.resolve(pos); };
+        var callback = _mode.fixNode() || function(n, pos) { return Promise.resolve(pos); };
         var promises = changes.map(function(change) {
-            var key = _behavior.parent().nodeKey.eval(change.n);
+            var key = _mode.parent().nodeKey.eval(change.n);
             return callback(key, change.fixed);
         });
         return Promise.all(promises);
@@ -105,7 +105,7 @@ dc_graph.fix_nodes = function(options) {
         }
     }
     function clear_fixes() {
-        _behavior.strategy().clear_all_fixes && _behavior.strategy().clear_all_fixes();
+        _mode.strategy().clear_all_fixes && _mode.strategy().clear_all_fixes();
         _execute.clear_fixes();
     }
     function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
@@ -113,17 +113,17 @@ dc_graph.fix_nodes = function(options) {
         _wnodes = wnodes;
         _edges = edges;
         _wedges = wedges;
-        if(_behavior.strategy().on_data) {
-            _behavior.strategy().on_data(_execute, nodes, wnodes, edges, wedges, ports, wports); // ghastly
+        if(_mode.strategy().on_data) {
+            _mode.strategy().on_data(_execute, nodes, wnodes, edges, wedges, ports, wports); // ghastly
             var changes = find_changes();
             set_changes(changes);
             // can't wait for backend to acknowledge/approve so just set then blast
-            if(_behavior.reportOverridesAsynchronously())
+            if(_mode.reportOverridesAsynchronously())
                 tell_changes(changes); // dangling promise
         }
     }
 
-    var _behavior = {
+    var _mode = {
         parent: property(null).react(function(p) {
             fix_nodes_group
                 .on('request_fixes.fix-nodes', p ? request_fixes : null)
@@ -131,8 +131,8 @@ dc_graph.fix_nodes = function(options) {
                 .on('new_edge.fix_nodes', p ? new_edge : null);
             if(p) {
                 p.on('data.fix-nodes', on_data);
-            } else if(_behavior.parent())
-                _behavior.parent().on('data.fix-nodes', null);
+            } else if(_mode.parent())
+                _mode.parent().on('data.fix-nodes', null);
         }),
         // callback for setting & fixing node position
         fixNode: property(null),
@@ -144,7 +144,7 @@ dc_graph.fix_nodes = function(options) {
         reportOverridesAsynchronously: property(true)
     };
 
-    return _behavior;
+    return _mode;
 };
 
 dc_graph.fix_nodes.strategy = {};

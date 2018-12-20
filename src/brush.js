@@ -32,28 +32,28 @@ dc_graph.brush = function() {
             _gBrush = null;
         }
     }
-    var _behavior = dc_graph.behavior('brush', {
+    var _mode = dc_graph.mode('brush', {
         add_behavior: function() {},
         remove_behavior: remove_brush
     });
 
-    _behavior.on = function(event, f) {
+    _mode.on = function(event, f) {
         if(arguments.length === 1)
             return _dispatch.on(event);
         _dispatch.on(event, f);
         return this;
     };
-    _behavior.activate = function() {
-        install_brush(_behavior.parent());
+    _mode.activate = function() {
+        install_brush(_mode.parent());
         return this;
     };
-    _behavior.deactivate = function() {
+    _mode.deactivate = function() {
         remove_brush();
         return this;
     };
-    _behavior.isActive = function () {
+    _mode.isActive = function () {
         return !!_gBrush;
     };
 
-    return _behavior;
+    return _mode;
 };

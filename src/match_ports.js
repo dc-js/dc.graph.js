@@ -26,14 +26,14 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
         });
     }
     function is_valid(sourcePort, targetPort) {
-        return (_behavior.allowParallel() || !has_parallel(sourcePort, targetPort))
-            && _behavior.isValid()(sourcePort, targetPort);
+        return (_strategy.allowParallel() || !has_parallel(sourcePort, targetPort))
+            && _strategy.isValid()(sourcePort, targetPort);
     }
     function why_invalid(sourcePort, targetPort) {
-        return !_behavior.allowParallel() && has_parallel(sourcePort, targetPort) && "can't connect two edges between the same two ports" ||
-            _behavior.whyInvalid()(sourcePort, targetPort);
+        return !_strategy.allowParallel() && has_parallel(sourcePort, targetPort) && "can't connect two edges between the same two ports" ||
+            _strategy.whyInvalid()(sourcePort, targetPort);
     }
-    var _behavior = {
+    var _strategy = {
         isValid: property(function(sourcePort, targetPort) {
             return targetPort !== sourcePort && targetPort.name === sourcePort.name;
         }),
@@ -97,5 +97,5 @@ dc_graph.match_ports = function(diagram, symbolPorts) {
             return true;
         }
     };
-    return _behavior;
+    return _strategy;
 };

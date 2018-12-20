@@ -26,7 +26,7 @@ dc_graph.highlight_radius = function(options) {
         console.assert(_graph);
         var nodeset = {}, edgeset = {};
         nodes.forEach(function(nkey) {
-            recurse(_graph.node(nkey), _behavior.radius(), nodeset, edgeset);
+            recurse(_graph.node(nkey), _mode.radius(), nodeset, edgeset);
         });
         if(!Object.keys(nodeset).length && !Object.keys(edgeset).length)
             nodeset = edgeset = null;
@@ -48,15 +48,15 @@ dc_graph.highlight_radius = function(options) {
                 select_nodes_group.set_changed(sel2);
             }, 0);
     }
-    var _behavior = {
+    var _mode = {
         parent: function(p) {
             if(p) {
                 p.on('data.fix-nodes', on_data);
-            } else if(_behavior.parent())
-                _behavior.parent().on('data.fix-nodes', null);
+            } else if(_mode.parent())
+                _mode.parent().on('data.fix-nodes', null);
             select_nodes_group.on('set_changed', selection_changed);
         }
     };
-    _behavior.radius = property(1);
-    return _behavior;
+    _mode.radius = property(1);
+    return _mode;
 };

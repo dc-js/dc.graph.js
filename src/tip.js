@@ -23,45 +23,45 @@ dc_graph.tip = function(options) {
             _d3tip = d3.tip()
                 .attr('class', options.class || 'd3-tip')
                 .html(function(d) { return "<span>" + d + "</span>"; })
-                .direction(_behavior.direction());
-            if(_behavior.offset())
-                _d3tip.offset(_behavior.offset());
+                .direction(_mode.direction());
+            if(_mode.offset())
+                _d3tip.offset(_mode.offset());
             parent.svg().call(_d3tip);
         }
     }
     function fetch_and_show_content(d) {
-        if(_behavior.disabled() || _behavior.selection().exclude && _behavior.selection().exclude(d3.event.target)) {
+        if(_mode.disabled() || _mode.selection().exclude && _mode.selection().exclude(d3.event.target)) {
             hide_tip.call(this);
             return;
         }
         var target = this,
             next = function() {
-                _behavior.content()(d, function(content) {
+                _mode.content()(d, function(content) {
                     _d3tip.show.call(target, content, target);
                     d3.select('div.d3-tip')
                         .selectAll('a.tip-link')
                         .on('click', function() {
                             d3.event.preventDefault();
-                            if(_behavior.linkCallback())
-                                _behavior.linkCallback()(this.id);
+                            if(_mode.linkCallback())
+                                _mode.linkCallback()(this.id);
                         });
                     _dispatch.tipped(d);
                 });
             };
         if(_hideTimeout)
             window.clearTimeout(_hideTimeout);
-        if(_behavior.delay()) {
+        if(_mode.delay()) {
             window.clearTimeout(_showTimeout);
-            _showTimeout = window.setTimeout(next, _behavior.delay());
+            _showTimeout = window.setTimeout(next, _mode.delay());
         }
         else next();
     }
 
     function check_hide_tip() {
         if(d3.event.relatedTarget &&
-           (!_behavior.selection().exclude || !_behavior.selection().exclude(d3.event.target)) &&
+           (!_mode.selection().exclude || !_mode.selection().exclude(d3.event.target)) &&
            (this && this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
-            _behavior.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
+            _mode.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
             return false;
         return true;
     }
@@ -84,20 +84,20 @@ dc_graph.tip = function(options) {
         if(!check_hide_tip.apply(this))
             return;
         preempt_tip();
-        if(_behavior.hideDelay())
+        if(_mode.hideDelay())
             _hideTimeout = window.setTimeout(function () {
                 _d3tip.hide();
-            }, _behavior.hideDelay());
+            }, _mode.hideDelay());
         else
             _d3tip.hide();
     }
 
     function add_behavior(diagram, node, edge, ehover) {
         init(diagram);
-        _behavior.programmatic() || _behavior.selection().select(diagram, node, edge, ehover)
+        _mode.programmatic() || _mode.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, fetch_and_show_content)
             .on('mouseout.' + _namespace, hide_tip_delay);
-        if(_behavior.clickable()) {
+        if(_mode.clickable()) {
             d3.select('div.d3-tip')
                 .on('mouseover.' + _namespace, function() {
                     if(_hideTimeout)
@@ -107,12 +107,12 @@ dc_graph.tip = function(options) {
         }
     }
     function remove_behavior(diagram, node, edge, ehover) {
-        _behavior.programmatic() || _behavior.selection().select(diagram, node, edge, ehover)
+        _mode.programmatic() || _mode.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, null)
             .on('mouseout.' + _namespace, null);
     }
 
-    var _behavior = dc_graph.behavior(_namespace, {
+    var _mode = dc_graph.mode(_namespace, {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         laterDraw: true
@@ -133,7 +133,7 @@ dc_graph.tip = function(options) {
      * var tip = dc_graph.tip();
      * tip.content(tip.table());
      **/
-    _behavior.direction = property('n');
+    _mode.direction = property('n');
 
     /**
      * Specifies the function to generate content for the tooltip. This function has the
@@ -146,28 +146,28 @@ dc_graph.tip = function(options) {
      * @param {Function} [content]
      * @return {Function}
      * @example
-     * // Default behavior: assume it's a node, show node title
+     * // Default mode: assume it's a node, show node title
      * var tip = dc_graph.tip().content(function(n, k) {
-     *     k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
+     *     k(_mode.parent() ? _mode.parent().nodeTitle.eval(n) : '');
      * });
      **/
-    _behavior.content = property(function(n, k) {
-        k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
+    _mode.content = property(function(n, k) {
+        k(_mode.parent() ? _mode.parent().nodeTitle.eval(n) : '');
     });
 
-    _behavior.on = function(event, f) {
+    _mode.on = function(event, f) {
         return _dispatch.on(event, f);
     };
 
-    _behavior.disabled = property(false);
-    _behavior.programmatic = property(false);
+    _mode.disabled = property(false);
+    _mode.programmatic = property(false);
 
-    _behavior.displayTip = function(filter, n, cb) {
+    _mode.displayTip = function(filter, n, cb) {
         if(typeof filter !== 'function') {
             var d = filter;
             filter = function(d2) { return d2 === d; };
         }
-        var found = _behavior.selection().select(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), null)
+        var found = _mode.selection().select(_mode.parent(), _mode.parent().selectAllNodes(), _mode.parent().selectAllEdges(), null)
             .filter(filter);
         if(found.size() > 0) {
             var action = fetch_and_show_content;
@@ -181,29 +181,29 @@ dc_graph.tip = function(options) {
             d = d3.select(flattened[which]).datum();
             if(cb)
                 cb(d);
-            if(_behavior.programmatic())
+            if(_mode.programmatic())
                 found.on('mouseout', hide_tip_delay);
         }
-        return _behavior;
+        return _mode;
     };
 
-    _behavior.hideTip = function(delay) {
+    _mode.hideTip = function(delay) {
         if(_d3tip) {
             if(delay)
                 hide_tip_delay();
             else
                 hide_tip();
         }
-        return _behavior;
+        return _mode;
     };
-    _behavior.selection = property(dc_graph.tip.select_node_and_edge());
-    _behavior.showDelay = _behavior.delay = property(0);
-    _behavior.hideDelay = property(200);
-    _behavior.offset = property(null);
-    _behavior.clickable = property(false);
-    _behavior.linkCallback = property(null);
+    _mode.selection = property(dc_graph.tip.select_node_and_edge());
+    _mode.showDelay = _mode.delay = property(0);
+    _mode.hideDelay = property(200);
+    _mode.offset = property(null);
+    _mode.clickable = property(false);
+    _mode.linkCallback = property(null);
 
-    return _behavior;
+    return _mode;
 };
 
 /**

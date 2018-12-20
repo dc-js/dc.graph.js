@@ -72,7 +72,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
     }
 
     function add_behavior(diagram, node, edge) {
-        var condition = _behavior.noneIsAll() ? function(t) {
+        var condition = _mode.noneIsAll() ? function(t) {
             return !_selected.length || contains(_selected, thinginess.key(t));
         } : function(t) {
             return contains(_selected, thinginess.key(t));
@@ -91,7 +91,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
             if(_mousedownThing !== t)
                 return;
             var key = thinginess.key(t), newSelected;
-            if(_behavior.multipleSelect()) {
+            if(_mode.multipleSelect()) {
                 if(isUnion(d3.event))
                     newSelected = add_array(_selected, key);
                 else if(isToggle(d3.event))
@@ -102,14 +102,14 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
             things_group.set_changed(newSelected);
         });
 
-        if(_behavior.multipleSelect()) {
+        if(_mode.multipleSelect()) {
             var brush_mode = diagram.child('brush');
             brush_mode.activate();
         }
         else
-            background_click_event(diagram, _behavior.clickBackgroundClears());
+            background_click_event(diagram, _mode.clickBackgroundClears());
 
-        if(_behavior.autoCropSelection()) {
+        if(_mode.autoCropSelection()) {
             // drop any selected which no longer exist in the diagram
             var present = thinginess.clickables(diagram, node, edge).data().map(thinginess.key);
             var now_selected = _selected.filter(function(k) { return contains(present, k); });
@@ -124,12 +124,12 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         thinginess.removeStyles();
     }
 
-    var _behavior = dc_graph.behavior(things_name, {
+    var _mode = dc_graph.mode(things_name, {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
             things_group.on('set_changed.' + things_name, p ? selection_changed(p) : null);
-            if(p && _behavior.multipleSelect()) {
+            if(p && _mode.multipleSelect()) {
                 var brush_mode = p.child('brush');
                 if(!brush_mode) {
                     brush_mode = dc_graph.brush();
@@ -143,21 +143,21 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         laterDraw: thinginess.laterDraw || false
     });
 
-    _behavior.multipleSelect = property(true);
-    _behavior.clickBackgroundClears = property(true, false).react(function(v) {
-        if(!_behavior.multipleSelect() && _behavior.parent())
-            background_click_event(_behavior.parent(), v);
+    _mode.multipleSelect = property(true);
+    _mode.clickBackgroundClears = property(true, false).react(function(v) {
+        if(!_mode.multipleSelect() && _mode.parent())
+            background_click_event(_mode.parent(), v);
     });
-    _behavior.noneIsAll = property(false);
+    _mode.noneIsAll = property(false);
     // if you're replacing the data, you probably want the selection not to be preserved when a thing
     // with the same key re-appears later (true). however, if you're filtering dc.js-style, you
     // probably want filters to be independent between diagrams (false)
-    _behavior.autoCropSelection = property(true);
+    _mode.autoCropSelection = property(true);
     // if you want to do the cool things select_things can do
-    _behavior.thinginess = function() {
+    _mode.thinginess = function() {
         return thinginess;
     };
-    return _behavior;
+    return _mode;
 };
 
 dc_graph.select_things_group = function(brushgroup, type) {

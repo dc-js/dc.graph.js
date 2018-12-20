@@ -2,12 +2,12 @@ dc_graph.delete_nodes = function(id_tag, options) {
     options = options || {};
     var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
     var select_edges_group = dc_graph.select_things_group(options.select_edges_group || 'select-edges-group', 'select-edges');
-    var _behavior = dc_graph.delete_things(select_nodes_group, 'delete-nodes', id_tag);
+    var _mode = dc_graph.delete_things(select_nodes_group, 'delete-nodes', id_tag);
 
-    _behavior.preDelete(function(nodes) {
+    _mode.preDelete(function(nodes) {
         // request a delete of all attached edges, using the delete edges mode
         // kind of horrible
-        var diagram = _behavior.parent();
+        var diagram = _mode.parent();
         var deleteEdgesMode = diagram.child('delete-edges');
         if(!deleteEdgesMode)
             return null; // reject if we can't delete the edges
@@ -29,5 +29,5 @@ dc_graph.delete_nodes = function(id_tag, options) {
             });
         });
     });
-    return _behavior;
+    return _mode;
 };

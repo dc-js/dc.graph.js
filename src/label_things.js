@@ -69,7 +69,7 @@ dc_graph.label_things = function(options) {
     function remove_behavior(diagram, node, edge) {
     }
 
-    var _behavior = dc_graph.behavior(options.label_type, {
+    var _mode = dc_graph.mode(options.label_type, {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
@@ -83,10 +83,10 @@ dc_graph.label_things = function(options) {
             }
         }
     });
-    _behavior.editSelection = function(eventOptions) {
-        edit_selection(_behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), eventOptions);
+    _mode.editSelection = function(eventOptions) {
+        edit_selection(_mode.parent().selectAllNodes(), _mode.parent().selectAllEdges(), eventOptions);
     };
-    return _behavior;
+    return _mode;
 };
 
 dc_graph.label_things_group = function(brushgroup, type) {

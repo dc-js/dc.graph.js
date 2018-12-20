@@ -7,33 +7,33 @@ dc_graph.highlight_things = function(includeprops, excludeprops, modename, group
         _active = nodeset || edgeset;
         _nodeset = nodeset || {};
         _edgeset = edgeset || {};
-        _behavior.parent().requestRefresh(_behavior.durationOverride());
+        _mode.parent().requestRefresh(_mode.durationOverride());
     }
     function add_behavior(diagram) {
         diagram.cascade(cascbase, true, node_edge_conditions(
             function(n) {
-                return _nodeset[_behavior.parent().nodeKey.eval(n)];
+                return _nodeset[_mode.parent().nodeKey.eval(n)];
             }, function(e) {
-                return _edgeset[_behavior.parent().edgeKey.eval(e)];
+                return _edgeset[_mode.parent().edgeKey.eval(e)];
             }, includeprops));
         diagram.cascade(cascbase+10, true, node_edge_conditions(
             function(n) {
-                return _active && !_nodeset[_behavior.parent().nodeKey.eval(n)];
+                return _active && !_nodeset[_mode.parent().nodeKey.eval(n)];
             }, function(e) {
-                return _active && !_edgeset[_behavior.parent().edgeKey.eval(e)];
+                return _active && !_edgeset[_mode.parent().edgeKey.eval(e)];
             }, excludeprops));
     }
     function remove_behavior(diagram) {
         diagram.cascade(cascbase, false, includeprops);
         diagram.cascade(cascbase + 10, false, excludeprops);
     }
-    var _behavior = dc_graph.behavior(modename, {
+    var _mode = dc_graph.mode(modename, {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
             highlight_things_group.on('highlight.' + modename, p ? highlight : null);
         }
     });
-    _behavior.durationOverride = property(undefined);
-    return _behavior;
+    _mode.durationOverride = property(undefined);
+    return _mode;
 };

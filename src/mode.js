@@ -1,12 +1,12 @@
-dc_graph.behavior = function(event_namespace, options) {
-    var _behavior = {};
+dc_graph.mode = function(event_namespace, options) {
+    var _mode = {};
     var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
 
     /**
      #### .parent([object])
-     Assigns this behavior to a diagram.
+     Assigns this mode to a diagram.
      **/
-    _behavior.parent = property(null)
+    _mode.parent = property(null)
         .react(function(p) {
             var diagram;
             if(p) {
@@ -25,8 +25,8 @@ dc_graph.behavior = function(event_namespace, options) {
                     options.remove_behavior(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
                 });
             }
-            else if(_behavior.parent()) {
-                diagram = _behavior.parent();
+            else if(_mode.parent()) {
+                diagram = _mode.parent();
                 diagram.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
                     options.remove_behavior(diagram, node, edge, ehover);
                     diagram.on(_eventName + '.' + event_namespace, null);
@@ -34,5 +34,7 @@ dc_graph.behavior = function(event_namespace, options) {
             }
             options.parent && options.parent(p);
         });
-    return _behavior;
+    return _mode;
 };
+
+dc_graph.behavior = deprecate_function('dc_graph.behavior has been renamed dc_graph.mode', dc_graph.mode);

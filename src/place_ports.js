@@ -58,7 +58,7 @@ dc_graph.place_ports = function() {
         }
         function misses(p, p2) {
             var dist = distance(p, p2);
-            var misses = dist > _behavior.minDistance();
+            var misses = dist > _mode.minDistance();
             return misses;
         }
         function rand_within(a, b) {
@@ -152,7 +152,7 @@ dc_graph.place_ports = function() {
             inside = inside.filter(function(p) { return !unplaced.includes(p); });
 
             // place any remaining by trying random spots within the range until it misses all or we give up
-            var patience = _behavior.patience(), maxdist = 0, maxvec;
+            var patience = _mode.patience(), maxdist = 0, maxvec;
             while(unplaced.length) {
                 var p = unplaced[0];
                 p.vec = a_to_v(rand_within(p.abounds[0], p.abounds[1]));
@@ -162,7 +162,7 @@ dc_graph.place_ports = function() {
                     maxdist = mindist;
                     maxvec = p.vec;
                 }
-                if(!patience-- || mindist > _behavior.minDistance()) {
+                if(!patience-- || mindist > _mode.minDistance()) {
                     if(patience<0) {
                         console.warn('ran out of patience placing a port');
                         p.vec = maxvec;
@@ -170,18 +170,18 @@ dc_graph.place_ports = function() {
                     }
                     inside.push(p);
                     unplaced.shift();
-                    patience = _behavior.patience();
+                    patience = _mode.patience();
                     maxdist = 0;
                 }
             }
         }
     };
-    var _behavior = {
+    var _mode = {
         parent: property(null).react(function(p) {
             if(p) {
                 p.on('receivedLayout.place-ports', received_layout);
-            } else if(_behavior.parent())
-                _behavior.parent().on('receivedLayout.place-ports', null);
+            } else if(_mode.parent())
+                _mode.parent().on('receivedLayout.place-ports', null);
         }),
         // minimum distance between ports
         minDistance: property(20),
@@ -189,5 +189,5 @@ dc_graph.place_ports = function() {
         patience: property(20)
     };
 
-    return _behavior;
+    return _mode;
 };

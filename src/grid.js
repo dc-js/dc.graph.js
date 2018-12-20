@@ -14,8 +14,8 @@ dc_graph.grid = function() {
     function draw(diagram) {
         _gridLayer = diagram.g().selectAll('g.grid-layer').data([0]);
         _gridLayer.enter().append('g').attr('class', 'grid-layer');
-        var ofs = _behavior.wholeOnLines() ? 0 : 0.5;
-        var vline_data = _scale >= _behavior.threshold() ? d3.range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1]) + 1) : [];
+        var ofs = _mode.wholeOnLines() ? 0 : 0.5;
+        var vline_data = _scale >= _mode.threshold() ? d3.range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1]) + 1) : [];
         var vlines = _gridLayer.selectAll('line.grid-line.vertical')
             .data(vline_data, function(d) { return d - ofs; });
         vlines.exit().remove();
@@ -30,7 +30,7 @@ dc_graph.grid = function() {
             y1: _yDomain[0],
             y2: _yDomain[1]
         });
-        var hline_data = _scale >= _behavior.threshold() ? d3.range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1]) + 1) : [];
+        var hline_data = _scale >= _mode.threshold() ? d3.range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1]) + 1) : [];
         var hlines = _gridLayer.selectAll('line.grid-line.horizontal')
             .data(hline_data, function(d) { return d - ofs; });
         hlines.exit().remove();
@@ -52,7 +52,7 @@ dc_graph.grid = function() {
         _scale = scale;
         _xDomain = xDomain,
         _yDomain = yDomain;
-        draw(_behavior.parent());
+        draw(_mode.parent());
     }
 
     function infer_and_draw(diagram) {
@@ -63,7 +63,7 @@ dc_graph.grid = function() {
         draw(diagram);
     }
 
-    var _behavior = dc_graph.behavior('highlight-paths', {
+    var _mode = dc_graph.mode('highlight-paths', {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
@@ -74,10 +74,10 @@ dc_graph.grid = function() {
         }
     });
 
-    _behavior.threshold = property(4);
-    _behavior.wholeOnLines = property(true);
+    _mode.threshold = property(4);
+    _mode.wholeOnLines = property(true);
 
-    return _behavior;
+    return _mode;
 };
 
 

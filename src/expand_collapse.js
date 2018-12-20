@@ -410,7 +410,7 @@ dc_graph.expand_collapse = function(options) {
         options.expandedNodes(map);
     }
 
-    var _behavior = dc_graph.behavior('expand-collapse', {
+    var _mode = dc_graph.mode('expand-collapse', {
         add_behavior: add_behavior,
         remove_behavior: remove_behavior,
         parent: function(p) {
@@ -422,8 +422,8 @@ dc_graph.expand_collapse = function(options) {
         }
     });
 
-    _behavior.expand = expand;
-    _behavior.expandNodes = expandNodes;
-    _behavior.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
-    return _behavior;
+    _mode.expand = expand;
+    _mode.expandNodes = expandNodes;
+    _mode.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
+    return _mode;
 };

@@ -9,35 +9,35 @@ dc_graph.label_nodes = function(options) {
 
     options.find_thing = function(key, node, edge) {
         return node.filter(function(n) {
-            return _behavior.parent().nodeKey.eval(n) === key;
+            return _mode.parent().nodeKey.eval(n) === key;
         });
     };
     options.hide_thing_label = function(node, whether) {
-        var contents = _behavior.parent().content(_behavior.parent().nodeContent.eval(node.datum()));
+        var contents = _mode.parent().content(_mode.parent().nodeContent.eval(node.datum()));
         contents.selectText(node).attr('visibility', whether ? 'hidden' : 'visible');
     };
     options.thing_box = function(node, eventOptions) {
-        var contents = _behavior.parent().content(_behavior.parent().nodeContent.eval(node.datum())),
+        var contents = _mode.parent().content(_mode.parent().nodeContent.eval(node.datum())),
             box = contents.textbox(node);
         box.x += node.datum().cola.x;
         box.y += node.datum().cola.y;
         return box;
     };
     options.thing_label = function(node) {
-        return _behavior.parent().nodeLabel.eval(node.datum());
+        return _mode.parent().nodeLabel.eval(node.datum());
     };
     options.accept = function(node, text) {
-        var callback = _behavior.changeNodeLabel() ?
-                _behavior.changeNodeLabel()(_behavior.parent().nodeKey.eval(node.datum()), text) :
+        var callback = _mode.changeNodeLabel() ?
+                _mode.changeNodeLabel()(_mode.parent().nodeKey.eval(node.datum()), text) :
                 Promise.resolve(text);
         return callback.then(function(text2) {
             var n = node.datum();
             n.orig.value[_labelTag] = text2;
-            _behavior.parent().redrawGroup();
+            _mode.parent().redrawGroup();
         });
     };
 
-    var _behavior = dc_graph.label_things(options);
-    _behavior.changeNodeLabel = property(null);
-    return _behavior;
+    var _mode = dc_graph.label_things(options);
+    _mode.changeNodeLabel = property(null);
+    return _mode;
 };
