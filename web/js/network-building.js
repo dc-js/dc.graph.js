@@ -86,8 +86,8 @@ var select_edges = dc_graph.select_edges({
     edgeStrokeWidth: 2
 }).multipleSelect(false);
 
-var label_nodes = dc_graph.label_nodes(),
-    label_edges = dc_graph.label_edges();
+var label_nodes = dc_graph.label_nodes({class: 'node-label'}),
+    label_edges = dc_graph.label_edges({class: 'edge-label'});
 
 var delete_nodes = dc_graph.delete_nodes()
         .crossfilterAccessor(function(diagram) {
