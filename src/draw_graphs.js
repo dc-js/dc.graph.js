@@ -159,7 +159,7 @@ dc_graph.draw_graphs = function(options) {
         return false;
     }
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         var select_nodes = diagram.child('select-nodes');
         if(select_nodes) {
             if(_mode.clickCreatesNodes())
@@ -348,7 +348,7 @@ dc_graph.draw_graphs = function(options) {
             _edgeLayer = diagram.g().append('g').attr('class', 'draw-graphs');
     }
 
-    function remove_behavior(diagram, node, edge, ehover) {
+    function remove(diagram, node, edge, ehover) {
         node
             .on('mousedown.draw-graphs', null)
             .on('mousemove.draw-graphs', null)
@@ -360,8 +360,8 @@ dc_graph.draw_graphs = function(options) {
     }
 
     var _mode = dc_graph.mode('highlight-paths', {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior
+        draw: draw,
+        remove: remove
     });
 
     // update the data source/destination

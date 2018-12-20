@@ -27,7 +27,7 @@ dc_graph.move_nodes = function(options) {
             f(n, key);
         });
     }
-    function add_behavior(diagram, node, edge) {
+    function draw(diagram, node, edge) {
         node.on('mousedown.move-nodes', function(n) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
@@ -105,15 +105,15 @@ dc_graph.move_nodes = function(options) {
             .on('mouseup.move-nodes', mouse_up);
     }
 
-    function remove_behavior(diagram, node, edge) {
+    function remove(diagram, node, edge) {
         node.on('mousedown.move-nodes', null);
         node.on('mousemove.move-nodes', null);
         node.on('mouseup.move-nodes', null);
     }
 
     var _mode = dc_graph.mode('move-nodes', {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             select_nodes_group.on('set_changed.move-nodes', p ? selection_changed(p) : null);
             if(p) {

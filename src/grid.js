@@ -2,11 +2,11 @@ dc_graph.grid = function() {
     var _gridLayer = null;
     var _translate, _scale, _xDomain, _yDomain;
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         //infer_and_draw(diagram);
     }
 
-    function remove_behavior(diagram, node, edge, ehover) {
+    function remove(diagram, node, edge, ehover) {
         if(_gridLayer)
             _gridLayer.remove();
     }
@@ -64,8 +64,8 @@ dc_graph.grid = function() {
     }
 
     var _mode = dc_graph.mode('highlight-paths', {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             if(p) {
                 p.on('zoomed.grid', on_zoom);

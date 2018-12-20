@@ -444,21 +444,21 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
             .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _mode.avoidSharpTurns()); });
     };
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         _layer = _mode.parent().select('g.draw').selectAll('g.spline-layer').data([0]);
         _layer.enter().append('g').attr('class', 'spline-layer');
 
         drawSpline(_paths);
     }
 
-    function remove_behavior(diagram, node, edge, ehover) {
+    function remove(diagram, node, edge, ehover) {
     }
 
     var _mode = dc_graph.mode('draw-spline-paths', {
         laterDraw: true,
-        add_behavior: add_behavior,
-        remove_behavior: function(diagram, node, edge, ehover) {
-            remove_behavior(diagram, node, edge, ehover);
+        draw: draw,
+        remove: function(diagram, node, edge, ehover) {
+            remove(diagram, node, edge, ehover);
             return this;
         },
         parent: function(p) {

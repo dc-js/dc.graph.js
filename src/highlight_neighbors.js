@@ -21,7 +21,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
         }
         else highlight_things_group.highlight(null, null);
     }
-    function add_behavior(diagram, node, edge) {
+    function draw(diagram, node, edge) {
         node
             .on('mouseover.highlight-neighbors', function(n) {
                 highlight_neighbors_group.highlight_node(_mode.parent().nodeKey.eval(n));
@@ -31,7 +31,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
             });
     }
 
-    function remove_behavior(diagram, node, edge) {
+    function remove(diagram, node, edge) {
         node
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
@@ -39,9 +39,9 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
     }
 
     var _mode = dc_graph.mode('highlight-neighbors', {
-        add_behavior: add_behavior,
-        remove_behavior: function(diagram, node, edge) {
-            remove_behavior(diagram, node, edge);
+        draw: draw,
+        remove: function(diagram, node, edge) {
+            remove(diagram, node, edge);
         },
         parent: function(p) {
             highlight_neighbors_group.on('highlight_node.highlight', p ? highlight_node : null);

@@ -92,7 +92,7 @@ dc_graph.tip = function(options) {
             _d3tip.hide();
     }
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         init(diagram);
         _mode.programmatic() || _mode.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, fetch_and_show_content)
@@ -106,15 +106,15 @@ dc_graph.tip = function(options) {
                 .on('mouseout.' + _namespace, hide_tip_delay);
         }
     }
-    function remove_behavior(diagram, node, edge, ehover) {
+    function remove(diagram, node, edge, ehover) {
         _mode.programmatic() || _mode.selection().select(diagram, node, edge, ehover)
             .on('mouseover.' + _namespace, null)
             .on('mouseout.' + _namespace, null);
     }
 
     var _mode = dc_graph.mode(_namespace, {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+        draw: draw,
+        remove: remove,
         laterDraw: true
     });
     /**

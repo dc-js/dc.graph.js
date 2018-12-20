@@ -2,7 +2,7 @@ dc_graph.troubleshoot = function() {
     var _debugLayer = null;
     var _translate, _scale = 1, _xDomain, _yDomain;
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         if(!_debugLayer)
             _debugLayer = diagram.g().append('g').attr({
                 class: 'troubleshoot',
@@ -121,7 +121,7 @@ dc_graph.troubleshoot = function() {
         _scale = scale;
         _xDomain = xDomain;
         _yDomain = yDomain;
-        add_behavior(_mode.parent(), _mode.parent().selectAllNodes(), _mode.parent().selectAllEdges());
+        draw(_mode.parent(), _mode.parent().selectAllNodes(), _mode.parent().selectAllEdges());
     }
 
     function boundary(point, wid, hei) {
@@ -233,15 +233,15 @@ dc_graph.troubleshoot = function() {
             opacity: _mode.xOpacity()
         });
     }
-    function remove_behavior(diagram, node, edge, ehover) {
+    function remove(diagram, node, edge, ehover) {
         if(_debugLayer)
             _debugLayer.remove();
     }
 
     var _mode = dc_graph.mode('highlight-paths', {
         laterDraw: true,
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             if(p) {
                 _translate = p.translate();

@@ -1,6 +1,16 @@
 dc_graph.mode = function(event_namespace, options) {
     var _mode = {};
     var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
+    var draw = options.draw, remove = options.remove;
+
+    if(!draw) {
+        console.warn('behavior.draw has been replaced by mode.draw');
+        draw = options.draw;
+    }
+    if(!remove) {
+        console.warn('behavior.remove has been replaced by mode.remove');
+        remove = options.remove;
+    }
 
     /**
      #### .parent([object])
@@ -13,7 +23,7 @@ dc_graph.mode = function(event_namespace, options) {
                 var first = true;
                 diagram = p;
                 p.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
-                    options.add_behavior(diagram, node, edge, ehover);
+                    draw(diagram, node, edge, ehover);
                     if(first && options.first) {
                         options.first(diagram, node, edge, ehover);
                         first = false;
@@ -22,13 +32,13 @@ dc_graph.mode = function(event_namespace, options) {
                         options.rest(diagram, node, edge, ehover);
                 });
                 p.on('reset.' + event_namespace, function() {
-                    options.remove_behavior(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
+                    remove(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
                 });
             }
             else if(_mode.parent()) {
                 diagram = _mode.parent();
                 diagram.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
-                    options.remove_behavior(diagram, node, edge, ehover);
+                    remove(diagram, node, edge, ehover);
                     diagram.on(_eventName + '.' + event_namespace, null);
                 });
             }

@@ -33,8 +33,8 @@ dc_graph.brush = function() {
         }
     }
     var _mode = dc_graph.mode('brush', {
-        add_behavior: function() {},
-        remove_behavior: remove_brush
+        draw: function() {},
+        remove: remove_brush
     });
 
     _mode.on = function(event, f) {

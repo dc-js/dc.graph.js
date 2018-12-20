@@ -71,7 +71,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         things_group.set_changed(newSelected);
     }
 
-    function add_behavior(diagram, node, edge) {
+    function draw(diagram, node, edge) {
         var condition = _mode.noneIsAll() ? function(t) {
             return !_selected.length || contains(_selected, thinginess.key(t));
         } : function(t) {
@@ -118,15 +118,15 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         }
     }
 
-    function remove_behavior(diagram, node, edge) {
+    function remove(diagram, node, edge) {
         thinginess.clickables(diagram, node, edge).on('click.' + things_name, null);
         diagram.svg().on('click.' + things_name, null);
         thinginess.removeStyles();
     }
 
     var _mode = dc_graph.mode(things_name, {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             things_group.on('set_changed.' + things_name, p ? selection_changed(p) : null);
             if(p && _mode.multipleSelect()) {

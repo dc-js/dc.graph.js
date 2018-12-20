@@ -245,7 +245,7 @@ dc_graph.expand_collapse = function(options) {
         });
     }
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         function enter_node(n) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             _overNode = n;
@@ -357,7 +357,7 @@ dc_graph.expand_collapse = function(options) {
         ));
     }
 
-    function remove_behavior(diagram, node, edge) {
+    function remove(diagram, node, edge) {
         node
             .on('mouseover.expand-collapse', null)
             .on('mouseout.expand-collapse', null);
@@ -411,8 +411,8 @@ dc_graph.expand_collapse = function(options) {
     }
 
     var _mode = dc_graph.mode('expand-collapse', {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             if(p) {
                 _keyboard = p.child('keyboard');

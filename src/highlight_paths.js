@@ -73,7 +73,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
         else return pathsA.concat(pathsB.filter(doesnt_contain_path(pathsA)));
     }
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         diagram
             .cascade(200, true, node_edge_conditions(function(n) {
                 return !!node_on_paths[diagram.nodeKey.eval(n)];
@@ -115,7 +115,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             });
     }
 
-    function remove_behavior(diagram, node, edge, ehover) {
+    function remove(diagram, node, edge, ehover) {
         node
             .on('mouseover.highlight-paths', null)
             .on('mouseout.highlight-paths', null)
@@ -132,9 +132,9 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     }
 
     var _mode = dc_graph.mode('highlight-paths', {
-        add_behavior: add_behavior,
-        remove_behavior: function(diagram, node, edge, ehover) {
-            remove_behavior(diagram, node, edge, ehover);
+        draw: draw,
+        remove: function(diagram, node, edge, ehover) {
+            remove(diagram, node, edge, ehover);
             return this;
         },
         parent: function(p) {

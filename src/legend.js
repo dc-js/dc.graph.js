@@ -19,8 +19,8 @@ dc_graph.legend = function(legend_namespace) {
     }
 
     var _legend = dc_graph.mode(legend_namespace, {
-        add_behavior: redraw,
-        remove_behavior: function() {},
+        draw: redraw,
+        remove: function() {},
         parent: function(p) {
             if(p) {
                 p

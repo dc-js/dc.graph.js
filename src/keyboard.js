@@ -7,7 +7,7 @@ dc_graph.keyboard = function() {
     function keyup() {
         _dispatch.keyup();
     }
-    function add_behavior(diagram) {
+    function draw(diagram) {
         _input_anchor = diagram.svg().selectAll('a#dcgraph-keyboard').data([1]);
         _input_anchor.enter()
             .insert('a', ':first-child').attr({
@@ -22,12 +22,12 @@ dc_graph.keyboard = function() {
             _mode.focus();
         });
     }
-    function remove_behavior(diagram) {
+    function remove(diagram) {
         _input_anchor.remove();
     }
     var _mode = dc_graph.mode('brush', {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior
+        draw: draw,
+        remove: remove
     });
 
     _mode.on = function(event, f) {
