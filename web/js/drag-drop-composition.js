@@ -703,7 +703,8 @@ get_catalog().then(function(catalog) {
 
     var label_nodes = dc_graph.label_nodes({
         labelTag: 'name',
-        align: 'left'
+        align: 'left',
+        class: 'node-label'
     }).changeNodeLabel(function(nodeId, text) {
         var node = _compositionDiagram.getNode(nodeId);
         // execute on server first, which could reject or change text
@@ -713,7 +714,8 @@ get_catalog().then(function(catalog) {
 
     var label_edges = dc_graph.label_edges({
         labelTag: 'name',
-        align: 'center'
+        align: 'center',
+        class: 'edge-label'
     }).changeEdgeLabel(function(edgeId, text) {
         // execute on server first, which could reject or change text
         return Promise.resolve(text);

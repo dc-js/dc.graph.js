@@ -10,14 +10,14 @@
     fill: none;
 }
 
-.dc-graph text.node-label {
+.dc-graph .node-label {
     font: 18px sans-serif;
     text-anchor: middle;
     dominant-baseline: central;
     pointer-events: none;
 }
 
-.dc-graph text.edge-label {
+.dc-graph .edge-label {
     font: 10px sans-serif;
     pointer-events: none;
 }
