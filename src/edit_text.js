@@ -6,11 +6,12 @@ dc_graph.edit_text = function(parent, options) {
         height: '100%',
         width: '100%' // don't wrap
     });
+    var padding = options.padding !== undefined ? options.padding : 2;
     function reposition() {
         var pos;
         switch(options.align) {
         case 'left':
-            pos = [options.box.x, options.box.y];
+            pos = [options.box.x-padding, options.box.y-padding];
             break;
         default:
         case 'center':
@@ -31,7 +32,7 @@ dc_graph.edit_text = function(parent, options) {
     }).style({
         display: 'inline-block',
         'background-color': 'white',
-        padding: '2px'
+        padding: padding + 'px'
     });
 
     function stopProp() {
