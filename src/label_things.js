@@ -24,6 +24,7 @@ dc_graph.label_things = function(options) {
                 {
                     text: eventOptions.text || options.thing_label(thing) || options.default_label,
                     align: options.align,
+                    class: options.class,
                     box: box,
                     selectText: eventOptions.selectText,
                     accept: function(text) {

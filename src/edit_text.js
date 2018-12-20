@@ -26,7 +26,8 @@ dc_graph.edit_text = function(parent, options) {
     var text = options.text || "type on me";
     textdiv.text(text).attr({
         contenteditable: true,
-        width: 'auto'
+        width: 'auto',
+        class: options.class || null
     }).style({
         display: 'inline-block',
         'background-color': 'white',
