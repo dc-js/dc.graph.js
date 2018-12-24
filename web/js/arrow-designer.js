@@ -94,6 +94,7 @@ var engine = dc_graph.manual_layout();
 arrowDiagram
     .width('auto')
     .height('auto')
+    .restrictPan(true)
     .layoutEngine(engine)
     .zoomExtent([1, 256])
     .fitStrategy('align_tl')
