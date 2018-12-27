@@ -645,6 +645,35 @@ function split_bezier_n(p, n) {
     return ret;
 }
 
+// binary search for a point along a bezier that is a certain distance from one of the end points
+// return the bezier cut at that point.
+function chop_bezier(points, end, dist) {
+    var EPS = 0.1, dist2 = dist*dist;
+    var ref, dir;
+    if(end === 'head') {
+        ref = points[points.length-1];
+        dir = -1;
+    } else {
+        ref = points[0];
+        dir = 1;
+    }
+    var parts, d2, t = 0.5, dt = 0.5, dx, dy;
+    do {
+        parts = split_bezier(points, t);
+        dx = ref.x - parts[1][0].x;
+        dy = ref.y - parts[1][0].y;
+        d2 = dx*dx + dy*dy;
+        dt /= 2;
+        if(d2 > dist2)
+            t -= dt*dir;
+        else
+            t += dt*dir;
+        //console.log('dist', dist, 'dir', dir, 'd', d, 't', t, 'dt', dt);
+    }
+    while(dt > 0.0000001 && Math.abs(d2 - dist2) > EPS);
+    return end === 'head' ? parts[0] : parts[1];
+}
+
 dc_graph.no_shape = function() {
     var _shape = {
         parent: property(null),
