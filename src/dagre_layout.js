@@ -94,9 +94,6 @@ dc_graph.dagre_layout = function(id) {
         supportsWebworker: function() {
             return true;
         },
-        needsStage: function(stage) { // stopgap until we have engine chaining
-            return stage === 'ports' || stage === 'edgepos';
-        },
         on: function(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
