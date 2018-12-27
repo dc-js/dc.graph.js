@@ -1,4 +1,4 @@
-dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
+dc_graph.spline_paths = function(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
@@ -478,3 +478,5 @@ dc_graph.draw_spline_paths = function(pathreader, pathprops, hoverprops, selectp
 
     return _mode;
 };
+
+dc_graph.draw_spline_paths = deprecate_function("draw_spline_paths has been renamed spline_paths, please update", dc_graph.spline_paths);
