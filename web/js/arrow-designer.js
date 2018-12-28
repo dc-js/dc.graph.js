@@ -29,6 +29,8 @@ var options = {
                 .redraw();
         }
     },
+    color: 'black',
+    opacity: 1,
     strokewidth: 1,
     arrowsize: 1,
     grid: {
@@ -104,6 +106,8 @@ arrowDiagram
     .nodeLabel(null)
     .nodeStrokeWidth(sync_url.vals.strokewidth)
     .edgeLabel(null)
+    .edgeOpacity(sync_url.vals.opacity)
+    .edgeStroke(sync_url.vals.color)
     .edgeArrowSize(sync_url.vals.arrowsize)
     .edgeArrowhead(() => sync_url.vals.arrowhead)
     .edgeArrowtail(() => sync_url.vals.arrowtail);
