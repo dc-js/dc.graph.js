@@ -112,5 +112,9 @@ arrowDiagram
     .edgeArrowhead(() => sync_url.vals.arrowhead)
     .edgeArrowtail(() => sync_url.vals.arrowtail);
 
+var syntax = "up to four, optional 'o' then optional 'l' or 'r' then one of " + Object.keys(arrowDiagram.arrows()).join(' ');
+
+d3.selectAll('label[for*="arrow"]').attr('title', syntax);
+
 arrowDiagram.render();
 sync_url.exert();
