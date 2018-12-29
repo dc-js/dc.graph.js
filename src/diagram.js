@@ -1613,6 +1613,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     id: function(d) {
                         return _diagram.edgeId(d) + '-arrows';
                     },
+                    fill: 'none',
                     opacity: 0
                 });
 
@@ -2103,14 +2104,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.nodeStrokeWidth.eval(source) / 2,
             target_padding = target.dcg_ry +
             _diagram.nodeStrokeWidth.eval(target) / 2;
-        var arrowSize = _diagram.edgeArrowSize.eval(e),
-            stemWidth = _diagram.edgeStrokeWidth.eval(e) / arrowSize;
-        var headLength = arrowSize *
-            (arrow_length(arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e)), stemWidth) +
-             _diagram.nodeStrokeWidth.eval(e.target) / 2),
-            tailLength = arrowSize *
-            (arrow_length(arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)), stemWidth) +
-             _diagram.nodeStrokeWidth.eval(e.source) / 2);
+        var alengths = scaled_arrow_lengths(e);
         for(var p = 0; p < parallel.edges.length; ++p) {
             // alternate parallel edges over, then under
             var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
@@ -2124,18 +2118,42 @@ dc_graph.diagram = function (parent, chartGroup) {
                 path.points.reverse();
             if(_diagram.enforceEdgeDirection())
                 path = enforce_path_direction(path, source.cola, target.cola);
-            var points0 = as_bezier3(path), points = chop_bezier(points0, 'head', headLength);
-            points = chop_bezier(points, 'tail', tailLength);
-            path.points = points;
+            var path0 = {
+                points: path.points,
+                bezDegree: path.bezDegree
+            };
+            path = clip_path_to_arrows(alengths.headLength, alengths.tailLength, path);
+            var points = path.points, points0 = path0.points;
             parallel.edges[p].pos[age] = {
                 path: path,
-                full: {points: points0, bezDegree: 3},
-                orienthead: Math.atan2(points0[points0.length-1].y - points[points.length-1].y,
-                                       points0[points0.length-1].x - points[points.length-1].x) + 'rad',
-                orienttail: Math.atan2(points0[0].y - points[0].y,
-                                       points0[0].x - points[0].x) + 'rad'
+                full: path0,
+                orienthead: angle_between_points(points[points.length-1], points0[points0.length-1]) + 'rad',
+                orienttail: angle_between_points(points[0], points0[0]) + 'rad'
             };
         }
+    }
+
+    function clip_path_to_arrows(headLength, tailLength, path) {
+        var points0 = as_bezier3(path),
+            points = chop_bezier(points0, 'head', headLength);
+        return {
+            bezDegree: 3,
+            points: chop_bezier(points, 'tail', tailLength),
+            sourcePort: path.sourcePort,
+            targetPort: path.targetPort
+        };
+    }
+
+    function scaled_arrow_lengths(e) {
+        var arrowSize = _diagram.edgeArrowSize.eval(e),
+            stemWidth = _diagram.edgeStrokeWidth.eval(e) / arrowSize;
+        var headLength = arrowSize *
+            (arrow_length(arrow_parts(_arrows, _diagram.edgeArrowhead.eval(e)), stemWidth) +
+             _diagram.nodeStrokeWidth.eval(e.target) / 2),
+            tailLength = arrowSize *
+            (arrow_length(arrow_parts(_arrows, _diagram.edgeArrowtail.eval(e)), stemWidth) +
+             _diagram.nodeStrokeWidth.eval(e.source) / 2);
+        return {headLength: headLength, tailLength: tailLength};
     }
 
     function render_edge_path(age, full) {
@@ -2357,13 +2375,17 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         edge.each(function(e) {
             if(e.cola.points) {
+                var alengths = scaled_arrow_lengths(e);
+                var path0 = {
+                    points: e.cola.points,
+                    bezDegree: 3
+                };
+                var path = clip_path_to_arrows(alengths.headLength, alengths.tailLength, path0);
                 e.pos.new = {
-                    path: {
-                        points: e.cola.points,
-                        bezDegree: 3
-                    },
-                    orienthead: calculate_arrowhead_orientation(e.cola.points, 'head'),
-                    orienttail: calculate_arrowhead_orientation(e.cola.points, 'tail')
+                    path: path,
+                    full: path0,
+                    orienthead: angle_between_points(path.points[path.points.length-1], path0.points[path0.points.length-1]) + 'rad', //calculate_arrowhead_orientation(e.cola.points, 'head'),
+                    orienttail: angle_between_points(path.points[0], path0.points[0]) + 'rad' //calculate_arrowhead_orientation(e.cola.points, 'tail')
                 };
             }
             else {
