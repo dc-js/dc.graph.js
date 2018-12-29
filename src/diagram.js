@@ -2477,20 +2477,18 @@ dc_graph.diagram = function (parent, chartGroup) {
                     return _diagram.stagedDelay(edgeEntered[_diagram.edgeKey.eval(e)]);
                 })
                 .attr('opacity', _diagram.edgeOpacity.eval);
-        if(animatePositions) {
-            etrans
+        (animatePositions ? etrans : edge)
             .attr('d', function(e) {
                 var when = _diagram.stageTransitions() === 'insmod' &&
                         edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
                 return render_edge_path(when)(e);
             });
-            arrowtrans
+        (animatePositions ? arrowtrans : edgeArrows)
             .attr('d', function(e) {
                 var when = _diagram.stageTransitions() === 'insmod' &&
                         edgeEntered[_diagram.edgeKey.eval(e)] ? 'old' : 'new';
                 return render_edge_path(when, true)(e);
             });
-        }
         var elabels = edgeLabels
             .selectAll('text').data(function(e) {
                 var labels = _diagram.edgeLabel.eval(e);
