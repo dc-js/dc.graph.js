@@ -29,6 +29,7 @@ var options = {
                 .redraw();
         }
     },
+    shape: 'ellipse',
     color: 'black',
     opacity: 1,
     strokewidth: 1,
@@ -105,6 +106,7 @@ arrowDiagram
     .nodeRadius(10)
     .nodeLabel(null)
     .nodeStrokeWidth(sync_url.vals.strokewidth)
+    .nodeShape(sync_url.vals.shape)
     .edgeLabel(null)
     .edgeOpacity(sync_url.vals.opacity)
     .edgeStroke(sync_url.vals.color)
