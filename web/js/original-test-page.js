@@ -222,8 +222,9 @@ source(function(error, data) {
 
     var engine = dc_graph.spawn_engine(qs.layout || 'cola', qs, qs.worker != 'false');
     demoDiagram
-        .width($(window).width())
-        .height($(window).height())
+        .width('auto')
+        .height('auto')
+        .restrictPan(true)
         .layoutEngine(engine)
         .timeLimit(timeLimit)
         .transitionDuration(transition)
@@ -390,15 +391,6 @@ source(function(error, data) {
             })
             .attr("autocomplete", "on");
     }
-
-    // respond to browser resize (not necessary if width/height is static)
-    $(window).resize(function() {
-        demoDiagram
-            .width($(window).width())
-            .height($(window).height());
-    });
-
-
 
     // this is kind of a brain-dead way to test transitions
     // i mean, you can cram the concept of adding and deleting stuff over time
