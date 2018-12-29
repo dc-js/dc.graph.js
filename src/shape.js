@@ -649,17 +649,19 @@ function split_bezier_n(p, n) {
 // return the bezier cut at that point.
 function chop_bezier(points, end, dist) {
     var EPS = 0.1, dist2 = dist*dist;
-    var ref, dir;
+    var ref, dir, segment;
     if(end === 'head') {
         ref = points[points.length-1];
+        segment = points.slice(points.length-4);
         dir = -1;
     } else {
         ref = points[0];
+        segment = points.slice(0, 4);
         dir = 1;
     }
     var parts, d2, t = 0.5, dt = 0.5, dx, dy;
     do {
-        parts = split_bezier(points, t);
+        parts = split_bezier(segment, t);
         dx = ref.x - parts[1][0].x;
         dy = ref.y - parts[1][0].y;
         d2 = dx*dx + dy*dy;
@@ -671,7 +673,15 @@ function chop_bezier(points, end, dist) {
         //console.log('dist', dist, 'dir', dir, 'd', d, 't', t, 'dt', dt);
     }
     while(dt > 0.0000001 && Math.abs(d2 - dist2) > EPS);
-    return end === 'head' ? parts[0] : parts[1];
+    points = points.slice();
+    if(end === 'head')
+        return points.slice(0, points.length-4).concat(parts[0]);
+    else
+        return parts[1].concat(points.slice(4));
+}
+
+function angle_between_points(p0, p1) {
+    return Math.atan2(p1.y - p0.y, p1.x - p0.x);
 }
 
 dc_graph.no_shape = function() {
