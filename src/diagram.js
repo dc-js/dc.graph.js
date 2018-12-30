@@ -2543,6 +2543,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                 textTrans = textTrans.transition()
                     .duration(_diagram.stagedDuration())
                     .attr('d', render_edge_label_path('new'));
+                arrowtrans.transition()
+                    .duration(_diagram.stagedDuration())
+                    .attr('d', render_edge_path('new', true));
             } else {
                 // if transitions are too short, we run into various problems,
                 // from transitions not completing to objects not found
@@ -2552,6 +2555,8 @@ dc_graph.diagram = function (parent, chartGroup) {
                     .attr('d', render_edge_path('new'));
                 textTrans
                     .attr('d', render_edge_path('new'));
+                arrowtrans
+                    .attr('d', render_edge_path('new', true));
             }
         }
 
