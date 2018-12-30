@@ -2,12 +2,12 @@ var options = {
     arrowhead: {
         default: 'vee',
         selector: '#arrowhead',
-        needs_redraw: true
+        needs_redraw: 'refresh'
     },
     arrowtail: {
         default: null,
         selector: '#arrowtail',
-        needs_redraw: true
+        needs_redraw: 'refresh'
     },
     zoom: {
         default: 4,

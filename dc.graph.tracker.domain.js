@@ -4,7 +4,10 @@ function dcgraph_domain(diagram, chartgroup) {
             if(opt.needs_relayout)
                 diagram.relayout();
             if(opt.needs_relayout || opt.needs_redraw)
-                dc.redrawAll(chartgroup);
+                if(opt.needs_redraw === 'refresh')
+                    diagram.refresh();
+                else
+                    dc.redrawAll(chartgroup);
         }
     };
 }
