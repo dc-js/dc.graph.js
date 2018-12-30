@@ -154,6 +154,7 @@ function on_load(filename, error, data) {
     exploreDiagram
         .width('auto')
         .height('auto')
+        .restrictPan(true)
         .layoutEngine(engine)
         .fitStrategy('align_tc')
         .timeLimit(sync_url.vals.timeLimit)
