@@ -2456,7 +2456,7 @@ dc_graph.diagram = function (parent, chartGroup) {
           .select('textPath')
             .text(function(t) { return t; })
             .attr('opacity', function() {
-                _diagram.edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
+                return _diagram.edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
             });
         textPathsEnter
             .attr('d', render_edge_label_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
