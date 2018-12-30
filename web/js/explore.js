@@ -172,7 +172,7 @@ function on_load(filename, error, data) {
         .edgeArrowhead('vee')
         .edgeLength(function(e) {
             var e2 = exploreDiagram.getWholeEdge(e.key);
-            return 15 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
+            return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
         })
         .edgeStroke(function(e) { return e.value.color || 'black'; })
         .edgeStrokeDashArray(function(e) {
