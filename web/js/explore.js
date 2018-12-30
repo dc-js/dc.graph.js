@@ -193,6 +193,7 @@ function on_load(filename, error, data) {
                 .map(i => (rnd() > 0.5 ? 'o' : '') + anames[Math.floor(rnd()*anames.length)])
                 .join('');
         };
+        var now = String(new Date());
         switch(sync_url.vals.rndarrow) {
         case 'one':
             arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
@@ -200,7 +201,7 @@ function on_load(filename, error, data) {
             break;
         case 'lots':
             arrowheadscale = arrowtailscale = function(label) {
-                return arrowgen(rand(label || ''));
+                return arrowgen(rand((label || '') + now));
             };
             break;
         case 'changing':
@@ -211,7 +212,7 @@ function on_load(filename, error, data) {
                 ++seed;
             }, 500);
             arrowheadscale = arrowtailscale = function(label) {
-                return arrowgen(rand((label || '') + seed));
+                return arrowgen(rand((label || '') + now + seed));
             };
             break;
         default:
