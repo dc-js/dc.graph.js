@@ -2104,7 +2104,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.nodeStrokeWidth.eval(source) / 2,
             target_padding = target.dcg_ry +
             _diagram.nodeStrokeWidth.eval(target) / 2;
-        var alengths = scaled_arrow_lengths(e);
         for(var p = 0; p < parallel.edges.length; ++p) {
             // alternate parallel edges over, then under
             var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
@@ -2122,6 +2121,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 points: path.points,
                 bezDegree: path.bezDegree
             };
+            var alengths = scaled_arrow_lengths(parallel.edges[p]);
             path = clip_path_to_arrows(alengths.headLength, alengths.tailLength, path);
             var points = path.points, points0 = path0.points;
             parallel.edges[p].pos[age] = {
