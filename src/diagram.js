@@ -2446,17 +2446,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
             })
           .append('textPath')
-            .attr('startOffset', '50%')
-            .attr('xlink:href', function(e) {
-                var id = _diagram.textpathId(d3.select(this.parentNode.parentNode).datum());
-                // angular on firefox needs absolute paths for fragments
-                return window.location.href.split('#')[0] + '#' + id;
-            });
+            .attr('startOffset', '50%');
         elabels
           .select('textPath')
             .text(function(t) { return t; })
             .attr('opacity', function() {
                 return _diagram.edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
+            })
+            .attr('xlink:href', function(e) {
+                var id = _diagram.textpathId(d3.select(this.parentNode.parentNode).datum());
+                // angular on firefox needs absolute paths for fragments
+                return window.location.href.split('#')[0] + '#' + id;
             });
         textPathsEnter
             .attr('d', render_edge_label_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
