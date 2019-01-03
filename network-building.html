@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Network building</title>
+  <title>Draw a graph</title>
   <meta charset="UTF-8">
   <link rel="icon" href="img/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
@@ -17,16 +17,17 @@
 
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dagre.js"></script>
+  <script type="text/javascript" src="js/d3v4-force.js"></script>
   <script type="text/javascript" src="js/viz.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
   <script type="text/javascript" src="js/chart.registry.js"></script>
 
+  <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/querystring.js"></script>
+  <script type="text/javascript" src="js/sync-url-options.js"></script>
+  <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
 
   <style>
-    table {
-      border-collapse: collapse;
-    }
     tr {
       border: 1px solid black;
       table-layout: fixed;
@@ -39,45 +40,89 @@
         text-align: left;
     }
 
-    #graph {
+    #main {
       position: absolute;
       left: 0;
       top: 0;
       right: 0;
       bottom: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #controls {
+        padding: 1em;
+    }
+
+    #content {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+    }
+
+    #left-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #graph {
+        flex: 1;
     }
 
     #output-nodes {
-        position: absolute;
-        right: 3in;
-        top: 1em;
     }
 
     #output-edges {
-        position: absolute;
-        right: 1em;
-        top: 1em;
     }
 
     text.edge-label {
         visibility: visible;
+    }
+
+    .dc-graph text.node-label {
+        font: 24px sans-serif;
+    }
+
+    table {
+        border-spacing: 5px;
+        border-collapse: separate;
+        table-layout: fixed;
+    }
+
+    td {
+        background-color: #f4faff;
+        padding: 3px;
+        max-width: 50px;
+        overflow: hidden;
+    }
+    td:empty:after{
+        content: "\200C";
     }
   </style>
 </head>
 
 <body>
 
-  <div id="graph" class="chart"></div>
-
-  <div id="output-nodes">
-    <h4>Nodes</h4>
-    <table id="output-nodes-table"></table>
+  <div id="main">
+    <script type="text/javascript" src="js/example-header.js"></script>
+    <div id="content">
+      <div id="left-content">
+        <div id="controls">
+          <select id="layout"></select>
+        </div>
+        <div id="graph" class="chart"></div>
+      </div>
+      <div id="output-nodes">
+        <h4>Nodes</h4>
+        <table id="output-nodes-table"></table>
+      </div>
+      <div id="output-edges">
+        <h4>Edges</h4>
+        <table id="output-edges-table"></table>
+      </div>
+    </div>
   </div>
-  <div id="output-edges">
-    <h4>Edges</h4>
-    <table id="output-edges-table"></table>
-  </div>
-
-<script type="text/javascript" src="js/network-building.js"></script>
+  <script type="text/javascript" src="js/network-building.js"></script>
 </body>
 </html>

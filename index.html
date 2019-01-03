@@ -1,66 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Network example</title>
+  <title>dc.graph</title>
   <meta charset="UTF-8">
   <link rel="icon" href="img/favicon.png" type="image/x-icon" />
-  <link rel="stylesheet" type="text/css" href="css/runner.css"/>
   <link rel="stylesheet" type="text/css" href="css/index.css"/>
-  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
-  <link rel="stylesheet" type="text/css" href="css/dc.css"/>
-  <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
 
   <script type="text/javascript" src="js/d3.js"></script>
-  <script type="text/javascript" src="js/crossfilter.js"></script>
-  <script type="text/javascript" src="js/dc.js"></script>
-  <script type="text/javascript" src="js/chart.registry.js"></script>
- 
-  <script type="text/javascript" src="js/jquery.js"></script>
-  <script type="text/javascript" src="js/jquery-ui.js"></script>
-  <script type="text/javascript" src="js/lodash.js"></script>
-
-  <script type="text/javascript" src="js/cola.js"></script>
-  <script type="text/javascript" src="js/viz.js"></script>
-  <script type="text/javascript" src="js/dc.graph.js"></script>
-  <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
-
-  <script type="text/javascript" src="js/querystring.js"></script>
-  <script type="text/javascript" src="js/runner.js"></script>
-
-  <script type="text/javascript" src="js/app_layout.js"></script>
-  <script type="text/javascript" src="js/qfs_layout.js"></script>
-  <script type="text/javascript" src="js/ceph_layout.js"></script>
-  <script type="text/javascript" src="js/vfc_layout.js"></script>
 </head>
-
 <body>
+  <h1>dc.graph</h1>
+  <p><strong>dc.graph</strong> is a JavaScript library for interacting with graphs.</p>
 
-  <div class="ui-widget" id="search-wrapper">
-    <label for="tags">Search: </label>
-    <input id="search">
+  <div id="gallery">
+    <dl>
+        <dt><a href="drag-drop-composition.html">Drag and Drop Network Composition</a>
+        <dt><a href="simple-viewer.html">Simple graph viewer</a>
+        <dt><a href="network-building.html?layout=dagre">Draw a graph</a>
+        <dt><a href="random.html">Randomly build a graph</a>
+        <dt><a href="brushing-filtering.html">Brushing and filtering</a>
+        <dt><a href="explore.html?file=world.gv&layout=dot">Explore a large graph</a>
+        <dt><a href="match-game.html">Match Game</a>
+        <dt><a href="resizing.html">Dynamic resizing</a>
+        <dt><a href="arrow-designer.html">Arrow Designer</a>
+    </dl>
+    <a href="random.html">
+      <img id="random-generation" src="img/screenshots/random-generation.png"
+           class="animate" style="width: 500px;">
+    </a>
   </div>
 
-  <div id="graph" class="chart"></div>
-  <div id="overview" class="chart"></div>
-  <div id="controls" class="chart">
-    <div id="run-indicator">
-      running
-    </div>
-    <div id="stepper" style="display: none">
-      <div id="time-range">
-        <label id="now">&#x21e7;</label>
-      </div>
-      <div style="margin-top: 25px">
-        <button onclick="start_stop()">stop/start</button>
-        <div id="status"></div>
-      </div>
-    </div>
-    <div id="app-options" style="margin-top: 15px; display: none">
-      <label><input type="checkbox" id="use-app-layout" checked="true">Use App Layout</label>
-    </div>
-    <div id="graph-stats"></div>
-  </div>
-
-<script type="text/javascript" src="js/index.js"></script>
+  <script type="text/javascript" src="js/index.js"></script>
 </body>
-</html>

@@ -155,6 +155,14 @@ function deprecation_warning(message) {
     };
 }
 
+function deprecate_function(message, f) {
+    var dep = deprecation_warning(message);
+    return function() {
+        dep();
+        return f.apply(this, arguments);
+    };
+}
+
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 function uuid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -243,7 +251,7 @@ function regenerate_objects(preserved, list, need, key, assign, create, destroy)
 /**
  * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
  * implement - although these are not required, they make it easier for clients and
- * behaviors (like expand_collapse) to work with multiple layout engines.
+ * modes (like expand_collapse) to work with multiple layout engines.
  *
  * these attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
  * @class graphviz_attrs
@@ -414,9 +422,6 @@ dc_graph.cola_layout = function(id) {
         },
         supportsWebworker: function() {
             return true;
-        },
-        needsStage: function(stage) { // stopgap until we have engine chaining
-            return stage === 'ports' || stage === 'edgepos';
         },
         parent: property(null),
         on: function(event, f) {

@@ -155,6 +155,14 @@ function deprecation_warning(message) {
     };
 }
 
+function deprecate_function(message, f) {
+    var dep = deprecation_warning(message);
+    return function() {
+        dep();
+        return f.apply(this, arguments);
+    };
+}
+
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 function uuid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -243,7 +251,7 @@ function regenerate_objects(preserved, list, need, key, assign, create, destroy)
 /**
  * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
  * implement - although these are not required, they make it easier for clients and
- * behaviors (like expand_collapse) to work with multiple layout engines.
+ * modes (like expand_collapse) to work with multiple layout engines.
  *
  * these attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
  * @class graphviz_attrs
@@ -302,6 +310,14 @@ dc_graph.d3_force_layout = function(id) {
 
         _simulation = d3.layout.force()
             .size([options.width, options.height]);
+        if(options.linkDistance) {
+            if(typeof options.linkDistance === 'number')
+                _simulation.linkDistance(options.linkDistance);
+            else if(options.linkDistance === 'auto')
+                _simulation.linkDistance(function(e) {
+                    return e.dcg_edgeLength;
+                });
+        }
 
         _simulation.on('tick', /* _tick = */ function() {
             dispatchState('tick');
@@ -527,7 +543,7 @@ dc_graph.d3_force_layout = function(id) {
         restorePositions: restorePositions,
         optionNames: function() {
             return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength',
-                    'initialCharge', 'fixOffPathNodes']
+                    'initialCharge', 'linkDistance', 'fixOffPathNodes']
                 .concat(graphviz_keys);
         },
         iterations: property(300),
@@ -535,6 +551,7 @@ dc_graph.d3_force_layout = function(id) {
         chargeForce: property(-500),
         gravityStrength: property(1.0),
         initialCharge: property(-400),
+        linkDistance: property(20),
         fixOffPathNodes: property(false),
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {}

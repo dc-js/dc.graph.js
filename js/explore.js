@@ -4,7 +4,19 @@ var options = {
     transition: 1000,
     stage: 'insmod',
     linkLength: 30,
-    layout: 'cola',
+    layout: {
+        default: 'cola',
+        values: dc_graph.engines.available(),
+        selector: '#layout',
+        needs_relayout: true,
+        exert: function(val, diagram) {
+            var engine = dc_graph.spawn_engine(val);
+            apply_engine_parameters(engine);
+            diagram
+                .layoutEngine(engine);
+        }
+    },
+    worker: true,
     timeLimit: 10000,
     start: null,
     directional: false,
@@ -32,6 +44,28 @@ var options = {
 };
 var exploreDiagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
+
+function apply_engine_parameters(engine) {
+    switch(engine.layoutAlgorithm()) {
+    case 'd3v4-force':
+        engine
+            .collisionRadius(125)
+            .gravityStrength(0.05)
+            .initialCharge(-500);
+        break;
+    case 'd3-force':
+        engine
+            .gravityStrength(0.1)
+            .linkDistance('auto')
+            .initialCharge(-5000);
+        break;
+    case 'cola':
+        engine.lengthStrategy('individual');
+        break;
+    }
+    exploreDiagram.initLayoutOnRedraw(engine.layoutAlgorithm() === 'cola');
+    return engine;
+}
 
 // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript#47593316
 function xfnv1a(k) {
@@ -61,23 +95,40 @@ function rand(s) {
     return sfc32(seed(), seed(), seed(), seed());
 }
 
-function display_error(message) {
+function display_error(heading, message) {
     d3.select('#message')
         .style('display', null)
-        .html('<h1>' + message + '</h1>');
+        .html('<div><h1>' + heading + '</h1>' +
+              (message ? '<code>' + message + '</code></div>' : ''));
     throw new Error(message);
 }
-if(!sync_url.vals.file)
-    display_error('Need <code>?file=</code> in URL!');
+
+function hide_error() {
+    d3.select('#message')
+        .style('display', 'none');
+}
+
+d3.select('#user-file').on('change', function() {
+    var filename = this.value;
+    if(filename) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            hide_error();
+            dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+            sync_url.update('expanded', []);
+        };
+        reader.readAsText(this.files[0]);
+    }
+});
 
 var expand_collapse;
-dc_graph.load_graph(sync_url.vals.file, function(error, data) {
+function on_load(filename, error, data) {
     if(error) {
-        var message = '';
+        var heading = '';
         if(error.status)
-            message = 'Error ' + error.status + ': ';
-        message += 'Could not load file ' + sync_url.vals.file;
-        display_error(message);
+            heading = 'Error ' + error.status + ': ';
+        heading += 'Could not load file ' + filename;
+        display_error(heading, error.message);
     }
     var graph_data = dc_graph.munge_graph(data),
         nodes = graph_data.nodes,
@@ -92,11 +143,18 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     var edge_flat = dc_graph.flat_group.make(edges, edge_key),
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
-    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker != 'false');
+    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+    apply_engine_parameters(engine);
+
+    // graphlib-dot seems to wrap nodes in an extra {value} (don't we all)
+    function nvalue(n) {
+        return n.value.value ? n.value.value : n.value;
+    }
 
     exploreDiagram
         .width('auto')
         .height('auto')
+        .restrictPan(true)
         .layoutEngine(engine)
         .fitStrategy('align_tc')
         .timeLimit(sync_url.vals.timeLimit)
@@ -106,12 +164,16 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
-        .nodeLabel(function(n) { return n.value.value.label && n.value.value.label.split(/\n|\\n/); })
+        .nodeLabel(function(n) { return nvalue(n).label && nvalue(n).label.split(/\n|\\n/); })
         .nodeLabelPadding(5)
-        .nodeShape(function(n) { return n.value.value.shape; })
-        .nodeFill(function(n) { return n.value.value.fillcolor || 'white'; })
+        .nodeShape(function(n) { return nvalue(n).shape; })
+        .nodeFill(function(n) { return nvalue(n).fillcolor || 'white'; })
         .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
         .edgeArrowhead('vee')
+        .edgeLength(function(e) {
+            var e2 = exploreDiagram.getWholeEdge(e.key);
+            return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
+        })
         .edgeStroke(function(e) { return e.value.color || 'black'; })
         .edgeStrokeDashArray(function(e) {
             switch(e.value.style) {
@@ -131,6 +193,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
                 .map(i => (rnd() > 0.5 ? 'o' : '') + anames[Math.floor(rnd()*anames.length)])
                 .join('');
         };
+        var now = String(new Date());
         switch(sync_url.vals.rndarrow) {
         case 'one':
             arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
@@ -138,7 +201,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
             break;
         case 'lots':
             arrowheadscale = arrowtailscale = function(label) {
-                return arrowgen(rand(label || ''));
+                return arrowgen(rand((label || '') + now));
             };
             break;
         case 'changing':
@@ -149,7 +212,7 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
                 ++seed;
             }, 500);
             arrowheadscale = arrowtailscale = function(label) {
-                return arrowgen(rand((label || '') + seed));
+                return arrowgen(rand((label || '') + now + seed));
             };
             break;
         default:
@@ -277,7 +340,9 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     exploreDiagram.autoZoom('once-noanim');
     var starter = d3.select('#add-node');
     var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
-    option.enter().append('option')
+    option.enter().append('option');
+    option.exit().remove();
+    option
         .attr('value', function(d) { return d.value; })
         .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
         .text(function(d) { return d.label; });
@@ -291,8 +356,13 @@ dc_graph.load_graph(sync_url.vals.file, function(error, data) {
     d3.select('#reset').on('click', function() {
         sync_url.update('expanded', []);
     });
+
     if(sync_url.vals.start)
         expand_collapse.expand('both', sync_url.vals.start, true);
     else sync_url.exert();
-});
+}
 
+if(!sync_url.vals.file)
+    display_error('Need <code>?file=</code> in URL!');
+
+dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));

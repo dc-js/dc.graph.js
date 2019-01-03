@@ -1,0 +1,37 @@
+body {
+    overflow: hidden;
+    margin: 0;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+#main {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+}
+#canvas {
+    flex: 1;
+    position: relative;
+}
+#content {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+}
+#graph {
+    flex: 1;
+}
+#charts {
+    flex: 0 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.dc-chart .selected path, .dc-chart .selected circle {
+    stroke-width: 0
+}
+p#hint {
+    position: absolute;
+    left: 1em;
+    top: 0.5em;
+}

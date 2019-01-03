@@ -2,12 +2,12 @@ var options = {
     arrowhead: {
         default: 'vee',
         selector: '#arrowhead',
-        needs_redraw: true
+        needs_redraw: 'refresh'
     },
     arrowtail: {
         default: null,
         selector: '#arrowtail',
-        needs_redraw: true
+        needs_redraw: 'refresh'
     },
     zoom: {
         default: 4,
@@ -29,6 +29,9 @@ var options = {
                 .redraw();
         }
     },
+    shape: 'ellipse',
+    color: 'black',
+    opacity: 1,
     strokewidth: 1,
     arrowsize: 1,
     grid: {
@@ -94,6 +97,7 @@ var engine = dc_graph.manual_layout();
 arrowDiagram
     .width('auto')
     .height('auto')
+    .restrictPan(true)
     .layoutEngine(engine)
     .zoomExtent([1, 256])
     .fitStrategy('align_tl')
@@ -102,10 +106,17 @@ arrowDiagram
     .nodeRadius(10)
     .nodeLabel(null)
     .nodeStrokeWidth(sync_url.vals.strokewidth)
+    .nodeShape(sync_url.vals.shape)
     .edgeLabel(null)
+    .edgeOpacity(sync_url.vals.opacity)
+    .edgeStroke(sync_url.vals.color)
     .edgeArrowSize(sync_url.vals.arrowsize)
     .edgeArrowhead(() => sync_url.vals.arrowhead)
     .edgeArrowtail(() => sync_url.vals.arrowtail);
+
+var syntax = "up to four, optional 'o' then optional 'l' or 'r' then one of " + Object.keys(arrowDiagram.arrows()).join(' ');
+
+d3.selectAll('label[for*="arrow"]').attr('title', syntax);
 
 arrowDiagram.render();
 sync_url.exert();

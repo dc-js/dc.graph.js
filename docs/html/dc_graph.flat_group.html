@@ -11,7 +11,7 @@
 	<![endif]-->
 	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
 
-	<link type="text/css" rel="stylesheet" href="styles/site.flatly.css">
+	<link type="text/css" rel="stylesheet" href="styles/site.yeti.css">
 
 </head>
 
@@ -40,7 +40,7 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="dc_graph.cola_layout.html">dc_graph.cola_layout</a></li><li><a href="dc_graph.constraint_pattern.html">dc_graph.constraint_pattern</a></li><li><a href="dc_graph.d3_force_layout.html">dc_graph.d3_force_layout</a></li><li><a href="dc_graph.d3v4_force_layout.html">dc_graph.d3v4_force_layout</a></li><li><a href="dc_graph.dagre_layout.html">dc_graph.dagre_layout</a></li><li><a href="dc_graph.diagram.html">dc_graph.diagram</a></li><li><a href="dc_graph.graphviz_attrs.html">dc_graph.graphviz_attrs</a></li><li><a href="dc_graph.graphviz_layout.html">dc_graph.graphviz_layout</a></li><li><a href="dc_graph.tip.html">dc_graph.tip</a></li><li><a href="dc_graph.tree_layout.html">dc_graph.tree_layout</a></li>
+					<li><a href="dc_graph.brush.html">dc_graph.brush</a></li><li><a href="dc_graph.cola_layout.html">dc_graph.cola_layout</a></li><li><a href="dc_graph.constraint_pattern.html">dc_graph.constraint_pattern</a></li><li><a href="dc_graph.d3_force_layout.html">dc_graph.d3_force_layout</a></li><li><a href="dc_graph.d3v4_force_layout.html">dc_graph.d3v4_force_layout</a></li><li><a href="dc_graph.dagre_layout.html">dc_graph.dagre_layout</a></li><li><a href="dc_graph.diagram.html">dc_graph.diagram</a></li><li><a href="dc_graph.graphviz_attrs.html">dc_graph.graphviz_attrs</a></li><li><a href="dc_graph.graphviz_layout.html">dc_graph.graphviz_layout</a></li><li><a href="dc_graph.tip.html">dc_graph.tip</a></li><li><a href="dc_graph.tree_layout.html">dc_graph.tree_layout</a></li>
 				</ul>
 			</li>
 			
@@ -91,29 +91,12 @@
     <div class="container-overview">
     
         
-            <div class="description"><p><code>dc_graph.flat_group</code> implements a special <a href="https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups">&quot;fake group&quot;</a>
-for the special case where you want a group that represents the filtered rows of the crossfilter.</p>
-<p>Although <code>dc_graph</code> can be used with reduced data, typically the nodes and edges are just rows of
-the corresponding data arrays, and each array has a column which contains the unique identifier
-for the node or edge. In this setup, there are other dimensions and groups which are aggregated
-for the use of dc.js charts, but the graph just shows or does not show the nodes and edges from
-the rows.</p>
-<p>This simple class supports that use case in three steps:</p>
-<ol>
-<li>It creates a dimension keyed on the unique identifier (specified to <code>flat_group.make</code>)</li>
-<li>It creates a group from the dimension with a reduction function that returns the row when the
-row is filtered in, and <code>null</code> when the row is filtered out.</li>
-<li>It wraps the group in a fake group which filters out the resulting nulls.</li>
-</ol>
-<p>The result is a fake group whose <code>.all()</code> method returns an array of the currently filtered-in
-<code>{key, value}</code> pairs, where the key is that returned by the ID accessor, and the value is the raw
-row object from the data.</p>
-<p>This could be a useful crossfilter utility outside of dc.graph. For example, bubble charts and
-scatter plots often use similar functionality because each observation is either shown or not,
-and it is helpful to have the entire row available as reduced data.</p>
-<p>But it would need to be generalized and cleaned up. (For example, the way it has to create the
-crossfilter and dimension is kinda dumb.) And there is currently no such crossfilter utility
-library to put it in.</p></div>
+            <div class="description"><p><code>dc_graph.flat_group</code> implements a
+<a href="https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups">&quot;fake crossfilter group&quot;</a>
+for the case of a group which is 1:1 with the rows of the data array.</p>
+<p>Although <code>dc_graph</code> can be used with aggregated or reduced data, typically the nodes and edges
+are rows of two data arrays, and each row has a column which contains the unique identifier for
+the node or edge.</p></div>
         
 
         
@@ -198,7 +181,6 @@ library to put it in.</p></div>
     
     <div class="description">
         <p>Create a flat dimension and group from an existing crossfilter.</p>
-<p>This is a wretched name for this function.</p>
     </div>
     
 
@@ -303,6 +285,15 @@ unique identifier</p></td>
     
 
 	
+	<dt class="important tag-deprecated method-doc-label method-doc-details-label">Deprecated:</dt>
+	
+    <dd>
+        <ul class="dummy">
+            <li>use .make() instead</li>
+        </ul>
+    </dd>
+    
+    
 
 	
 
@@ -320,7 +311,7 @@ unique identifier</p></td>
 		<ul class="dummy">
 			<li>
 				<a href="flat_group.js.html">flat_group.js</a>,
-				 <a href="flat_group.js.html#sunlight-1-line-78">line 78</a>
+				 <a href="flat_group.js.html#sunlight-1-line-70">line 70</a>
 			</li>
 		</ul>
 	</dd>
@@ -377,7 +368,7 @@ unique identifier</p></td>
             
 <hr>
 <dt>
-    <h4 class="name" id=".make"><span class="type-signature">&lt;static> </span>make(vec, id_accessor)</h4>
+    <h4 class="name" id=".make"><span class="type-signature">&lt;static> </span>make(source, id_accessor)</h4>
     
     
 </dt>
@@ -385,8 +376,17 @@ unique identifier</p></td>
 
     
     <div class="description">
-        <p>Create a crossfilter, dimension, and flat group, as described in <a href="dc_graph.flat_group.html">flat_group</a>.
-Returns an object containing all three.</p>
+        <p>Create a crossfilter, dimension, and flat group. Returns an object containing all three.</p>
+<ol>
+<li>If <code>source</code> is an array, create a crossfilter from it. Otherwise assume it is a
+crossfilter instance.</li>
+<li>Create a dimension on the crossfilter keyed by <code>id_accessor</code></li>
+<li>Create a group from the dimension, reducing to the row when it's filtered in, or
+<code>null</code> when it's out.</li>
+<li>Wrap the group in a fake group which filters out the nulls.</li>
+</ol>
+<p>The resulting fake group's <code>.all()</code> method returns an array of the currently filtered-in
+<code>{key, value}</code> pairs where the key is <code>id_accessor(row)</code> and the value is the row.</p>
     </div>
     
 
@@ -421,7 +421,7 @@ Returns an object containing all three.</p>
 
         <tr>
             
-                <td class="name"><code>vec</code></td>
+                <td class="name"><code>source</code></td>
             
 
             <td class="type">
@@ -438,7 +438,7 @@ Returns an object containing all three.</p>
 
             
 
-            <td class="description last"><p>the data array for crossfilter</p></td>
+            <td class="description last"><p>the data array for crossfilter, or a crossfilter</p></td>
         </tr>
 
     
@@ -508,7 +508,7 @@ unique identifier</p></td>
 		<ul class="dummy">
 			<li>
 				<a href="flat_group.js.html">flat_group.js</a>,
-				 <a href="flat_group.js.html#sunlight-1-line-63">line 63</a>
+				 <a href="flat_group.js.html#sunlight-1-line-44">line 44</a>
 			</li>
 		</ul>
 	</dd>
@@ -615,7 +615,7 @@ unique identifier</p></td>
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on Mon Dec 10th 2018
+		on Thu Jan 3rd 2019
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
