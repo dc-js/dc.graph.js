@@ -1,19 +1,35 @@
-var qs = querystring.parse();
-var options = Object.assign({
-    rankdir: 'TB'
-}, qs);
+var options = {
+    rankdir: 'TB',
+    layout: {
+        default: 'dagre',
+        values: dc_graph.engines.available(),
+        selector: '#layout',
+        needs_relayout: true,
+        exert: function(val, diagram) {
+            var engine = dc_graph.spawn_engine(val);
+            apply_engine_parameters(engine);
+            diagram
+                .layoutEngine(engine);
+        }
+    },
+    shape: 'ellipse',
+    worker: true
+};
+
+var drawDiagram = dc_graph.diagram('#graph');
+var sync_url = sync_url_options(options, dcgraph_domain(drawDiagram), drawDiagram);
 
 var node_flat = dc_graph.flat_group.make([], function(d) { return d.id; }),
     edge_flat = dc_graph.flat_group.make([], function(d) { return d.id; });
 
-var drawDiagram = dc_graph.diagram('#graph');
-var engine = dc_graph.spawn_engine(options.layout, options, options.worker != 'false');
+var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+apply_engine_parameters(engine);
 
 drawDiagram
-    .width(window.innerWidth)
-    .height(window.innerHeight)
+    .width('auto')
+    .height('auto')
+    .restrictPan(true)
     .layoutEngine(engine)
-    .rankdir(options.rankdir)
     .transitionDuration(500)
     .stageTransitions('insmod')
     .showLayoutSteps(false)
@@ -21,18 +37,49 @@ drawDiagram
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
     .edgeSource(function(e) { return e.value.source; })
     .edgeTarget(function(e) { return e.value.target; })
-    .nodeShape(qs.shape || 'ellipse')
+    .nodeShape(sync_url.vals.shape || 'ellipse')
     .nodeLabel(function(n) { return n.value.label; })
-    .edgeLabel(function(e) { return e.value.label || ''; })
+    .nodeStrokeWidth(0)
+    .nodeFill('#001')
+    .nodeLabelFill('#eee')
     .nodeLabelPadding({x: 4, y: 4})
     .nodeFixed(function(n) { return n.value.fixedPos; })
+    .edgeLabel(function(e) { return e.value.label || ''; })
+    .edgeLength(function(e) {
+        var e2 = drawDiagram.getWholeEdge(e.key);
+        return 10 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
+    })
     .edgeArrowhead('vee');
+
+function apply_engine_parameters(engine) {
+    switch(engine.layoutAlgorithm()) {
+    case 'd3v4-force':
+        engine
+            .collisionRadius(125)
+            .gravityStrength(0.05)
+            .initialCharge(-500);
+        break;
+    case 'd3-force':
+        engine
+            .gravityStrength(0.1)
+            .linkDistance('auto')
+            .initialCharge(-5000);
+        break;
+    case 'cola':
+        engine.lengthStrategy('individual');
+        break;
+    }
+    drawDiagram.initLayoutOnRedraw(engine.layoutAlgorithm() === 'cola');
+    engine.rankdir(sync_url.vals.rankdir);
+    return engine;
+}
 
 drawDiagram.timeLimit(1000);
 
 var select_nodes = dc_graph.select_nodes({
-    nodeFill: '#eeffe0',
-    nodeStrokeWidth: 2
+    nodeStroke: '#16b',
+    nodeStrokeWidth: 5,
+    nodeRadius: 22.5
 }).multipleSelect(false);
 
 var select_edges = dc_graph.select_edges({
@@ -40,8 +87,8 @@ var select_edges = dc_graph.select_edges({
     edgeStrokeWidth: 2
 }).multipleSelect(false);
 
-var label_nodes = dc_graph.label_nodes(),
-    label_edges = dc_graph.label_edges();
+var label_nodes = dc_graph.label_nodes({class: 'node-label'}),
+    label_edges = dc_graph.label_edges({class: 'edge-label'});
 
 var delete_nodes = dc_graph.delete_nodes()
         .crossfilterAccessor(function(diagram) {
@@ -94,13 +141,13 @@ select_edges_group.on('set_changed.show-info', function(edges) {
 });
 
 var nodeDim = node_flat.crossfilter.dimension(function(d) { return d.timestamp; });
-var outnodes = dc.dataTable('#output-nodes')
-        .dimension(nodeDim)
-        .size(Infinity)
-        .group(function() { return ''; })
-        .sortBy(function(v) { return  v.timestamp; })
-        .showGroups(false)
-        .columns(['label']);
+var outnodes = dc.dataTable('#output-nodes-table')
+    .dimension(nodeDim)
+    .size(Infinity)
+    .group(function() { return ''; })
+    .sortBy(function(v) { return  v.timestamp; })
+    .showGroups(false)
+    .columns(['label']);
 
 var node_labels = {};
 function update_node_labels() {
@@ -112,35 +159,35 @@ function update_node_labels() {
 }
 
 var edgeDim = edge_flat.crossfilter.dimension(function(d) { return d.timestamp; });
-var outedges = dc.dataTable('#output-edges')
-        .dimension(edgeDim)
-        .size(Infinity)
-        .group(function() { return ''; })
-        .sortBy(function(e) {
-            return node_labels[e.source] + ',' + node_labels[e.target];
-        })
-        .showGroups(false)
-        .on('preRender', update_node_labels)
-        .on('preRedraw', update_node_labels)
-        .columns([
-            {
-                label: 'Source',
-                format: function(d) {
-                    return node_labels[d.source];
-                }
-            },
-            {
-                label: 'Target',
-                format: function(d) {
-                    return node_labels[d.target];
-                }
-            },
-            {
-                label: 'Label',
-                format: function(d) {
-                    return d.label;
-                }
+var outedges = dc.dataTable('#output-edges-table')
+    .dimension(edgeDim)
+    .size(Infinity)
+    .group(function() { return ''; })
+    .sortBy(function(e) {
+        return node_labels[e.source] + ',' + node_labels[e.target];
+    })
+    .showGroups(false)
+    .on('preRender', update_node_labels)
+    .on('preRedraw', update_node_labels)
+    .columns([
+        {
+            label: 'Source',
+            format: function(d) {
+                return node_labels[d.source];
             }
-        ]);
+        },
+        {
+            label: 'Target',
+            format: function(d) {
+                return node_labels[d.target];
+            }
+        },
+        {
+            label: 'Label',
+            format: function(d) {
+                return d.label;
+            }
+        }
+    ]);
 
 dc.renderAll();

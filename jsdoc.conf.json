@@ -14,7 +14,7 @@
     "footer": "",
     "copyright": "dc.graph.js Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers",
     "navType": "vertical",
-    "theme": "flatly",
+    "theme": "yeti",
     "linenums": true,
     "collapseSymbols": false,
     "inverseNav": true,

@@ -24,7 +24,7 @@
             null;
     }
     function validate() {
-        var diagram = _behavior.parent();
+        var diagram = _mode.parent();
         var nodes = diagram.nodeGroup().all(),
             edges = diagram.edgeGroup().all(),
             ports = diagram.portGroup() ? diagram.portGroup().all() : [];
@@ -92,14 +92,14 @@
         else
             console.log('validation of ' + title + ' succeeded with ' + count_text() + '.');
     }
-    var _behavior = {
+    var _mode = {
         parent: property(null).react(function(p) {
             if(p)
                 p.on('data.validate', validate);
             else
-                _behavior.parent().on('data.validate', null);
+                _mode.parent().on('data.validate', null);
         })
     };
 
-    return _behavior;
+    return _mode;
 };

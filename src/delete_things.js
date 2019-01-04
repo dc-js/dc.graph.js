@@ -9,20 +9,20 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
         return r[id_tag];
     }
     function delete_selection(selection) {
-        if(!_behavior.crossfilterAccessor())
+        if(!_mode.crossfilterAccessor())
             throw new Error('need crossfilterAccessor');
-        if(!_behavior.dimensionAccessor())
+        if(!_mode.dimensionAccessor())
             throw new Error('need dimensionAccessor');
         selection = selection || _selected;
         if(selection.length === 0)
             return Promise.resolve([]);
-        var promise = _behavior.preDelete() ? _behavior.preDelete()(selection) : Promise.resolve(selection);
-        if(_behavior.onDelete())
-            promise = promise.then(_behavior.onDelete());
+        var promise = _mode.preDelete() ? _mode.preDelete()(selection) : Promise.resolve(selection);
+        if(_mode.onDelete())
+            promise = promise.then(_mode.onDelete());
         return promise.then(function(selection) {
             if(selection && selection.length) {
-                var crossfilter = _behavior.crossfilterAccessor()(_behavior.parent()),
-                    dimension = _behavior.dimensionAccessor()(_behavior.parent());
+                var crossfilter = _mode.crossfilterAccessor()(_mode.parent()),
+                    dimension = _mode.dimensionAccessor()(_mode.parent());
                 var all = crossfilter.all().slice(), n = all.length;
                 dimension.filter(null);
                 crossfilter.remove();
@@ -34,22 +34,22 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
                                  filtered.map(row_id), all.map(row_id), selection);
                 crossfilter.add(filtered);
 
-                _behavior.parent().redrawGroup();
+                _mode.parent().redrawGroup();
             }
             return true;
         });
     }
-    function add_behavior(diagram) {
+    function draw(diagram) {
         _keyboard.on('keyup.' + mode_name, function() {
             if(d3.event.code === _deleteKey)
                 delete_selection();
         });
     }
-    function remove_behavior(diagram) {
+    function remove(diagram) {
     }
-    var _behavior = dc_graph.behavior(mode_name, {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+    var _mode = dc_graph.mode(mode_name, {
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             things_group.on('set_changed.' + mode_name, selection_changed);
             if(p) {
@@ -59,10 +59,10 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
             }
         }
     });
-    _behavior.preDelete = property(null);
-    _behavior.onDelete = property(null);
-    _behavior.crossfilterAccessor = property(null);
-    _behavior.dimensionAccessor = property(null);
-    _behavior.deleteSelection = delete_selection;
-    return _behavior;
+    _mode.preDelete = property(null);
+    _mode.onDelete = property(null);
+    _mode.crossfilterAccessor = property(null);
+    _mode.dimensionAccessor = property(null);
+    _mode.deleteSelection = delete_selection;
+    return _mode;
 };

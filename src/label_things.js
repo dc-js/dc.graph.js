@@ -24,6 +24,7 @@ dc_graph.label_things = function(options) {
                 {
                     text: eventOptions.text || options.thing_label(thing) || options.default_label,
                     align: options.align,
+                    class: options.class,
                     box: box,
                     selectText: eventOptions.selectText,
                     accept: function(text) {
@@ -51,7 +52,7 @@ dc_graph.label_things = function(options) {
         }
         label_things_group.edit_label(thing, eventOptions);
     }
-    function add_behavior(diagram, node, edge) {
+    function draw(diagram, node, edge) {
         _keyboard.on('keyup.' + options.label_type, function() {
             if(_selected.length) {
                 // printable characters should start edit
@@ -66,12 +67,12 @@ dc_graph.label_things = function(options) {
             });
     }
 
-    function remove_behavior(diagram, node, edge) {
+    function remove(diagram, node, edge) {
     }
 
-    var _behavior = dc_graph.behavior(options.label_type, {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+    var _mode = dc_graph.mode(options.label_type, {
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             select_things_group.on('set_changed.' + options.label_type, p ? selection_changed_listener(p) : null);
             label_things_group.on('edit_label.' + options.label_type, p ? edit_label_listener(p) : null);
@@ -83,10 +84,10 @@ dc_graph.label_things = function(options) {
             }
         }
     });
-    _behavior.editSelection = function(eventOptions) {
-        edit_selection(_behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges(), eventOptions);
+    _mode.editSelection = function(eventOptions) {
+        edit_selection(_mode.parent().selectAllNodes(), _mode.parent().selectAllEdges(), eventOptions);
     };
-    return _behavior;
+    return _mode;
 };
 
 dc_graph.label_things_group = function(brushgroup, type) {

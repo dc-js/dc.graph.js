@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.7.3  
+**Version**: 0.7.4  
 **Example**  
 ```js
 // Example chaining
@@ -127,9 +127,15 @@ diagram.width(600)
         * [.direction](#dc_graph.tip+direction) ⇒ <code>String</code> \| [<code>tip</code>](#dc_graph.tip)
         * [.content](#dc_graph.tip+content) ⇒ <code>function</code>
         * [.table](#dc_graph.tip+table) ⇒ <code>function</code>
+    * [.brush](#dc_graph.brush)
+        * [new brush()](#new_dc_graph.brush_new)
+        * [.on(event, [f])](#dc_graph.brush+on) ⇒ [<code>brush</code>](#dc_graph.brush) \| <code>function</code>
+        * [.activate()](#dc_graph.brush+activate) ⇒ [<code>brush</code>](#dc_graph.brush)
+        * [.deactivate()](#dc_graph.brush+deactivate) ⇒ [<code>brush</code>](#dc_graph.brush)
+        * [.isActive()](#dc_graph.brush+isActive) ⇒ <code>Boolean</code>
     * [.flat_group](#dc_graph.flat_group) : <code>object</code>
-        * [.make(vec, id_accessor)](#dc_graph.flat_group.make) ⇒ <code>Object</code>
-        * [.another(ndx, id_accessor)](#dc_graph.flat_group.another) ⇒ <code>Object</code>
+        * [.make(source, id_accessor)](#dc_graph.flat_group.make) ⇒ <code>Object</code>
+        * ~~[.another(ndx, id_accessor)](#dc_graph.flat_group.another) ⇒ <code>Object</code>~~
 
 <a name="dc_graph.diagram"></a>
 
@@ -1394,7 +1400,7 @@ Returns the DOM id for the chart's anchored location.
 #### new graphviz_attrs()
 `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
 implement - although these are not required, they make it easier for clients and
-behaviors (like expand_collapse) to work with multiple layout engines.
+modes (like expand_collapse) to work with multiple layout engines.
 
 these attributes are [from graphviz](http://www.graphviz.org/doc/info/attrs.html)
 
@@ -1710,9 +1716,9 @@ needed, and then pass html forward to `k`.
 
 **Example**  
 ```js
-// Default behavior: assume it's a node, show node title
+// Default mode: assume it's a node, show node title
 var tip = dc_graph.tip().content(function(n, k) {
-    k(_behavior.parent() ? _behavior.parent().nodeTitle.eval(n) : '');
+    k(_mode.parent() ? _mode.parent().nodeTitle.eval(n) : '');
 });
 ```
 <a name="dc_graph.tip+table"></a>
@@ -1730,62 +1736,100 @@ Note: this interface is not great and is subject to change in the near term.
 var tip = dc_graph.tip();
 tip.content(dc_graph.tip.table());
 ```
+<a name="dc_graph.brush"></a>
+
+### dc_graph.brush
+**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+
+* [.brush](#dc_graph.brush)
+    * [new brush()](#new_dc_graph.brush_new)
+    * [.on(event, [f])](#dc_graph.brush+on) ⇒ [<code>brush</code>](#dc_graph.brush) \| <code>function</code>
+    * [.activate()](#dc_graph.brush+activate) ⇒ [<code>brush</code>](#dc_graph.brush)
+    * [.deactivate()](#dc_graph.brush+deactivate) ⇒ [<code>brush</code>](#dc_graph.brush)
+    * [.isActive()](#dc_graph.brush+isActive) ⇒ <code>Boolean</code>
+
+<a name="new_dc_graph.brush_new"></a>
+
+#### new brush()
+`dc_graph.brush` is a [mode](dc_graph.mode) providing a simple wrapper over
+[d3.svg.brush](https://github.com/d3/d3-3.x-api-reference/blob/master/SVG-Controls.md#brush)
+
+<a name="dc_graph.brush+on"></a>
+
+#### brush.on(event, [f]) ⇒ [<code>brush</code>](#dc_graph.brush) \| <code>function</code>
+Subscribe to a brush event, currently `brushstart`, `brushmove`, or `brushend`
+
+**Kind**: instance method of [<code>brush</code>](#dc_graph.brush)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| event | <code>String</code> | the name of the event; please namespace with `'namespace.event'` |
+| [f] | <code>function</code> | the handler function; if omitted, returns the current handler |
+
+<a name="dc_graph.brush+activate"></a>
+
+#### brush.activate() ⇒ [<code>brush</code>](#dc_graph.brush)
+Add the brush to the parent diagram's SVG
+
+**Kind**: instance method of [<code>brush</code>](#dc_graph.brush)  
+<a name="dc_graph.brush+deactivate"></a>
+
+#### brush.deactivate() ⇒ [<code>brush</code>](#dc_graph.brush)
+Remove the brush from the parent diagram's SVG
+
+**Kind**: instance method of [<code>brush</code>](#dc_graph.brush)  
+<a name="dc_graph.brush+isActive"></a>
+
+#### brush.isActive() ⇒ <code>Boolean</code>
+Retrieve whether the brush is currently active
+
+**Kind**: instance method of [<code>brush</code>](#dc_graph.brush)  
 <a name="dc_graph.flat_group"></a>
 
 ### dc_graph.flat_group : <code>object</code>
-`dc_graph.flat_group` implements a special ["fake group"](https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups)
-for the special case where you want a group that represents the filtered rows of the crossfilter.
+`dc_graph.flat_group` implements a
+["fake crossfilter group"](https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups)
+for the case of a group which is 1:1 with the rows of the data array.
 
-Although `dc_graph` can be used with reduced data, typically the nodes and edges are just rows of
-the corresponding data arrays, and each array has a column which contains the unique identifier
-for the node or edge. In this setup, there are other dimensions and groups which are aggregated
-for the use of dc.js charts, but the graph just shows or does not show the nodes and edges from
-the rows.
-
-This simple class supports that use case in three steps:
- 1. It creates a dimension keyed on the unique identifier (specified to `flat_group.make`)
- 2. It creates a group from the dimension with a reduction function that returns the row when the
- row is filtered in, and `null` when the row is filtered out.
- 3. It wraps the group in a fake group which filters out the resulting nulls.
-
-The result is a fake group whose `.all()` method returns an array of the currently filtered-in
-`{key, value}` pairs, where the key is that returned by the ID accessor, and the value is the raw
-row object from the data.
-
-This could be a useful crossfilter utility outside of dc.graph. For example, bubble charts and
-scatter plots often use similar functionality because each observation is either shown or not,
-and it is helpful to have the entire row available as reduced data.
-
-But it would need to be generalized and cleaned up. (For example, the way it has to create the
-crossfilter and dimension is kinda dumb.) And there is currently no such crossfilter utility
-library to put it in.
+Although `dc_graph` can be used with aggregated or reduced data, typically the nodes and edges
+are rows of two data arrays, and each row has a column which contains the unique identifier for
+the node or edge.
 
 **Kind**: static namespace of [<code>dc_graph</code>](#dc_graph)  
 
 * [.flat_group](#dc_graph.flat_group) : <code>object</code>
-    * [.make(vec, id_accessor)](#dc_graph.flat_group.make) ⇒ <code>Object</code>
-    * [.another(ndx, id_accessor)](#dc_graph.flat_group.another) ⇒ <code>Object</code>
+    * [.make(source, id_accessor)](#dc_graph.flat_group.make) ⇒ <code>Object</code>
+    * ~~[.another(ndx, id_accessor)](#dc_graph.flat_group.another) ⇒ <code>Object</code>~~
 
 <a name="dc_graph.flat_group.make"></a>
 
-#### flat_group.make(vec, id_accessor) ⇒ <code>Object</code>
-Create a crossfilter, dimension, and flat group, as described in [flat_group](#dc_graph.flat_group).
-Returns an object containing all three.
+#### flat_group.make(source, id_accessor) ⇒ <code>Object</code>
+Create a crossfilter, dimension, and flat group. Returns an object containing all three.
+
+ 1. If `source` is an array, create a crossfilter from it. Otherwise assume it is a
+ crossfilter instance.
+ 2. Create a dimension on the crossfilter keyed by `id_accessor`
+ 3. Create a group from the dimension, reducing to the row when it's filtered in, or
+`null` when it's out.
+ 4. Wrap the group in a fake group which filters out the nulls.
+
+The resulting fake group's `.all()` method returns an array of the currently filtered-in
+`{key, value}` pairs where the key is `id_accessor(row)` and the value is the row.
 
 **Kind**: static method of [<code>flat_group</code>](#dc_graph.flat_group)  
 **Returns**: <code>Object</code> - `{crossfilter, dimension, group}`  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| vec | <code>Array</code> | the data array for crossfilter |
+| source | <code>Array</code> | the data array for crossfilter, or a crossfilter |
 | id_accessor | <code>function</code> | accessor function taking a row object and returning its unique identifier |
 
 <a name="dc_graph.flat_group.another"></a>
 
-#### flat_group.another(ndx, id_accessor) ⇒ <code>Object</code>
-Create a flat dimension and group from an existing crossfilter.
+#### ~~flat_group.another(ndx, id_accessor) ⇒ <code>Object</code>~~
+***Deprecated***
 
-This is a wretched name for this function.
+Create a flat dimension and group from an existing crossfilter.
 
 **Kind**: static method of [<code>flat_group</code>](#dc_graph.flat_group)  
 **Returns**: <code>Object</code> - `{crossfilter, dimension, group}`  

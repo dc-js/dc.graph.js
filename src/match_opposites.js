@@ -17,9 +17,9 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
         return { x: p.node.cola.x + p.pos.x, y: p.node.cola.y + p.pos.y };
     }
     function is_valid(sourcePort, targetPort) {
-        return (_behavior.allowParallel() || !_wedges.some(function(e) {
+        return (_strategy.allowParallel() || !_wedges.some(function(e) {
             return sourcePort.edges.indexOf(e) >= 0 && targetPort.edges.indexOf(e) >= 0;
-        })) && _behavior.isValid()(sourcePort, targetPort);
+        })) && _strategy.isValid()(sourcePort, targetPort);
     }
     function reset_deletables(source, targets) {
         targets.forEach(function(p) {
@@ -32,7 +32,7 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                 e.deleting = 0;
             });
     }
-    var _behavior = {
+    var _strategy = {
         isValid: property(function(sourcePort, targetPort) {
             // draw_graphs is already enforcing this, but this makes more sense and i use xor any chance i get
             return (diagram.portName.eval(sourcePort) === 'in') ^ (diagram.portName.eval(targetPort) === 'in');
@@ -105,5 +105,5 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
             return diagram.portName.eval(sourcePort) === 'in';
         }
     };
-    return _behavior;
+    return _strategy;
 };

@@ -1,9 +1,4 @@
-.ui-autocomplete {
-  max-height: 500px;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.edge-label {
-    visibility: visible;
+body {
+    font-family: Open Sans, sans-serif;
+    padding: 3em;
 }

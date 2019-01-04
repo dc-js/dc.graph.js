@@ -161,7 +161,7 @@ if (!Array.prototype.find) {
       while (k < len) {
         // a. Let Pk be ! ToString(k).
         // b. Let kValue be ? Get(O, Pk).
-        // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+        // c. Let testResult be ToBoolean(? Call(predicate, T, << kValue, k, O >>)).
         // d. If testResult is true, return kValue.
         var kValue = o[k];
         if (predicate.call(thisArg, kValue, k, o)) {

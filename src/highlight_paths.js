@@ -7,10 +7,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     var _anchor;
 
     function refresh() {
-        if(_behavior.doRedraw())
-            _behavior.parent().relayout().redraw();
+        if(_mode.doRedraw())
+            _mode.parent().relayout().redraw();
         else
-            _behavior.parent().refresh();
+            _mode.parent().refresh();
     }
 
     function paths_changed(nop, eop) {
@@ -73,7 +73,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
         else return pathsA.concat(pathsB.filter(doesnt_contain_path(pathsA)));
     }
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         diagram
             .cascade(200, true, node_edge_conditions(function(n) {
                 return !!node_on_paths[diagram.nodeKey.eval(n)];
@@ -115,7 +115,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             });
     }
 
-    function remove_behavior(diagram, node, edge, ehover) {
+    function remove(diagram, node, edge, ehover) {
         node
             .on('mouseover.highlight-paths', null)
             .on('mouseout.highlight-paths', null)
@@ -131,10 +131,10 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             .cascade(400, false, hoverprops);
     }
 
-    var _behavior = dc_graph.behavior('highlight-paths', {
-        add_behavior: add_behavior,
-        remove_behavior: function(diagram, node, edge, ehover) {
-            remove_behavior(diagram, node, edge, ehover);
+    var _mode = dc_graph.mode('highlight-paths', {
+        draw: draw,
+        remove: function(diagram, node, edge, ehover) {
+            remove(diagram, node, edge, ehover);
             return this;
         },
         parent: function(p) {
@@ -148,8 +148,8 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
     });
 
     // whether to do relayout & redraw (true) or just refresh (false)
-    _behavior.doRedraw = property(false);
+    _mode.doRedraw = property(false);
 
-    return _behavior;
+    return _mode;
 };
 

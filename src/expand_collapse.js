@@ -245,14 +245,14 @@ dc_graph.expand_collapse = function(options) {
         });
     }
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         function enter_node(n) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             _overNode = n;
             _overDir = dir;
             if(options.hideNode && detect_key(options.hideKey))
                 highlight_hiding_node(diagram, n, edge);
-            else if(_overNode.orig.value.value.URL && detect_key(options.linkKey)) {
+            else if(_overNode.orig.value.value && _overNode.orig.value.value.URL && detect_key(options.linkKey)) {
                 diagram.selectAllNodes()
                     .filter(function(n) {
                         return n === _overNode;
@@ -277,7 +277,7 @@ dc_graph.expand_collapse = function(options) {
             if(options.hideNode && detect_key(options.hideKey))
                 options.hideNode(nk);
             else if(detect_key(options.linkKey)) {
-                if(n.orig.value.value.URL)
+                if(n.orig.value.value && n.orig.value.value.URL)
                     window.open(n.orig.value.value.URL, 'dcgraphlink');
             } else {
                 clear_stubs(diagram, node, edge);
@@ -322,7 +322,7 @@ dc_graph.expand_collapse = function(options) {
                     collapse_highlight_group.highlight({}, {});
                 }
                 else if(d3.event.key === options.linkKey && _overNode) {
-                    if(_overNode && _overNode.orig.value.value.URL) {
+                    if(_overNode && _overNode.orig.value.value && _overNode.orig.value.value.URL) {
                         diagram.selectAllNodes()
                             .filter(function(n) {
                                 return n === _overNode;
@@ -338,7 +338,7 @@ dc_graph.expand_collapse = function(options) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
                         highlight_collapse(diagram, _overNode, node, edge, _overDir);
-                        if(_overNode.orig.value.value.URL) {
+                        if(_overNode.orig.value && _overNode.orig.value.value && _overNode.orig.value.value.URL) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
                                     return n === _overNode;
@@ -349,7 +349,7 @@ dc_graph.expand_collapse = function(options) {
             });
         diagram.cascade(97, true, conditional_properties(
             function(n) {
-                return n === _overNode && n.orig.value.value.URL;
+                return n === _overNode && n.orig.value.value && n.orig.value.value.URL;
             },
             {
                 nodeLabelDecoration: 'underline'
@@ -357,7 +357,7 @@ dc_graph.expand_collapse = function(options) {
         ));
     }
 
-    function remove_behavior(diagram, node, edge) {
+    function remove(diagram, node, edge) {
         node
             .on('mouseover.expand-collapse', null)
             .on('mouseout.expand-collapse', null);
@@ -410,9 +410,9 @@ dc_graph.expand_collapse = function(options) {
         options.expandedNodes(map);
     }
 
-    var _behavior = dc_graph.behavior('expand-collapse', {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+    var _mode = dc_graph.mode('expand-collapse', {
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             if(p) {
                 _keyboard = p.child('keyboard');
@@ -422,8 +422,8 @@ dc_graph.expand_collapse = function(options) {
         }
     });
 
-    _behavior.expand = expand;
-    _behavior.expandNodes = expandNodes;
-    _behavior.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
-    return _behavior;
+    _mode.expand = expand;
+    _mode.expandNodes = expandNodes;
+    _mode.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
+    return _mode;
 };

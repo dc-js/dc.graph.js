@@ -20,18 +20,18 @@ dc_graph.select_edges = function(props, options) {
             }).map(this.key);
         },
         clickables: function() {
-            return _behavior.parent().selectAllEdges('.edge-hover');
+            return _mode.parent().selectAllEdges('.edge-hover');
         },
         key: function(e) {
-            return _behavior.parent().edgeKey.eval(e);
+            return _mode.parent().edgeKey.eval(e);
         },
         applyStyles: function(pred) {
-            _behavior.parent().cascade(50, true, node_edge_conditions(null, pred, props));
+            _mode.parent().cascade(50, true, node_edge_conditions(null, pred, props));
         },
         removeStyles: function() {
-            _behavior.parent().cascade(50, false, props);
+            _mode.parent().cascade(50, false, props);
         }
     };
-    var _behavior = dc_graph.select_things(select_edges_group, 'select-edges', thinginess);
-    return _behavior;
+    var _mode = dc_graph.select_things(select_edges_group, 'select-edges', thinginess);
+    return _mode;
 };

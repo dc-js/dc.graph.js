@@ -75,6 +75,62 @@ function process_dsv(callback, error, data) {
     });
 }
 
+dc_graph.file_formats = [
+    {
+        exts: 'json',
+        from_url: d3.json,
+        from_text: function(text, callback) {
+            callback(null, JSON.parse(text));
+        }
+    },
+    {
+        exts: ['gv', 'dot'],
+        from_url: function(url, callback) {
+            d3.text(url, process_dot.bind(null, callback));
+        },
+        from_text: function(text, callback) {
+            process_dot(callback, null, text);
+        }
+    },
+    {
+        exts: 'psv',
+        from_url: function(url, callback) {
+            d3.dsv('|', 'text/plain')(url, process_dsv.bind(null, callback));
+        },
+        from_text: function(text, callback) {
+            process_dsv(callback, null, d3.dsv('|').parse(text));
+        }
+    },
+    {
+        exts: 'csv',
+        from_url: function(url, callback) {
+            d3.csv(url, process_dsv.bind(null, callback));
+        },
+        from_text: function(text, callback) {
+            process_dsv(callback, null, d3.csv.parse(text));
+        }
+    }
+];
+
+dc_graph.match_file_format = function(filename) {
+    return dc_graph.file_formats.find(function(format) {
+        var exts = format.exts;
+        if(!Array.isArray(exts))
+            exts = [exts];
+        return exts.find(function(ext) {
+                return new RegExp('\.' + ext + '$').test(filename);
+        });
+    });
+};
+
+function unknown_format_error(filename) {
+    var spl = filename.split('.');
+    if(spl.length)
+        return new Error('do not know how to process graph file extension ' + spl[spl.length-1]);
+    else
+        return new Error('need file extension to process graph file automatically, filename ' + filename);
+}
+
 // load a graph from various formats and return the data in consistent {nodes, links} format
 dc_graph.load_graph = function() {
     // ignore any query parameters for checking extension
@@ -106,12 +162,18 @@ dc_graph.load_graph = function() {
                     callback(null, {nodes: nodes.results, edges: edges.results});
             });
     }
-    else if(/\.json$/.test(ignore_query(file1)))
-        d3.json(file1, callback);
-    else if(/\.gv|\.dot$/.test(ignore_query(file1)))
-        d3.text(file1, process_dot.bind(null, callback));
-    else if(/\.psv$/.test(ignore_query(file1)))
-        d3.dsv('|', 'text/plain')(file1, process_dsv.bind(null, callback));
-    else if(/\.csv$/.test(ignore_query(file1)))
-        d3.csv(file1, process_dsv.bind(null, callback));
+    else {
+        var file1noq = ignore_query(file1);
+        var format = dc_graph.match_file_format(file1noq);
+        if(format)
+            format.from_url(file1, callback);
+        else callback(unknown_format_error(file1noq));
+    }
+};
+
+dc_graph.load_graph_text = function(text, filename, callback) {
+    var format = dc_graph.match_file_format(filename);
+    if(format)
+        format.from_text(text, callback);
+    else callback(unknown_format_error(filename));
 };

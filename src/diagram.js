@@ -1471,7 +1471,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             e1.cola.dcg_edgeTarget = _diagram.edgeTarget.eval(e1);
             e1.source = _nodes[e1.cola.dcg_edgeSource];
             e1.target = _nodes[e1.cola.dcg_edgeTarget];
-            e1.cola.dcg_edgeLength = _diagram.edgeLength.eval(e1);
             e1.sourcePort = e1.sourcePort || {};
             e1.targetPort = e1.targetPort || {};
             _diagram.layoutEngine().populateLayoutEdge(e1.cola, e1);
@@ -1709,6 +1708,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             _nodes_snapshot = nodes_snapshot;
             _edges_snapshot = edges_snapshot;
         }
+
+        // edge lengths may be affected by node sizes
+        wedges.forEach(function(e) {
+            e.cola.dcg_edgeLength = _diagram.edgeLength.eval(e);
+        });
 
         // cola constraints always use indices, but node references
         // are more friendly, so translate those
@@ -2138,14 +2142,19 @@ dc_graph.diagram = function (parent, chartGroup) {
     function node_bounds(n) {
         var bounds = {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
                       right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
-        var ports = _nodePorts[_diagram.nodeKey.eval(n)];
-        if(ports)
-            ports.forEach(function(p) {
-                var pb = _diagram.portStyle(_diagram.portStyleName.eval(p)).portBounds(p);
-                pb.left += n.cola.x; pb.top += n.cola.y;
-                pb.right += n.cola.x; pb.bottom += n.cola.y;
-                bounds = union_bounds(bounds, pb);
-            });
+        if(_diagram.portStyle.enum().length) {
+            var ports = _nodePorts[_diagram.nodeKey.eval(n)];
+            if(ports)
+                ports.forEach(function(p) {
+                    var portStyle =_diagram.portStyleName.eval(p);
+                    if(!portStyle || !_diagram.portStyle(portStyle))
+                        return;
+                    var pb = _diagram.portStyle(portStyle).portBounds(p);
+                    pb.left += n.cola.x; pb.top += n.cola.y;
+                    pb.right += n.cola.x; pb.bottom += n.cola.y;
+                    bounds = union_bounds(bounds, pb);
+                });
+        }
         return bounds;
     }
 
@@ -2437,17 +2446,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
             })
           .append('textPath')
-            .attr('startOffset', '50%')
-            .attr('xlink:href', function(e) {
-                var id = _diagram.textpathId(d3.select(this.parentNode.parentNode).datum());
-                // angular on firefox needs absolute paths for fragments
-                return window.location.href.split('#')[0] + '#' + id;
-            });
+            .attr('startOffset', '50%');
         elabels
           .select('textPath')
             .text(function(t) { return t; })
             .attr('opacity', function() {
-                _diagram.edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
+                return _diagram.edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
+            })
+            .attr('xlink:href', function(e) {
+                var id = _diagram.textpathId(d3.select(this.parentNode.parentNode).datum());
+                // angular on firefox needs absolute paths for fragments
+                return window.location.href.split('#')[0] + '#' + id;
             });
         textPathsEnter
             .attr('d', render_edge_label_path(_diagram.stageTransitions() === 'modins' ? 'new' : 'old'));
@@ -2753,6 +2762,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var svg = _svg || _diagram.select('svg');
         svg.remove();
         _svg = null;
+        _diagram.x(null).y(null);
         return generateSvg();
     };
 

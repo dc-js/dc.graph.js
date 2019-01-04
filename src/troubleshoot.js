@@ -2,7 +2,7 @@ dc_graph.troubleshoot = function() {
     var _debugLayer = null;
     var _translate, _scale = 1, _xDomain, _yDomain;
 
-    function add_behavior(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, ehover) {
         if(!_debugLayer)
             _debugLayer = diagram.g().append('g').attr({
                 class: 'troubleshoot',
@@ -19,11 +19,11 @@ dc_graph.troubleshoot = function() {
         crosshairs.enter().append('path').attr('class', 'nodecenter');
         crosshairs.attr({
             d: function(c) {
-                return 'M' + (c.x - _behavior.xhairWidth()/2) + ',' + c.y + ' h' + _behavior.xhairWidth() +
-                    ' M' + c.x + ',' + (c.y - _behavior.xhairHeight()/2) + ' v' + _behavior.xhairHeight();
+                return 'M' + (c.x - _mode.xhairWidth()/2) + ',' + c.y + ' h' + _mode.xhairWidth() +
+                    ' M' + c.x + ',' + (c.y - _mode.xhairHeight()/2) + ' v' + _mode.xhairHeight();
             },
-            opacity: _behavior.xhairOpacity() !== null ? _behavior.xhairOpacity() : _behavior.opacity(),
-            stroke: _behavior.xhairColor(),
+            opacity: _mode.xhairOpacity() !== null ? _mode.xhairOpacity() : _mode.opacity(),
+            stroke: _mode.xhairColor(),
             'stroke-width': 1/_scale
         });
         function cola_point(n) {
@@ -33,7 +33,7 @@ dc_graph.troubleshoot = function() {
             return boundary(cola_point(n), n.cola.width, n.cola.height);
         });
         var colaboundary = _debugLayer.selectAll('path.colaboundary').data(colabounds);
-        draw_corners(colaboundary, 'colaboundary', _behavior.boundsColor());
+        draw_corners(colaboundary, 'colaboundary', _mode.boundsColor());
 
         var textbounds = node.data().map(function(n) {
             if(!n.bbox || (!n.bbox.width && !n.bbox.height))
@@ -41,7 +41,7 @@ dc_graph.troubleshoot = function() {
             return boundary(cola_point(n), n.bbox.width, n.bbox.height);
         }).filter(function(n) { return !!n; });
         var textboundary = _debugLayer.selectAll('path.textboundary').data(textbounds);
-        draw_corners(textboundary, 'textboundary', _behavior.boundsColor());
+        draw_corners(textboundary, 'textboundary', _mode.boundsColor());
 
         var radiibounds = node.data().map(function(n) {
             if(typeof n.dcg_rx !== 'number')
@@ -49,27 +49,27 @@ dc_graph.troubleshoot = function() {
             return boundary(cola_point(n), n.dcg_rx*2, n.dcg_ry*2);
         }).filter(function(n) { return !!n; });
         var radiiboundary = _debugLayer.selectAll('path.radiiboundary').data(radiibounds);
-        draw_corners(radiiboundary, 'radiiboundary', _behavior.boundsColor());
+        draw_corners(radiiboundary, 'radiiboundary', _mode.boundsColor());
 
         diagram.addOrRemoveDef('debug-orient-marker-head',
                                true,
                                'svg:marker',
-                               orient_marker.bind(null, _behavior.arrowHeadColor()));
+                               orient_marker.bind(null, _mode.arrowHeadColor()));
         diagram.addOrRemoveDef('debug-orient-marker-tail',
                                true,
                                'svg:marker',
-                               orient_marker.bind(null, _behavior.arrowTailColor()));
-        var heads = _behavior.arrowLength() ? edge.data().map(function(e) {
+                               orient_marker.bind(null, _mode.arrowTailColor()));
+        var heads = _mode.arrowLength() ? edge.data().map(function(e) {
             return {pos: e.pos.new.path.points[e.pos.new.path.points.length-1], orient: e.pos.new.orienthead};
         }) : [];
         var headOrients = _debugLayer.selectAll('line.heads').data(heads);
-        draw_arrow_orient(headOrients, 'heads', _behavior.arrowHeadColor(), '#debug-orient-marker-head');
+        draw_arrow_orient(headOrients, 'heads', _mode.arrowHeadColor(), '#debug-orient-marker-head');
 
-        var tails = _behavior.arrowLength() ? edge.data().map(function(e) {
+        var tails = _mode.arrowLength() ? edge.data().map(function(e) {
             return {pos: e.pos.new.path.points[0], orient: e.pos.new.orienttail};
         }) : [];
         var tailOrients = _debugLayer.selectAll('line.tails').data(tails);
-        draw_arrow_orient(tailOrients, 'tails', _behavior.arrowTailColor(), '#debug-orient-marker-tail');
+        draw_arrow_orient(tailOrients, 'tails', _mode.arrowTailColor(), '#debug-orient-marker-tail');
 
         var headpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
             var arrowSize = diagram.edgeArrowSize.eval(e);
@@ -84,7 +84,7 @@ dc_graph.troubleshoot = function() {
             );
         }));
         var hp = _debugLayer.selectAll('path.head-point').data(headpts);
-        draw_x(hp, 'head-point', _behavior.arrowHeadColor());
+        draw_x(hp, 'head-point', _mode.arrowHeadColor());
 
         var tailpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
             var arrowSize = diagram.edgeArrowSize.eval(e);
@@ -99,17 +99,17 @@ dc_graph.troubleshoot = function() {
             );
         }));
         var tp = _debugLayer.selectAll('path.tail-point').data(tailpts);
-        draw_x(tp, 'tail-point', _behavior.arrowTailColor());
+        draw_x(tp, 'tail-point', _mode.arrowTailColor());
 
         var domain = _debugLayer.selectAll('rect.domain').data([0]);
         domain.enter().append('rect');
-        var xd = _behavior.parent().x().domain(), yd = _behavior.parent().y().domain();
+        var xd = _mode.parent().x().domain(), yd = _mode.parent().y().domain();
         domain.attr({
             class: 'domain',
             fill: 'none',
-            opacity: _behavior.domainOpacity(),
-            stroke: _behavior.domainColor(),
-            'stroke-width': _behavior.domainStrokeWidth()/_scale,
+            opacity: _mode.domainOpacity(),
+            stroke: _mode.domainColor(),
+            'stroke-width': _mode.domainStrokeWidth()/_scale,
             x: xd[0],
             y: yd[0],
             width: xd[1] - xd[0],
@@ -121,7 +121,7 @@ dc_graph.troubleshoot = function() {
         _scale = scale;
         _xDomain = xDomain;
         _yDomain = yDomain;
-        add_behavior(_behavior.parent(), _behavior.parent().selectAllNodes(), _behavior.parent().selectAllEdges());
+        draw(_mode.parent(), _mode.parent().selectAllNodes(), _mode.parent().selectAllEdges());
     }
 
     function boundary(point, wid, hei) {
@@ -137,10 +137,10 @@ dc_graph.troubleshoot = function() {
     }
     function corners(bounds) {
         return [
-            bound_tick(bounds.left, bounds.top, _behavior.boundsWidth(), _behavior.boundsHeight()),
-            bound_tick(bounds.right, bounds.top, -_behavior.boundsWidth(), _behavior.boundsHeight()),
-            bound_tick(bounds.right, bounds.bottom, -_behavior.boundsWidth(), -_behavior.boundsHeight()),
-            bound_tick(bounds.left, bounds.bottom, _behavior.boundsWidth(), -_behavior.boundsHeight()),
+            bound_tick(bounds.left, bounds.top, _mode.boundsWidth(), _mode.boundsHeight()),
+            bound_tick(bounds.right, bounds.top, -_mode.boundsWidth(), _mode.boundsHeight()),
+            bound_tick(bounds.right, bounds.bottom, -_mode.boundsWidth(), -_mode.boundsHeight()),
+            bound_tick(bounds.left, bounds.bottom, _mode.boundsWidth(), -_mode.boundsHeight()),
         ].join(' ');
     }
     function draw_corners(binding, classname, color) {
@@ -148,7 +148,7 @@ dc_graph.troubleshoot = function() {
         binding.enter().append('path').attr('class', classname);
         binding.attr({
             d: corners,
-            opacity: _behavior.boundsOpacity() !== null ? _behavior.boundsOpacity() : _behavior.opacity(),
+            opacity: _mode.boundsOpacity() !== null ? _mode.boundsOpacity() : _mode.opacity(),
             stroke: color,
             'stroke-width': 1/_scale,
             fill: 'none'
@@ -163,11 +163,11 @@ dc_graph.troubleshoot = function() {
         binding.attr({
             x1: function(d) { return d.pos.x; },
             y1: function(d) { return d.pos.y; },
-            x2: function(d) { return d.pos.x - Math.cos(unrad(d.orient))*_behavior.arrowLength(); },
-            y2: function(d) { return d.pos.y - Math.sin(unrad(d.orient))*_behavior.arrowLength(); },
+            x2: function(d) { return d.pos.x - Math.cos(unrad(d.orient))*_mode.arrowLength(); },
+            y2: function(d) { return d.pos.y - Math.sin(unrad(d.orient))*_mode.arrowLength(); },
             stroke: color,
-            'stroke-width': _behavior.arrowStrokeWidth()/_scale,
-            opacity: _behavior.arrowOpacity() !== null ? _behavior.arrowOpacity() : _behavior.opacity(),
+            'stroke-width': _mode.arrowStrokeWidth()/_scale,
+            opacity: _mode.arrowOpacity() !== null ? _mode.arrowOpacity() : _mode.opacity(),
             'marker-end': 'url(' + markerUrl + ')'
         });
     }
@@ -217,7 +217,7 @@ dc_graph.troubleshoot = function() {
 
 
     function draw_x(binding, classname, color) {
-        var xw = _behavior.xWidth()/2, xh = _behavior.xHeight()/2;
+        var xw = _mode.xWidth()/2, xh = _mode.xHeight()/2;
         binding.exit().remove();
         binding.enter().append('path').attr('class', classname);
         binding.attr({
@@ -230,54 +230,54 @@ dc_graph.troubleshoot = function() {
             },
             'stroke-width': 2/_scale,
             stroke: color,
-            opacity: _behavior.xOpacity()
+            opacity: _mode.xOpacity()
         });
     }
-    function remove_behavior(diagram, node, edge, ehover) {
+    function remove(diagram, node, edge, ehover) {
         if(_debugLayer)
             _debugLayer.remove();
     }
 
-    var _behavior = dc_graph.behavior('highlight-paths', {
+    var _mode = dc_graph.mode('highlight-paths', {
         laterDraw: true,
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             if(p) {
                 _translate = p.translate();
                 _scale = p.scale();
                 p.on('zoomed.troubleshoot', on_zoom);
             }
-            else if(_behavior.parent())
-                _behavior.parent().on('zoomed.troubleshoot', null);
+            else if(_mode.parent())
+                _mode.parent().on('zoomed.troubleshoot', null);
         }
     });
-    _behavior.opacity = property(0.75);
+    _mode.opacity = property(0.75);
 
-    _behavior.xhairOpacity = property(null);
-    _behavior.xhairWidth = property(10);
-    _behavior.xhairHeight = property(10);
-    _behavior.xhairColor = property('blue');
+    _mode.xhairOpacity = property(null);
+    _mode.xhairWidth = property(10);
+    _mode.xhairHeight = property(10);
+    _mode.xhairColor = property('blue');
 
-    _behavior.boundsOpacity = property(null);
-    _behavior.boundsWidth = property(10);
-    _behavior.boundsHeight = property(10);
-    _behavior.boundsColor = property('green');
+    _mode.boundsOpacity = property(null);
+    _mode.boundsWidth = property(10);
+    _mode.boundsHeight = property(10);
+    _mode.boundsColor = property('green');
 
-    _behavior.arrowOpacity = property(null);
-    _behavior.arrowStrokeWidth = property(3);
-    _behavior.arrowColor = _behavior.arrowHeadColor = property('darkorange');
-    _behavior.arrowTailColor = property('red');
-    _behavior.arrowLength = property(100);
+    _mode.arrowOpacity = property(null);
+    _mode.arrowStrokeWidth = property(3);
+    _mode.arrowColor = _mode.arrowHeadColor = property('darkorange');
+    _mode.arrowTailColor = property('red');
+    _mode.arrowLength = property(100);
 
-    _behavior.xWidth = property(1);
-    _behavior.xHeight = property(1);
-    _behavior.xOpacity = property(0.8);
+    _mode.xWidth = property(1);
+    _mode.xHeight = property(1);
+    _mode.xOpacity = property(0.8);
 
-    _behavior.domainOpacity = property(0.6);
-    _behavior.domainColor = property('darkorange');
-    _behavior.domainStrokeWidth = property(4);
+    _mode.domainOpacity = property(0.6);
+    _mode.domainColor = property('darkorange');
+    _mode.domainStrokeWidth = property(4);
 
-    return _behavior;
+    return _mode;
 };
 

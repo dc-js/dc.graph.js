@@ -23,11 +23,11 @@ dc_graph.move_nodes = function(options) {
     function for_each_selected(f, selected) {
         selected = selected || _selected;
         selected.forEach(function(key) {
-            var n = _behavior.parent().getWholeNode(key);
+            var n = _mode.parent().getWholeNode(key);
             f(n, key);
         });
     }
-    function add_behavior(diagram, node, edge) {
+    function draw(diagram, node, edge) {
         node.on('mousedown.move-nodes', function(n) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
@@ -60,7 +60,7 @@ dc_graph.move_nodes = function(options) {
                 var pos = dc_graph.event_coords(diagram);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
-                if(!_moveStarted && Math.hypot(dx, dy) > _behavior.dragSize()) {
+                if(!_moveStarted && Math.hypot(dx, dy) > _mode.dragSize()) {
                     _moveStarted = true;
                     // prevent click event for this node setting selection just to this
                     if(_downNode)
@@ -105,25 +105,28 @@ dc_graph.move_nodes = function(options) {
             .on('mouseup.move-nodes', mouse_up);
     }
 
-    function remove_behavior(diagram, node, edge) {
+    function remove(diagram, node, edge) {
         node.on('mousedown.move-nodes', null);
         node.on('mousemove.move-nodes', null);
         node.on('mouseup.move-nodes', null);
     }
 
-    var _behavior = dc_graph.behavior('move-nodes', {
-        add_behavior: add_behavior,
-        remove_behavior: remove_behavior,
+    var _mode = dc_graph.mode('move-nodes', {
+        draw: draw,
+        remove: remove,
         parent: function(p) {
             select_nodes_group.on('set_changed.move-nodes', p ? selection_changed(p) : null);
-            _brush = p.child('brush');
-            _drawGraphs = p.child('draw-graphs');
-            _selectNodes = p.child('select-nodes');
+            if(p) {
+                _brush = p.child('brush');
+                _drawGraphs = p.child('draw-graphs');
+                _selectNodes = p.child('select-nodes');
+            }
+            else _brush = _drawGraphs = _selectNodes = null;
         }
     });
 
     // minimum distance that is considered a drag, not a click
-    _behavior.dragSize = property(5);
+    _mode.dragSize = property(5);
 
-    return _behavior;
+    return _mode;
 };

@@ -184,10 +184,18 @@ module.exports = function (grunt) {
                         flatten: true,
                         nonull: true,
                         src: [
-                            'node_modules/x-editable/dist/jqueryui-editable/img/*',
-                            'node_modules/ionicons/dist/ionicons/svg/md-*'
+                            'node_modules/x-editable/dist/jqueryui-editable/img/*'
                         ],
                         dest: '<%= conf.web %>/img'
+                    },
+                    {
+                        expand: true,
+                        flatten: true,
+                        nonull: true,
+                        src: [
+                            'node_modules/ionicons/dist/ionicons/svg/md-*'
+                        ],
+                        dest: '<%= conf.web %>/img/ionicons'
                     },
                     {
                         nonull: true,
@@ -356,7 +364,7 @@ module.exports.jsFiles = [
     'src/constraint_pattern.js',
     'src/tree_positions.js',
     'src/tree_constraints.js',
-    'src/behavior.js',
+    'src/mode.js',
     'src/tip.js',
     'src/dropdown.js',
     'src/keyboard.js',
@@ -381,7 +389,7 @@ module.exports.jsFiles = [
     'src/highlight_radius.js',
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',
-    'src/draw_spline_paths.js',
+    'src/spline_paths.js',
     'src/expand_collapse.js',
     'src/shown_hidden.js',
     'src/expanded_hidden.js',

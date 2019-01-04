@@ -13,7 +13,7 @@ dc_graph.text_contents = function() {
                 else if(typeof lines === 'string')
                     lines = [lines];
                 var lineHeight = _contents.parent().nodeLineHeight();
-                var first = 1 - ((lines.length - 1) * lineHeight + 1)/2;
+                var first = 0.5 - ((lines.length - 1) * lineHeight + 1)/2;
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
             tspan.enter().append('tspan');

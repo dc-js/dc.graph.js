@@ -1,0 +1,14 @@
+.ui-autocomplete {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.edge-label {
+    visibility: visible;
+}
+
+#graph {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+}

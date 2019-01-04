@@ -9,11 +9,11 @@ dc_graph.label_edges = function(options) {
 
     options.find_thing = function(key, node, edge) {
         return edge.filter(function(e) {
-            return _behavior.parent().edgeKey.eval(e) === key;
+            return _mode.parent().edgeKey.eval(e) === key;
         });
     };
     options.hide_thing_label = function(edge, whether) {
-        var label = _behavior.parent().selectAll('#' + _behavior.parent().edgeId(edge.datum()) + '-label textPath');
+        var label = _mode.parent().selectAll('#' + _mode.parent().edgeId(edge.datum()) + '-label textPath');
         label.attr('visibility', whether ? 'hidden' : 'visible');
     };
     options.thing_box = function(edge, eventOptions) {
@@ -23,20 +23,20 @@ dc_graph.label_edges = function(options) {
         return {x: x, y: y-10, width:0, height: 20};
     };
     options.thing_label = function(edge) {
-        return _behavior.parent().edgeLabel.eval(edge.datum());
+        return _mode.parent().edgeLabel.eval(edge.datum());
     };
     options.accept = function(edge, text) {
-        var callback = _behavior.changeEdgeLabel() ?
-                _behavior.changeEdgeLabel()(_behavior.parent().edgeKey.eval(edge.datum()), text) :
+        var callback = _mode.changeEdgeLabel() ?
+                _mode.changeEdgeLabel()(_mode.parent().edgeKey.eval(edge.datum()), text) :
                 Promise.resolve(text);
         return callback.then(function(text2) {
             var e = edge.datum();
             e.orig.value[_labelTag] = text2;
-            _behavior.parent().redrawGroup();
+            _mode.parent().redrawGroup();
         });
     };
 
-    var _behavior = dc_graph.label_things(options);
-    _behavior.changeEdgeLabel = property(null);
-    return _behavior;
+    var _mode = dc_graph.label_things(options);
+    _mode.changeEdgeLabel = property(null);
+    return _mode;
 };

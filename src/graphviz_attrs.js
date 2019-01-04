@@ -1,7 +1,7 @@
 /**
  * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
  * implement - although these are not required, they make it easier for clients and
- * behaviors (like expand_collapse) to work with multiple layout engines.
+ * modes (like expand_collapse) to work with multiple layout engines.
  *
  * these attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
  * @class graphviz_attrs
