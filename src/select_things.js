@@ -35,7 +35,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 refresh = true;
             _selected = selection;
             if(refresh)
-                diagram.refresh();
+                diagram.requestRefresh();
         };
     }
     var _have_bce = false;
