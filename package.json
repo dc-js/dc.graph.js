@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "license": "Apache-2.0",
   "copyright": "2015-2019",
   "description": "Graph visualizations integrated with crossfilter and dc.js",

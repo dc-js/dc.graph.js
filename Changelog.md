@@ -1,3 +1,20 @@
+## 0.7.4
+* edge labels were lost when the page URL changed, because we are using absolute URLs
+* edge opacity was not properly applied to edge labels, again
+* when editing node & edge labels, the editor is closer to the actual font size
+* better vertical centering for node text
+* allow specifying `linkDistance` for d3-force layout; `"auto"` means individual; `edgeLength` is computed and set after node sizes are calculated
+* redraw arrows if edge stroke (color) changed
+* `load_graph` file extensions are extensible; can also read string instead of URL
+* `flat_group.another` deprecated; `flat_group.make` includes the same functionality
+* `behavior` renamed to `mode` with a deprecation warning. likewise `add_behavior` -> `draw`, `remove_behavior` -> `remove` ([#59](https://github.com/dc-js/dc.graph.js/issues/59))
+* many updates to the examples, including a common banner with title/source link/version, and the start of an index page. where it makes sense, they have engine switching, automatic sizing & restrictPan.
+* loading of user data in explore and simple viewer
+* examples renamed: `rectangular-selection` -> `brushing-filtering`, `single-file` -> `simple-viewer`, `index` -> `original-test-page`
+* reset the scales when resetting the SVG, so that re-`render`ing works
+* remove unused `needsStage` method from layout engines
+* bigger non-bold default font for nodes & edges
+
 ## 0.7.3
 * fix crash related to nodes without ports
 
