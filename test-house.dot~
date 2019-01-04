@@ -1,0 +1,5 @@
+digraph G {
+  node [shape=house]
+  {A,B,C} -> D
+  D -> {E,F}
+}

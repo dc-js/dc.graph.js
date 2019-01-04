@@ -1,7 +1,7 @@
 /*!
- *  dc.graph 0.7.3
+ *  dc.graph 0.7.4
  *  http://dc-js.github.io/dc.graph.js/
- *  Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
+ *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.3
+ * @version 0.7.4
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.3',
+    version: '0.7.4',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -9025,7 +9025,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 refresh = true;
             _selected = selection;
             if(refresh)
-                diagram.refresh();
+                diagram.requestRefresh();
         };
     }
     var _have_bce = false;
