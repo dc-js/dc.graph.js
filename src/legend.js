@@ -158,20 +158,20 @@ dc_graph.legend = function(legend_namespace) {
                 .attr('dx', function(d) {
                     return (_legend.itemWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width;
                 })
-                .on('mouseenter', function(n) {
+                .on('mouseenter.' + legend_namespace, function(n) {
                     var rect = this.getBoundingClientRect();
                     var key = _legend.parent().nodeKey.eval(n);
                     _legend.dropdown()
                         .show(key, rect.x, rect.y);
                 });
             item
-                .on('mouseenter', function(d) {
+                .on('mouseenter.' + legend_namespace, function(d) {
                     if(_counts && _counts[d.orig.key]) {
                         d3.select(this).selectAll('.dropdown-caret')
                             .style('visibility', 'visible');
                     }
                 })
-                .on('mouseleave', function(d) {
+                .on('mouseleave.' + legend_namespace, function(d) {
                     d3.select(this).selectAll('.dropdown-caret')
                         .style('visibility', 'hidden');
                 });
@@ -179,7 +179,7 @@ dc_graph.legend = function(legend_namespace) {
 
         if(_legend.dimension()) {
             item.attr('cursor', 'pointer')
-                .on('click.legend', function(d) {
+                .on('click.' + legend_namespace, function(d) {
                     var key = _legend.parent().nodeKey.eval(d);
                     if(!_included.length)
                         _included = _items.map(_legend.parent().nodeKey.eval);
@@ -192,7 +192,7 @@ dc_graph.legend = function(legend_namespace) {
                 });
         } else {
             item.attr('cursor', 'auto')
-                .on('click.legend', null);
+                .on('click.' + legend_namespace, null);
         }
         item.transition().duration(1000)
             .attr('opacity', function(d) {

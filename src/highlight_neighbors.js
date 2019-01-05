@@ -44,7 +44,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
             remove(diagram, node, edge);
         },
         parent: function(p) {
-            highlight_neighbors_group.on('highlight_node.highlight', p ? highlight_node : null);
+            highlight_neighbors_group.on('highlight_node.highlight-neighbors', p ? highlight_node : null);
             if(p && !p.child('highlight-things'))
                 p.child('highlight-things',
                         dc_graph.highlight_things(includeprops, excludeprops)

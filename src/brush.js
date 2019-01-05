@@ -23,9 +23,9 @@ dc_graph.brush = function() {
         if(!_brush) {
             _brush = d3.svg.brush()
                 .x(diagram.x()).y(diagram.y())
-                .on('brushstart', brushstart)
-                .on('brush', brushmove)
-                .on('brushend', brushend);
+                .on('brushstart.brush-mode', brushstart)
+                .on('brush.brush-mode', brushmove)
+                .on('brushend.brush-mode', brushend);
         }
         if(!_gBrush) {
             _gBrush = diagram.svg().insert('g', ':first-child')

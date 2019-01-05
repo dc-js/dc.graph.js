@@ -423,13 +423,13 @@ dc_graph.spline_paths = function(pathreader, pathprops, hoverprops, selectprops,
             .attr('stroke', 'green')
             .attr('stroke-width', (pathprops.edgeStrokeWidth || 1) + 4)
             .attr('fill', 'none')
-            .on('mouseover', function(d) {
+            .on('mouseover.spline-paths', function(d) {
                 highlight_paths_group.hover_changed([d]);
              })
-            .on('mouseout', function(d) {
+            .on('mouseout.spline-paths', function(d) {
                 highlight_paths_group.hover_changed(null);
              })
-            .on('click', function(d) {
+            .on('click.spline-paths', function(d) {
                 var selected = _selected && _selected.slice(0) || [],
                     i = selected.indexOf(d);
                 if(i !== -1)

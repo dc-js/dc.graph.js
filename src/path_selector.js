@@ -80,13 +80,13 @@ dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
               .attr('class', 'path_label')
               .attr('x', 0)
               .attr('y', radius*1.7)
-              .on('mouseover', function() {
+              .on('mouseover.path-selector', function() {
                   highlight_paths_group.hover_changed([path_data]);
               })
-              .on('mouseout', function() {
+              .on('mouseout.path-selector', function() {
                   highlight_paths_group.hover_changed(null);
               })
-              .on('click', function() {
+              .on('click.path-selector', function() {
                   highlight_paths_group.select_changed(toggle_paths(selected, [path_data]));
               });
           });
@@ -125,16 +125,16 @@ dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
     }
 
     highlight_paths_group
-        .on('paths_changed.selector', function(nop, eop, paths) {
+        .on('paths_changed.path-selector', function(nop, eop, paths) {
             hovered = selected = null;
             paths_ = paths;
             selector.redraw();
         })
-        .on('hover_changed.selector', function(hpaths) {
+        .on('hover_changed.path-selector', function(hpaths) {
             hovered = hpaths;
             draw_hovered();
         })
-        .on('select_changed.selector', function(spaths) {
+        .on('select_changed.path-selector', function(spaths) {
             selected = spaths;
             draw_selected();
         });

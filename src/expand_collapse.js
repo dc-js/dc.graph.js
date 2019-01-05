@@ -303,8 +303,8 @@ dc_graph.expand_collapse = function(options) {
         node
             .on('mouseenter.expand-collapse', enter_node)
             .on('mouseout.expand-collapse', leave_node)
-            .on('click', click_node)
-            .on('dblclick', click_node);
+            .on('click.expand-collapse', click_node)
+            .on('dblclick.expand-collapse', click_node);
 
         ehover
             .on('mouseenter.expand-collapse', enter_edge)

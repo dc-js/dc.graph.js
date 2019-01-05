@@ -1633,11 +1633,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             .attr('fill', 'none')
             .attr('stroke', 'green')
             .attr('stroke-width', 10)
-            .on('mouseover', function(e) {
+            .on('mouseover.diagram', function(e) {
                 d3.select('#' + _diagram.edgeId(e) + '-label')
                     .attr('visibility', 'visible');
             })
-            .on('mouseout', function(e) {
+            .on('mouseout.diagram', function(e) {
                 d3.select('#' + _diagram.edgeId(e) + '-label')
                     .attr('visibility', 'hidden');
             });
@@ -1830,7 +1830,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         }
         _diagram.layoutEngine()
-            .on('tick', function(nodes, edges) {
+            .on('tick.diagram', function(nodes, edges) {
                 var elapsed = Date.now() - startTime;
                 if(!_diagram.initialOnly())
                     populate_cola(nodes, edges);
@@ -1848,7 +1848,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _diagram.layoutEngine().stop();
                 }
             })
-            .on('end', function(nodes, edges) {
+            .on('end.diagram', function(nodes, edges) {
                 if(!_diagram.showLayoutSteps()) {
                     if(!_diagram.initialOnly())
                         populate_cola(nodes, edges);
@@ -1862,7 +1862,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 else layout_done(true);
                 check_zoom(node, edge);
             })
-            .on('start', function() {
+            .on('start.diagram', function() {
                 console.log('algo ' + _diagram.layoutEngine().layoutAlgorithm() + ' started.');
                 _dispatch.start();
             });
@@ -2964,7 +2964,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                      .domain([0, _diagram.height()])
                      .range([0, _diagram.height()]));
         _zoom = d3.behavior.zoom()
-            .on('zoom', doZoom)
+            .on('zoom.diagram', doZoom)
             .x(_diagram.x()).y(_diagram.y())
             .scaleExtent(_diagram.zoomExtent());
         if(_diagram.mouseZoomable()) {
