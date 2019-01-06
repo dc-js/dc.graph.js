@@ -74,10 +74,18 @@ function on_load(filename, error, data) {
         display_error(heading, error.message);
     }
 
-    var edges = dc_graph.flat_group.make(data.links, function(d) {
-        return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : '');
-    }),
-        nodes = dc_graph.flat_group.make(data.nodes, function(d) { return d.name; });
+    var graph_data = dc_graph.munge_graph(data),
+        nodes = graph_data.nodes,
+        edges = graph_data.edges,
+        sourceattr = graph_data.sourceattr,
+        targetattr = graph_data.targetattr,
+        nodekeyattr = graph_data.nodekeyattr;
+
+    var edge_key = function(d) {
+        return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
+    };
+    var edge_flat = dc_graph.flat_group.make(edges, edge_key),
+        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
     var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     simpleDiagram
@@ -87,8 +95,10 @@ function on_load(filename, error, data) {
         .height('auto')
         .autoZoom('once')
         .restrictPan(true)
-        .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
-        .edgeDimension(edges.dimension).edgeGroup(edges.group)
+        .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
+        .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
+        .edgeSource(function(e) { return e.value[sourceattr]; })
+        .edgeTarget(function(e) { return e.value[targetattr]; })
     // aesthetics
         .nodeFixed(n => n.value.fixedPos)
         .nodeStrokeWidthAccessor(0) // turn off outlines
