@@ -36,3 +36,27 @@ dc_graph.graphviz_attrs = function() {
         ranksep: property(40)
     };
 };
+
+// graphlib-dot seems to wrap nodes in an extra {value}
+// actually this is quite a common problem with generic libs
+function nvalue(n) {
+    return n.value.value ? n.value.value : n.value;
+}
+
+// apply standard accessors to a diagram in order to style it as graphviz would
+// this is just a start
+dc_graph.apply_graphviz_accessors = function(diagram) {
+    diagram
+        .nodeLabel(function(n) { return nvalue(n).label && nvalue(n).label.split(/\n|\\n/); })
+        .nodeShape(function(n) { return nvalue(n).shape; })
+        .nodeFill(function(n) { return nvalue(n).fillcolor || 'white'; })
+        .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
+        .edgeStroke(function(e) { return e.value.color || 'black'; })
+        .edgeStrokeDashArray(function(e) {
+            switch(e.value.style) {
+            case 'dotted':
+                return [1,5];
+            }
+            return null;
+        });
+};
