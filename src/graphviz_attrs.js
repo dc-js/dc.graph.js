@@ -44,12 +44,22 @@ function nvalue(n) {
 }
 
 // apply standard accessors to a diagram in order to style it as graphviz would
-// this is just a start
+// this is a work in progress
 dc_graph.apply_graphviz_accessors = function(diagram) {
     diagram
-        .nodeLabel(function(n) { return nvalue(n).label && nvalue(n).label.split(/\n|\\n/); })
+        .nodeLabel(function(n) {
+            var label = nvalue(n).label || n.key;
+            return label && label.split(/\n|\\n/);
+        })
         .nodeShape(function(n) { return nvalue(n).shape; })
         .nodeFill(function(n) { return nvalue(n).fillcolor || 'white'; })
+        .nodeLabelFill(function(n) { return nvalue(n).fontcolor || 'black'; })
+        .nodeStrokeWidth(function(n) {
+            // it is debatable whether a point === a pixel but they are close
+            // https://graphicdesign.stackexchange.com/questions/199/point-vs-pixel-what-is-the-difference
+            var penwidth = nvalue(n).penwidth;
+            return penwidth !== undefined ? +penwidth : 1;
+        })
         .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
         .edgeStroke(function(e) { return e.value.color || 'black'; })
         .edgeStrokeDashArray(function(e) {
