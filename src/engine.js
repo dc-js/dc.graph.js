@@ -47,6 +47,12 @@ dc_graph._engines = [
         instantiate: function() {
             return dc_graph.cola_layout();
         }
+    },
+    {
+        name: 'manual',
+        instantiate: function() {
+            return dc_graph.manual_layout();
+        }
     }
 ];
 dc_graph._default_engine = 'cola';
