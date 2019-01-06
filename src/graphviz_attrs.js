@@ -48,7 +48,9 @@ function nvalue(n) {
 dc_graph.apply_graphviz_accessors = function(diagram) {
     diagram
         .nodeLabel(function(n) {
-            var label = nvalue(n).label || n.key;
+            var label = nvalue(n).label;
+            if(label === undefined)
+                label = n.key;
             return label && label.split(/\n|\\n/);
         })
         .nodeShape(function(n) { return nvalue(n).shape; })
