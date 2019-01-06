@@ -14,6 +14,26 @@ var options = {
     },
     worker: true,
     file: 'data/process.json',
+    gvattr: {
+        default: true,
+        selector: '#graphviz-attrs',
+        needs_redraw: 'refresh',
+        exert: function(val, diagram) {
+            if(val)
+                dc_graph.apply_graphviz_accessors(simpleDiagram);
+            else {
+                simpleDiagram
+                    .nodeFixed(n => n.value.fixedPos)
+                    .nodeStrokeWidth(0) // turn off outlines
+                    .nodeFill(function(kv) {
+                        return '#2E54A2';
+                    })
+                    .nodeLabelPadding({x: 2, y: 0})
+                    .nodeLabelFill('white')
+                    .edgeArrowhead(sync_url.vals.arrows ? 'vee' : null);
+            }
+        }
+    },
     arrows: false,
     tips: true,
     neighbors: true
@@ -100,15 +120,9 @@ function on_load(filename, error, data) {
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
     // aesthetics
-        .nodeFixed(n => n.value.fixedPos)
-        .nodeStrokeWidthAccessor(0) // turn off outlines
-        .nodeFillAccessor(function(kv) {
-            return '#2E54A2';
-        })
-        .nodeLabelPadding({x: 2, y: 0})
-        .nodeLabelFillAccessor('white')
-        .nodeTitleAccessor(null) // deactivate basic tooltips
-        .edgeArrowheadAccessor(sync_url.vals.arrows ? 'vee' : null);
+        .nodeTitleAccessor(null); // deactivate basic tooltips
+
+    sync_url.exert();
 
     var move_nodes = dc_graph.move_nodes();
     simpleDiagram.child('move-nodes', move_nodes);
