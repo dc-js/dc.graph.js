@@ -81,3 +81,7 @@
     opacity: 0.1;
     fill: none;
 }
+
+.d3-tip table td {
+    padding: 2px;
+}
