@@ -98,6 +98,7 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
 };
 
 dc_graph.snapshot_graphviz = function(diagram) {
+    var xDomain = diagram.x().domain(), yDomain = diagram.y().domain();
     return {
         nodes: diagram.nodeGroup().all().map(function(n) {
             return diagram.getWholeNode(n.key);
@@ -137,6 +138,12 @@ dc_graph.snapshot_graphviz = function(diagram) {
                 arrowhead: diagram.edgeArrowhead.eval(e),
                 arrowtail: diagram.edgeArrowtail.eval(e)
             };
-        })
+        }),
+        bounds: {
+            left: xDomain[0],
+            top: yDomain[0],
+            right: xDomain[1],
+            bottom: yDomain[1]
+        }
     };
 };
