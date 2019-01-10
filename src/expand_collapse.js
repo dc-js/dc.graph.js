@@ -252,7 +252,7 @@ dc_graph.expand_collapse = function(options) {
             _overDir = dir;
             if(options.hideNode && detect_key(options.hideKey))
                 highlight_hiding_node(diagram, n, edge);
-            else if(_overNode.orig.value.value && _overNode.orig.value.value.URL && detect_key(options.linkKey)) {
+            else if(_mode.nodeURL.eval(_overNode) && detect_key(options.linkKey)) {
                 diagram.selectAllNodes()
                     .filter(function(n) {
                         return n === _overNode;
@@ -277,8 +277,8 @@ dc_graph.expand_collapse = function(options) {
             if(options.hideNode && detect_key(options.hideKey))
                 options.hideNode(nk);
             else if(detect_key(options.linkKey)) {
-                if(n.orig.value.value && n.orig.value.value.URL)
-                    window.open(n.orig.value.value.URL, 'dcgraphlink');
+                if(_mode.nodeURL.eval(n))
+                    window.open(_mode.nodeURL.eval(n), 'dcgraphlink');
             } else {
                 clear_stubs(diagram, node, edge);
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
@@ -322,7 +322,7 @@ dc_graph.expand_collapse = function(options) {
                     collapse_highlight_group.highlight({}, {});
                 }
                 else if(d3.event.key === options.linkKey && _overNode) {
-                    if(_overNode && _overNode.orig.value.value && _overNode.orig.value.value.URL) {
+                    if(_overNode && _mode.nodeURL.eval(_overNode)) {
                         diagram.selectAllNodes()
                             .filter(function(n) {
                                 return n === _overNode;
@@ -338,7 +338,7 @@ dc_graph.expand_collapse = function(options) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
                         highlight_collapse(diagram, _overNode, node, edge, _overDir);
-                        if(_overNode.orig.value && _overNode.orig.value.value && _overNode.orig.value.value.URL) {
+                        if(_mode.nodeURL(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
                                     return n === _overNode;
@@ -425,5 +425,8 @@ dc_graph.expand_collapse = function(options) {
     _mode.expand = expand;
     _mode.expandNodes = expandNodes;
     _mode.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
+    _mode.nodeURL = property(function(n) {
+        return n.value && n.value.value && n.value.value.URL;
+    });
     return _mode;
 };
