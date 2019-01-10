@@ -2246,6 +2246,11 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
     }
 
+    _diagram.calc_bounds0 = function(ndata, edata) {
+        // assumption: there can be no edges without nodes
+        var bounds = ndata.map(node_bounds).reduce(union_bounds);
+        return edata.map(edge_bounds).reduce(union_bounds, bounds);
+    };
     var _bounds;
     function calc_bounds(node, edge) {
         if((_diagram.fitStrategy() || _diagram.restrictPan()) && node.size()) {

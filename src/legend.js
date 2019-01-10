@@ -311,7 +311,7 @@ dc_graph.legend.edge_legend = function() {
         fakeNodeRadius: property(10),
         length: property(50),
         draw: function(diagram, itemEnter, item) {
-            diagram._updateEdge(itemEnter.select('path.edge'));
+            diagram._updateEdge(itemEnter.select('path.edge'), diagram.selectAllEdges('.edge-arrows'));
         }
     };
     return _type;
