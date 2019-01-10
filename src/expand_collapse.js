@@ -278,7 +278,7 @@ dc_graph.expand_collapse = function(options) {
                 options.hideNode(nk);
             else if(detect_key(options.linkKey)) {
                 if(_mode.nodeURL.eval(n))
-                    window.open(_mode.nodeURL.eval(n), 'dcgraphlink');
+                    window.open(_mode.nodeURL.eval(n), _mode.urlTargetWindow());
             } else {
                 clear_stubs(diagram, node, edge);
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
@@ -428,5 +428,6 @@ dc_graph.expand_collapse = function(options) {
     _mode.nodeURL = property(function(n) {
         return n.value && n.value.value && n.value.value.URL;
     });
+    _mode.urlTargetWindow = property('dcgraphlink');
     return _mode;
 };
