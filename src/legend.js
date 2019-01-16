@@ -201,7 +201,7 @@ dc_graph.legend = function(legend_namespace) {
     };
 
     _legend.countBaseline = function() {
-        if(_legend.counter)
+        if(_legend.counter())
             _totals = _legend.counter()(
                 _legend.parent().nodeGroup().all(),
                 _legend.parent().edgeGroup().all(),
