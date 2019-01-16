@@ -79,7 +79,7 @@ dc_graph.munge_graph = function(data, nodekeyattr, sourceattr, targetattr) {
     }
     var node0 = nodes[0];
     if(node0[nka] === undefined) {
-        var nodekeyattrs = nodekeyattr ? [nodekeyattr] : ['ecomp_uid', 'id', '_id'];
+        var nodekeyattrs = nodekeyattr ? [nodekeyattr] : ['ecomp_uid', 'id', '_id', 'key'];
         var nodewrappers = ['vertex'];
         candidates = find_attr(node0, nodekeyattrs);
         if(!candidates.length) {

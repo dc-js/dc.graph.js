@@ -146,11 +146,6 @@ function on_load(filename, error, data) {
     var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     apply_engine_parameters(engine);
 
-    // graphlib-dot seems to wrap nodes in an extra {value} (don't we all)
-    function nvalue(n) {
-        return n.value.value ? n.value.value : n.value;
-    }
-
     exploreDiagram
         .width('auto')
         .height('auto')
@@ -164,24 +159,13 @@ function on_load(filename, error, data) {
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
-        .nodeLabel(function(n) { return nvalue(n).label && nvalue(n).label.split(/\n|\\n/); })
         .nodeLabelPadding(5)
-        .nodeShape(function(n) { return nvalue(n).shape; })
-        .nodeFill(function(n) { return nvalue(n).fillcolor || 'white'; })
-        .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
         .edgeArrowhead('vee')
         .edgeLength(function(e) {
             var e2 = exploreDiagram.getWholeEdge(e.key);
             return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
-        })
-        .edgeStroke(function(e) { return e.value.color || 'black'; })
-        .edgeStrokeDashArray(function(e) {
-            switch(e.value.style) {
-            case 'dotted':
-                return [1,5];
-            }
-            return null;
         });
+    dc_graph.apply_graphviz_accessors(exploreDiagram);
     if(sync_url.vals.bigzoom)
         exploreDiagram.zoomExtent([0.001, 200]);
     if(sync_url.vals.rndarrow) {

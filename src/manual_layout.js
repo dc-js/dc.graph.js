@@ -31,7 +31,7 @@ dc_graph.manual_layout = function(id) {
             return _layoutId;
         },
         supportsWebworker: function() {
-            return true;
+            return false;
         },
         parent: property(null),
         on: function(event, f) {

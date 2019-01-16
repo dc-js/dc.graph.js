@@ -39,36 +39,36 @@ dc_graph.edit_text = function(parent, options) {
         d3.event.stopPropagation();
     }
     foreign
-        .on('mousedown', stopProp)
-        .on('mousemove', stopProp)
-        .on('mouseup', stopProp)
-        .on('dblclick', stopProp);
+        .on('mousedown.edit-text', stopProp)
+        .on('mousemove.edit-text', stopProp)
+        .on('mouseup.edit-text', stopProp)
+        .on('dblclick.edit-text', stopProp);
 
     function accept() {
         options.accept && options.accept(textdiv.text());
-        textdiv.on('blur.edittext', null);
+        textdiv.on('blur.edit-text', null);
         foreign.remove();
         options.finally && options.finally();
     }
     function cancel() {
         options.cancel && options.cancel();
-        textdiv.on('blur.edittext', null);
+        textdiv.on('blur.edit-text', null);
         foreign.remove();
         options.finally && options.finally();
     }
 
-    textdiv.on('keydown.edittext', function() {
+    textdiv.on('keydown.edit-text', function() {
         if(d3.event.keyCode===13) {
             d3.event.preventDefault();
         }
-    }).on('keyup.edittext', function() {
+    }).on('keyup.edit-text', function() {
         if(d3.event.keyCode===13) {
             accept();
         } else if(d3.event.keyCode===27) {
             cancel();
         }
         reposition();
-    }).on('blur.edittext', cancel);
+    }).on('blur.edit-text', cancel);
     reposition();
     textdiv.node().focus();
 

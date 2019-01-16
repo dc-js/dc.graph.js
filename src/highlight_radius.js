@@ -51,10 +51,10 @@ dc_graph.highlight_radius = function(options) {
     var _mode = {
         parent: function(p) {
             if(p) {
-                p.on('data.fix-nodes', on_data);
+                p.on('data.highlight-radius', on_data);
             } else if(_mode.parent())
-                _mode.parent().on('data.fix-nodes', null);
-            select_nodes_group.on('set_changed', selection_changed);
+                _mode.parent().on('data.highlight-radius', null);
+            select_nodes_group.on('set_changed.highlight-radius', selection_changed);
         }
     };
     _mode.radius = property(1);

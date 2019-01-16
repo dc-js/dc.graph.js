@@ -40,7 +40,7 @@ dc_graph.tip = function(options) {
                     _d3tip.show.call(target, content, target);
                     d3.select('div.d3-tip')
                         .selectAll('a.tip-link')
-                        .on('click', function() {
+                        .on('click.' + _namespace, function() {
                             d3.event.preventDefault();
                             if(_mode.linkCallback())
                                 _mode.linkCallback()(this.id);
@@ -182,7 +182,7 @@ dc_graph.tip = function(options) {
             if(cb)
                 cb(d);
             if(_mode.programmatic())
-                found.on('mouseout', hide_tip_delay);
+                found.on('mouseout.' + _namespace, hide_tip_delay);
         }
         return _mode;
     };

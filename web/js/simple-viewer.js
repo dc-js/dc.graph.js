@@ -14,6 +14,26 @@ var options = {
     },
     worker: true,
     file: 'data/process.json',
+    gvattr: {
+        default: true,
+        selector: '#graphviz-attrs',
+        needs_redraw: 'refresh',
+        exert: function(val, diagram) {
+            if(val)
+                dc_graph.apply_graphviz_accessors(simpleDiagram);
+            else {
+                simpleDiagram
+                    .nodeFixed(n => n.value.fixedPos)
+                    .nodeStrokeWidth(0) // turn off outlines
+                    .nodeFill(function(kv) {
+                        return '#2E54A2';
+                    })
+                    .nodeLabelPadding({x: 2, y: 0})
+                    .nodeLabelFill('white')
+                    .edgeArrowhead(sync_url.vals.arrows ? 'vee' : null);
+            }
+        }
+    },
     arrows: false,
     tips: true,
     neighbors: true
@@ -74,10 +94,18 @@ function on_load(filename, error, data) {
         display_error(heading, error.message);
     }
 
-    var edges = dc_graph.flat_group.make(data.links, function(d) {
-        return d.sourcename + '-' + d.targetname + (d.par ? ':' + d.par : '');
-    }),
-        nodes = dc_graph.flat_group.make(data.nodes, function(d) { return d.name; });
+    var graph_data = dc_graph.munge_graph(data),
+        nodes = graph_data.nodes,
+        edges = graph_data.edges,
+        sourceattr = graph_data.sourceattr,
+        targetattr = graph_data.targetattr,
+        nodekeyattr = graph_data.nodekeyattr;
+
+    var edge_key = function(d) {
+        return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
+    };
+    var edge_flat = dc_graph.flat_group.make(edges, edge_key),
+        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
 
     var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     simpleDiagram
@@ -87,18 +115,14 @@ function on_load(filename, error, data) {
         .height('auto')
         .autoZoom('once')
         .restrictPan(true)
-        .nodeDimension(nodes.dimension).nodeGroup(nodes.group)
-        .edgeDimension(edges.dimension).edgeGroup(edges.group)
+        .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
+        .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
+        .edgeSource(function(e) { return e.value[sourceattr]; })
+        .edgeTarget(function(e) { return e.value[targetattr]; })
     // aesthetics
-        .nodeFixed(n => n.value.fixedPos)
-        .nodeStrokeWidthAccessor(0) // turn off outlines
-        .nodeFillAccessor(function(kv) {
-            return '#2E54A2';
-        })
-        .nodeLabelPadding({x: 2, y: 0})
-        .nodeLabelFillAccessor('white')
-        .nodeTitleAccessor(null) // deactivate basic tooltips
-        .edgeArrowheadAccessor(sync_url.vals.arrows ? 'vee' : null);
+        .nodeTitleAccessor(null); // deactivate basic tooltips
+
+    sync_url.exert();
 
     var move_nodes = dc_graph.move_nodes();
     simpleDiagram.child('move-nodes', move_nodes);

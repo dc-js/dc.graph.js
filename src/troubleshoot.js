@@ -79,7 +79,7 @@ dc_graph.troubleshoot = function() {
                 arrowSize,
                 diagram.edgeStrokeWidth.eval(e) / arrowSize,
                 unrad(e.pos.new.orienthead),
-                e.pos.new.path.points[e.pos.new.path.points.length-1],
+                e.pos.new.full.points[e.pos.new.full.points.length-1],
                 diagram.nodeStrokeWidth.eval(e.target)
             );
         }));
@@ -94,7 +94,7 @@ dc_graph.troubleshoot = function() {
                 arrowSize,
                 diagram.edgeStrokeWidth.eval(e) / arrowSize,
                 unrad(e.pos.new.orienttail),
-                e.pos.new.path.points[0],
+                e.pos.new.full.points[0],
                 diagram.nodeStrokeWidth.eval(e.source)
             );
         }));
