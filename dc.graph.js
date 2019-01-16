@@ -8086,7 +8086,7 @@ dc_graph.legend = function(legend_namespace) {
     };
 
     _legend.countBaseline = function() {
-        if(_legend.counter)
+        if(_legend.counter())
             _totals = _legend.counter()(
                 _legend.parent().nodeGroup().all(),
                 _legend.parent().edgeGroup().all(),
@@ -11253,7 +11253,7 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function draw(diagram, node, edge, ehover) {
-        function enter_node(n) {
+        function over_node(n) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             _overNode = n;
             _overDir = dir;
@@ -11308,7 +11308,8 @@ dc_graph.expand_collapse = function(options) {
         }
 
         node
-            .on('mouseenter.expand-collapse', enter_node)
+            .on('mouseenter.expand-collapse', over_node)
+            .on('mousemove.expand-collapse', over_node)
             .on('mouseout.expand-collapse', leave_node)
             .on('click.expand-collapse', click_node)
             .on('dblclick.expand-collapse', click_node);
@@ -11364,10 +11365,17 @@ dc_graph.expand_collapse = function(options) {
         ));
     }
 
-    function remove(diagram, node, edge) {
+    function remove(diagram, node, edge, ehover) {
         node
-            .on('mouseover.expand-collapse', null)
-            .on('mouseout.expand-collapse', null);
+            .on('mouseenter.expand-collapse', null)
+            .on('mousemove.expand-collapse', null)
+            .on('mouseout.expand-collapse', null)
+            .on('click.expand-collapse', null)
+            .on('dblclick.expand-collapse', null);
+        ehover
+            .on('mouseenter.expand-collapse', null)
+            .on('mouseout.expand-collapse', null)
+            .on('click.expand-collapse', null);
         clear_stubs(diagram, node, edge);
     }
 
