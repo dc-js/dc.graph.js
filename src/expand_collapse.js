@@ -358,10 +358,17 @@ dc_graph.expand_collapse = function(options) {
         ));
     }
 
-    function remove(diagram, node, edge) {
+    function remove(diagram, node, edge, ehover) {
         node
-            .on('mouseover.expand-collapse', null)
-            .on('mouseout.expand-collapse', null);
+            .on('mouseenter.expand-collapse', null)
+            .on('mousemove.expand-collapse', null)
+            .on('mouseout.expand-collapse', null)
+            .on('click.expand-collapse', null)
+            .on('dblclick.expand-collapse', null);
+        ehover
+            .on('mouseenter.expand-collapse', null)
+            .on('mouseout.expand-collapse', null)
+            .on('click.expand-collapse', null);
         clear_stubs(diagram, node, edge);
     }
 
