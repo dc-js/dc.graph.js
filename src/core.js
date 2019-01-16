@@ -133,6 +133,7 @@ function deprecation_warning(message) {
         if(said)
             return;
         console.warn(message);
+        said = true;
     };
 }
 
