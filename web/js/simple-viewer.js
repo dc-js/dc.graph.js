@@ -139,8 +139,12 @@ function on_load(filename, error, data) {
         simpleDiagram.child('tip', tip);
     }
     if(sync_url.vals.neighbors) {
+        var highlight_neighbors = dc_graph.highlight_neighbors({
+            edgeStroke: 'orangered',
+            edgeStrokeWidth: 3
+        }).durationOverride(0);
         simpleDiagram
-            .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+            .child('highlight-neighbors', highlight_neighbors);
     }
 
     simpleDiagram.render();
