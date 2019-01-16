@@ -338,7 +338,7 @@ dc_graph.expand_collapse = function(options) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
                         highlight_collapse(diagram, _overNode, node, edge, _overDir);
-                        if(_mode.nodeURL(_overNode)) {
+                        if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
                                     return n === _overNode;
