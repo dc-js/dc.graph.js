@@ -1,3 +1,5 @@
-body {
-    font-family: 'Open Sans', 'sans-serif';
+.ui-autocomplete {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
