@@ -277,8 +277,8 @@ dc_graph.expand_collapse = function(options) {
             if(options.hideNode && detect_key(options.hideKey))
                 options.hideNode(nk);
             else if(detect_key(options.linkKey)) {
-                if(_mode.nodeURL.eval(n))
-                    window.open(_mode.nodeURL.eval(n), _mode.urlTargetWindow());
+                if(_mode.nodeURL.eval(n) && _mode.urlOpener)
+                    _mode.urlOpener()(_mode, n, _mode.nodeURL.eval(n));
             } else {
                 clear_stubs(diagram, node, edge);
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
@@ -338,7 +338,7 @@ dc_graph.expand_collapse = function(options) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
                         highlight_collapse(diagram, _overNode, node, edge, _overDir);
-                        if(_mode.nodeURL(_overNode)) {
+                        if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
                                     return n === _overNode;
@@ -429,5 +429,10 @@ dc_graph.expand_collapse = function(options) {
         return n.value && n.value.value && n.value.value.URL;
     });
     _mode.urlTargetWindow = property('dcgraphlink');
+    _mode.urlOpener = property(dc_graph.expand_collapse.default_url_opener);
     return _mode;
+};
+
+dc_graph.expand_collapse.default_url_opener = function(mode, node, url) {
+    window.open(mode.nodeURL.eval(node), mode.urlTargetWindow());
 };

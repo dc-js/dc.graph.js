@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.7.5
+ *  dc.graph 0.7.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.5
+ * @version 0.7.6
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.5',
+    version: '0.7.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -11284,8 +11284,8 @@ dc_graph.expand_collapse = function(options) {
             if(options.hideNode && detect_key(options.hideKey))
                 options.hideNode(nk);
             else if(detect_key(options.linkKey)) {
-                if(_mode.nodeURL.eval(n))
-                    window.open(_mode.nodeURL.eval(n), _mode.urlTargetWindow());
+                if(_mode.nodeURL.eval(n) && _mode.urlOpener)
+                    _mode.urlOpener()(_mode, n, _mode.nodeURL.eval(n));
             } else {
                 clear_stubs(diagram, node, edge);
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
@@ -11345,7 +11345,7 @@ dc_graph.expand_collapse = function(options) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
                         highlight_collapse(diagram, _overNode, node, edge, _overDir);
-                        if(_mode.nodeURL(_overNode)) {
+                        if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
                                     return n === _overNode;
@@ -11436,7 +11436,12 @@ dc_graph.expand_collapse = function(options) {
         return n.value && n.value.value && n.value.value.URL;
     });
     _mode.urlTargetWindow = property('dcgraphlink');
+    _mode.urlOpener = property(dc_graph.expand_collapse.default_url_opener);
     return _mode;
+};
+
+dc_graph.expand_collapse.default_url_opener = function(mode, node, url) {
+    window.open(mode.nodeURL.eval(node), mode.urlTargetWindow());
 };
 
 dc_graph.expand_collapse.shown_hidden = function(opts) {
