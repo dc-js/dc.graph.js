@@ -1,3 +1,6 @@
+## 0.7.6
+* `expand_collapse.urlOpener` to open links using a callback instead of `window.open`
+
 ## 0.7.5
 * space is made for edge arrow heads/tails by cutting the spline at the correct distance, instead of using `stroke-dasharray` ([#95](https://github.com/dc-js/dc.graph.js/issues/95)). this requires an extra, unclipped and unshown copy of each edge to host the arrows.
 * formal support for converting to and reading from [graphviz attributes](https://graphviz.org/doc/info/attrs.html): `dc_graph.apply_graphviz_accessors` applies the supported accessors to a diagram, and `dc_graph.snapshot_graphviz` produces `{nodes: [...], edges: [...], bounds: {...}}` from a diagram.
