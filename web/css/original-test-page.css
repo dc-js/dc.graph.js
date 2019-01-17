@@ -11,10 +11,6 @@
   overflow-x: hidden;
 }
 
-.edge-label {
-    visibility: visible;
-}
-
 #graph {
     flex: 1;
 }
