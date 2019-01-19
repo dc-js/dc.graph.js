@@ -38,8 +38,10 @@ dc_graph.keyboard = function() {
     };
 
     _mode.focus = function() {
-        if(!_mode.disableFocus())
-            _input_anchor.node().focus();
+        if(!_mode.disableFocus()) {
+            console.log(_input_anchor.node());
+            _input_anchor.node().focus && _input_anchor.node().focus();
+        }
     };
 
     _mode.disableFocus = property(false);
