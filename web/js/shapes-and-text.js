@@ -33,7 +33,7 @@ var shapeDiagram = dc_graph.diagram('#graph');
 shapeDiagram
     .width(window.innerWidth)
     .height(window.innerHeight)
-    .layoutAlgorithm('cola')
+    .layoutEngine(dc_graph.spawn_engine('cola'))
     .transitionDuration(500)
     .stageTransitions('insmod')
     .showLayoutSteps(false)
