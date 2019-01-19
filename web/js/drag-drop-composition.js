@@ -13,6 +13,10 @@ function demo_catalog_reader(catalog) {
             return catalog.components;
         },
         composites: function() {
+            if(arguments.length) {
+                catalog.solutions = arguments[0];
+                return this;
+            }
             return catalog.solutions;
         },
         fModelId: function(model) {
@@ -194,12 +198,12 @@ function maybe_save_solution(catalog) {
 function rename_solution(catalog, oldname, newname) {
     if(_.find(catalog.composites(), comp => catalog.fCompositeId(comp) === newname))
         return Promise.reject('name already used');
-    catalog.composites() = catalog.composites().map(function(soln) {
+    catalog.composites(catalog.composites().map(function(soln) {
         soln = Object.assign({}, soln);
         if(catalog.fCompositeId(soln) === oldname)
             soln.name = newname;
         return soln;
-    });
+    }));
     if(_fakeDB[oldname]) {
         _fakeDB[newname] = _fakeDB[oldname];
         delete _fakeDB[oldname];
@@ -209,9 +213,9 @@ function rename_solution(catalog, oldname, newname) {
 function delete_solution(catalog, name) {
     if(!_.find(catalog.composites(), comp => catalog.fCompositeId(comp) === name))
         return Promise.reject('solution not in catalog');
-    catalog.composites() = catalog.composites().filter(
+    catalog.composites(catalog.composites().filter(
         soln => catalog.fCompositeId(soln) !== name
-    );
+    ));
     if(_fakeDB[name])
         delete _fakeDB[name];
     return Promise.resolve(catalog);
