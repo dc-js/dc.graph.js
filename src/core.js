@@ -238,6 +238,17 @@ if (!Array.prototype.includes) {
   });
 }
 
+if (!Object.entries) {
+  Object.entries = function( obj ){
+    var ownProps = Object.keys( obj ),
+        i = ownProps.length,
+        resArray = new Array(i); // preallocate the Array
+    while (i--)
+      resArray[i] = [ownProps[i], obj[ownProps[i]]];
+    return resArray;
+  };
+}
+
 function getBBoxNoThrow(elem) {
     // firefox seems to have issues with some of my texts
     // just catch for now
