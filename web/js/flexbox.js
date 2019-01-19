@@ -35,12 +35,18 @@ var data = d3.range(7).map(function(i) {
     };
 }));
 
-var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), n => n.id),
-    edge_flat = dc_graph.flat_group.make([], e => e.id);
+var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), function (n) {
+    return n.id;
+}),
+    edge_flat = dc_graph.flat_group.make([], function (e) {
+    return e.id;
+});
 
 var flexboxDiagram = dc_graph.diagram('#graph')
         .layoutEngine(dc_graph.flexbox_layout()
-                      .addressToKey(ad => 'flex+' + ad.join(','))
+                      .addressToKey(function (ad) {
+                          return 'flex+' + ad.join(',');
+                      })
                       .keyToAddress(function(key) {
                           var ads = key.split('flex+')[1];
                           return ads ? ads.split(',') : [];
