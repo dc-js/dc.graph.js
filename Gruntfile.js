@@ -245,6 +245,11 @@ module.exports = function (grunt) {
                         dest: '<%= conf.web %>/js/promise-polyfill.js'
                     },
                     {
+                        nonull: true,
+                        src: 'node_modules/classlist-polyfill/src/index.js',
+                        dest: '<%= conf.web %>/js/classlist-polyfill.js'
+                    },
+                    {
                         expand: true,
                         flatten: true,
                         src: [

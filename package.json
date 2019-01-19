@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "bootstrap": "~3.3",
+    "classlist-polyfill": "1.2.x",
     "d3-force": "^1.1.2",
     "d3-force-straighten-paths": "^1.0.2",
     "d3-tip": "~0.7",
