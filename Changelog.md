@@ -1,7 +1,6 @@
 ## 0.7.7
 * remove ES6 syntax and add some polyfills for IE11. notes:
   * SVG implementation is slow and may not work over 100 nodes
-  * label is not vertically centered in nodes (need CSS fallback here)
   * label editing does not work
   * mouse wheel scrolling does not work
   * edge drawing does not work in drag&drop composition demo (does work in basic network-building)

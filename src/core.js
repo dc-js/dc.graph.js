@@ -153,6 +153,14 @@ function uuid() {
     });
 }
 
+function is_ie() {
+    var ua = window.navigator.userAgent;
+
+    return(ua.indexOf('MSIE ') > 0 ||
+           ua.indexOf('Trident/') > 0 ||
+           ua.indexOf('Edge/') > 0);
+}
+
 // polyfill Object.assign for IE
 // it's just too useful to do without
 if (typeof Object.assign != 'function') {
