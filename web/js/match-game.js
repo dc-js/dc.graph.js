@@ -64,15 +64,23 @@ if(vertical) {
     inbounds = lbounds;
     outbounds = rbounds;
 }
-var ports = data.map(n => ({
-    nodeId: n.id,
-    side: n.id[0] === 'a' ? 'out' : 'in',
-    bounds: n.id[0] === 'a' ? outbounds : inbounds
-}));
+var ports = data.map(function (n) {
+    return {
+        nodeId: n.id,
+        side: n.id[0] === 'a' ? 'out' : 'in',
+        bounds: n.id[0] === 'a' ? outbounds : inbounds
+    };
+});
 
-var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), n => n.id),
-    edge_flat = dc_graph.flat_group.make([], e => e.id),
-    port_flat = dc_graph.flat_group.make(ports, p => p.nodeId + '/' + p.side);
+var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), function (n) {
+    return n.id;
+}),
+    edge_flat = dc_graph.flat_group.make([], function (e) {
+    return e.id;
+}),
+    port_flat = dc_graph.flat_group.make(ports, function (p) {
+    return p.nodeId + '/' + p.side;
+});
 
 var layout = dc_graph.flexbox_layout()
     .logStuff(true)
@@ -100,18 +108,26 @@ var matchDiagram = dc_graph.diagram('#graph')
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .portDimension(port_flat.dimension).portGroup(port_flat.group)
-        .nodeShape(n => layout.keyToAddress()(matchDiagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rounded-rect')
+        .nodeShape(function (n) {
+            return layout.keyToAddress()(matchDiagram.nodeKey()(n)).length < 2 ? 'nothing' : 'rounded-rect';
+        })
         .nodeLabelPadding({x: 20, y: 0})
-        .nodeLabelAlignment(n => /^a/.test(n.key) ? 'right' : 'left')
+        .nodeLabelAlignment(function (n) {
+            return (/^a/.test(n.key) ? 'right' : 'left');
+        })
         .nodeStrokeWidth(0)
         .nodeTitle(null)
         .edgesInFront(true)
         .edgeSourcePortName('out')
         .edgeTargetPortName('in')
         .edgeLabel(null)
-        .portNodeKey(p => p.value.nodeId)
-        .portName(p => p.value.side)
-        .portBounds(p => p.value.bounds)
+        .portNodeKey(function (p) {
+            return p.value.nodeId;
+        }).portName(function (p) {
+            return p.value.side;
+        }).portBounds(function (p) {
+            return p.value.bounds;
+        })
         .portElastic(false);
 
 matchDiagram.child('validate', dc_graph.validate());
