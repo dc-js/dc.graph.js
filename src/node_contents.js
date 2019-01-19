@@ -15,7 +15,7 @@ dc_graph.text_contents = function() {
                 var lineHeight = _contents.parent().nodeLineHeight();
                 var first = 0.5 - ((lines.length - 1) * lineHeight + 1)/2;
                 if(is_ie())
-                    first += 0.25; // does not seem to have dominant-baseline
+                    first += 0.3; // IE (& Edge?!?) do not seem to have dominant-baseline
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
             tspan.enter().append('tspan');
