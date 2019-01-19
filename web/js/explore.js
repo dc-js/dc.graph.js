@@ -173,9 +173,10 @@ function on_load(filename, error, data) {
         var anames = Object.keys(dc_graph.builtin_arrows);
 
         function arrowgen(rnd) {
-            return d3.range(Math.floor(rnd()*5))
-                .map(i => (rnd() > 0.5 ? 'o' : '') + anames[Math.floor(rnd()*anames.length)])
-                .join('');
+            return d3.range(Math.floor(rnd() * 5))
+                .map(function (i) {
+                    return (rnd() > 0.5 ? 'o' : '') + anames[Math.floor(rnd() * anames.length)];
+                }).join('');
         };
         var now = String(new Date());
         switch(sync_url.vals.rndarrow) {
@@ -202,9 +203,11 @@ function on_load(filename, error, data) {
         default:
             throw new Error('unknown rndarrow "' + sync_url.vals.rndarrow + '"');
         }
-        exploreDiagram
-            .edgeArrowhead(e => arrowheadscale(e.value.label))
-            .edgeArrowtail(e => arrowtailscale(e.value.label));
+        exploreDiagram.edgeArrowhead(function (e) {
+            return arrowheadscale(e.value.label);
+        }).edgeArrowtail(function (e) {
+            return arrowtailscale(e.value.label);
+        });
     }
     if(engine.layoutAlgorithm() === 'cola') {
         engine
@@ -259,23 +262,37 @@ function on_load(filename, error, data) {
             label: exploreDiagram.nodeLabel()(n)
         };
     });
-    nodelist.sort((a,b) => a.label < b.label ? -1 : 1);
+    nodelist.sort(function (a, b) {
+        return a.label < b.label ? -1 : 1;
+    });
 
     var expand_strategy = sync_url.vals.expand_strategy || 'expanded_hidden';
     var ec_strategy = dc_graph.expand_collapse[expand_strategy]({
         nodeCrossfilter: node_flat.crossfilter,
         edgeCrossfilter: edge_flat.crossfilter,
         edgeGroup: edge_flat.group,
-        nodeKey: n => n.name,
-        edgeRawKey: e => edge_key(e),
-        edgeSource: e => e.value[sourceattr],
-        edgeTarget: e => e.value[targetattr],
+        nodeKey: function(n) {
+            return n.name;
+        },
+        edgeRawKey: function(e) {
+            return edge_key(e);
+        },
+        edgeSource: function(e) {
+            return e.value[sourceattr];
+        },
+        edgeTarget: function(e) {
+            return e.value[targetattr];
+        },
         directional: sync_url.vals.directional
     });
 
     if(sync_url.vals.start) {
-        if(!nodes.find(n => n.name === sync_url.vals.start)) {
-            let found = nodes.find(n => n.value.label.includes(sync_url.vals.start));
+        if(!nodes.find(function (n) {
+            return n.name === sync_url.vals.start;
+        })) {
+            var found = nodes.find(function (n) {
+                return n.value.label.includes(sync_url.vals.start);
+            });
             if(found)
                 sync_url.vals.start = found.name;
             else {
