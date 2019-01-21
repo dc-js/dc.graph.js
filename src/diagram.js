@@ -915,7 +915,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @method groupConnected
      * @memberof dc_graph.diagram
      * @instance
-     * @param {String} [stageTransitions=false]
+     * @param {String} [groupConnected=false]
      * @return {String}
      * @return {dc_graph.diagram}
      **/

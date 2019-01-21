@@ -233,12 +233,21 @@ module.exports = function (grunt) {
                             'node_modules/metagraph/metagraph.js',
                             'node_modules/queue-async/build/queue.js',
                             'node_modules/dagre/dist/dagre.js',
-                            'node_modules/promise-polyfill/dist/promise.js',
                             'node_modules/webcola/WebCola/cola.js',
                             'node_modules/viz.js/viz.js',
                             'node_modules/x-editable/dist/jqueryui-editable/js/jqueryui-editable.js'
                           ],
                         dest: '<%= conf.web %>/js/'
+                    },
+                    {
+                        nonull: true,
+                        src: 'node_modules/promise-polyfill/dist/polyfill.js',
+                        dest: '<%= conf.web %>/js/promise-polyfill.js'
+                    },
+                    {
+                        nonull: true,
+                        src: 'node_modules/classlist-polyfill/src/index.js',
+                        dest: '<%= conf.web %>/js/classlist-polyfill.js'
                     },
                     {
                         expand: true,

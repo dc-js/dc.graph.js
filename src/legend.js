@@ -112,6 +112,7 @@ dc_graph.legend = function(legend_namespace) {
             _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original));
     }
 
+    _legend.redraw = deprecate_function("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
     function redraw() {
         var legend = _legend.parent().svg()
                 .selectAll('g.dc-graph-legend.' + legend_namespace)
@@ -201,13 +202,14 @@ dc_graph.legend = function(legend_namespace) {
     };
 
     _legend.countBaseline = function() {
-        if(_legend.counter)
+        if(_legend.counter())
             _totals = _legend.counter()(
                 _legend.parent().nodeGroup().all(),
                 _legend.parent().edgeGroup().all(),
                 _legend.parent().portGroup() && _legend.parent().portGroup().all());
     };
 
+    _legend.render = deprecate_function("dc_graph.legend is an ordinary mode now; render will go away soon", render);
     function render() {
         var exemplars = _legend.exemplars();
         _legend.countBaseline();

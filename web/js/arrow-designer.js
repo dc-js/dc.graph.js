@@ -89,8 +89,12 @@ var edges = [
     }
 ];
 
-var edge_flat = dc_graph.flat_group.make(edges, e => e.key),
-    node_flat = dc_graph.flat_group.make(nodes, n => n.key);
+var edge_flat = dc_graph.flat_group.make(edges, function (e) {
+    return e.key;
+}),
+    node_flat = dc_graph.flat_group.make(nodes, function (n) {
+    return n.key;
+});
 
 var engine = dc_graph.manual_layout();
 
@@ -111,8 +115,11 @@ arrowDiagram
     .edgeOpacity(sync_url.vals.opacity)
     .edgeStroke(sync_url.vals.color)
     .edgeArrowSize(sync_url.vals.arrowsize)
-    .edgeArrowhead(() => sync_url.vals.arrowhead)
-    .edgeArrowtail(() => sync_url.vals.arrowtail);
+    .edgeArrowhead(function () {
+        return sync_url.vals.arrowhead;
+    }).edgeArrowtail(function () {
+        return sync_url.vals.arrowtail;
+    });
 
 var syntax = "concatenate up to four: optional 'o' then optional 'l' or 'r' then one of " + Object.keys(arrowDiagram.arrows()).join(' ');
 
