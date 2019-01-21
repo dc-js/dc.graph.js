@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.7.6
+ *  dc.graph 0.7.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.6
+ * @version 0.7.7
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.6',
+    version: '0.7.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -155,6 +155,7 @@ function deprecation_warning(message) {
         if(said)
             return;
         console.warn(message);
+        said = true;
     };
 }
 
@@ -172,6 +173,14 @@ function uuid() {
         var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
         return v.toString(16);
     });
+}
+
+function is_ie() {
+    var ua = window.navigator.userAgent;
+
+    return(ua.indexOf('MSIE ') > 0 ||
+           ua.indexOf('Trident/') > 0 ||
+           ua.indexOf('Edge/') > 0);
 }
 
 // polyfill Object.assign for IE
@@ -205,6 +214,98 @@ if (typeof Object.assign != 'function') {
     configurable: true
   });
 }
+
+
+// https://tc39.github.io/ecma262/#sec-array.prototype.includes
+if (!Array.prototype.includes) {
+  Object.defineProperty(Array.prototype, 'includes', {
+    value: function(valueToFind, fromIndex) {
+
+      if (this == null) {
+        throw new TypeError('"this" is null or not defined');
+      }
+
+      // 1. Let O be ? ToObject(this value).
+      var o = Object(this);
+
+      // 2. Let len be ? ToLength(? Get(O, "length")).
+      var len = o.length >>> 0;
+
+      // 3. If len is 0, return false.
+      if (len === 0) {
+        return false;
+      }
+
+      // 4. Let n be ? ToInteger(fromIndex).
+      //    (If fromIndex is undefined, this step produces the value 0.)
+      var n = fromIndex | 0;
+
+      // 5. If n >= 0, then
+      //  a. Let k be n.
+      // 6. Else n < 0,
+      //  a. Let k be len + n.
+      //  b. If k < 0, let k be 0.
+      var k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+      function sameValueZero(x, y) {
+        return x === y || (typeof x === 'number' && typeof y === 'number' && isNaN(x) && isNaN(y));
+      }
+
+      // 7. Repeat, while k < len
+      while (k < len) {
+        // a. Let elementK be the result of ? Get(O, ! ToString(k)).
+        // b. If SameValueZero(valueToFind, elementK) is true, return true.
+        if (sameValueZero(o[k], valueToFind)) {
+          return true;
+        }
+        // c. Increase k by 1.
+        k++;
+      }
+
+      // 8. Return false
+      return false;
+    }
+  });
+}
+
+if (!Object.entries) {
+  Object.entries = function( obj ){
+    var ownProps = Object.keys( obj ),
+        i = ownProps.length,
+        resArray = new Array(i); // preallocate the Array
+    while (i--)
+      resArray[i] = [ownProps[i], obj[ownProps[i]]];
+    return resArray;
+  };
+}
+
+// https://github.com/KhaledElAnsari/Object.values
+Object.values = Object.values ? Object.values : function(obj) {
+    var allowedTypes = ["[object String]", "[object Object]", "[object Array]", "[object Function]"];
+    var objType = Object.prototype.toString.call(obj);
+
+    if(obj === null || typeof obj === "undefined") {
+	throw new TypeError("Cannot convert undefined or null to object");
+    } else if(!~allowedTypes.indexOf(objType)) {
+	return [];
+    } else {
+	// if ES6 is supported
+	if (Object.keys) {
+	    return Object.keys(obj).map(function (key) {
+		return obj[key];
+	    });
+	}
+
+	var result = [];
+	for (var prop in obj) {
+	    if (obj.hasOwnProperty(prop)) {
+		result.push(obj[prop]);
+	    }
+	}
+
+	return result;
+    }
+};
 
 function getBBoxNoThrow(elem) {
     // firefox seems to have issues with some of my texts
@@ -2128,6 +2229,8 @@ dc_graph.text_contents = function() {
                     lines = [lines];
                 var lineHeight = _contents.parent().nodeLineHeight();
                 var first = 0.5 - ((lines.length - 1) * lineHeight + 1)/2;
+                if(is_ie())
+                    first += 0.3; // IE (& Edge?!?) do not seem to have dominant-baseline
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
             tspan.enter().append('tspan');
@@ -3157,7 +3260,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @method groupConnected
      * @memberof dc_graph.diagram
      * @instance
-     * @param {String} [stageTransitions=false]
+     * @param {String} [groupConnected=false]
      * @return {String}
      * @return {dc_graph.diagram}
      **/
@@ -7997,6 +8100,7 @@ dc_graph.legend = function(legend_namespace) {
             _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original));
     }
 
+    _legend.redraw = deprecate_function("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
     function redraw() {
         var legend = _legend.parent().svg()
                 .selectAll('g.dc-graph-legend.' + legend_namespace)
@@ -8086,13 +8190,14 @@ dc_graph.legend = function(legend_namespace) {
     };
 
     _legend.countBaseline = function() {
-        if(_legend.counter)
+        if(_legend.counter())
             _totals = _legend.counter()(
                 _legend.parent().nodeGroup().all(),
                 _legend.parent().edgeGroup().all(),
                 _legend.parent().portGroup() && _legend.parent().portGroup().all());
     };
 
+    _legend.render = deprecate_function("dc_graph.legend is an ordinary mode now; render will go away soon", render);
     function render() {
         var exemplars = _legend.exemplars();
         _legend.countBaseline();
@@ -8997,8 +9102,9 @@ dc_graph.keyboard = function() {
     };
 
     _mode.focus = function() {
-        if(!_mode.disableFocus())
-            _input_anchor.node().focus();
+        if(!_mode.disableFocus()) {
+            _input_anchor.node().focus && _input_anchor.node().focus();
+        }
     };
 
     _mode.disableFocus = property(false);
@@ -11253,7 +11359,7 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function draw(diagram, node, edge, ehover) {
-        function enter_node(n) {
+        function over_node(n) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             _overNode = n;
             _overDir = dir;
@@ -11308,7 +11414,8 @@ dc_graph.expand_collapse = function(options) {
         }
 
         node
-            .on('mouseenter.expand-collapse', enter_node)
+            .on('mouseenter.expand-collapse', over_node)
+            .on('mousemove.expand-collapse', over_node)
             .on('mouseout.expand-collapse', leave_node)
             .on('click.expand-collapse', click_node)
             .on('dblclick.expand-collapse', click_node);
@@ -11364,10 +11471,17 @@ dc_graph.expand_collapse = function(options) {
         ));
     }
 
-    function remove(diagram, node, edge) {
+    function remove(diagram, node, edge, ehover) {
         node
-            .on('mouseover.expand-collapse', null)
-            .on('mouseout.expand-collapse', null);
+            .on('mouseenter.expand-collapse', null)
+            .on('mousemove.expand-collapse', null)
+            .on('mouseout.expand-collapse', null)
+            .on('click.expand-collapse', null)
+            .on('dblclick.expand-collapse', null);
+        ehover
+            .on('mouseenter.expand-collapse', null)
+            .on('mouseout.expand-collapse', null)
+            .on('click.expand-collapse', null);
         clear_stubs(diagram, node, edge);
     }
 

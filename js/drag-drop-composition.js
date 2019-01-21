@@ -13,6 +13,10 @@ function demo_catalog_reader(catalog) {
             return catalog.components;
         },
         composites: function() {
+            if(arguments.length) {
+                catalog.solutions = arguments[0];
+                return this;
+            }
             return catalog.solutions;
         },
         fModelId: function(model) {
@@ -33,10 +37,14 @@ function demo_catalog_reader(catalog) {
         fTypeName: function(type) {
             return type.name;
         },
-        ports: function(nid, def) {
-            return def.requirements.map(r => ({nodeId: nid, portname: 'req-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: inbounds})).concat(
-                def.capabilities.map(r => ({nodeId: nid, portname: 'cap-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: outbounds}))).concat(
-                    (def.extras || []).map(x => ({nodeId: nid, portname: 'xtra-' + x, wild: x === 'wild', type: x === 'wild' ? null : x, bounds: xtrabounds})));
+        ports: function ports(nid, def) {
+            return def.requirements.map(function (r) {
+                return { nodeId: nid, portname: 'req-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: inbounds };
+            }).concat(def.capabilities.map(function (r) {
+                return { nodeId: nid, portname: 'cap-' + r, wild: r === 'wild', type: r === 'wild' ? null : r, bounds: outbounds };
+            })).concat((def.extras || []).map(function (x) {
+                return { nodeId: nid, portname: 'xtra-' + x, wild: x === 'wild', type: x === 'wild' ? null : x, bounds: xtrabounds };
+            }));
         }
     };
 }
@@ -120,7 +128,9 @@ if(options.rankdir === 'TB') {
     xtrabounds = [-Math.PI/2, -Math.PI/2];
 }
 function update_ports() {
-    var port_flat = dc_graph.flat_group.make(_ports, d => d.nodeId + '/' + d.portname);
+    var port_flat = dc_graph.flat_group.make(_ports, function (d) {
+        return d.nodeId + '/' + d.portname;
+    });
     _compositionDiagram
         .portDimension(port_flat.dimension).portGroup(port_flat.group);
 }
@@ -129,16 +139,26 @@ function display_solution(catalog, solution) {
     _compositionDiagram.child('fix-nodes')
         .clearFixes();
     _description.editable('setValue', solution.description || null);
-    var types = d3.set(solution.nodes.map(n => n.type)).values();
-    Promise.all(types.map(t => _components.get(t).url).map(json_promise)).then(function(defns) {
+    var types = d3.set(solution.nodes.map(function (n) {
+        return n.type;
+    })).values();
+    Promise.all(types.map(function (t) {
+        return _components.get(t).url;
+    }).map(json_promise)).then(function (defns) {
         var defn = {};
-        types.forEach((t, i) => defn[t] = defns[i]);
+        types.forEach(function (t, i) {
+            return defn[t] = defns[i];
+        });
         _ports = [];
         solution.nodes.forEach(function(n) {
             _ports = _ports.concat(catalog.ports(n.id, defn[n.type]));
         });
-        var node_flat = dc_graph.flat_group.make(solution.nodes, function(d) { return d.id; }),
-            edge_flat = dc_graph.flat_group.make(solution.edges, e => e.id);
+        var node_flat = dc_graph.flat_group.make(solution.nodes, function (d) {
+            return d.id;
+        }),
+            edge_flat = dc_graph.flat_group.make(solution.edges, function (e) {
+            return e.id;
+        });
         _compositionDiagram
             .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
             .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group);
@@ -175,7 +195,9 @@ function save_solution(catalog, name) {
     _solution.edges = _drawGraphs.edgeCrossfilter().all();
     _fakeDB[name] = _solution;
     set_dirty(false);
-    if(!_.find(catalog.composites(), comp => catalog.fCompositeId(comp) === name))
+    if (!_.find(catalog.composites(), function (comp) {
+        return catalog.fCompositeId(comp) === name;
+    }))
         catalog.composites().push({
             name: name,
             url: null
@@ -192,14 +214,15 @@ function maybe_save_solution(catalog) {
 }
 
 function rename_solution(catalog, oldname, newname) {
-    if(_.find(catalog.composites(), comp => catalog.fCompositeId(comp) === newname))
-        return Promise.reject('name already used');
-    catalog.composites() = catalog.composites().map(function(soln) {
+    if (_.find(catalog.composites(), function (comp) {
+        return catalog.fCompositeId(comp) === newname;
+    })) return Promise.reject('name already used');
+    catalog.composites(catalog.composites().map(function(soln) {
         soln = Object.assign({}, soln);
         if(catalog.fCompositeId(soln) === oldname)
             soln.name = newname;
         return soln;
-    });
+    }));
     if(_fakeDB[oldname]) {
         _fakeDB[newname] = _fakeDB[oldname];
         delete _fakeDB[oldname];
@@ -207,13 +230,14 @@ function rename_solution(catalog, oldname, newname) {
     return Promise.resolve(catalog);
 }
 function delete_solution(catalog, name) {
-    if(!_.find(catalog.composites(), comp => catalog.fCompositeId(comp) === name))
+    if (!_.find(catalog.composites(), function (comp) {
+        return catalog.fCompositeId(comp) === name;
+    }))
         return Promise.reject('solution not in catalog');
-    catalog.composites() = catalog.composites().filter(
-        soln => catalog.fCompositeId(soln) !== name
-    );
-    if(_fakeDB[name])
-        delete _fakeDB[name];
+    catalog.composites(catalog.composites().filter(function (soln) {
+        return catalog.fCompositeId(soln) !== name;
+    }));
+    if (_fakeDB[name]) delete _fakeDB[name];
     return Promise.resolve(catalog);
 }
 
@@ -515,11 +539,11 @@ get_catalog().then(function(catalog) {
         .timeLimit(500)
         .margins({left: 5, top: 5, right: 5, bottom: 5})
         .modKeyZoom(options.mkzoom || null)
-        .transitionDuration(1000)
+        .transitionDuration(qs.duration !== undefined ? +qs.duration : 1000)
         .fitStrategy('zoom')
         .autoZoom('always')
         .restrictPan(true)
-        .stageTransitions('insmod')
+        .stageTransitions(qs.stage || 'insmod')
         .enforceEdgeDirection(options.rankdir || 'LR')
         .edgeSource(function(e) { return e.value.sourcename; })
         .edgeTarget(function(e) { return e.value.targetname; })
@@ -539,15 +563,22 @@ get_catalog().then(function(catalog) {
             return hashIcon(_icons, d.value.type);
         })
         .nodeFixed(function(n) { return n.value.fixedPos; })
-        .portNodeKey(p => p.value.nodeId)
-        .portName(p => p.value.portname)
-        .portBounds(p => p.value.bounds)
-        .edgeSourcePortName(e => e.value.sourceport)
-        .edgeTargetPortName(e => e.value.targetport);
+        .portNodeKey(function (p) {
+            return p.value.nodeId;
+        }).portName(function (p) {
+            return p.value.portname;
+        }).portBounds(function (p) {
+            return p.value.bounds;
+        }).edgeSourcePortName(function (e) {
+            return e.value.sourceport;
+        }).edgeTargetPortName(function (e) {
+            return e.value.targetport;
+        });
 
-    if(qs.showFixed)
-        _compositionDiagram.nodeStrokeDashArray(n => n.value.fixedPos ? null : '5,5');
-
+    if (qs.showFixed)
+        _compositionDiagram.nodeStrokeDashArray(function (n) {
+                                                              return n.value.fixedPos ? null : '5,5';
+        });
 
     _compositionDiagram.content('text-with-icon', dc_graph.with_icon_contents(dc_graph.text_contents(), 35, 35));
 
@@ -557,9 +588,11 @@ get_catalog().then(function(catalog) {
         //.outline(dc_graph.symbol_port_style.outline.square())
         .outlineStrokeWidth(1)
 //        .portLabel(p => p.value.portname)
-        .symbol(p => p.orig.value.type)
-        .color(p => p.orig.value.type)
-        .colorScale(d3.scale.ordinal().range(
+        .symbol(function (p) {
+            return p.orig.value.type;
+        }).color(function (p) {
+            return p.orig.value.type;
+        }).colorScale(d3.scale.ordinal().range(
             // colorbrewer qualitative scale
             d3.shuffle(
                 ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#eebb22','#a65628','#f781bf'] // 8-class set1
@@ -567,7 +600,9 @@ get_catalog().then(function(catalog) {
             )));
     if(qs.direcports)
         symbolPorts.outline(dc_graph.symbol_port_style.outline.arrow()
-                            .outie(p => p.value.bounds === outbounds));
+                            .outie(function (p) {
+                                return p.value.bounds === outbounds;
+                            }));
     if(qs.lettports)
         symbolPorts
             .content(dc_graph.symbol_port_style.content.letter());
@@ -575,7 +610,9 @@ get_catalog().then(function(catalog) {
         .content(dc_graph.symbol_port_style.content.letter())
         .outlineStrokeWidth(1)
         .symbol('S')
-        .symbolScale(x => x)
+        .symbolScale(function (x) {
+            return x;
+        })
         .color('black')
         .colorScale(null);
     _compositionDiagram
@@ -589,24 +626,31 @@ get_catalog().then(function(catalog) {
             .allowParallel(qs.parallel || false);
 
     var wildcard = dc_graph.wildcard_ports({
-        get_type: p => p.orig.value.type,
-        set_type: (p, src) => p.orig.value.type = src && src.orig.value.type,
-        get_wild: p => p.orig.value.wild,
+        get_type: function get_type(p) {
+            return p.orig.value.type;
+        },
+        set_type: function set_type(p, src) {
+            return p.orig.value.type = src && src.orig.value.type;
+        },
+        get_wild: function get_wild(p) {
+            return p.orig.value.wild;
+        },
         update_ports: update_ports
     });
 
-    portMatcher.isValid(
-        (sourcePort, targetPort) => wildcard.isValid(sourcePort, targetPort) &&
+    portMatcher.isValid(function(sourcePort, targetPort) {
+        return wildcard.isValid(sourcePort, targetPort) &&
             sourcePort.orig.value.bounds !== xtrabounds &&
             targetPort.orig.value.bounds !== xtrabounds &&
-            sourcePort.orig.value.bounds !== targetPort.orig.value.bounds);
+            sourcePort.orig.value.bounds !== targetPort.orig.value.bounds;
+    });
 
-    portMatcher.whyInvalid(
-        (sourcePort, targetPort) =>
-            sourcePort.orig.value.bounds === xtrabounds && "can't connect to that type of source port" ||
+    portMatcher.whyInvalid(function(sourcePort, targetPort) {
+        return sourcePort.orig.value.bounds === xtrabounds && "can't connect to that type of source port" ||
             targetPort.orig.value.bounds === xtrabounds && "can't connect to that type of target port" ||
             sourcePort.orig.value.bounds === targetPort.orig.value.bounds && "can't connect ports facing the same direction" ||
-            wildcard.whyInvalid(sourcePort, targetPort));
+            wildcard.whyInvalid(sourcePort, targetPort);
+    });
     var gropts;
     _drawGraphs = dc_graph.draw_graphs(gropts = {
         idTag: 'id',
@@ -734,7 +778,9 @@ get_catalog().then(function(catalog) {
                 return Promise.resolve(nodes)
                     .then(function(nodes) {
                         // after the back-end has accepted the deletion, we can remove unneeded ports
-                        _ports = _ports.filter(p => p.nodeId !== nodes[0]);
+                        _ports = _ports.filter(function (p) {
+                            return p.nodeId !== nodes[0];
+                        });
                         update_ports();
                         return nodes;
                     });
@@ -916,7 +962,9 @@ get_catalog().then(function(catalog) {
     // load initial composite solution
     var catsol;
     if(options.solution)
-        catsol = catalog.composites().find(sol => sol.name === options.solution);
+        catsol = catalog.composites().find(function (sol) {
+            return sol.name === options.solution;
+        });
     if(catsol)
         load_sol(catsol.name, catsol.url);
     else {
