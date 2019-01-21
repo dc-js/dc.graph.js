@@ -1,7 +1,8 @@
 var qs = querystring.parse();
 var options = Object.assign({
     min: 3,
-    max: 10
+    max: 10,
+    log: false
 }, qs);
 
 var vertical = options.rankdir === 'TB';
@@ -83,7 +84,7 @@ var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), function (n) 
 });
 
 var layout = dc_graph.flexbox_layout()
-    .logStuff(true)
+    .logStuff(qs.log && qs.log !== 'false')
     .addressToKey(function(ad) {
         switch(ad.length) {
         case 0: return 'top';
