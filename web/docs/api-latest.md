@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.7.6  
+**Version**: 0.7.7  
 **Example**  
 ```js
 // Example chaining
@@ -69,7 +69,7 @@ diagram.width(600)
         * [.transitionDuration([transitionDuration])](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.stageTransitions([stageTransitions])](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.deleteDelay([deleteDelay])](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
-        * [.groupConnected([stageTransitions])](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.groupConnected([groupConnected])](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.timeLimit([timeLimit])](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.constrain([constrain])](#dc_graph.diagram+constrain) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.parallelEdgeOffset([parallelEdgeOffset])](#dc_graph.diagram+parallelEdgeOffset) ⇒ <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -191,7 +191,7 @@ diagram.width(600)
     * [.transitionDuration([transitionDuration])](#dc_graph.diagram+transitionDuration) ⇒ <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.stageTransitions([stageTransitions])](#dc_graph.diagram+stageTransitions) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.deleteDelay([deleteDelay])](#dc_graph.diagram+deleteDelay) ⇒ <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
-    * [.groupConnected([stageTransitions])](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.groupConnected([groupConnected])](#dc_graph.diagram+groupConnected) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.timeLimit([timeLimit])](#dc_graph.diagram+timeLimit) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.constrain([constrain])](#dc_graph.diagram+constrain) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.parallelEdgeOffset([parallelEdgeOffset])](#dc_graph.diagram+parallelEdgeOffset) ⇒ <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -955,14 +955,14 @@ staged transitions.
 
 <a name="dc_graph.diagram+groupConnected"></a>
 
-#### diagram.groupConnected([stageTransitions]) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
+#### diagram.groupConnected([groupConnected]) ⇒ <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
 Whether to put connected components each in their own group, to stabilize layout.
 
 **Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
 
 | Param | Type | Default |
 | --- | --- | --- |
-| [stageTransitions] | <code>String</code> | <code>false</code> | 
+| [groupConnected] | <code>String</code> | <code>false</code> | 
 
 <a name="dc_graph.diagram+timeLimit"></a>
 

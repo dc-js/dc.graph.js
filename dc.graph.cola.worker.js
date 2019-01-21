@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.7.6
+ *  dc.graph 0.7.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.6
+ * @version 0.7.7
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.6',
+    version: '0.7.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -172,6 +172,14 @@ function uuid() {
     });
 }
 
+function is_ie() {
+    var ua = window.navigator.userAgent;
+
+    return(ua.indexOf('MSIE ') > 0 ||
+           ua.indexOf('Trident/') > 0 ||
+           ua.indexOf('Edge/') > 0);
+}
+
 // polyfill Object.assign for IE
 // it's just too useful to do without
 if (typeof Object.assign != 'function') {
@@ -203,6 +211,98 @@ if (typeof Object.assign != 'function') {
     configurable: true
   });
 }
+
+
+// https://tc39.github.io/ecma262/#sec-array.prototype.includes
+if (!Array.prototype.includes) {
+  Object.defineProperty(Array.prototype, 'includes', {
+    value: function(valueToFind, fromIndex) {
+
+      if (this == null) {
+        throw new TypeError('"this" is null or not defined');
+      }
+
+      // 1. Let O be ? ToObject(this value).
+      var o = Object(this);
+
+      // 2. Let len be ? ToLength(? Get(O, "length")).
+      var len = o.length >>> 0;
+
+      // 3. If len is 0, return false.
+      if (len === 0) {
+        return false;
+      }
+
+      // 4. Let n be ? ToInteger(fromIndex).
+      //    (If fromIndex is undefined, this step produces the value 0.)
+      var n = fromIndex | 0;
+
+      // 5. If n >= 0, then
+      //  a. Let k be n.
+      // 6. Else n < 0,
+      //  a. Let k be len + n.
+      //  b. If k < 0, let k be 0.
+      var k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+      function sameValueZero(x, y) {
+        return x === y || (typeof x === 'number' && typeof y === 'number' && isNaN(x) && isNaN(y));
+      }
+
+      // 7. Repeat, while k < len
+      while (k < len) {
+        // a. Let elementK be the result of ? Get(O, ! ToString(k)).
+        // b. If SameValueZero(valueToFind, elementK) is true, return true.
+        if (sameValueZero(o[k], valueToFind)) {
+          return true;
+        }
+        // c. Increase k by 1.
+        k++;
+      }
+
+      // 8. Return false
+      return false;
+    }
+  });
+}
+
+if (!Object.entries) {
+  Object.entries = function( obj ){
+    var ownProps = Object.keys( obj ),
+        i = ownProps.length,
+        resArray = new Array(i); // preallocate the Array
+    while (i--)
+      resArray[i] = [ownProps[i], obj[ownProps[i]]];
+    return resArray;
+  };
+}
+
+// https://github.com/KhaledElAnsari/Object.values
+Object.values = Object.values ? Object.values : function(obj) {
+    var allowedTypes = ["[object String]", "[object Object]", "[object Array]", "[object Function]"];
+    var objType = Object.prototype.toString.call(obj);
+
+    if(obj === null || typeof obj === "undefined") {
+	throw new TypeError("Cannot convert undefined or null to object");
+    } else if(!~allowedTypes.indexOf(objType)) {
+	return [];
+    } else {
+	// if ES6 is supported
+	if (Object.keys) {
+	    return Object.keys(obj).map(function (key) {
+		return obj[key];
+	    });
+	}
+
+	var result = [];
+	for (var prop in obj) {
+	    if (obj.hasOwnProperty(prop)) {
+		result.push(obj[prop]);
+	    }
+	}
+
+	return result;
+    }
+};
 
 function getBBoxNoThrow(elem) {
     // firefox seems to have issues with some of my texts
