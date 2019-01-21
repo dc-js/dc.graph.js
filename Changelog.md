@@ -3,6 +3,7 @@
   * SVG implementation is slow and may not work over 100 nodes
   * label editing does not work
   * edge drawing does not work in drag&drop composition demo (does work in basic network-building)
+  * arrowheads may not update correctly when edge stroke width changes, and may pile up if arrows change
 * `expand_collapse` hovers can change while moving from top to bottom of node
 * workaround [#104](https://github.com/dc-js/dc.js/issues/104) in simple-viewer with `durationOverride(0)`
 * expose and deprecate `legend.render` and `legend.redraw` instead of removing them outright
