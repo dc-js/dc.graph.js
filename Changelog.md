@@ -1,3 +1,6 @@
+## 0.7.8
+* IE hates a null `console`
+
 ## 0.7.7
 * remove ES6 syntax and add some polyfills for IE11. notes:
   * SVG implementation is slow and may not work over 100 nodes

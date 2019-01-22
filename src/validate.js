@@ -86,7 +86,7 @@
         if(errors.length) {
             console.warn('validation of ' + title + ' failed with ' + count_text() + ':');
             errors.forEach(function(err) {
-                console.warn.apply(null, err);
+                console.warn.apply(console, err);
             });
         }
         else
