@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>dc.graph</title>
+  <meta charset="UTF-8">
+  <link rel="icon" href="img/favicon.png" type="image/x-icon" />
+</head>
+<body>
+  <h1>dc.graph</h1>
+  <p><strong>dc.graph</strong> is a JavaScript library for interacting with graphs.</p>
+</body>
