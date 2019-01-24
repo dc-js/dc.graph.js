@@ -1,3 +1,6 @@
+## 0.7.9
+* `sync_url_options`: ability to extract what-if url with some params changed
+
 ## 0.7.8
 * IE hates a null `console`
 
