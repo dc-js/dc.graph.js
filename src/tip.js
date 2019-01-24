@@ -129,9 +129,6 @@ dc_graph.tip = function(options) {
      * @return {String}
      * @return {dc_graph.tip}
      * @example
-     * // show all the attributes and values in the node and edge objects
-     * var tip = dc_graph.tip();
-     * tip.content(tip.table());
      **/
     _mode.direction = property('n');
 
@@ -210,7 +207,6 @@ dc_graph.tip = function(options) {
  * Generates a handler which can be passed to `tip.content` to produce a table of the
  * attributes and values of the hovered object.
  *
- * Note: this interface is not great and is subject to change in the near term.
  * @name table
  * @memberof dc_graph.tip
  * @instance
