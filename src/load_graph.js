@@ -78,6 +78,7 @@ function process_dsv(callback, error, data) {
 dc_graph.file_formats = [
     {
         exts: 'json',
+        mimes: 'application/json',
         from_url: d3.json,
         from_text: function(text, callback) {
             callback(null, JSON.parse(text));
@@ -85,6 +86,7 @@ dc_graph.file_formats = [
     },
     {
         exts: ['gv', 'dot'],
+        mimes: 'text/vnd.graphviz',
         from_url: function(url, callback) {
             d3.text(url, process_dot.bind(null, callback));
         },
@@ -94,6 +96,7 @@ dc_graph.file_formats = [
     },
     {
         exts: 'psv',
+        mimes: 'text/psv',
         from_url: function(url, callback) {
             d3.dsv('|', 'text/plain')(url, process_dsv.bind(null, callback));
         },
@@ -103,6 +106,7 @@ dc_graph.file_formats = [
     },
     {
         exts: 'csv',
+        mimes: 'text/csv',
         from_url: function(url, callback) {
             d3.csv(url, process_dsv.bind(null, callback));
         },
@@ -123,12 +127,25 @@ dc_graph.match_file_format = function(filename) {
     });
 };
 
+dc_graph.match_mime_type = function(mime) {
+    return dc_graph.file_formats.find(function(format) {
+        var mimes = format.mimes;
+        if(!Array.isArray(mimes))
+            mimes = [mimes];
+        return mimes.includes(mime);
+    });
+};
+
 function unknown_format_error(filename) {
     var spl = filename.split('.');
     if(spl.length)
         return new Error('do not know how to process graph file extension ' + spl[spl.length-1]);
     else
         return new Error('need file extension to process graph file automatically, filename ' + filename);
+}
+
+function unknown_mime_error(mime) {
+    return new Error('do not know how to process mime type ' + mime);
 }
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
@@ -163,11 +180,20 @@ dc_graph.load_graph = function() {
             });
     }
     else {
-        var file1noq = ignore_query(file1);
-        var format = dc_graph.match_file_format(file1noq);
-        if(format)
-            format.from_url(file1, callback);
-        else callback(unknown_format_error(file1noq));
+        var format;
+        if(/^data:/.test(file1)) {
+            var parts = file1.slice(5).split(/,(.+)/);
+            format = dc_graph.match_mime_type(parts[0]);
+            if(format)
+                format.from_text(parts[1], callback);
+            else callback(unknown_mime_error(parts[0]));
+        } else {
+            var file1noq = ignore_query(file1);
+            format = dc_graph.match_file_format(file1noq);
+            if(format)
+                format.from_url(file1, callback);
+            else callback(unknown_format_error(file1noq));
+        }
     }
 };
 
@@ -176,4 +202,8 @@ dc_graph.load_graph_text = function(text, filename, callback) {
     if(format)
         format.from_text(text, callback);
     else callback(unknown_format_error(filename));
+};
+
+dc_graph.data_url = function(data) {
+    return 'data:application/json,' + JSON.stringify(data);
 };
