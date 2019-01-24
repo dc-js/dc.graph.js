@@ -64,6 +64,11 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
             return nvalue(n).opacity || 1;
         })
         .nodeLabelFill(function(n) { return nvalue(n).fontcolor || 'black'; })
+        .nodeTitle(function(n) {
+            return nvalue(n).tooltip !== undefined ?
+                nvalue(n).tooltip :
+                diagram.nodeLabel()(n);
+        })
         .nodeStrokeWidth(function(n) {
             // it is debatable whether a point === a pixel but they are close
             // https://graphicdesign.stackexchange.com/questions/199/point-vs-pixel-what-is-the-difference
