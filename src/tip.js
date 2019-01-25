@@ -219,15 +219,31 @@ dc_graph.tip = function(options) {
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
         d = gen.fetch()(d);
-        var keys = Object.keys(d).filter(d3.functor(gen.filter()))
+        if(!d)
+            return; // don't display tooltip if no content
+        var data, keys;
+        if(Array.isArray(d))
+            data = d;
+        else if(typeof d === 'number' || typeof d === 'string')
+            data = [d];
+        else { // object
+            data = keys = Object.keys(d).filter(d3.functor(gen.filter()))
                 .filter(function(k) {
                     return d[k];
                 });
+        }
         var table = d3.select(document.createElement('table'));
-        var rows = table.selectAll('tr').data(keys);
+        var rows = table.selectAll('tr').data(data);
         var rowsEnter = rows.enter().append('tr');
-        rowsEnter.append('td').text(function(k) { return k; });
-        rowsEnter.append('td').text(function(k) { return d[k]; });
+        rowsEnter.append('td').text(function(item) {
+            if(keys && typeof item === 'string')
+                return item;
+            return JSON.stringify(item);
+        });
+        if(keys)
+            rowsEnter.append('td').text(function(item) {
+                return JSON.stringify(d[item]);
+            });
         k(table.node().outerHTML); // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
