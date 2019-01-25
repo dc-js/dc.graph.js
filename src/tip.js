@@ -253,6 +253,22 @@ dc_graph.tip.table = function() {
     return gen;
 };
 
+dc_graph.tip.json_table = function() {
+    var table = dc_graph.tip.table().fetch(function(d) {
+        var jsontip = table.json()(d);
+        if(!jsontip) return null;
+        try {
+            return JSON.parse(jsontip);
+        } catch(xep) {
+            return [jsontip];
+        }
+    });
+    table.json = property(function(d) {
+        return (d.orig.value.value || d.orig.value).jsontip;
+    });
+    return table;
+};
+
 dc_graph.tip.select_node_and_edge = function() {
     return {
         select: function(diagram, node, edge, ehover) {

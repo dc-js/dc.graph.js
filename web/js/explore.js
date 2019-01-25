@@ -187,16 +187,7 @@ function on_load(filename, error, data) {
             return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
         });
     dc_graph.apply_graphviz_accessors(exploreDiagram);
-    var jsonTable = dc_graph.tip.table().fetch(function(d) {
-        var jsontip = nvalue(d.orig).jsontip;
-        if(!jsontip) return null;
-        try {
-            return JSON.parse(jsontip);
-        } catch(xep) {
-            return [jsontip];
-        }
-    });
-    exploreDiagram.child('tip', dc_graph.tip().content(jsonTable));
+    exploreDiagram.child('tip', dc_graph.tip().content(dc_graph.tip.json_table()));
     if(sync_url.vals.bigzoom)
         exploreDiagram.zoomExtent([0.001, 200]);
     if(sync_url.vals.rndarrow) {
