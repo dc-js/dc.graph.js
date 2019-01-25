@@ -135,9 +135,13 @@ function on_load(filename, error, data) {
 
     if(sync_url.vals.tips) {
         var tip = dc_graph.tip();
+        var json_table = dc_graph.tip.json_table()
+            .json(function(d) {
+                return (d.orig.value.value || d.orig.value).jsontip || JSON.stringify(d.orig.value);
+            });
         tip
             .showDelay(250)
-            .content(dc_graph.tip.table());
+            .content(json_table);
         simpleDiagram.child('tip', tip);
     }
     if(sync_url.vals.neighbors) {
