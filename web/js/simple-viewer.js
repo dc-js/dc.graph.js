@@ -87,6 +87,13 @@ d3.select('#user-file').on('change', function() {
     }
 });
 
+var url_output = sync_url.output(), more_output;
+sync_url.output(function(params) {
+    url_output(params);
+    if(more_output)
+        more_output(params);
+});
+
 function on_load(filename, error, data) {
     if(error) {
         var heading = '';
@@ -102,6 +109,13 @@ function on_load(filename, error, data) {
         sourceattr = graph_data.sourceattr,
         targetattr = graph_data.targetattr,
         nodekeyattr = graph_data.nodekeyattr;
+
+    function update_data_link() {
+        d3.select('#data-link')
+            .attr('href', sync_url.what_if_url({file: dc_graph.data_url({nodes: nodes, edges: edges})}));
+    }
+    more_output = update_data_link;
+    update_data_link();
 
     var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');

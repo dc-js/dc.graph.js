@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.7.8  
+**Version**: 0.7.9  
 **Example**  
 ```js
 // Example chaining
@@ -1694,12 +1694,6 @@ Specify the direction for tooltips. Currently supports the
 | --- | --- | --- |
 | [direction] | <code>String</code> | <code>&#x27;n&#x27;</code> | 
 
-**Example**  
-```js
-// show all the attributes and values in the node and edge objects
-var tip = dc_graph.tip();
-tip.content(tip.table());
-```
 <a name="dc_graph.tip+content"></a>
 
 #### tip.content ⇒ <code>function</code>
@@ -1726,8 +1720,6 @@ var tip = dc_graph.tip().content(function(n, k) {
 #### tip.table ⇒ <code>function</code>
 Generates a handler which can be passed to `tip.content` to produce a table of the
 attributes and values of the hovered object.
-
-Note: this interface is not great and is subject to change in the near term.
 
 **Kind**: instance property of [<code>tip</code>](#dc_graph.tip)  
 **Example**  

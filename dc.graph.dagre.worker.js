@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.7.8
+ *  dc.graph 0.7.9
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.8
+ * @version 0.7.9
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.8',
+    version: '0.7.9',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -178,6 +178,10 @@ function is_ie() {
     return(ua.indexOf('MSIE ') > 0 ||
            ua.indexOf('Trident/') > 0 ||
            ua.indexOf('Edge/') > 0);
+}
+
+function is_safari() {
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 }
 
 // polyfill Object.assign for IE
@@ -415,6 +419,11 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
             return nvalue(n).opacity || 1;
         })
         .nodeLabelFill(function(n) { return nvalue(n).fontcolor || 'black'; })
+        .nodeTitle(function(n) {
+            return nvalue(n).tooltip !== undefined ?
+                nvalue(n).tooltip :
+                diagram.nodeLabel()(n);
+        })
         .nodeStrokeWidth(function(n) {
             // it is debatable whether a point === a pixel but they are close
             // https://graphicdesign.stackexchange.com/questions/199/point-vs-pixel-what-is-the-difference

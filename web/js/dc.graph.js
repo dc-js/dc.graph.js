@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.7.8
+ *  dc.graph 0.7.9
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.8
+ * @version 0.7.9
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.8',
+    version: '0.7.9',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -181,6 +181,10 @@ function is_ie() {
     return(ua.indexOf('MSIE ') > 0 ||
            ua.indexOf('Trident/') > 0 ||
            ua.indexOf('Edge/') > 0);
+}
+
+function is_safari() {
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 }
 
 // polyfill Object.assign for IE
@@ -2229,8 +2233,10 @@ dc_graph.text_contents = function() {
                     lines = [lines];
                 var lineHeight = _contents.parent().nodeLineHeight();
                 var first = 0.5 - ((lines.length - 1) * lineHeight + 1)/2;
-                if(is_ie())
-                    first += 0.3; // IE (& Edge?!?) do not seem to have dominant-baseline
+                // IE, Edge, and Safari do not seem to support
+                // dominant-baseline: central although they say they do
+                if(is_ie() || is_safari())
+                    first += 0.3;
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
             tspan.enter().append('tspan');
@@ -5787,6 +5793,11 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
             return nvalue(n).opacity || 1;
         })
         .nodeLabelFill(function(n) { return nvalue(n).fontcolor || 'black'; })
+        .nodeTitle(function(n) {
+            return nvalue(n).tooltip !== undefined ?
+                nvalue(n).tooltip :
+                diagram.nodeLabel()(n);
+        })
         .nodeStrokeWidth(function(n) {
             // it is debatable whether a point === a pixel but they are close
             // https://graphicdesign.stackexchange.com/questions/199/point-vs-pixel-what-is-the-difference
@@ -8819,10 +8830,6 @@ dc_graph.tip = function(options) {
      * @param {String} [direction='n']
      * @return {String}
      * @return {dc_graph.tip}
-     * @example
-     * // show all the attributes and values in the node and edge objects
-     * var tip = dc_graph.tip();
-     * tip.content(tip.table());
      **/
     _mode.direction = property('n');
 
@@ -8901,7 +8908,6 @@ dc_graph.tip = function(options) {
  * Generates a handler which can be passed to `tip.content` to produce a table of the
  * attributes and values of the hovered object.
  *
- * Note: this interface is not great and is subject to change in the near term.
  * @name table
  * @memberof dc_graph.tip
  * @instance
@@ -8914,15 +8920,31 @@ dc_graph.tip = function(options) {
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
         d = gen.fetch()(d);
-        var keys = Object.keys(d).filter(d3.functor(gen.filter()))
+        if(!d)
+            return; // don't display tooltip if no content
+        var data, keys;
+        if(Array.isArray(d))
+            data = d;
+        else if(typeof d === 'number' || typeof d === 'string')
+            data = [d];
+        else { // object
+            data = keys = Object.keys(d).filter(d3.functor(gen.filter()))
                 .filter(function(k) {
-                    return d[k];
+                    return d[k] !== undefined;
                 });
+        }
         var table = d3.select(document.createElement('table'));
-        var rows = table.selectAll('tr').data(keys);
+        var rows = table.selectAll('tr').data(data);
         var rowsEnter = rows.enter().append('tr');
-        rowsEnter.append('td').text(function(k) { return k; });
-        rowsEnter.append('td').text(function(k) { return d[k]; });
+        rowsEnter.append('td').text(function(item) {
+            if(keys && typeof item === 'string')
+                return item;
+            return JSON.stringify(item);
+        });
+        if(keys)
+            rowsEnter.append('td').text(function(item) {
+                return JSON.stringify(d[item]);
+            });
         k(table.node().outerHTML); // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
@@ -8930,6 +8952,22 @@ dc_graph.tip.table = function() {
         return d.orig.value;
     });
     return gen;
+};
+
+dc_graph.tip.json_table = function() {
+    var table = dc_graph.tip.table().fetch(function(d) {
+        var jsontip = table.json()(d);
+        if(!jsontip) return null;
+        try {
+            return JSON.parse(jsontip);
+        } catch(xep) {
+            return [jsontip];
+        }
+    });
+    table.json = property(function(d) {
+        return (d.orig.value.value || d.orig.value).jsontip;
+    });
+    return table;
 };
 
 dc_graph.tip.select_node_and_edge = function() {
@@ -13103,6 +13141,7 @@ function process_dsv(callback, error, data) {
 dc_graph.file_formats = [
     {
         exts: 'json',
+        mimes: 'application/json',
         from_url: d3.json,
         from_text: function(text, callback) {
             callback(null, JSON.parse(text));
@@ -13110,6 +13149,7 @@ dc_graph.file_formats = [
     },
     {
         exts: ['gv', 'dot'],
+        mimes: 'text/vnd.graphviz',
         from_url: function(url, callback) {
             d3.text(url, process_dot.bind(null, callback));
         },
@@ -13119,6 +13159,7 @@ dc_graph.file_formats = [
     },
     {
         exts: 'psv',
+        mimes: 'text/psv',
         from_url: function(url, callback) {
             d3.dsv('|', 'text/plain')(url, process_dsv.bind(null, callback));
         },
@@ -13128,6 +13169,7 @@ dc_graph.file_formats = [
     },
     {
         exts: 'csv',
+        mimes: 'text/csv',
         from_url: function(url, callback) {
             d3.csv(url, process_dsv.bind(null, callback));
         },
@@ -13148,12 +13190,25 @@ dc_graph.match_file_format = function(filename) {
     });
 };
 
+dc_graph.match_mime_type = function(mime) {
+    return dc_graph.file_formats.find(function(format) {
+        var mimes = format.mimes;
+        if(!Array.isArray(mimes))
+            mimes = [mimes];
+        return mimes.includes(mime);
+    });
+};
+
 function unknown_format_error(filename) {
     var spl = filename.split('.');
     if(spl.length)
         return new Error('do not know how to process graph file extension ' + spl[spl.length-1]);
     else
         return new Error('need file extension to process graph file automatically, filename ' + filename);
+}
+
+function unknown_mime_error(mime) {
+    return new Error('do not know how to process mime type ' + mime);
 }
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
@@ -13188,11 +13243,20 @@ dc_graph.load_graph = function() {
             });
     }
     else {
-        var file1noq = ignore_query(file1);
-        var format = dc_graph.match_file_format(file1noq);
-        if(format)
-            format.from_url(file1, callback);
-        else callback(unknown_format_error(file1noq));
+        var format;
+        if(/^data:/.test(file1)) {
+            var parts = file1.slice(5).split(/,(.+)/);
+            format = dc_graph.match_mime_type(parts[0]);
+            if(format)
+                format.from_text(parts[1], callback);
+            else callback(unknown_mime_error(parts[0]));
+        } else {
+            var file1noq = ignore_query(file1);
+            format = dc_graph.match_file_format(file1noq);
+            if(format)
+                format.from_url(file1, callback);
+            else callback(unknown_format_error(file1noq));
+        }
     }
 };
 
@@ -13201,6 +13265,10 @@ dc_graph.load_graph_text = function(text, filename, callback) {
     if(format)
         format.from_text(text, callback);
     else callback(unknown_format_error(filename));
+};
+
+dc_graph.data_url = function(data) {
+    return 'data:application/json,' + JSON.stringify(data);
 };
 
 function can_get_graph_from_this(data) {

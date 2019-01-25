@@ -128,7 +128,6 @@ dc_graph.tip = function(options) {
      * @param {String} [direction='n']
      * @return {String}
      * @return {dc_graph.tip}
-     * @example
      **/
     _mode.direction = property('n');
 
