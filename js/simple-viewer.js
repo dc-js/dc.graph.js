@@ -87,6 +87,13 @@ d3.select('#user-file').on('change', function() {
     }
 });
 
+var url_output = sync_url.output(), more_output;
+sync_url.output(function(params) {
+    url_output(params);
+    if(more_output)
+        more_output(params);
+});
+
 function on_load(filename, error, data) {
     if(error) {
         var heading = '';
@@ -102,6 +109,13 @@ function on_load(filename, error, data) {
         sourceattr = graph_data.sourceattr,
         targetattr = graph_data.targetattr,
         nodekeyattr = graph_data.nodekeyattr;
+
+    function update_data_link() {
+        d3.select('#data-link')
+            .attr('href', sync_url.what_if_url({file: dc_graph.data_url({nodes: nodes, edges: edges})}));
+    }
+    more_output = update_data_link;
+    update_data_link();
 
     var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
@@ -122,7 +136,7 @@ function on_load(filename, error, data) {
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
     // aesthetics
-        .nodeTitleAccessor(null); // deactivate basic tooltips
+        .nodeTitle(null); // deactivate basic tooltips
 
     sync_url.exert();
 
@@ -135,9 +149,13 @@ function on_load(filename, error, data) {
 
     if(sync_url.vals.tips) {
         var tip = dc_graph.tip();
+        var json_table = dc_graph.tip.json_table()
+            .json(function(d) {
+                return (d.orig.value.value || d.orig.value).jsontip || JSON.stringify(d.orig.value);
+            });
         tip
             .showDelay(250)
-            .content(dc_graph.tip.table());
+            .content(json_table);
         simpleDiagram.child('tip', tip);
     }
     if(sync_url.vals.neighbors) {

@@ -121,6 +121,20 @@ d3.select('#user-file').on('change', function() {
     }
 });
 
+var url_output = sync_url.output(), more_output;
+sync_url.output(function(params) {
+    url_output(params);
+    if(more_output)
+        more_output(params);
+});
+
+// graphlib-dot seems to wrap nodes in an extra {value}
+// actually this is quite a common problem with generic libs
+function nvalue(n) {
+    return n.value.value ? n.value.value : n.value;
+}
+
+
 var expand_collapse;
 function on_load(filename, error, data) {
     if(error) {
@@ -136,6 +150,13 @@ function on_load(filename, error, data) {
         sourceattr = graph_data.sourceattr,
         targetattr = graph_data.targetattr,
         nodekeyattr = graph_data.nodekeyattr;
+
+    function update_data_link() {
+        d3.select('#data-link')
+            .attr('href', sync_url.what_if_url({file: dc_graph.data_url({nodes: nodes, edges: edges})}));
+    }
+    more_output = update_data_link;
+    update_data_link();
 
     var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
@@ -166,6 +187,7 @@ function on_load(filename, error, data) {
             return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
         });
     dc_graph.apply_graphviz_accessors(exploreDiagram);
+    exploreDiagram.child('tip', dc_graph.tip().content(dc_graph.tip.json_table()));
     if(sync_url.vals.bigzoom)
         exploreDiagram.zoomExtent([0.001, 200]);
     if(sync_url.vals.rndarrow) {
