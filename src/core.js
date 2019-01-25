@@ -161,6 +161,10 @@ function is_ie() {
            ua.indexOf('Edge/') > 0);
 }
 
+function is_safari() {
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+}
+
 // polyfill Object.assign for IE
 // it's just too useful to do without
 if (typeof Object.assign != 'function') {

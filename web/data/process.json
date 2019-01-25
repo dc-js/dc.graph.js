@@ -35,7 +35,8 @@
     },
     {
       "id": 8,
-      "name": "runswap"
+      "name": "runswap",
+      "jsontip": "{\"weird\": \"fields\", \"data\": \"spooky\"}"
     },
     {
       "id": 9,

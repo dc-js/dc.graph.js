@@ -128,10 +128,6 @@ dc_graph.tip = function(options) {
      * @param {String} [direction='n']
      * @return {String}
      * @return {dc_graph.tip}
-     * @example
-     * // show all the attributes and values in the node and edge objects
-     * var tip = dc_graph.tip();
-     * tip.content(tip.table());
      **/
     _mode.direction = property('n');
 
@@ -210,7 +206,6 @@ dc_graph.tip = function(options) {
  * Generates a handler which can be passed to `tip.content` to produce a table of the
  * attributes and values of the hovered object.
  *
- * Note: this interface is not great and is subject to change in the near term.
  * @name table
  * @memberof dc_graph.tip
  * @instance
@@ -223,15 +218,31 @@ dc_graph.tip = function(options) {
 dc_graph.tip.table = function() {
     var gen = function(d, k) {
         d = gen.fetch()(d);
-        var keys = Object.keys(d).filter(d3.functor(gen.filter()))
+        if(!d)
+            return; // don't display tooltip if no content
+        var data, keys;
+        if(Array.isArray(d))
+            data = d;
+        else if(typeof d === 'number' || typeof d === 'string')
+            data = [d];
+        else { // object
+            data = keys = Object.keys(d).filter(d3.functor(gen.filter()))
                 .filter(function(k) {
-                    return d[k];
+                    return d[k] !== undefined;
                 });
+        }
         var table = d3.select(document.createElement('table'));
-        var rows = table.selectAll('tr').data(keys);
+        var rows = table.selectAll('tr').data(data);
         var rowsEnter = rows.enter().append('tr');
-        rowsEnter.append('td').text(function(k) { return k; });
-        rowsEnter.append('td').text(function(k) { return d[k]; });
+        rowsEnter.append('td').text(function(item) {
+            if(keys && typeof item === 'string')
+                return item;
+            return JSON.stringify(item);
+        });
+        if(keys)
+            rowsEnter.append('td').text(function(item) {
+                return JSON.stringify(d[item]);
+            });
         k(table.node().outerHTML); // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
@@ -239,6 +250,22 @@ dc_graph.tip.table = function() {
         return d.orig.value;
     });
     return gen;
+};
+
+dc_graph.tip.json_table = function() {
+    var table = dc_graph.tip.table().fetch(function(d) {
+        var jsontip = table.json()(d);
+        if(!jsontip) return null;
+        try {
+            return JSON.parse(jsontip);
+        } catch(xep) {
+            return [jsontip];
+        }
+    });
+    table.json = property(function(d) {
+        return (d.orig.value.value || d.orig.value).jsontip;
+    });
+    return table;
 };
 
 dc_graph.tip.select_node_and_edge = function() {

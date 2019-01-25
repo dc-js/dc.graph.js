@@ -52,15 +52,18 @@ var sync_url_options = (function() {
             querystring.update(m);
         };
 
-        function update_interesting(qs) {
+        function interesting_params(qs) {
             var interesting = Object.keys(options)
                     .filter(function(k) {
                         return qs[options[k].query] !== write_query(query_type(options[k].default), options[k].default);
                     }).map(function(k) {
                         return options[k].query || k;
                     });
-            var interested = pick(qs, interesting);
-            _output(interested);
+            return pick(qs, interesting);
+        }
+
+        function update_interesting(qs) {
+            _output(interesting_params(qs));
         }
 
         function do_option(key, opt, callback) {
@@ -165,6 +168,10 @@ var sync_url_options = (function() {
             },
             update: function(k, v) {
                 options[k].update(v, true);
+            },
+            what_if_url: function(overrides) {
+                var qs2 = Object.assign({}, qs, overrides);
+                return querystring.get_url(interesting_params(qs2));
             }
         };
     }

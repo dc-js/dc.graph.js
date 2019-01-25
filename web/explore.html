@@ -7,10 +7,12 @@
   <link rel="stylesheet" type="text/css" href="css/explore.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
+  <link rel="stylesheet" type="text/css" href="css/d3-tip/example-styles.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
   <script type="text/javascript" src="js/dc.js"></script>
+  <script type="text/javascript" src="js/d3-tip/index.js"></script>
   <script type="text/javascript" src="js/chart.registry.js"></script>
 
   <script type="text/javascript" src="js/cola.js"></script>
@@ -39,6 +41,7 @@
       <div id="middle-controls"></div>
       <div id="right-controls">
         <label for='#user-file' title="in-browser: nothing uploaded to server">Load file&nbsp;</label><input type="file" id="user-file" style="display: inline" title="in-browser: nothing uploaded to server">
+        <a id="data-link" target="dcgraph-datalink" style="font-size: 8px" href='#'>DATA LINK</a>
       </div>
     </div>
     <div id="graph"></div>

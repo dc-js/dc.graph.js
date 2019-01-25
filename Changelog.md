@@ -1,3 +1,12 @@
+## 0.7.9
+* simple-viewer and explore accept new attribute "jsontip" which attempts to format JSON in a compact way. only annoyance is that neither json nor graphviz accepts single quote marks, so there are a lot of "\"escaped quotes\""
+* `dc_graph.tip.table` deals gracefully with any JSON-like data, displaying as key&value columns if an object, or as one column otherwise. values are JSON-stringified for a compact display
+* `tip.table` was dropping rows for object when the value was zero, `null`, or an empty strings from object. it only drops `undefined` now.
+* `apply_graphviz_accessors` supports standard graphviz `tooltip` attribute, which defaults to the label (not necessarily the key as before)
+* use the `dy="0.3em"` hack for vertically centering text in safari as well as IE, Edge
+* `sync_url_options`: ability to extract what-if url with some params changed
+* **experimental** data urls: explore and simple-viewer can read the graph from a [data: URI](https://en.wikipedia.org/wiki/Data_URI_scheme) and that allows them to create **DATA LINKS** to the same page with the "uploaded" user data.
+
 ## 0.7.8
 * IE hates a null `console`
 
