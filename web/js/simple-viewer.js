@@ -122,7 +122,7 @@ function on_load(filename, error, data) {
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
     // aesthetics
-        .nodeTitleAccessor(null); // deactivate basic tooltips
+        .nodeTitle(null); // deactivate basic tooltips
 
     sync_url.exert();
 
