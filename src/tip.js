@@ -229,7 +229,7 @@ dc_graph.tip.table = function() {
         else { // object
             data = keys = Object.keys(d).filter(d3.functor(gen.filter()))
                 .filter(function(k) {
-                    return d[k];
+                    return d[k] !== undefined;
                 });
         }
         var table = d3.select(document.createElement('table'));
