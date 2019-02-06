@@ -84,4 +84,5 @@
 
 .d3-tip table td {
     padding: 2px;
+    max-width: 300px;
 }
