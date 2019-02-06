@@ -1,3 +1,8 @@
+## 0.7.10
+* control the size of table tooltips so they don't take over the screen
+* smaller tooltip text in explore.html
+* update dependencies and get rid of some unused ones to make GitHub and NPM happy about vulnerabilities (which were never exposed to end users)
+
 ## 0.7.9
 * simple-viewer and explore accept new attribute "jsontip" which attempts to format JSON in a compact way. only annoyance is that neither json nor graphviz accepts single quote marks, so there are a lot of "\"escaped quotes\""
 * `dc_graph.tip.table` deals gracefully with any JSON-like data, displaying as key&value columns if an object, or as one column otherwise. values are JSON-stringified for a compact display
