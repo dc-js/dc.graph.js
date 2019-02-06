@@ -258,16 +258,14 @@ module.exports = function (grunt) {
                         dest: '<%= conf.web %>/fonts/'
                     },
                     {
-                        expand: true,
-                        flatten: true,
+                        nonull: true,
                         src: 'node_modules/d3-tip/index.js',
-                        dest: '<%= conf.web %>/js/d3-tip/'
+                        dest: '<%= conf.web %>/js/d3-tip.js'
                     },
                     {
-                        expand: true,
-                        flatten: true,
+                        nonull: true,
                         src: 'node_modules/d3-tip/examples/example-styles.css',
-                        dest: '<%= conf.web %>/css/d3-tip/'
+                        dest: '<%= conf.web %>/css/d3-tip.css'
                     }
                 ]
             }
