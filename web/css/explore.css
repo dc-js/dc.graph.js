@@ -41,3 +41,8 @@
     align-items: center;
     justify-content: center;
 }
+
+.d3-tip table td {
+    font-size: 10px;
+    font-weight: normal;
+}
