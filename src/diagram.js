@@ -1125,13 +1125,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.mode = _diagram.child = named_children();
 
-    // for backward compatibility; use .child() for more control & multiple legends
-    _diagram.legend = function(_) {
+    _diagram.legend = deprecate_function(".legend() is deprecated; use .child() for more control & multiple legends", function(_) {
         if(!arguments.length)
             return _diagram.child('node-legend');
         _diagram.child('node-legend', _);
         return _diagram;
-    };
+    });
 
     /**
      * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
