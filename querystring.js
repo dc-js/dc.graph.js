@@ -29,21 +29,22 @@ var querystring = (function() {
                 return b;
             })(window.location.search.substr(1).split('&'));
         },
-        generate: function(m) {
+        generate: function(m, encode) {
+            if(encode===undefined) encode = true;
             var parts = [];
             for(var k in m)
-                parts.push(k + '=' + encodeURIComponent(m[k]));
+                parts.push(k + '=' + (encode ? encodeURIComponent(m[k]) : m[k]));
             return parts.length ? parts.join('&') : '';
         },
-        get_url: function(m) {
+        get_url: function(m, encode) {
             var url = window.location.protocol + '//' + window.location.host + window.location.pathname;
-            var params = this.generate(m);
+            var params = this.generate(m, encode);
             if(params)
                 url += '?' + params;
             return url;
         },
-        update: function(m) {
-            window.history.pushState(null, null, this.get_url(m));
+        update: function(m, encode) {
+            window.history.pushState(null, null, this.get_url(m, encode));
             return this;
         },
         option_tracker: function() {
