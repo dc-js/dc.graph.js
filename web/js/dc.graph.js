@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.7.10
+ *  dc.graph 0.7.11
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.7.10
+ * @version 0.7.11
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.7.10',
+    version: '0.7.11',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3476,13 +3476,12 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.mode = _diagram.child = named_children();
 
-    // for backward compatibility; use .child() for more control & multiple legends
-    _diagram.legend = function(_) {
+    _diagram.legend = deprecate_function(".legend() is deprecated; use .child() for more control & multiple legends", function(_) {
         if(!arguments.length)
             return _diagram.child('node-legend');
         _diagram.child('node-legend', _);
         return _diagram;
-    };
+    });
 
     /**
      * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
@@ -8968,6 +8967,22 @@ dc_graph.tip.json_table = function() {
         return (d.orig.value.value || d.orig.value).jsontip;
     });
     return table;
+};
+
+dc_graph.tip.html_or_json_table = function() {
+    var json_table = dc_graph.tip.json_table();
+    var gen = function(d, k) {
+        var html = gen.html()(d);
+        if(html)
+            k(html);
+        else
+            json_table(d, k);
+    };
+    gen.json = json_table.json;
+    gen.html = property(function(d) {
+        return (d.orig.value.value || d.orig.value).htmltip;
+    });
+    return gen;
 };
 
 dc_graph.tip.select_node_and_edge = function() {
