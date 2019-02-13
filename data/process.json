@@ -23,7 +23,8 @@
     },
     {
       "id": 5,
-      "name": "sleep"
+      "name": "sleep",
+      "htmltip": "<h1>HTML Tip</h1><table><tr><td>Row 1</td><td>Col 2</td><td>Col 3</td></tr><tr><td>Row 2</td><td>etc.</td><td>and so on</td></tr></table>"
     },
     {
       "id": 6,
