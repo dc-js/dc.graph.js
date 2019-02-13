@@ -1,3 +1,8 @@
+## 0.7.11
+* `htmltip` attribute for ultimate control over tooltip formatting in simple-viewer.html and explore.html
+* `querystring.update` takes a second parameter, whether to encode, for keeping URLs friendly (still defaults true)
+* deprecate `diagram.legend` in favor of the more general `diagram.child`
+
 ## 0.7.10
 * control the size of table tooltips so they don't take over the screen
 * smaller tooltip text in explore.html
