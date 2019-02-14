@@ -256,8 +256,8 @@ dc_graph.legend.node_legend = function() {
         },
         draw: function(diagram, itemEnter, item) {
             diagram
-                ._enterNode(itemEnter)
-                ._updateNode(item);
+                .renderNode(itemEnter)
+                .redrawNode(item);
         }
     };
 };
@@ -313,7 +313,7 @@ dc_graph.legend.edge_legend = function() {
         fakeNodeRadius: property(10),
         length: property(50),
         draw: function(diagram, itemEnter, item) {
-            diagram._updateEdge(itemEnter.select('path.edge'), diagram.selectAllEdges('.edge-arrows'));
+            diagram.redrawEdge(itemEnter.select('path.edge'), diagram.renderer().selectAllEdges('.edge-arrows'));
         }
     };
     return _type;
