@@ -612,6 +612,45 @@ function arrow_length(parts, stemWidth) {
     return front_ref(parts[0].frontRef)[0] - offsets[parts.length-1].backRef[0];
 }
 
+
+function scaled_arrow_lengths(diagram, e) {
+    var arrowSize = diagram.edgeArrowSize.eval(e),
+        stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize;
+    var headLength = arrowSize *
+        (arrow_length(arrow_parts(diagram.arrows(), diagram.edgeArrowhead.eval(e)), stemWidth) +
+         diagram.nodeStrokeWidth.eval(e.target) / 2),
+        tailLength = arrowSize *
+        (arrow_length(arrow_parts(diagram.arrows(), diagram.edgeArrowtail.eval(e)), stemWidth) +
+         diagram.nodeStrokeWidth.eval(e.source) / 2);
+    return {headLength: headLength, tailLength: tailLength};
+}
+
+function clip_path_to_arrows(headLength, tailLength, path) {
+    var points0 = as_bezier3(path),
+        points = chop_bezier(points0, 'head', headLength);
+    return {
+        bezDegree: 3,
+        points: chop_bezier(points, 'tail', tailLength),
+        sourcePort: path.sourcePort,
+        targetPort: path.targetPort
+    };
+}
+
+function place_arrows_on_spline(diagram, e, points) {
+    var alengths = scaled_arrow_lengths(diagram, e);
+    var path0 = {
+        points: points,
+        bezDegree: 3
+    };
+    var path = clip_path_to_arrows(alengths.headLength, alengths.tailLength, path0);
+    return {
+        path: path,
+        full: path0,
+        orienthead: angle_between_points(path.points[path.points.length-1], path0.points[path0.points.length-1]) + 'rad', //calculate_arrowhead_orientation(e.cola.points, 'head'),
+        orienttail: angle_between_points(path.points[0], path0.points[0]) + 'rad' //calculate_arrowhead_orientation(e.cola.points, 'tail')
+    };
+}
+
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
     var strokeOfs, edgeStroke;
