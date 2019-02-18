@@ -1603,7 +1603,53 @@ dc_graph.diagram = function (parent, chartGroup) {
         // i am not satisfied with this constraint generation api...
         // https://github.com/dc-js/dc.graph.js/issues/10
         var constraints = _diagram.constrain()(_diagram, wnodes, wedges);
+
+        // warn if there are any loops (before changing names to indices)
+        // it would be better to do this in webcola
+        // (for one thing, this duplicates logic in rectangle.ts)
+        // but by that time it has lost the names of things,
+        // so the output would be difficult to use
+        var constraints_by_left = constraints.reduce(function(p, c) {
+            if(c.type) {
+                switch(c.type) {
+                case 'alignment':
+                    var left = c.offsets[0].node;
+                    p[left] = p[left] || [];
+                    c.offsets.slice(1).forEach(function(o) {
+                        p[left].push({node: o.node, in_constraint: c});
+                    });
+                    break;
+                }
+            } else if(c.axis) {
+                p[c.left] = p[c.left] || [];
+                p[c.left].push({node: c.right, in_constraint: c});
+            }
+            return p;
+        }, {});
+        var touched = {};
+        function find_constraint_loops(con, stack) {
+            var left = con.node;
+            stack = stack || [];
+            var loop = stack.find(function(con) { return con.node === left; });
+            stack = stack.concat([con]);
+            if(loop)
+                console.warn('found a loop in constraints', stack);
+            if(touched[left])
+                return;
+            touched[left] = true;
+            if(!constraints_by_left[left])
+                return;
+            constraints_by_left[left].forEach(function(right) {
+                find_constraint_loops(right, stack);
+            });
+        }
+        Object.keys(constraints_by_left).forEach(function(left) {
+            if(!touched[left])
+                find_constraint_loops({node: left, in_constraint: null});
+        });
+
         // translate references from names to indices (ugly)
+        var invalid_constraints = [];
         constraints.forEach(function(c) {
             if(c.type) {
                 switch(c.type) {
@@ -1618,11 +1664,15 @@ dc_graph.diagram = function (parent, chartGroup) {
                     });
                     break;
                 }
-            } else if(c.axis) {
+            } else if(c.axis && c.left && c.right) {
                 c.left = _nodes[c.left].index;
                 c.right = _nodes[c.right].index;
             }
+            else invalid_constraints.push(c);
         });
+
+        if(invalid_constraints.length)
+            console.warn(invalid_constraints.length + ' invalid constraints', invalid_constraints);
 
         // pseudo-cola.js features
 
