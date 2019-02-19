@@ -109,11 +109,11 @@ dc_graph.cola_layout = function(id) {
             dispatchState('end');
         });
 
-        if(engine.setcolaSpec !== []) {
+        if(engine.setcolaSpec()) {
             var setcola_result = setcola
                 .nodes(wnodes)        // Set the graph nodes
                 .links(wedges)        // Set the graph links
-                .constraints(engine.setcolaSpec)  // Set the constraints
+                .constraints(engine.setcolaSpec())  // Set the constraints
                 .gap(10) //default value is 10, can be customized in setcolaSpec
                 .layout();
 
@@ -261,7 +261,7 @@ dc_graph.cola_layout = function(id) {
         gridSnapIterations: property(0),
         tickSize: property(1),
         groupConnected: property(false),
-        setcolaSpec: property([]),
+        setcolaSpec: property(null),
         extractNodeAttrs: function(_node, _attrs) {}, //add new attributes to _node from _attrs
         extractEdgeAttrs: function(_edge, _attrs) {},
     });
