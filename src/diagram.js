@@ -1807,14 +1807,16 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.layoutEngine().data(
                 { width: _diagram.width(), height: _diagram.height() },
                 wnodes.map(function(v) {
-                    var _v = Object.assign({}, v.cola, v.dcg_shape);
-                    _v.attrs = v.orig;
-                    return _v;
+                    var lv = Object.assign({}, v.cola, v.dcg_shape);
+                    if(_diagram.layoutEngine().annotateNode)
+                        _diagram.layoutEngine().annotateNode(lv, v);
+                    return lv;
                 }),
-                layout_edges.map(function(v) {
-                    var _v = v.cola;
-                    _v.attrs = v.orig;
-                    return _v;
+                layout_edges.map(function(e) {
+                    var le = e.cola;
+                    if(_diagram.layoutEngine().annotateEdge)
+                        _diagram.layoutEngine().annotateEdge(le, e);
+                    return le;
                 }),
                 constraints
             );

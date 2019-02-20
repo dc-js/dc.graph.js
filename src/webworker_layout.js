@@ -31,6 +31,8 @@ dc_graph.webworker_layout = function(layoutEngine) {
                 options[option] = layoutEngine[option]();
                 return options;
             }, options);
+        if(layoutEngine.propagateOptions)
+            layoutEngine.propagateOptions(options);
         _worker.worker.postMessage({
             command: 'init',
             args: {
@@ -76,7 +78,8 @@ dc_graph.webworker_layout = function(layoutEngine) {
     // somewhat sketchy - do we want this object to be transparent or not?
     var passthroughs = ['layoutAlgorithm', 'populateLayoutNode', 'populateLayoutEdge',
                         'rankdir', 'ranksep'];
-    passthroughs.concat(layoutEngine.optionNames()).forEach(function(name) {
+    passthroughs.concat(layoutEngine.optionNames(),
+                        layoutEngine.passThru ? layoutEngine.passThru() : []).forEach(function(name) {
         engine[name] = function() {
             var ret = layoutEngine[name].apply(layoutEngine, arguments);
             return arguments.length ? this : ret;
