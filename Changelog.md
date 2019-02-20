@@ -1,3 +1,8 @@
+## 0.8.0
+* [setcola](https://github.com/uwdata/setcola) constraints for cola layout - thanks Zhe Wang! ([#86](https://github.com/dc-js/dc.graph.js/pull/86))
+* start validating (some) constraints for cola layout
+* abstract out the concept of an "SVG renderer" to possibly enable other renderers. note: you will see some warnings about the SVG renderer which are normal.
+
 ## 0.7.11
 * `htmltip` attribute for ultimate control over tooltip formatting in simple-viewer.html and explore.html
 * `querystring.update` takes a second parameter, whether to encode, for keeping URLs friendly (still defaults true)

@@ -13,13 +13,15 @@ dc_graph.cola_layout = function(id) {
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
+    var _options;
 
     function init(options) {
-        // width, height, handleDisconnected, lengthStrategy, baseLength, flowLayout, tickSize
+        _options = options;
         _d3cola = cola.d3adaptor()
             .avoidOverlaps(true)
             .size([options.width, options.height])
             .handleDisconnected(options.handleDisconnected);
+
         if(_d3cola.tickSize) // non-standard
             _d3cola.tickSize(options.tickSize);
 
@@ -51,6 +53,9 @@ dc_graph.cola_layout = function(id) {
             v1.width = v.width;
             v1.height = v.height;
             v1.fixed = !!v.dcg_nodeFixed;
+            _options.nodeAttrs.forEach(function(key) {
+                v1[key] = v[key];
+            });
 
             if(v1.fixed && typeof v.dcg_nodeFixed === 'object') {
                 v1.x = v.dcg_nodeFixed.x;
@@ -73,6 +78,9 @@ dc_graph.cola_layout = function(id) {
             e1.source = _nodes[e.dcg_edgeSource];
             e1.target = _nodes[e.dcg_edgeTarget];
             e1.dcg_edgeLength = e.dcg_edgeLength;
+            _options.edgeAttrs.forEach(function(key) {
+                e1[key] = e[key];
+            });
         });
 
         // cola needs each node object to have an index property
@@ -89,6 +97,13 @@ dc_graph.cola_layout = function(id) {
         }
 
         function dispatchState(event) {
+            // clean up extra setcola annotations
+            wnodes.forEach(function(n) {
+                Object.keys(n).forEach(function(key) {
+                    if(/^get/.test(key) && typeof n[key] === 'function')
+                        delete n[key];
+                });
+            });
             _dispatch[event](
                 wnodes,
                 wedges.map(function(e) {
@@ -103,10 +118,27 @@ dc_graph.cola_layout = function(id) {
         }).on('end', /* _done = */ function() {
             dispatchState('end');
         });
-        _d3cola.nodes(wnodes)
-            .links(wedges)
-            .constraints(constraints)
-            .groups(groups);
+
+        if(_options.setcolaSpec) {
+            console.log('generating setcola constrains');
+            var setcola_result = setcola
+                .nodes(wnodes)
+                .links(wedges)
+                .constraints(_options.setcolaSpec)
+                .gap(10) //default value is 10, can be customized in setcolaSpec
+                .layout();
+
+            _d3cola.nodes(setcola_result.nodes)
+                .links(setcola_result.links)
+                .constraints(setcola_result.constraints)
+                .groups(groups);
+        } else {
+            _d3cola.nodes(wnodes)
+                .links(wedges)
+                .constraints(constraints)
+                .groups(groups);
+        }
+
     }
 
     function start() {
@@ -158,11 +190,29 @@ dc_graph.cola_layout = function(id) {
             stop();
         },
         optionNames: function() {
-            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout', 'tickSize', 'groupConnected']
+            return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout',
+                    'tickSize', 'groupConnected', 'setcolaSpec']
                 .concat(graphviz_keys);
+        },
+        passThru: function() {
+            return ['annotateNode', 'annotateEdge', 'extractNodeAttrs', 'extractEdgeAttrs'];
+        },
+        propagateOptions: function(options) {
+            options.nodeAttrs = Object.keys(engine.extractNodeAttrs());
+            options.edgeAttrs = Object.keys(engine.extractEdgeAttrs());
         },
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
+        annotateNode: function(lv, v) {
+            Object.keys(engine.extractNodeAttrs()).forEach(function(key) {
+                lv[key] = engine.extractNodeAttrs()[key](v.orig);
+            });
+        },
+        annotateEdge: function(le, e) {
+            Object.keys(engine.extractEdgeAttrs()).forEach(function(key) {
+                le[key] = engine.extractEdgeAttrs()[key](e.orig);
+            });
+        },
         /**
          * Instructs cola.js to fit the connected components.
          * @method handleDisconnected
@@ -237,9 +287,12 @@ dc_graph.cola_layout = function(id) {
         allConstraintsIterations: property(20),
         gridSnapIterations: property(0),
         tickSize: property(1),
-        groupConnected: property(false)
+        groupConnected: property(false),
+        setcolaSpec: property(null),
+        extractNodeAttrs: property({}), // {attr: function(node)}
+        extractEdgeAttrs: property({})
     });
     return engine;
 };
 
-dc_graph.cola_layout.scripts = ['d3.js', 'cola.js'];
+dc_graph.cola_layout.scripts = ['d3.js', 'cola.js', 'setcola.js'];
