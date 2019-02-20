@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.7.11  
+**Version**: 0.8.0  
 **Example**  
 ```js
 // Example chaining
@@ -88,17 +88,17 @@ diagram.width(600)
         * [.render()](#dc_graph.diagram+render) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.on([event], [f])](#dc_graph.diagram+on) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.getStats()](#dc_graph.diagram+getStats) ⇒ [<code>diagram</code>](#dc_graph.diagram)
-        * [.select([selector])](#dc_graph.diagram+select) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
-        * [.selectAll([selector])](#dc_graph.diagram+selectAll) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
-        * [.svg([selection])](#dc_graph.diagram+svg) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
-        * [.g([selection])](#dc_graph.diagram+g) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
-        * [.resetSvg()](#dc_graph.diagram+resetSvg) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.redrawGroup()](#dc_graph.diagram+redrawGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.renderGroup()](#dc_graph.diagram+renderGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
+        * [.select([selector])](#dc_graph.diagram+select) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.selectAll([selector])](#dc_graph.diagram+selectAll) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.svg([selection])](#dc_graph.diagram+svg) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.g([selection])](#dc_graph.diagram+g) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.resetSvg()](#dc_graph.diagram+resetSvg) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.graphviz_attrs](#dc_graph.graphviz_attrs)
         * [new graphviz_attrs()](#new_dc_graph.graphviz_attrs_new)
         * [.rankdir([rankdir])](#dc_graph.graphviz_attrs+rankdir)
@@ -210,17 +210,17 @@ diagram.width(600)
     * [.render()](#dc_graph.diagram+render) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.on([event], [f])](#dc_graph.diagram+on) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.getStats()](#dc_graph.diagram+getStats) ⇒ [<code>diagram</code>](#dc_graph.diagram)
-    * [.select([selector])](#dc_graph.diagram+select) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
-    * [.selectAll([selector])](#dc_graph.diagram+selectAll) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
-    * [.svg([selection])](#dc_graph.diagram+svg) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
-    * [.g([selection])](#dc_graph.diagram+g) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
-    * [.resetSvg()](#dc_graph.diagram+resetSvg) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.redrawGroup()](#dc_graph.diagram+redrawGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.renderGroup()](#dc_graph.diagram+renderGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.anchorName()](#dc_graph.diagram+anchorName) ⇒ <code>String</code>
+    * [.select([selector])](#dc_graph.diagram+select) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.selectAll([selector])](#dc_graph.diagram+selectAll) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.svg([selection])](#dc_graph.diagram+svg) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.g([selection])](#dc_graph.diagram+g) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.resetSvg()](#dc_graph.diagram+resetSvg) ⇒ [<code>diagram</code>](#dc_graph.diagram)
 
 <a name="new_dc_graph.diagram_new"></a>
 
@@ -1179,7 +1179,7 @@ diagram.layoutAlgorithm('dagre');
 <a name="dc_graph.diagram+layoutEngine"></a>
 
 #### diagram.layoutEngine([engine])
-The layout engine determines how to draw things!
+The layout engine determines positions of nodes and edges.
 
 **Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
 
@@ -1243,6 +1243,70 @@ Returns an object with current statistics on graph layout.
 * `nedges` - number of edges displayed
 
 **Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+<a name="dc_graph.diagram+x"></a>
+
+#### diagram.x([scale]) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Standard dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
+method. Gets or sets the x scale.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type |
+| --- | --- |
+| [scale] | <code>d3.scale</code> | 
+
+<a name="dc_graph.diagram+x"></a>
+
+#### diagram.x([scale]) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Standard dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
+method. Gets or sets the y scale.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type |
+| --- | --- |
+| [scale] | <code>d3.scale</code> | 
+
+<a name="dc_graph.diagram+redrawGroup"></a>
+
+#### diagram.redrawGroup() ⇒ [<code>diagram</code>](#dc_graph.diagram)
+Standard dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
+method. Causes all charts in the chart group to be redrawn.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+<a name="dc_graph.diagram+renderGroup"></a>
+
+#### diagram.renderGroup() ⇒ [<code>diagram</code>](#dc_graph.diagram)
+Standard dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
+method. Causes all charts in the chart group to be rendered.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+<a name="dc_graph.diagram+anchor"></a>
+
+#### diagram.anchor([parent], [chartGroup]) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set the root SVGElement to either be any valid [d3 single
+selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom
+block element such as a div; or a dom element or d3 selection. This class is called
+internally on diagram initialization, but be called again to relocate the diagram. However, it
+will orphan any previously created SVGElements.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type |
+| --- | --- |
+| [parent] | <code>anchorSelector</code> \| <code>anchorNode</code> \| <code>d3.selection</code> | 
+| [chartGroup] | <code>String</code> | 
+
+<a name="dc_graph.diagram+anchorName"></a>
+
+#### diagram.anchorName() ⇒ <code>String</code>
+Returns the DOM id for the chart's anchored location.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
 <a name="dc_graph.diagram+select"></a>
 
 #### diagram.select([selector]) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -1283,32 +1347,6 @@ calls can be chained after it.)
 | --- | --- |
 | [selector] | <code>String</code> | 
 
-<a name="dc_graph.diagram+x"></a>
-
-#### diagram.x([scale]) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
-Standard dc.js
-[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
-method. Gets or sets the x scale.
-
-**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
-
-| Param | Type |
-| --- | --- |
-| [scale] | <code>d3.scale</code> | 
-
-<a name="dc_graph.diagram+x"></a>
-
-#### diagram.x([scale]) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
-Standard dc.js
-[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
-method. Gets or sets the y scale.
-
-**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
-
-| Param | Type |
-| --- | --- |
-| [scale] | <code>d3.scale</code> | 
-
 <a name="dc_graph.diagram+svg"></a>
 
 #### diagram.svg([selection]) ⇒ <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -1344,44 +1382,6 @@ Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
 method. Remove the diagram's SVG elements from the dom and recreate the container SVG
 element.
-
-**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
-<a name="dc_graph.diagram+redrawGroup"></a>
-
-#### diagram.redrawGroup() ⇒ [<code>diagram</code>](#dc_graph.diagram)
-Standard dc.js
-[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
-method. Causes all charts in the chart group to be redrawn.
-
-**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
-<a name="dc_graph.diagram+renderGroup"></a>
-
-#### diagram.renderGroup() ⇒ [<code>diagram</code>](#dc_graph.diagram)
-Standard dc.js
-[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
-method. Causes all charts in the chart group to be rendered.
-
-**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
-<a name="dc_graph.diagram+anchor"></a>
-
-#### diagram.anchor([parent], [chartGroup]) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
-Set the root SVGElement to either be any valid [d3 single
-selector](https://github.com/mbostock/d3/wiki/Selections#selecting-elements) specifying a dom
-block element such as a div; or a dom element or d3 selection. This class is called
-internally on diagram initialization, but be called again to relocate the diagram. However, it
-will orphan any previously created SVGElements.
-
-**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
-
-| Param | Type |
-| --- | --- |
-| [parent] | <code>anchorSelector</code> \| <code>anchorNode</code> \| <code>d3.selection</code> | 
-| [chartGroup] | <code>String</code> | 
-
-<a name="dc_graph.diagram+anchorName"></a>
-
-#### diagram.anchorName() ⇒ <code>String</code>
-Returns the DOM id for the chart's anchored location.
 
 **Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
 <a name="dc_graph.graphviz_attrs"></a>
