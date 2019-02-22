@@ -449,7 +449,7 @@ function update_palette(catalog) {
     });
     categories.unshift(null);
     categories.unshift({
-        key: "Other Solutions...",
+        key: "Saved Solutions",
         draggable: false,
         noheader: true,
         values: catalog.composites().map(function(v) {

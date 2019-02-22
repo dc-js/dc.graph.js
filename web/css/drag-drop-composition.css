@@ -111,3 +111,7 @@ circle.port {
 .d3-tip.hint-positive:after {
     color: rgba(48, 212, 92, 0.9);
 }
+
+#palette a[href="#collapse-saved-solutions"] {
+    color: green;
+}
