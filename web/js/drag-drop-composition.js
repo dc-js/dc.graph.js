@@ -690,13 +690,13 @@ get_catalog().then(function(catalog) {
     _compositionDiagram.child('select-nodes', select_nodes);
 
     var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
-    select_nodes_group.on('set_changed.show-info', function(nodes) {
+    select_nodes_group.on('set_changed.show-info', function(nodes, refresh) {
         _palette.select(null);
         if(nodes.length>1)
             throw new Error('not expecting multiple select');
         else if(nodes.length === 1) {
-            select_edges_group.set_changed([]);
-            select_ports_group.set_changed([]);
+            select_edges_group.set_changed([], refresh);
+            select_ports_group.set_changed([], refresh);
             var type = _compositionDiagram.getNode(nodes[0]).value.type;
             var comps = catalog.models().filter(function(comp) {
                 return catalog.fModelName(comp) === type;
@@ -712,11 +712,11 @@ get_catalog().then(function(catalog) {
     }).multipleSelect(false);
     _compositionDiagram.child('select-edges', select_edges);
     var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
-    select_edges_group.on('set_changed.show-info', function(edges) {
+    select_edges_group.on('set_changed.show-info', function(edges, refresh) {
         _palette.select(null);
         if(edges.length>0) {
-            select_nodes_group.set_changed([]);
-            select_ports_group.set_changed([]);
+            select_nodes_group.set_changed([], refresh);
+            select_ports_group.set_changed([], refresh);
             var edge = _compositionDiagram.getEdge(edges[0]);
             display_properties(catalog, edge);
         } else display_properties(catalog, null);
@@ -729,11 +729,11 @@ get_catalog().then(function(catalog) {
     }).multipleSelect(false);
     _compositionDiagram.child('select-ports', select_ports);
     var select_ports_group = dc_graph.select_things_group('select-ports-group', 'select-ports');
-    select_ports_group.on('set_changed.show-info', function(ports) {
+    select_ports_group.on('set_changed.show-info', function(ports, refresh) {
         _palette.select(null);
         if(ports.length>0) {
-            select_nodes_group.set_changed([]);
-            select_edges_group.set_changed([]);
+            select_nodes_group.set_changed([], refresh);
+            select_edges_group.set_changed([], refresh);
             display_properties(catalog, ports[0]);
         } else display_properties(catalog, null);
     });
