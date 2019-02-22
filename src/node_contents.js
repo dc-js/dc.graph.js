@@ -27,7 +27,7 @@ dc_graph.text_contents = function() {
                     return _contents.parent().nodeLabelDecoration.eval(line.node);
                 },
                 x: 0
-            }).text(function(s) { return s.line; });
+            }).html(function(s) { return s.line; });
             text
                 .each(function(n) {
                     n.xofs = 0;
