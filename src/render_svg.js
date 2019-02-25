@@ -548,7 +548,7 @@ dc_graph.render_svg = function() {
             .attr('startOffset', '50%');
         elabels
           .select('textPath')
-            .text(function(t) { return t; })
+            .html(function(t) { return t; })
             .attr('opacity', function() {
                 return _renderer.parent().edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
             })
