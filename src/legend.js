@@ -11,9 +11,17 @@ dc_graph.legend = function(legend_namespace) {
 
     function apply_filter() {
         if(_legend.dimension()) {
-            _legend.dimension().filterFunction(function(k) {
-                return !_included.length || _included.includes(k);
-            });
+            if(_legend.isTagDimension()) {
+                _legend.dimension().filterFunction(function(ks) {
+                    return !_included.length || ks.filter(function(k) {
+                        return _included.includes(k);
+                    }).length;
+                });
+            } else {
+                _legend.dimension().filterFunction(function(k) {
+                    return !_included.length || _included.includes(k);
+                });
+            }
             _legend.parent().redraw();
         }
     }
@@ -70,6 +78,8 @@ dc_graph.legend = function(legend_namespace) {
      Set or get height to reserve for legend item. Default: 30.
     **/
     _legend.itemHeight = _legend.nodeHeight = property(40);
+
+    _legend.dyLabel = property('0.3em');
 
     _legend.omitEmpty = property(false);
 
@@ -129,7 +139,7 @@ dc_graph.legend = function(legend_namespace) {
         item.exit().remove();
         var itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
         itemEnter.append('text')
-            .attr('dy', '0.3em')
+            .attr('dy', _legend.dyLabel())
             .attr('class', 'legend-label');
         item
             .attr('transform', function(n, i) {
@@ -237,6 +247,7 @@ dc_graph.legend = function(legend_namespace) {
                 apply_filter();
             }
         });
+    _legend.isTagDimension = property(false);
 
     return _legend;
 };
@@ -317,4 +328,27 @@ dc_graph.legend.edge_legend = function() {
         }
     };
     return _type;
+};
+
+dc_graph.legend.symbol_legend = function(symbolScale) {
+    return {
+        itemSelector: function() {
+            return '.symbol';
+        },
+        labelSelector: function() {
+            return '.symbol-label';
+        },
+        create: function(diagram, selection, w, h) {
+            var symbolEnter = selection.append('g')
+                .attr('class', 'symbol');
+            return symbolEnter;
+        },
+        draw: function(diagram, symbolEnter, symbol) {
+            symbolEnter.append('text')
+                .html(function(d) {
+                    return symbolScale(d.orig.key);
+                });
+            return symbolEnter;
+        }
+    };
 };

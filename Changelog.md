@@ -1,7 +1,15 @@
+## 0.8.1
+* `symbol_legend` for legend items represented with some text which may be a symbol, e.g. when nodes/edges have a set of tags
+* legend supports [tag dimensions](https://github.com/crossfilter/crossfilter/wiki/API-Reference#dimension_with_arrays)
+* ability to change vertical offset of legend text
+* edge arrows properly transitioned and removed on exit instead of disappearing abruptly before the edge is gone
+* node and edge labels are rendered as html instead of text, allowing character entities and (presumably) `tspan` formatting
+* `propagateOptions` also invoked when layout is not in a webworker (this was a crashing bug... layout engine interface is not properly documented so see [c358ff3](https://github.com/dc-js/dc.graph.js/commit/c358ff3522d817) / [efdca3d](https://github.com/dc-js/dc.graph.js/commit/efdca3d7b4c) for details)
+
 ## 0.8.0
 * [setcola](https://github.com/uwdata/setcola) constraints for cola layout - thanks Zhe Wang! ([#86](https://github.com/dc-js/dc.graph.js/pull/86))
 * start validating (some) constraints for cola layout
-* abstract out the concept of an "SVG renderer" to possibly enable other renderers. note: you will see some warnings about the SVG renderer which are normal.
+* abstract out the concept of an "SVG renderer" to possibly enable other renderers. note: you will see some warnings about the SVG renderer which are diagnostics to identify which components are SVG-specific. in time, components will either be adapted to work across renderers, or they will disable themselves when they won't work with the renderer.
 
 ## 0.7.11
 * `htmltip` attribute for ultimate control over tooltip formatting in simple-viewer.html and explore.html

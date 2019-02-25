@@ -159,6 +159,14 @@ dc_graph.render_svg = function() {
             .each(function(e) {
                 e.deleted = false;
             });
+        edge.exit().each(function(e) {
+            e.deleted = true;
+        }).transition()
+            .duration(_renderer.parent().stagedDuration())
+            .delay(_renderer.parent().deleteDelay())
+            .attr('opacity', 0)
+            .remove();
+
         var edgeArrows = _edgeLayer.selectAll('.edge-arrows')
                 .data(wedges, _renderer.parent().edgeKey.eval);
         var edgeArrowsEnter = edgeArrows.enter().append('svg:path')
@@ -170,18 +178,15 @@ dc_graph.render_svg = function() {
                     fill: 'none',
                     opacity: 0
                 });
-
-        edge.exit().each(function(e) {
-            e.deleted = true;
-        }).transition()
+        edgeArrows.exit().transition()
             .duration(_renderer.parent().stagedDuration())
             .delay(_renderer.parent().deleteDelay())
             .attr('opacity', 0)
-            .each(function(e) {
+            .remove()
+            .each('end.delarrow', function(e) {
                 edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'head', null);
                 edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'tail', null);
-            })
-            .remove();
+            });
 
         if(_renderer.parent().edgeSort()) {
             edge.sort(function(a, b) {
@@ -543,7 +548,7 @@ dc_graph.render_svg = function() {
             .attr('startOffset', '50%');
         elabels
           .select('textPath')
-            .text(function(t) { return t; })
+            .html(function(t) { return t; })
             .attr('opacity', function() {
                 return _renderer.parent().edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
             })

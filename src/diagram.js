@@ -1372,6 +1372,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_diagram.initLayoutOnRedraw())
             initLayout();
 
+        _nodes = {};
+        _edges = {};
+        _ports = {};
+
         // start out with 1:1 zoom
         _diagram.x(d3.scale.linear()
                    .domain([0, _diagram.width()])
