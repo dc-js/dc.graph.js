@@ -11,9 +11,17 @@ dc_graph.legend = function(legend_namespace) {
 
     function apply_filter() {
         if(_legend.dimension()) {
-            _legend.dimension().filterFunction(function(k) {
-                return !_included.length || _included.includes(k);
-            });
+            if(_legend.isTagDimension()) {
+                _legend.dimension().filterFunction(function(ks) {
+                    return !_included.length || ks.filter(function(k) {
+                        return _included.includes(k);
+                    }).length;
+                });
+            } else {
+                _legend.dimension().filterFunction(function(k) {
+                    return !_included.length || _included.includes(k);
+                });
+            }
             _legend.parent().redraw();
         }
     }
@@ -237,6 +245,7 @@ dc_graph.legend = function(legend_namespace) {
                 apply_filter();
             }
         });
+    _legend.isTagDimension = property(false);
 
     return _legend;
 };
