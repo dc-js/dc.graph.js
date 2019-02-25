@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.0
+ *  dc.graph 0.8.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.0
+ * @version 0.8.1
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.0',
+    version: '0.8.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -2285,7 +2285,7 @@ dc_graph.text_contents = function() {
                     return _contents.parent().nodeLabelDecoration.eval(line.node);
                 },
                 x: 0
-            }).text(function(s) { return s.line; });
+            }).html(function(s) { return s.line; });
             text
                 .each(function(n) {
                     n.xofs = 0;
@@ -3762,6 +3762,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!_diagram.initLayoutOnRedraw())
             initLayout();
 
+        _nodes = {};
+        _edges = {};
+        _ports = {};
+
         // start out with 1:1 zoom
         _diagram.x(d3.scale.linear()
                    .domain([0, _diagram.width()])
@@ -4973,6 +4977,14 @@ dc_graph.render_svg = function() {
             .each(function(e) {
                 e.deleted = false;
             });
+        edge.exit().each(function(e) {
+            e.deleted = true;
+        }).transition()
+            .duration(_renderer.parent().stagedDuration())
+            .delay(_renderer.parent().deleteDelay())
+            .attr('opacity', 0)
+            .remove();
+
         var edgeArrows = _edgeLayer.selectAll('.edge-arrows')
                 .data(wedges, _renderer.parent().edgeKey.eval);
         var edgeArrowsEnter = edgeArrows.enter().append('svg:path')
@@ -4984,18 +4996,15 @@ dc_graph.render_svg = function() {
                     fill: 'none',
                     opacity: 0
                 });
-
-        edge.exit().each(function(e) {
-            e.deleted = true;
-        }).transition()
+        edgeArrows.exit().transition()
             .duration(_renderer.parent().stagedDuration())
             .delay(_renderer.parent().deleteDelay())
             .attr('opacity', 0)
-            .each(function(e) {
+            .remove()
+            .each('end.delarrow', function(e) {
                 edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'head', null);
                 edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'tail', null);
-            })
-            .remove();
+            });
 
         if(_renderer.parent().edgeSort()) {
             edge.sort(function(a, b) {
@@ -5357,7 +5366,7 @@ dc_graph.render_svg = function() {
             .attr('startOffset', '50%');
         elabels
           .select('textPath')
-            .text(function(t) { return t; })
+            .html(function(t) { return t; })
             .attr('opacity', function() {
                 return _renderer.parent().edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
             })
@@ -6249,6 +6258,7 @@ dc_graph.cola_layout = function(id) {
             this.optionNames().forEach(function(option) {
                 options[option] = options[option] || this[option]();
             }.bind(this));
+            this.propagateOptions(options);
             init(options);
             return this;
         },
@@ -6270,8 +6280,10 @@ dc_graph.cola_layout = function(id) {
             return ['annotateNode', 'annotateEdge', 'extractNodeAttrs', 'extractEdgeAttrs'];
         },
         propagateOptions: function(options) {
-            options.nodeAttrs = Object.keys(engine.extractNodeAttrs());
-            options.edgeAttrs = Object.keys(engine.extractEdgeAttrs());
+            if(!options.nodeAttrs)
+                options.nodeAttrs = Object.keys(engine.extractNodeAttrs());
+            if(!options.edgeAttrs)
+                options.edgeAttrs = Object.keys(engine.extractEdgeAttrs());
         },
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
@@ -8251,9 +8263,17 @@ dc_graph.legend = function(legend_namespace) {
 
     function apply_filter() {
         if(_legend.dimension()) {
-            _legend.dimension().filterFunction(function(k) {
-                return !_included.length || _included.includes(k);
-            });
+            if(_legend.isTagDimension()) {
+                _legend.dimension().filterFunction(function(ks) {
+                    return !_included.length || ks.filter(function(k) {
+                        return _included.includes(k);
+                    }).length;
+                });
+            } else {
+                _legend.dimension().filterFunction(function(k) {
+                    return !_included.length || _included.includes(k);
+                });
+            }
             _legend.parent().redraw();
         }
     }
@@ -8310,6 +8330,8 @@ dc_graph.legend = function(legend_namespace) {
      Set or get height to reserve for legend item. Default: 30.
     **/
     _legend.itemHeight = _legend.nodeHeight = property(40);
+
+    _legend.dyLabel = property('0.3em');
 
     _legend.omitEmpty = property(false);
 
@@ -8369,7 +8391,7 @@ dc_graph.legend = function(legend_namespace) {
         item.exit().remove();
         var itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
         itemEnter.append('text')
-            .attr('dy', '0.3em')
+            .attr('dy', _legend.dyLabel())
             .attr('class', 'legend-label');
         item
             .attr('transform', function(n, i) {
@@ -8477,6 +8499,7 @@ dc_graph.legend = function(legend_namespace) {
                 apply_filter();
             }
         });
+    _legend.isTagDimension = property(false);
 
     return _legend;
 };
@@ -8557,6 +8580,29 @@ dc_graph.legend.edge_legend = function() {
         }
     };
     return _type;
+};
+
+dc_graph.legend.symbol_legend = function(symbolScale) {
+    return {
+        itemSelector: function() {
+            return '.symbol';
+        },
+        labelSelector: function() {
+            return '.symbol-label';
+        },
+        create: function(diagram, selection, w, h) {
+            var symbolEnter = selection.append('g')
+                .attr('class', 'symbol');
+            return symbolEnter;
+        },
+        draw: function(diagram, symbolEnter, symbol) {
+            symbolEnter.append('text')
+                .html(function(d) {
+                    return symbolScale(d.orig.key);
+                });
+            return symbolEnter;
+        }
+    };
 };
 
 /**
