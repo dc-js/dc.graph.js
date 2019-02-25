@@ -318,3 +318,26 @@ dc_graph.legend.edge_legend = function() {
     };
     return _type;
 };
+
+dc_graph.legend.symbol_legend = function(symbolScale) {
+    return {
+        itemSelector: function() {
+            return '.symbol';
+        },
+        labelSelector: function() {
+            return '.symbol-label';
+        },
+        create: function(diagram, selection, w, h) {
+            var symbolEnter = selection.append('g')
+                .attr('class', 'symbol');
+            return symbolEnter;
+        },
+        draw: function(diagram, symbolEnter, symbol) {
+            symbolEnter.append('text')
+                .html(function(d) {
+                    return symbolScale(d.orig.key);
+                });
+            return symbolEnter;
+        }
+    };
+};
