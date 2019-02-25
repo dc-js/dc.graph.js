@@ -79,6 +79,8 @@ dc_graph.legend = function(legend_namespace) {
     **/
     _legend.itemHeight = _legend.nodeHeight = property(40);
 
+    _legend.dyLabel = property('0.3em');
+
     _legend.omitEmpty = property(false);
 
     /**
@@ -137,7 +139,7 @@ dc_graph.legend = function(legend_namespace) {
         item.exit().remove();
         var itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
         itemEnter.append('text')
-            .attr('dy', '0.3em')
+            .attr('dy', _legend.dyLabel())
             .attr('class', 'legend-label');
         item
             .attr('transform', function(n, i) {
