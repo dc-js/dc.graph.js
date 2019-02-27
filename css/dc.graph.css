@@ -82,7 +82,25 @@
     fill: none;
 }
 
-.d3-tip table td {
-    padding: 2px;
+
+div.d3-tip {
     max-width: 300px;
+    font-size: 12px;
+}
+
+.d3-tip p,
+.d3-tip table {
+    font-weight: normal;
+    margin: 1ex 0;
+}
+
+.d3-tip table td,
+.d3-tip table th {
+    font-size: 10px;
+}
+
+.d3-tip table th,
+.d3-tip table td {
+    border: 1px solid #777;
+    padding: 2px;
 }

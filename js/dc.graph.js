@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.1
+ *  dc.graph 0.8.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.1
+ * @version 0.8.2
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.1',
+    version: '0.8.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -5991,7 +5991,8 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
         })
         .nodeLabelFill(function(n) { return nvalue(n).fontcolor || 'black'; })
         .nodeTitle(function(n) {
-            return nvalue(n).tooltip !== undefined ?
+            return (nvalue(n).htmltip || nvalue(n).jsontip) ? null :
+                nvalue(n).tooltip !== undefined ?
                 nvalue(n).tooltip :
                 diagram.nodeLabel()(n);
         })
@@ -7331,38 +7332,6 @@ dc_graph.d3v4_force_layout = function(id) {
 
 dc_graph.d3v4_force_layout.scripts = ['d3.js', 'd3v4-force.js'];
 
-/**
- * `dc_graph.flexbox_layout` lays out nodes in accordance with the
- * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox flexbox layout algorithm}.
- * Nodes fit into a containment hierarchy based on their keys; edges do not affect the layout but
- * are drawn from node to node.
- *
- * Since the flexbox algorithm is not ordinarily available in SVG, this class uses the
- * {@link https://npmjs.com/package/css-layout css-layout}
- * package. (It does not currently support css-layout's successor
- * {@link https://github.com/facebook/yoga yoga} but that should be straightforward to add if
- * there is interest.)
- *
- * Unlike conventional graph layout, where positions are determined based on a few attributes and
- * the topological structure of the eedges, flexbox layout is determined based on the node hierarchy
- * and a large number of attributes on the nodes. See css-layout's
- * {@link https://npmjs.com/package/css-layout#supported-attributes Supported Attributes}
- * for a list of those attributes, and see below to understand how the hierarchy is inferred from
- * node keys.
- *
- * `flexbox_layout` does not require all internal nodes to be specified. The node keys are parsed as
- * "addresses" or paths (arrays of strings) and the tree is built from those paths. Wherever a
- * node's path terminates is where that node's data will be applied.
- *
- * Since flexbox supports a vast number of attributes, we don't attempt to create accessors for
- * every one. Instead, any attributes in the node data are copied which match the names of flexbox
- * attributes.
- *
- * @class flexbox_layout
- * @memberof dc_graph
- * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.flexbox_layout}
- **/
 dc_graph.flexbox_layout = function(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
@@ -7529,31 +7498,7 @@ dc_graph.flexbox_layout = function(id) {
             });
         },
         populateLayoutEdge: function() {},
-        /**
-         * This function constructs a node key string from an "address". An address is an array of
-         * strings identifying the path from the root to the node.
-         *
-         * By default, it joins the address with commas.
-         * @method addressToKey
-         * @memberof dc_graph.flexbox_layout
-         * @instance
-         * @param {Function} [addressToKey = function(ad) { return ad.join(','); }]
-         * @return {Function}
-         * @return {dc_graph.flexbox_layout}
-         **/
         addressToKey: property(function(ad) { return ad.join(','); }),
-        /**
-         * This function constructs an "address" from a node key string. An address is an array of
-         * strings identifying the path from the root to the node.
-         *
-         * By default, it splits the key by its commas.
-         * @method keyToAddress
-         * @memberof dc_graph.flexbox_layout
-         * @instance
-         * @param {Function} [keyToAddress = function(nid) { return nid.split(','); }]
-         * @return {Function}
-         * @return {dc_graph.flexbox_layout}
-         **/
         keyToAddress: property(function(nid) { return nid.split(','); }),
         logStuff: property(false)
     };
