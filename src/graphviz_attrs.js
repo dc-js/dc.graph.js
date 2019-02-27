@@ -65,7 +65,8 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
         })
         .nodeLabelFill(function(n) { return nvalue(n).fontcolor || 'black'; })
         .nodeTitle(function(n) {
-            return nvalue(n).tooltip !== undefined ?
+            return (nvalue(n).htmltip || nvalue(n).jsontip) ? null :
+                nvalue(n).tooltip !== undefined ?
                 nvalue(n).tooltip :
                 diagram.nodeLabel()(n);
         })

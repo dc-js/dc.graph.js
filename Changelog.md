@@ -1,3 +1,7 @@
+## 0.8.2
+* smaller text in tooltips & formatting for tooltip tables which makes normal latex-like html work better
+* htmltip and jsontip suppress tooltip in graphviz attr formatting. curiously, this wasn't necessary on macOS.
+
 ## 0.8.1
 * `symbol_legend` for legend items represented with some text which may be a symbol, e.g. when nodes/edges have a set of tags
 * legend supports [tag dimensions](https://github.com/crossfilter/crossfilter/wiki/API-Reference#dimension_with_arrays)
