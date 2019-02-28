@@ -2198,7 +2198,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Gets or sets the y scale.
-     * @method x
+     * @method y
      * @memberof dc_graph.diagram
      * @instance
      * @param {d3.scale} [scale]
