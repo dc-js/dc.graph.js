@@ -325,24 +325,6 @@ dc_graph.render_svg = function() {
         return this;
     };
 
-
-    function debug_bounds(bounds) {
-        var brect = _g.selectAll('rect.bounds').data([0]);
-        brect.enter()
-            .insert('rect', ':first-child').attr({
-                class: 'bounds',
-                fill: 'rgba(128,255,128,0.1)',
-                stroke: '#000'
-            });
-        brect
-            .attr({
-                x: bounds.left,
-                y: bounds.top,
-                width: bounds.right - bounds.left,
-                height: bounds.bottom - bounds.top
-            });
-    }
-
     function generate_edge_path(age, full) {
         var field = full ? 'full' : 'path';
         return function(e) {

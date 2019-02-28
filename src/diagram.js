@@ -2080,8 +2080,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
                 swidth =  _diagram.width() - _diagram.margins().left - _diagram.margins().right,
                 sheight = _diagram.height() - _diagram.margins().top - _diagram.margins().bottom;
-            if(_diagram.DEBUG_BOUNDS)
-                debug_bounds(_bounds);
             var fitS = _diagram.fitStrategy(), translate = [0,0], scale = 1;
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
