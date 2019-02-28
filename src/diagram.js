@@ -1299,7 +1299,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     function svg_specific(name) {
-        return deprecate_function(name + "() is specific to the SVG renderer", function() {
+        return trace_function('trace', name + '() is specific to the SVG renderer', function() {
+            return _diagram.renderer()[name].apply(this, arguments);
+        });
+    }
+
+    function call_on_renderer(name) {
+        return trace_function('trace', 'calling ' + name + '() on renderer', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -1316,7 +1322,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.scale = svg_specific('scale');
 
     function renderer_specific(name) {
-        return deprecate_function(name + "() will have renderer-specific arguments", function() {
+        return trace_function('trace', name + '() will have renderer-specific arguments', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -1324,7 +1330,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.renderEdge = svg_specific('renderEdge');
     _diagram.redrawNode = svg_specific('redrawNode');
     _diagram.redrawEdge = svg_specific('redrawEdge');
-    _diagram.reposition = svg_specific('reposition');
+    _diagram.reposition = call_on_renderer('reposition');
 
 
     /**
@@ -1389,9 +1395,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    _diagram.refresh = function() {
-        _diagram.renderer().refresh();
-    };
+    _diagram.refresh = call_on_renderer('refresh');
 
     _diagram.width_is_automatic = function() {
         return _width === 'auto';
