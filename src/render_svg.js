@@ -96,7 +96,7 @@ dc_graph.render_svg = function() {
         return _renderer;
     };
 
-    _renderer.resizeTooo = function(oldWidth, oldHeight, newWidth, newHeight) {
+    _renderer.rezoom = function(oldWidth, oldHeight, newWidth, newHeight) {
         var scale = _zoom.scale(), translate = _zoom.translate();
         _zoom.scale(1).translate([0,0]);
         var xDomain = _renderer.parent().x().domain(), yDomain = _renderer.parent().y().domain();

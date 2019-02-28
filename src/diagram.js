@@ -1405,7 +1405,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var oldWidth = _lastWidth, oldHeight = _lastHeight;
         var newWidth = _diagram.width(), newHeight = _diagram.height();
         if(oldWidth !== newWidth || oldHeight !== newHeight)
-            _diagram.renderer().resizeTooo(oldWidth, oldHeight, newWidth, newHeight);
+            _diagram.renderer().rezoom(oldWidth, oldHeight, newWidth, newHeight);
     }
 
     _diagram.startLayout = function () {
