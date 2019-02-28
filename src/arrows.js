@@ -651,6 +651,20 @@ function place_arrows_on_spline(diagram, e, points) {
     };
 }
 
+
+// determine pre-transition orientation that won't spin a lot going to new orientation
+function unsurprising_orient(oldorient, neworient) {
+    var oldang = +oldorient.slice(0, -3),
+        newang = +neworient.slice(0, -3);
+    if(Math.abs(oldang - newang) > Math.PI) {
+        if(newang > oldang)
+            oldang += 2*Math.PI;
+        else oldang -= 2*Math.PI;
+    }
+    return oldang;
+}
+
+
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
     var strokeOfs, edgeStroke;
