@@ -353,6 +353,7 @@ module.exports.jsFiles = [
     'src/node_contents.js',
     'src/diagram.js',
     'src/render_svg.js',
+    'src/render_webgl.js',
     'src/engine.js',
     'src/webworker_layout.js',
     'src/graphviz_attrs.js',
