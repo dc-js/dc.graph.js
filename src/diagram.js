@@ -2145,15 +2145,23 @@ dc_graph.diagram = function (parent, chartGroup) {
             _animateZoom = false;
         }
     }
-
-    var renderer_specific_events = ['drawn', 'transitionsStarted', 'zoomed'].reduce(function(p, ev) {
-        p[ev] = onetime_trace('trace', 'subscribing to event "' + ev + '" which takes renderer-specific parameters');
-        return p;
-    }, {});
-    var inconsistent_arguments = ['end'].reduce(function(p, ev) {
-        p[ev] = onetime_trace('trace', 'subscribing to event "' + ev + '" which may receive inconsistent arguments');
-        return p;
-    }, {});
+    function namespace_event_reducer(msg_fun) {
+        return function(p, ev) {
+            var namespace = {};
+            p[ev] = function(ns) {
+                return namespace[ns] = namespace[ns] || onetime_trace('trace', msg_fun(ns, ev));
+            };
+            return p;
+        };
+    }
+    var renderer_specific_events = ['drawn', 'transitionsStarted', 'zoomed']
+            .reduce(namespace_event_reducer(function(ns, ev) {
+                return 'subscribing "' + ns + '" to event "' + ev + '" which takes renderer-specific parameters';
+            }), {});
+    var inconsistent_arguments = ['end']
+            .reduce(namespace_event_reducer(function(ns, ev) {
+                return 'subscribing "' + ns + '" to event "' + ev + '" which may receive inconsistent arguments';
+            }), {});
 
     /**
      * Standard dc.js
@@ -2173,10 +2181,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.on = function(event, f) {
         if(arguments.length === 1)
             return _dispatch.on(event);
-        var ev = event.split('.')[0],
-            warning = renderer_specific_events[ev] || inconsistent_arguments[ev];
+        var evns = event.split('.'),
+            warning = renderer_specific_events[evns[0]] || inconsistent_arguments[evns[0]];
         if(warning)
-            warning();
+            warning(evns[1] || '')();
         _dispatch.on(event, f);
         return this;
     };
