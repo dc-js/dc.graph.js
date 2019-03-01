@@ -1120,6 +1120,15 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.mode = _diagram.child = named_children();
 
+    _diagram.mode.reject = function(id, object) {
+        var rtype = _diagram.renderer().rendererType();
+        if(!object.supportsRenderer)
+            console.log('could not check if "' + id + '" is compatible with ' + rtype);
+        else if(!object.supportsRenderer(rtype))
+            return 'not installing "' + id + '" because it is not compatible with renderer ' + rtype;
+        return false;
+    };
+
     _diagram.legend = deprecate_function(".legend() is deprecated; use .child() for more control & multiple legends", function(_) {
         if(!arguments.length)
             return _diagram.child('node-legend');

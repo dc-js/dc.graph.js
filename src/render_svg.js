@@ -4,6 +4,10 @@ dc_graph.render_svg = function() {
     var _zoom;
     var _renderer = {};
 
+    _renderer.rendererType = function() {
+        return 'svg';
+    };
+
     _renderer.parent = property(null);
 
     _renderer.renderNode = _renderer._enterNode = function(nodeEnter) {

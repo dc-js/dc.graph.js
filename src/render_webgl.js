@@ -6,6 +6,10 @@ dc_graph.render_webgl = function() {
 
     _renderer.parent = property(null);
 
+    _renderer.rendererType = function() {
+        return 'webgl';
+    };
+
     _renderer.resize = function(w, h) {
         return _renderer;
     };

@@ -2,6 +2,7 @@ dc_graph.mode = function(event_namespace, options) {
     var _mode = {};
     var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
     var draw = options.draw, remove = options.remove;
+    var supported_renderers = options.renderers || ['svg'];
 
     if(!draw) {
         console.warn('behavior.draw has been replaced by mode.draw');
@@ -44,6 +45,11 @@ dc_graph.mode = function(event_namespace, options) {
             }
             options.parent && options.parent(p);
         });
+
+    _mode.supportsRenderer = function(rendererType) {
+        return supported_renderers.includes(rendererType);
+    };
+
     return _mode;
 };
 

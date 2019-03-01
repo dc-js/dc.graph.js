@@ -89,6 +89,15 @@ function named_children() {
     var f = function(id, object) {
         if(arguments.length === 1)
             return _children[id];
+        if(f.reject) {
+            var reject = f.reject(id, object);
+            if(reject) {
+                console.groupCollapsed(reject);
+                console.trace();
+                console.groupEnd();
+                return this;
+            }
+        }
         // do not notify unnecessarily
         if(_children[id] === object)
             return this;
