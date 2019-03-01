@@ -16,32 +16,6 @@ dc_graph.render_webgl = function() {
         return !!_camera;
     };
 
-    _renderer.initializeDrawing = function () {
-        _camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-        _camera.position.z = 1000;
-
-        _scene = new THREE.Scene();
-
-        _nodeMaterial =  new THREE.ShaderMaterial({
-            uniforms: {
-                color: { value: new THREE.Color('888888') }
-            },
-            vertexShader: document.getElementById( 'vertexshader' ).textContent,
-            fragmentShader: document.getElementById( 'fragmentshader' ).textContent
-        });
-        _edgeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 1 } );
-
-        _webgl_renderer = new THREE.WebGLRenderer({ antialias: true });
-        _webgl_renderer.setPixelRatio(window.devicePixelRatio);
-        _webgl_renderer.setSize(window.innerWidth, window.innerHeight);
-        _renderer.parent().root().node().appendChild(_webgl_renderer.domElement);
-
-        _controls = new THREE.OrbitControls(_camera, _webgl_renderer.domElement);
-        _controls.minDistance = 250;
-        _controls.maxDistance = 2000;
-        return _renderer;
-    };
-
     _renderer.resize = function(w, h) {
         return _renderer;
     };
@@ -70,6 +44,32 @@ dc_graph.render_webgl = function() {
     _renderer.commitTranslateScale = function() {
     };
 
+    _renderer.initializeDrawing = function () {
+        _camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+        _camera.position.z = 1000;
+
+        _scene = new THREE.Scene();
+
+        _nodeMaterial =  new THREE.ShaderMaterial({
+            uniforms: {
+                color: { value: new THREE.Color(parseInt('888888', 16)) }
+            },
+            vertexShader: document.getElementById( 'vertexshader' ).textContent,
+            fragmentShader: document.getElementById( 'fragmentshader' ).textContent
+        });
+        _edgeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 1 } );
+
+        _webgl_renderer = new THREE.WebGLRenderer({ antialias: true });
+        _webgl_renderer.setPixelRatio(window.devicePixelRatio);
+        _webgl_renderer.setSize(window.innerWidth, window.innerHeight);
+        _renderer.parent().root().node().appendChild(_webgl_renderer.domElement);
+
+        _controls = new THREE.OrbitControls(_camera, _webgl_renderer.domElement);
+        _controls.minDistance = 250;
+        _controls.maxDistance = 2000;
+        return _renderer;
+    };
+
     _renderer.startRedraw = function(dispatch, wnodes, wedges) {
         wnodes.forEach(infer_shape(_renderer.parent()));
         return {wnodes: wnodes, wedges: wedges};
@@ -83,8 +83,36 @@ dc_graph.render_webgl = function() {
             if(!e.pos.new)
                 _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
         });
+
+        var positions = new Float32Array(drawState.wnodes.length * 3);
+        var scales = new Float32Array(drawState.wnodes.length * 3);
+        drawState.wnodes.forEach(function(n, i) {
+            positions[i*3] = n.cola.x * 3;
+            positions[i*3 + 1] = n.cola.y * 3;
+            positions[i*3 + 2] = 0;
+            scales[i] = 100;
+        });
+
+        var geometry = new THREE.BufferGeometry();
+        geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.addAttribute('scale', new THREE.BufferAttribute(scales, 1));
+
+        var particles = new THREE.Points(geometry, _nodeMaterial);
+        _scene.add(particles);
+        animate();
         return _renderer;
     };
+
+    function animate() {
+        window.requestAnimationFrame(animate);
+        render();
+    }
+
+    function render() {
+        _webgl_renderer.render(_scene, _camera);
+    }
+
+
 
     _renderer.drawPorts = function(drawState) {
         var nodePorts = _renderer.parent().nodePorts();
