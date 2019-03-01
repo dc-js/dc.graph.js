@@ -90,7 +90,7 @@ dc_graph.render_webgl = function() {
         drawState.wnodes.forEach(function(n, i) {
             positions[i*3] = n.cola.x * MULT;
             positions[i*3 + 1] = n.cola.y * MULT;
-            positions[i*3 + 2] = 0;
+            positions[i*3 + 2] = n.cola.z * MULT || 0;
             scales[i] = 100;
         });
 
@@ -106,8 +106,8 @@ dc_graph.render_webgl = function() {
             if(!e.source || !e.target)
                 return;
             var a = e.source.cola, b = e.target.cola;
-            vertices.push(a.x*MULT, a.y*MULT, 0,
-                          b.x*MULT, b.y*MULT, 0);
+            vertices.push(a.x*MULT, a.y*MULT, a.z*MULT || 0,
+                          b.x*MULT, b.y*MULT, b.z*MULT || 0);
         });
         var lineGeometry = new THREE.BufferGeometry();
         lineGeometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
@@ -126,8 +126,6 @@ dc_graph.render_webgl = function() {
     function render() {
         _webgl_renderer.render(_scene, _camera);
     }
-
-
 
     _renderer.drawPorts = function(drawState) {
         var nodePorts = _renderer.parent().nodePorts();
