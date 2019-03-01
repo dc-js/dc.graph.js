@@ -84,11 +84,12 @@ dc_graph.render_webgl = function() {
                 _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
         });
 
+        var MULT = 3;
         var positions = new Float32Array(drawState.wnodes.length * 3);
         var scales = new Float32Array(drawState.wnodes.length * 3);
         drawState.wnodes.forEach(function(n, i) {
-            positions[i*3] = n.cola.x * 3;
-            positions[i*3 + 1] = n.cola.y * 3;
+            positions[i*3] = n.cola.x * MULT;
+            positions[i*3 + 1] = n.cola.y * MULT;
             positions[i*3 + 2] = 0;
             scales[i] = 100;
         });
@@ -99,6 +100,20 @@ dc_graph.render_webgl = function() {
 
         var particles = new THREE.Points(geometry, _nodeMaterial);
         _scene.add(particles);
+
+        var vertices = [];
+        drawState.wedges.forEach(function(e) {
+            if(!e.source || !e.target)
+                return;
+            var a = e.source.cola, b = e.target.cola;
+            vertices.push(a.x*MULT, a.y*MULT, 0,
+                          b.x*MULT, b.y*MULT, 0);
+        });
+        var lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        var line = new THREE.LineSegments(lineGeometry, _edgeMaterial);
+        _scene.add(line);
+
         animate();
         return _renderer;
     };
