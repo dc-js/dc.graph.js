@@ -51,7 +51,7 @@ dc_graph.render_webgl = function() {
 
         _nodeMaterial =  new THREE.ShaderMaterial({
             uniforms: {
-//                color: { value: new THREE.Color(parseInt('888888', 16)) }
+                color: { value: new THREE.Color(parseInt('888888', 16)) }
             },
             vertexShader: document.getElementById( 'vertexshader' ).textContent,
             fragmentShader: document.getElementById( 'fragmentshader' ).textContent
