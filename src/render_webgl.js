@@ -46,7 +46,6 @@ dc_graph.render_webgl = function() {
 
     _renderer.initializeDrawing = function () {
         _camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-        _camera.position.z = 1000;
 
         _scene = new THREE.Scene();
 
@@ -65,7 +64,7 @@ dc_graph.render_webgl = function() {
         _renderer.parent().root().node().appendChild(_webgl_renderer.domElement);
 
         _controls = new THREE.OrbitControls(_camera, _webgl_renderer.domElement);
-        _controls.minDistance = 250;
+        _controls.minDistance = 0;
         _controls.maxDistance = 2000;
         return _renderer;
     };
@@ -90,7 +89,7 @@ dc_graph.render_webgl = function() {
         var colors = new Float32Array(drawState.wnodes.length * 3);
         drawState.wnodes.forEach(function(n, i) {
             positions[i*3] = n.cola.x * MULT;
-            positions[i*3 + 1] = n.cola.y * MULT;
+            positions[i*3 + 1] = -n.cola.y * MULT;
             positions[i*3 + 2] = n.cola.z * MULT || 0;
             scales[i] = 100;
             var color = _renderer.parent().nodeFill.eval(n);
@@ -107,6 +106,15 @@ dc_graph.render_webgl = function() {
             colors[i*3 + 2] = cint & 0xff;
         });
 
+        var xext = d3.extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
+            yext = d3.extent(drawState.wnodes, function(n) { return n.cola.y * MULT; }),
+            zext = d3.extent(drawState.wnodes, function(n) { return n.cola.z * MULT || 0; });
+        _camera.position.set(
+            (xext[0] + xext[1])/2,
+            (yext[0] + yext[1])/2,
+            (zext[0] + zext[1])/2);
+        _controls.update();
+
         var nodeGeometry = new THREE.BufferGeometry();
         nodeGeometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
         nodeGeometry.addAttribute('scale', new THREE.BufferAttribute(scales, 1));
@@ -120,8 +128,8 @@ dc_graph.render_webgl = function() {
             if(!e.source || !e.target)
                 return;
             var a = e.source.cola, b = e.target.cola;
-            vertices.push(a.x*MULT, a.y*MULT, a.z*MULT || 0,
-                          b.x*MULT, b.y*MULT, b.z*MULT || 0);
+            vertices.push(a.x*MULT, -a.y*MULT, a.z*MULT || 0,
+                          b.x*MULT, -b.y*MULT, b.z*MULT || 0);
         });
         var lineGeometry = new THREE.BufferGeometry();
         lineGeometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
