@@ -85,7 +85,7 @@ dc_graph.render_webgl = function() {
 
         var MULT = 3;
         var positions = new Float32Array(drawState.wnodes.length * 3);
-        var scales = new Float32Array(drawState.wnodes.length * 3);
+        var scales = new Float32Array(drawState.wnodes.length);
         var colors = new Float32Array(drawState.wnodes.length * 3);
         drawState.wnodes.forEach(function(n, i) {
             positions[i*3] = n.cola.x * MULT;
