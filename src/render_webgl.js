@@ -52,7 +52,7 @@ dc_graph.render_webgl = function() {
 
         _nodeMaterial =  new THREE.ShaderMaterial({
             uniforms: {
-                color: { value: new THREE.Color(parseInt('888888', 16)) }
+//                color: { value: new THREE.Color(parseInt('888888', 16)) }
             },
             vertexShader: document.getElementById( 'vertexshader' ).textContent,
             fragmentShader: document.getElementById( 'fragmentshader' ).textContent
@@ -87,16 +87,30 @@ dc_graph.render_webgl = function() {
         var MULT = 3;
         var positions = new Float32Array(drawState.wnodes.length * 3);
         var scales = new Float32Array(drawState.wnodes.length * 3);
+        var colors = new Float32Array(drawState.wnodes.length * 3);
         drawState.wnodes.forEach(function(n, i) {
             positions[i*3] = n.cola.x * MULT;
             positions[i*3 + 1] = n.cola.y * MULT;
             positions[i*3 + 2] = n.cola.z * MULT || 0;
             scales[i] = 100;
+            var color = _renderer.parent().nodeFill.eval(n);
+            if(_renderer.parent().nodeFillScale())
+                color = _renderer.parent().nodeFillScale()(color);
+            // it better be 6 byte hex RGB
+            if(color.length !== 7 || color[0] !== '#') {
+                console.warn("don't know how to use color " + color);
+                color = '#888888';
+            }
+            var cint = parseInt(color.slice(1), 16);
+            colors[i*3] = cint >> 16;
+            colors[i*3 + 1] = (cint >> 8) & 0xff;
+            colors[i*3 + 2] = cint & 0xff;
         });
 
         var nodeGeometry = new THREE.BufferGeometry();
         nodeGeometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
         nodeGeometry.addAttribute('scale', new THREE.BufferAttribute(scales, 1));
+        nodeGeometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
 
         var particles = new THREE.Points(nodeGeometry, _nodeMaterial);
         _scene.add(particles);
