@@ -94,11 +94,11 @@ dc_graph.render_webgl = function() {
             scales[i] = 100;
         });
 
-        var geometry = new THREE.BufferGeometry();
-        geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.addAttribute('scale', new THREE.BufferAttribute(scales, 1));
+        var nodeGeometry = new THREE.BufferGeometry();
+        nodeGeometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+        nodeGeometry.addAttribute('scale', new THREE.BufferAttribute(scales, 1));
 
-        var particles = new THREE.Points(geometry, _nodeMaterial);
+        var particles = new THREE.Points(nodeGeometry, _nodeMaterial);
         _scene.add(particles);
 
         var vertices = [];
