@@ -1155,7 +1155,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!arguments.length)
             return _diagram.layoutEngine() ? _diagram.layoutEngine().layoutAlgorithm() : 'cola';
         if(!skipWarning)
-            console.warn('dc.graph.diagram.layoutAlgorithm is depecrated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
+            console.warn('dc.graph.diagram.layoutAlgorithm is deprecated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
 
         var engine;
         switch(value) {
