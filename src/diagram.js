@@ -1821,23 +1821,32 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.layoutEngine().dispatch().end(wnodes, wedges);
         else {
             _dispatch.start(); // cola doesn't seem to fire this itself?
-            _diagram.layoutEngine().data(
+            var engine = _diagram.layoutEngine();
+            engine.data(
                 { width: _diagram.width(), height: _diagram.height() },
                 wnodes.map(function(v) {
                     var lv = Object.assign({}, v.cola, v.dcg_shape);
-                    if(_diagram.layoutEngine().annotateNode)
-                        _diagram.layoutEngine().annotateNode(lv, v);
+                    if(engine.annotateNode)
+                        engine.annotateNode(lv, v);
+                    else if(engine.extractNodeAttrs)
+                        Object.keys(engine.extractNodeAttrs()).forEach(function(key) {
+                            lv[key] = engine.extractNodeAttrs()[key](v.orig);
+                        });
                     return lv;
                 }),
                 layout_edges.map(function(e) {
                     var le = e.cola;
-                    if(_diagram.layoutEngine().annotateEdge)
-                        _diagram.layoutEngine().annotateEdge(le, e);
+                    if(engine.annotateEdge)
+                        engine.annotateEdge(le, e);
+                    else if(engine.extractEdgeAttrs)
+                        Object.keys(engine.extractEdgeAttrs()).forEach(function(key) {
+                            le[key] = engine.extractEdgeAttrs()[key](e.orig);
+                        });
                     return le;
                 }),
                 constraints
             );
-            _diagram.layoutEngine().start();
+            engine.start();
         }
         return this;
     };

@@ -196,7 +196,7 @@ dc_graph.cola_layout = function(id) {
                 .concat(graphviz_keys);
         },
         passThru: function() {
-            return ['annotateNode', 'annotateEdge', 'extractNodeAttrs', 'extractEdgeAttrs'];
+            return ['extractNodeAttrs', 'extractEdgeAttrs'];
         },
         propagateOptions: function(options) {
             if(!options.nodeAttrs)
@@ -206,16 +206,6 @@ dc_graph.cola_layout = function(id) {
         },
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
-        annotateNode: function(lv, v) {
-            Object.keys(engine.extractNodeAttrs()).forEach(function(key) {
-                lv[key] = engine.extractNodeAttrs()[key](v.orig);
-            });
-        },
-        annotateEdge: function(le, e) {
-            Object.keys(engine.extractEdgeAttrs()).forEach(function(key) {
-                le[key] = engine.extractEdgeAttrs()[key](e.orig);
-            });
-        },
         /**
          * Instructs cola.js to fit the connected components.
          * @method handleDisconnected
