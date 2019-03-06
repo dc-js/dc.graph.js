@@ -9,8 +9,7 @@
 dc_graph.layered_layout = function(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
-    var _nodes = {}, _edges = {};
-    var _wnodes = [], _wedges = [];
+    var _supergraph, _subgraphs;
     var _options = null;
 
     function init(options) {
@@ -28,14 +27,49 @@ dc_graph.layered_layout = function(id) {
     }
 
     function data(nodes, edges, constraints) {
-        var supergraph = dc_graph.supergraph({nodes: nodes, edges: edges}, {
+        _supergraph = dc_graph.supergraph({nodes: nodes, edges: edges}, {
             nodeKey: function(n) { return n.dcg_nodeKey; },
             edgeKey: function(n) { return n.dcg_edgeKey; },
+            nodeValue: function(n) { return n; },
+            edgeValue: function(e) { return e; },
             edgeSource: function(e) { return e.dcg_edgeSource; },
-            edgeTarget: function(n) { return n.dcg_edgeTarget; }
+            edgeTarget: function(e) { return e.dcg_edgeTarget; }
         });
 
-        console.log(supergraph.nodes().length);
+        // every node belongs natively in one rank
+        var nranks = _supergraph.nodes().reduce(function(p, n) {
+            var rank = engine.layerAccessor()(n.value());
+            p[rank] = p[rank] || [];
+            p[rank].push(n);
+            return p;
+        }, {});
+        var eranks = Object.keys(nranks).reduce(function(p, r) {
+            p[r] = [];
+            return p;
+        }, {});
+
+        // nodes are shadowed into any layers to which they are adjacent
+        // edges are induced from the native&shadow nodes in each layer
+        _supergraph.edges().forEach(function(e) {
+            var srank = engine.layerAccessor()(e.source().value()),
+                trank = engine.layerAccessor()(e.target().value());
+            if(srank == trank) {
+                eranks[srank].push(e);
+                return;
+            }
+            nranks[trank].push(e.source());
+            eranks[trank].push(e);
+            nranks[srank].push(e.target());
+            eranks[srank].push(e);
+        });
+
+        // produce a subgraph for each layer
+        _subgraphs = Object.keys(nranks).reduce(function(p, r) {
+            p[r] = _supergraph.subgraph(
+                nranks[r].map(function(n) { return n.key(); }),
+                eranks[r].map(function(e) { return e.key(); }));
+            return p;
+        }, {});
     }
 
     function start() {
@@ -85,8 +119,11 @@ dc_graph.layered_layout = function(id) {
                 .concat(graphviz_keys);
         },
         engineFactory: property(null),
+        layerAccessor: property(null),
         populateLayoutNode: function() {},
-        populateLayoutEdge: function() {}
+        populateLayoutEdge: function() {},
+        extractNodeAttrs: property({}), // {attr: function(node)}
+        extractEdgeAttrs: property({})
     });
     engine.pathStraightenForce = engine.angleForce;
     return engine;
