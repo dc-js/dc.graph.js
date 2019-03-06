@@ -1,3 +1,9 @@
+## 0.8.3
+* increase the maximum tooltip width to 500px
+* continued refactoring of renderer code. the previous renderer-related warnings are now informational messages.
+* remove obsolete bounds debugger - `dc_graph.troubleshoot` does this better
+* document `flexbox_layout`
+
 ## 0.8.2
 * smaller text in tooltips & formatting for tooltip tables which makes normal latex-like html work better
 * htmltip and jsontip suppress tooltip in graphviz attr formatting. curiously, this wasn't necessary on macOS.

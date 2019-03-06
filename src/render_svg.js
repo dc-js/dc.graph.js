@@ -96,7 +96,7 @@ dc_graph.render_svg = function() {
         return _renderer;
     };
 
-    _renderer.resizeTooo = function(oldWidth, oldHeight, newWidth, newHeight) {
+    _renderer.rezoom = function(oldWidth, oldHeight, newWidth, newHeight) {
         var scale = _zoom.scale(), translate = _zoom.translate();
         _zoom.scale(1).translate([0,0]);
         var xDomain = _renderer.parent().x().domain(), yDomain = _renderer.parent().y().domain();
@@ -325,24 +325,6 @@ dc_graph.render_svg = function() {
         return this;
     };
 
-
-    function debug_bounds(bounds) {
-        var brect = _g.selectAll('rect.bounds').data([0]);
-        brect.enter()
-            .insert('rect', ':first-child').attr({
-                class: 'bounds',
-                fill: 'rgba(128,255,128,0.1)',
-                stroke: '#000'
-            });
-        brect
-            .attr({
-                x: bounds.left,
-                y: bounds.top,
-                width: bounds.right - bounds.left,
-                height: bounds.bottom - bounds.top
-            });
-    }
-
     function generate_edge_path(age, full) {
         var field = full ? 'full' : 'path';
         return function(e) {
@@ -360,17 +342,15 @@ dc_graph.render_svg = function() {
         };
     };
 
-    // determine pre-transition orientation that won't spin a lot going to new orientation
-    function unsurprising_orient(oldorient, neworient) {
-        var oldang = +oldorient.slice(0, -3),
-            newang = +neworient.slice(0, -3);
-        if(Math.abs(oldang - newang) > Math.PI) {
-            if(newang > oldang)
-                oldang += 2*Math.PI;
-            else oldang -= 2*Math.PI;
-        }
-        return oldang + 'rad';
+    function with_rad(f) {
+        return function() {
+            return f.apply(this, arguments) + 'rad';
+        };
     }
+
+    function unsurprising_orient_rad(oldorient, neworient) {
+        return with_rad(unsurprising_orient)(oldorient, neworient);
+   }
 
     function has_source_and_target(e) {
         return !!e.source && !!e.target;
@@ -484,7 +464,7 @@ dc_graph.render_svg = function() {
             .each(function(e) {
                 if(_renderer.parent().edgeArrowhead.eval(e))
                     d3.select('#' + _renderer.parent().arrowId(e, 'head'))
-                    .attr('orient', unsurprising_orient(e.pos.old.orienthead, e.pos.new.orienthead))
+                    .attr('orient', unsurprising_orient_rad(e.pos.old.orienthead, e.pos.new.orienthead))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
                     .attr('orient', function() {
@@ -492,7 +472,7 @@ dc_graph.render_svg = function() {
                     });
                 if(_renderer.parent().edgeArrowtail.eval(e))
                     d3.select('#' + _renderer.parent().arrowId(e, 'tail'))
-                    .attr('orient', unsurprising_orient(e.pos.old.orienttail, e.pos.new.orienttail))
+                    .attr('orient', unsurprising_orient_rad(e.pos.old.orienttail, e.pos.new.orienttail))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
                     .attr('orient', function() {

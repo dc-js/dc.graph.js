@@ -1299,7 +1299,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     function svg_specific(name) {
-        return deprecate_function(name + "() is specific to the SVG renderer", function() {
+        return trace_function('trace', name + '() is specific to the SVG renderer', function() {
+            return _diagram.renderer()[name].apply(this, arguments);
+        });
+    }
+
+    function call_on_renderer(name) {
+        return trace_function('trace', 'calling ' + name + '() on renderer', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -1316,7 +1322,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.scale = svg_specific('scale');
 
     function renderer_specific(name) {
-        return deprecate_function(name + "() will have renderer-specific arguments", function() {
+        return trace_function('trace', name + '() will have renderer-specific arguments', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -1324,7 +1330,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.renderEdge = svg_specific('renderEdge');
     _diagram.redrawNode = svg_specific('redrawNode');
     _diagram.redrawEdge = svg_specific('redrawEdge');
-    _diagram.reposition = svg_specific('reposition');
+    _diagram.reposition = call_on_renderer('reposition');
 
 
     /**
@@ -1389,9 +1395,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    _diagram.refresh = function() {
-        _diagram.renderer().refresh();
-    };
+    _diagram.refresh = call_on_renderer('refresh');
 
     _diagram.width_is_automatic = function() {
         return _width === 'auto';
@@ -1405,7 +1409,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var oldWidth = _lastWidth, oldHeight = _lastHeight;
         var newWidth = _diagram.width(), newHeight = _diagram.height();
         if(oldWidth !== newWidth || oldHeight !== newHeight)
-            _diagram.renderer().resizeTooo(oldWidth, oldHeight, newWidth, newHeight);
+            _diagram.renderer().rezoom(oldWidth, oldHeight, newWidth, newHeight);
     }
 
     _diagram.startLayout = function () {
@@ -2080,8 +2084,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
                 swidth =  _diagram.width() - _diagram.margins().left - _diagram.margins().right,
                 sheight = _diagram.height() - _diagram.margins().top - _diagram.margins().bottom;
-            if(_diagram.DEBUG_BOUNDS)
-                debug_bounds(_bounds);
             var fitS = _diagram.fitStrategy(), translate = [0,0], scale = 1;
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
@@ -2143,6 +2145,23 @@ dc_graph.diagram = function (parent, chartGroup) {
             _animateZoom = false;
         }
     }
+    function namespace_event_reducer(msg_fun) {
+        return function(p, ev) {
+            var namespace = {};
+            p[ev] = function(ns) {
+                return namespace[ns] = namespace[ns] || onetime_trace('trace', msg_fun(ns, ev));
+            };
+            return p;
+        };
+    }
+    var renderer_specific_events = ['drawn', 'transitionsStarted', 'zoomed']
+            .reduce(namespace_event_reducer(function(ns, ev) {
+                return 'subscribing "' + ns + '" to event "' + ev + '" which takes renderer-specific parameters';
+            }), {});
+    var inconsistent_arguments = ['end']
+            .reduce(namespace_event_reducer(function(ns, ev) {
+                return 'subscribing "' + ns + '" to event "' + ev + '" which may receive inconsistent arguments';
+            }), {});
 
     /**
      * Standard dc.js
@@ -2162,6 +2181,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.on = function(event, f) {
         if(arguments.length === 1)
             return _dispatch.on(event);
+        var evns = event.split('.'),
+            warning = renderer_specific_events[evns[0]] || inconsistent_arguments[evns[0]];
+        if(warning)
+            warning(evns[1] || '')();
         _dispatch.on(event, f);
         return this;
     };
@@ -2198,7 +2221,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Gets or sets the y scale.
-     * @method x
+     * @method y
      * @memberof dc_graph.diagram
      * @instance
      * @param {d3.scale} [scale]
