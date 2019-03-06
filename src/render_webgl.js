@@ -2,7 +2,7 @@ dc_graph.render_webgl = function() {
     //var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _camera, _scene, _webgl_renderer;
     var _controls;
-    var _nodeMaterial, _edgeMaterial;
+    var _sphereGeometry, _edgeMaterial;
     var _animating = false; // do not refresh during animations
     var _renderer = {};
 
@@ -49,13 +49,7 @@ dc_graph.render_webgl = function() {
 
         _scene = new THREE.Scene();
 
-        _nodeMaterial =  new THREE.ShaderMaterial({
-            uniforms: {
-                color: { value: new THREE.Color(parseInt('888888', 16)) }
-            },
-            vertexShader: document.getElementById( 'vertexshader' ).textContent,
-            fragmentShader: document.getElementById( 'fragmentshader' ).textContent
-        });
+        _sphereGeometry = new THREE.SphereBufferGeometry(10, 32, 32);
         _edgeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 1 } );
 
         _webgl_renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -84,14 +78,7 @@ dc_graph.render_webgl = function() {
         });
 
         var MULT = 3;
-        var positions = new Float32Array(drawState.wnodes.length * 3);
-        var scales = new Float32Array(drawState.wnodes.length);
-        var colors = new Float32Array(drawState.wnodes.length * 3);
         drawState.wnodes.forEach(function(n, i) {
-            positions[i*3] = n.cola.x * MULT;
-            positions[i*3 + 1] = -n.cola.y * MULT;
-            positions[i*3 + 2] = n.cola.z * MULT || 0;
-            scales[i] = 100;
             var color = _renderer.parent().nodeFill.eval(n);
             if(_renderer.parent().nodeFillScale())
                 color = _renderer.parent().nodeFillScale()(color);
@@ -101,9 +88,12 @@ dc_graph.render_webgl = function() {
                 color = '#888888';
             }
             var cint = parseInt(color.slice(1), 16);
-            colors[i*3] = cint >> 16;
-            colors[i*3 + 1] = (cint >> 8) & 0xff;
-            colors[i*3 + 2] = cint & 0xff;
+            var material = new THREE.MeshBasicMaterial({color: cint});
+            var sphere = new THREE.Mesh(_sphereGeometry, material);
+            sphere.position.x = n.cola.x * MULT;
+            sphere.position.y = -n.cola.y * MULT;
+            sphere.position.z = n.cola.z * MULT || 0;
+            _scene.add(sphere);
         });
 
         var xext = d3.extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
@@ -115,14 +105,6 @@ dc_graph.render_webgl = function() {
 
         _controls.target.set(cx, cy, cz);
         _controls.update();
-
-        var nodeGeometry = new THREE.BufferGeometry();
-        nodeGeometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-        nodeGeometry.addAttribute('scale', new THREE.BufferAttribute(scales, 1));
-        nodeGeometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-        var particles = new THREE.Points(nodeGeometry, _nodeMaterial);
-        _scene.add(particles);
 
         var vertices = [];
         drawState.wedges.forEach(function(e) {
