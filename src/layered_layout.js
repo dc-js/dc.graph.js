@@ -87,11 +87,6 @@ dc_graph.layered_layout = function(id) {
     }
 
     function layout_layers(layout, last, layers) {
-        layout.nodes.forEach(function(n) {
-            var n2 = _subgraphs[last].node(n.dcg_nodeKey);
-            n2.value().x = n.x;
-            n2.value().y = n.y;
-        });
         if(layers.length === 0)
             return Promise.resolve(layout);
         var curr = layers.shift();
@@ -119,16 +114,24 @@ dc_graph.layered_layout = function(id) {
             _subgraphs[n].edges().map(function(e) {
                 return e.value();
             }));
-        return promise_layout(engine2);
+        return promise_layout(_subgraphs[n], engine2);
     }
 
-    // stopgap - engine.start() should return a promise
-    function promise_layout(engine) {
+    function promise_layout(subgraph, engine) {
+        // stopgap - engine.start() should return a promise
         return new Promise(function(resolve, reject) {
             engine.on('end', function(nodes, edges) {
                 resolve({nodes: nodes, edges: edges});
             });
             engine.start();
+        }).then(function(layout) {
+            // copy positions back into the subgraph (and hence supergraph)
+            layout.nodes.forEach(function(n) {
+                var n2 = subgraph.node(n.dcg_nodeKey);
+                n2.value().x = n.x;
+                n2.value().y = n.y;
+            });
+            return layout;
         });
     }
 
