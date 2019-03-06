@@ -17,15 +17,6 @@ dc_graph.layered_layout = function(id) {
 
     }
 
-    function dispatchState(event) {
-        _dispatch[event](
-            _wnodes,
-            _wedges.map(function(e) {
-                return {dcg_edgeKey: e.dcg_edgeKey};
-            })
-        );
-    }
-
     function data(nodes, edges, constraints) {
         _supergraph = dc_graph.supergraph({nodes: nodes, edges: edges}, {
             nodeKey: function(n) { return n.dcg_nodeKey; },
@@ -70,6 +61,75 @@ dc_graph.layered_layout = function(id) {
                 eranks[r].map(function(e) { return e.key(); }));
             return p;
         }, {});
+
+        // start from the most populous layer
+        var max = null;
+        Object.keys(nranks).forEach(function(r) {
+            if(max === null ||
+               _subgraphs[r].nodes().length > _subgraphs[max].nodes().length)
+                max = +r;
+        });
+
+        // travel up and down from there, each time fixing the nodes from the last layer
+        var ranks = Object.keys(nranks).map(function(r) { return +r; }).sort();
+        var mi = ranks.indexOf(max);
+        var ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
+        layout_layer(max, -1).then(function(layout) {
+            Promise.all([
+                layout_layers(layout, max, ups),
+                layout_layers(layout, max, downs)
+            ]).then(function() {
+                _dispatch.end(
+                    _supergraph.nodes().map(function(n) { return n.value(); }),
+                    _supergraph.edges().map(function(e) { return e.value(); }));
+            });
+        });
+    }
+
+    function layout_layers(layout, last, layers) {
+        layout.nodes.forEach(function(n) {
+            var n2 = _subgraphs[last].node(n.dcg_nodeKey);
+            n2.value().x = n.x;
+            n2.value().y = n.y;
+        });
+        if(layers.length === 0)
+            return Promise.resolve(layout);
+        var curr = layers.shift();
+        return layout_layer(curr, last).then(function(layout) {
+            return layout_layers(layout, curr, layers);
+        });
+    }
+
+    function layout_layer(n, last) {
+        _subgraphs[n].nodes().forEach(function(n) {
+            if(engine.layerAccessor()(n.value()) === last)
+                n.value().dcg_nodeFixed = {
+                    x: n.value().x,
+                    y: n.value().y
+                };
+            else n.value().dcg_nodeFixed = null;
+        });
+        var engine2 = engine.engineFactory()();
+        engine2.init({});
+        engine2.data(
+            {},
+            _subgraphs[n].nodes().map(function(n) {
+                return n.value();
+            }),
+            _subgraphs[n].edges().map(function(e) {
+                return e.value();
+            }));
+        return promise_layout(engine2);
+    }
+
+    // stopgap - engine.start() should return a promise
+    function promise_layout(engine) {
+        return new Promise(function(resolve, reject) {
+            engine.on('end', function(nodes, edges) {
+                resolve({nodes: nodes, edges: edges});
+            });
+            engine.start();
+        });
     }
 
     function start() {
