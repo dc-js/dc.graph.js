@@ -64,8 +64,8 @@ dc_graph.render_webgl = function() {
         _renderer.parent().root().node().appendChild(_webgl_renderer.domElement);
 
         _controls = new THREE.OrbitControls(_camera, _webgl_renderer.domElement);
-        _controls.minDistance = 0;
-        _controls.maxDistance = 2000;
+        _controls.minDistance = 300;
+        _controls.maxDistance = 3000;
         return _renderer;
     };
 
@@ -107,13 +107,13 @@ dc_graph.render_webgl = function() {
         });
 
         var xext = d3.extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
-            yext = d3.extent(drawState.wnodes, function(n) { return n.cola.y * MULT; }),
+            yext = d3.extent(drawState.wnodes, function(n) { return -n.cola.y * MULT; }),
             zext = d3.extent(drawState.wnodes, function(n) { return n.cola.z * MULT || 0; });
         var cx = (xext[0] + xext[1])/2,
             cy = (yext[0] + yext[1])/2,
             cz = (zext[0] + zext[1])/2;
 
-        _camera.position.set(cx, cy, cz);
+        _controls.target.set(cx, cy, cz);
         _controls.update();
 
         var nodeGeometry = new THREE.BufferGeometry();
