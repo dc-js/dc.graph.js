@@ -38,7 +38,7 @@ dc_graph.d3v4_force_layout = function(id) {
         );
     }
 
-    function data(nodes, edges, constraints) {
+    function data(nodes, edges) {
         var nodeIDs = {};
         nodes.forEach(function(d, i) {
             nodeIDs[d.dcg_nodeKey] = i;
