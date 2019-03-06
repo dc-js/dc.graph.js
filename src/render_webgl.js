@@ -109,10 +109,11 @@ dc_graph.render_webgl = function() {
         var xext = d3.extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
             yext = d3.extent(drawState.wnodes, function(n) { return n.cola.y * MULT; }),
             zext = d3.extent(drawState.wnodes, function(n) { return n.cola.z * MULT || 0; });
-        _camera.position.set(
-            (xext[0] + xext[1])/2,
-            (yext[0] + yext[1])/2,
-            (zext[0] + zext[1])/2);
+        var cx = (xext[0] + xext[1])/2,
+            cy = (yext[0] + yext[1])/2,
+            cz = (zext[0] + zext[1])/2;
+
+        _camera.position.set(cx, cy, cz);
         _controls.update();
 
         var nodeGeometry = new THREE.BufferGeometry();
