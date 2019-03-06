@@ -97,7 +97,9 @@ dc_graph.layered_layout = function(id) {
 
     function layout_layer(r, last) {
         _subgraphs[r].nodes().forEach(function(n) {
-            if(engine.layerAccessor()(n.value()) === last)
+            if(engine.layerAccessor()(n.value()) !== r &&
+               n.value().x !== undefined &&
+               n.value().y !== undefined)
                 n.value().dcg_nodeFixed = {
                     x: n.value().x,
                     y: n.value().y
