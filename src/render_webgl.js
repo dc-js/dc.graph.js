@@ -59,7 +59,7 @@ dc_graph.render_webgl = function() {
 
         _controls = new THREE.OrbitControls(_camera, _webgl_renderer.domElement);
         _controls.minDistance = 300;
-        _controls.maxDistance = 3000;
+        _controls.maxDistance = 1000;
         return _renderer;
     };
 
