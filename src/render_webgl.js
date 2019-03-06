@@ -47,6 +47,7 @@ dc_graph.render_webgl = function() {
 
     _renderer.initializeDrawing = function () {
         _camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+        _camera.up = new THREE.Vector3(0, 0, 1);
 
         _scene = new THREE.Scene();
 
@@ -54,7 +55,7 @@ dc_graph.render_webgl = function() {
         _edgeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1 });
 
         _directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        _directionalLight.position.set(-1, -1, -1).normalize();
+        _directionalLight.position.set(-1, -1, 1).normalize();
         _scene.add(_directionalLight);
 
         _ambientLight = new THREE.AmbientLight(0xaaaaaa);

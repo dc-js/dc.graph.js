@@ -135,7 +135,7 @@ dc_graph.layered_layout = function(id) {
                     return;
                 n.value().x = ln.x;
                 n.value().y = ln.y;
-                n.value().z = r * engine.layerSeparationZ();
+                n.value().z = -r * engine.layerSeparationZ(); // lowest rank at top
             });
             return layout;
         });
