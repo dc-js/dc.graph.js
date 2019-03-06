@@ -126,11 +126,14 @@ dc_graph.layered_layout = function(id) {
             subengine.start();
         }).then(function(layout) {
             // copy positions back into the subgraph (and hence supergraph)
-            layout.nodes.forEach(function(n) {
-                var n2 = _subgraphs[r].node(n.dcg_nodeKey);
-                n2.value().x = n.x;
-                n2.value().y = n.y;
-                n2.value().z = r * engine.layerSeparationZ();
+            layout.nodes.forEach(function(ln) {
+                var n = _subgraphs[r].node(ln.dcg_nodeKey);
+                // do not copy positions for shadow nodes
+                if(engine.layerAccessor()(n.value()) !== r)
+                    return;
+                n.value().x = ln.x;
+                n.value().y = ln.y;
+                n.value().z = r * engine.layerSeparationZ();
             });
             return layout;
         });
