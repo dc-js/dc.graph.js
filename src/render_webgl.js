@@ -1,6 +1,7 @@
 dc_graph.render_webgl = function() {
     //var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _camera, _scene, _webgl_renderer;
+    var _directionalLight, _ambientLight;
     var _controls;
     var _sphereGeometry, _edgeMaterial;
     var _animating = false; // do not refresh during animations
@@ -50,7 +51,14 @@ dc_graph.render_webgl = function() {
         _scene = new THREE.Scene();
 
         _sphereGeometry = new THREE.SphereBufferGeometry(10, 32, 32);
-        _edgeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 1 } );
+        _edgeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1 });
+
+        _directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        _directionalLight.position.set(-1, -1, -1).normalize();
+        _scene.add(_directionalLight);
+
+        _ambientLight = new THREE.AmbientLight(0xaaaaaa);
+        _scene.add(_ambientLight);
 
         _webgl_renderer = new THREE.WebGLRenderer({ antialias: true });
         _webgl_renderer.setPixelRatio(window.devicePixelRatio);
@@ -88,7 +96,7 @@ dc_graph.render_webgl = function() {
                 color = '#888888';
             }
             var cint = parseInt(color.slice(1), 16);
-            var material = new THREE.MeshBasicMaterial({color: cint});
+            var material = new THREE.MeshLambertMaterial({color: cint});
             var sphere = new THREE.Mesh(_sphereGeometry, material);
             sphere.position.x = n.cola.x * MULT;
             sphere.position.y = -n.cola.y * MULT;
