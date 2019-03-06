@@ -95,8 +95,8 @@ dc_graph.layered_layout = function(id) {
         });
     }
 
-    function layout_layer(n, last) {
-        _subgraphs[n].nodes().forEach(function(n) {
+    function layout_layer(r, last) {
+        _subgraphs[r].nodes().forEach(function(n) {
             if(engine.layerAccessor()(n.value()) === last)
                 n.value().dcg_nodeFixed = {
                     x: n.value().x,
@@ -104,32 +104,33 @@ dc_graph.layered_layout = function(id) {
                 };
             else n.value().dcg_nodeFixed = null;
         });
-        var engine2 = engine.engineFactory()();
-        engine2.init({});
-        engine2.data(
+        var subengine = engine.engineFactory()();
+        subengine.init(_options);
+        subengine.data(
             {},
-            _subgraphs[n].nodes().map(function(n) {
+            _subgraphs[r].nodes().map(function(n) {
                 return n.value();
             }),
-            _subgraphs[n].edges().map(function(e) {
+            _subgraphs[r].edges().map(function(e) {
                 return e.value();
             }));
-        return promise_layout(_subgraphs[n], engine2);
+        return promise_layout(r, subengine);
     }
 
-    function promise_layout(subgraph, engine) {
+    function promise_layout(r, subengine) {
         // stopgap - engine.start() should return a promise
         return new Promise(function(resolve, reject) {
-            engine.on('end', function(nodes, edges) {
+            subengine.on('end', function(nodes, edges) {
                 resolve({nodes: nodes, edges: edges});
             });
-            engine.start();
+            subengine.start();
         }).then(function(layout) {
             // copy positions back into the subgraph (and hence supergraph)
             layout.nodes.forEach(function(n) {
-                var n2 = subgraph.node(n.dcg_nodeKey);
+                var n2 = _subgraphs[r].node(n.dcg_nodeKey);
                 n2.value().x = n.x;
                 n2.value().y = n.y;
+                n2.value().z = r * engine.layerSeparationZ();
             });
             return layout;
         });
@@ -183,6 +184,7 @@ dc_graph.layered_layout = function(id) {
         },
         engineFactory: property(null),
         layerAccessor: property(null),
+        layerSeparationZ: property(50),
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
         extractNodeAttrs: property({}), // {attr: function(node)}

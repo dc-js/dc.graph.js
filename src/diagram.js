@@ -1768,6 +1768,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
                 n.cola.x = rn.x;
                 n.cola.y = rn.y;
+                n.cola.z = rn.z;
             });
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
