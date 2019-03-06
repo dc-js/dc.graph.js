@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>dc.graph.js Class: graphviz_layout</title>
+	<title>dc.graph.js Class: flexbox_layout</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -72,7 +72,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: graphviz_layout</h1>
+	<h1 class="page-title">Class: flexbox_layout</h1>
 <section>
 
 <header>
@@ -80,7 +80,7 @@
         <h2>
             <span class="ancestors"><a href="dc_graph.html">dc_graph</a>.</span>
         
-        graphviz_layout
+        flexbox_layout
         </h2>
         
     
@@ -93,7 +93,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="graphviz_layout"><span class="type-signature"></span>new graphviz_layout( [id])</h4>
+    <h4 class="name" id="flexbox_layout"><span class="type-signature"></span>new flexbox_layout( [id])</h4>
     
     
 </dt>
@@ -101,9 +101,27 @@
 
     
     <div class="description">
-        <p><code>dc_graph.graphviz_layout</code> is an adaptor for viz.js (graphviz) layouts in dc.graph.js</p>
-<p>In addition to the below layout attributes, <code>graphviz_layout</code> also implements the attributes from
-<a href="dc_graph.graphviz_attrs.html">graphviz_attrs</a></p>
+        <p><code>dc_graph.flexbox_layout</code> lays out nodes in accordance with the
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox">flexbox layout algorithm</a>.
+Nodes fit into a containment hierarchy based on their keys; edges do not affect the layout but
+are drawn from node to node.</p>
+<p>Since the flexbox algorithm is not ordinarily available in SVG, this class uses the
+<a href="https://npmjs.com/package/css-layout">css-layout</a>
+package. (It does not currently support css-layout's successor
+<a href="https://github.com/facebook/yoga">yoga</a> but that should be straightforward to add if
+there is interest.)</p>
+<p>Unlike conventional graph layout, where positions are determined based on a few attributes and
+the topological structure of the eedges, flexbox layout is determined based on the node hierarchy
+and a large number of attributes on the nodes. See css-layout's
+<a href="https://npmjs.com/package/css-layout#supported-attributes">Supported Attributes</a>
+for a list of those attributes, and see below to understand how the hierarchy is inferred from
+node keys.</p>
+<p><code>flexbox_layout</code> does not require all internal nodes to be specified. The node keys are parsed as
+&quot;addresses&quot; or paths (arrays of strings) and the tree is built from those paths. Wherever a
+node's path terminates is where that node's data will be applied.</p>
+<p>Since flexbox supports a vast number of attributes, we don't attempt to create accessors for
+every one. Instead, any attributes in the node data are copied which match the names of flexbox
+attributes.</p>
     </div>
     
 
@@ -219,8 +237,8 @@
 	<dd class="tag-source">
 		<ul class="dummy">
 			<li>
-				<a href="graphviz_layout.js.html">graphviz_layout.js</a>,
-				 <a href="graphviz_layout.js.html#sunlight-1-line-1">line 1</a>
+				<a href="flexbox_layout.js.html">flexbox_layout.js</a>,
+				 <a href="flexbox_layout.js.html#sunlight-1-line-1">line 1</a>
 			</li>
 		</ul>
 	</dd>
@@ -256,7 +274,7 @@
     </dt>
     <dd>
         
-<span class="param-type"><a href="dc_graph.graphviz_layout.html">dc_graph.graphviz_layout</a></span>
+<span class="param-type"><a href="dc_graph.flexbox_layout.html">dc_graph.flexbox_layout</a></span>
 
 
 
@@ -284,6 +302,406 @@
 
     
 
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="addressToKey"><span class="type-signature"></span>addressToKey( [addressToKey])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>This function constructs a node key string from an &quot;address&quot;. An address is an array of
+strings identifying the path from the root to the node.</p>
+<p>By default, it joins the address with commas.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>addressToKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    function(ad) { return ad.join(','); }
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="flexbox_layout.js.html">flexbox_layout.js</a>,
+				 <a href="flexbox_layout.js.html#sunlight-1-line-199">line 199</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    <ul>
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.flexbox_layout.html">dc_graph.flexbox_layout</a></span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        </ul>
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="keyToAddress"><span class="type-signature"></span>keyToAddress( [keyToAddress])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>This function constructs an &quot;address&quot; from a node key string. An address is an array of
+strings identifying the path from the root to the node.</p>
+<p>By default, it splits the key by its commas.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>keyToAddress</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    function(nid) { return nid.split(','); }
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="flexbox_layout.js.html">flexbox_layout.js</a>,
+				 <a href="flexbox_layout.js.html#sunlight-1-line-212">line 212</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    <ul>
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.flexbox_layout.html">dc_graph.flexbox_layout</a></span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        </ul>
+
+    
+</dd>
+
+        </dl>
     
 
     

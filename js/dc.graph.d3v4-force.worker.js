@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.2
+ *  dc.graph 0.8.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.2
+ * @version 0.8.3
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.2',
+    version: '0.8.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -146,22 +146,35 @@ function deprecated_property(message, defaultValue) {
     return ret;
 }
 
-function deprecation_warning(message) {
+function onetime_trace(level, message) {
     var said = false;
     return function() {
         if(said)
             return;
-        console.warn(message);
+        if(level === 'trace') {
+            console.groupCollapsed(message);
+            console.trace();
+            console.groupEnd();
+        }
+        else
+            console[level](message);
         said = true;
     };
 }
 
-function deprecate_function(message, f) {
-    var dep = deprecation_warning(message);
+function deprecation_warning(message) {
+    return onetime_trace('warn', message);
+}
+
+function trace_function(level, message, f) {
+    var dep = onetime_trace(level, message);
     return function() {
         dep();
         return f.apply(this, arguments);
     };
+}
+function deprecate_function(message, f) {
+    return trace_function('warn', message, f);
 }
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript

@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.2
+ *  dc.graph 0.8.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.2
+ * @version 0.8.3
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.2',
+    version: '0.8.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -149,22 +149,35 @@ function deprecated_property(message, defaultValue) {
     return ret;
 }
 
-function deprecation_warning(message) {
+function onetime_trace(level, message) {
     var said = false;
     return function() {
         if(said)
             return;
-        console.warn(message);
+        if(level === 'trace') {
+            console.groupCollapsed(message);
+            console.trace();
+            console.groupEnd();
+        }
+        else
+            console[level](message);
         said = true;
     };
 }
 
-function deprecate_function(message, f) {
-    var dep = deprecation_warning(message);
+function deprecation_warning(message) {
+    return onetime_trace('warn', message);
+}
+
+function trace_function(level, message, f) {
+    var dep = onetime_trace(level, message);
     return function() {
         dep();
         return f.apply(this, arguments);
     };
+}
+function deprecate_function(message, f) {
+    return trace_function('warn', message, f);
 }
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
@@ -2213,6 +2226,20 @@ function place_arrows_on_spline(diagram, e, points) {
     };
 }
 
+
+// determine pre-transition orientation that won't spin a lot going to new orientation
+function unsurprising_orient(oldorient, neworient) {
+    var oldang = +oldorient.slice(0, -3),
+        newang = +neworient.slice(0, -3);
+    if(Math.abs(oldang - newang) > Math.PI) {
+        if(newang > oldang)
+            oldang += 2*Math.PI;
+        else oldang -= 2*Math.PI;
+    }
+    return oldang;
+}
+
+
 function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
     var strokeOfs, edgeStroke;
@@ -3689,7 +3716,13 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     function svg_specific(name) {
-        return deprecate_function(name + "() is specific to the SVG renderer", function() {
+        return trace_function('trace', name + '() is specific to the SVG renderer', function() {
+            return _diagram.renderer()[name].apply(this, arguments);
+        });
+    }
+
+    function call_on_renderer(name) {
+        return trace_function('trace', 'calling ' + name + '() on renderer', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -3706,7 +3739,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.scale = svg_specific('scale');
 
     function renderer_specific(name) {
-        return deprecate_function(name + "() will have renderer-specific arguments", function() {
+        return trace_function('trace', name + '() will have renderer-specific arguments', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -3714,7 +3747,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.renderEdge = svg_specific('renderEdge');
     _diagram.redrawNode = svg_specific('redrawNode');
     _diagram.redrawEdge = svg_specific('redrawEdge');
-    _diagram.reposition = svg_specific('reposition');
+    _diagram.reposition = call_on_renderer('reposition');
 
 
     /**
@@ -3779,9 +3812,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return this;
     };
 
-    _diagram.refresh = function() {
-        _diagram.renderer().refresh();
-    };
+    _diagram.refresh = call_on_renderer('refresh');
 
     _diagram.width_is_automatic = function() {
         return _width === 'auto';
@@ -3795,7 +3826,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var oldWidth = _lastWidth, oldHeight = _lastHeight;
         var newWidth = _diagram.width(), newHeight = _diagram.height();
         if(oldWidth !== newWidth || oldHeight !== newHeight)
-            _diagram.renderer().resizeTooo(oldWidth, oldHeight, newWidth, newHeight);
+            _diagram.renderer().rezoom(oldWidth, oldHeight, newWidth, newHeight);
     }
 
     _diagram.startLayout = function () {
@@ -4470,8 +4501,6 @@ dc_graph.diagram = function (parent, chartGroup) {
             var vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
                 swidth =  _diagram.width() - _diagram.margins().left - _diagram.margins().right,
                 sheight = _diagram.height() - _diagram.margins().top - _diagram.margins().bottom;
-            if(_diagram.DEBUG_BOUNDS)
-                debug_bounds(_bounds);
             var fitS = _diagram.fitStrategy(), translate = [0,0], scale = 1;
             if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
                 var sAR = sheight / swidth, vAR = vheight / vwidth,
@@ -4533,6 +4562,23 @@ dc_graph.diagram = function (parent, chartGroup) {
             _animateZoom = false;
         }
     }
+    function namespace_event_reducer(msg_fun) {
+        return function(p, ev) {
+            var namespace = {};
+            p[ev] = function(ns) {
+                return namespace[ns] = namespace[ns] || onetime_trace('trace', msg_fun(ns, ev));
+            };
+            return p;
+        };
+    }
+    var renderer_specific_events = ['drawn', 'transitionsStarted', 'zoomed']
+            .reduce(namespace_event_reducer(function(ns, ev) {
+                return 'subscribing "' + ns + '" to event "' + ev + '" which takes renderer-specific parameters';
+            }), {});
+    var inconsistent_arguments = ['end']
+            .reduce(namespace_event_reducer(function(ns, ev) {
+                return 'subscribing "' + ns + '" to event "' + ev + '" which may receive inconsistent arguments';
+            }), {});
 
     /**
      * Standard dc.js
@@ -4552,6 +4598,10 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.on = function(event, f) {
         if(arguments.length === 1)
             return _dispatch.on(event);
+        var evns = event.split('.'),
+            warning = renderer_specific_events[evns[0]] || inconsistent_arguments[evns[0]];
+        if(warning)
+            warning(evns[1] || '')();
         _dispatch.on(event, f);
         return this;
     };
@@ -4588,7 +4638,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * Standard dc.js
      * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin}
      * method. Gets or sets the y scale.
-     * @method x
+     * @method y
      * @memberof dc_graph.diagram
      * @instance
      * @param {d3.scale} [scale]
@@ -4914,7 +4964,7 @@ dc_graph.render_svg = function() {
         return _renderer;
     };
 
-    _renderer.resizeTooo = function(oldWidth, oldHeight, newWidth, newHeight) {
+    _renderer.rezoom = function(oldWidth, oldHeight, newWidth, newHeight) {
         var scale = _zoom.scale(), translate = _zoom.translate();
         _zoom.scale(1).translate([0,0]);
         var xDomain = _renderer.parent().x().domain(), yDomain = _renderer.parent().y().domain();
@@ -5143,24 +5193,6 @@ dc_graph.render_svg = function() {
         return this;
     };
 
-
-    function debug_bounds(bounds) {
-        var brect = _g.selectAll('rect.bounds').data([0]);
-        brect.enter()
-            .insert('rect', ':first-child').attr({
-                class: 'bounds',
-                fill: 'rgba(128,255,128,0.1)',
-                stroke: '#000'
-            });
-        brect
-            .attr({
-                x: bounds.left,
-                y: bounds.top,
-                width: bounds.right - bounds.left,
-                height: bounds.bottom - bounds.top
-            });
-    }
-
     function generate_edge_path(age, full) {
         var field = full ? 'full' : 'path';
         return function(e) {
@@ -5178,17 +5210,15 @@ dc_graph.render_svg = function() {
         };
     };
 
-    // determine pre-transition orientation that won't spin a lot going to new orientation
-    function unsurprising_orient(oldorient, neworient) {
-        var oldang = +oldorient.slice(0, -3),
-            newang = +neworient.slice(0, -3);
-        if(Math.abs(oldang - newang) > Math.PI) {
-            if(newang > oldang)
-                oldang += 2*Math.PI;
-            else oldang -= 2*Math.PI;
-        }
-        return oldang + 'rad';
+    function with_rad(f) {
+        return function() {
+            return f.apply(this, arguments) + 'rad';
+        };
     }
+
+    function unsurprising_orient_rad(oldorient, neworient) {
+        return with_rad(unsurprising_orient)(oldorient, neworient);
+   }
 
     function has_source_and_target(e) {
         return !!e.source && !!e.target;
@@ -5302,7 +5332,7 @@ dc_graph.render_svg = function() {
             .each(function(e) {
                 if(_renderer.parent().edgeArrowhead.eval(e))
                     d3.select('#' + _renderer.parent().arrowId(e, 'head'))
-                    .attr('orient', unsurprising_orient(e.pos.old.orienthead, e.pos.new.orienthead))
+                    .attr('orient', unsurprising_orient_rad(e.pos.old.orienthead, e.pos.new.orienthead))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
                     .attr('orient', function() {
@@ -5310,7 +5340,7 @@ dc_graph.render_svg = function() {
                     });
                 if(_renderer.parent().edgeArrowtail.eval(e))
                     d3.select('#' + _renderer.parent().arrowId(e, 'tail'))
-                    .attr('orient', unsurprising_orient(e.pos.old.orienttail, e.pos.new.orienttail))
+                    .attr('orient', unsurprising_orient_rad(e.pos.old.orienttail, e.pos.new.orienttail))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
                     .attr('orient', function() {
@@ -7332,6 +7362,38 @@ dc_graph.d3v4_force_layout = function(id) {
 
 dc_graph.d3v4_force_layout.scripts = ['d3.js', 'd3v4-force.js'];
 
+/**
+ * `dc_graph.flexbox_layout` lays out nodes in accordance with the
+ * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox flexbox layout algorithm}.
+ * Nodes fit into a containment hierarchy based on their keys; edges do not affect the layout but
+ * are drawn from node to node.
+ *
+ * Since the flexbox algorithm is not ordinarily available in SVG, this class uses the
+ * {@link https://npmjs.com/package/css-layout css-layout}
+ * package. (It does not currently support css-layout's successor
+ * {@link https://github.com/facebook/yoga yoga} but that should be straightforward to add if
+ * there is interest.)
+ *
+ * Unlike conventional graph layout, where positions are determined based on a few attributes and
+ * the topological structure of the eedges, flexbox layout is determined based on the node hierarchy
+ * and a large number of attributes on the nodes. See css-layout's
+ * {@link https://npmjs.com/package/css-layout#supported-attributes Supported Attributes}
+ * for a list of those attributes, and see below to understand how the hierarchy is inferred from
+ * node keys.
+ *
+ * `flexbox_layout` does not require all internal nodes to be specified. The node keys are parsed as
+ * "addresses" or paths (arrays of strings) and the tree is built from those paths. Wherever a
+ * node's path terminates is where that node's data will be applied.
+ *
+ * Since flexbox supports a vast number of attributes, we don't attempt to create accessors for
+ * every one. Instead, any attributes in the node data are copied which match the names of flexbox
+ * attributes.
+ *
+ * @class flexbox_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.flexbox_layout}
+ **/
 dc_graph.flexbox_layout = function(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
@@ -7498,7 +7560,31 @@ dc_graph.flexbox_layout = function(id) {
             });
         },
         populateLayoutEdge: function() {},
+        /**
+         * This function constructs a node key string from an "address". An address is an array of
+         * strings identifying the path from the root to the node.
+         *
+         * By default, it joins the address with commas.
+         * @method addressToKey
+         * @memberof dc_graph.flexbox_layout
+         * @instance
+         * @param {Function} [addressToKey = function(ad) { return ad.join(','); }]
+         * @return {Function}
+         * @return {dc_graph.flexbox_layout}
+         **/
         addressToKey: property(function(ad) { return ad.join(','); }),
+        /**
+         * This function constructs an "address" from a node key string. An address is an array of
+         * strings identifying the path from the root to the node.
+         *
+         * By default, it splits the key by its commas.
+         * @method keyToAddress
+         * @memberof dc_graph.flexbox_layout
+         * @instance
+         * @param {Function} [keyToAddress = function(nid) { return nid.split(','); }]
+         * @return {Function}
+         * @return {dc_graph.flexbox_layout}
+         **/
         keyToAddress: property(function(nid) { return nid.split(','); }),
         logStuff: property(false)
     };
