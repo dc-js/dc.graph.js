@@ -5,12 +5,12 @@ dc_graph.mode = function(event_namespace, options) {
     var supported_renderers = options.renderers || ['svg'];
 
     if(!draw) {
-        console.warn('behavior.draw has been replaced by mode.draw');
-        draw = options.draw;
+        console.warn('behavior.add_behavior has been replaced by mode.draw');
+        draw = options.add_behavior;
     }
     if(!remove) {
-        console.warn('behavior.remove has been replaced by mode.remove');
-        remove = options.remove;
+        console.warn('behavior.remove_behavior has been replaced by mode.remove');
+        remove = options.remove_behavior;
     }
 
     /**
