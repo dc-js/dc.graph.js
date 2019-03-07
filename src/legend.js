@@ -203,6 +203,8 @@ dc_graph.legend = function(legend_namespace) {
                         _included.push(key);
                     apply_filter();
                     _dispatch.filtered(_legend, key);
+                    if(_svg_renderer)
+                        window.setTimeout(redraw, 250);
                 });
         } else {
             item.attr('cursor', 'auto')
