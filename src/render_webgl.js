@@ -52,7 +52,7 @@ dc_graph.render_webgl = function() {
         _scene = new THREE.Scene();
 
         _sphereGeometry = new THREE.SphereBufferGeometry(10, 32, 32);
-        _edgeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1 });
+        _edgeMaterial = new THREE.MeshLambertMaterial( { color: 0xcccccc } );
 
         _directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         _directionalLight.position.set(-1, -1, 1).normalize();
@@ -121,13 +121,13 @@ dc_graph.render_webgl = function() {
             if(!e.source || !e.target)
                 return;
             var a = e.source.cola, b = e.target.cola;
-            vertices.push(a.x*MULT, -a.y*MULT, a.z*MULT || 0,
-                          b.x*MULT, -b.y*MULT, b.z*MULT || 0);
+            var path = new THREE.LineCurve3(
+                new THREE.Vector3(a.x*MULT, -a.y*MULT, a.z*MULT || 0),
+                new THREE.Vector3(b.x*MULT, -b.y*MULT, b.z*MULT || 0));
+            var geometry = new THREE.TubeBufferGeometry(path, 20, 1, 8, false);
+            var mesh = new THREE.Mesh(geometry, _edgeMaterial);
+            _scene.add(mesh);
         });
-        var lineGeometry = new THREE.BufferGeometry();
-        lineGeometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        var line = new THREE.LineSegments(lineGeometry, _edgeMaterial);
-        _scene.add(line);
 
         animate();
         return _renderer;
