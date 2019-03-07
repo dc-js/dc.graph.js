@@ -33,7 +33,11 @@ dc_graph.mode = function(event_namespace, options) {
                         options.rest(diagram, node, edge, ehover);
                 });
                 p.on('reset.' + event_namespace, function() {
-                    remove(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
+                    var rend = diagram.renderer(),
+                        node = rend.selectAllNodes ? rend.selectAllNodes() : null,
+                        edge = rend.selectAllEdges ? rend.selectAllEdges() : null,
+                        edgeHover = rend.selectAllEdges ? rend.selectAllEdges('.edge-hover') : null;
+                    remove(diagram, node, edge, edgeHover);
                 });
             }
             else if(_mode.parent()) {
