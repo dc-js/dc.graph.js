@@ -63,7 +63,8 @@ dc_graph.render_webgl = function() {
 
         _webgl_renderer = new THREE.WebGLRenderer({ antialias: true });
         _webgl_renderer.setPixelRatio(window.devicePixelRatio);
-        _webgl_renderer.setSize(window.innerWidth, window.innerHeight);
+        var boundRect = _renderer.parent().root().node().getBoundingClientRect();
+        _webgl_renderer.setSize(boundRect.width, boundRect.height);
         _renderer.parent().root().node().appendChild(_webgl_renderer.domElement);
 
         _controls = new THREE.OrbitControls(_camera, _webgl_renderer.domElement);
