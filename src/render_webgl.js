@@ -46,7 +46,7 @@ dc_graph.render_webgl = function() {
     };
 
     _renderer.initializeDrawing = function () {
-        _camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+        _camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
         _camera.up = new THREE.Vector3(0, 0, 1);
 
         _scene = new THREE.Scene();
