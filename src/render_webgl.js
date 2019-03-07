@@ -134,8 +134,8 @@ dc_graph.render_webgl = function() {
             var mesh = new THREE.Mesh(geometry, edgeMaterial);
             _scene.add(mesh);
         });
-
-        animate();
+        _animating = false;
+        _renderer.parent().layoutDone(true);
         return _renderer;
     };
 
