@@ -1120,6 +1120,15 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.mode = _diagram.child = named_children();
 
+    _diagram.mode.reject = function(id, object) {
+        var rtype = _diagram.renderer().rendererType();
+        if(!object.supportsRenderer)
+            console.log('could not check if "' + id + '" is compatible with ' + rtype);
+        else if(!object.supportsRenderer(rtype))
+            return 'not installing "' + id + '" because it is not compatible with renderer ' + rtype;
+        return false;
+    };
+
     _diagram.legend = deprecate_function(".legend() is deprecated; use .child() for more control & multiple legends", function(_) {
         if(!arguments.length)
             return _diagram.child('node-legend');
@@ -1146,7 +1155,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!arguments.length)
             return _diagram.layoutEngine() ? _diagram.layoutEngine().layoutAlgorithm() : 'cola';
         if(!skipWarning)
-            console.warn('dc.graph.diagram.layoutAlgorithm is depecrated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
+            console.warn('dc.graph.diagram.layoutAlgorithm is deprecated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
 
         var engine;
         switch(value) {
@@ -1759,6 +1768,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
                 n.cola.x = rn.x;
                 n.cola.y = rn.y;
+                n.cola.z = rn.z;
             });
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
@@ -1812,23 +1822,32 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.layoutEngine().dispatch().end(wnodes, wedges);
         else {
             _dispatch.start(); // cola doesn't seem to fire this itself?
-            _diagram.layoutEngine().data(
+            var engine = _diagram.layoutEngine();
+            engine.data(
                 { width: _diagram.width(), height: _diagram.height() },
                 wnodes.map(function(v) {
                     var lv = Object.assign({}, v.cola, v.dcg_shape);
-                    if(_diagram.layoutEngine().annotateNode)
-                        _diagram.layoutEngine().annotateNode(lv, v);
+                    if(engine.annotateNode)
+                        engine.annotateNode(lv, v);
+                    else if(engine.extractNodeAttrs)
+                        Object.keys(engine.extractNodeAttrs()).forEach(function(key) {
+                            lv[key] = engine.extractNodeAttrs()[key](v.orig);
+                        });
                     return lv;
                 }),
                 layout_edges.map(function(e) {
                     var le = e.cola;
-                    if(_diagram.layoutEngine().annotateEdge)
-                        _diagram.layoutEngine().annotateEdge(le, e);
+                    if(engine.annotateEdge)
+                        engine.annotateEdge(le, e);
+                    else if(engine.extractEdgeAttrs)
+                        Object.keys(engine.extractEdgeAttrs()).forEach(function(key) {
+                            le[key] = engine.extractEdgeAttrs()[key](e.orig);
+                        });
                     return le;
                 }),
                 constraints
             );
-            _diagram.layoutEngine().start();
+            engine.start();
         }
         return this;
     };

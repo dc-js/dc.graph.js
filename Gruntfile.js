@@ -353,6 +353,7 @@ module.exports.jsFiles = [
     'src/node_contents.js',
     'src/diagram.js',
     'src/render_svg.js',
+    'src/render_webgl.js',
     'src/engine.js',
     'src/webworker_layout.js',
     'src/graphviz_attrs.js',
@@ -364,6 +365,7 @@ module.exports.jsFiles = [
     'src/d3v4_force_layout.js',
     'src/flexbox_layout.js',
     'src/manual_layout.js',
+    'src/layered_layout.js',
     'src/place_ports.js',
     'src/grid.js',
     'src/troubleshoot.js',
@@ -414,6 +416,7 @@ module.exports.jsFiles = [
     'src/path_reader.js',
     'src/path_selector.js',
     'src/generate.js',
+    'src/supergraph.js',
     'src/line_breaks.js',
     'src/type_graph.js',
     'src/footer.js'  // NOTE: keep this last

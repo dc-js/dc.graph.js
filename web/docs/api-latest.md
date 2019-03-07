@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.8.2  
+**Version**: 0.8.4  
 **Example**  
 ```js
 // Example chaining
@@ -89,7 +89,7 @@ diagram.width(600)
         * [.on([event], [f])](#dc_graph.diagram+on) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.getStats()](#dc_graph.diagram+getStats) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
-        * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.y([scale])](#dc_graph.diagram+y) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.redrawGroup()](#dc_graph.diagram+redrawGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.renderGroup()](#dc_graph.diagram+renderGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -120,6 +120,12 @@ diagram.width(600)
         * [new d3_force_layout([id])](#new_dc_graph.d3_force_layout_new)
     * [.d3v4_force_layout](#dc_graph.d3v4_force_layout)
         * [new d3v4_force_layout([id])](#new_dc_graph.d3v4_force_layout_new)
+    * [.flexbox_layout](#dc_graph.flexbox_layout)
+        * [new flexbox_layout([id])](#new_dc_graph.flexbox_layout_new)
+        * [.addressToKey([addressToKey])](#dc_graph.flexbox_layout+addressToKey) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+        * [.keyToAddress([keyToAddress])](#dc_graph.flexbox_layout+keyToAddress) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+    * [.layered_layout](#dc_graph.layered_layout)
+        * [new layered_layout([id])](#new_dc_graph.layered_layout_new)
     * [.constraint_pattern](#dc_graph.constraint_pattern)
         * [new constraint_pattern(diagram, pattern)](#new_dc_graph.constraint_pattern_new)
     * [.tip](#dc_graph.tip)
@@ -211,7 +217,7 @@ diagram.width(600)
     * [.on([event], [f])](#dc_graph.diagram+on) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.getStats()](#dc_graph.diagram+getStats) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
-    * [.x([scale])](#dc_graph.diagram+x) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.y([scale])](#dc_graph.diagram+y) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.redrawGroup()](#dc_graph.diagram+redrawGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.renderGroup()](#dc_graph.diagram+renderGroup) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.anchor([parent], [chartGroup])](#dc_graph.diagram+anchor) ⇒ <code>String</code> \| <code>node</code> \| <code>d3.selection</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -1256,9 +1262,9 @@ method. Gets or sets the x scale.
 | --- | --- |
 | [scale] | <code>d3.scale</code> | 
 
-<a name="dc_graph.diagram+x"></a>
+<a name="dc_graph.diagram+y"></a>
 
-#### diagram.x([scale]) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
+#### diagram.y([scale]) ⇒ <code>d3.scale</code> \| [<code>diagram</code>](#dc_graph.diagram)
 Standard dc.js
 [baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
 method. Gets or sets the y scale.
@@ -1594,6 +1600,93 @@ In addition to the below layout attributes, `graphviz_layout` also implements th
 
 #### new d3v4_force_layout([id])
 `dc_graph.d3v4_force_layout` is an adaptor for d3-force version 4 layouts in dc.graph.js
+
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [id] | <code>String</code> | <code>uuid()</code> | Unique identifier |
+
+<a name="dc_graph.flexbox_layout"></a>
+
+### dc_graph.flexbox_layout
+**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+
+* [.flexbox_layout](#dc_graph.flexbox_layout)
+    * [new flexbox_layout([id])](#new_dc_graph.flexbox_layout_new)
+    * [.addressToKey([addressToKey])](#dc_graph.flexbox_layout+addressToKey) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+    * [.keyToAddress([keyToAddress])](#dc_graph.flexbox_layout+keyToAddress) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+
+<a name="new_dc_graph.flexbox_layout_new"></a>
+
+#### new flexbox_layout([id])
+`dc_graph.flexbox_layout` lays out nodes in accordance with the
+[flexbox layout algorithm](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox).
+Nodes fit into a containment hierarchy based on their keys; edges do not affect the layout but
+are drawn from node to node.
+
+Since the flexbox algorithm is not ordinarily available in SVG, this class uses the
+[css-layout](https://npmjs.com/package/css-layout)
+package. (It does not currently support css-layout's successor
+[yoga](https://github.com/facebook/yoga) but that should be straightforward to add if
+there is interest.)
+
+Unlike conventional graph layout, where positions are determined based on a few attributes and
+the topological structure of the eedges, flexbox layout is determined based on the node hierarchy
+and a large number of attributes on the nodes. See css-layout's
+[Supported Attributes](https://npmjs.com/package/css-layout#supported-attributes)
+for a list of those attributes, and see below to understand how the hierarchy is inferred from
+node keys.
+
+`flexbox_layout` does not require all internal nodes to be specified. The node keys are parsed as
+"addresses" or paths (arrays of strings) and the tree is built from those paths. Wherever a
+node's path terminates is where that node's data will be applied.
+
+Since flexbox supports a vast number of attributes, we don't attempt to create accessors for
+every one. Instead, any attributes in the node data are copied which match the names of flexbox
+attributes.
+
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [id] | <code>String</code> | <code>uuid()</code> | Unique identifier |
+
+<a name="dc_graph.flexbox_layout+addressToKey"></a>
+
+#### flexbox_layout.addressToKey([addressToKey]) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+This function constructs a node key string from an "address". An address is an array of
+strings identifying the path from the root to the node.
+
+By default, it joins the address with commas.
+
+**Kind**: instance method of [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [addressToKey] | <code>function</code> | <code>function(ad) { return ad.join(&#x27;,&#x27;); }</code> | 
+
+<a name="dc_graph.flexbox_layout+keyToAddress"></a>
+
+#### flexbox_layout.keyToAddress([keyToAddress]) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+This function constructs an "address" from a node key string. An address is an array of
+strings identifying the path from the root to the node.
+
+By default, it splits the key by its commas.
+
+**Kind**: instance method of [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [keyToAddress] | <code>function</code> | <code>function(nid) { return nid.split(&#x27;,&#x27;); }</code> | 
+
+<a name="dc_graph.layered_layout"></a>
+
+### dc_graph.layered_layout
+**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+<a name="new_dc_graph.layered_layout_new"></a>
+
+#### new layered_layout([id])
+`dc_graph.layered_layout` produces 3D layered layouts, utilizing another layout
+that supports fixed nodes and position hints for the layers
 
 
 | Param | Type | Default | Description |

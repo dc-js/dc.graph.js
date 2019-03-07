@@ -9,6 +9,8 @@ dc_graph.legend = function(legend_namespace) {
     var _dispatch = d3.dispatch('filtered');
     var _totals, _counts;
 
+    var _svg_renderer;
+
     function apply_filter() {
         if(_legend.dimension()) {
             if(_legend.isTagDimension()) {
@@ -27,6 +29,7 @@ dc_graph.legend = function(legend_namespace) {
     }
 
     var _legend = dc_graph.mode(legend_namespace, {
+        renderers: ['svg', 'webgl'],
         draw: redraw,
         remove: function() {},
         parent: function(p) {
@@ -124,7 +127,7 @@ dc_graph.legend = function(legend_namespace) {
 
     _legend.redraw = deprecate_function("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
     function redraw() {
-        var legend = _legend.parent().svg()
+        var legend = (_svg_renderer || _legend.parent()).svg()
                 .selectAll('g.dc-graph-legend.' + legend_namespace)
                 .data([0]);
         legend.enter().append('g')
@@ -151,7 +154,7 @@ dc_graph.legend = function(legend_namespace) {
             .text(function(d) {
                 return d.name + (_legend.counter() && _counts ? (' (' + (_counts[d.orig.key] || 0) + (_counts[d.orig.key] !== _totals[d.orig.key] ? '/' + (_totals[d.orig.key] || 0) : '') + ')') : '');
             });
-        _legend.type().draw(_legend.parent(), itemEnter, item);
+        _legend.type().draw(_svg_renderer || _legend.parent(), itemEnter, item);
         if(_legend.noLabel())
             item.selectAll(_legend.type().labelSelector()).remove();
 
@@ -221,6 +224,20 @@ dc_graph.legend = function(legend_namespace) {
 
     _legend.render = deprecate_function("dc_graph.legend is an ordinary mode now; render will go away soon", render);
     function render() {
+        if(_legend.parent().renderer().rendererType() !== 'svg') {
+            _svg_renderer = dc_graph.render_svg();
+            _svg_renderer.parent(_legend.parent())
+                .svg(_legend.parent().root().append('svg')
+                     .style({
+                         position: 'absolute',
+                         left: 0, top: 0,
+                         width: '100%', height: '100%',
+                         fill: 'wheat',
+                         'pointer-events': 'none'
+                     }));
+        }
+
+
         var exemplars = _legend.exemplars();
         _legend.countBaseline();
         if(exemplars instanceof Array) {
@@ -235,7 +252,7 @@ dc_graph.legend = function(legend_namespace) {
     };
 
     _legend.dropdown = property(null).react(function(v) {
-        if(!!v !== !!_legend.dropdown() && _legend.parent() && _legend.parent().svg())
+        if(!!v !== !!_legend.dropdown() && _legend.parent() && (_svg_renderer || _legend.parent()).svg())
             window.setTimeout(_legend.redraw, 0);
     });
 
@@ -265,8 +282,8 @@ dc_graph.legend.node_legend = function() {
             return selection.append('g')
                 .attr('class', 'node');
         },
-        draw: function(diagram, itemEnter, item) {
-            diagram
+        draw: function(renderer, itemEnter, item) {
+            renderer
                 .renderNode(itemEnter)
                 .redrawNode(item);
         }
@@ -323,8 +340,8 @@ dc_graph.legend.edge_legend = function() {
         },
         fakeNodeRadius: property(10),
         length: property(50),
-        draw: function(diagram, itemEnter, item) {
-            diagram.redrawEdge(itemEnter.select('path.edge'), diagram.renderer().selectAllEdges('.edge-arrows'));
+        draw: function(renderer, itemEnter, item) {
+            renderer.redrawEdge(itemEnter.select('path.edge'), renderer.selectAllEdges('.edge-arrows'));
         }
     };
     return _type;
@@ -343,7 +360,7 @@ dc_graph.legend.symbol_legend = function(symbolScale) {
                 .attr('class', 'symbol');
             return symbolEnter;
         },
-        draw: function(diagram, symbolEnter, symbol) {
+        draw: function(renderer, symbolEnter, symbol) {
             symbolEnter.append('text')
                 .html(function(d) {
                     return symbolScale(d.orig.key);

@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "license": "Apache-2.0",
   "copyright": "2015-2019",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
@@ -29,7 +29,7 @@
     "d3": "3.x",
     "dagre": "^0.8.4",
     "dc": "~2.1.0",
-    "metagraph": "^0.0.6",
+    "metagraph": "^0.0.7",
     "queue-async": "~1.x",
     "viz.js": "^1.8.2",
     "webcola": "3.3.x"

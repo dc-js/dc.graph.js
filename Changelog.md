@@ -1,3 +1,6 @@
+## 0.8.4
+* many caveats, but this has the first working WebGL renderer and a layered layout (no animations, can't re-render, can't filter etc etc)
+
 ## 0.8.3
 * increase the maximum tooltip width to 500px
 * continued refactoring of renderer code. the previous renderer-related warnings are now informational messages.

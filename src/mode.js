@@ -2,14 +2,15 @@ dc_graph.mode = function(event_namespace, options) {
     var _mode = {};
     var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
     var draw = options.draw, remove = options.remove;
+    var supported_renderers = options.renderers || ['svg'];
 
     if(!draw) {
-        console.warn('behavior.draw has been replaced by mode.draw');
-        draw = options.draw;
+        console.warn('behavior.add_behavior has been replaced by mode.draw');
+        draw = options.add_behavior;
     }
     if(!remove) {
-        console.warn('behavior.remove has been replaced by mode.remove');
-        remove = options.remove;
+        console.warn('behavior.remove_behavior has been replaced by mode.remove');
+        remove = options.remove_behavior;
     }
 
     /**
@@ -32,7 +33,11 @@ dc_graph.mode = function(event_namespace, options) {
                         options.rest(diagram, node, edge, ehover);
                 });
                 p.on('reset.' + event_namespace, function() {
-                    remove(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
+                    var rend = diagram.renderer(),
+                        node = rend.selectAllNodes ? rend.selectAllNodes() : null,
+                        edge = rend.selectAllEdges ? rend.selectAllEdges() : null,
+                        edgeHover = rend.selectAllEdges ? rend.selectAllEdges('.edge-hover') : null;
+                    remove(diagram, node, edge, edgeHover);
                 });
             }
             else if(_mode.parent()) {
@@ -44,6 +49,11 @@ dc_graph.mode = function(event_namespace, options) {
             }
             options.parent && options.parent(p);
         });
+
+    _mode.supportsRenderer = function(rendererType) {
+        return supported_renderers.includes(rendererType);
+    };
+
     return _mode;
 };
 

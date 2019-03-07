@@ -53,6 +53,12 @@ dc_graph._engines = [
         instantiate: function() {
             return dc_graph.manual_layout();
         }
+    },
+    {
+        name: 'layered',
+        instantiate: function() {
+            return dc_graph.layered_layout();
+        }
     }
 ];
 dc_graph._default_engine = 'cola';
