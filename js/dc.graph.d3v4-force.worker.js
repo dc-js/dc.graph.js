@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.3
+ *  dc.graph 0.8.4
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.3
+ * @version 0.8.4
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.3',
+    version: '0.8.4',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -108,6 +108,15 @@ function named_children() {
     var f = function(id, object) {
         if(arguments.length === 1)
             return _children[id];
+        if(f.reject) {
+            var reject = f.reject(id, object);
+            if(reject) {
+                console.groupCollapsed(reject);
+                console.trace();
+                console.groupEnd();
+                return this;
+            }
+        }
         // do not notify unnecessarily
         if(_children[id] === object)
             return this;
@@ -562,7 +571,7 @@ dc_graph.d3v4_force_layout = function(id) {
         );
     }
 
-    function data(nodes, edges, constraints) {
+    function data(nodes, edges) {
         var nodeIDs = {};
         nodes.forEach(function(d, i) {
             nodeIDs[d.dcg_nodeKey] = i;

@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.8.3  
+**Version**: 0.8.4  
 **Example**  
 ```js
 // Example chaining
@@ -124,6 +124,8 @@ diagram.width(600)
         * [new flexbox_layout([id])](#new_dc_graph.flexbox_layout_new)
         * [.addressToKey([addressToKey])](#dc_graph.flexbox_layout+addressToKey) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
         * [.keyToAddress([keyToAddress])](#dc_graph.flexbox_layout+keyToAddress) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+    * [.layered_layout](#dc_graph.layered_layout)
+        * [new layered_layout([id])](#new_dc_graph.layered_layout_new)
     * [.constraint_pattern](#dc_graph.constraint_pattern)
         * [new constraint_pattern(diagram, pattern)](#new_dc_graph.constraint_pattern_new)
     * [.tip](#dc_graph.tip)
@@ -1675,6 +1677,21 @@ By default, it splits the key by its commas.
 | Param | Type | Default |
 | --- | --- | --- |
 | [keyToAddress] | <code>function</code> | <code>function(nid) { return nid.split(&#x27;,&#x27;); }</code> | 
+
+<a name="dc_graph.layered_layout"></a>
+
+### dc_graph.layered_layout
+**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+<a name="new_dc_graph.layered_layout_new"></a>
+
+#### new layered_layout([id])
+`dc_graph.layered_layout` produces 3D layered layouts, utilizing another layout
+that supports fixed nodes and position hints for the layers
+
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [id] | <code>String</code> | <code>uuid()</code> | Unique identifier |
 
 <a name="dc_graph.constraint_pattern"></a>
 

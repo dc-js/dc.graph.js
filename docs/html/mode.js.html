@@ -40,7 +40,7 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="dc_graph.brush.html">dc_graph.brush</a></li><li><a href="dc_graph.cola_layout.html">dc_graph.cola_layout</a></li><li><a href="dc_graph.constraint_pattern.html">dc_graph.constraint_pattern</a></li><li><a href="dc_graph.d3_force_layout.html">dc_graph.d3_force_layout</a></li><li><a href="dc_graph.d3v4_force_layout.html">dc_graph.d3v4_force_layout</a></li><li><a href="dc_graph.dagre_layout.html">dc_graph.dagre_layout</a></li><li><a href="dc_graph.diagram.html">dc_graph.diagram</a></li><li><a href="dc_graph.flexbox_layout.html">dc_graph.flexbox_layout</a></li><li><a href="dc_graph.graphviz_attrs.html">dc_graph.graphviz_attrs</a></li><li><a href="dc_graph.graphviz_layout.html">dc_graph.graphviz_layout</a></li><li><a href="dc_graph.tip.html">dc_graph.tip</a></li><li><a href="dc_graph.tree_layout.html">dc_graph.tree_layout</a></li>
+					<li><a href="dc_graph.brush.html">dc_graph.brush</a></li><li><a href="dc_graph.cola_layout.html">dc_graph.cola_layout</a></li><li><a href="dc_graph.constraint_pattern.html">dc_graph.constraint_pattern</a></li><li><a href="dc_graph.d3_force_layout.html">dc_graph.d3_force_layout</a></li><li><a href="dc_graph.d3v4_force_layout.html">dc_graph.d3v4_force_layout</a></li><li><a href="dc_graph.dagre_layout.html">dc_graph.dagre_layout</a></li><li><a href="dc_graph.diagram.html">dc_graph.diagram</a></li><li><a href="dc_graph.flexbox_layout.html">dc_graph.flexbox_layout</a></li><li><a href="dc_graph.graphviz_attrs.html">dc_graph.graphviz_attrs</a></li><li><a href="dc_graph.graphviz_layout.html">dc_graph.graphviz_layout</a></li><li><a href="dc_graph.layered_layout.html">dc_graph.layered_layout</a></li><li><a href="dc_graph.tip.html">dc_graph.tip</a></li><li><a href="dc_graph.tree_layout.html">dc_graph.tree_layout</a></li>
 				</ul>
 			</li>
 			
@@ -81,14 +81,15 @@
     var _mode = {};
     var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
     var draw = options.draw, remove = options.remove;
+    var supported_renderers = options.renderers || ['svg'];
 
     if(!draw) {
-        console.warn('behavior.draw has been replaced by mode.draw');
-        draw = options.draw;
+        console.warn('behavior.add_behavior has been replaced by mode.draw');
+        draw = options.add_behavior;
     }
     if(!remove) {
-        console.warn('behavior.remove has been replaced by mode.remove');
-        remove = options.remove;
+        console.warn('behavior.remove_behavior has been replaced by mode.remove');
+        remove = options.remove_behavior;
     }
 
     /**
@@ -111,7 +112,11 @@
                         options.rest(diagram, node, edge, ehover);
                 });
                 p.on('reset.' + event_namespace, function() {
-                    remove(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
+                    var rend = diagram.renderer(),
+                        node = rend.selectAllNodes ? rend.selectAllNodes() : null,
+                        edge = rend.selectAllEdges ? rend.selectAllEdges() : null,
+                        edgeHover = rend.selectAllEdges ? rend.selectAllEdges('.edge-hover') : null;
+                    remove(diagram, node, edge, edgeHover);
                 });
             }
             else if(_mode.parent()) {
@@ -123,6 +128,11 @@
             }
             options.parent &amp;&amp; options.parent(p);
         });
+
+    _mode.supportsRenderer = function(rendererType) {
+        return supported_renderers.includes(rendererType);
+    };
+
     return _mode;
 };
 

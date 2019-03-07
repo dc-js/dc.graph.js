@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>dc.graph.js Source: graphviz_layout.js</title>
+	<title>dc.graph.js Source: layered_layout.js</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -72,138 +72,166 @@
 		<div id="main">
 			
 
-		<h1 class="page-title">Source: graphviz_layout.js</h1>
+		<h1 class="page-title">Source: layered_layout.js</h1>
     
 <section>
     <article>
         <pre
             class="sunlight-highlight-javascript linenums">/**
- * `dc_graph.graphviz_layout` is an adaptor for viz.js (graphviz) layouts in dc.graph.js
- *
- * In addition to the below layout attributes, `graphviz_layout` also implements the attributes from
- * {@link dc_graph.graphviz_attrs graphviz_attrs}
- * @class graphviz_layout
+ * `dc_graph.layered_layout` produces 3D layered layouts, utilizing another layout
+ * that supports fixed nodes and position hints for the layers
+ * @class layered_layout
  * @memberof dc_graph
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.graphviz_layout}
+ * @return {dc_graph.layered_layout}
  **/
-dc_graph.graphviz_layout = function(id, layout, server) {
+dc_graph.layered_layout = function(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
-    var _dotInput, _dotString;
-    var _clusters; // hack to get cluster data out
+    var _supergraph, _subgraphs;
+    var _options = null;
 
     function init(options) {
+        _options = options;
+
     }
 
-    function encode_name(name) {
-        return name.replace(/^%/, '&amp;#37;');
-    }
-    function decode_name(name) {
-        return name.replace(/^&amp;#37;/, '%');
-    }
-    function stringize_property(prop, value) {
-        return [prop, '"' + value + '"'].join('=');
-    }
-    function stringize_properties(props) {
-        return '[' + props.join(', ') + ']';
-    }
-    function data(nodes, edges) {
-        if(_dotInput) {
-            _dotString = _dotInput;
-            return;
-        }
-        var lines = [];
-        var directed = layout !== 'neato';
-        lines.push((directed ? 'digraph' : 'graph') + ' g {');
-        lines.push('graph ' + stringize_properties([
-            stringize_property('nodesep', graphviz.nodesep()/72),
-            stringize_property('ranksep', graphviz.ranksep()/72),
-            stringize_property('rankdir', graphviz.rankdir())
-        ]));
-        lines = lines.concat(nodes.map(function(v) {
-            var props = [
-                stringize_property('width', v.width/72),
-                stringize_property('height', v.height/72),
-                stringize_property('fixedsize', 'shape'),
-                stringize_property('shape', v.abstract.shape)
-            ];
-            if(v.dcg_nodeFixed)
-                props.push(stringize_property('pos', [
-                    v.dcg_nodeFixed.x,
-                    1000-v.dcg_nodeFixed.y
-                ].join(',')));
-            return '  "' + encode_name(v.dcg_nodeKey) + '" ' + stringize_properties(props);
-        }));
-        lines = lines.concat(edges.map(function(e) {
-            return '  "' + encode_name(e.dcg_edgeSource) + (directed ? '" -> "' : '" -- "') +
-                encode_name(e.dcg_edgeTarget) + '" ' + stringize_properties([
-                    stringize_property('id', encode_name(e.dcg_edgeKey)),
-                stringize_property('arrowhead', 'none'),
-                stringize_property('arrowtail', 'none')
-                ]);
-        }));
-        lines.push('}');
-        lines.push('');
-        _dotString = lines.join('\n');
-    }
+    function data(nodes, edges, constraints) {
+        _supergraph = dc_graph.supergraph({nodes: nodes, edges: edges}, {
+            nodeKey: function(n) { return n.dcg_nodeKey; },
+            edgeKey: function(n) { return n.dcg_edgeKey; },
+            nodeValue: function(n) { return n; },
+            edgeValue: function(e) { return e; },
+            edgeSource: function(e) { return e.dcg_edgeSource; },
+            edgeTarget: function(e) { return e.dcg_edgeTarget; }
+        });
 
-    function process_response(error, result) {
-        _dispatch.start();
-        var bb = result.bb.split(',').map(function(x) { return +x; });
-        var nodes = (result.objects || []).filter(function(n) {
-            return n.pos; // remove non-nodes like clusters
-        }).map(function(n) {
-            var pos = n.pos.split(',');
-            return {
-                dcg_nodeKey: decode_name(n.name),
-                x: +pos[0],
-                y: bb[3] - pos[1]
-            };
-        });
-        _clusters = (result.objects || []).filter(function(n) {
-            return /^cluster/.test(n.name);
-        });
-        _clusters.forEach(function(c) {
-            // annotate with flipped cluster coords for convenience
-            c.bbflip = c.bb.split(',').map(function(s) { return +s; });
-            var t = bb[3] - c.bbflip[1];
-            c.bbflip[1] = bb[3] - c.bbflip[3];
-            c.bbflip[3] = t;
-        });
-        var edges = (result.edges || []).map(function(e) {
-            var e2 = {
-                dcg_edgeKey: decode_name(e.id || 'n' + e._gvid)
-            };
-            if(e._draw_) {
-                var directive = e._draw_.find(function(d) { return d.op &amp;&amp; d.points; });
-                e2.points = directive.points.map(function(p) { return {x: p[0], y: bb[3] - p[1]}; });
+        // every node belongs natively in one rank
+        var nranks = _supergraph.nodes().reduce(function(p, n) {
+            var rank = engine.layerAccessor()(n.value());
+            p[rank] = p[rank] || [];
+            p[rank].push(n);
+            return p;
+        }, {});
+        var eranks = Object.keys(nranks).reduce(function(p, r) {
+            p[r] = [];
+            return p;
+        }, {});
+
+        // nodes are shadowed into any layers to which they are adjacent
+        // edges are induced from the native&amp;shadow nodes in each layer
+        _supergraph.edges().forEach(function(e) {
+            var srank = engine.layerAccessor()(e.source().value()),
+                trank = engine.layerAccessor()(e.target().value());
+            if(srank == trank) {
+                eranks[srank].push(e);
+                return;
             }
-            return e2;
+            nranks[trank].push(e.source());
+            eranks[trank].push(e);
+            nranks[srank].push(e.target());
+            eranks[srank].push(e);
         });
-        _dispatch.end(nodes, edges);
+
+        // produce a subgraph for each layer
+        _subgraphs = Object.keys(nranks).reduce(function(p, r) {
+            p[r] = _supergraph.subgraph(
+                nranks[r].map(function(n) { return n.key(); }),
+                eranks[r].map(function(e) { return e.key(); }));
+            return p;
+        }, {});
+
+        // start from the most populous layer
+        var max = null;
+        Object.keys(nranks).forEach(function(r) {
+            if(max === null ||
+               _subgraphs[r].nodes().length > _subgraphs[max].nodes().length)
+                max = +r;
+        });
+
+        // travel up and down from there, each time fixing the nodes from the last layer
+        var ranks = Object.keys(nranks).map(function(r) { return +r; }).sort();
+        var mi = ranks.indexOf(max);
+        var ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
+        layout_layer(max, -1).then(function(layout) {
+            Promise.all([
+                layout_layers(layout, max, ups),
+                layout_layers(layout, max, downs)
+            ]).then(function() {
+                _dispatch.end(
+                    _supergraph.nodes().map(function(n) { return n.value(); }),
+                    _supergraph.edges().map(function(e) { return e.value(); }));
+            });
+        });
+    }
+
+    function layout_layers(layout, last, layers) {
+        if(layers.length === 0)
+            return Promise.resolve(layout);
+        var curr = layers.shift();
+        return layout_layer(curr, last).then(function(layout) {
+            return layout_layers(layout, curr, layers);
+        });
+    }
+
+    function layout_layer(r, last) {
+        _subgraphs[r].nodes().forEach(function(n) {
+            if(engine.layerAccessor()(n.value()) !== r &amp;&amp;
+               n.value().x !== undefined &amp;&amp;
+               n.value().y !== undefined)
+                n.value().dcg_nodeFixed = {
+                    x: n.value().x,
+                    y: n.value().y
+                };
+            else n.value().dcg_nodeFixed = null;
+        });
+        var subengine = engine.engineFactory()();
+        subengine.init(_options);
+        subengine.data(
+            {},
+            _subgraphs[r].nodes().map(function(n) {
+                return n.value();
+            }),
+            _subgraphs[r].edges().map(function(e) {
+                return e.value();
+            }));
+        return promise_layout(r, subengine);
+    }
+
+    function promise_layout(r, subengine) {
+        // stopgap - engine.start() should return a promise
+        return new Promise(function(resolve, reject) {
+            subengine.on('end', function(nodes, edges) {
+                resolve({nodes: nodes, edges: edges});
+            });
+            subengine.start();
+        }).then(function(layout) {
+            // copy positions back into the subgraph (and hence supergraph)
+            layout.nodes.forEach(function(ln) {
+                var n = _subgraphs[r].node(ln.dcg_nodeKey);
+                // do not copy positions for shadow nodes
+                if(engine.layerAccessor()(n.value()) !== r)
+                    return;
+                n.value().x = ln.x;
+                n.value().y = ln.y;
+                n.value().z = -r * engine.layerSeparationZ(); // lowest rank at top
+            });
+            return layout;
+        });
     }
 
     function start() {
-        if(server) {
-            d3.json(server)
-                .header("Content-type", "application/x-www-form-urlencoded")
-                .post('layouttool=' + layout + '&amp;' + encodeURIComponent(_dotString), process_response);
-        }
-        else {
-            var result = Viz(_dotString, {format: 'json', engine: layout, totalMemory: 1 &lt;&lt; 25});
-            result = JSON.parse(result);
-            process_response(null, result);
-        }
+        _dispatch.start();
     }
 
     function stop() {
     }
 
     var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
-    return Object.assign(graphviz, {
+
+    var engine = Object.assign(graphviz, {
         layoutAlgorithm: function() {
-            return layout;
+            return 'layered';
         },
         layoutId: function() {
             return _layoutId;
@@ -211,6 +239,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         supportsWebworker: function() {
             return false;
         },
+        parent: property(null),
         on: function(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
@@ -224,16 +253,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges) {
-            data(nodes, edges);
-        },
-        dotInput: function(text) {
-            _dotInput = text;
-            return this;
-        },
-        clusters: function() {
-            // filter out clusters and return them separately, because dc.graph doesn't know how to draw them
-            return _clusters;
+        data: function(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
         },
         start: function() {
             start();
@@ -242,12 +263,21 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             stop();
         },
         optionNames: function() {
-            return graphviz_keys;
+            return []
+                .concat(graphviz_keys);
         },
+        engineFactory: property(null),
+        layerAccessor: property(null),
+        layerSeparationZ: property(50),
         populateLayoutNode: function() {},
-        populateLayoutEdge: function() {}
+        populateLayoutEdge: function() {},
+        extractNodeAttrs: property({}), // {attr: function(node)}
+        extractEdgeAttrs: property({})
     });
-}
+    engine.pathStraightenForce = engine.angleForce;
+    return engine;
+};
+
 
 </pre>
     </article>

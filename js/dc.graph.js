@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.3
+ *  dc.graph 0.8.4
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.3
+ * @version 0.8.4
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.3',
+    version: '0.8.4',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -111,6 +111,15 @@ function named_children() {
     var f = function(id, object) {
         if(arguments.length === 1)
             return _children[id];
+        if(f.reject) {
+            var reject = f.reject(id, object);
+            if(reject) {
+                console.groupCollapsed(reject);
+                console.trace();
+                console.groupEnd();
+                return this;
+            }
+        }
         // do not notify unnecessarily
         if(_children[id] === object)
             return this;
@@ -3537,6 +3546,15 @@ dc_graph.diagram = function (parent, chartGroup) {
      **/
     _diagram.mode = _diagram.child = named_children();
 
+    _diagram.mode.reject = function(id, object) {
+        var rtype = _diagram.renderer().rendererType();
+        if(!object.supportsRenderer)
+            console.log('could not check if "' + id + '" is compatible with ' + rtype);
+        else if(!object.supportsRenderer(rtype))
+            return 'not installing "' + id + '" because it is not compatible with renderer ' + rtype;
+        return false;
+    };
+
     _diagram.legend = deprecate_function(".legend() is deprecated; use .child() for more control & multiple legends", function(_) {
         if(!arguments.length)
             return _diagram.child('node-legend');
@@ -3563,7 +3581,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!arguments.length)
             return _diagram.layoutEngine() ? _diagram.layoutEngine().layoutAlgorithm() : 'cola';
         if(!skipWarning)
-            console.warn('dc.graph.diagram.layoutAlgorithm is depecrated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
+            console.warn('dc.graph.diagram.layoutAlgorithm is deprecated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
 
         var engine;
         switch(value) {
@@ -4176,6 +4194,7 @@ dc_graph.diagram = function (parent, chartGroup) {
                 }
                 n.cola.x = rn.x;
                 n.cola.y = rn.y;
+                n.cola.z = rn.z;
             });
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
@@ -4229,23 +4248,32 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.layoutEngine().dispatch().end(wnodes, wedges);
         else {
             _dispatch.start(); // cola doesn't seem to fire this itself?
-            _diagram.layoutEngine().data(
+            var engine = _diagram.layoutEngine();
+            engine.data(
                 { width: _diagram.width(), height: _diagram.height() },
                 wnodes.map(function(v) {
                     var lv = Object.assign({}, v.cola, v.dcg_shape);
-                    if(_diagram.layoutEngine().annotateNode)
-                        _diagram.layoutEngine().annotateNode(lv, v);
+                    if(engine.annotateNode)
+                        engine.annotateNode(lv, v);
+                    else if(engine.extractNodeAttrs)
+                        Object.keys(engine.extractNodeAttrs()).forEach(function(key) {
+                            lv[key] = engine.extractNodeAttrs()[key](v.orig);
+                        });
                     return lv;
                 }),
                 layout_edges.map(function(e) {
                     var le = e.cola;
-                    if(_diagram.layoutEngine().annotateEdge)
-                        _diagram.layoutEngine().annotateEdge(le, e);
+                    if(engine.annotateEdge)
+                        engine.annotateEdge(le, e);
+                    else if(engine.extractEdgeAttrs)
+                        Object.keys(engine.extractEdgeAttrs()).forEach(function(key) {
+                            le[key] = engine.extractEdgeAttrs()[key](e.orig);
+                        });
                     return le;
                 }),
                 constraints
             );
-            _diagram.layoutEngine().start();
+            engine.start();
         }
         return this;
     };
@@ -4871,6 +4899,10 @@ dc_graph.render_svg = function() {
     var _animating = false; // do not refresh during animations
     var _zoom;
     var _renderer = {};
+
+    _renderer.rendererType = function() {
+        return 'svg';
+    };
 
     _renderer.parent = property(null);
 
@@ -5725,6 +5757,198 @@ dc_graph.render_svg = function() {
 };
 
 
+dc_graph.render_webgl = function() {
+    //var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
+    var _camera, _scene, _webgl_renderer;
+    var _directionalLight, _ambientLight;
+    var _controls;
+    var _sphereGeometry, _edgeMaterial;
+    var _animating = false; // do not refresh during animations
+    var _renderer = {};
+
+    _renderer.rendererType = function() {
+        return 'webgl';
+    };
+
+    _renderer.parent = property(null);
+
+    _renderer.isRendered = function() {
+        return !!_camera;
+    };
+
+    _renderer.resize = function(w, h) {
+        return _renderer;
+    };
+
+    _renderer.rezoom = function(oldWidth, oldHeight, newWidth, newHeight) {
+        return _renderer;
+    };
+
+    _renderer.globalTransform = function(pos, scale, animate) {
+        return _renderer;
+    };
+
+    _renderer.translate = function(_) {
+        if(!arguments.length)
+            return [0,0];
+        return _renderer;
+    };
+
+    _renderer.scale = function(_) {
+        if(!arguments.length)
+            return 1;
+        return _renderer;
+    };
+
+    // argh
+    _renderer.commitTranslateScale = function() {
+    };
+
+    _renderer.initializeDrawing = function () {
+        _camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+        _camera.up = new THREE.Vector3(0, 0, 1);
+
+        _scene = new THREE.Scene();
+
+        _sphereGeometry = new THREE.SphereBufferGeometry(10, 32, 32);
+        _edgeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1 });
+
+        _directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        _directionalLight.position.set(-1, -1, 1).normalize();
+        _scene.add(_directionalLight);
+
+        _ambientLight = new THREE.AmbientLight(0xaaaaaa);
+        _scene.add(_ambientLight);
+
+        _webgl_renderer = new THREE.WebGLRenderer({ antialias: true });
+        _webgl_renderer.setPixelRatio(window.devicePixelRatio);
+        var boundRect = _renderer.parent().root().node().getBoundingClientRect();
+        _webgl_renderer.setSize(boundRect.width, boundRect.height);
+        _renderer.parent().root().node().appendChild(_webgl_renderer.domElement);
+
+        _controls = new THREE.OrbitControls(_camera, _webgl_renderer.domElement);
+        _controls.minDistance = 300;
+        _controls.maxDistance = 1000;
+        return _renderer;
+    };
+
+    _renderer.startRedraw = function(dispatch, wnodes, wedges) {
+        wnodes.forEach(infer_shape(_renderer.parent()));
+        return {wnodes: wnodes, wedges: wedges};
+    };
+
+    _renderer.draw = function(drawState, animatePositions) {
+        drawState.wedges.forEach(function(e) {
+            if(!e.pos.old)
+                _renderer.parent().calcEdgePath(e, 'old', e.source.prevX || e.source.cola.x, e.source.prevY || e.source.cola.y,
+                                                e.target.prevX || e.target.cola.x, e.target.prevY || e.target.cola.y);
+            if(!e.pos.new)
+                _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
+        });
+
+        var MULT = 3;
+        drawState.wnodes.forEach(function(n, i) {
+            var color = _renderer.parent().nodeFill.eval(n);
+            if(_renderer.parent().nodeFillScale())
+                color = _renderer.parent().nodeFillScale()(color);
+            // it better be 6 byte hex RGB
+            if(color.length !== 7 || color[0] !== '#') {
+                console.warn("don't know how to use color " + color);
+                color = '#888888';
+            }
+            var cint = parseInt(color.slice(1), 16);
+            var material = new THREE.MeshLambertMaterial({color: cint});
+            var sphere = new THREE.Mesh(_sphereGeometry, material);
+            sphere.position.x = n.cola.x * MULT;
+            sphere.position.y = -n.cola.y * MULT;
+            sphere.position.z = n.cola.z * MULT || 0;
+            _scene.add(sphere);
+        });
+
+        var xext = d3.extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
+            yext = d3.extent(drawState.wnodes, function(n) { return -n.cola.y * MULT; }),
+            zext = d3.extent(drawState.wnodes, function(n) { return n.cola.z * MULT || 0; });
+        var cx = (xext[0] + xext[1])/2,
+            cy = (yext[0] + yext[1])/2,
+            cz = (zext[0] + zext[1])/2;
+
+        _controls.target.set(cx, cy, cz);
+        _controls.update();
+
+        var vertices = [];
+        drawState.wedges.forEach(function(e) {
+            if(!e.source || !e.target)
+                return;
+            var a = e.source.cola, b = e.target.cola;
+            vertices.push(a.x*MULT, -a.y*MULT, a.z*MULT || 0,
+                          b.x*MULT, -b.y*MULT, b.z*MULT || 0);
+        });
+        var lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        var line = new THREE.LineSegments(lineGeometry, _edgeMaterial);
+        _scene.add(line);
+
+        animate();
+        return _renderer;
+    };
+
+    function animate() {
+        window.requestAnimationFrame(animate);
+        render();
+    }
+
+    function render() {
+        _webgl_renderer.render(_scene, _camera);
+    }
+
+    _renderer.drawPorts = function(drawState) {
+        var nodePorts = _renderer.parent().nodePorts();
+        if(!nodePorts)
+            return;
+        _renderer.parent().portStyle.enum().forEach(function(style) {
+            var nodePorts2 = {};
+            for(var nid in nodePorts)
+                nodePorts2[nid] = nodePorts[nid].filter(function(p) {
+                    return _renderer.parent().portStyleName.eval(p) === style;
+                });
+            // not implemented
+            var port = _renderer.selectNodePortsOfStyle(drawState.node, style);
+            //_renderer.parent().portStyle(style).drawPorts(port, nodePorts2, drawState.node);
+        });
+    };
+
+    _renderer.fireTSEvent = function(dispatch, drawState) {
+        dispatch.transitionsStarted(null);
+    };
+
+    _renderer.calculateBounds = function(drawState) {
+        if(!drawState.wnodes.length)
+            return null;
+        return _renderer.parent().calculateBounds(drawState.wnodes, drawState.wedges);
+    };
+
+    _renderer.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
+        if(_animating)
+            return _renderer; // but what about changed attributes?
+        return _renderer;
+    };
+
+    _renderer.reposition = function(node, edge) {
+        return _renderer;
+    };
+
+    function has_source_and_target(e) {
+        return !!e.source && !!e.target;
+    }
+
+    _renderer.animating = function() {
+        return _animating;
+    };
+
+    return _renderer;
+};
+
+
 dc_graph.spawn_engine = function(layout, args, worker) {
     args = args || {};
     worker = worker && !!window.Worker;
@@ -5779,6 +6003,12 @@ dc_graph._engines = [
         name: 'manual',
         instantiate: function() {
             return dc_graph.manual_layout();
+        }
+    },
+    {
+        name: 'layered',
+        instantiate: function() {
+            return dc_graph.layered_layout();
         }
     }
 ];
@@ -6308,7 +6538,7 @@ dc_graph.cola_layout = function(id) {
                 .concat(graphviz_keys);
         },
         passThru: function() {
-            return ['annotateNode', 'annotateEdge', 'extractNodeAttrs', 'extractEdgeAttrs'];
+            return ['extractNodeAttrs', 'extractEdgeAttrs'];
         },
         propagateOptions: function(options) {
             if(!options.nodeAttrs)
@@ -6318,16 +6548,6 @@ dc_graph.cola_layout = function(id) {
         },
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
-        annotateNode: function(lv, v) {
-            Object.keys(engine.extractNodeAttrs()).forEach(function(key) {
-                lv[key] = engine.extractNodeAttrs()[key](v.orig);
-            });
-        },
-        annotateEdge: function(le, e) {
-            Object.keys(engine.extractEdgeAttrs()).forEach(function(key) {
-                le[key] = engine.extractEdgeAttrs()[key](e.orig);
-            });
-        },
         /**
          * Instructs cola.js to fit the connected components.
          * @method handleDisconnected
@@ -7195,7 +7415,7 @@ dc_graph.d3v4_force_layout = function(id) {
         );
     }
 
-    function data(nodes, edges, constraints) {
+    function data(nodes, edges) {
         var nodeIDs = {};
         nodes.forEach(function(d, i) {
             nodeIDs[d.dcg_nodeKey] = i;
@@ -7668,6 +7888,209 @@ dc_graph.manual_layout = function(id) {
 };
 
 dc_graph.manual_layout.scripts = ['css-layout.js'];
+
+/**
+ * `dc_graph.layered_layout` produces 3D layered layouts, utilizing another layout
+ * that supports fixed nodes and position hints for the layers
+ * @class layered_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.layered_layout}
+ **/
+dc_graph.layered_layout = function(id) {
+    var _layoutId = id || uuid();
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _supergraph, _subgraphs;
+    var _options = null;
+
+    function init(options) {
+        _options = options;
+
+    }
+
+    function data(nodes, edges, constraints) {
+        _supergraph = dc_graph.supergraph({nodes: nodes, edges: edges}, {
+            nodeKey: function(n) { return n.dcg_nodeKey; },
+            edgeKey: function(n) { return n.dcg_edgeKey; },
+            nodeValue: function(n) { return n; },
+            edgeValue: function(e) { return e; },
+            edgeSource: function(e) { return e.dcg_edgeSource; },
+            edgeTarget: function(e) { return e.dcg_edgeTarget; }
+        });
+
+        // every node belongs natively in one rank
+        var nranks = _supergraph.nodes().reduce(function(p, n) {
+            var rank = engine.layerAccessor()(n.value());
+            p[rank] = p[rank] || [];
+            p[rank].push(n);
+            return p;
+        }, {});
+        var eranks = Object.keys(nranks).reduce(function(p, r) {
+            p[r] = [];
+            return p;
+        }, {});
+
+        // nodes are shadowed into any layers to which they are adjacent
+        // edges are induced from the native&shadow nodes in each layer
+        _supergraph.edges().forEach(function(e) {
+            var srank = engine.layerAccessor()(e.source().value()),
+                trank = engine.layerAccessor()(e.target().value());
+            if(srank == trank) {
+                eranks[srank].push(e);
+                return;
+            }
+            nranks[trank].push(e.source());
+            eranks[trank].push(e);
+            nranks[srank].push(e.target());
+            eranks[srank].push(e);
+        });
+
+        // produce a subgraph for each layer
+        _subgraphs = Object.keys(nranks).reduce(function(p, r) {
+            p[r] = _supergraph.subgraph(
+                nranks[r].map(function(n) { return n.key(); }),
+                eranks[r].map(function(e) { return e.key(); }));
+            return p;
+        }, {});
+
+        // start from the most populous layer
+        var max = null;
+        Object.keys(nranks).forEach(function(r) {
+            if(max === null ||
+               _subgraphs[r].nodes().length > _subgraphs[max].nodes().length)
+                max = +r;
+        });
+
+        // travel up and down from there, each time fixing the nodes from the last layer
+        var ranks = Object.keys(nranks).map(function(r) { return +r; }).sort();
+        var mi = ranks.indexOf(max);
+        var ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
+        layout_layer(max, -1).then(function(layout) {
+            Promise.all([
+                layout_layers(layout, max, ups),
+                layout_layers(layout, max, downs)
+            ]).then(function() {
+                _dispatch.end(
+                    _supergraph.nodes().map(function(n) { return n.value(); }),
+                    _supergraph.edges().map(function(e) { return e.value(); }));
+            });
+        });
+    }
+
+    function layout_layers(layout, last, layers) {
+        if(layers.length === 0)
+            return Promise.resolve(layout);
+        var curr = layers.shift();
+        return layout_layer(curr, last).then(function(layout) {
+            return layout_layers(layout, curr, layers);
+        });
+    }
+
+    function layout_layer(r, last) {
+        _subgraphs[r].nodes().forEach(function(n) {
+            if(engine.layerAccessor()(n.value()) !== r &&
+               n.value().x !== undefined &&
+               n.value().y !== undefined)
+                n.value().dcg_nodeFixed = {
+                    x: n.value().x,
+                    y: n.value().y
+                };
+            else n.value().dcg_nodeFixed = null;
+        });
+        var subengine = engine.engineFactory()();
+        subengine.init(_options);
+        subengine.data(
+            {},
+            _subgraphs[r].nodes().map(function(n) {
+                return n.value();
+            }),
+            _subgraphs[r].edges().map(function(e) {
+                return e.value();
+            }));
+        return promise_layout(r, subengine);
+    }
+
+    function promise_layout(r, subengine) {
+        // stopgap - engine.start() should return a promise
+        return new Promise(function(resolve, reject) {
+            subengine.on('end', function(nodes, edges) {
+                resolve({nodes: nodes, edges: edges});
+            });
+            subengine.start();
+        }).then(function(layout) {
+            // copy positions back into the subgraph (and hence supergraph)
+            layout.nodes.forEach(function(ln) {
+                var n = _subgraphs[r].node(ln.dcg_nodeKey);
+                // do not copy positions for shadow nodes
+                if(engine.layerAccessor()(n.value()) !== r)
+                    return;
+                n.value().x = ln.x;
+                n.value().y = ln.y;
+                n.value().z = -r * engine.layerSeparationZ(); // lowest rank at top
+            });
+            return layout;
+        });
+    }
+
+    function start() {
+        _dispatch.start();
+    }
+
+    function stop() {
+    }
+
+    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+
+    var engine = Object.assign(graphviz, {
+        layoutAlgorithm: function() {
+            return 'layered';
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        supportsWebworker: function() {
+            return false;
+        },
+        parent: property(null),
+        on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
+        },
+        start: function() {
+            start();
+        },
+        stop: function() {
+            stop();
+        },
+        optionNames: function() {
+            return []
+                .concat(graphviz_keys);
+        },
+        engineFactory: property(null),
+        layerAccessor: property(null),
+        layerSeparationZ: property(50),
+        populateLayoutNode: function() {},
+        populateLayoutEdge: function() {},
+        extractNodeAttrs: property({}), // {attr: function(node)}
+        extractEdgeAttrs: property({})
+    });
+    engine.pathStraightenForce = engine.angleForce;
+    return engine;
+};
+
+
 
 function port_name(nodeId, edgeId, portName) {
     if(!(nodeId || edgeId))
@@ -8348,6 +8771,8 @@ dc_graph.legend = function(legend_namespace) {
     var _dispatch = d3.dispatch('filtered');
     var _totals, _counts;
 
+    var _svg_renderer;
+
     function apply_filter() {
         if(_legend.dimension()) {
             if(_legend.isTagDimension()) {
@@ -8366,6 +8791,7 @@ dc_graph.legend = function(legend_namespace) {
     }
 
     var _legend = dc_graph.mode(legend_namespace, {
+        renderers: ['svg', 'webgl'],
         draw: redraw,
         remove: function() {},
         parent: function(p) {
@@ -8463,7 +8889,7 @@ dc_graph.legend = function(legend_namespace) {
 
     _legend.redraw = deprecate_function("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
     function redraw() {
-        var legend = _legend.parent().svg()
+        var legend = (_svg_renderer || _legend.parent()).svg()
                 .selectAll('g.dc-graph-legend.' + legend_namespace)
                 .data([0]);
         legend.enter().append('g')
@@ -8490,7 +8916,7 @@ dc_graph.legend = function(legend_namespace) {
             .text(function(d) {
                 return d.name + (_legend.counter() && _counts ? (' (' + (_counts[d.orig.key] || 0) + (_counts[d.orig.key] !== _totals[d.orig.key] ? '/' + (_totals[d.orig.key] || 0) : '') + ')') : '');
             });
-        _legend.type().draw(_legend.parent(), itemEnter, item);
+        _legend.type().draw(_svg_renderer || _legend.parent(), itemEnter, item);
         if(_legend.noLabel())
             item.selectAll(_legend.type().labelSelector()).remove();
 
@@ -8560,6 +8986,20 @@ dc_graph.legend = function(legend_namespace) {
 
     _legend.render = deprecate_function("dc_graph.legend is an ordinary mode now; render will go away soon", render);
     function render() {
+        if(_legend.parent().renderer().rendererType() !== 'svg') {
+            _svg_renderer = dc_graph.render_svg();
+            _svg_renderer.parent(_legend.parent())
+                .svg(_legend.parent().root().append('svg')
+                     .style({
+                         position: 'absolute',
+                         left: 0, top: 0,
+                         width: '100%', height: '100%',
+                         fill: 'wheat',
+                         'pointer-events': 'none'
+                     }));
+        }
+
+
         var exemplars = _legend.exemplars();
         _legend.countBaseline();
         if(exemplars instanceof Array) {
@@ -8574,7 +9014,7 @@ dc_graph.legend = function(legend_namespace) {
     };
 
     _legend.dropdown = property(null).react(function(v) {
-        if(!!v !== !!_legend.dropdown() && _legend.parent() && _legend.parent().svg())
+        if(!!v !== !!_legend.dropdown() && _legend.parent() && (_svg_renderer || _legend.parent()).svg())
             window.setTimeout(_legend.redraw, 0);
     });
 
@@ -8604,8 +9044,8 @@ dc_graph.legend.node_legend = function() {
             return selection.append('g')
                 .attr('class', 'node');
         },
-        draw: function(diagram, itemEnter, item) {
-            diagram
+        draw: function(renderer, itemEnter, item) {
+            renderer
                 .renderNode(itemEnter)
                 .redrawNode(item);
         }
@@ -8662,8 +9102,8 @@ dc_graph.legend.edge_legend = function() {
         },
         fakeNodeRadius: property(10),
         length: property(50),
-        draw: function(diagram, itemEnter, item) {
-            diagram.redrawEdge(itemEnter.select('path.edge'), diagram.renderer().selectAllEdges('.edge-arrows'));
+        draw: function(renderer, itemEnter, item) {
+            renderer.redrawEdge(itemEnter.select('path.edge'), renderer.selectAllEdges('.edge-arrows'));
         }
     };
     return _type;
@@ -8682,7 +9122,7 @@ dc_graph.legend.symbol_legend = function(symbolScale) {
                 .attr('class', 'symbol');
             return symbolEnter;
         },
-        draw: function(diagram, symbolEnter, symbol) {
+        draw: function(renderer, symbolEnter, symbol) {
             symbolEnter.append('text')
                 .html(function(d) {
                     return symbolScale(d.orig.key);
@@ -9027,14 +9467,15 @@ dc_graph.mode = function(event_namespace, options) {
     var _mode = {};
     var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
     var draw = options.draw, remove = options.remove;
+    var supported_renderers = options.renderers || ['svg'];
 
     if(!draw) {
-        console.warn('behavior.draw has been replaced by mode.draw');
-        draw = options.draw;
+        console.warn('behavior.add_behavior has been replaced by mode.draw');
+        draw = options.add_behavior;
     }
     if(!remove) {
-        console.warn('behavior.remove has been replaced by mode.remove');
-        remove = options.remove;
+        console.warn('behavior.remove_behavior has been replaced by mode.remove');
+        remove = options.remove_behavior;
     }
 
     /**
@@ -9057,7 +9498,11 @@ dc_graph.mode = function(event_namespace, options) {
                         options.rest(diagram, node, edge, ehover);
                 });
                 p.on('reset.' + event_namespace, function() {
-                    remove(diagram, diagram.selectAllNodes(), diagram.selectAllEdges(), diagram.selectAllEdges('.edge-hover'));
+                    var rend = diagram.renderer(),
+                        node = rend.selectAllNodes ? rend.selectAllNodes() : null,
+                        edge = rend.selectAllEdges ? rend.selectAllEdges() : null,
+                        edgeHover = rend.selectAllEdges ? rend.selectAllEdges('.edge-hover') : null;
+                    remove(diagram, node, edge, edgeHover);
                 });
             }
             else if(_mode.parent()) {
@@ -9069,6 +9514,11 @@ dc_graph.mode = function(event_namespace, options) {
             }
             options.parent && options.parent(p);
         });
+
+    _mode.supportsRenderer = function(rendererType) {
+        return supported_renderers.includes(rendererType);
+    };
+
     return _mode;
 };
 
@@ -14413,6 +14863,33 @@ dc_graph.random_graph = function(options) {
             }
         }
     };
+};
+
+dc_graph.supergraph = function(data, options) {
+    if(!dc_graph.supergraph.pattern) {
+        var mg = metagraph;
+        var graph_and_subgraph = {
+            nodes: {
+                graph: mg.graph_pattern(options),
+                sg: mg.subgraph_pattern(options),
+                subgraph: mg.graph_pattern(options)
+            },
+            edges: {
+                to_sg: {
+                    source: 'graph',
+                    target: 'sg',
+                    input: 'parent'
+                },
+                from_sg: {
+                    source: 'subgraph',
+                    target: 'sg',
+                    input: 'child'
+                }
+            }
+        };
+        dc_graph.supergraph.pattern = mg.compose(mg.graph_detect(graph_and_subgraph));
+    }
+    return dc_graph.supergraph.pattern.node('graph.Graph').value().create(data);
 };
 
 var dont_use_key = deprecation_warning('dc_graph.line_breaks now takes a string - d.key behavior is deprecated and will be removed in a later version');
