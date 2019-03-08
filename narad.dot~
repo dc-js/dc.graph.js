@@ -17,7 +17,7 @@ n35 [label="Vlan
 n100 [label="BgpNeighbor
 (bgp-neighbor-id)", URL="http://envy15.research.att.com:8089/extract/BgpNeighbor.html", shape=ellipse];
 n7 [label="Cable
-(cable-name)", URL="http://envy15.research.att.com:8089/extract/Cable.html", shape=ellipse, htmltip="<h2>Surprise!</h2>"];
+(cable-name)", URL="http://envy15.research.att.com:8089/extract/Cable.html", shape=ellipse];
 n21 [label="PluggableSlot
 (slot-name)", URL="http://envy15.research.att.com:8089/extract/PluggableSlot.html", shape=ellipse];
 n66 [label="Project

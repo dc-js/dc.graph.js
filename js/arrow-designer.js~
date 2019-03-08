@@ -1,0 +1,44 @@
+var options = {
+    file: null,
+    tickSize: 1,
+    transition: 1000,
+    stage: 'insmod',
+    linkLength: 30,
+    layout: 'cola',
+    timeLimit: 10000,
+    start: null,
+    directional: false,
+    bigzoom: false,
+    rndarrow: null,
+    edgeCat: null,
+    edgeExpn: null,
+    expanded: {
+        default: [],
+        subscribe: function(k) {
+            var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
+            expanded_highlight_group.on('highlight.sync-url', function(nodeset, edgeset) {
+                k(Object.keys(nodeset).filter(function(nk) {
+                    return nodeset[nk];
+                }));
+            });
+        },
+        dont_exert_after_subscribe: true,
+        exert: function(val, diagram) {
+            expand_collapse
+                .expandNodes(val);
+        }
+    }
+};
+var diagram = dc_graph.diagram('#graph');
+var sync_url = sync_url_options(options, dcgraph_domain(diagram), diagram);
+
+var nodes = [
+    {
+        key: 'tail',
+        value: {}
+    },
+    {
+        key: 'head',
+        value: {}
+    }
+]

@@ -1,0 +1,14 @@
+.dc-graph text.node-label {
+    font: 10px helvetica, san-serif;
+    text-anchor: middle;
+    pointer-events: none;
+}
+
+.edge-label {
+    visibility: visible;
+}
+
+#graph {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+}
