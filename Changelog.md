@@ -1,3 +1,7 @@
+## 0.8.5
+* filtering works with the WebGL renderer. (still no animations)
+* webgl edges are extruded as tubes and colored
+
 ## 0.8.4
 * many caveats, but this has the first working WebGL renderer and a layered layout (no animations, can't re-render, can't filter etc etc)
 

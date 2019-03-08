@@ -3,7 +3,8 @@ dc_graph.render_webgl = function() {
     var _camera, _scene, _webgl_renderer;
     var _directionalLight, _ambientLight;
     var _controls;
-    var _sphereGeometry, _edgeMaterial;
+    var _sphereGeometry;
+    var _nodes = {}, _edges = {};
     var _animating = false; // do not refresh during animations
     var _renderer = {};
 
@@ -52,7 +53,6 @@ dc_graph.render_webgl = function() {
         _scene = new THREE.Scene();
 
         _sphereGeometry = new THREE.SphereBufferGeometry(10, 32, 32);
-        _edgeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 1 });
 
         _directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         _directionalLight.position.set(-1, -1, 1).normalize();
@@ -75,8 +75,37 @@ dc_graph.render_webgl = function() {
 
     _renderer.startRedraw = function(dispatch, wnodes, wedges) {
         wnodes.forEach(infer_shape(_renderer.parent()));
-        return {wnodes: wnodes, wedges: wedges};
+        var rnodes = regenerate_objects(_nodes, wnodes, null, function(n) {
+            return _renderer.parent().nodeKey.eval(n);
+        }, function(rn, n) {
+            rn.wnode = n;
+        }, null, function(wnode, rnode) {
+            _scene.remove(rnode.mesh);
+            //rnode.mesh.dispose();
+            rnode.material.dispose();
+        });
+        var redges = regenerate_objects(_edges, wedges, null, function(e) {
+            return _renderer.parent().edgeKey.eval(e);
+        }, function(re, e) {
+            re.wedge = e;
+        }, null, function(wedge, redge) {
+            _scene.remove(redge.mesh);
+            //redge.mesh.dispose();
+            redge.geometry.dispose();
+            redge.material.dispose();
+        });
+        animate();
+        return {wnodes: wnodes, wedges: wedges, rnodes: rnodes, redges: redges};
     };
+
+    function color_to_int(color) {
+        // it better be 6 byte hex RGB
+        if(color.length !== 7 || color[0] !== '#') {
+            console.warn("don't know how to use color " + color);
+            color = '#888888';
+        }
+        return parseInt(color.slice(1), 16);
+    }
 
     _renderer.draw = function(drawState, animatePositions) {
         drawState.wedges.forEach(function(e) {
@@ -88,22 +117,23 @@ dc_graph.render_webgl = function() {
         });
 
         var MULT = 3;
-        drawState.wnodes.forEach(function(n, i) {
-            var color = _renderer.parent().nodeFill.eval(n);
-            if(_renderer.parent().nodeFillScale())
-                color = _renderer.parent().nodeFillScale()(color);
-            // it better be 6 byte hex RGB
-            if(color.length !== 7 || color[0] !== '#') {
-                console.warn("don't know how to use color " + color);
-                color = '#888888';
+        drawState.rnodes.forEach(function(rn) {
+            var color = _renderer.parent().nodeFill.eval(rn.wnode);
+            var add = false;
+            if(!rn.mesh) {
+                add = true;
+                if(_renderer.parent().nodeFillScale())
+                    color = _renderer.parent().nodeFillScale()(color);
+                var cint = color_to_int(color);
+                rn.material = new THREE.MeshLambertMaterial({color: cint});
+                rn.mesh = new THREE.Mesh(_sphereGeometry, rn.material);
+                rn.mesh.name = _renderer.parent().nodeKey.eval(rn.wnode);
             }
-            var cint = parseInt(color.slice(1), 16);
-            var material = new THREE.MeshLambertMaterial({color: cint});
-            var sphere = new THREE.Mesh(_sphereGeometry, material);
-            sphere.position.x = n.cola.x * MULT;
-            sphere.position.y = -n.cola.y * MULT;
-            sphere.position.z = n.cola.z * MULT || 0;
-            _scene.add(sphere);
+            rn.mesh.position.x = rn.wnode.cola.x * MULT;
+            rn.mesh.position.y = -rn.wnode.cola.y * MULT;
+            rn.mesh.position.z = rn.wnode.cola.z * MULT || 0;
+            if(add)
+                _scene.add(rn.mesh);
         });
 
         var xext = d3.extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
@@ -117,19 +147,35 @@ dc_graph.render_webgl = function() {
         _controls.update();
 
         var vertices = [];
-        drawState.wedges.forEach(function(e) {
-            if(!e.source || !e.target)
+        drawState.redges.forEach(function(re) {
+            if(!re.wedge.source || !re.wedge.target)
                 return;
-            var a = e.source.cola, b = e.target.cola;
-            vertices.push(a.x*MULT, -a.y*MULT, a.z*MULT || 0,
-                          b.x*MULT, -b.y*MULT, b.z*MULT || 0);
+            var a = re.wedge.source.cola, b = re.wedge.target.cola;
+            var add = false;
+            if(!re.mesh) {
+                add = true;
+                var color = _renderer.parent().edgeStroke.eval(re.wedge);
+                var cint = color_to_int(color);
+                re.material = new THREE.MeshLambertMaterial({ color: cint });
+                re.curve = new THREE.LineCurve3(
+                    new THREE.Vector3(a.x*MULT, -a.y*MULT, a.z*MULT || 0),
+                    new THREE.Vector3(b.x*MULT, -b.y*MULT, b.z*MULT || 0));
+                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, 1, 8, false);
+                re.mesh = new THREE.Mesh(re.geometry, re.material);
+                re.mesh.name = _renderer.parent().edgeKey.eval(re.wedge);
+            } else {
+                re.curve = new THREE.LineCurve3(
+                    new THREE.Vector3(a.x*MULT, -a.y*MULT, a.z*MULT || 0),
+                    new THREE.Vector3(b.x*MULT, -b.y*MULT, b.z*MULT || 0));
+                re.geometry.dispose();
+                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, 1, 8, false);
+                re.mesh.geometry = re.geometry;
+            }
+            if(add)
+                _scene.add(re.mesh);
         });
-        var lineGeometry = new THREE.BufferGeometry();
-        lineGeometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        var line = new THREE.LineSegments(lineGeometry, _edgeMaterial);
-        _scene.add(line);
-
-        animate();
+        _animating = false;
+        _renderer.parent().layoutDone(true);
         return _renderer;
     };
 
