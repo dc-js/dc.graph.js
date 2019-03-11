@@ -11,7 +11,7 @@ dc_graph.annotate_layers = function() {
         if(rendererType === 'svg') {
             var engine = _mode.parent().layoutEngine();
             if(engine.layoutAlgorithm() === 'cola' &&
-               engine.setcolaSpec()) {
+               engine.setcolaSpec() && engine.setcolaNodes()) {
                 _drawLayer = _mode.parent().select('g.draw').selectAll('g.divider-layer').data([0]);
                 _drawLayer.enter().append('g').attr('class', 'divider-layer');
                 var boundary_nodes = engine.setcolaNodes().filter(function(n) {
