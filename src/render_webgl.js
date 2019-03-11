@@ -152,6 +152,7 @@ dc_graph.render_webgl = function() {
                 return;
             var a = re.wedge.source.cola, b = re.wedge.target.cola;
             var add = false;
+            var width = _renderer.parent().edgeStrokeWidth.eval(re.wedge);
             if(!re.mesh) {
                 add = true;
                 var color = _renderer.parent().edgeStroke.eval(re.wedge);
@@ -160,7 +161,7 @@ dc_graph.render_webgl = function() {
                 re.curve = new THREE.LineCurve3(
                     new THREE.Vector3(a.x*MULT, -a.y*MULT, a.z*MULT || 0),
                     new THREE.Vector3(b.x*MULT, -b.y*MULT, b.z*MULT || 0));
-                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, 1, 8, false);
+                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, width/2, 8, false);
                 re.mesh = new THREE.Mesh(re.geometry, re.material);
                 re.mesh.name = _renderer.parent().edgeKey.eval(re.wedge);
             } else {
@@ -168,7 +169,7 @@ dc_graph.render_webgl = function() {
                     new THREE.Vector3(a.x*MULT, -a.y*MULT, a.z*MULT || 0),
                     new THREE.Vector3(b.x*MULT, -b.y*MULT, b.z*MULT || 0));
                 re.geometry.dispose();
-                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, 1, 8, false);
+                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, width/2, 8, false);
                 re.mesh.geometry = re.geometry;
             }
             if(add)
