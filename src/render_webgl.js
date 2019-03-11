@@ -106,6 +106,7 @@ dc_graph.render_webgl = function() {
         }
         return parseInt(color.slice(1), 16);
     }
+    _renderer.color_to_int = color_to_int;
 
     _renderer.draw = function(drawState, animatePositions) {
         drawState.wedges.forEach(function(e) {
