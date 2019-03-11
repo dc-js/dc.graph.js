@@ -109,7 +109,8 @@ dc_graph.cola_layout = function(id) {
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
-                })
+                }),
+                _setcola_nodes
             );
         }
         _d3cola.on('tick', /* _tick = */ function() {
@@ -194,7 +195,7 @@ dc_graph.cola_layout = function(id) {
         },
         optionNames: function() {
             return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout',
-                    'tickSize', 'groupConnected', 'setcolaSpec']
+                    'tickSize', 'groupConnected', 'setcolaSpec', 'setcolaNodes']
                 .concat(graphviz_keys);
         },
         passThru: function() {
@@ -288,7 +289,10 @@ dc_graph.cola_layout = function(id) {
             return _setcola_nodes;
         },
         extractNodeAttrs: property({}), // {attr: function(node)}
-        extractEdgeAttrs: property({})
+        extractEdgeAttrs: property({}),
+        processExtraWorkerResults: function(setcolaNodes) {
+            _setcola_nodes = setcolaNodes;
+        }
     });
     return engine;
 };
