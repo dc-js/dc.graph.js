@@ -1321,6 +1321,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.svg = svg_specific('svg');
     _diagram.g = svg_specific('g');
+    _diagram.select = svg_specific('select');
     _diagram.selectAll = svg_specific('selectAll');
     _diagram.addOrRemoveDef = svg_specific('addOrRemoveDef');
     _diagram.selectAllNodes = svg_specific('selectAllNodes');

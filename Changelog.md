@@ -1,3 +1,11 @@
+## 0.8.6
+* `annotate_layers` draws lines between setcola layers, and planes in 3d layered layout
+* `dc_graph.mode` passes through draw arguments rather than assuming it's an SVG event
+* webworker allows passing data back from layout thread to client engine via `processExtraWorkerResults`
+* `cola_layout` exposes the extra layout nodes via `setcolaNodes`
+* `diagram.select()` was missing
+* webgl edge tubes use `edgeStrokeWidth` for circumference
+
 ## 0.8.5
 * filtering works with the WebGL renderer. (still no animations)
 * webgl edges are extruded as tubes and colored

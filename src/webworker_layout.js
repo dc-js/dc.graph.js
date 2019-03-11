@@ -9,6 +9,9 @@ function create_worker(layoutAlgorithm) {
             var layoutId = e.data.layoutId;
             if(!worker.layouts[layoutId])
                 throw new Error('layoutId "' + layoutId + '" unknown!');
+            var engine = worker.layouts[layoutId].getEngine();
+            if(e.data.args.length > 2 && engine.processExtraWorkerResults)
+                engine.processExtraWorkerResults.apply(engine, e.data.args.slice(2));
             worker.layouts[layoutId].dispatch()[e.data.response].apply(null, e.data.args);
         };
     }

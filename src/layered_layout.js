@@ -10,6 +10,7 @@ dc_graph.layered_layout = function(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _supergraph, _subgraphs;
+    var _layers;
     var _options = null;
 
     function init(options) {
@@ -72,6 +73,12 @@ dc_graph.layered_layout = function(id) {
 
         // travel up and down from there, each time fixing the nodes from the last layer
         var ranks = Object.keys(nranks).map(function(r) { return +r; }).sort();
+        _layers = ranks.map(function(r) {
+            return {
+                rank: r,
+                z: -r * engine.layerSeparationZ()
+            };
+        });
         var mi = ranks.indexOf(max);
         var ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
         layout_layer(max, -1).then(function(layout) {
@@ -190,6 +197,9 @@ dc_graph.layered_layout = function(id) {
         engineFactory: property(null),
         layerAccessor: property(null),
         layerSeparationZ: property(50),
+        layers: function() {
+            return _layers;
+        },
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
         extractNodeAttrs: property({}), // {attr: function(node)}

@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.5
+ *  dc.graph 0.8.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.5
+ * @version 0.8.6
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.5',
+    version: '0.8.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -541,6 +541,7 @@ dc_graph.snapshot_graphviz = function(diagram) {
 dc_graph.cola_layout = function(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
+    var _setcola_nodes;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _flowLayout;
     // node and edge objects shared with cola.js, preserved from one iteration
@@ -641,7 +642,8 @@ dc_graph.cola_layout = function(id) {
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
-                })
+                }),
+                _setcola_nodes
             );
         }
         _d3cola.on('tick', /* _tick = */ function() {
@@ -661,6 +663,7 @@ dc_graph.cola_layout = function(id) {
                 .gap(10) //default value is 10, can be customized in setcolaSpec
                 .layout();
 
+            _setcola_nodes = setcola_result.nodes.filter(function(n) { return n._cid; });
             _d3cola.nodes(setcola_result.nodes)
                 .links(setcola_result.links)
                 .constraints(setcola_result.constraints)
@@ -725,7 +728,7 @@ dc_graph.cola_layout = function(id) {
         },
         optionNames: function() {
             return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout',
-                    'tickSize', 'groupConnected', 'setcolaSpec']
+                    'tickSize', 'groupConnected', 'setcolaSpec', 'setcolaNodes']
                 .concat(graphviz_keys);
         },
         passThru: function() {
@@ -815,8 +818,14 @@ dc_graph.cola_layout = function(id) {
         tickSize: property(1),
         groupConnected: property(false),
         setcolaSpec: property(null),
+        setcolaNodes: function() {
+            return _setcola_nodes;
+        },
         extractNodeAttrs: property({}), // {attr: function(node)}
-        extractEdgeAttrs: property({})
+        extractEdgeAttrs: property({}),
+        processExtraWorkerResults: function(setcolaNodes) {
+            _setcola_nodes = setcolaNodes;
+        }
     });
     return engine;
 };
