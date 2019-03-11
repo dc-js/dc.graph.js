@@ -116,7 +116,7 @@ dc_graph.render_webgl = function() {
                 _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
         });
 
-        var MULT = 3;
+        var MULT = _renderer.multiplier();
         drawState.rnodes.forEach(function(rn) {
             var color = _renderer.parent().nodeFill.eval(rn.wnode);
             var add = false;
@@ -144,6 +144,7 @@ dc_graph.render_webgl = function() {
             cz = (zext[0] + zext[1])/2;
 
         drawState.center = [cx, cy, cz];
+        drawState.extents = [xext, yext, zext];
         _controls.target.set(cx, cy, cz);
         _controls.update();
 
@@ -233,6 +234,8 @@ dc_graph.render_webgl = function() {
     _renderer.animating = function() {
         return _animating;
     };
+
+    _renderer.multiplier = property(3);
 
     return _renderer;
 };

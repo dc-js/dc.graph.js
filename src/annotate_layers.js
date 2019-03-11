@@ -39,16 +39,18 @@ dc_graph.annotate_layers = function() {
                 });
             }
         } else if(rendererType === 'webgl') {
+            var MULT = _mode.parent().renderer().multiplier();
             var scene = arguments[1], drawState = arguments[2];
             if(engine.layoutAlgorithm() === 'layered' && engine.layers()) {
-                var sqLength = 500;
-                var squareShape = new THREE.Shape();
-                squareShape.moveTo(0, 0);
-                squareShape.lineTo(0, sqLength);
-                squareShape.lineTo(sqLength, sqLength);
-                squareShape.lineTo(sqLength, 0);
-                squareShape.lineTo(0, 0);
-                var geometry = new THREE.ShapeBufferGeometry(squareShape);
+                var width = drawState.extents[0][1] - drawState.extents[0][0] + _mode.padding()*MULT*2,
+                    height = drawState.extents[1][1] - drawState.extents[1][0] + _mode.padding()*MULT*2;
+                var shape = new THREE.Shape();
+                shape.moveTo(0, 0);
+                shape.lineTo(0, height);
+                shape.lineTo(width, height);
+                shape.lineTo(width, 0);
+                shape.lineTo(0, 0);
+                var geometry = new THREE.ShapeBufferGeometry(shape);
 
                 engine.layers().forEach(function(layer) {
                     var mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
@@ -57,7 +59,9 @@ dc_graph.annotate_layers = function() {
                         color: 0xffffdd,
                         side: THREE.DoubleSide
                     }));
-                    mesh.position.set(drawState.center[0] - sqLength/2, drawState.center[1] - sqLength/2, layer.z*3);
+                    mesh.position.set(drawState.extents[0][0] - _mode.padding()*MULT,
+                                      drawState.extents[1][0] - _mode.padding()*MULT,
+                                      layer.z * MULT);
                     mesh.rotation.set(0, 0, 0);
                     scene.add(mesh);
                 });
@@ -72,5 +76,6 @@ dc_graph.annotate_layers = function() {
     _mode.stroke = property('black');
     _mode.strokeWidth = property(2);
     _mode.strokeDashArray = property([5,5]);
+    _mode.padding = property(5);
     return _mode;
 };
