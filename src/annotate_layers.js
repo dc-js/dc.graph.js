@@ -42,8 +42,8 @@ dc_graph.annotate_layers = function() {
             var MULT = _mode.parent().renderer().multiplier();
             var scene = arguments[1], drawState = arguments[2];
             if(engine.layoutAlgorithm() === 'layered' && engine.layers()) {
-                var width = drawState.extents[0][1] - drawState.extents[0][0] + _mode.padding()*MULT*2,
-                    height = drawState.extents[1][1] - drawState.extents[1][0] + _mode.padding()*MULT*2;
+                var width = drawState.extents[0][1] - drawState.extents[0][0] + _mode.planePadding()*MULT*2,
+                    height = drawState.extents[1][1] - drawState.extents[1][0] + _mode.planePadding()*MULT*2;
                 var shape = new THREE.Shape();
                 shape.moveTo(0, 0);
                 shape.lineTo(0, height);
@@ -54,13 +54,13 @@ dc_graph.annotate_layers = function() {
 
                 engine.layers().forEach(function(layer) {
                     var mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
-                        opacity: 0.2,
+                        opacity: _mode.planeOpacity(),
                         transparent: true,
-                        color: 0xffffdd,
+                        color: _mode.parent().renderer().color_to_int(_mode.planeColor()),
                         side: THREE.DoubleSide
                     }));
-                    mesh.position.set(drawState.extents[0][0] - _mode.padding()*MULT,
-                                      drawState.extents[1][0] - _mode.padding()*MULT,
+                    mesh.position.set(drawState.extents[0][0] - _mode.planePadding()*MULT,
+                                      drawState.extents[1][0] - _mode.planePadding()*MULT,
                                       layer.z * MULT);
                     mesh.rotation.set(0, 0, 0);
                     scene.add(mesh);
@@ -73,9 +73,14 @@ dc_graph.annotate_layers = function() {
             _drawLayer.remove();
     }
 
+    // line properties for svg
     _mode.stroke = property('black');
     _mode.strokeWidth = property(2);
     _mode.strokeDashArray = property([5,5]);
-    _mode.padding = property(5);
+
+    // plane properties
+    _mode.planePadding = property(5);
+    _mode.planeOpacity = property(0.2);
+    _mode.planeColor = property('#ffffdd');
     return _mode;
 };
