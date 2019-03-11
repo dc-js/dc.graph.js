@@ -368,6 +368,7 @@ module.exports.jsFiles = [
     'src/layered_layout.js',
     'src/place_ports.js',
     'src/grid.js',
+    'src/annotate_layers.js',
     'src/troubleshoot.js',
     'src/validate.js',
     'src/legend.js',
