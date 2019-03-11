@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.5
+ *  dc.graph 0.8.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.5
+ * @version 0.8.6
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.5',
+    version: '0.8.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3747,6 +3747,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.svg = svg_specific('svg');
     _diagram.g = svg_specific('g');
+    _diagram.select = svg_specific('select');
     _diagram.selectAll = svg_specific('selectAll');
     _diagram.addOrRemoveDef = svg_specific('addOrRemoveDef');
     _diagram.selectAllNodes = svg_specific('selectAllNodes');
@@ -5865,6 +5866,7 @@ dc_graph.render_webgl = function() {
         }
         return parseInt(color.slice(1), 16);
     }
+    _renderer.color_to_int = color_to_int;
 
     _renderer.draw = function(drawState, animatePositions) {
         drawState.wedges.forEach(function(e) {
@@ -5875,7 +5877,7 @@ dc_graph.render_webgl = function() {
                 _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
         });
 
-        var MULT = 3;
+        var MULT = _renderer.multiplier();
         drawState.rnodes.forEach(function(rn) {
             var color = _renderer.parent().nodeFill.eval(rn.wnode);
             var add = false;
@@ -5902,6 +5904,8 @@ dc_graph.render_webgl = function() {
             cy = (yext[0] + yext[1])/2,
             cz = (zext[0] + zext[1])/2;
 
+        drawState.center = [cx, cy, cz];
+        drawState.extents = [xext, yext, zext];
         _controls.target.set(cx, cy, cz);
         _controls.update();
 
@@ -5911,6 +5915,7 @@ dc_graph.render_webgl = function() {
                 return;
             var a = re.wedge.source.cola, b = re.wedge.target.cola;
             var add = false;
+            var width = _renderer.parent().edgeStrokeWidth.eval(re.wedge);
             if(!re.mesh) {
                 add = true;
                 var color = _renderer.parent().edgeStroke.eval(re.wedge);
@@ -5919,7 +5924,7 @@ dc_graph.render_webgl = function() {
                 re.curve = new THREE.LineCurve3(
                     new THREE.Vector3(a.x*MULT, -a.y*MULT, a.z*MULT || 0),
                     new THREE.Vector3(b.x*MULT, -b.y*MULT, b.z*MULT || 0));
-                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, 1, 8, false);
+                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, width/2, 8, false);
                 re.mesh = new THREE.Mesh(re.geometry, re.material);
                 re.mesh.name = _renderer.parent().edgeKey.eval(re.wedge);
             } else {
@@ -5927,7 +5932,7 @@ dc_graph.render_webgl = function() {
                     new THREE.Vector3(a.x*MULT, -a.y*MULT, a.z*MULT || 0),
                     new THREE.Vector3(b.x*MULT, -b.y*MULT, b.z*MULT || 0));
                 re.geometry.dispose();
-                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, 1, 8, false);
+                re.geometry = new THREE.TubeBufferGeometry(re.curve, 20, width/2, 8, false);
                 re.mesh.geometry = re.geometry;
             }
             if(add)
@@ -5964,7 +5969,7 @@ dc_graph.render_webgl = function() {
     };
 
     _renderer.fireTSEvent = function(dispatch, drawState) {
-        dispatch.transitionsStarted(null);
+        dispatch.transitionsStarted(_scene, drawState);
     };
 
     _renderer.calculateBounds = function(drawState) {
@@ -5990,6 +5995,8 @@ dc_graph.render_webgl = function() {
     _renderer.animating = function() {
         return _animating;
     };
+
+    _renderer.multiplier = property(3);
 
     return _renderer;
 };
@@ -6142,6 +6149,9 @@ function create_worker(layoutAlgorithm) {
             var layoutId = e.data.layoutId;
             if(!worker.layouts[layoutId])
                 throw new Error('layoutId "' + layoutId + '" unknown!');
+            var engine = worker.layouts[layoutId].getEngine();
+            if(e.data.args.length > 2 && engine.processExtraWorkerResults)
+                engine.processExtraWorkerResults.apply(engine, e.data.args.slice(2));
             worker.layouts[layoutId].dispatch()[e.data.response].apply(null, e.data.args);
         };
     }
@@ -6396,6 +6406,7 @@ dc_graph.snapshot_graphviz = function(diagram) {
 dc_graph.cola_layout = function(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
+    var _setcola_nodes;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _flowLayout;
     // node and edge objects shared with cola.js, preserved from one iteration
@@ -6496,7 +6507,8 @@ dc_graph.cola_layout = function(id) {
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
-                })
+                }),
+                _setcola_nodes
             );
         }
         _d3cola.on('tick', /* _tick = */ function() {
@@ -6516,6 +6528,7 @@ dc_graph.cola_layout = function(id) {
                 .gap(10) //default value is 10, can be customized in setcolaSpec
                 .layout();
 
+            _setcola_nodes = setcola_result.nodes.filter(function(n) { return n._cid; });
             _d3cola.nodes(setcola_result.nodes)
                 .links(setcola_result.links)
                 .constraints(setcola_result.constraints)
@@ -6580,7 +6593,7 @@ dc_graph.cola_layout = function(id) {
         },
         optionNames: function() {
             return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout',
-                    'tickSize', 'groupConnected', 'setcolaSpec']
+                    'tickSize', 'groupConnected', 'setcolaSpec', 'setcolaNodes']
                 .concat(graphviz_keys);
         },
         passThru: function() {
@@ -6670,8 +6683,14 @@ dc_graph.cola_layout = function(id) {
         tickSize: property(1),
         groupConnected: property(false),
         setcolaSpec: property(null),
+        setcolaNodes: function() {
+            return _setcola_nodes;
+        },
         extractNodeAttrs: property({}), // {attr: function(node)}
-        extractEdgeAttrs: property({})
+        extractEdgeAttrs: property({}),
+        processExtraWorkerResults: function(setcolaNodes) {
+            _setcola_nodes = setcolaNodes;
+        }
     });
     return engine;
 };
@@ -7947,6 +7966,7 @@ dc_graph.layered_layout = function(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _supergraph, _subgraphs;
+    var _layers;
     var _options = null;
 
     function init(options) {
@@ -8009,6 +8029,12 @@ dc_graph.layered_layout = function(id) {
 
         // travel up and down from there, each time fixing the nodes from the last layer
         var ranks = Object.keys(nranks).map(function(r) { return +r; }).sort();
+        _layers = ranks.map(function(r) {
+            return {
+                rank: r,
+                z: -r * engine.layerSeparationZ()
+            };
+        });
         var mi = ranks.indexOf(max);
         var ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
         layout_layer(max, -1).then(function(layout) {
@@ -8127,6 +8153,9 @@ dc_graph.layered_layout = function(id) {
         engineFactory: property(null),
         layerAccessor: property(null),
         layerSeparationZ: property(50),
+        layers: function() {
+            return _layers;
+        },
         populateLayoutNode: function() {},
         populateLayoutEdge: function() {},
         extractNodeAttrs: property({}), // {attr: function(node)}
@@ -8415,6 +8444,93 @@ dc_graph.grid = function() {
 };
 
 
+
+dc_graph.annotate_layers = function() {
+    // svg-specific
+    var _drawLayer;
+    // wegl-specific
+    var _planes = [];
+    var _mode = dc_graph.mode('annotate-layers', {
+        laterDraw: true,
+        renderers: ['svg', 'webgl'],
+        draw: draw,
+        remove: remove
+    });
+    function draw(diagram) {
+        var rendererType = _mode.parent().renderer().rendererType();
+        var engine = _mode.parent().layoutEngine();
+        if(rendererType === 'svg') {
+            if(engine.layoutAlgorithm() === 'cola' &&
+               engine.setcolaSpec() && engine.setcolaNodes()) {
+                _drawLayer = _mode.parent().select('g.draw').selectAll('g.divider-layer').data([0]);
+                _drawLayer.enter().append('g').attr('class', 'divider-layer');
+                var boundary_nodes = engine.setcolaNodes().filter(function(n) {
+                    return /^sort_order_boundary/.test(n.name);
+                });
+                var lines = _drawLayer.selectAll('line.divider').data(boundary_nodes);
+                lines.exit().remove();
+                lines.enter().append('line')
+                    .attr('class', 'divider');
+                lines.attr({
+                    stroke: _mode.stroke(),
+                    'stroke-width': _mode.strokeWidth(),
+                    'stroke-dasharray': _mode.strokeDashArray(),
+                    x1: -5000,
+                    y1: function(n) {
+                        return n.y;
+                    },
+                    x2: 5000,
+                    y2:  function(n) {
+                        return n.y;
+                    }
+                });
+            }
+        } else if(rendererType === 'webgl') {
+            var MULT = _mode.parent().renderer().multiplier();
+            var scene = arguments[1], drawState = arguments[2];
+            if(engine.layoutAlgorithm() === 'layered' && engine.layers()) {
+                var width = drawState.extents[0][1] - drawState.extents[0][0] + _mode.planePadding()*MULT*2,
+                    height = drawState.extents[1][1] - drawState.extents[1][0] + _mode.planePadding()*MULT*2;
+                var shape = new THREE.Shape();
+                shape.moveTo(0, 0);
+                shape.lineTo(0, height);
+                shape.lineTo(width, height);
+                shape.lineTo(width, 0);
+                shape.lineTo(0, 0);
+                var geometry = new THREE.ShapeBufferGeometry(shape);
+
+                engine.layers().forEach(function(layer) {
+                    var mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+                        opacity: _mode.planeOpacity(),
+                        transparent: true,
+                        color: _mode.parent().renderer().color_to_int(_mode.planeColor()),
+                        side: THREE.DoubleSide
+                    }));
+                    mesh.position.set(drawState.extents[0][0] - _mode.planePadding()*MULT,
+                                      drawState.extents[1][0] - _mode.planePadding()*MULT,
+                                      layer.z * MULT);
+                    mesh.rotation.set(0, 0, 0);
+                    scene.add(mesh);
+                });
+            }
+        } else throw new Error("annotate_layers doesn't know how to work with renderer " + rendererType);
+    }
+    function remove() {
+        if(_drawLayer)
+            _drawLayer.remove();
+    }
+
+    // line properties for svg
+    _mode.stroke = property('black');
+    _mode.strokeWidth = property(2);
+    _mode.strokeDashArray = property([5,5]);
+
+    // plane properties
+    _mode.planePadding = property(5);
+    _mode.planeOpacity = property(0.2);
+    _mode.planeColor = property('#ffffdd');
+    return _mode;
+};
 
 dc_graph.troubleshoot = function() {
     var _debugLayer = null;
@@ -9536,14 +9652,15 @@ dc_graph.mode = function(event_namespace, options) {
             if(p) {
                 var first = true;
                 diagram = p;
-                p.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
-                    draw(diagram, node, edge, ehover);
+                p.on(_eventName + '.' + event_namespace, function() {
+                    var args2 = [diagram].concat(Array.prototype.slice.call(arguments));
+                    draw.apply(null, args2);
                     if(first && options.first) {
-                        options.first(diagram, node, edge, ehover);
+                        options.first.apply(null, args2);
                         first = false;
                     }
                     else if(options.rest)
-                        options.rest(diagram, node, edge, ehover);
+                        options.rest.apply(null, args2);
                 });
                 p.on('reset.' + event_namespace, function() {
                     var rend = diagram.renderer(),
