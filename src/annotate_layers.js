@@ -1,15 +1,18 @@
 dc_graph.annotate_layers = function() {
+    // svg-specific
     var _drawLayer;
+    // wegl-specific
+    var _planes = [];
     var _mode = dc_graph.mode('annotate-layers', {
         laterDraw: true,
         renderers: ['svg', 'webgl'],
         draw: draw,
         remove: remove
     });
-    function draw() {
+    function draw(diagram) {
         var rendererType = _mode.parent().renderer().rendererType();
+        var engine = _mode.parent().layoutEngine();
         if(rendererType === 'svg') {
-            var engine = _mode.parent().layoutEngine();
             if(engine.layoutAlgorithm() === 'cola' &&
                engine.setcolaSpec() && engine.setcolaNodes()) {
                 _drawLayer = _mode.parent().select('g.draw').selectAll('g.divider-layer').data([0]);
@@ -35,7 +38,31 @@ dc_graph.annotate_layers = function() {
                     }
                 });
             }
-        }
+        } else if(rendererType === 'webgl') {
+            var scene = arguments[1], drawState = arguments[2];
+            if(engine.layoutAlgorithm() === 'layered' && engine.layers()) {
+                var sqLength = 500;
+                var squareShape = new THREE.Shape();
+                squareShape.moveTo(0, 0);
+                squareShape.lineTo(0, sqLength);
+                squareShape.lineTo(sqLength, sqLength);
+                squareShape.lineTo(sqLength, 0);
+                squareShape.lineTo(0, 0);
+                var geometry = new THREE.ShapeBufferGeometry(squareShape);
+
+                engine.layers().forEach(function(layer) {
+                    var mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+                        opacity: 0.2,
+                        transparent: true,
+                        color: 0xffffdd,
+                        side: THREE.DoubleSide
+                    }));
+                    mesh.position.set(drawState.center[0] - sqLength/2, drawState.center[1] - sqLength/2, layer.z*3);
+                    mesh.rotation.set(0, 0, 0);
+                    scene.add(mesh);
+                });
+            }
+        } else throw new Error("annotate_layers doesn't know how to work with renderer " + rendererType);
     }
     function remove() {
         if(_drawLayer)

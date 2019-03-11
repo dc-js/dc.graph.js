@@ -143,6 +143,7 @@ dc_graph.render_webgl = function() {
             cy = (yext[0] + yext[1])/2,
             cz = (zext[0] + zext[1])/2;
 
+        drawState.center = [cx, cy, cz];
         _controls.target.set(cx, cy, cz);
         _controls.update();
 
@@ -206,7 +207,7 @@ dc_graph.render_webgl = function() {
     };
 
     _renderer.fireTSEvent = function(dispatch, drawState) {
-        dispatch.transitionsStarted(null);
+        dispatch.transitionsStarted(_scene, drawState);
     };
 
     _renderer.calculateBounds = function(drawState) {
