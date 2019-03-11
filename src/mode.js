@@ -23,14 +23,15 @@ dc_graph.mode = function(event_namespace, options) {
             if(p) {
                 var first = true;
                 diagram = p;
-                p.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
-                    draw(diagram, node, edge, ehover);
+                p.on(_eventName + '.' + event_namespace, function() {
+                    var args2 = [diagram].concat(Array.prototype.slice.call(arguments));
+                    draw.apply(null, args2);
                     if(first && options.first) {
-                        options.first(diagram, node, edge, ehover);
+                        options.first.apply(null, args2);
                         first = false;
                     }
                     else if(options.rest)
-                        options.rest(diagram, node, edge, ehover);
+                        options.rest.apply(null, args2);
                 });
                 p.on('reset.' + event_namespace, function() {
                     var rend = diagram.renderer(),
