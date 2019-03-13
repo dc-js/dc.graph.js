@@ -47,6 +47,9 @@ dc_graph.render_webgl = function() {
     };
 
     _renderer.initializeDrawing = function () {
+        if(_scene) // just treat it as a redraw
+            return _renderer;
+
         _camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
         _camera.up = new THREE.Vector3(0, 0, 1);
 

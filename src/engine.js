@@ -55,6 +55,12 @@ dc_graph._engines = [
         }
     },
     {
+        name: 'flexbox',
+        instantiate: function() {
+            return dc_graph.flexbox_layout();
+        }
+    },
+    {
         name: 'layered',
         instantiate: function() {
             return dc_graph.layered_layout();
