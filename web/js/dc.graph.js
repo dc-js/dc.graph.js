@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.6
+ *  dc.graph 0.8.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.6
+ * @version 0.8.7
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.6',
+    version: '0.8.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -5807,6 +5807,9 @@ dc_graph.render_webgl = function() {
     };
 
     _renderer.initializeDrawing = function () {
+        if(_scene) // just treat it as a redraw
+            return _renderer;
+
         _camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
         _camera.up = new THREE.Vector3(0, 0, 1);
 
@@ -6056,6 +6059,12 @@ dc_graph._engines = [
         name: 'manual',
         instantiate: function() {
             return dc_graph.manual_layout();
+        }
+    },
+    {
+        name: 'flexbox',
+        instantiate: function() {
+            return dc_graph.flexbox_layout();
         }
     },
     {
@@ -6519,7 +6528,7 @@ dc_graph.cola_layout = function(id) {
             dispatchState('end');
         });
 
-        if(_options.setcolaSpec) {
+        if(_options.setcolaSpec && typeof setcola !== 'undefined') {
             console.log('generating setcola constrains');
             var setcola_result = setcola
                 .nodes(wnodes)
@@ -6695,7 +6704,8 @@ dc_graph.cola_layout = function(id) {
     return engine;
 };
 
-dc_graph.cola_layout.scripts = ['d3.js', 'cola.js', 'setcola.js'];
+dc_graph.cola_layout.scripts = ['d3.js', 'cola.js'];
+dc_graph.cola_layout.optional_scripts = ['setcola.js'];
 
 /**
  * `dc_graph.dagre_layout` is an adaptor for dagre.js layouts in dc.graph.js
@@ -8450,6 +8460,7 @@ dc_graph.annotate_layers = function() {
     var _drawLayer;
     // wegl-specific
     var _planes = [];
+    var _planeGeometry;
     var _mode = dc_graph.mode('annotate-layers', {
         laterDraw: true,
         renderers: ['svg', 'webgl'],
@@ -8491,16 +8502,29 @@ dc_graph.annotate_layers = function() {
             if(engine.layoutAlgorithm() === 'layered' && engine.layers()) {
                 var width = drawState.extents[0][1] - drawState.extents[0][0] + _mode.planePadding()*MULT*2,
                     height = drawState.extents[1][1] - drawState.extents[1][0] + _mode.planePadding()*MULT*2;
+                var delGeom;
                 var shape = new THREE.Shape();
                 shape.moveTo(0, 0);
                 shape.lineTo(0, height);
                 shape.lineTo(width, height);
                 shape.lineTo(width, 0);
                 shape.lineTo(0, 0);
-                var geometry = new THREE.ShapeBufferGeometry(shape);
+                if(_planeGeometry)
+                    delGeom = _planeGeometry;
+                _planeGeometry = new THREE.ShapeBufferGeometry(shape);
 
-                engine.layers().forEach(function(layer) {
-                    var mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+                var layers = engine.layers();
+                if(layers.length < _planes.length) {
+                    for(var i = layers.length; i < _planes.length; ++i)
+                        scene.remove(_planes[i].mesh);
+                    _planes = _planes.slice(0, layers.length);
+                }
+                layers.forEach(function(layer, i) {
+                    if(!_planes[i])
+                        _planes[i] = Object.assign({}, layer);
+                    if(_planes[i].mesh)
+                        scene.remove(_planes[i].mesh);
+                    var mesh = _planes[i].mesh = new THREE.Mesh(_planeGeometry, new THREE.MeshStandardMaterial({
                         opacity: _mode.planeOpacity(),
                         transparent: true,
                         color: _mode.parent().renderer().color_to_int(_mode.planeColor()),
@@ -8509,9 +8533,10 @@ dc_graph.annotate_layers = function() {
                     mesh.position.set(drawState.extents[0][0] - _mode.planePadding()*MULT,
                                       drawState.extents[1][0] - _mode.planePadding()*MULT,
                                       layer.z * MULT);
-                    mesh.rotation.set(0, 0, 0);
                     scene.add(mesh);
                 });
+                if(delGeom)
+                    delGeom.dispose();
             }
         } else throw new Error("annotate_layers doesn't know how to work with renderer " + rendererType);
     }
