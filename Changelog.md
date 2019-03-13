@@ -1,3 +1,9 @@
+## 0.8.7
+* setcola is optional for `cola_layout`
+* flexbox is listed in the catalog of layout engines
+* `render_webgl` deals with re-renders better (by treating them as redraws - will need to revisit when it supports animations)
+* `annotate_layers` updates the planes on redraw
+
 ## 0.8.6
 * `annotate_layers` draws lines between setcola layers, and planes in 3d layered layout
 * `dc_graph.mode` passes through draw arguments rather than assuming it's an SVG event
