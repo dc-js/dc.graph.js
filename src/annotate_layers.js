@@ -3,6 +3,7 @@ dc_graph.annotate_layers = function() {
     var _drawLayer;
     // wegl-specific
     var _planes = [];
+    var _planeGeometry;
     var _mode = dc_graph.mode('annotate-layers', {
         laterDraw: true,
         renderers: ['svg', 'webgl'],
@@ -44,16 +45,29 @@ dc_graph.annotate_layers = function() {
             if(engine.layoutAlgorithm() === 'layered' && engine.layers()) {
                 var width = drawState.extents[0][1] - drawState.extents[0][0] + _mode.planePadding()*MULT*2,
                     height = drawState.extents[1][1] - drawState.extents[1][0] + _mode.planePadding()*MULT*2;
+                var delGeom;
                 var shape = new THREE.Shape();
                 shape.moveTo(0, 0);
                 shape.lineTo(0, height);
                 shape.lineTo(width, height);
                 shape.lineTo(width, 0);
                 shape.lineTo(0, 0);
-                var geometry = new THREE.ShapeBufferGeometry(shape);
+                if(_planeGeometry)
+                    delGeom = _planeGeometry;
+                _planeGeometry = new THREE.ShapeBufferGeometry(shape);
 
-                engine.layers().forEach(function(layer) {
-                    var mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+                var layers = engine.layers();
+                if(layers.length < _planes.length) {
+                    for(var i = layers.length; i < _planes.length; ++i)
+                        scene.remove(_planes[i].mesh);
+                    _planes = _planes.slice(0, layers.length);
+                }
+                layers.forEach(function(layer, i) {
+                    if(!_planes[i])
+                        _planes[i] = Object.assign({}, layer);
+                    if(_planes[i].mesh)
+                        scene.remove(_planes[i].mesh);
+                    var mesh = _planes[i].mesh = new THREE.Mesh(_planeGeometry, new THREE.MeshStandardMaterial({
                         opacity: _mode.planeOpacity(),
                         transparent: true,
                         color: _mode.parent().renderer().color_to_int(_mode.planeColor()),
@@ -62,9 +76,10 @@ dc_graph.annotate_layers = function() {
                     mesh.position.set(drawState.extents[0][0] - _mode.planePadding()*MULT,
                                       drawState.extents[1][0] - _mode.planePadding()*MULT,
                                       layer.z * MULT);
-                    mesh.rotation.set(0, 0, 0);
                     scene.add(mesh);
                 });
+                if(delGeom)
+                    delGeom.dispose();
             }
         } else throw new Error("annotate_layers doesn't know how to work with renderer " + rendererType);
     }
