@@ -121,7 +121,7 @@ dc_graph.cola_layout = function(id) {
             dispatchState('end');
         });
 
-        if(_options.setcolaSpec) {
+        if(_options.setcolaSpec && typeof setcola !== 'undefined') {
             console.log('generating setcola constrains');
             var setcola_result = setcola
                 .nodes(wnodes)
@@ -297,4 +297,5 @@ dc_graph.cola_layout = function(id) {
     return engine;
 };
 
-dc_graph.cola_layout.scripts = ['d3.js', 'cola.js', 'setcola.js'];
+dc_graph.cola_layout.scripts = ['d3.js', 'cola.js'];
+dc_graph.cola_layout.optional_scripts = ['setcola.js'];

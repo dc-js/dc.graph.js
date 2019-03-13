@@ -24,6 +24,14 @@ onmessage = function(e) {
         if(!_layouts) {
             _layouts = {};
             importScripts.apply(null, dc_graph[layout_name].scripts);
+            if(dc_graph[layout_name].optional_scripts) {
+                try {
+                    importScripts.apply(null, dc_graph[layout_name].optional_scripts);
+                }
+                catch(xep) {
+                    console.log(xep);
+                }
+            }
         }
 
         _layouts[args.layoutId] = dc_graph[layout_name]()
