@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.6
+ *  dc.graph 0.8.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.6
+ * @version 0.8.7
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.6',
+    version: '0.8.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -831,6 +831,14 @@ onmessage = function(e) {
         if(!_layouts) {
             _layouts = {};
             importScripts.apply(null, dc_graph[layout_name].scripts);
+            if(dc_graph[layout_name].optional_scripts) {
+                try {
+                    importScripts.apply(null, dc_graph[layout_name].optional_scripts);
+                }
+                catch(xep) {
+                    console.log(xep);
+                }
+            }
         }
 
         _layouts[args.layoutId] = dc_graph[layout_name]()
