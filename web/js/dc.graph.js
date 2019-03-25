@@ -7712,7 +7712,7 @@ dc_graph.flexbox_layout = function(id) {
     }
     function all_keys(tree) {
         var key = _engine.addressToKey()(tree.address);
-        return Array.prototype.concat.apply([key], Object.keys(tree.children).map(function(k) {
+        return Array.prototype.concat.apply([key], Object.keys(tree.children || {}).map(function(k) {
             return all_keys(tree.children[k]);
         }));
     }
@@ -7725,6 +7725,11 @@ dc_graph.flexbox_layout = function(id) {
         });
         var need = all_keys(_tree);
         _wnodes = nodes;
+    }
+    function ensure_inner_nodes(tree) {
+        if(!tree.node)
+            tree.node = {dcg_nodeKey: tree.address.length ? tree.address[tree.address.length-1] : null};
+        Object.values(tree.children).forEach(ensure_inner_nodes);
     }
     var internal_attrs = ['sort', 'dcg_nodeKey', 'x', 'y'],
         skip_on_parents = ['width', 'height'];
@@ -7780,6 +7785,7 @@ dc_graph.flexbox_layout = function(id) {
                 return d3.ascending(a.node.dcg_nodeKey, b.node.dcg_nodeKey);
             }
         };
+        ensure_inner_nodes(_tree);
         var flexTree = create_flextree(defaults, _tree);
         flexTree.style.width = _graph.width;
         flexTree.style.height = _graph.height;
