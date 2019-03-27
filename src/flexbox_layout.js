@@ -59,7 +59,7 @@ dc_graph.flexbox_layout = function(id) {
     }
     function data(graph, nodes) {
         _graph = graph;
-        _tree = {};
+        _tree = {address: [], children: {}};
         nodes.forEach(function(n) {
             var ad = _engine.keyToAddress()(n.dcg_nodeKey);
             add_node([], ad, n, _tree);
