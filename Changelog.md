@@ -1,3 +1,6 @@
+## 0.8.8
+* flexbox layout tolerant of missing parent nodes and empty data
+
 ## 0.8.7
 * setcola is optional for `cola_layout`
 * flexbox is listed in the catalog of layout engines
