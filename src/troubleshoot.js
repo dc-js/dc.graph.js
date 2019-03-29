@@ -238,7 +238,7 @@ dc_graph.troubleshoot = function() {
             _debugLayer.remove();
     }
 
-    var _mode = dc_graph.mode('highlight-paths', {
+    var _mode = dc_graph.mode('troubleshoot', {
         laterDraw: true,
         draw: draw,
         remove: remove,

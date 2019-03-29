@@ -359,7 +359,7 @@ dc_graph.draw_graphs = function(options) {
             .on('mouseup.draw-graphs', null);
     }
 
-    var _mode = dc_graph.mode('highlight-paths', {
+    var _mode = dc_graph.mode('draw-graphs', {
         draw: draw,
         remove: remove
     });

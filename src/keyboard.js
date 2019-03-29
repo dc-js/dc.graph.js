@@ -25,7 +25,7 @@ dc_graph.keyboard = function() {
     function remove(diagram) {
         _input_anchor.remove();
     }
-    var _mode = dc_graph.mode('brush', {
+    var _mode = dc_graph.mode('keyboard', {
         draw: draw,
         remove: remove
     });

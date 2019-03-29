@@ -63,7 +63,7 @@ dc_graph.grid = function() {
         draw(diagram);
     }
 
-    var _mode = dc_graph.mode('highlight-paths', {
+    var _mode = dc_graph.mode('grid', {
         draw: draw,
         remove: remove,
         parent: function(p) {
