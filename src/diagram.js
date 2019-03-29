@@ -2043,6 +2043,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     };
 
     function node_bounds(n) {
+        if(n.cola.x === undefined || n.cola.y === undefined)
+            return null;
         var bounds = {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
                       right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
         if(_diagram.portStyle.enum().length) {
@@ -2087,8 +2089,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.calculateBounds = function(ndata, edata) {
         // assumption: there can be no edges without nodes
-        var bounds = ndata.map(node_bounds).reduce(union_bounds);
-        return edata.map(edge_bounds).reduce(union_bounds, bounds);
+        var bounds = ndata.map(node_bounds)
+            .filter(function(n) { return !!n; })
+            .reduce(union_bounds);
+        return edata.map(edge_bounds)
+            .filter(function(e) { return !!e; })
+            .reduce(union_bounds, bounds);
     };
     var _bounds;
     function calc_bounds(drawState) {

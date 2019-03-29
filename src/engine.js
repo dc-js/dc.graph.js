@@ -36,9 +36,11 @@ dc_graph._engines = [
         }
     },
     {
-        names: ['circo', 'dot', 'neato', 'osage', 'twopi', 'fdp'],
-        instantiate: function(layout, args) {
-            return dc_graph.graphviz_layout(null, layout, args.server);
+        names: [ 'circo', 'dot', 'neato', 'osage', 'twopi', 'sfdp', 'fdp', 'gvmap.sh' ],
+        instantiate: function (layout, args) {
+            return dc_graph.graphviz_layout (
+                null, layout + " -Goverlap=prism", "http://sauron.research.att.com/cgi-bin/gv_layout.cgi"
+            );
         }
     },
     {

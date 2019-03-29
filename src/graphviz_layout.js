@@ -13,6 +13,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _dotInput, _dotString;
     var _clusters; // hack to get cluster data out
+    var _background; // another side channel
 
     function init(options) {
     }
@@ -70,6 +71,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     }
 
     function process_response(error, result) {
+        if(error)
+            throw new Error(error.responseText);
         _dispatch.start();
         var bb = result.bb.split(',').map(function(x) { return +x; });
         var nodes = (result.objects || []).filter(function(n) {
@@ -82,6 +85,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
                 y: bb[3] - pos[1]
             };
         });
+        _background = result._background && parsedraw(result._background);
         _clusters = (result.objects || []).filter(function(n) {
             return /^cluster/.test(n.name);
         });
@@ -156,6 +160,9 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             // filter out clusters and return them separately, because dc.graph doesn't know how to draw them
             return _clusters;
         },
+        background: function() {
+            return _background;
+        },
         start: function() {
             start();
         },
@@ -169,4 +176,3 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         populateLayoutEdge: function() {}
     });
 }
-
