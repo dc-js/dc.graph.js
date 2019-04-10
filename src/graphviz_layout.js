@@ -70,6 +70,10 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     }
 
     function process_response(error, result) {
+        if(error) {
+            console.warn("graphviz layout failed: ", error);
+            return;
+        }
         _dispatch.start();
         var bb = result.bb.split(',').map(function(x) { return +x; });
         var nodes = (result.objects || []).filter(function(n) {
