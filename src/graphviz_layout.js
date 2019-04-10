@@ -70,12 +70,20 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     }
 
     function process_response(error, result) {
+        if(error) {
+            console.warn("graphviz layout failed: ", error);
+            return;
+        }
         _dispatch.start();
         var bb = result.bb.split(',').map(function(x) { return +x; });
         var nodes = (result.objects || []).filter(function(n) {
             return n.pos; // remove non-nodes like clusters
         }).map(function(n) {
             var pos = n.pos.split(',');
+            if(isNaN(pos[0]) || isNaN(pos[1])) {
+                console.warn('got a NaN position from graphviz');
+                pos[0] = pos[1] = 0;
+            }
             return {
                 dcg_nodeKey: decode_name(n.name),
                 x: +pos[0],
