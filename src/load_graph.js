@@ -39,7 +39,7 @@ function process_dot(callback, error, text) {
 
         edges = [];
         digraph.edges().forEach(function(e) {
-            edges.push(Object.assign({}, e.value, {
+            edges.push(Object.assign({}, digraph.edge(e.v, e.w), {
                 source: digraph._nodes[e.v].id,
                 target: digraph._nodes[e.w].id,
                 sourcename: e.v,
