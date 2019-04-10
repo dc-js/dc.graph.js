@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.8
+ *  dc.graph 0.8.9
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.8
+ * @version 0.8.9
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.8',
+    version: '0.8.9',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -4178,6 +4178,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         if(skip_layout) {
             _running = false;
+            // init_node_ports?
             _diagram.renderer().draw(drawState, true);
             _diagram.renderer().drawPorts(drawState);
             _diagram.renderer().fireTSEvent(_dispatch, drawState);
@@ -4311,6 +4312,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     function edge_vec(n, e) {
         var dy = e.target.cola.y - e.source.cola.y,
             dx = e.target.cola.x - e.source.cola.x;
+        if(dy === 0 && dx === 0)
+            return [1, 0];
         if(e.source !== n)
             dy = -dy, dx = -dx;
         if(e.parallel && e.parallel.edges.length > 1 && e.source.index > e.target.index)
@@ -7075,12 +7078,20 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     }
 
     function process_response(error, result) {
+        if(error) {
+            console.warn("graphviz layout failed: ", error);
+            return;
+        }
         _dispatch.start();
         var bb = result.bb.split(',').map(function(x) { return +x; });
         var nodes = (result.objects || []).filter(function(n) {
             return n.pos; // remove non-nodes like clusters
         }).map(function(n) {
             var pos = n.pos.split(',');
+            if(isNaN(pos[0]) || isNaN(pos[1])) {
+                console.warn('got a NaN position from graphviz');
+                pos[0] = pos[1] = 0;
+            }
             return {
                 dcg_nodeKey: decode_name(n.name),
                 x: +pos[0],
