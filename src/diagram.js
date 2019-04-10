@@ -24,6 +24,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
+    var _clusters = {};
     var _nodePorts; // ports sorted by node id
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
@@ -417,6 +418,12 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.edgeSourcePortName = property(null);
     _diagram.edgeTargetPortName = property(null);
+
+    _diagram.clusterDimension = property(null);
+    _diagram.clusterGroup = property(null);
+    _diagram.clusterKey = property(dc.pluck('key'));
+    _diagram.clusterParent = property(null);
+    _diagram.nodeParentCluster = property(null);
 
     /**
      * Set or get the function which will be used to retrieve the radius, in pixels, for each
@@ -1391,6 +1398,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _nodes = {};
         _edges = {};
         _ports = {};
+        _clusters = {};
 
         // start out with 1:1 zoom
         _diagram.x(d3.scale.linear()
@@ -1426,6 +1434,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nodes = _diagram.nodeGroup().all();
         var edges = _diagram.edgeGroup().all();
         var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
+        var clusters = _diagram.clusterGroup() ? _diagram.clusterGroup().all() : [];
         if(_running) {
             throw new Error('dc_graph.diagram.redraw already running!');
         }
@@ -1545,6 +1554,17 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!keeps[k])
                     delete _nodes[k];
         }
+
+        var needclusters = d3.set(wnodes.map(function(n) {
+            return _diagram.nodeParentCluster.eval(n);
+        }).filter(identity)).values();
+
+        var wclusters = regenerate_objects(_clusters, clusters, needclusters, function(c) {
+            return _diagram.clusterKey.eval(c);
+        }, function(c1, c) { // assign
+            c1.orig = c;
+        }, function(k, c) { // create
+        });
 
         wnodes.forEach(function(v, i) {
             v.index = i;
