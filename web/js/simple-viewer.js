@@ -36,6 +36,7 @@ var options = {
             }
         }
     },
+    cutoff: null,
     arrows: false,
     tips: true,
     neighbors: true
@@ -165,6 +166,25 @@ function on_load(filename, error, data) {
         }).durationOverride(0);
         simpleDiagram
             .child('highlight-neighbors', highlight_neighbors);
+    }
+    if(sync_url.vals.cutoff) {
+        var parts = /(.*)([<>]=?)(.*)/.exec(sync_url.vals.cutoff);
+        if(parts.length === 4) {
+            var eps = 0.00001, // yuk
+                range, x = +parts[3];
+            switch(parts[2]) {
+            case '<':
+                range = [-Infinity, x];
+                break;
+            case '>':
+                range = [x+eps, Infinity];
+                break;
+            }
+            if(range)
+                edge_flat.crossfilter.dimension(function(d) {
+                    return +d[parts[1]];
+                }).filterRange(range);
+        }
     }
 
     simpleDiagram.render();
