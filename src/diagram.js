@@ -1886,6 +1886,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     function edge_vec(n, e) {
         var dy = e.target.cola.y - e.source.cola.y,
             dx = e.target.cola.x - e.source.cola.x;
+        if(dy === 0 && dx === 0)
+            return [1, 0];
         if(e.source !== n)
             dy = -dy, dx = -dx;
         if(e.parallel && e.parallel.edges.length > 1 && e.source.index > e.target.index)
