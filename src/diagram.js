@@ -1752,6 +1752,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         });
         if(skip_layout) {
             _running = false;
+            // init_node_ports?
             _diagram.renderer().draw(drawState, true);
             _diagram.renderer().drawPorts(drawState);
             _diagram.renderer().fireTSEvent(_dispatch, drawState);
