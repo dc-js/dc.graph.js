@@ -227,6 +227,7 @@ module.exports = function (grunt) {
                             'node_modules/css-layout/dist/css-layout.js',
                             'node_modules/d3/d3.js',
                             'node_modules/dc/dc.js',
+                            'node_modules/graphlib-dot/dist/graphlib-dot.js',
                             'node_modules/jquery/dist/jquery.js',
                             'node_modules/jquery-ui-dist/jquery-ui.js',
                             'node_modules/lodash/lodash.js',
