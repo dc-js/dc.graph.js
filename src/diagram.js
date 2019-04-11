@@ -421,8 +421,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.clusterDimension = property(null);
     _diagram.clusterGroup = property(null);
+
     _diagram.clusterKey = property(dc.pluck('key'));
     _diagram.clusterParent = property(null);
+
     _diagram.nodeParentCluster = property(null);
 
     /**
@@ -1464,6 +1466,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.orig = v;
             v1.cola = v1.cola || {};
             v1.cola.dcg_nodeKey = _diagram.nodeKey.eval(v1);
+            v1.cola.dcg_nodeParentCluster = _diagram.nodeParentCluster.eval(v1);
             _diagram.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
         var wedges = regenerate_objects(_edges, edges, null, function(e) {
@@ -1560,9 +1563,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         }).filter(identity)).values();
 
         var wclusters = regenerate_objects(_clusters, clusters, needclusters, function(c) {
-            return _diagram.clusterKey.eval(c);
+            return _diagram.clusterKey()(c);
         }, function(c1, c) { // assign
             c1.orig = c;
+            c1.cola = c1.cola || {
+                dcg_clusterKey: _diagram.clusterKey.eval(c1),
+                dcg_clusterParent: _diagram.clusterParent.eval(c1)
+            };
         }, function(k, c) { // create
         });
 
@@ -1866,6 +1873,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                             le[key] = engine.extractEdgeAttrs()[key](e.orig);
                         });
                     return le;
+                }),
+                wclusters.map(function(c) {
+                    return c.cola;
                 }),
                 constraints
             );

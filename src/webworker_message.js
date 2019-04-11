@@ -42,7 +42,7 @@ onmessage = function(e) {
         break;
     case 'data':
         if(_layouts)
-            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.constraints);
+            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.clusters, args.constraints);
         break;
     case 'start':
         // if(args.initialOnly) {

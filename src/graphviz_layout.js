@@ -29,7 +29,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     function stringize_properties(props) {
         return '[' + props.join(', ') + ']';
     }
-    function data(nodes, edges) {
+    function data(nodes, edges, clusters) {
         if(_dotInput) {
             _dotString = _dotInput;
             return;
@@ -42,6 +42,33 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             stringize_property('ranksep', graphviz.ranksep()/72),
             stringize_property('rankdir', graphviz.rankdir())
         ]));
+        var cluster_nodes = {};
+        nodes.forEach(function(n) {
+            var cl = n.dcg_nodeParentCluster;
+            if(cl) {
+                cluster_nodes[cl] = cluster_nodes[cl] || [];
+                cluster_nodes[cl].push(n.dcg_nodeKey);
+            }
+        });
+        var cluster_children = {}, tops = [];
+        clusters.forEach(function(c) {
+            var p = c.dcg_clusterParent;
+            if(p) {
+                cluster_children[p] = cluster_children[p] || [];
+                cluster_children[p].push(c.dcg_clusterKey);
+            } else tops.push(c.dcg_clusterKey);
+        });
+
+        function print_subgraph(i, c) {
+            var indent = ' '.repeat(i*2);
+            lines.push(indent + 'subgraph "' + c + '" {');
+            if(cluster_children[c])
+                cluster_children[c].forEach(print_subgraph.bind(null, i+1));
+            lines.push(indent + '  ' + cluster_nodes[c].join(' '));
+            lines.push(indent + '}');
+        }
+        tops.forEach(print_subgraph.bind(null, 1));
+
         lines = lines.concat(nodes.map(function(v) {
             var props = [
                 stringize_property('width', v.width/72),
@@ -153,8 +180,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges) {
-            data(nodes, edges);
+        data: function(graph, nodes, edges, clusters) {
+            data(nodes, edges, clusters);
         },
         dotInput: function(text) {
             _dotInput = text;

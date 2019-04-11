@@ -184,8 +184,8 @@ dc_graph.cola_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges, constraints) {
-            data(nodes, edges, constraints);
+        data: function(graph, nodes, edges, clusters, constraints) {
+            data(nodes, edges, clusters, constraints);
         },
         start: function() {
             start();

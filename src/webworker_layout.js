@@ -45,7 +45,7 @@ dc_graph.webworker_layout = function(layoutEngine) {
         });
         return this;
     };
-    engine.data = function(graph, nodes, edges, constraints) {
+    engine.data = function(graph, nodes, edges, clusters, constraints) {
         _worker.worker.postMessage({
             command: 'data',
             args: {
@@ -53,6 +53,7 @@ dc_graph.webworker_layout = function(layoutEngine) {
                 graph: graph,
                 nodes: nodes,
                 edges: edges,
+                clusters: clusters,
                 constraints: constraints
             }
         });
