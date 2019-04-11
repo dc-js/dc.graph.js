@@ -1,8 +1,11 @@
+## 0.8.10
+* added event namespacing to document keyboard event handlers for `modKeyZoom` because it didn't work with two diagrams on the same page
+
 ## 0.8.9
 * more robustness when interacting with graphviz
   * ignore and flag NaN positions
   * default port vector when edge source and target positions are the same
-  * check for errors returned by graphviz 
+  * check for errors returned by graphviz
 
 ## 0.8.8
 * flexbox layout tolerant of missing parent nodes and empty data
