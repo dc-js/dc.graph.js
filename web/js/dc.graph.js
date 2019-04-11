@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.9
+ *  dc.graph 0.9.0
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.9
+ * @version 0.9.0
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.9',
+    version: '0.9.0',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -5724,7 +5724,7 @@ dc_graph.render_svg = function() {
                     }
                 });
                 d3.select(document)
-                    .on('keydown.modkey-zoom', function() {
+                    .on('keydown.modkey-zoom-' + _renderer.parent().anchorName(), function() {
                         if(mods.indexOf (d3.event.key) > -1) {
                             modDown = true;
                             if(!mouseDown) {
@@ -5735,7 +5735,7 @@ dc_graph.render_svg = function() {
                             }
                         }
                     })
-                    .on('keyup.modkey-zoom', function() {
+                    .on('keyup.modkey-zoom-' + _renderer.parent().anchorName(), function() {
                         if(mods.indexOf (d3.event.key) > -1) {
                             modDown = false;
                             if(!mouseDown) {
