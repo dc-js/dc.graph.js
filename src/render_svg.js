@@ -824,7 +824,7 @@ dc_graph.render_svg = function() {
                     }
                 });
                 d3.select(document)
-                    .on('keydown.modkey-zoom', function() {
+                    .on('keydown.modkey-zoom-' + _renderer.parent().anchorName(), function() {
                         if(mods.indexOf (d3.event.key) > -1) {
                             modDown = true;
                             if(!mouseDown) {
@@ -835,7 +835,7 @@ dc_graph.render_svg = function() {
                             }
                         }
                     })
-                    .on('keyup.modkey-zoom', function() {
+                    .on('keyup.modkey-zoom-' + _renderer.parent().anchorName(), function() {
                         if(mods.indexOf (d3.event.key) > -1) {
                             modDown = false;
                             if(!mouseDown) {
