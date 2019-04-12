@@ -37,13 +37,25 @@ var options = {
         }
     },
     cutoff: null,
+    limit: {
+        default: 0.5,
+        selector: '#cutoff',
+        needs_redraw: true,
+        exert: function(val, _, filters) {
+            if(filters.cutoff) {
+                d3.select('#cutoff-display').text(val);
+                filters.cutoff.set(val);
+            }
+        }
+    },
     arrows: false,
     tips: true,
     neighbors: true
 };
 
 var simpleDiagram = dc_graph.diagram('#graph');
-var sync_url = sync_url_options(options, dcgraph_domain(simpleDiagram), simpleDiagram);
+var filters = {};
+var sync_url = sync_url_options(options, dcgraph_domain(simpleDiagram), simpleDiagram, filters);
 
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
@@ -143,6 +155,17 @@ function on_load(filename, error, data) {
     // aesthetics
         .nodeTitle(null); // deactivate basic tooltips
 
+    if(sync_url.vals.cutoff) {
+        d3.select('#cutoff-stuff').style('display', 'inline-block');
+        var dim = edge_flat.crossfilter.dimension(function(d) {
+            return +d[sync_url.vals.cutoff];
+        });
+        filters.cutoff = {
+            set: function(v) {
+                dim.filterRange([v, Infinity]);
+            }
+        };
+    }
     sync_url.exert();
 
     var move_nodes = dc_graph.move_nodes();
@@ -173,25 +196,6 @@ function on_load(filename, error, data) {
         }).durationOverride(0);
         simpleDiagram
             .child('highlight-neighbors', highlight_neighbors);
-    }
-    if(sync_url.vals.cutoff) {
-        var parts = /(.*)([<>]=?)(.*)/.exec(sync_url.vals.cutoff);
-        if(parts.length === 4) {
-            var eps = 0.00001, // yuk
-                range, x = +parts[3];
-            switch(parts[2]) {
-            case '<':
-                range = [-Infinity, x];
-                break;
-            case '>':
-                range = [x+eps, Infinity];
-                break;
-            }
-            if(range)
-                edge_flat.crossfilter.dimension(function(d) {
-                    return +d[parts[1]];
-                }).filterRange(range);
-        }
     }
 
     simpleDiagram.render();
