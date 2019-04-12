@@ -57,7 +57,7 @@ dc_graph.draw_clusters = function() {
     _mode.clusterStroke = property('black');
     _mode.clusterStrokeWidth = property(1);
     _mode.clusterFill = property(null);
-    _mode.clusterLabel = property(function(kv) { return kv.key; });
+    _mode.clusterLabel = property(null);
     _mode.clusterLabelFill = property('black');
     _mode.clusterLabelAlignment = property(['bottom','right']);
 
