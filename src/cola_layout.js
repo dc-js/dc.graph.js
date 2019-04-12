@@ -100,6 +100,7 @@ dc_graph.cola_layout = function(id) {
             var G = {};
             groups = clusters.map(function(c, i) {
                 return G[c.dcg_clusterKey] = {
+                    dcg_clusterKey: c.dcg_clusterKey,
                     index: i,
                     groups: [],
                     leaves: []
@@ -127,6 +128,16 @@ dc_graph.cola_layout = function(id) {
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
+                }),
+                groups.map(function(g) {
+                    g = Object.assign({}, g);
+                    g.bounds = {
+                        left: g.bounds.x,
+                        top: g.bounds.y,
+                        right: g.bounds.X,
+                        bottom: g.bounds.Y
+                    };
+                    return g;
                 }),
                 _setcola_nodes
             );
