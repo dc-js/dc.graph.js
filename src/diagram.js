@@ -1815,15 +1815,19 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(re.points)
                     e.cola.points = re.points;
             });
-            rclusters.forEach(function(rc) {
-                var c = _clusters[rc.dcg_clusterKey];
-                if(!c) {
-                    console.warn('received cluster "' + rc.dcg_clusterKey + '" that we did not send, ignored');
-                    return;
-                }
-                if(rc.bounds)
-                    c.cola.bounds = rc.bounds;
+            wclusters.forEach(function(c) {
+                c.cola.bounds = null;
             });
+            if(rclusters)
+                rclusters.forEach(function(rc) {
+                    var c = _clusters[rc.dcg_clusterKey];
+                    if(!c) {
+                        console.warn('received cluster "' + rc.dcg_clusterKey + '" that we did not send, ignored');
+                        return;
+                    }
+                    if(rc.bounds)
+                        c.cola.bounds = rc.bounds;
+                });
         }
         _diagram.layoutEngine()
             .on('tick.diagram', function(nodes, edges, clusters) {

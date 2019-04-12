@@ -19,12 +19,16 @@ dc_graph.draw_clusters = function() {
     function draw(diagram) {
         if(!diagram.clusterGroup())
             return;
-        var clayer = diagram.g().selectAll('g.clusters').data([0]);
-        clayer.enter().insert('g', ':first-child');
+        var clayer = diagram.g().selectAll('g.cluster-layer').data([0]);
+        clayer.enter().insert('g', ':first-child')
+            .attr('class', 'cluster-layer');
         var clusters = diagram.clusterGroup().all().map(function(kv) {
             return _mode.parent().getWholeCluster(kv.key);
+        }).filter(function(c) {
+            return c.cola.bounds;
         });
-        var rects = clayer.selectAll('rect.cluster').data(clusters);
+        var rects = clayer.selectAll('rect.cluster')
+            .data(clusters, function(c) { return c.orig.key; });
         rects.exit().remove();
         rects.enter().append('rect')
             .attr({
