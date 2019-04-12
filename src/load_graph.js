@@ -50,7 +50,7 @@ function process_dot(callback, error, text) {
 
         // iterative bfs for variety (recursion would work just as well)
         var cluster_names = {};
-        var queue = digraph.children().map(function(c) { return {parent: null, key: c}; });
+        var queue = digraph.children().map(function(c) { return Object.assign({parent: null, key: c}, digraph.node(c)); });
         while(queue.length) {
             var item = queue.shift(),
                 children = digraph.children(item.key);
