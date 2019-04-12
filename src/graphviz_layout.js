@@ -12,7 +12,6 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _dotInput, _dotString;
-    var _clusters; // hack to get cluster data out
 
     function init(options) {
     }
@@ -117,15 +116,16 @@ dc_graph.graphviz_layout = function(id, layout, server) {
                 y: bb[3] - pos[1]
             };
         });
-        _clusters = (result.objects || []).filter(function(n) {
+        var clusters = (result.objects || []).filter(function(n) {
             return /^cluster/.test(n.name);
         });
-        _clusters.forEach(function(c) {
-            // annotate with flipped cluster coords for convenience
-            c.bbflip = c.bb.split(',').map(function(s) { return +s; });
-            var t = bb[3] - c.bbflip[1];
-            c.bbflip[1] = bb[3] - c.bbflip[3];
-            c.bbflip[3] = t;
+        clusters.forEach(function(c) {
+            c.dcg_clusterKey = c.name;
+
+            // gv: llx, lly, urx, ury, up-positive
+            var cbb = c.bb.split(',').map(function(s) { return +s; });
+            c.bounds = {left: cbb[0], top: bb[3] - cbb[3],
+                        right: cbb[2], bottom: bb[3] - cbb[1]};
         });
         var edges = (result.edges || []).map(function(e) {
             var e2 = {
@@ -137,7 +137,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             }
             return e2;
         });
-        _dispatch.end(nodes, edges);
+        _dispatch.end(nodes, edges, clusters);
     }
 
     function start() {
@@ -186,10 +186,6 @@ dc_graph.graphviz_layout = function(id, layout, server) {
         dotInput: function(text) {
             _dotInput = text;
             return this;
-        },
-        clusters: function() {
-            // filter out clusters and return them separately, because dc.graph doesn't know how to draw them
-            return _clusters;
         },
         start: function() {
             start();

@@ -152,6 +152,9 @@ function on_load(filename, error, data) {
         .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
     simpleDiagram.child('fix-nodes', fix_nodes);
 
+    var draw_clusters = dc_graph.draw_clusters();
+    simpleDiagram.child('draw-clusters', draw_clusters);
+
     if(sync_url.vals.tips) {
         var tip = dc_graph.tip();
         var json_table = dc_graph.tip.html_or_json_table()

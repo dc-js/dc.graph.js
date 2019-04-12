@@ -422,9 +422,12 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.clusterDimension = property(null);
     _diagram.clusterGroup = property(null);
 
+    // cluster accessors
     _diagram.clusterKey = property(dc.pluck('key'));
     _diagram.clusterParent = property(null);
+    _diagram.clusterPadding = property(8);
 
+    // node accessor
     _diagram.nodeParentCluster = property(null);
 
     /**
@@ -1258,6 +1261,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         return _nodePorts;
     };
 
+    _diagram.getWholeCluster = function(id) {
+        return _clusters[id] || null;
+    };
+
     /**
      * Instructs cola.js to fit the connected components.
      *
@@ -1788,11 +1795,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         var startTime = Date.now();
 
-        function populate_cola(rnodes, redges) {
+        function populate_cola(rnodes, redges, rclusters) {
             rnodes.forEach(function(rn) {
                 var n = _nodes[rn.dcg_nodeKey];
                 if(!n) {
-                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send');
+                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send, ignored');
                     return;
                 }
                 n.cola.x = rn.x;
@@ -1802,18 +1809,27 @@ dc_graph.diagram = function (parent, chartGroup) {
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
                 if(!e) {
-                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
+                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send, ignored');
                     return;
                 }
                 if(re.points)
                     e.cola.points = re.points;
             });
+            rclusters.forEach(function(rc) {
+                var c = _clusters[rc.dcg_clusterKey];
+                if(!c) {
+                    console.warn('received cluster "' + rc.dcg_clusterKey + '" that we did not send, ignored');
+                    return;
+                }
+                if(rc.bounds)
+                    c.cola.bounds = rc.bounds;
+            });
         }
         _diagram.layoutEngine()
-            .on('tick.diagram', function(nodes, edges) {
+            .on('tick.diagram', function(nodes, edges, clusters) {
                 var elapsed = Date.now() - startTime;
                 if(!_diagram.initialOnly())
-                    populate_cola(nodes, edges);
+                    populate_cola(nodes, edges, clusters);
                 if(_diagram.showLayoutSteps()) {
                     init_node_ports(_nodes, wports);
                     _dispatch.receivedLayout(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
@@ -1828,10 +1844,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _diagram.layoutEngine().stop();
                 }
             })
-            .on('end.diagram', function(nodes, edges) {
+            .on('end.diagram', function(nodes, edges, clusters) {
                 if(!_diagram.showLayoutSteps()) {
                     if(!_diagram.initialOnly())
-                        populate_cola(nodes, edges);
+                        populate_cola(nodes, edges, clusters);
                     init_node_ports(_nodes, wports);
                     _dispatch.receivedLayout(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
                     propagate_port_positions(_nodes, wedges, _ports);

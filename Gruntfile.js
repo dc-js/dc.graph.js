@@ -402,6 +402,7 @@ module.exports.jsFiles = [
     'src/highlight_paths_group.js',
     'src/highlight_paths.js',
     'src/spline_paths.js',
+    'src/draw_clusters.js',
     'src/expand_collapse.js',
     'src/shown_hidden.js',
     'src/expanded_hidden.js',
