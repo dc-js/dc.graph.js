@@ -98,7 +98,9 @@ dc_graph.cola_layout = function(id) {
             });
         } else if(clusters) {
             var G = {};
-            groups = clusters.map(function(c, i) {
+            groups = clusters.filter(function(c) {
+                return /^cluster/.test(c.dcg_clusterKey);
+            }).map(function(c, i) {
                 return G[c.dcg_clusterKey] = {
                     dcg_clusterKey: c.dcg_clusterKey,
                     index: i,
@@ -107,11 +109,11 @@ dc_graph.cola_layout = function(id) {
                 };
             });
             clusters.forEach(function(c) {
-                if(c.dcg_clusterParent)
+                if(c.dcg_clusterParent && G[c.dcg_clusterParent])
                     G[c.dcg_clusterParent].groups.push(G[c.dcg_clusterKey].index);
             });
             wnodes.forEach(function(n, i) {
-                if(n.dcg_nodeParentCluster)
+                if(n.dcg_nodeParentCluster && G[n.dcg_nodeParentCluster])
                     G[n.dcg_nodeParentCluster].leaves.push(i);
             });
         }
