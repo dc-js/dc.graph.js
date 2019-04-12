@@ -102,7 +102,7 @@ dc_graph.cola_layout = function(id) {
                 return G[c.dcg_clusterKey] = {
                     index: i,
                     groups: [],
-                    nodes: []
+                    leaves: []
                 };
             });
             clusters.forEach(function(c) {
@@ -111,7 +111,7 @@ dc_graph.cola_layout = function(id) {
             });
             wnodes.forEach(function(n, i) {
                 if(n.dcg_nodeParentCluster)
-                    G[n.dcg_nodeParentCluster].nodes.push(i);
+                    G[n.dcg_nodeParentCluster].leaves.push(i);
             });
         }
 
