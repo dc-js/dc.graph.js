@@ -123,7 +123,7 @@ function on_load(filename, error, data) {
     };
     var edge_flat = dc_graph.flat_group.make(edges, edge_key),
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; }),
-        cluster_flat = dc_graph.flat_group.make(data.clusters, function(d) { return d.key; });
+        cluster_flat = dc_graph.flat_group.make(data.clusters || [], function(d) { return d.key; });
 
     var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     simpleDiagram
@@ -138,7 +138,7 @@ function on_load(filename, error, data) {
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
         .clusterDimension(cluster_flat.dimension).clusterGroup(cluster_flat.group)
-        .nodeParentCluster(function(n) { return data.node_cluster[n.key]; })
+        .nodeParentCluster(data.node_cluster ? function(n) { return data.node_cluster[n.key]; } : null)
         .clusterParent(function(c) { return c.parent; })
     // aesthetics
         .nodeTitle(null); // deactivate basic tooltips
