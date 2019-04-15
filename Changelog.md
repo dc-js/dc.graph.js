@@ -1,7 +1,10 @@
-## 0.9.0
+## 0.9.1
 * clusters are another dimension of data, similar to ports and paths. clusters are drawn with `draw_clusters` mode. cola, dagre, dot, and fdp layouts support clusters.
 * eliminate unqualilified `d3.select` that could accidentally snag objects from another diagram ([#114](https://github.com/dc-js/dc.graph.js/issues/114))
 * adding a null mode should remove any mode with that name (not crash ;)
+
+## 0.9.0
+(dead version)
 
 ## 0.8.11
 * added event namespacing to document keyboard event handlers for `modKeyZoom` because it didn't work with two diagrams on the same page
