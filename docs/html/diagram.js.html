@@ -103,6 +103,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
+    var _clusters = {};
     var _nodePorts; // ports sorted by node id
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
@@ -496,6 +497,95 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.edgeSourcePortName = property(null);
     _diagram.edgeTargetPortName = property(null);
+
+    /**
+     * Set or get the crossfilter dimension which represents the edges in the
+     * diagram. Typically there will be a crossfilter instance for the nodes, and another for
+     * the edges.
+     *
+     * *As with node and edge dimensions, the diagram will itself not filter on cluster dimensions;
+     * this is included for symmetry, and for modes which may want to filter clusters.*
+     * @method clusterDimension
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {crossfilter.dimension} [clusterDimension]
+     * @return {crossfilter.dimension}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterDimension = property(null);
+
+    /**
+     * Set or get the crossfilter group which is the data source for clusters in the
+     * diagram.
+     *
+     * The key/value pairs returned by `diagram.clusterGroup().all()` need to support, at a minimum,
+     * the {@link dc_graph.diagram#clusterKey clusterKey} and {@link dc_graph.diagram#clusterParent clusterParent}
+     * accessors, which should return keys in this group.
+     *
+     * @method clusterGroup
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {crossfilter.group} [clusterGroup]
+     * @return {crossfilter.group}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterGroup = property(null);
+
+    // cluster accessors
+    /**
+     * Set or get the function which will be used to retrieve the unique key for each cluster. By
+     * default, this accesses the `key` field of the object passed to it.
+     *
+     * @method clusterKey
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterKey=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterKey = property(dc.pluck('key'));
+
+    /**
+     * Set or get the function which will be used to retrieve the key of the parent of a cluster,
+     * which is another cluster.
+     *
+     * @method clusterParent
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterParent=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterParent = property(null);
+
+    /**
+     * Set or get the function which will be used to retrieve the padding, in pixels, around a cluster.
+     *
+     * **To be implemented.** If a single value is returned, it will be used on all sides; if two
+     * values are returned they will be interpreted as the vertical and horizontal padding.
+     *
+     * @method clusterPadding
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterPadding=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterPadding = property(8);
+
+    // node accessor
+    /**
+     * Set or get the function which will be used to retrieve the parent cluster of a node, or
+     * `null` if the node is not in a cluster.
+     *
+     * @method nodeParentCluster
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [nodeParentCluster=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.nodeParentCluster = property(null);
 
     /**
      * Set or get the function which will be used to retrieve the radius, in pixels, for each
@@ -1201,6 +1291,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.mode.reject = function(id, object) {
         var rtype = _diagram.renderer().rendererType();
+        if(!object)
+            return true; // null is always a valid mode for any renderer
         if(!object.supportsRenderer)
             console.log('could not check if "' + id + '" is compatible with ' + rtype);
         else if(!object.supportsRenderer(rtype))
@@ -1326,6 +1418,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.nodePorts = function() {
         return _nodePorts;
+    };
+
+    _diagram.getWholeCluster = function(id) {
+        return _clusters[id] || null;
     };
 
     /**
@@ -1470,6 +1566,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _nodes = {};
         _edges = {};
         _ports = {};
+        _clusters = {};
 
         // start out with 1:1 zoom
         _diagram.x(d3.scale.linear()
@@ -1505,6 +1602,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nodes = _diagram.nodeGroup().all();
         var edges = _diagram.edgeGroup().all();
         var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
+        var clusters = _diagram.clusterGroup() ? _diagram.clusterGroup().all() : [];
         if(_running) {
             throw new Error('dc_graph.diagram.redraw already running!');
         }
@@ -1534,6 +1632,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.orig = v;
             v1.cola = v1.cola || {};
             v1.cola.dcg_nodeKey = _diagram.nodeKey.eval(v1);
+            v1.cola.dcg_nodeParentCluster = _diagram.nodeParentCluster.eval(v1);
             _diagram.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
         var wedges = regenerate_objects(_edges, edges, null, function(e) {
@@ -1624,6 +1723,21 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!keeps[k])
                     delete _nodes[k];
         }
+
+        var needclusters = d3.set(wnodes.map(function(n) {
+            return _diagram.nodeParentCluster.eval(n);
+        }).filter(identity)).values();
+
+        var wclusters = regenerate_objects(_clusters, clusters, needclusters, function(c) {
+            return _diagram.clusterKey()(c);
+        }, function(c1, c) { // assign
+            c1.orig = c;
+            c1.cola = c1.cola || {
+                dcg_clusterKey: _diagram.clusterKey.eval(c1),
+                dcg_clusterParent: _diagram.clusterParent.eval(c1)
+            };
+        }, function(k, c) { // create
+        });
 
         wnodes.forEach(function(v, i) {
             v.index = i;
@@ -1840,11 +1954,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         var startTime = Date.now();
 
-        function populate_cola(rnodes, redges) {
+        function populate_cola(rnodes, redges, rclusters) {
             rnodes.forEach(function(rn) {
                 var n = _nodes[rn.dcg_nodeKey];
                 if(!n) {
-                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send');
+                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send, ignored');
                     return;
                 }
                 n.cola.x = rn.x;
@@ -1854,18 +1968,31 @@ dc_graph.diagram = function (parent, chartGroup) {
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
                 if(!e) {
-                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
+                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send, ignored');
                     return;
                 }
                 if(re.points)
                     e.cola.points = re.points;
             });
+            wclusters.forEach(function(c) {
+                c.cola.bounds = null;
+            });
+            if(rclusters)
+                rclusters.forEach(function(rc) {
+                    var c = _clusters[rc.dcg_clusterKey];
+                    if(!c) {
+                        console.warn('received cluster "' + rc.dcg_clusterKey + '" that we did not send, ignored');
+                        return;
+                    }
+                    if(rc.bounds)
+                        c.cola.bounds = rc.bounds;
+                });
         }
         _diagram.layoutEngine()
-            .on('tick.diagram', function(nodes, edges) {
+            .on('tick.diagram', function(nodes, edges, clusters) {
                 var elapsed = Date.now() - startTime;
                 if(!_diagram.initialOnly())
-                    populate_cola(nodes, edges);
+                    populate_cola(nodes, edges, clusters);
                 if(_diagram.showLayoutSteps()) {
                     init_node_ports(_nodes, wports);
                     _dispatch.receivedLayout(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
@@ -1880,10 +2007,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _diagram.layoutEngine().stop();
                 }
             })
-            .on('end.diagram', function(nodes, edges) {
+            .on('end.diagram', function(nodes, edges, clusters) {
                 if(!_diagram.showLayoutSteps()) {
                     if(!_diagram.initialOnly())
-                        populate_cola(nodes, edges);
+                        populate_cola(nodes, edges, clusters);
                     init_node_ports(_nodes, wports);
                     _dispatch.receivedLayout(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
                     propagate_port_positions(_nodes, wedges, _ports);
@@ -1925,6 +2052,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                             le[key] = engine.extractEdgeAttrs()[key](e.orig);
                         });
                     return le;
+                }),
+                wclusters.map(function(c) {
+                    return c.cola;
                 }),
                 constraints
             );
@@ -2595,7 +2725,7 @@ dc_graph.diagram = function (parent, chartGroup) {
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on Thu Apr 11th 2019
+		on Mon Apr 15th 2019
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

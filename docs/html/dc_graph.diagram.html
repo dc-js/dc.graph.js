@@ -384,7 +384,7 @@ complete.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1363">line 1363</a>
+				 <a href="diagram.js.html#sunlight-1-line-1459">line 1459</a>
 			</li>
 		</ul>
 	</dd>
@@ -536,7 +536,7 @@ complete.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-202">line 202</a>
+				 <a href="diagram.js.html#sunlight-1-line-203">line 203</a>
 			</li>
 		</ul>
 	</dd>
@@ -768,7 +768,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2409">line 2409</a>
+				 <a href="diagram.js.html#sunlight-1-line-2539">line 2539</a>
 			</li>
 		</ul>
 	</dd>
@@ -900,7 +900,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2454">line 2454</a>
+				 <a href="diagram.js.html#sunlight-1-line-2584">line 2584</a>
 			</li>
 		</ul>
 	</dd>
@@ -1083,7 +1083,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-248">line 248</a>
+				 <a href="diagram.js.html#sunlight-1-line-249">line 249</a>
 			</li>
 		</ul>
 	</dd>
@@ -1274,7 +1274,7 @@ lengths.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-851">line 851</a>
+				 <a href="diagram.js.html#sunlight-1-line-941">line 941</a>
 			</li>
 		</ul>
 	</dd>
@@ -1498,7 +1498,7 @@ The child needs to support a <code>parent</code> method, the diagram to modify.<
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1100">line 1100</a>
+				 <a href="diagram.js.html#sunlight-1-line-1190">line 1190</a>
 			</li>
 		</ul>
 	</dd>
@@ -1556,6 +1556,982 @@ tip.content(function(n, k) {
 });
 diagram.child(&#x27;tip&#x27;, tip);</pre>
 
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="clusterDimension"><span class="type-signature"></span>clusterDimension( [clusterDimension])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set or get the crossfilter dimension which represents the edges in the
+diagram. Typically there will be a crossfilter instance for the nodes, and another for
+the edges.</p>
+<p><em>As with node and edge dimensions, the diagram will itself not filter on cluster dimensions;
+this is included for symmetry, and for modes which may want to filter clusters.</em></p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>clusterDimension</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">crossfilter.dimension</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="diagram.js.html">diagram.js</a>,
+				 <a href="diagram.js.html#sunlight-1-line-422">line 422</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    <ul>
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">crossfilter.dimension</span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.diagram.html">dc_graph.diagram</a></span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        </ul>
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="clusterGroup"><span class="type-signature"></span>clusterGroup( [clusterGroup])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set or get the crossfilter group which is the data source for clusters in the
+diagram.</p>
+<p>The key/value pairs returned by <code>diagram.clusterGroup().all()</code> need to support, at a minimum,
+the <a href="dc_graph.diagram.html#clusterKey">clusterKey</a> and <a href="dc_graph.diagram.html#clusterParent">clusterParent</a>
+accessors, which should return keys in this group.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>clusterGroup</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">crossfilter.group</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="diagram.js.html">diagram.js</a>,
+				 <a href="diagram.js.html#sunlight-1-line-438">line 438</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    <ul>
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">crossfilter.group</span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.diagram.html">dc_graph.diagram</a></span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        </ul>
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="clusterKey"><span class="type-signature"></span>clusterKey( [clusterKey])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set or get the function which will be used to retrieve the unique key for each cluster. By
+default, this accesses the <code>key</code> field of the object passed to it.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>clusterKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    function(kv) { return kv.key }
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="diagram.js.html">diagram.js</a>,
+				 <a href="diagram.js.html#sunlight-1-line-456">line 456</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    <ul>
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.diagram.html">dc_graph.diagram</a></span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        </ul>
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="clusterPadding"><span class="type-signature"></span>clusterPadding( [clusterPadding])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set or get the function which will be used to retrieve the padding, in pixels, around a cluster.</p>
+<p><strong>To be implemented.</strong> If a single value is returned, it will be used on all sides; if two
+values are returned they will be interpreted as the vertical and horizontal padding.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>clusterPadding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    function(kv) { return kv.key }
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="diagram.js.html">diagram.js</a>,
+				 <a href="diagram.js.html#sunlight-1-line-482">line 482</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    <ul>
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.diagram.html">dc_graph.diagram</a></span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        </ul>
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="clusterParent"><span class="type-signature"></span>clusterParent( [clusterParent])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set or get the function which will be used to retrieve the key of the parent of a cluster,
+which is another cluster.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>clusterParent</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    function(kv) { return kv.key }
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="diagram.js.html">diagram.js</a>,
+				 <a href="diagram.js.html#sunlight-1-line-469">line 469</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    <ul>
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.diagram.html">dc_graph.diagram</a></span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        </ul>
 
     
 </dd>
@@ -1704,7 +2680,7 @@ this constrain function, specifying the constraints themselves in a graph.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-931">line 931</a>
+				 <a href="diagram.js.html#sunlight-1-line-1021">line 1021</a>
 			</li>
 		</ul>
 	</dd>
@@ -1902,7 +2878,7 @@ staged transitions.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-895">line 895</a>
+				 <a href="diagram.js.html#sunlight-1-line-985">line 985</a>
 			</li>
 		</ul>
 	</dd>
@@ -2103,7 +3079,7 @@ for the target/ head/destination of the edge. Arrow symbols can be specified wit
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-720">line 720</a>
+				 <a href="diagram.js.html#sunlight-1-line-810">line 810</a>
 			</li>
 		</ul>
 	</dd>
@@ -2305,7 +3281,7 @@ for the target/ head/destination of the edge. Arrow symbols can be specified wit
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-746">line 746</a>
+				 <a href="diagram.js.html#sunlight-1-line-836">line 836</a>
 			</li>
 		</ul>
 	</dd>
@@ -2509,7 +3485,7 @@ for the tail/source of the edge. Arrow symbols can be specified with
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-733">line 733</a>
+				 <a href="diagram.js.html#sunlight-1-line-823">line 823</a>
 			</li>
 		</ul>
 	</dd>
@@ -2704,7 +3680,7 @@ itself does not use them - but filter_selection will.</em></p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-304">line 304</a>
+				 <a href="diagram.js.html#sunlight-1-line-305">line 305</a>
 			</li>
 		</ul>
 	</dd>
@@ -2897,7 +3873,7 @@ keys as the <a href="dc_graph.diagram.html#nodeKey">nodeKey</a></p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-320">line 320</a>
+				 <a href="diagram.js.html#sunlight-1-line-321">line 321</a>
 			</li>
 		</ul>
 	</dd>
@@ -3090,7 +4066,7 @@ value is truthy, true otherwise.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-757">line 757</a>
+				 <a href="diagram.js.html#sunlight-1-line-847">line 847</a>
 			</li>
 		</ul>
 	</dd>
@@ -3299,7 +4275,7 @@ default, this accesses the <code>key</code> field of the object passed to it.</p
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-357">line 357</a>
+				 <a href="diagram.js.html#sunlight-1-line-358">line 358</a>
 			</li>
 		</ul>
 	</dd>
@@ -3491,7 +4467,7 @@ displayed when an edge is hovered over. By default, uses the <code>edgeKey</code
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-699">line 699</a>
+				 <a href="diagram.js.html#sunlight-1-line-789">line 789</a>
 			</li>
 		</ul>
 	</dd>
@@ -3696,7 +4672,7 @@ distance is falsy, uses the <code>baseLength</code>.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-802">line 802</a>
+				 <a href="diagram.js.html#sunlight-1-line-892">line 892</a>
 			</li>
 		</ul>
 	</dd>
@@ -3908,7 +4884,7 @@ to 1.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-687">line 687</a>
+				 <a href="diagram.js.html#sunlight-1-line-777">line 777</a>
 			</li>
 		</ul>
 	</dd>
@@ -4112,7 +5088,7 @@ parallel edge is which.)</em></p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-980">line 980</a>
+				 <a href="diagram.js.html#sunlight-1-line-1070">line 1070</a>
 			</li>
 		</ul>
 	</dd>
@@ -4311,7 +5287,7 @@ displayed. By default, looks for <code>.value.sourcename</code>.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-372">line 372</a>
+				 <a href="diagram.js.html#sunlight-1-line-373">line 373</a>
 			</li>
 		</ul>
 	</dd>
@@ -4510,7 +5486,7 @@ displayed. By default, looks for <code>.value.sourcename</code>.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-663">line 663</a>
+				 <a href="diagram.js.html#sunlight-1-line-753">line 753</a>
 			</li>
 		</ul>
 	</dd>
@@ -4712,7 +5688,7 @@ displayed. By default, looks for <code>.value.sourcename</code>.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-674">line 674</a>
+				 <a href="diagram.js.html#sunlight-1-line-764">line 764</a>
 			</li>
 		</ul>
 	</dd>
@@ -4915,7 +5891,7 @@ is currently filtered out, the edge will not be displayed. By default, looks for
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-389">line 389</a>
+				 <a href="diagram.js.html#sunlight-1-line-390">line 390</a>
 			</li>
 		</ul>
 	</dd>
@@ -5132,7 +6108,7 @@ into view as possible, using using the same algorithm as <code>restrictPan</code
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-213">line 213</a>
+				 <a href="diagram.js.html#sunlight-1-line-214">line 214</a>
 			</li>
 		</ul>
 	</dd>
@@ -5322,7 +6298,7 @@ now it is separate.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-822">line 822</a>
+				 <a href="diagram.js.html#sunlight-1-line-912">line 912</a>
 			</li>
 		</ul>
 	</dd>
@@ -5614,7 +6590,7 @@ resetting it might produce unpredictable results.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2215">line 2215</a>
+				 <a href="diagram.js.html#sunlight-1-line-2345">line 2345</a>
 			</li>
 		</ul>
 	</dd>
@@ -5797,7 +6773,7 @@ resetting it might produce unpredictable results.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-908">line 908</a>
+				 <a href="diagram.js.html#sunlight-1-line-998">line 998</a>
 			</li>
 		</ul>
 	</dd>
@@ -5995,7 +6971,7 @@ resetting it might produce unpredictable results.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1252">line 1252</a>
+				 <a href="diagram.js.html#sunlight-1-line-1348">line 1348</a>
 			</li>
 		</ul>
 	</dd>
@@ -6202,7 +7178,7 @@ rectangle as its containing div using CSS.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-72">line 72</a>
+				 <a href="diagram.js.html#sunlight-1-line-73">line 73</a>
 			</li>
 		</ul>
 	</dd>
@@ -6400,7 +7376,7 @@ shown.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1062">line 1062</a>
+				 <a href="diagram.js.html#sunlight-1-line-1152">line 1152</a>
 			</li>
 		</ul>
 	</dd>
@@ -6601,7 +7577,7 @@ matter of composing them into a super-algorithm, not a special step like this wa
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1042">line 1042</a>
+				 <a href="diagram.js.html#sunlight-1-line-1132">line 1132</a>
 			</li>
 		</ul>
 	</dd>
@@ -6802,7 +7778,7 @@ soon.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1001">line 1001</a>
+				 <a href="diagram.js.html#sunlight-1-line-1091">line 1091</a>
 			</li>
 		</ul>
 	</dd>
@@ -7001,7 +7977,7 @@ object instead</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1139">line 1139</a>
+				 <a href="diagram.js.html#sunlight-1-line-1231">line 1231</a>
 			</li>
 		</ul>
 	</dd>
@@ -7186,7 +8162,7 @@ diagram.layoutAlgorithm(&#x27;dagre&#x27;);</pre>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1173">line 1173</a>
+				 <a href="diagram.js.html#sunlight-1-line-1265">line 1265</a>
 			</li>
 		</ul>
 	</dd>
@@ -7353,7 +8329,7 @@ diagram.layoutEngine(dc_graph.webworker_layout(dc_graph.dagre_layout()));</pre>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1017">line 1017</a>
+				 <a href="diagram.js.html#sunlight-1-line-1107">line 1107</a>
 			</li>
 		</ul>
 	</dd>
@@ -7550,7 +8526,7 @@ according to the visual encoding of this diagram.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1088">line 1088</a>
+				 <a href="diagram.js.html#sunlight-1-line-1178">line 1178</a>
 			</li>
 		</ul>
 	</dd>
@@ -7759,7 +8735,7 @@ for more details.
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-782">line 782</a>
+				 <a href="diagram.js.html#sunlight-1-line-872">line 872</a>
 			</li>
 		</ul>
 	</dd>
@@ -7959,7 +8935,7 @@ whether dragging on the background pans the diagram.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-188">line 188</a>
+				 <a href="diagram.js.html#sunlight-1-line-189">line 189</a>
 			</li>
 		</ul>
 	</dd>
@@ -8151,7 +9127,7 @@ itself does not use them - but filter_selection will.</em></p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-268">line 268</a>
+				 <a href="diagram.js.html#sunlight-1-line-269">line 269</a>
 			</li>
 		</ul>
 	</dd>
@@ -8351,7 +9327,7 @@ node.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-473">line 473</a>
+				 <a href="diagram.js.html#sunlight-1-line-563">line 563</a>
 			</li>
 		</ul>
 	</dd>
@@ -8547,7 +9523,7 @@ to return the fill color. If falsy, uses the identity function (no scale).</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-460">line 460</a>
+				 <a href="diagram.js.html#sunlight-1-line-550">line 550</a>
 			</li>
 		</ul>
 	</dd>
@@ -8749,7 +9725,7 @@ to return the fill color. If falsy, uses the identity function (no scale).</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-565">line 565</a>
+				 <a href="diagram.js.html#sunlight-1-line-655">line 655</a>
 			</li>
 		</ul>
 	</dd>
@@ -8953,7 +9929,7 @@ and returns falsy for other nodes.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-649">line 649</a>
+				 <a href="diagram.js.html#sunlight-1-line-739">line 739</a>
 			</li>
 		</ul>
 	</dd>
@@ -9151,7 +10127,7 @@ crossfilter group.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-284">line 284</a>
+				 <a href="diagram.js.html#sunlight-1-line-285">line 285</a>
 			</li>
 		</ul>
 	</dd>
@@ -9350,7 +10326,7 @@ the keys returned by the <a href="dc_graph.diagram.html#edgeSource">edgeSource</
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-340">line 340</a>
+				 <a href="diagram.js.html#sunlight-1-line-341">line 341</a>
 			</li>
 		</ul>
 	</dd>
@@ -9542,7 +10518,7 @@ node. By default, looks for a field <code>label</code> or <code>name</code> insi
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-532">line 532</a>
+				 <a href="diagram.js.html#sunlight-1-line-622">line 622</a>
 			</li>
 		</ul>
 	</dd>
@@ -9753,7 +10729,7 @@ diagram.nodeLabel(function(kv) {
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-554">line 554</a>
+				 <a href="diagram.js.html#sunlight-1-line-644">line 644</a>
 			</li>
 		</ul>
 	</dd>
@@ -9959,7 +10935,7 @@ diagram.nodeLabel(function(kv) {
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-509">line 509</a>
+				 <a href="diagram.js.html#sunlight-1-line-599">line 599</a>
 			</li>
 		</ul>
 	</dd>
@@ -10161,7 +11137,7 @@ diagram.nodeLabel(function(kv) {
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-521">line 521</a>
+				 <a href="diagram.js.html#sunlight-1-line-611">line 611</a>
 			</li>
 		</ul>
 	</dd>
@@ -10363,7 +11339,7 @@ diagram.nodeLabel(function(kv) {
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-485">line 485</a>
+				 <a href="diagram.js.html#sunlight-1-line-575">line 575</a>
 			</li>
 		</ul>
 	</dd>
@@ -10565,7 +11541,7 @@ affect the layout in some cases.</em></p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-635">line 635</a>
+				 <a href="diagram.js.html#sunlight-1-line-725">line 725</a>
 			</li>
 		</ul>
 	</dd>
@@ -10765,7 +11741,7 @@ to both sides of the node.)</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-496">line 496</a>
+				 <a href="diagram.js.html#sunlight-1-line-586">line 586</a>
 			</li>
 		</ul>
 	</dd>
@@ -10805,6 +11781,203 @@ to both sides of the node.)</p>
 |
 
 <span class="param-type">Number</span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.diagram.html">dc_graph.diagram</a></span>
+
+
+
+    </dd>
+</dl>
+
+</li>
+        </ul>
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="nodeParentCluster"><span class="type-signature"></span>nodeParentCluster( [nodeParentCluster])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set or get the function which will be used to retrieve the parent cluster of a node, or
+<code>null</code> if the node is not in a cluster.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>nodeParentCluster</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    function(kv) { return kv.key }
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="diagram.js.html">diagram.js</a>,
+				 <a href="diagram.js.html#sunlight-1-line-498">line 498</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    <ul>
+            <li>
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
 
 
 
@@ -10968,7 +12141,7 @@ node. This determines the height of nodes,and if <code>nodeFitLabel</code> is fa
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-421">line 421</a>
+				 <a href="diagram.js.html#sunlight-1-line-511">line 511</a>
 			</li>
 		</ul>
 	</dd>
@@ -11178,7 +12351,7 @@ invtriangle, invtrapezium, square, polygon are supported.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-576">line 576</a>
+				 <a href="diagram.js.html#sunlight-1-line-666">line 666</a>
 			</li>
 		</ul>
 	</dd>
@@ -11390,7 +12563,7 @@ of each node.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-446">line 446</a>
+				 <a href="diagram.js.html#sunlight-1-line-536">line 536</a>
 			</li>
 		</ul>
 	</dd>
@@ -11594,7 +12767,7 @@ be drawn half on top of the fill, and half outside. Default: 1</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-433">line 433</a>
+				 <a href="diagram.js.html#sunlight-1-line-523">line 523</a>
 			</li>
 		</ul>
 	</dd>
@@ -11789,7 +12962,7 @@ as a tooltip. By default, uses the key of the node.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-616">line 616</a>
+				 <a href="diagram.js.html#sunlight-1-line-706">line 706</a>
 			</li>
 		</ul>
 	</dd>
@@ -12031,7 +13204,7 @@ and can be modified through the passed d3 selections.</li>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2189">line 2189</a>
+				 <a href="diagram.js.html#sunlight-1-line-2319">line 2319</a>
 			</li>
 		</ul>
 	</dd>
@@ -12210,7 +13383,7 @@ from the original so they don't overlap.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-968">line 968</a>
+				 <a href="diagram.js.html#sunlight-1-line-1058">line 1058</a>
 			</li>
 		</ul>
 	</dd>
@@ -12400,7 +13573,7 @@ generated from graphviz-style since it is more general.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-839">line 839</a>
+				 <a href="diagram.js.html#sunlight-1-line-929">line 929</a>
 			</li>
 		</ul>
 	</dd>
@@ -12490,7 +13663,7 @@ method. Causes all charts in the chart group to be redrawn.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2257">line 2257</a>
+				 <a href="diagram.js.html#sunlight-1-line-2387">line 2387</a>
 			</li>
 		</ul>
 	</dd>
@@ -12600,7 +13773,7 @@ not be necessary.)</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1028">line 1028</a>
+				 <a href="diagram.js.html#sunlight-1-line-1118">line 1118</a>
 			</li>
 		</ul>
 	</dd>
@@ -12711,7 +13884,7 @@ must be called the first time, and <code>.redraw()</code> can be called after th
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1375">line 1375</a>
+				 <a href="diagram.js.html#sunlight-1-line-1471">line 1471</a>
 			</li>
 		</ul>
 	</dd>
@@ -12821,7 +13994,7 @@ method. Causes all charts in the chart group to be rendered.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2270">line 2270</a>
+				 <a href="diagram.js.html#sunlight-1-line-2400">line 2400</a>
 			</li>
 		</ul>
 	</dd>
@@ -13111,7 +14284,7 @@ when the diagram is constructed; setting it later may have unexpected consequenc
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-173">line 173</a>
+				 <a href="diagram.js.html#sunlight-1-line-174">line 174</a>
 			</li>
 		</ul>
 	</dd>
@@ -13695,7 +14868,7 @@ stabilized. Note: this may not be compatible with transitionDuration.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1075">line 1075</a>
+				 <a href="diagram.js.html#sunlight-1-line-1165">line 1165</a>
 			</li>
 		</ul>
 	</dd>
@@ -13898,7 +15071,7 @@ the delete, modify, and insert operations:</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-878">line 878</a>
+				 <a href="diagram.js.html#sunlight-1-line-968">line 968</a>
 			</li>
 		</ul>
 	</dd>
@@ -14289,7 +15462,7 @@ limit.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-919">line 919</a>
+				 <a href="diagram.js.html#sunlight-1-line-1009">line 1009</a>
 			</li>
 		</ul>
 	</dd>
@@ -14489,7 +15662,7 @@ be animated.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-866">line 866</a>
+				 <a href="diagram.js.html#sunlight-1-line-956">line 956</a>
 			</li>
 		</ul>
 	</dd>
@@ -14696,7 +15869,7 @@ rectangle as its containing div using CSS.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-122">line 122</a>
+				 <a href="diagram.js.html#sunlight-1-line-123">line 123</a>
 			</li>
 		</ul>
 	</dd>
@@ -14886,7 +16059,7 @@ method. Gets or sets the x scale.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2229">line 2229</a>
+				 <a href="diagram.js.html#sunlight-1-line-2359">line 2359</a>
 			</li>
 		</ul>
 	</dd>
@@ -15076,7 +16249,7 @@ method. Gets or sets the y scale.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2243">line 2243</a>
+				 <a href="diagram.js.html#sunlight-1-line-2373">line 2373</a>
 			</li>
 		</ul>
 	</dd>
@@ -15197,7 +16370,7 @@ method. Gets or sets the y scale.</p>
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on Thu Apr 11th 2019
+		on Mon Apr 15th 2019
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

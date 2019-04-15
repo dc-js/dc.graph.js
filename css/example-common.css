@@ -6,3 +6,7 @@ select {
     position: relative;
     top: -0.1em;
 }
+input[type="range"] {
+    position: relative;
+    top: 0.2em;
+}

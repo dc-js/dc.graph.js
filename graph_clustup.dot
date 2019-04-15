@@ -1,5 +1,5 @@
 digraph flow {
-subgraph cluster_1 { style=invis;
+subgraph cluster_1 { style=invis; 
 "123" [label="ACCT_SEMI_DECILE_CWTR",fontsize=14,group=1];
 "124" [label="ACCT_SEMI_DECILE_CWTR_B",fontsize=14,group=1];
 "143" [label="TOTAL_ACLF_CALLS_6M_B",fontsize=14,group=1];
@@ -25,7 +25,7 @@ subgraph cluster_1 { style=invis;
 "163" [label="ACLF_SUCCESSFUL_CNT_6M_B",fontsize=14,group=1];
 "164" [label="ACLF_GOOD_CALL_CNT_6M_B",fontsize=14,group=1];
 }
-subgraph cluster_2 { style=invis;
+subgraph cluster_2 { style=invis; 
 "2" [label="UV_IND",fontsize=14,group=2];
 "3" [label="UV_TV_IND",fontsize=14,group=2];
 "4" [label="UV_VCE_IND",fontsize=14,group=2];
@@ -50,7 +50,7 @@ subgraph cluster_2 { style=invis;
 "210" [label="UV_INT_MX_ELGBL_SPEED",fontsize=14,group=2];
 "211" [label="UV_INT_ATT_FIBER_IND",fontsize=14,group=2];
 }
-subgraph cluster_3 { style=invis;
+subgraph cluster_3 { style=invis; 
 "16" [label="IN_CE_CUST_PROFILE_IND",fontsize=14,group=3];
 "18" [label="CONTRACT_TYPE_B",fontsize=14,group=3];
 "19" [label="CONTRACT_TTCE_MNTHS_B",fontsize=14,group=3];
@@ -90,7 +90,7 @@ subgraph cluster_3 { style=invis;
 "221" [label="PLUS_DEVICE_MODEL",fontsize=14,group=3];
 "239" [label="EADOPTER",fontsize=14,group=3];
 }
-subgraph cluster_4 { style=invis;
+subgraph cluster_4 { style=invis; 
 "62" [label="CALLS_B",fontsize=14,group=4];
 "63" [label="RIF_RATE_B",fontsize=14,group=4];
 "64" [label="NONRIF_DROP_RATE_B",fontsize=14,group=4];
@@ -132,7 +132,7 @@ subgraph cluster_4 { style=invis;
 "122" [label="ACCT_RIF_RATE_HZ_3M_B",fontsize=14,group=4];
 "238" [label="CALL_PROTECT_IND",fontsize=14,group=4];
 }
-subgraph cluster_5 { style=invis;
+subgraph cluster_5 { style=invis; 
 "100" [label="VOLTE_4GTOWIFI_RATE_3MO_B",fontsize=14,group=5];
 "111" [label="ACCT_VOLTE_4GTOWIFI_RATE_3MO_B",fontsize=14,group=5];
 "165" [label="WIFI_CALL_REG_IND",fontsize=14,group=5];
@@ -152,7 +152,7 @@ subgraph cluster_5 { style=invis;
 "179" [label="ACCT_CALL_WIFI_ABORTS_3M_B",fontsize=14,group=5];
 "180" [label="ACCT_CALL_WIFI_ABORTS_3M_B2",fontsize=14,group=5];
 }
-subgraph cluster_6 { style=invis;
+subgraph cluster_6 { style=invis; 
 "25" [label="PLN_DATA_GB_CAT_B",fontsize=14,group=6];
 "26" [label="PLN_DATA_GB_CAT_B2",fontsize=14,group=6];
 "27" [label="PLN_DATA_GRP",fontsize=14,group=6];
@@ -173,7 +173,7 @@ subgraph cluster_6 { style=invis;
 "186" [label="USG_PCT_OF_TOTAL_AVLABLE_B",fontsize=14,group=6];
 "187" [label="USG_PCT_OF_TOTAL_AVLABLE_B2",fontsize=14,group=6];
 }
-subgraph cluster_7 { style=invis;
+subgraph cluster_7 { style=invis; 
 "38" [label="IN_MOB_PROFILE_IND",fontsize=14,group=7];
 "43" [label="DEVICE_TECH",fontsize=14,group=7];
 "52" [label="PRIMARY_LINE_IND",fontsize=14,group=7];
@@ -181,7 +181,7 @@ subgraph cluster_7 { style=invis;
 "73" [label="ACCT_LINES_B2",fontsize=14,group=7];
 "121" [label="ACCT_FC_IND",fontsize=14,group=7];
 }
-subgraph cluster_8 { style=invis;
+subgraph cluster_8 { style=invis; 
 "54" [label="UMTS270N_B",fontsize=14,group=8];
 "55" [label="UMTS_HSPAP_B",fontsize=14,group=8];
 "56" [label="UMTS_HSPAP_B2",fontsize=14,group=8];
@@ -209,7 +209,7 @@ subgraph cluster_8 { style=invis;
 "197" [label="BZ_SUB_DENSITY_B",fontsize=14,group=8];
 "198" [label="BZ_SUB_PCT_B",fontsize=14,group=8];
 }
-subgraph cluster_9 { style=invis;
+subgraph cluster_9 { style=invis; 
 "222" [label="VNOC_STREAM_CHANNELS_B",fontsize=14,group=9];
 "223" [label="VNOC_SOCIAL_STREAM_CHANNELS_B",fontsize=14,group=9];
 "224" [label="VNOC_FACEBOOK_STREAM_IND",fontsize=14,group=9];
@@ -223,7 +223,7 @@ subgraph cluster_9 { style=invis;
 "232" [label="VNOC_TV_STREAM_IND",fontsize=14,group=9];
 "233" [label="VNOC_ACCT_TV_STREAM_CNT_B",fontsize=14,group=9];
 }
-subgraph cluster_10 { style=invis;
+subgraph cluster_10 { style=invis; 
 "17" [label="ACCT_LIABILITY",fontsize=14,group=10];
 "39" [label="LIABILITY",fontsize=14,group=10];
 "40" [label="SEGMENT",fontsize=14,group=10];
@@ -233,14 +233,14 @@ subgraph cluster_10 { style=invis;
 "236" [label="IRU_INDUSTRY_DIVISION2",fontsize=14,group=10];
 "237" [label="IRU_INDUSTRY_GROUP_IND",fontsize=14,group=10];
 }
-subgraph cluster_11 { style=invis;
+subgraph cluster_11 { style=invis; 
 "34" [label="NUM_OVG_EVENTS_SIX_MTHS_MS",fontsize=14,group=11];
 "188" [label="OVG_6M_CNT_B",fontsize=14,group=11];
 "189" [label="OVG_6M_CNT_B2",fontsize=14,group=11];
 "190" [label="OVG_6M_AMT_B",fontsize=14,group=11];
 "191" [label="OVG_6M_MB_B",fontsize=14,group=11];
 }
-subgraph cluster_12 { style=invis;
+subgraph cluster_12 { style=invis; 
 "112" [label="BILL_TOTAL_B",fontsize=14,group=12];
 "113" [label="ZERO_BILL_IND",fontsize=14,group=12];
 "114" [label="BILL_TOTAL_B2",fontsize=14,group=12];
@@ -248,7 +248,7 @@ subgraph cluster_12 { style=invis;
 "116" [label="ZERO_REVENUE_IND",fontsize=14,group=12];
 "117" [label="BILL_ACCT_REVENUE_B",fontsize=14,group=12];
 }
-subgraph cluster_13 { style=invis;
+subgraph cluster_13 { style=invis; 
 "10" [label="CONNECT_CAR_IND",fontsize=14,group=13];
 "13" [label="QUOTA_CELL",fontsize=14,group=13];
 "192" [label="NONE_PR_VI_IND",fontsize=14,group=13];
@@ -256,17 +256,17 @@ subgraph cluster_13 { style=invis;
 "194" [label="BZ_VPGM_MARKET_REGION",fontsize=14,group=13];
 "195" [label="BZ_REGION",fontsize=14,group=13];
 }
-subgraph cluster_14 { style=invis;
+subgraph cluster_14 { style=invis; 
 "213" [label="CHAT_6M_IND",fontsize=14,group=14];
 "214" [label="CHAT_9M_IND",fontsize=14,group=14];
 "215" [label="ACCT_CHAT_9M_IND",fontsize=14,group=14];
 }
-subgraph cluster_15 { style=invis;
+subgraph cluster_15 { style=invis; 
 "1" [label="DTV_IND",fontsize=14,group=15];
 "216" [label="DTV_STREAM_IND",fontsize=14,group=15];
 "217" [label="DTV_DTVN_STREAM_IND",fontsize=14,group=15];
 }
-subgraph cluster_16 { style=invis;
+subgraph cluster_16 { style=invis; 
 "14" [label="GMAIL_IND",fontsize=14,group=16];
 "15" [label="EMAIL_DOMAIN_GRP",fontsize=14,group=16];
 }
