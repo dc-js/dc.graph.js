@@ -419,15 +419,93 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.edgeSourcePortName = property(null);
     _diagram.edgeTargetPortName = property(null);
 
+    /**
+     * Set or get the crossfilter dimension which represents the edges in the
+     * diagram. Typically there will be a crossfilter instance for the nodes, and another for
+     * the edges.
+     *
+     * *As with node and edge dimensions, the diagram will itself not filter on cluster dimensions;
+     * this is included for symmetry, and for modes which may want to filter clusters.*
+     * @method clusterDimension
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {crossfilter.dimension} [clusterDimension]
+     * @return {crossfilter.dimension}
+     * @return {dc_graph.diagram}
+     **/
     _diagram.clusterDimension = property(null);
+
+    /**
+     * Set or get the crossfilter group which is the data source for clusters in the
+     * diagram.
+     *
+     * The key/value pairs returned by `diagram.clusterGroup().all()` need to support, at a minimum,
+     * the {@link dc_graph.diagram#clusterKey clusterKey} and {@link dc_graph.diagram#clusterParent clusterParent}
+     * accessors, which should return keys in this group.
+     *
+     * @method clusterGroup
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {crossfilter.group} [clusterGroup]
+     * @return {crossfilter.group}
+     * @return {dc_graph.diagram}
+     **/
     _diagram.clusterGroup = property(null);
 
     // cluster accessors
+    /**
+     * Set or get the function which will be used to retrieve the unique key for each cluster. By
+     * default, this accesses the `key` field of the object passed to it.
+     *
+     * @method clusterKey
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterKey=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
     _diagram.clusterKey = property(dc.pluck('key'));
+
+    /**
+     * Set or get the function which will be used to retrieve the key of the parent of a cluster,
+     * which is another cluster.
+     *
+     * @method clusterParent
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterParent=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
     _diagram.clusterParent = property(null);
+
+    /**
+     * Set or get the function which will be used to retrieve the padding, in pixels, around a cluster.
+     *
+     * **To be implemented.** If a single value is returned, it will be used on all sides; if two
+     * values are returned they will be interpreted as the vertical and horizontal padding.
+     *
+     * @method clusterPadding
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterPadding=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
     _diagram.clusterPadding = property(8);
 
     // node accessor
+    /**
+     * Set or get the function which will be used to retrieve the parent cluster of a node, or
+     * `null` if the node is not in a cluster.
+     *
+     * @method nodeParentCluster
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [nodeParentCluster=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
     _diagram.nodeParentCluster = property(null);
 
     /**
