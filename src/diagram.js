@@ -1134,6 +1134,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.mode.reject = function(id, object) {
         var rtype = _diagram.renderer().rendererType();
+        if(!object)
+            return true; // null is always a valid mode for any renderer
         if(!object.supportsRenderer)
             console.log('could not check if "' + id + '" is compatible with ' + rtype);
         else if(!object.supportsRenderer(rtype))
