@@ -1,4 +1,5 @@
 var _workers = {};
+var NUMBER_RESULTS = 3;
 function create_worker(layoutAlgorithm) {
     if(!_workers[layoutAlgorithm]) {
         var worker = _workers[layoutAlgorithm] = {
@@ -10,8 +11,8 @@ function create_worker(layoutAlgorithm) {
             if(!worker.layouts[layoutId])
                 throw new Error('layoutId "' + layoutId + '" unknown!');
             var engine = worker.layouts[layoutId].getEngine();
-            if(e.data.args.length > 2 && engine.processExtraWorkerResults)
-                engine.processExtraWorkerResults.apply(engine, e.data.args.slice(2));
+            if(e.data.args.length > NUMBER_RESULTS && engine.processExtraWorkerResults)
+                engine.processExtraWorkerResults.apply(engine, e.data.args.slice(NUMBER_RESULTS));
             worker.layouts[layoutId].dispatch()[e.data.response].apply(null, e.data.args);
         };
     }
@@ -45,7 +46,7 @@ dc_graph.webworker_layout = function(layoutEngine) {
         });
         return this;
     };
-    engine.data = function(graph, nodes, edges, constraints) {
+    engine.data = function(graph, nodes, edges, clusters, constraints) {
         _worker.worker.postMessage({
             command: 'data',
             args: {
@@ -53,6 +54,7 @@ dc_graph.webworker_layout = function(layoutEngine) {
                 graph: graph,
                 nodes: nodes,
                 edges: edges,
+                clusters: clusters,
                 constraints: constraints
             }
         });

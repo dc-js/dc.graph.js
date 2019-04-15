@@ -46,11 +46,12 @@ dc_graph.cola_layout = function(id) {
         }
     }
 
-    function data(nodes, edges, constraints) {
+    function data(nodes, edges, clusters, constraints) {
         var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.dcg_nodeParentCluster = v.dcg_nodeParentCluster;
             v1.width = v.width;
             v1.height = v.height;
             v1.fixed = !!v.dcg_nodeFixed;
@@ -95,6 +96,26 @@ dc_graph.cola_layout = function(id) {
             groups = components.map(function(g) {
                 return {leaves: g.array.map(function(n) { return n.index; })};
             });
+        } else if(clusters) {
+            var G = {};
+            groups = clusters.filter(function(c) {
+                return /^cluster/.test(c.dcg_clusterKey);
+            }).map(function(c, i) {
+                return G[c.dcg_clusterKey] = {
+                    dcg_clusterKey: c.dcg_clusterKey,
+                    index: i,
+                    groups: [],
+                    leaves: []
+                };
+            });
+            clusters.forEach(function(c) {
+                if(c.dcg_clusterParent && G[c.dcg_clusterParent])
+                    G[c.dcg_clusterParent].groups.push(G[c.dcg_clusterKey].index);
+            });
+            wnodes.forEach(function(n, i) {
+                if(n.dcg_nodeParentCluster && G[n.dcg_nodeParentCluster])
+                    G[n.dcg_nodeParentCluster].leaves.push(i);
+            });
         }
 
         function dispatchState(event) {
@@ -109,6 +130,16 @@ dc_graph.cola_layout = function(id) {
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
+                }),
+                groups.map(function(g) {
+                    g = Object.assign({}, g);
+                    g.bounds = {
+                        left: g.bounds.x,
+                        top: g.bounds.y,
+                        right: g.bounds.X,
+                        bottom: g.bounds.Y
+                    };
+                    return g;
                 }),
                 _setcola_nodes
             );
@@ -184,8 +215,8 @@ dc_graph.cola_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges, constraints) {
-            data(nodes, edges, constraints);
+        data: function(graph, nodes, edges, clusters, constraints) {
+            data(nodes, edges, clusters, constraints);
         },
         start: function() {
             start();

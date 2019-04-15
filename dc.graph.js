@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.11
+ *  dc.graph 0.9.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.11
+ * @version 0.9.1
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.11',
+    version: '0.9.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -2450,6 +2450,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
+    var _clusters = {};
     var _nodePorts; // ports sorted by node id
     var _stats = {};
     var _nodes_snapshot, _edges_snapshot;
@@ -2843,6 +2844,95 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.edgeSourcePortName = property(null);
     _diagram.edgeTargetPortName = property(null);
+
+    /**
+     * Set or get the crossfilter dimension which represents the edges in the
+     * diagram. Typically there will be a crossfilter instance for the nodes, and another for
+     * the edges.
+     *
+     * *As with node and edge dimensions, the diagram will itself not filter on cluster dimensions;
+     * this is included for symmetry, and for modes which may want to filter clusters.*
+     * @method clusterDimension
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {crossfilter.dimension} [clusterDimension]
+     * @return {crossfilter.dimension}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterDimension = property(null);
+
+    /**
+     * Set or get the crossfilter group which is the data source for clusters in the
+     * diagram.
+     *
+     * The key/value pairs returned by `diagram.clusterGroup().all()` need to support, at a minimum,
+     * the {@link dc_graph.diagram#clusterKey clusterKey} and {@link dc_graph.diagram#clusterParent clusterParent}
+     * accessors, which should return keys in this group.
+     *
+     * @method clusterGroup
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {crossfilter.group} [clusterGroup]
+     * @return {crossfilter.group}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterGroup = property(null);
+
+    // cluster accessors
+    /**
+     * Set or get the function which will be used to retrieve the unique key for each cluster. By
+     * default, this accesses the `key` field of the object passed to it.
+     *
+     * @method clusterKey
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterKey=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterKey = property(dc.pluck('key'));
+
+    /**
+     * Set or get the function which will be used to retrieve the key of the parent of a cluster,
+     * which is another cluster.
+     *
+     * @method clusterParent
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterParent=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterParent = property(null);
+
+    /**
+     * Set or get the function which will be used to retrieve the padding, in pixels, around a cluster.
+     *
+     * **To be implemented.** If a single value is returned, it will be used on all sides; if two
+     * values are returned they will be interpreted as the vertical and horizontal padding.
+     *
+     * @method clusterPadding
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [clusterPadding=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.clusterPadding = property(8);
+
+    // node accessor
+    /**
+     * Set or get the function which will be used to retrieve the parent cluster of a node, or
+     * `null` if the node is not in a cluster.
+     *
+     * @method nodeParentCluster
+     * @memberof dc_graph.diagram
+     * @instance
+     * @param {Function} [nodeParentCluster=function(kv) { return kv.key }]
+     * @return {Function}
+     * @return {dc_graph.diagram}
+     **/
+    _diagram.nodeParentCluster = property(null);
 
     /**
      * Set or get the function which will be used to retrieve the radius, in pixels, for each
@@ -3548,6 +3638,8 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.mode.reject = function(id, object) {
         var rtype = _diagram.renderer().rendererType();
+        if(!object)
+            return true; // null is always a valid mode for any renderer
         if(!object.supportsRenderer)
             console.log('could not check if "' + id + '" is compatible with ' + rtype);
         else if(!object.supportsRenderer(rtype))
@@ -3673,6 +3765,10 @@ dc_graph.diagram = function (parent, chartGroup) {
 
     _diagram.nodePorts = function() {
         return _nodePorts;
+    };
+
+    _diagram.getWholeCluster = function(id) {
+        return _clusters[id] || null;
     };
 
     /**
@@ -3817,6 +3913,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         _nodes = {};
         _edges = {};
         _ports = {};
+        _clusters = {};
 
         // start out with 1:1 zoom
         _diagram.x(d3.scale.linear()
@@ -3852,6 +3949,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         var nodes = _diagram.nodeGroup().all();
         var edges = _diagram.edgeGroup().all();
         var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
+        var clusters = _diagram.clusterGroup() ? _diagram.clusterGroup().all() : [];
         if(_running) {
             throw new Error('dc_graph.diagram.redraw already running!');
         }
@@ -3881,6 +3979,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.orig = v;
             v1.cola = v1.cola || {};
             v1.cola.dcg_nodeKey = _diagram.nodeKey.eval(v1);
+            v1.cola.dcg_nodeParentCluster = _diagram.nodeParentCluster.eval(v1);
             _diagram.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
         var wedges = regenerate_objects(_edges, edges, null, function(e) {
@@ -3971,6 +4070,21 @@ dc_graph.diagram = function (parent, chartGroup) {
                 if(!keeps[k])
                     delete _nodes[k];
         }
+
+        var needclusters = d3.set(wnodes.map(function(n) {
+            return _diagram.nodeParentCluster.eval(n);
+        }).filter(identity)).values();
+
+        var wclusters = regenerate_objects(_clusters, clusters, needclusters, function(c) {
+            return _diagram.clusterKey()(c);
+        }, function(c1, c) { // assign
+            c1.orig = c;
+            c1.cola = c1.cola || {
+                dcg_clusterKey: _diagram.clusterKey.eval(c1),
+                dcg_clusterParent: _diagram.clusterParent.eval(c1)
+            };
+        }, function(k, c) { // create
+        });
 
         wnodes.forEach(function(v, i) {
             v.index = i;
@@ -4187,11 +4301,11 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
         var startTime = Date.now();
 
-        function populate_cola(rnodes, redges) {
+        function populate_cola(rnodes, redges, rclusters) {
             rnodes.forEach(function(rn) {
                 var n = _nodes[rn.dcg_nodeKey];
                 if(!n) {
-                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send');
+                    console.warn('received node "' + rn.dcg_nodeKey + '" that we did not send, ignored');
                     return;
                 }
                 n.cola.x = rn.x;
@@ -4201,18 +4315,31 @@ dc_graph.diagram = function (parent, chartGroup) {
             redges.forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
                 if(!e) {
-                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send');
+                    console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send, ignored');
                     return;
                 }
                 if(re.points)
                     e.cola.points = re.points;
             });
+            wclusters.forEach(function(c) {
+                c.cola.bounds = null;
+            });
+            if(rclusters)
+                rclusters.forEach(function(rc) {
+                    var c = _clusters[rc.dcg_clusterKey];
+                    if(!c) {
+                        console.warn('received cluster "' + rc.dcg_clusterKey + '" that we did not send, ignored');
+                        return;
+                    }
+                    if(rc.bounds)
+                        c.cola.bounds = rc.bounds;
+                });
         }
         _diagram.layoutEngine()
-            .on('tick.diagram', function(nodes, edges) {
+            .on('tick.diagram', function(nodes, edges, clusters) {
                 var elapsed = Date.now() - startTime;
                 if(!_diagram.initialOnly())
-                    populate_cola(nodes, edges);
+                    populate_cola(nodes, edges, clusters);
                 if(_diagram.showLayoutSteps()) {
                     init_node_ports(_nodes, wports);
                     _dispatch.receivedLayout(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
@@ -4227,10 +4354,10 @@ dc_graph.diagram = function (parent, chartGroup) {
                     _diagram.layoutEngine().stop();
                 }
             })
-            .on('end.diagram', function(nodes, edges) {
+            .on('end.diagram', function(nodes, edges, clusters) {
                 if(!_diagram.showLayoutSteps()) {
                     if(!_diagram.initialOnly())
-                        populate_cola(nodes, edges);
+                        populate_cola(nodes, edges, clusters);
                     init_node_ports(_nodes, wports);
                     _dispatch.receivedLayout(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
                     propagate_port_positions(_nodes, wedges, _ports);
@@ -4272,6 +4399,9 @@ dc_graph.diagram = function (parent, chartGroup) {
                             le[key] = engine.extractEdgeAttrs()[key](e.orig);
                         });
                     return le;
+                }),
+                wclusters.map(function(c) {
+                    return c.cola;
                 }),
                 constraints
             );
@@ -4965,9 +5095,9 @@ dc_graph.render_svg = function() {
             })
             .each(function(e) {
                 var fillEdgeStroke = _renderer.parent().edgeStroke.eval(e);
-                d3.selectAll('#' + _renderer.parent().arrowId(e, 'head'))
+                _renderer.selectAll('#' + _renderer.parent().arrowId(e, 'head'))
                     .attr('fill', _renderer.parent().edgeStroke.eval(e));
-                d3.selectAll('#' + _renderer.parent().arrowId(e, 'tail'))
+                _renderer.selectAll('#' + _renderer.parent().arrowId(e, 'tail'))
                     .attr('fill', _renderer.parent().edgeStroke.eval(e));
             });
     };
@@ -5109,11 +5239,11 @@ dc_graph.render_svg = function() {
             .attr('stroke', 'green')
             .attr('stroke-width', 10)
             .on('mouseover.diagram', function(e) {
-                d3.select('#' + _renderer.parent().edgeId(e) + '-label')
+                _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
                     .attr('visibility', 'visible');
             })
             .on('mouseout.diagram', function(e) {
-                d3.select('#' + _renderer.parent().edgeId(e) + '-label')
+                _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
                     .attr('visibility', 'hidden');
             });
         edgeHover.exit().remove();
@@ -5215,12 +5345,12 @@ dc_graph.render_svg = function() {
             e.pos.old = null;
             _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
             if(_renderer.parent().edgeArrowhead.eval(e))
-                d3.select('#' + _renderer.parent().arrowId(e, 'head'))
+                _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
                 .attr('orient', function() {
                     return e.pos.new.orienthead;
                 });
             if(_renderer.parent().edgeArrowtail.eval(e))
-                d3.select('#' + _renderer.parent().arrowId(e, 'tail'))
+                _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
                 .attr('orient', function() {
                     return e.pos.new.orienttail;
                 });
@@ -5352,12 +5482,12 @@ dc_graph.render_svg = function() {
                 // else start new edges at old positions of nodes, if any, else new positions
                 var age = _renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old';
                 if(_renderer.parent().edgeArrowhead.eval(e))
-                    d3.select('#' + _renderer.parent().arrowId(e, 'head'))
+                    _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
                     .attr('orient', function() {
                         return e.pos[age].orienthead;
                     });
                 if(_renderer.parent().edgeArrowtail.eval(e))
-                    d3.select('#' + _renderer.parent().arrowId(e, 'tail'))
+                    _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
                     .attr('orient', function() {
                         return e.pos[age].orienttail;
                     });
@@ -5367,7 +5497,7 @@ dc_graph.render_svg = function() {
         edgeArrows
             .each(function(e) {
                 if(_renderer.parent().edgeArrowhead.eval(e))
-                    d3.select('#' + _renderer.parent().arrowId(e, 'head'))
+                    _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
                     .attr('orient', unsurprising_orient_rad(e.pos.old.orienthead, e.pos.new.orienthead))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
@@ -5375,7 +5505,7 @@ dc_graph.render_svg = function() {
                         return e.pos.new.orienthead;
                     });
                 if(_renderer.parent().edgeArrowtail.eval(e))
-                    d3.select('#' + _renderer.parent().arrowId(e, 'tail'))
+                    _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
                     .attr('orient', unsurprising_orient_rad(e.pos.old.orienttail, e.pos.new.orienttail))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
@@ -6151,6 +6281,7 @@ dc_graph.engines = {
 };
 
 var _workers = {};
+var NUMBER_RESULTS = 3;
 function create_worker(layoutAlgorithm) {
     if(!_workers[layoutAlgorithm]) {
         var worker = _workers[layoutAlgorithm] = {
@@ -6162,8 +6293,8 @@ function create_worker(layoutAlgorithm) {
             if(!worker.layouts[layoutId])
                 throw new Error('layoutId "' + layoutId + '" unknown!');
             var engine = worker.layouts[layoutId].getEngine();
-            if(e.data.args.length > 2 && engine.processExtraWorkerResults)
-                engine.processExtraWorkerResults.apply(engine, e.data.args.slice(2));
+            if(e.data.args.length > NUMBER_RESULTS && engine.processExtraWorkerResults)
+                engine.processExtraWorkerResults.apply(engine, e.data.args.slice(NUMBER_RESULTS));
             worker.layouts[layoutId].dispatch()[e.data.response].apply(null, e.data.args);
         };
     }
@@ -6197,7 +6328,7 @@ dc_graph.webworker_layout = function(layoutEngine) {
         });
         return this;
     };
-    engine.data = function(graph, nodes, edges, constraints) {
+    engine.data = function(graph, nodes, edges, clusters, constraints) {
         _worker.worker.postMessage({
             command: 'data',
             args: {
@@ -6205,6 +6336,7 @@ dc_graph.webworker_layout = function(layoutEngine) {
                 graph: graph,
                 nodes: nodes,
                 edges: edges,
+                clusters: clusters,
                 constraints: constraints
             }
         });
@@ -6355,6 +6487,19 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
             }
             return null;
         });
+    var draw_clusters = diagram.child('draw-clusters');
+    if(draw_clusters) {
+        draw_clusters
+            .clusterStroke(function(c) {
+                return c.value.color || 'black';
+            })
+            .clusterFill(function(c) {
+                return c.value.style === 'filled' ? c.value.fillcolor || c.value.color || c.value.bgcolor : null;
+            })
+            .clusterLabel(function(c) {
+                return c.value.label;
+            });
+    }
 };
 
 dc_graph.snapshot_graphviz = function(diagram) {
@@ -6456,11 +6601,12 @@ dc_graph.cola_layout = function(id) {
         }
     }
 
-    function data(nodes, edges, constraints) {
+    function data(nodes, edges, clusters, constraints) {
         var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.dcg_nodeParentCluster = v.dcg_nodeParentCluster;
             v1.width = v.width;
             v1.height = v.height;
             v1.fixed = !!v.dcg_nodeFixed;
@@ -6505,6 +6651,26 @@ dc_graph.cola_layout = function(id) {
             groups = components.map(function(g) {
                 return {leaves: g.array.map(function(n) { return n.index; })};
             });
+        } else if(clusters) {
+            var G = {};
+            groups = clusters.filter(function(c) {
+                return /^cluster/.test(c.dcg_clusterKey);
+            }).map(function(c, i) {
+                return G[c.dcg_clusterKey] = {
+                    dcg_clusterKey: c.dcg_clusterKey,
+                    index: i,
+                    groups: [],
+                    leaves: []
+                };
+            });
+            clusters.forEach(function(c) {
+                if(c.dcg_clusterParent && G[c.dcg_clusterParent])
+                    G[c.dcg_clusterParent].groups.push(G[c.dcg_clusterKey].index);
+            });
+            wnodes.forEach(function(n, i) {
+                if(n.dcg_nodeParentCluster && G[n.dcg_nodeParentCluster])
+                    G[n.dcg_nodeParentCluster].leaves.push(i);
+            });
         }
 
         function dispatchState(event) {
@@ -6519,6 +6685,16 @@ dc_graph.cola_layout = function(id) {
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
+                }),
+                groups.map(function(g) {
+                    g = Object.assign({}, g);
+                    g.bounds = {
+                        left: g.bounds.x,
+                        top: g.bounds.y,
+                        right: g.bounds.X,
+                        bottom: g.bounds.Y
+                    };
+                    return g;
                 }),
                 _setcola_nodes
             );
@@ -6594,8 +6770,8 @@ dc_graph.cola_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges, constraints) {
-            data(nodes, edges, constraints);
+        data: function(graph, nodes, edges, clusters, constraints) {
+            data(nodes, edges, clusters, constraints);
         },
         start: function() {
             start();
@@ -6730,7 +6906,7 @@ dc_graph.dagre_layout = function(id) {
 
     function init(options) {
         // Create a new directed graph
-        _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
+        _dagreGraph = new dagre.graphlib.Graph({multigraph: true, compound: true});
 
         // Set an object for the graph label
         _dagreGraph.setGraph({rankdir: options.rankdir, nodesep: options.nodesep, ranksep: options.ranksep});
@@ -6739,7 +6915,7 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
     }
 
-    function data(nodes, edges) {
+    function data(nodes, edges, clusters) {
         var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
@@ -6769,12 +6945,36 @@ dc_graph.dagre_layout = function(id) {
         }, function(k, e) {
             _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget, e.dcg_edgeKey);
         });
+        clusters = clusters.filter(function(c) {
+            return /^cluster/.test(c.dcg_clusterKey);
+        });
+        clusters.forEach(function(c) {
+            _dagreGraph.setNode(c.dcg_clusterKey, c);
+        });
+        clusters.forEach(function(c) {
+            if(c.dcg_clusterParent)
+                _dagreGraph.setParent(c.dcg_clusterKey, c.dcg_clusterParent);
+        });
+        nodes.forEach(function(n) {
+            if(n.dcg_nodeParentCluster)
+                _dagreGraph.setParent(n.dcg_nodeKey, n.dcg_nodeParentCluster);
+        });
 
         function dispatchState(event) {
             _dispatch[event](
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
+                }),
+                clusters.map(function(c) {
+                    var c = Object.assign({}, _dagreGraph.node(c.dcg_clusterKey));
+                    c.bounds = {
+                        left: c.x - c.width/2,
+                        top: c.y - c.height/2,
+                        right: c.x + c.width/2,
+                        bottom: c.y + c.height/2
+                    };
+                    return c;
                 })
             );
         }
@@ -6819,8 +7019,8 @@ dc_graph.dagre_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges) {
-            data(nodes, edges);
+        data: function(graph, nodes, edges, clusters) {
+            data(nodes, edges, clusters);
         },
         start: function() {
             start();
@@ -7020,7 +7220,6 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _dotInput, _dotString;
-    var _clusters; // hack to get cluster data out
 
     function init(options) {
     }
@@ -7037,7 +7236,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     function stringize_properties(props) {
         return '[' + props.join(', ') + ']';
     }
-    function data(nodes, edges) {
+    function data(nodes, edges, clusters) {
         if(_dotInput) {
             _dotString = _dotInput;
             return;
@@ -7050,6 +7249,33 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             stringize_property('ranksep', graphviz.ranksep()/72),
             stringize_property('rankdir', graphviz.rankdir())
         ]));
+        var cluster_nodes = {};
+        nodes.forEach(function(n) {
+            var cl = n.dcg_nodeParentCluster;
+            if(cl) {
+                cluster_nodes[cl] = cluster_nodes[cl] || [];
+                cluster_nodes[cl].push(n.dcg_nodeKey);
+            }
+        });
+        var cluster_children = {}, tops = [];
+        clusters.forEach(function(c) {
+            var p = c.dcg_clusterParent;
+            if(p) {
+                cluster_children[p] = cluster_children[p] || [];
+                cluster_children[p].push(c.dcg_clusterKey);
+            } else tops.push(c.dcg_clusterKey);
+        });
+
+        function print_subgraph(i, c) {
+            var indent = ' '.repeat(i*2);
+            lines.push(indent + 'subgraph "' + c + '" {');
+            if(cluster_children[c])
+                cluster_children[c].forEach(print_subgraph.bind(null, i+1));
+            lines.push(indent + '  ' + cluster_nodes[c].join(' '));
+            lines.push(indent + '}');
+        }
+        tops.forEach(print_subgraph.bind(null, 1));
+
         lines = lines.concat(nodes.map(function(v) {
             var props = [
                 stringize_property('width', v.width/72),
@@ -7098,15 +7324,16 @@ dc_graph.graphviz_layout = function(id, layout, server) {
                 y: bb[3] - pos[1]
             };
         });
-        _clusters = (result.objects || []).filter(function(n) {
+        var clusters = (result.objects || []).filter(function(n) {
             return /^cluster/.test(n.name);
         });
-        _clusters.forEach(function(c) {
-            // annotate with flipped cluster coords for convenience
-            c.bbflip = c.bb.split(',').map(function(s) { return +s; });
-            var t = bb[3] - c.bbflip[1];
-            c.bbflip[1] = bb[3] - c.bbflip[3];
-            c.bbflip[3] = t;
+        clusters.forEach(function(c) {
+            c.dcg_clusterKey = c.name;
+
+            // gv: llx, lly, urx, ury, up-positive
+            var cbb = c.bb.split(',').map(function(s) { return +s; });
+            c.bounds = {left: cbb[0], top: bb[3] - cbb[3],
+                        right: cbb[2], bottom: bb[3] - cbb[1]};
         });
         var edges = (result.edges || []).map(function(e) {
             var e2 = {
@@ -7118,7 +7345,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             }
             return e2;
         });
-        _dispatch.end(nodes, edges);
+        _dispatch.end(nodes, edges, clusters);
     }
 
     function start() {
@@ -7161,16 +7388,12 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges) {
-            data(nodes, edges);
+        data: function(graph, nodes, edges, clusters) {
+            data(nodes, edges, clusters);
         },
         dotInput: function(text) {
             _dotInput = text;
             return this;
-        },
-        clusters: function() {
-            // filter out clusters and return them separately, because dc.graph doesn't know how to draw them
-            return _clusters;
         },
         start: function() {
             start();
@@ -12196,6 +12419,73 @@ dc_graph.spline_paths = function(pathreader, pathprops, hoverprops, selectprops,
 
 dc_graph.draw_spline_paths = deprecate_function("draw_spline_paths has been renamed spline_paths, please update", dc_graph.spline_paths);
 
+dc_graph.draw_clusters = function() {
+
+    function apply_bounds(rect) {
+        rect.attr({
+            x: function(c) {
+                return c.cola.bounds.left;
+            },
+            y: function(c) {
+                return c.cola.bounds.top;
+            },
+            width: function(c) {
+                return c.cola.bounds.right - c.cola.bounds.left;
+            },
+            height: function(c) {
+                return c.cola.bounds.bottom - c.cola.bounds.top;
+            }
+        });
+    }
+    function draw(diagram) {
+        if(!diagram.clusterGroup())
+            return;
+        var clayer = diagram.g().selectAll('g.cluster-layer').data([0]);
+        clayer.enter().insert('g', ':first-child')
+            .attr('class', 'cluster-layer');
+        var clusters = diagram.clusterGroup().all().map(function(kv) {
+            return _mode.parent().getWholeCluster(kv.key);
+        }).filter(function(c) {
+            return c.cola.bounds;
+        });
+        var rects = clayer.selectAll('rect.cluster')
+            .data(clusters, function(c) { return c.orig.key; });
+        rects.exit().remove();
+        rects.enter().append('rect')
+            .attr({
+                class: 'cluster',
+                opacity: 0,
+                stroke: _mode.clusterStroke.eval,
+                'stroke-width': _mode.clusterStrokeWidth.eval,
+                fill: function(c) {
+                    return _mode.clusterFill.eval(c) || 'none';
+                }
+            })
+            .call(apply_bounds);
+        rects.transition()
+            .duration(_mode.parent().stagedDuration())
+            .attr('opacity', _mode.clusterOpacity.eval)
+            .call(apply_bounds);
+    }
+    function remove(diagram, node, edge, ehover) {
+    }
+    var _mode = dc_graph.mode('draw-clusters', {
+        laterDraw: true,
+        draw: draw,
+        remove: remove
+    });
+    _mode.clusterOpacity = property(0.25);
+    _mode.clusterStroke = property('black');
+    _mode.clusterStrokeWidth = property(1);
+    _mode.clusterFill = property(null);
+    _mode.clusterLabel = property(null);
+    _mode.clusterLabelFill = property('black');
+    _mode.clusterLabelAlignment = property(['bottom','right']);
+
+    return _mode;
+};
+
+
 dc_graph.expand_collapse = function(options) {
     if(typeof options === 'function') {
         options = {
@@ -14113,7 +14403,7 @@ function process_dot(callback, error, text) {
         callback(error, null);
         return;
     }
-    var nodes, edges;
+    var nodes, edges, node_cluster = {}, clusters = [];
     if(graphlibDot.parse) { // graphlib-dot 1.1.0 (where did i get it from?)
         var digraph = graphlibDot.parse(text);
 
@@ -14136,6 +14426,7 @@ function process_dot(callback, error, text) {
                 targetname: edge.v
             }));
         });
+        // TODO: if this version exists in the wild, look at how it does subgraphs/clusters
     } else { // graphlib-dot 0.6
         digraph = graphlibDot.read(text);
 
@@ -14149,15 +14440,34 @@ function process_dot(callback, error, text) {
 
         edges = [];
         digraph.edges().forEach(function(e) {
-            edges.push(Object.assign({}, e.value, {
+            edges.push(Object.assign({}, digraph.edge(e.v, e.w), {
                 source: digraph._nodes[e.v].id,
                 target: digraph._nodes[e.w].id,
                 sourcename: e.v,
                 targetname: e.w
             }));
         });
+
+        // iterative bfs for variety (recursion would work just as well)
+        var cluster_names = {};
+        var queue = digraph.children().map(function(c) { return Object.assign({parent: null, key: c}, digraph.node(c)); });
+        while(queue.length) {
+            var item = queue.shift(),
+                children = digraph.children(item.key);
+            if(children.length) {
+                clusters.push(item);
+                cluster_names[item.key] = true;
+            }
+            else
+                node_cluster[item.key] = item.parent;
+            queue = queue.concat(children.map(function(c) { return {parent: item.key, key: c}; }));
+        }
+        // clusters as nodes not currently supported
+        nodes = nodes.filter(function(n) {
+            return !cluster_names[n.name];
+        });
     }
-    var graph = {nodes: nodes, links: edges};
+    var graph = {nodes: nodes, links: edges, node_cluster: node_cluster, clusters: clusters};
     callback(null, graph);
 }
 

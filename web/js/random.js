@@ -20,6 +20,7 @@ var options = {
     remedge: 0.75,
     interval: 500,
     opacity: 0.7,
+    arrows: false,
     ports: false,
     shape: 'ellipse',
     content: 'text',

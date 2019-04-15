@@ -65,9 +65,9 @@ dc_graph.render_svg = function() {
             })
             .each(function(e) {
                 var fillEdgeStroke = _renderer.parent().edgeStroke.eval(e);
-                d3.selectAll('#' + _renderer.parent().arrowId(e, 'head'))
+                _renderer.selectAll('#' + _renderer.parent().arrowId(e, 'head'))
                     .attr('fill', _renderer.parent().edgeStroke.eval(e));
-                d3.selectAll('#' + _renderer.parent().arrowId(e, 'tail'))
+                _renderer.selectAll('#' + _renderer.parent().arrowId(e, 'tail'))
                     .attr('fill', _renderer.parent().edgeStroke.eval(e));
             });
     };
@@ -209,11 +209,11 @@ dc_graph.render_svg = function() {
             .attr('stroke', 'green')
             .attr('stroke-width', 10)
             .on('mouseover.diagram', function(e) {
-                d3.select('#' + _renderer.parent().edgeId(e) + '-label')
+                _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
                     .attr('visibility', 'visible');
             })
             .on('mouseout.diagram', function(e) {
-                d3.select('#' + _renderer.parent().edgeId(e) + '-label')
+                _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
                     .attr('visibility', 'hidden');
             });
         edgeHover.exit().remove();
@@ -315,12 +315,12 @@ dc_graph.render_svg = function() {
             e.pos.old = null;
             _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
             if(_renderer.parent().edgeArrowhead.eval(e))
-                d3.select('#' + _renderer.parent().arrowId(e, 'head'))
+                _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
                 .attr('orient', function() {
                     return e.pos.new.orienthead;
                 });
             if(_renderer.parent().edgeArrowtail.eval(e))
-                d3.select('#' + _renderer.parent().arrowId(e, 'tail'))
+                _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
                 .attr('orient', function() {
                     return e.pos.new.orienttail;
                 });
@@ -452,12 +452,12 @@ dc_graph.render_svg = function() {
                 // else start new edges at old positions of nodes, if any, else new positions
                 var age = _renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old';
                 if(_renderer.parent().edgeArrowhead.eval(e))
-                    d3.select('#' + _renderer.parent().arrowId(e, 'head'))
+                    _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
                     .attr('orient', function() {
                         return e.pos[age].orienthead;
                     });
                 if(_renderer.parent().edgeArrowtail.eval(e))
-                    d3.select('#' + _renderer.parent().arrowId(e, 'tail'))
+                    _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
                     .attr('orient', function() {
                         return e.pos[age].orienttail;
                     });
@@ -467,7 +467,7 @@ dc_graph.render_svg = function() {
         edgeArrows
             .each(function(e) {
                 if(_renderer.parent().edgeArrowhead.eval(e))
-                    d3.select('#' + _renderer.parent().arrowId(e, 'head'))
+                    _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
                     .attr('orient', unsurprising_orient_rad(e.pos.old.orienthead, e.pos.new.orienthead))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
@@ -475,7 +475,7 @@ dc_graph.render_svg = function() {
                         return e.pos.new.orienthead;
                     });
                 if(_renderer.parent().edgeArrowtail.eval(e))
-                    d3.select('#' + _renderer.parent().arrowId(e, 'tail'))
+                    _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
                     .attr('orient', unsurprising_orient_rad(e.pos.old.orienttail, e.pos.new.orienttail))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))

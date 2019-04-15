@@ -6,6 +6,7 @@
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
   <link rel="stylesheet" type="text/css" href="css/d3-tip.css"/>
+  <link rel="stylesheet" type="text/css" href="css/example-common.css"/>
 
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
@@ -23,7 +24,7 @@
   <script type="text/javascript" src="js/chart.registry.js"></script>
   <script type="text/javascript" src="js/dc.graph.js"></script>
 
-  <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
+  <script type="text/javascript" src="js/graphlib-dot.js"></script>
 
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/querystring.js"></script>
@@ -76,6 +77,7 @@
     <div id="controls">
       <div id="left-controls">
         <select id="layout"></select>&nbsp;&nbsp;&nbsp;
+        <div id="cutoff-stuff" style="display: none"><label for="cutoff">&nbsp;Edge cutoff:&nbsp;</label><div style="display: inline-block"><input id="cutoff" type="range" min="0" max="1" step="0.05" style="width: 10em"></div>&nbsp;<span id="cutoff-display"></span>&nbsp;&nbsp;&nbsp;</div>
         <input id="graphviz-attrs" type="checkbox"><label for="graphviz-attrs">&nbsp;Use graphviz <a href="https://graphviz.org/doc/info/attrs.html" target=_blank>attrs</a></label>
       </div>
       <div id="middle-controls"></div>

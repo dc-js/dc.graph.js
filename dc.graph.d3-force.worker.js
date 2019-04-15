@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.11
+ *  dc.graph 0.9.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.11
+ * @version 0.9.1
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.11',
+    version: '0.9.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -478,6 +478,19 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
             }
             return null;
         });
+    var draw_clusters = diagram.child('draw-clusters');
+    if(draw_clusters) {
+        draw_clusters
+            .clusterStroke(function(c) {
+                return c.value.color || 'black';
+            })
+            .clusterFill(function(c) {
+                return c.value.style === 'filled' ? c.value.fillcolor || c.value.color || c.value.bgcolor : null;
+            })
+            .clusterLabel(function(c) {
+                return c.value.label;
+            });
+    }
 };
 
 dc_graph.snapshot_graphviz = function(diagram) {
@@ -849,7 +862,7 @@ onmessage = function(e) {
         break;
     case 'data':
         if(_layouts)
-            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.constraints);
+            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.clusters, args.constraints);
         break;
     case 'start':
         // if(args.initialOnly) {

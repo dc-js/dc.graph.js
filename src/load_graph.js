@@ -3,7 +3,7 @@ function process_dot(callback, error, text) {
         callback(error, null);
         return;
     }
-    var nodes, edges;
+    var nodes, edges, node_cluster = {}, clusters = [];
     if(graphlibDot.parse) { // graphlib-dot 1.1.0 (where did i get it from?)
         var digraph = graphlibDot.parse(text);
 
@@ -26,6 +26,7 @@ function process_dot(callback, error, text) {
                 targetname: edge.v
             }));
         });
+        // TODO: if this version exists in the wild, look at how it does subgraphs/clusters
     } else { // graphlib-dot 0.6
         digraph = graphlibDot.read(text);
 
@@ -39,15 +40,34 @@ function process_dot(callback, error, text) {
 
         edges = [];
         digraph.edges().forEach(function(e) {
-            edges.push(Object.assign({}, e.value, {
+            edges.push(Object.assign({}, digraph.edge(e.v, e.w), {
                 source: digraph._nodes[e.v].id,
                 target: digraph._nodes[e.w].id,
                 sourcename: e.v,
                 targetname: e.w
             }));
         });
+
+        // iterative bfs for variety (recursion would work just as well)
+        var cluster_names = {};
+        var queue = digraph.children().map(function(c) { return Object.assign({parent: null, key: c}, digraph.node(c)); });
+        while(queue.length) {
+            var item = queue.shift(),
+                children = digraph.children(item.key);
+            if(children.length) {
+                clusters.push(item);
+                cluster_names[item.key] = true;
+            }
+            else
+                node_cluster[item.key] = item.parent;
+            queue = queue.concat(children.map(function(c) { return {parent: item.key, key: c}; }));
+        }
+        // clusters as nodes not currently supported
+        nodes = nodes.filter(function(n) {
+            return !cluster_names[n.name];
+        });
     }
-    var graph = {nodes: nodes, links: edges};
+    var graph = {nodes: nodes, links: edges, node_cluster: node_cluster, clusters: clusters};
     callback(null, graph);
 }
 

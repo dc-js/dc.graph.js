@@ -36,13 +36,26 @@ var options = {
             }
         }
     },
+    cutoff: null,
+    limit: {
+        default: 0.5,
+        selector: '#cutoff',
+        needs_redraw: true,
+        exert: function(val, _, filters) {
+            if(filters.cutoff) {
+                d3.select('#cutoff-display').text(val);
+                filters.cutoff.set(val);
+            }
+        }
+    },
     arrows: false,
     tips: true,
     neighbors: true
 };
 
 var simpleDiagram = dc_graph.diagram('#graph');
-var sync_url = sync_url_options(options, dcgraph_domain(simpleDiagram), simpleDiagram);
+var filters = {};
+var sync_url = sync_url_options(options, dcgraph_domain(simpleDiagram), simpleDiagram, filters);
 
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
@@ -121,7 +134,8 @@ function on_load(filename, error, data) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     };
     var edge_flat = dc_graph.flat_group.make(edges, edge_key),
-        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
+        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; }),
+        cluster_flat = dc_graph.flat_group.make(data.clusters || [], function(d) { return d.key; });
 
     var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     simpleDiagram
@@ -135,8 +149,26 @@ function on_load(filename, error, data) {
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
         .edgeSource(function(e) { return e.value[sourceattr]; })
         .edgeTarget(function(e) { return e.value[targetattr]; })
+        .clusterDimension(cluster_flat.dimension).clusterGroup(cluster_flat.group)
+        .nodeParentCluster(data.node_cluster ? function(n) { return data.node_cluster[n.key]; } : null)
+        .clusterParent(function(c) { return c.parent; })
     // aesthetics
         .nodeTitle(null); // deactivate basic tooltips
+
+    if(sync_url.vals.cutoff) {
+        d3.select('#cutoff-stuff').style('display', 'inline-block');
+        var dim = edge_flat.crossfilter.dimension(function(d) {
+            return +d[sync_url.vals.cutoff];
+        });
+        filters.cutoff = {
+            set: function(v) {
+                dim.filterRange([v, Infinity]);
+            }
+        };
+    }
+
+    var draw_clusters = dc_graph.draw_clusters();
+    simpleDiagram.child('draw-clusters', draw_clusters);
 
     sync_url.exert();
 

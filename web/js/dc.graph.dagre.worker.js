@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.11
+ *  dc.graph 0.9.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.11
+ * @version 0.9.1
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.11',
+    version: '0.9.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -478,6 +478,19 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
             }
             return null;
         });
+    var draw_clusters = diagram.child('draw-clusters');
+    if(draw_clusters) {
+        draw_clusters
+            .clusterStroke(function(c) {
+                return c.value.color || 'black';
+            })
+            .clusterFill(function(c) {
+                return c.value.style === 'filled' ? c.value.fillcolor || c.value.color || c.value.bgcolor : null;
+            })
+            .clusterLabel(function(c) {
+                return c.value.label;
+            });
+    }
 };
 
 dc_graph.snapshot_graphviz = function(diagram) {
@@ -551,7 +564,7 @@ dc_graph.dagre_layout = function(id) {
 
     function init(options) {
         // Create a new directed graph
-        _dagreGraph = new dagre.graphlib.Graph({multigraph: true});
+        _dagreGraph = new dagre.graphlib.Graph({multigraph: true, compound: true});
 
         // Set an object for the graph label
         _dagreGraph.setGraph({rankdir: options.rankdir, nodesep: options.nodesep, ranksep: options.ranksep});
@@ -560,7 +573,7 @@ dc_graph.dagre_layout = function(id) {
         _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
     }
 
-    function data(nodes, edges) {
+    function data(nodes, edges, clusters) {
         var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
@@ -590,12 +603,36 @@ dc_graph.dagre_layout = function(id) {
         }, function(k, e) {
             _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget, e.dcg_edgeKey);
         });
+        clusters = clusters.filter(function(c) {
+            return /^cluster/.test(c.dcg_clusterKey);
+        });
+        clusters.forEach(function(c) {
+            _dagreGraph.setNode(c.dcg_clusterKey, c);
+        });
+        clusters.forEach(function(c) {
+            if(c.dcg_clusterParent)
+                _dagreGraph.setParent(c.dcg_clusterKey, c.dcg_clusterParent);
+        });
+        nodes.forEach(function(n) {
+            if(n.dcg_nodeParentCluster)
+                _dagreGraph.setParent(n.dcg_nodeKey, n.dcg_nodeParentCluster);
+        });
 
         function dispatchState(event) {
             _dispatch[event](
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
+                }),
+                clusters.map(function(c) {
+                    var c = Object.assign({}, _dagreGraph.node(c.dcg_clusterKey));
+                    c.bounds = {
+                        left: c.x - c.width/2,
+                        top: c.y - c.height/2,
+                        right: c.x + c.width/2,
+                        bottom: c.y + c.height/2
+                    };
+                    return c;
                 })
             );
         }
@@ -640,8 +677,8 @@ dc_graph.dagre_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges) {
-            data(nodes, edges);
+        data: function(graph, nodes, edges, clusters) {
+            data(nodes, edges, clusters);
         },
         start: function() {
             start();
@@ -703,7 +740,7 @@ onmessage = function(e) {
         break;
     case 'data':
         if(_layouts)
-            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.constraints);
+            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.clusters, args.constraints);
         break;
     case 'start':
         // if(args.initialOnly) {
