@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.8.11  
+**Version**: 0.9.1  
 **Example**  
 ```js
 // Example chaining
@@ -37,6 +37,12 @@ diagram.width(600)
         * [.edgeKey([edgeKey])](#dc_graph.diagram+edgeKey) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.edgeSource([edgeSource])](#dc_graph.diagram+edgeSource) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.edgeTarget([edgeTarget])](#dc_graph.diagram+edgeTarget) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.clusterDimension([clusterDimension])](#dc_graph.diagram+clusterDimension) ⇒ <code>crossfilter.dimension</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.clusterGroup([clusterGroup])](#dc_graph.diagram+clusterGroup) ⇒ <code>crossfilter.group</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.clusterKey([clusterKey])](#dc_graph.diagram+clusterKey) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.clusterParent([clusterParent])](#dc_graph.diagram+clusterParent) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.clusterPadding([clusterPadding])](#dc_graph.diagram+clusterPadding) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.nodeParentCluster([nodeParentCluster])](#dc_graph.diagram+nodeParentCluster) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.nodeRadius([nodeRadius])](#dc_graph.diagram+nodeRadius) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.nodeStrokeWidth([nodeStrokeWidth])](#dc_graph.diagram+nodeStrokeWidth) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
         * [.nodeStroke([nodeStroke])](#dc_graph.diagram+nodeStroke) ⇒ <code>function</code> \| <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -165,6 +171,12 @@ diagram.width(600)
     * [.edgeKey([edgeKey])](#dc_graph.diagram+edgeKey) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.edgeSource([edgeSource])](#dc_graph.diagram+edgeSource) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.edgeTarget([edgeTarget])](#dc_graph.diagram+edgeTarget) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.clusterDimension([clusterDimension])](#dc_graph.diagram+clusterDimension) ⇒ <code>crossfilter.dimension</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.clusterGroup([clusterGroup])](#dc_graph.diagram+clusterGroup) ⇒ <code>crossfilter.group</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.clusterKey([clusterKey])](#dc_graph.diagram+clusterKey) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.clusterParent([clusterParent])](#dc_graph.diagram+clusterParent) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.clusterPadding([clusterPadding])](#dc_graph.diagram+clusterPadding) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.nodeParentCluster([nodeParentCluster])](#dc_graph.diagram+nodeParentCluster) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.nodeRadius([nodeRadius])](#dc_graph.diagram+nodeRadius) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.nodeStrokeWidth([nodeStrokeWidth])](#dc_graph.diagram+nodeStrokeWidth) ⇒ <code>function</code> \| <code>Number</code> \| [<code>diagram</code>](#dc_graph.diagram)
     * [.nodeStroke([nodeStroke])](#dc_graph.diagram+nodeStroke) ⇒ <code>function</code> \| <code>String</code> \| [<code>diagram</code>](#dc_graph.diagram)
@@ -496,6 +508,88 @@ is currently filtered out, the edge will not be displayed. By default, looks for
 | Param | Type | Default |
 | --- | --- | --- |
 | [edgeTarget] | <code>function</code> | <code>function(kv) { return kv.value.targetname; }</code> | 
+
+<a name="dc_graph.diagram+clusterDimension"></a>
+
+#### diagram.clusterDimension([clusterDimension]) ⇒ <code>crossfilter.dimension</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set or get the crossfilter dimension which represents the edges in the
+diagram. Typically there will be a crossfilter instance for the nodes, and another for
+the edges.
+
+*As with node and edge dimensions, the diagram will itself not filter on cluster dimensions;
+this is included for symmetry, and for modes which may want to filter clusters.*
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type |
+| --- | --- |
+| [clusterDimension] | <code>crossfilter.dimension</code> | 
+
+<a name="dc_graph.diagram+clusterGroup"></a>
+
+#### diagram.clusterGroup([clusterGroup]) ⇒ <code>crossfilter.group</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set or get the crossfilter group which is the data source for clusters in the
+diagram.
+
+The key/value pairs returned by `diagram.clusterGroup().all()` need to support, at a minimum,
+the [clusterKey](#dc_graph.diagram+clusterKey) and [clusterParent](#dc_graph.diagram+clusterParent)
+accessors, which should return keys in this group.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type |
+| --- | --- |
+| [clusterGroup] | <code>crossfilter.group</code> | 
+
+<a name="dc_graph.diagram+clusterKey"></a>
+
+#### diagram.clusterKey([clusterKey]) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set or get the function which will be used to retrieve the unique key for each cluster. By
+default, this accesses the `key` field of the object passed to it.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [clusterKey] | <code>function</code> | <code>function(kv) { return kv.key }</code> | 
+
+<a name="dc_graph.diagram+clusterParent"></a>
+
+#### diagram.clusterParent([clusterParent]) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set or get the function which will be used to retrieve the key of the parent of a cluster,
+which is another cluster.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [clusterParent] | <code>function</code> | <code>function(kv) { return kv.key }</code> | 
+
+<a name="dc_graph.diagram+clusterPadding"></a>
+
+#### diagram.clusterPadding([clusterPadding]) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set or get the function which will be used to retrieve the padding, in pixels, around a cluster.
+
+**To be implemented.** If a single value is returned, it will be used on all sides; if two
+values are returned they will be interpreted as the vertical and horizontal padding.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [clusterPadding] | <code>function</code> | <code>function(kv) { return kv.key }</code> | 
+
+<a name="dc_graph.diagram+nodeParentCluster"></a>
+
+#### diagram.nodeParentCluster([nodeParentCluster]) ⇒ <code>function</code> \| [<code>diagram</code>](#dc_graph.diagram)
+Set or get the function which will be used to retrieve the parent cluster of a node, or
+`null` if the node is not in a cluster.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [nodeParentCluster] | <code>function</code> | <code>function(kv) { return kv.key }</code> | 
 
 <a name="dc_graph.diagram+nodeRadius"></a>
 

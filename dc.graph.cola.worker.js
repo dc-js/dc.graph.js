@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.8.11
+ *  dc.graph 0.9.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.8.11
+ * @version 0.9.1
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.8.11',
+    version: '0.9.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -478,6 +478,19 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
             }
             return null;
         });
+    var draw_clusters = diagram.child('draw-clusters');
+    if(draw_clusters) {
+        draw_clusters
+            .clusterStroke(function(c) {
+                return c.value.color || 'black';
+            })
+            .clusterFill(function(c) {
+                return c.value.style === 'filled' ? c.value.fillcolor || c.value.color || c.value.bgcolor : null;
+            })
+            .clusterLabel(function(c) {
+                return c.value.label;
+            });
+    }
 };
 
 dc_graph.snapshot_graphviz = function(diagram) {
@@ -579,11 +592,12 @@ dc_graph.cola_layout = function(id) {
         }
     }
 
-    function data(nodes, edges, constraints) {
+    function data(nodes, edges, clusters, constraints) {
         var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.dcg_nodeParentCluster = v.dcg_nodeParentCluster;
             v1.width = v.width;
             v1.height = v.height;
             v1.fixed = !!v.dcg_nodeFixed;
@@ -628,6 +642,26 @@ dc_graph.cola_layout = function(id) {
             groups = components.map(function(g) {
                 return {leaves: g.array.map(function(n) { return n.index; })};
             });
+        } else if(clusters) {
+            var G = {};
+            groups = clusters.filter(function(c) {
+                return /^cluster/.test(c.dcg_clusterKey);
+            }).map(function(c, i) {
+                return G[c.dcg_clusterKey] = {
+                    dcg_clusterKey: c.dcg_clusterKey,
+                    index: i,
+                    groups: [],
+                    leaves: []
+                };
+            });
+            clusters.forEach(function(c) {
+                if(c.dcg_clusterParent && G[c.dcg_clusterParent])
+                    G[c.dcg_clusterParent].groups.push(G[c.dcg_clusterKey].index);
+            });
+            wnodes.forEach(function(n, i) {
+                if(n.dcg_nodeParentCluster && G[n.dcg_nodeParentCluster])
+                    G[n.dcg_nodeParentCluster].leaves.push(i);
+            });
         }
 
         function dispatchState(event) {
@@ -642,6 +676,16 @@ dc_graph.cola_layout = function(id) {
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
+                }),
+                groups.map(function(g) {
+                    g = Object.assign({}, g);
+                    g.bounds = {
+                        left: g.bounds.x,
+                        top: g.bounds.y,
+                        right: g.bounds.X,
+                        bottom: g.bounds.Y
+                    };
+                    return g;
                 }),
                 _setcola_nodes
             );
@@ -717,8 +761,8 @@ dc_graph.cola_layout = function(id) {
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges, constraints) {
-            data(nodes, edges, constraints);
+        data: function(graph, nodes, edges, clusters, constraints) {
+            data(nodes, edges, clusters, constraints);
         },
         start: function() {
             start();
@@ -877,7 +921,7 @@ onmessage = function(e) {
         break;
     case 'data':
         if(_layouts)
-            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.constraints);
+            _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.clusters, args.constraints);
         break;
     case 'start':
         // if(args.initialOnly) {
