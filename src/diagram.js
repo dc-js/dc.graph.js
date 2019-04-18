@@ -1455,6 +1455,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * {@link #dc_graph.diagram+showLayoutSteps showLayoutSteps}
      * is enabled. Watch the {@link #dc_graph.diagram+on 'end'} event to know when layout is
      * complete.
+     * @method redraw
+     * @memberof dc_graph.diagram
+     * @instance
+     * @return {dc_graph.diagram}
      **/
     var _needsRedraw = false;
     _diagram.redraw = function () {
