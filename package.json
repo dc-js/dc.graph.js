@@ -40,7 +40,7 @@
     "d3-force": "^1.1.2",
     "d3-force-straighten-paths": "^1.0.2",
     "d3-tip": "~0.7",
-    "font-awesome": "~4.7",
+    "@fortawesome/fontawesome-free": "^5",
     "graphlib-dot": "^0.6",
     "grunt": "^1.0.3",
     "grunt-browserify": "^5.3.0",

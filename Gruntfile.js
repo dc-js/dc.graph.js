@@ -164,7 +164,6 @@ module.exports = function (grunt) {
                             '<%= conf.pkg.name %>.css',
                             'node_modules/bootstrap/dist/css/bootstrap.css',
                             'node_modules/dc/dc.css',
-                            'node_modules/font-awesome/css/font-awesome.css',
                             'node_modules/jquery-ui-dist/jquery-ui.css',
                             'node_modules/x-editable/dist/jqueryui-editable/css/jqueryui-editable.css'
                         ],
@@ -251,12 +250,17 @@ module.exports = function (grunt) {
                         dest: '<%= conf.web %>/js/classlist-polyfill.js'
                     },
                     {
+                        nonull: true,
+                        src: 'node_modules/@fortawesome/fontawesome-free/css/all.css',
+                        dest: '<%= conf.web %>/css/fontawesome-all.css'
+                    },
+                    {
                         expand: true,
                         flatten: true,
                         src: [
-                            'node_modules/font-awesome/fonts/*'
+                            'node_modules/@fortawesome/fontawesome-free/webfonts/*'
                         ],
-                        dest: '<%= conf.web %>/fonts/'
+                        dest: '<%= conf.web %>/webfonts/'
                     },
                     {
                         nonull: true,
