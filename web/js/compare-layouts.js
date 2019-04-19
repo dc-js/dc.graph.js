@@ -163,3 +163,8 @@ function on_load(filename, error, data) {
 }
 
 dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+
+d3.select('#randomize').on('click', function() {
+    sync_url.update('llayout', rnd_item(good_layouts), true);
+    sync_url.update('rlayout', rnd_item(good_layouts), true);
+});
