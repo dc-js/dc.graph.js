@@ -254,13 +254,13 @@ var options = {
             var modf;
             switch(val) {
             case 'x':
-                diagram.flowLayout({axis: 'x', minSeparation: 200});
+                diagram.layoutEngine().flowLayout({axis: 'x', minSeparation: 200});
                 break;
             case 'y':
-                diagram.flowLayout({axis: 'y', minSeparation: 200});
+                diagram.layoutEngine().flowLayout({axis: 'y', minSeparation: 200});
                 break;
             case 'none':
-                diagram.flowLayout(null);
+                diagram.layoutEngine().flowLayout(null);
                 break;
             default:
                 throw new Error('unknown flow direction ' + val);
