@@ -94,7 +94,10 @@ dc_graph.cola_layout = function(id) {
         if(engine.groupConnected()) {
             var components = cola.separateGraphs(wnodes, wedges);
             groups = components.map(function(g) {
-                return {leaves: g.array.map(function(n) { return n.index; })};
+                return {
+                    dcg_autoGroup: true,
+                    leaves: g.array.map(function(n) { return n.index; })
+                };
             });
         } else if(clusters) {
             var G = {};
@@ -131,7 +134,9 @@ dc_graph.cola_layout = function(id) {
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
                 }),
-                groups.map(function(g) {
+                groups.filter(function(g) {
+                    return !g.dcg_autoGroup;
+                }).map(function(g) {
                     g = Object.assign({}, g);
                     g.bounds = {
                         left: g.bounds.x,
