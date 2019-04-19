@@ -289,7 +289,7 @@ var tracker = sync_url_options(options, dcgraph_domain(vizgemsDiagram, 'network'
 
 var is_running = tracker.vals.play;
 function display_running() {
-    $('#play-button i').attr('class', is_running ? 'fa fa-pause' : 'fa fa-play');
+    $('#play-button i').attr('class', is_running ? 'fas fa-pause' : 'fas fa-play');
 }
 display_running();
 $('#play-button').click(function(e) {
