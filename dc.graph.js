@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.1
+ *  dc.graph 0.9.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.1
+ * @version 0.9.2
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.1',
+    version: '0.9.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3639,7 +3639,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.mode.reject = function(id, object) {
         var rtype = _diagram.renderer().rendererType();
         if(!object)
-            return true; // null is always a valid mode for any renderer
+            return false; // null is always a valid mode for any renderer
         if(!object.supportsRenderer)
             console.log('could not check if "' + id + '" is compatible with ' + rtype);
         else if(!object.supportsRenderer(rtype))
@@ -3881,6 +3881,10 @@ dc_graph.diagram = function (parent, chartGroup) {
      * {@link #dc_graph.diagram+showLayoutSteps showLayoutSteps}
      * is enabled. Watch the {@link #dc_graph.diagram+on 'end'} event to know when layout is
      * complete.
+     * @method redraw
+     * @memberof dc_graph.diagram
+     * @instance
+     * @return {dc_graph.diagram}
      **/
     var _needsRedraw = false;
     _diagram.redraw = function () {
@@ -6649,7 +6653,10 @@ dc_graph.cola_layout = function(id) {
         if(engine.groupConnected()) {
             var components = cola.separateGraphs(wnodes, wedges);
             groups = components.map(function(g) {
-                return {leaves: g.array.map(function(n) { return n.index; })};
+                return {
+                    dcg_autoGroup: true,
+                    leaves: g.array.map(function(n) { return n.index; })
+                };
             });
         } else if(clusters) {
             var G = {};
@@ -6686,7 +6693,9 @@ dc_graph.cola_layout = function(id) {
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
                 }),
-                groups.map(function(g) {
+                groups.filter(function(g) {
+                    return !g.dcg_autoGroup;
+                }).map(function(g) {
                     g = Object.assign({}, g);
                     g.bounds = {
                         left: g.bounds.x,
@@ -12446,7 +12455,7 @@ dc_graph.draw_clusters = function() {
         var clusters = diagram.clusterGroup().all().map(function(kv) {
             return _mode.parent().getWholeCluster(kv.key);
         }).filter(function(c) {
-            return c.cola.bounds;
+            return c && c.cola.bounds;
         });
         var rects = clayer.selectAll('rect.cluster')
             .data(clusters, function(c) { return c.orig.key; });

@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.9.1  
+**Version**: 0.9.2  
 **Example**  
 ```js
 // Example chaining
@@ -91,6 +91,7 @@ diagram.width(600)
         * [.layoutAlgorithm([algo])](#dc_graph.diagram+layoutAlgorithm) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.layoutEngine([engine])](#dc_graph.diagram+layoutEngine)
         * [.handleDisconnected([handleDisconnected])](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> \| [<code>diagram</code>](#dc_graph.diagram)
+        * [.redraw()](#dc_graph.diagram+redraw) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.render()](#dc_graph.diagram+render) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.on([event], [f])](#dc_graph.diagram+on) ⇒ [<code>diagram</code>](#dc_graph.diagram)
         * [.getStats()](#dc_graph.diagram+getStats) ⇒ [<code>diagram</code>](#dc_graph.diagram)
@@ -225,6 +226,7 @@ diagram.width(600)
     * [.layoutAlgorithm([algo])](#dc_graph.diagram+layoutAlgorithm) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.layoutEngine([engine])](#dc_graph.diagram+layoutEngine)
     * [.handleDisconnected([handleDisconnected])](#dc_graph.diagram+handleDisconnected) ⇒ <code>Boolean</code> \| [<code>diagram</code>](#dc_graph.diagram)
+    * [.redraw()](#dc_graph.diagram+redraw) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.render()](#dc_graph.diagram+render) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.on([event], [f])](#dc_graph.diagram+on) ⇒ [<code>diagram</code>](#dc_graph.diagram)
     * [.getStats()](#dc_graph.diagram+getStats) ⇒ [<code>diagram</code>](#dc_graph.diagram)
@@ -1308,6 +1310,26 @@ Instructs cola.js to fit the connected components.
 | --- | --- | --- |
 | [handleDisconnected] | <code>Boolean</code> | <code>true</code> | 
 
+<a name="dc_graph.diagram+redraw"></a>
+
+#### diagram.redraw() ⇒ [<code>diagram</code>](#dc_graph.diagram)
+Standard dc.js
+[baseMixin](https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin)
+method. Computes a new layout based on the nodes and edges in the edge groups, and
+displays the diagram.  To the extent possible, the diagram will minimize changes in
+positions from the previous layout.  `.render()` must be called the first time, and
+`.redraw()` can be called after that.
+
+`.redraw()` will be triggered by changes to the filters in any other charts in the same
+dc.js chart group.
+
+Unlike in dc.js, `redraw` executes asynchronously, because drawing can be computationally
+intensive, and the diagram will be drawn multiple times if
+[showLayoutSteps](#dc_graph.diagram+showLayoutSteps)
+is enabled. Watch the ['end'](#dc_graph.diagram+on) event to know when layout is
+complete.
+
+**Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
 <a name="dc_graph.diagram+render"></a>
 
 #### diagram.render() ⇒ [<code>diagram</code>](#dc_graph.diagram)

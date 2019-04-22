@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Compare layouts</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
+  <link rel="stylesheet" type="text/css" href="css/d3-tip.css"/>
+  <link rel="stylesheet" type="text/css" href="css/fontawesome-all.css"/>
+  <link rel="stylesheet" type="text/css" href="css/example-common.css"/>
+
+  <script type="text/javascript" src="js/d3.js"></script>
+  <script type="text/javascript" src="js/crossfilter.js"></script>
+  <script type="text/javascript" src="js/dc.js"></script>
+  <script type="text/javascript" src="js/d3-tip.js"></script>
+
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/lodash.js"></script>
+  <script type="text/javascript" src="js/promise-polyfill.js"></script>
+
+  <script type="text/javascript" src="js/cola.js"></script>
+  <script type="text/javascript" src="js/dagre.js"></script>
+  <script type="text/javascript" src="js/d3v4-force.js"></script>
+  <script type="text/javascript" src="js/viz.js"></script>
+  <script type="text/javascript" src="js/chart.registry.js"></script>
+  <script type="text/javascript" src="js/dc.graph.js"></script>
+
+  <script type="text/javascript" src="js/graphlib-dot.js"></script>
+
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/querystring.js"></script>
+  <script type="text/javascript" src="js/sync-url-options.js"></script>
+  <script type="text/javascript" src="js/dc.graph.tracker.domain.js"></script>
+
+  <style type="text/css">
+    body {
+        overflow: hidden;
+    }
+    #main {
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    #compare {
+        flex: 1;
+        margin: 1em;
+        display: flex;
+        flex-direction: row;
+    }
+    #left-side, #right-side {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    #left-controls, #right-controls {
+        margin: auto;
+    }
+    #middle {
+        flex-basis: 0px;
+        position: relative;
+    }
+    #randomize {
+        position: absolute;
+        font-size: 2em;
+        left: -1em;
+    }
+    #left-graph, #right-graph {
+        flex: 1;
+    }
+    #message {
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+        background-color: rgba(255,255,255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+  </style>
+
+</head>
+
+
+<body>
+
+  <div id="main">
+    <script type="text/javascript" src="js/example-header.js"></script>
+    <div id="compare">
+      <div id="left-side">
+        <div id="left-controls">
+          <select id="left-layout"></select>
+        </div>
+        <div id="left-graph"></div>
+      </div>
+      <div id="middle">
+        <i id="randomize" class="fas fa-dice"></i>
+      </div>
+      <div id="right-side">
+        <div id="right-controls">
+          <select id="right-layout"></select>
+        </div>
+        <div id="right-graph"></div>
+      </div>
+    </div>
+  </div>
+  <div id="message" style="display: none;"></div>
+
+  <script type="text/javascript" src="js/compare-layouts.js"></script>
+</body>

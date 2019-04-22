@@ -135,11 +135,11 @@ run();
 
 d3.select('#play-stop').on('click', function() {
     if(interval) {
-        d3.select('#play-stop').attr('class', 'fa fa-play');
+        d3.select('#play-stop').attr('class', 'fas fa-play');
         window.clearInterval(interval);
         interval = null;
     } else {
-        d3.select('#play-stop').attr('class', 'fa fa-pause');
+        d3.select('#play-stop').attr('class', 'fas fa-pause');
         run();
     }
 });
