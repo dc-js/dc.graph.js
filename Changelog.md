@@ -1,3 +1,10 @@
+## 0.9.2
+* `draw_clusters` was crashing when encountering an unknown cluster
+* do not reject null modes, try 2
+* options tracker for multiple charts. ability to update the UI when changing a sync-url value.
+* start compare-layouts example
+* upgrade to font-awesome 5
+
 ## 0.9.1
 * clusters are another dimension of data, similar to ports and paths. clusters are drawn with `draw_clusters` mode. cola, dagre, dot, and fdp layouts support clusters.
 * eliminate unqualilified `d3.select` that could accidentally snag objects from another diagram ([#114](https://github.com/dc-js/dc.graph.js/issues/114))
