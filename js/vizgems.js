@@ -254,13 +254,13 @@ var options = {
             var modf;
             switch(val) {
             case 'x':
-                diagram.flowLayout({axis: 'x', minSeparation: 200});
+                diagram.layoutEngine().flowLayout({axis: 'x', minSeparation: 200});
                 break;
             case 'y':
-                diagram.flowLayout({axis: 'y', minSeparation: 200});
+                diagram.layoutEngine().flowLayout({axis: 'y', minSeparation: 200});
                 break;
             case 'none':
-                diagram.flowLayout(null);
+                diagram.layoutEngine().flowLayout(null);
                 break;
             default:
                 throw new Error('unknown flow direction ' + val);
@@ -289,7 +289,7 @@ var tracker = sync_url_options(options, dcgraph_domain(vizgemsDiagram, 'network'
 
 var is_running = tracker.vals.play;
 function display_running() {
-    $('#play-button i').attr('class', is_running ? 'fa fa-pause' : 'fa fa-play');
+    $('#play-button i').attr('class', is_running ? 'fas fa-pause' : 'fas fa-play');
 }
 display_running();
 $('#play-button').click(function(e) {

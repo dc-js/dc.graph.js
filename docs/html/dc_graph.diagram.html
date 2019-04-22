@@ -317,92 +317,6 @@ within the diagram's group.</p></td>
     
 
     
-        <h3 class="subsection-title">Members</h3>
-
-        <dl>
-            
-<hr>
-<dt class="name" id="~_needsRedraw">
-    <h4 id="~_needsRedraw"><span class="type-signature">&lt;inner> </span>_needsRedraw<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Standard dc.js
-<a href="https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin">baseMixin</a>
-method. Computes a new layout based on the nodes and edges in the edge groups, and
-displays the diagram.  To the extent possible, the diagram will minimize changes in
-positions from the previous layout.  <code>.render()</code> must be called the first time, and
-<code>.redraw()</code> can be called after that.</p>
-<p><code>.redraw()</code> will be triggered by changes to the filters in any other charts in the same
-dc.js chart group.</p>
-<p>Unlike in dc.js, <code>redraw</code> executes asynchronously, because drawing can be computationally
-intensive, and the diagram will be drawn multiple times if
-showLayoutSteps
-is enabled. Watch the 'end' event to know when layout is
-complete.</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
-	<dd class="tag-source">
-		<ul class="dummy">
-			<li>
-				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1459">line 1459</a>
-			</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-</dd>
-
-        </dl>
-    
 
     
         <h3 class="subsection-title">Methods</h3>
@@ -768,7 +682,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2539">line 2539</a>
+				 <a href="diagram.js.html#sunlight-1-line-2543">line 2543</a>
 			</li>
 		</ul>
 	</dd>
@@ -900,7 +814,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2584">line 2584</a>
+				 <a href="diagram.js.html#sunlight-1-line-2588">line 2588</a>
 			</li>
 		</ul>
 	</dd>
@@ -6590,7 +6504,7 @@ resetting it might produce unpredictable results.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2345">line 2345</a>
+				 <a href="diagram.js.html#sunlight-1-line-2349">line 2349</a>
 			</li>
 		</ul>
 	</dd>
@@ -13204,7 +13118,7 @@ and can be modified through the passed d3 selections.</li>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2319">line 2319</a>
+				 <a href="diagram.js.html#sunlight-1-line-2323">line 2323</a>
 			</li>
 		</ul>
 	</dd>
@@ -13606,6 +13520,126 @@ generated from graphviz-style since it is more general.</p>
             
 <hr>
 <dt>
+    <h4 class="name" id="redraw"><span class="type-signature"></span>redraw()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Standard dc.js
+<a href="https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin">baseMixin</a>
+method. Computes a new layout based on the nodes and edges in the edge groups, and
+displays the diagram.  To the extent possible, the diagram will minimize changes in
+positions from the previous layout.  <code>.render()</code> must be called the first time, and
+<code>.redraw()</code> can be called after that.</p>
+<p><code>.redraw()</code> will be triggered by changes to the filters in any other charts in the same
+dc.js chart group.</p>
+<p>Unlike in dc.js, <code>redraw</code> executes asynchronously, because drawing can be computationally
+intensive, and the diagram will be drawn multiple times if
+showLayoutSteps
+is enabled. Watch the 'end' event to know when layout is
+complete.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+	<dt class="tag-source method-doc-label method-doc-details-label">Source:</dt>
+	<dd class="tag-source">
+		<ul class="dummy">
+			<li>
+				<a href="diagram.js.html">diagram.js</a>,
+				 <a href="diagram.js.html#sunlight-1-line-1442">line 1442</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="dc_graph.diagram.html">dc_graph.diagram</a></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
     <h4 class="name" id="redrawGroup"><span class="type-signature"></span>redrawGroup()</h4>
     
     
@@ -13663,7 +13697,7 @@ method. Causes all charts in the chart group to be redrawn.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2387">line 2387</a>
+				 <a href="diagram.js.html#sunlight-1-line-2391">line 2391</a>
 			</li>
 		</ul>
 	</dd>
@@ -13884,7 +13918,7 @@ must be called the first time, and <code>.redraw()</code> can be called after th
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-1471">line 1471</a>
+				 <a href="diagram.js.html#sunlight-1-line-1475">line 1475</a>
 			</li>
 		</ul>
 	</dd>
@@ -13994,7 +14028,7 @@ method. Causes all charts in the chart group to be rendered.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2400">line 2400</a>
+				 <a href="diagram.js.html#sunlight-1-line-2404">line 2404</a>
 			</li>
 		</ul>
 	</dd>
@@ -16059,7 +16093,7 @@ method. Gets or sets the x scale.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2359">line 2359</a>
+				 <a href="diagram.js.html#sunlight-1-line-2363">line 2363</a>
 			</li>
 		</ul>
 	</dd>
@@ -16249,7 +16283,7 @@ method. Gets or sets the y scale.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2373">line 2373</a>
+				 <a href="diagram.js.html#sunlight-1-line-2377">line 2377</a>
 			</li>
 		</ul>
 	</dd>
@@ -16370,7 +16404,7 @@ method. Gets or sets the y scale.</p>
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 	
-		on Mon Apr 15th 2019
+		on Mon Apr 22nd 2019
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
