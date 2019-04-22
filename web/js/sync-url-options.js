@@ -166,7 +166,9 @@ var sync_url_options = (function() {
                 _output = _;
                 return this;
             },
-            update: function(k, v) {
+            update: function(k, v, do_ui) {
+                if(do_ui)
+                    options[k].set(v);
                 options[k].update(v, true);
             },
             what_if_url: function(overrides) {
