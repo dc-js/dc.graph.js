@@ -25,7 +25,7 @@ dc_graph.draw_clusters = function() {
         var clusters = diagram.clusterGroup().all().map(function(kv) {
             return _mode.parent().getWholeCluster(kv.key);
         }).filter(function(c) {
-            return c.cola.bounds;
+            return c && c.cola.bounds;
         });
         var rects = clayer.selectAll('rect.cluster')
             .data(clusters, function(c) { return c.orig.key; });
