@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.1
+ *  dc.graph 0.9.2
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.1
+ * @version 0.9.2
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.1',
+    version: '0.9.2',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -640,7 +640,10 @@ dc_graph.cola_layout = function(id) {
         if(engine.groupConnected()) {
             var components = cola.separateGraphs(wnodes, wedges);
             groups = components.map(function(g) {
-                return {leaves: g.array.map(function(n) { return n.index; })};
+                return {
+                    dcg_autoGroup: true,
+                    leaves: g.array.map(function(n) { return n.index; })
+                };
             });
         } else if(clusters) {
             var G = {};
@@ -677,7 +680,9 @@ dc_graph.cola_layout = function(id) {
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
                 }),
-                groups.map(function(g) {
+                groups.filter(function(g) {
+                    return !g.dcg_autoGroup;
+                }).map(function(g) {
                     g = Object.assign({}, g);
                     g.bounds = {
                         left: g.bounds.x,
