@@ -1,15 +1,23 @@
 // collapse edges between same source and target
-dc_graph.deparallelize = function(group, sourceTag, targetTag) {
+dc_graph.deparallelize = function(group, sourceTag, targetTag, options) {
+    options = options || {};
+    var both = options.both || false,
+        reduce = options.reduce || null;
     return {
         all: function() {
             var ST = {};
             group.all().forEach(function(kv) {
                 var source = kv.value[sourceTag],
                     target = kv.value[targetTag];
-                var dir = source < target;
+                var dir = both ? true : source < target;
                 var min = dir ? source : target, max = dir ? target : source;
                 ST[min] = ST[min] || {};
-                var entry = ST[min][max] = ST[min][max] || {in: 0, out: 0, original: kv};
+                var entry;
+                if(ST[min][max]) {
+                    entry = ST[min][max];
+                    if(reduce)
+                        entry.original = reduce(entry.original, kv);
+                } else ST[min][max] = entry = {in: 0, out: 0, original: Object.assign({}, kv)};
                 if(dir)
                     ++entry.in;
                 else
