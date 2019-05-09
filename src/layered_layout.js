@@ -205,7 +205,6 @@ dc_graph.layered_layout = function(id) {
         extractNodeAttrs: property({}), // {attr: function(node)}
         extractEdgeAttrs: property({})
     });
-    engine.pathStraightenForce = engine.angleForce;
     return engine;
 };
 

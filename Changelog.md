@@ -1,3 +1,6 @@
+## 0.9.3
+* options to deparallelize in both directions and reduce the edges
+
 ## 0.9.2
 * `draw_clusters` was crashing when encountering an unknown cluster
 * do not reject null modes, try 2
