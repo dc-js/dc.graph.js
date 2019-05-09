@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.2
+ *  dc.graph 0.9.3
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.2
+ * @version 0.9.3
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.2',
+    version: '0.9.3',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -8420,7 +8420,6 @@ dc_graph.layered_layout = function(id) {
         extractNodeAttrs: property({}), // {attr: function(node)}
         extractEdgeAttrs: property({})
     });
-    engine.pathStraightenForce = engine.angleForce;
     return engine;
 };
 
@@ -14939,17 +14938,25 @@ dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
 
 
 // collapse edges between same source and target
-dc_graph.deparallelize = function(group, sourceTag, targetTag) {
+dc_graph.deparallelize = function(group, sourceTag, targetTag, options) {
+    options = options || {};
+    var both = options.both || false,
+        reduce = options.reduce || null;
     return {
         all: function() {
             var ST = {};
             group.all().forEach(function(kv) {
                 var source = kv.value[sourceTag],
                     target = kv.value[targetTag];
-                var dir = source < target;
+                var dir = both ? true : source < target;
                 var min = dir ? source : target, max = dir ? target : source;
                 ST[min] = ST[min] || {};
-                var entry = ST[min][max] = ST[min][max] || {in: 0, out: 0, original: kv};
+                var entry;
+                if(ST[min][max]) {
+                    entry = ST[min][max];
+                    if(reduce)
+                        entry.original = reduce(entry.original, kv);
+                } else ST[min][max] = entry = {in: 0, out: 0, original: Object.assign({}, kv)};
                 if(dir)
                     ++entry.in;
                 else
