@@ -32,7 +32,8 @@
     "metagraph": "^0.0.7",
     "queue-async": "~1.x",
     "viz.js": "^1.8.2",
-    "webcola": "3.3.x"
+    "webcola": "3.3.x",
+    "yoga-layout": "^1.9.3"
   },
   "devDependencies": {
     "bootstrap": "~3.4",
@@ -74,7 +75,8 @@
   "scripts": {
     "test": "grunt test",
     "d3v4-force": "rollup -c d3v4-force.rollup.config.js",
-    "interval-tree": "rollup -c lysenko-interval-tree.rollup.config.js"
+    "interval-tree": "rollup -c lysenko-interval-tree.rollup.config.js",
+    "yoga": "rollup -c yoga.rollup.config.js"
   },
   "npmName": "dc.graph",
   "npmFileMap": [
