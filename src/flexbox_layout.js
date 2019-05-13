@@ -73,10 +73,19 @@ dc_graph.flexbox_layout = function(id, options) {
             tree.node = {dcg_nodeKey: tree.address.length ? tree.address[tree.address.length-1] : null};
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
-    function yoga_set_name(attr) {
-        return 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
+    function set_yoga_attr(flexnode, attr, value) {
+        var fname = 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
+        if(typeof flexnode[fname] !== 'function')
+            throw new Error('Could not set yoga attr "' + attr + '" (' + fname + ')');
+        flexnode['set' + attr.charAt(0).toUpperCase() + attr.slice(1)](value);
     }
-    var internal_attrs = ['sort', 'dcg_nodeKey', 'x', 'y'],
+    function get_yoga_attr(flexnode, attr) {
+        var fname = 'getComputed' + attr.charAt(0).toUpperCase() + attr.slice(1);
+        if(typeof flexnode[fname] !== 'function')
+            throw new Error('Could not get yoga attr "' + attr + '" (' + fname + ')');
+        return flexnode[fname]();
+    }
+    var internal_attrs = ['sort', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z'],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
         var flexnode;
@@ -85,7 +94,7 @@ dc_graph.flexbox_layout = function(id, options) {
             flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
             break;
         case 'yoga-layout':
-            flexnode = new Node();
+            flexnode = yogaLayout.Node.create();
             break;
         }
         var attrs2 = Object.assign({}, attrs);
@@ -105,7 +114,7 @@ dc_graph.flexbox_layout = function(id, options) {
                 flexnode.style[attr] = value;
                 break;
             case 'yoga-layout':
-                flexnode[yoga_set_name(attr)](value);
+                set_yoga_attr(flexnode, attr, value);
                 break;
             }
         }
@@ -131,14 +140,25 @@ dc_graph.flexbox_layout = function(id, options) {
         return flexnode;
     }
     function apply_layout(offset, tree) {
-        if(_engine.logStuff())
-            console.log(tree.node.dcg_nodeKey + ': '+ JSON.stringify(tree.flexnode.layout));
-        tree.node.x = offset.x + tree.flexnode.layout.left + tree.flexnode.layout.width/2;
-        tree.node.y = offset.y + tree.flexnode.layout.top + tree.flexnode.layout.height/2;
+        var left, top, width, height;
+        switch(options.algo) {
+        case 'css-layout':
+            if(_engine.logStuff())
+                console.log(tree.node.dcg_nodeKey + ': '+ JSON.stringify(tree.flexnode.layout));
+            left = tree.flexnode.layout.left; width = tree.flexnode.layout.width;
+            top = tree.flexnode.layout.top; height = tree.flexnode.layout.height;
+            break;
+        case 'yoga-layout':
+            left = get_yoga_attr(tree.flexnode, 'left'); width = get_yoga_attr(tree.flexnode, 'width');
+            top = get_yoga_attr(tree.flexnode, 'top'); height = get_yoga_attr(tree.flexnode, 'height');
+            break;
+        }
+        tree.node.x = offset.x + left + width/2;
+        tree.node.y = offset.y + top + height/2;
         Object.keys(tree.children)
             .map(function(key) { return tree.children[key]; })
             .forEach(function(child) {
-                apply_layout({x: offset.x + tree.flexnode.layout.left, y: offset.y + tree.flexnode.layout.top}, child);
+                apply_layout({x: offset.x + left, y: offset.y + top}, child);
             });
     }
     function dispatchState(wnodes, wedges, event) {
@@ -157,8 +177,16 @@ dc_graph.flexbox_layout = function(id, options) {
         };
         ensure_inner_nodes(_tree);
         var flexTree = create_flextree(defaults, _tree);
-        flexTree.style.width = _graph.width;
-        flexTree.style.height = _graph.height;
+        switch(options.algo) {
+        case 'css-layout':
+            flexTree.style.width = _graph.width;
+            flexTree.style.height = _graph.height;
+            break;
+        case 'yoga-layout':
+            set_yoga_attr(flexTree, 'width', _graph.width);
+            set_yoga_attr(flexTree, 'height', _graph.height);
+            break;
+        }
         if(_engine.logStuff())
             console.log(JSON.stringify(flexTree, null, 2));
         switch(options.algo) {
