@@ -30,8 +30,9 @@
  * @param {String} [id=uuid()] - Unique identifier
  * @return {dc_graph.flexbox_layout}
  **/
-dc_graph.flexbox_layout = function(id) {
+dc_graph.flexbox_layout = function(id, options) {
     var _layoutId = id || uuid();
+    options = options || {algo: 'css-layout'};
     var _dispatch = d3.dispatch('tick', 'start', 'end');
 
     var _graph, _tree, _nodes = {}, _wnodes;
@@ -72,10 +73,21 @@ dc_graph.flexbox_layout = function(id) {
             tree.node = {dcg_nodeKey: tree.address.length ? tree.address[tree.address.length-1] : null};
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
+    function yoga_set_name(attr) {
+        return 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
+    }
     var internal_attrs = ['sort', 'dcg_nodeKey', 'x', 'y'],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
-        var flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
+        var flexnode;
+        switch(options.algo) {
+        case 'css-layout':
+            flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
+            break;
+        case 'yoga-layout':
+            flexnode = new Node();
+            break;
+        }
         var attrs2 = Object.assign({}, attrs);
         var isParent = Object.keys(tree.children).length;
         if(tree.node)
@@ -88,15 +100,32 @@ dc_graph.flexbox_layout = function(id) {
             var value = attrs[attr];
             if(typeof value === 'function')
                 value = value(tree.node);
-            flexnode.style[attr] = value;
+            switch(options.algo) {
+            case 'css-layout':
+                flexnode.style[attr] = value;
+                break;
+            case 'yoga-layout':
+                flexnode[yoga_set_name(attr)](value);
+                break;
+            }
         }
         if(isParent) {
-            flexnode.children = Object.values(tree.children)
+            var children = Object.values(tree.children)
                 .sort(attrs.sort)
                 .map(function(c) { return c.address[c.address.length-1]; })
                 .map(function(key) {
                     return create_flextree(Object.assign({}, attrs2), tree.children[key]);
                 });
+            switch(options.algo) {
+            case 'css-layout':
+                flexnode.children = children;
+                break;
+            case 'yoga-layout':
+                children.forEach(function(child, i) {
+                    flexnode.insertChild(child, i);
+                });
+                break;
+            }
         }
         tree.flexnode = flexnode;
         return flexnode;
@@ -132,7 +161,14 @@ dc_graph.flexbox_layout = function(id) {
         flexTree.style.height = _graph.height;
         if(_engine.logStuff())
             console.log(JSON.stringify(flexTree, null, 2));
-        computeLayout(flexTree);
+        switch(options.algo) {
+        case 'css-layout':
+            computeLayout(flexTree);
+            break;
+        case 'yoga-layout':
+            flexTree.calculateLayout();
+            break;
+        }
         apply_layout({x: 0, y: 0}, _tree);
         dispatchState(_wnodes, [], 'end');
     }
