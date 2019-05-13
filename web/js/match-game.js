@@ -2,6 +2,7 @@ var qs = querystring.parse();
 var options = Object.assign({
     min: 3,
     max: 10,
+    algo: 'css-layout',
     log: false
 }, qs);
 
@@ -83,7 +84,7 @@ var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), function (n) 
     return p.nodeId + '/' + p.side;
 });
 
-var layout = dc_graph.flexbox_layout()
+var layout = dc_graph.flexbox_layout(null, {algo: options.algo})
     .logStuff(qs.log && qs.log !== 'false')
     .addressToKey(function(ad) {
         switch(ad.length) {
