@@ -1519,7 +1519,7 @@
         }
       }_nbind.addMethod = addMethod;function throwError(message) {
         throw new Error(message);
-      }_nbind.throwError = throwError;_nbind.bigEndian = false;_a = _typeModule(_typeModule), _nbind.Type = _a.Type, _nbind.makeType = _a.makeType, _nbind.getComplexType = _a.getComplexType, _nbind.structureList = _a.structureList;var BindType = function (_super) {
+      }_nbind.throwError = throwError;_nbind.bigEndian = false;var _a = _typeModule(_typeModule); _nbind.Type = _a.Type, _nbind.makeType = _a.makeType, _nbind.getComplexType = _a.getComplexType, _nbind.structureList = _a.structureList;var BindType = function (_super) {
         __extends(BindType, _super);function BindType() {
           var _this = _super !== null && _super.apply(this, arguments) || this;_this.heap = HEAPU32;_this.ptrSize = 4;return _this;
         }BindType.prototype.needsWireRead = function (policyTbl) {
