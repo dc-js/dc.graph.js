@@ -73,10 +73,27 @@ dc_graph.flexbox_layout = function(id, options) {
             tree.node = {dcg_nodeKey: tree.address.length ? tree.address[tree.address.length-1] : null};
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
+    var yoga_constants = {
+        flexDirection: {
+            column: yogaLayout.FLEX_DIRECTION_COLUMN,
+            row: yogaLayout.FLEX_DIRECTION_ROW
+        },
+        justifyContent: {
+            'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
+            'flex-start': yogaLayout.JUSTIFY_FLEX_START,
+            'flex-end': yogaLayout.JUSTIFY_FLEX_END
+        },
+        alignItems: {
+            'flex-start': yogaLayout.ALIGN_FLEX_START,
+            'flex-end': yogaLayout.ALIGN_FLEX_END
+        }
+    };
     function set_yoga_attr(flexnode, attr, value) {
         var fname = 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
         if(typeof flexnode[fname] !== 'function')
             throw new Error('Could not set yoga attr "' + attr + '" (' + fname + ')');
+        if(yoga_constants[attr])
+            value = yoga_constants[attr][value];
         flexnode['set' + attr.charAt(0).toUpperCase() + attr.slice(1)](value);
     }
     function get_yoga_attr(flexnode, attr) {
