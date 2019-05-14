@@ -217,6 +217,7 @@ module.exports = function (grunt) {
                             'dc.graph.tracker.domain.js',
                             'd3v4-force.js',
                             'lysenko-interval-tree.js',
+                            'yoga-layout.js',
                             'querystring.js',
                             'sync-url-options.js',
                             'chart.registry.js',

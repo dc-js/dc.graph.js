@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.2
+ *  dc.graph 0.9.4
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.2
+ * @version 0.9.4
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.2',
+    version: '0.9.4',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -7932,8 +7932,9 @@ dc_graph.d3v4_force_layout.scripts = ['d3.js', 'd3v4-force.js'];
  * @param {String} [id=uuid()] - Unique identifier
  * @return {dc_graph.flexbox_layout}
  **/
-dc_graph.flexbox_layout = function(id) {
+dc_graph.flexbox_layout = function(id, options) {
     var _layoutId = id || uuid();
+    options = options || {algo: 'yoga-layout'};
     var _dispatch = d3.dispatch('tick', 'start', 'end');
 
     var _graph, _tree, _nodes = {}, _wnodes;
@@ -7974,10 +7975,70 @@ dc_graph.flexbox_layout = function(id) {
             tree.node = {dcg_nodeKey: tree.address.length ? tree.address[tree.address.length-1] : null};
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
-    var internal_attrs = ['sort', 'dcg_nodeKey', 'x', 'y'],
+    var yoga_constants = {
+        alignItems: {
+            stretch: yogaLayout.ALIGN_STRETCH,
+            'flex-start': yogaLayout.ALIGN_FLEX_START,
+            center: yogaLayout.ALIGN_CENTER,
+            'flex-end': yogaLayout.ALIGN_FLEX_END,
+            baseline: yogaLayout.ALIGN_BASELINE
+        },
+        alignSelf: {
+            stretch: yogaLayout.ALIGN_STRETCH,
+            'flex-start': yogaLayout.ALIGN_FLEX_START,
+            center: yogaLayout.ALIGN_CENTER,
+            'flex-end': yogaLayout.ALIGN_FLEX_END,
+            baseline: yogaLayout.ALIGN_BASELINE
+        },
+        alignContent: {
+            'flex-start': yogaLayout.ALIGN_FLEX_START,
+            'flex-end': yogaLayout.ALIGN_FLEX_END,
+            stretch: yogaLayout.ALIGN_STRETCH,
+            center: yogaLayout.ALIGN_CENTER,
+            'space-between': yogaLayout.ALIGN_SPACE_BETWEEN,
+            'space-around': yogaLayout.ALIGN_SPACE_AROUND
+        },
+        flexDirection: {
+            column: yogaLayout.FLEX_DIRECTION_COLUMN,
+            'column-reverse': yogaLayout.FLEX_DIRECTION_COLUMN_REVERSE,
+            row: yogaLayout.FLEX_DIRECTION_ROW,
+            'row-reverse': yogaLayout.FLEX_DIRECTION_ROW_REVERSE
+        },
+        justifyContent: {
+            'flex-start': yogaLayout.JUSTIFY_FLEX_START,
+            center: yogaLayout.JUSTIFY_CENTER,
+            'flex-end': yogaLayout.JUSTIFY_FLEX_END,
+            'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
+            'space-around': yogaLayout.JUSTIFY_SPACE_AROUND,
+            'space-evenly': yogaLayout.JUSTIFY_SPACE_EVENLY
+        }
+    };
+    function set_yoga_attr(flexnode, attr, value) {
+        var fname = 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
+        if(typeof flexnode[fname] !== 'function')
+            throw new Error('Could not set yoga attr "' + attr + '" (' + fname + ')');
+        if(yoga_constants[attr])
+            value = yoga_constants[attr][value];
+        flexnode['set' + attr.charAt(0).toUpperCase() + attr.slice(1)](value);
+    }
+    function get_yoga_attr(flexnode, attr) {
+        var fname = 'getComputed' + attr.charAt(0).toUpperCase() + attr.slice(1);
+        if(typeof flexnode[fname] !== 'function')
+            throw new Error('Could not get yoga attr "' + attr + '" (' + fname + ')');
+        return flexnode[fname]();
+    }
+    var internal_attrs = ['sort', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z'],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
-        var flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
+        var flexnode;
+        switch(options.algo) {
+        case 'css-layout':
+            flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
+            break;
+        case 'yoga-layout':
+            flexnode = yogaLayout.Node.create();
+            break;
+        }
         var attrs2 = Object.assign({}, attrs);
         var isParent = Object.keys(tree.children).length;
         if(tree.node)
@@ -7990,28 +8051,56 @@ dc_graph.flexbox_layout = function(id) {
             var value = attrs[attr];
             if(typeof value === 'function')
                 value = value(tree.node);
-            flexnode.style[attr] = value;
+            switch(options.algo) {
+            case 'css-layout':
+                flexnode.style[attr] = value;
+                break;
+            case 'yoga-layout':
+                set_yoga_attr(flexnode, attr, value);
+                break;
+            }
         }
         if(isParent) {
-            flexnode.children = Object.values(tree.children)
+            var children = Object.values(tree.children)
                 .sort(attrs.sort)
                 .map(function(c) { return c.address[c.address.length-1]; })
                 .map(function(key) {
                     return create_flextree(Object.assign({}, attrs2), tree.children[key]);
                 });
+            switch(options.algo) {
+            case 'css-layout':
+                flexnode.children = children;
+                break;
+            case 'yoga-layout':
+                children.forEach(function(child, i) {
+                    flexnode.insertChild(child, i);
+                });
+                break;
+            }
         }
         tree.flexnode = flexnode;
         return flexnode;
     }
     function apply_layout(offset, tree) {
-        if(_engine.logStuff())
-            console.log(tree.node.dcg_nodeKey + ': '+ JSON.stringify(tree.flexnode.layout));
-        tree.node.x = offset.x + tree.flexnode.layout.left + tree.flexnode.layout.width/2;
-        tree.node.y = offset.y + tree.flexnode.layout.top + tree.flexnode.layout.height/2;
+        var left, top, width, height;
+        switch(options.algo) {
+        case 'css-layout':
+            if(_engine.logStuff())
+                console.log(tree.node.dcg_nodeKey + ': '+ JSON.stringify(tree.flexnode.layout));
+            left = tree.flexnode.layout.left; width = tree.flexnode.layout.width;
+            top = tree.flexnode.layout.top; height = tree.flexnode.layout.height;
+            break;
+        case 'yoga-layout':
+            left = get_yoga_attr(tree.flexnode, 'left'); width = get_yoga_attr(tree.flexnode, 'width');
+            top = get_yoga_attr(tree.flexnode, 'top'); height = get_yoga_attr(tree.flexnode, 'height');
+            break;
+        }
+        tree.node.x = offset.x + left + width/2;
+        tree.node.y = offset.y + top + height/2;
         Object.keys(tree.children)
             .map(function(key) { return tree.children[key]; })
             .forEach(function(child) {
-                apply_layout({x: offset.x + tree.flexnode.layout.left, y: offset.y + tree.flexnode.layout.top}, child);
+                apply_layout({x: offset.x + left, y: offset.y + top}, child);
             });
     }
     function dispatchState(wnodes, wedges, event) {
@@ -8030,11 +8119,26 @@ dc_graph.flexbox_layout = function(id) {
         };
         ensure_inner_nodes(_tree);
         var flexTree = create_flextree(defaults, _tree);
-        flexTree.style.width = _graph.width;
-        flexTree.style.height = _graph.height;
+        switch(options.algo) {
+        case 'css-layout':
+            flexTree.style.width = _graph.width;
+            flexTree.style.height = _graph.height;
+            break;
+        case 'yoga-layout':
+            set_yoga_attr(flexTree, 'width', _graph.width);
+            set_yoga_attr(flexTree, 'height', _graph.height);
+            break;
+        }
         if(_engine.logStuff())
             console.log(JSON.stringify(flexTree, null, 2));
-        computeLayout(flexTree);
+        switch(options.algo) {
+        case 'css-layout':
+            computeLayout(flexTree);
+            break;
+        case 'yoga-layout':
+            flexTree.calculateLayout();
+            break;
+        }
         apply_layout({x: 0, y: 0}, _tree);
         dispatchState(_wnodes, [], 'end');
     }
@@ -8130,6 +8234,11 @@ dc_graph.flexbox_layout = function(id) {
          * @return {dc_graph.flexbox_layout}
          **/
         keyToAddress: property(function(nid) { return nid.split(','); }),
+        yogaConstants: function() {
+            // in case any are missing, they can be added
+            // please file PRs for any missing constants!
+            return yoga_constants;
+        },
         logStuff: property(false)
     };
     return _engine;
@@ -8420,7 +8529,6 @@ dc_graph.layered_layout = function(id) {
         extractNodeAttrs: property({}), // {attr: function(node)}
         extractEdgeAttrs: property({})
     });
-    engine.pathStraightenForce = engine.angleForce;
     return engine;
 };
 
@@ -13828,11 +13936,11 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                 }
                 return Promise.resolve(true);
             }
-            reset_deletables(source, _validTargets);
+            reset_deletables(source, _validTargets || []);
             return Promise.resolve(false);
         },
         cancelDragEdge: function(source) {
-            reset_deletables(source, _validTargets);
+            reset_deletables(source, _validTargets || []);
             return true;
         },
         detectReversedEdge: function(edge, sourcePort, targetPort) {
@@ -14939,17 +15047,25 @@ dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
 
 
 // collapse edges between same source and target
-dc_graph.deparallelize = function(group, sourceTag, targetTag) {
+dc_graph.deparallelize = function(group, sourceTag, targetTag, options) {
+    options = options || {};
+    var both = options.both || false,
+        reduce = options.reduce || null;
     return {
         all: function() {
             var ST = {};
             group.all().forEach(function(kv) {
                 var source = kv.value[sourceTag],
                     target = kv.value[targetTag];
-                var dir = source < target;
+                var dir = both ? true : source < target;
                 var min = dir ? source : target, max = dir ? target : source;
                 ST[min] = ST[min] || {};
-                var entry = ST[min][max] = ST[min][max] || {in: 0, out: 0, original: kv};
+                var entry;
+                if(ST[min][max]) {
+                    entry = ST[min][max];
+                    if(reduce)
+                        entry.original = reduce(entry.original, kv);
+                } else ST[min][max] = entry = {in: 0, out: 0, original: Object.assign({}, kv)};
                 if(dir)
                     ++entry.in;
                 else
