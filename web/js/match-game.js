@@ -47,13 +47,13 @@ var data = d3.range(Math.round(+options.min + Math.random()*(options.max-options
     return {
         id: 'a' + i,
         label: [String.fromCharCode(97+i) + '.', phrase()],
-        flex: 0
+        flex: 1
     };
 }).concat(d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'b' + i,
         label: [String.fromCharCode(48+i) + '.', phrase()],
-        flex: 0
+        flex: 1
     };
 }));
 
@@ -119,6 +119,7 @@ var matchDiagram = dc_graph.diagram('#graph')
         })
         .nodeStrokeWidth(0)
         .nodeTitle(null)
+        .nodeFill('none')
         .edgesInFront(true)
         .edgeSourcePortName('out')
         .edgeTargetPortName('in')
@@ -141,6 +142,7 @@ var circlePorts = dc_graph.symbol_port_style()
         .portSymbol(null)
         .displacement(0)
         .smallRadius(2).mediumRadius(4).largeRadius(6)
+        .outlineFill('white')
         .outlineStroke('black').outlineStrokeWidth(1);
 matchDiagram.portStyle('circle-ports', circlePorts)
     .portStyleName('circle-ports');
