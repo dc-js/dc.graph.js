@@ -94,11 +94,11 @@ dc_graph.match_opposites = function(diagram, deleteProps, options) {
                 }
                 return Promise.resolve(true);
             }
-            reset_deletables(source, _validTargets);
+            reset_deletables(source, _validTargets || []);
             return Promise.resolve(false);
         },
         cancelDragEdge: function(source) {
-            reset_deletables(source, _validTargets);
+            reset_deletables(source, _validTargets || []);
             return true;
         },
         detectReversedEdge: function(edge, sourcePort, targetPort) {
