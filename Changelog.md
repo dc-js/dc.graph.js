@@ -1,3 +1,6 @@
+## 0.9.4
+* `flexbox_layout` now supports Yoga layout for flexbox support. since the license doesn't have the questionable patents exception that css-layout has, this is now the default, but one can select css-layout by passing `{algo: 'css-layout'}` as the second parameter.
+
 ## 0.9.3
 * options to deparallelize in both directions and reduce the edges
 

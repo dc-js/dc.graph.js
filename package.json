@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "license": "Apache-2.0",
   "copyright": "2015-2019",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
@@ -32,7 +32,8 @@
     "metagraph": "^0.0.7",
     "queue-async": "~1.x",
     "viz.js": "^1.8.2",
-    "webcola": "3.3.x"
+    "webcola": "3.3.x",
+    "yoga-layout": "^1.9.3"
   },
   "devDependencies": {
     "bootstrap": "~3.4",
@@ -74,7 +75,8 @@
   "scripts": {
     "test": "grunt test",
     "d3v4-force": "rollup -c d3v4-force.rollup.config.js",
-    "interval-tree": "rollup -c lysenko-interval-tree.rollup.config.js"
+    "interval-tree": "rollup -c lysenko-interval-tree.rollup.config.js",
+    "yoga": "rollup -c yoga.rollup.config.js; sed -i .bak 's/_a = _typeModule(_typeModule),/var _a = _typeModule(_typeModule);/' yoga-layout.js"
   },
   "npmName": "dc.graph",
   "npmFileMap": [
