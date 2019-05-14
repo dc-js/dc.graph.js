@@ -74,18 +74,41 @@ dc_graph.flexbox_layout = function(id, options) {
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
     var yoga_constants = {
+        alignItems: {
+            stretch: yogaLayout.ALIGN_STRETCH,
+            'flex-start': yogaLayout.ALIGN_FLEX_START,
+            center: yogaLayout.ALIGN_CENTER,
+            'flex-end': yogaLayout.ALIGN_FLEX_END,
+            baseline: yogaLayout.ALIGN_BASELINE
+        },
+        alignSelf: {
+            stretch: yogaLayout.ALIGN_STRETCH,
+            'flex-start': yogaLayout.ALIGN_FLEX_START,
+            center: yogaLayout.ALIGN_CENTER,
+            'flex-end': yogaLayout.ALIGN_FLEX_END,
+            baseline: yogaLayout.ALIGN_BASELINE
+        },
+        alignContent: {
+            'flex-start': yogaLayout.ALIGN_FLEX_START,
+            'flex-end': yogaLayout.ALIGN_FLEX_END,
+            stretch: yogaLayout.ALIGN_STRETCH,
+            center: yogaLayout.ALIGN_CENTER,
+            'space-between': yogaLayout.ALIGN_SPACE_BETWEEN,
+            'space-around': yogaLayout.ALIGN_SPACE_AROUND
+        },
         flexDirection: {
             column: yogaLayout.FLEX_DIRECTION_COLUMN,
-            row: yogaLayout.FLEX_DIRECTION_ROW
+            'column-reverse': yogaLayout.FLEX_DIRECTION_COLUMN_REVERSE,
+            row: yogaLayout.FLEX_DIRECTION_ROW,
+            'row-reverse': yogaLayout.FLEX_DIRECTION_ROW_REVERSE
         },
         justifyContent: {
-            'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
             'flex-start': yogaLayout.JUSTIFY_FLEX_START,
-            'flex-end': yogaLayout.JUSTIFY_FLEX_END
-        },
-        alignItems: {
-            'flex-start': yogaLayout.ALIGN_FLEX_START,
-            'flex-end': yogaLayout.ALIGN_FLEX_END
+            center: yogaLayout.JUSTIFY_CENTER,
+            'flex-end': yogaLayout.JUSTIFY_FLEX_END,
+            'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
+            'space-around': yogaLayout.JUSTIFY_SPACE_AROUND,
+            'space-evenly': yogaLayout.JUSTIFY_SPACE_EVENLY
         }
     };
     function set_yoga_attr(flexnode, attr, value) {
@@ -309,6 +332,11 @@ dc_graph.flexbox_layout = function(id, options) {
          * @return {dc_graph.flexbox_layout}
          **/
         keyToAddress: property(function(nid) { return nid.split(','); }),
+        yogaConstants: function() {
+            // in case any are missing, they can be added
+            // please file PRs for any missing constants!
+            return yoga_constants;
+        },
         logStuff: property(false)
     };
     return _engine;
