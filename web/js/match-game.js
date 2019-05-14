@@ -2,7 +2,7 @@ var qs = querystring.parse();
 var options = Object.assign({
     min: 3,
     max: 10,
-    algo: 'css-layout',
+    algo: 'yoga-layout',
     log: false
 }, qs);
 

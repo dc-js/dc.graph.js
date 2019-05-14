@@ -32,7 +32,7 @@
  **/
 dc_graph.flexbox_layout = function(id, options) {
     var _layoutId = id || uuid();
-    options = options || {algo: 'css-layout'};
+    options = options || {algo: 'yoga-layout'};
     var _dispatch = d3.dispatch('tick', 'start', 'end');
 
     var _graph, _tree, _nodes = {}, _wnodes;
