@@ -1,3 +1,5 @@
+var params = new URLSearchParams(window.location.search);
+
 var parentNodes = [
     {
         id: 'flex+',
@@ -43,7 +45,7 @@ var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), function (n) 
 });
 
 var flexboxDiagram = dc_graph.diagram('#graph')
-        .layoutEngine(dc_graph.flexbox_layout()
+        .layoutEngine(dc_graph.flexbox_layout(null, {algo: params.get('algo') || 'yoga-layout'})
                       .addressToKey(function (ad) {
                           return 'flex+' + ad.join(',');
                       })

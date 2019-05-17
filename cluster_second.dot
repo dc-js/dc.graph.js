@@ -1,0 +1,5 @@
+digraph g {
+  a -> b
+  subgraph cluster_SG { a b }
+  a -> c
+}
