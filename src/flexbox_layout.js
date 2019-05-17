@@ -125,7 +125,7 @@ dc_graph.flexbox_layout = function(id, options) {
             throw new Error('Could not get yoga attr "' + attr + '" (' + fname + ')');
         return flexnode[fname]();
     }
-    var internal_attrs = ['sort', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z'],
+    var internal_attrs = ['sort', 'order', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z'],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
         var flexnode;
