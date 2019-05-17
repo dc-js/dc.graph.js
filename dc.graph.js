@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.4
+ *  dc.graph 0.9.5
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.4
+ * @version 0.9.5
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.4',
+    version: '0.9.5',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -8027,7 +8027,7 @@ dc_graph.flexbox_layout = function(id, options) {
             throw new Error('Could not get yoga attr "' + attr + '" (' + fname + ')');
         return flexnode[fname]();
     }
-    var internal_attrs = ['sort', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z'],
+    var internal_attrs = ['sort', 'order', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z'],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
         var flexnode;
