@@ -682,7 +682,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2543">line 2543</a>
+				 <a href="diagram.js.html#sunlight-1-line-2561">line 2561</a>
 			</li>
 		</ul>
 	</dd>
@@ -814,7 +814,7 @@ will orphan any previously created SVGElements.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2588">line 2588</a>
+				 <a href="diagram.js.html#sunlight-1-line-2606">line 2606</a>
 			</li>
 		</ul>
 	</dd>
@@ -2478,9 +2478,9 @@ returned by the <code>ordering</code> function, by creating separation constrain
 specified <code>gap</code>.</li>
 <li>'circle' - (experimental) the nodes will be placed in a circle using &quot;wheel&quot;
 edge lengths similar to those described in
-<a href="http://%3Ca">href="http://www.csse.monash.edu.au/~tdwyer/Dwyer2009FastConstraints.pdf">www.csse.monash.edu.au/~tdwyer/Dwyer2009FastConstraints.pdf</a> Scalable, Versatile, and Simple Constrained Graph Layout</a>
+<a href="http://www.csse.monash.edu.au/~tdwyer/Dwyer2009FastConstraints.pdf">Scalable, Versatile, and Simple Constrained Graph Layout</a>
 <em>Although this is not as performant or stable as might be desired, it may work for
-simple cases. In particular, it should use edge length </em>constraints<em>, which don't yet
+simple cases. In particular, it should use edge length <em>constraints</em>, which don't yet
 exist in cola.js.</em></li>
 </ul>
 <p>Because it is tedious to write code to generate constraints for a graph, <strong>dc.graph.js</strong>
@@ -6504,7 +6504,7 @@ resetting it might produce unpredictable results.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2349">line 2349</a>
+				 <a href="diagram.js.html#sunlight-1-line-2367">line 2367</a>
 			</li>
 		</ul>
 	</dd>
@@ -9926,8 +9926,7 @@ and returns falsy for other nodes.</p>
     
     <div class="description">
         <p>Set or get the crossfilter group which is the data source for the nodes in the
-diagram. The diagram will use the group's <code>.all()</code> method to get an array of <code>{key,
-value}</code> pairs, where the key is a unique identifier, and the value is usually an object
+diagram. The diagram will use the group's <code>.all()</code> method to get an array of <code>{key, value}</code> pairs, where the key is a unique identifier, and the value is usually an object
 containing the node's attributes. All accessors work with these key/value pairs.</p>
 <p>If the group is changed or returns different values, the next call to <code>.redraw()</code> will
 reflect the changes incrementally.</p>
@@ -13118,7 +13117,7 @@ and can be modified through the passed d3 selections.</li>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2323">line 2323</a>
+				 <a href="diagram.js.html#sunlight-1-line-2341">line 2341</a>
 			</li>
 		</ul>
 	</dd>
@@ -13697,7 +13696,7 @@ method. Causes all charts in the chart group to be redrawn.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2391">line 2391</a>
+				 <a href="diagram.js.html#sunlight-1-line-2409">line 2409</a>
 			</li>
 		</ul>
 	</dd>
@@ -14028,7 +14027,7 @@ method. Causes all charts in the chart group to be rendered.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2404">line 2404</a>
+				 <a href="diagram.js.html#sunlight-1-line-2422">line 2422</a>
 			</li>
 		</ul>
 	</dd>
@@ -14401,7 +14400,9 @@ when the diagram is constructed; setting it later may have unexpected consequenc
 <a href="https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin">baseMixin</a>
 method. Execute a d3 single selection in the diagram's scope using the given selector
 and return the d3 selection. Roughly the same as</p>
-<pre class="prettyprint source lang-js"><code>d3.select('#diagram-id').select(selector)</code></pre><p>Since this function returns a d3 selection, it is not chainable. (However, d3 selection
+<pre class="prettyprint source lang-js"><code>d3.select('#diagram-id').select(selector)
+</code></pre>
+<p>Since this function returns a d3 selection, it is not chainable. (However, d3 selection
 calls can be chained after it.)</p>
     </div>
     
@@ -14594,7 +14595,9 @@ calls can be chained after it.)</p>
 <a href="https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin">baseMixin</a>
 method. Selects all elements that match the d3 single selector in the diagram's scope,
 and return the d3 selection. Roughly the same as</p>
-<pre class="prettyprint source lang-js"><code>d3.select('#diagram-id').selectAll(selector)</code></pre><p>Since this function returns a d3 selection, it is not chainable. (However, d3 selection
+<pre class="prettyprint source lang-js"><code>d3.select('#diagram-id').selectAll(selector)
+</code></pre>
+<p>Since this function returns a d3 selection, it is not chainable. (However, d3 selection
 calls can be chained after it.)</p>
     </div>
     
@@ -16093,7 +16096,7 @@ method. Gets or sets the x scale.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2363">line 2363</a>
+				 <a href="diagram.js.html#sunlight-1-line-2381">line 2381</a>
 			</li>
 		</ul>
 	</dd>
@@ -16283,7 +16286,7 @@ method. Gets or sets the y scale.</p>
 		<ul class="dummy">
 			<li>
 				<a href="diagram.js.html">diagram.js</a>,
-				 <a href="diagram.js.html#sunlight-1-line-2377">line 2377</a>
+				 <a href="diagram.js.html#sunlight-1-line-2395">line 2395</a>
 			</li>
 		</ul>
 	</dd>
@@ -16402,9 +16405,9 @@ method. Gets or sets the y scale.</p>
 	</span>
 
 <span class="jsdoc-message">
-	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.2</a>
 	
-		on Fri May 17th 2019
+		on Tue Jun 11th 2019
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
