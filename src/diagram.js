@@ -2245,6 +2245,13 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     }
 
+    _diagram.animateZoom = function(_) {
+        if(!arguments.length)
+            return _animateZoom;
+        _animateZoom = _;
+        return _diagram;
+    };
+
     function auto_zoom(animate) {
         if(_diagram.fitStrategy()) {
             if(!_bounds)
