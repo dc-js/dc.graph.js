@@ -1523,6 +1523,21 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.renderer().rezoom(oldWidth, oldHeight, newWidth, newHeight);
     }
 
+    // extract just the topology-related parts of nodes & edges to see if
+    // graph has changed wrt layout
+    function topology_node(n) {
+        return {orig: get_original(n), cola: {dcg_nodeFixed: n.cola.dcg_nodeFixed}};
+    }
+    function topology_edge(e) {
+        var dcg_fields = Object.keys(e).filter(function(k) {
+            return /^dcg_/.test(k);
+        });
+        return {orig: get_original(e), cola: dcg_fields.reduce(function(p, k) {
+            p[k] = e.cola[k];
+            return p;
+        }, {})};
+    }
+
     _diagram.startLayout = function () {
         var nodes = _diagram.nodeGroup().all();
         var edges = _diagram.edgeGroup().all();
@@ -1716,12 +1731,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         // no layout if the topology and layout parameters haven't changed
         var skip_layout = false;
         if(!_diagram.layoutUnchanged()) {
-            var nodes_snapshot = JSON.stringify(wnodes.map(function(n) {
-                return {orig: get_original(n), cola: {dcg_nodeFixed: n.cola.dcg_nodeFixed}};
-            }));
-            var edges_snapshot = JSON.stringify(wedges.map(function(e) {
-                return {orig: get_original(e), cola: e.cola};
-            }));
+            var nodes_snapshot = JSON.stringify(wnodes.map(topology_node));
+            var edges_snapshot = JSON.stringify(wedges.map(topology_edge));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
