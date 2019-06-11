@@ -1,3 +1,7 @@
+## 0.9.6
+* be more choosy about what counts as a layout change: only `e.cola` fields that start with `dcg_`
+* open up `animateZoom` for those who set translate/zoom themselves and want the animated transition
+
 ## 0.9.5
 * add one more internal parameter which should be ignored by flexbox layout ('order')
 * CSS for match-game example in order to reenable dragging from/to nodes and not just ports

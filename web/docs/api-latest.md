@@ -1,6 +1,6 @@
 <a name="dc_graph"></a>
 
-## dc_graph : <code>object</code>
+## dc\_graph : <code>object</code>
 The entire dc.graph.js library is scoped under the **dc_graph** name space. It does not introduce
 anything else into the global name space.
 
@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.9.5  
+**Version**: 0.9.6  
 **Example**  
 ```js
 // Example chaining
@@ -113,9 +113,9 @@ diagram.width(600)
         * [.ranksep([ranksep])](#dc_graph.graphviz_attrs+ranksep)
     * [.cola_layout](#dc_graph.cola_layout)
         * [new cola_layout([id])](#new_dc_graph.cola_layout_new)
-        * [.handleDisconnected([handleDisconnected])](#dc_graph.cola_layout+handleDisconnected) ⇒ <code>Boolean</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
-        * [.lengthStrategy([lengthStrategy])](#dc_graph.cola_layout+lengthStrategy) ⇒ <code>function</code> \| <code>String</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
-        * [.baseLength([baseLength])](#dc_graph.cola_layout+baseLength) ⇒ <code>Number</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
+        * [.handleDisconnected([handleDisconnected])](#dc_graph.cola_layout+handleDisconnected) ⇒ <code>Boolean</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
+        * [.lengthStrategy([lengthStrategy])](#dc_graph.cola_layout+lengthStrategy) ⇒ <code>function</code> \| <code>String</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
+        * [.baseLength([baseLength])](#dc_graph.cola_layout+baseLength) ⇒ <code>Number</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
         * [.flowLayout([flowLayout])](#dc_graph.cola_layout+flowLayout)
     * [.dagre_layout](#dc_graph.dagre_layout)
         * [new dagre_layout([id])](#new_dc_graph.dagre_layout_new)
@@ -129,8 +129,8 @@ diagram.width(600)
         * [new d3v4_force_layout([id])](#new_dc_graph.d3v4_force_layout_new)
     * [.flexbox_layout](#dc_graph.flexbox_layout)
         * [new flexbox_layout([id])](#new_dc_graph.flexbox_layout_new)
-        * [.addressToKey([addressToKey])](#dc_graph.flexbox_layout+addressToKey) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
-        * [.keyToAddress([keyToAddress])](#dc_graph.flexbox_layout+keyToAddress) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+        * [.addressToKey([addressToKey])](#dc_graph.flexbox_layout+addressToKey) ⇒ <code>function</code> \| [<code>flexbox\_layout</code>](#dc_graph.flexbox_layout)
+        * [.keyToAddress([keyToAddress])](#dc_graph.flexbox_layout+keyToAddress) ⇒ <code>function</code> \| [<code>flexbox\_layout</code>](#dc_graph.flexbox_layout)
     * [.layered_layout](#dc_graph.layered_layout)
         * [new layered_layout([id])](#new_dc_graph.layered_layout_new)
     * [.constraint_pattern](#dc_graph.constraint_pattern)
@@ -153,7 +153,7 @@ diagram.width(600)
 <a name="dc_graph.diagram"></a>
 
 ### dc_graph.diagram
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 
 * [.diagram](#dc_graph.diagram)
     * [new diagram(parent, [chartGroup])](#new_dc_graph.diagram_new)
@@ -1508,8 +1508,8 @@ element.
 **Kind**: instance method of [<code>diagram</code>](#dc_graph.diagram)  
 <a name="dc_graph.graphviz_attrs"></a>
 
-### dc_graph.graphviz_attrs
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.graphviz\_attrs
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 
 * [.graphviz_attrs](#dc_graph.graphviz_attrs)
     * [new graphviz_attrs()](#new_dc_graph.graphviz_attrs_new)
@@ -1519,7 +1519,7 @@ element.
 
 <a name="new_dc_graph.graphviz_attrs_new"></a>
 
-#### new graphviz_attrs()
+#### new graphviz\_attrs()
 `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
 implement - although these are not required, they make it easier for clients and
 modes (like expand_collapse) to work with multiple layout engines.
@@ -1531,7 +1531,7 @@ these attributes are [from graphviz](http://www.graphviz.org/doc/info/attrs.html
 #### graphviz_attrs.rankdir([rankdir])
 Direction to draw ranks.
 
-**Kind**: instance method of [<code>graphviz_attrs</code>](#dc_graph.graphviz_attrs)  
+**Kind**: instance method of [<code>graphviz\_attrs</code>](#dc_graph.graphviz_attrs)  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -1542,7 +1542,7 @@ Direction to draw ranks.
 #### graphviz_attrs.nodesep([nodesep])
 Spacing in between nodes in the same rank.
 
-**Kind**: instance method of [<code>graphviz_attrs</code>](#dc_graph.graphviz_attrs)  
+**Kind**: instance method of [<code>graphviz\_attrs</code>](#dc_graph.graphviz_attrs)  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1553,7 +1553,7 @@ Spacing in between nodes in the same rank.
 #### graphviz_attrs.ranksep([ranksep])
 Spacing in between ranks.
 
-**Kind**: instance method of [<code>graphviz_attrs</code>](#dc_graph.graphviz_attrs)  
+**Kind**: instance method of [<code>graphviz\_attrs</code>](#dc_graph.graphviz_attrs)  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1561,19 +1561,19 @@ Spacing in between ranks.
 
 <a name="dc_graph.cola_layout"></a>
 
-### dc_graph.cola_layout
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.cola\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 
 * [.cola_layout](#dc_graph.cola_layout)
     * [new cola_layout([id])](#new_dc_graph.cola_layout_new)
-    * [.handleDisconnected([handleDisconnected])](#dc_graph.cola_layout+handleDisconnected) ⇒ <code>Boolean</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
-    * [.lengthStrategy([lengthStrategy])](#dc_graph.cola_layout+lengthStrategy) ⇒ <code>function</code> \| <code>String</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
-    * [.baseLength([baseLength])](#dc_graph.cola_layout+baseLength) ⇒ <code>Number</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
+    * [.handleDisconnected([handleDisconnected])](#dc_graph.cola_layout+handleDisconnected) ⇒ <code>Boolean</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
+    * [.lengthStrategy([lengthStrategy])](#dc_graph.cola_layout+lengthStrategy) ⇒ <code>function</code> \| <code>String</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
+    * [.baseLength([baseLength])](#dc_graph.cola_layout+baseLength) ⇒ <code>Number</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
     * [.flowLayout([flowLayout])](#dc_graph.cola_layout+flowLayout)
 
 <a name="new_dc_graph.cola_layout_new"></a>
 
-#### new cola_layout([id])
+#### new cola\_layout([id])
 `dc_graph.cola_layout` is an adaptor for cola.js layouts in dc.graph.js
 
 
@@ -1583,10 +1583,10 @@ Spacing in between ranks.
 
 <a name="dc_graph.cola_layout+handleDisconnected"></a>
 
-#### cola_layout.handleDisconnected([handleDisconnected]) ⇒ <code>Boolean</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
+#### cola_layout.handleDisconnected([handleDisconnected]) ⇒ <code>Boolean</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
 Instructs cola.js to fit the connected components.
 
-**Kind**: instance method of [<code>cola_layout</code>](#dc_graph.cola_layout)  
+**Kind**: instance method of [<code>cola\_layout</code>](#dc_graph.cola_layout)  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1594,7 +1594,7 @@ Instructs cola.js to fit the connected components.
 
 <a name="dc_graph.cola_layout+lengthStrategy"></a>
 
-#### cola_layout.lengthStrategy([lengthStrategy]) ⇒ <code>function</code> \| <code>String</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
+#### cola_layout.lengthStrategy([lengthStrategy]) ⇒ <code>function</code> \| <code>String</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
 Currently, three strategies are supported for specifying the lengths of edges:
 * 'individual' - uses the `edgeLength` for each edge. If it returns falsy, uses the
 `baseLength`
@@ -1604,7 +1604,7 @@ the edge. See
 for more details.
 'none' - no edge lengths will be specified
 
-**Kind**: instance method of [<code>cola_layout</code>](#dc_graph.cola_layout)  
+**Kind**: instance method of [<code>cola\_layout</code>](#dc_graph.cola_layout)  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1612,12 +1612,12 @@ for more details.
 
 <a name="dc_graph.cola_layout+baseLength"></a>
 
-#### cola_layout.baseLength([baseLength]) ⇒ <code>Number</code> \| [<code>cola_layout</code>](#dc_graph.cola_layout)
+#### cola_layout.baseLength([baseLength]) ⇒ <code>Number</code> \| [<code>cola\_layout</code>](#dc_graph.cola_layout)
 Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
 'individual', and the base value to be multiplied for 'symmetric' and 'jaccard' edge
 lengths.
 
-**Kind**: instance method of [<code>cola_layout</code>](#dc_graph.cola_layout)  
+**Kind**: instance method of [<code>cola\_layout</code>](#dc_graph.cola_layout)  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1632,7 +1632,7 @@ If it is not set, `flowLayout` will be calculated from the [rankdir](#dc_graph.g
 and [ranksep](#dc_graph.graphviz_attrs+ranksep); if `rankdir` is also null (the
 default for cola layout), then there will be no flow.
 
-**Kind**: instance method of [<code>cola_layout</code>](#dc_graph.cola_layout)  
+**Kind**: instance method of [<code>cola\_layout</code>](#dc_graph.cola_layout)  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1647,11 +1647,11 @@ diagram.flowLayout({axis: 'x', minSeparation: 200})
 ```
 <a name="dc_graph.dagre_layout"></a>
 
-### dc_graph.dagre_layout
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.dagre\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 <a name="new_dc_graph.dagre_layout_new"></a>
 
-#### new dagre_layout([id])
+#### new dagre\_layout([id])
 `dc_graph.dagre_layout` is an adaptor for dagre.js layouts in dc.graph.js
 
 In addition to the below layout attributes, `dagre_layout` also implements the attributes from
@@ -1664,11 +1664,11 @@ In addition to the below layout attributes, `dagre_layout` also implements the a
 
 <a name="dc_graph.tree_layout"></a>
 
-### dc_graph.tree_layout
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.tree\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 <a name="new_dc_graph.tree_layout_new"></a>
 
-#### new tree_layout([id])
+#### new tree\_layout([id])
 `dc_graph.tree_layout` is a very simple and not very bright tree layout. It can draw any DAG, but
 tries to position the nodes as a tree.
 
@@ -1679,11 +1679,11 @@ tries to position the nodes as a tree.
 
 <a name="dc_graph.graphviz_layout"></a>
 
-### dc_graph.graphviz_layout
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.graphviz\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 <a name="new_dc_graph.graphviz_layout_new"></a>
 
-#### new graphviz_layout([id])
+#### new graphviz\_layout([id])
 `dc_graph.graphviz_layout` is an adaptor for viz.js (graphviz) layouts in dc.graph.js
 
 In addition to the below layout attributes, `graphviz_layout` also implements the attributes from
@@ -1696,11 +1696,11 @@ In addition to the below layout attributes, `graphviz_layout` also implements th
 
 <a name="dc_graph.d3_force_layout"></a>
 
-### dc_graph.d3_force_layout
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.d3\_force\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 <a name="new_dc_graph.d3_force_layout_new"></a>
 
-#### new d3_force_layout([id])
+#### new d3\_force\_layout([id])
 `dc_graph.d3_force_layout` is an adaptor for d3-force layouts in dc.graph.js
 
 
@@ -1710,11 +1710,11 @@ In addition to the below layout attributes, `graphviz_layout` also implements th
 
 <a name="dc_graph.d3v4_force_layout"></a>
 
-### dc_graph.d3v4_force_layout
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.d3v4\_force\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 <a name="new_dc_graph.d3v4_force_layout_new"></a>
 
-#### new d3v4_force_layout([id])
+#### new d3v4\_force\_layout([id])
 `dc_graph.d3v4_force_layout` is an adaptor for d3-force version 4 layouts in dc.graph.js
 
 
@@ -1724,17 +1724,17 @@ In addition to the below layout attributes, `graphviz_layout` also implements th
 
 <a name="dc_graph.flexbox_layout"></a>
 
-### dc_graph.flexbox_layout
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.flexbox\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 
 * [.flexbox_layout](#dc_graph.flexbox_layout)
     * [new flexbox_layout([id])](#new_dc_graph.flexbox_layout_new)
-    * [.addressToKey([addressToKey])](#dc_graph.flexbox_layout+addressToKey) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
-    * [.keyToAddress([keyToAddress])](#dc_graph.flexbox_layout+keyToAddress) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+    * [.addressToKey([addressToKey])](#dc_graph.flexbox_layout+addressToKey) ⇒ <code>function</code> \| [<code>flexbox\_layout</code>](#dc_graph.flexbox_layout)
+    * [.keyToAddress([keyToAddress])](#dc_graph.flexbox_layout+keyToAddress) ⇒ <code>function</code> \| [<code>flexbox\_layout</code>](#dc_graph.flexbox_layout)
 
 <a name="new_dc_graph.flexbox_layout_new"></a>
 
-#### new flexbox_layout([id])
+#### new flexbox\_layout([id])
 `dc_graph.flexbox_layout` lays out nodes in accordance with the
 [flexbox layout algorithm](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox).
 Nodes fit into a containment hierarchy based on their keys; edges do not affect the layout but
@@ -1768,13 +1768,13 @@ attributes.
 
 <a name="dc_graph.flexbox_layout+addressToKey"></a>
 
-#### flexbox_layout.addressToKey([addressToKey]) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+#### flexbox_layout.addressToKey([addressToKey]) ⇒ <code>function</code> \| [<code>flexbox\_layout</code>](#dc_graph.flexbox_layout)
 This function constructs a node key string from an "address". An address is an array of
 strings identifying the path from the root to the node.
 
 By default, it joins the address with commas.
 
-**Kind**: instance method of [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)  
+**Kind**: instance method of [<code>flexbox\_layout</code>](#dc_graph.flexbox_layout)  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1782,13 +1782,13 @@ By default, it joins the address with commas.
 
 <a name="dc_graph.flexbox_layout+keyToAddress"></a>
 
-#### flexbox_layout.keyToAddress([keyToAddress]) ⇒ <code>function</code> \| [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)
+#### flexbox_layout.keyToAddress([keyToAddress]) ⇒ <code>function</code> \| [<code>flexbox\_layout</code>](#dc_graph.flexbox_layout)
 This function constructs an "address" from a node key string. An address is an array of
 strings identifying the path from the root to the node.
 
 By default, it splits the key by its commas.
 
-**Kind**: instance method of [<code>flexbox_layout</code>](#dc_graph.flexbox_layout)  
+**Kind**: instance method of [<code>flexbox\_layout</code>](#dc_graph.flexbox_layout)  
 
 | Param | Type | Default |
 | --- | --- | --- |
@@ -1796,11 +1796,11 @@ By default, it splits the key by its commas.
 
 <a name="dc_graph.layered_layout"></a>
 
-### dc_graph.layered_layout
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.layered\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 <a name="new_dc_graph.layered_layout_new"></a>
 
-#### new layered_layout([id])
+#### new layered\_layout([id])
 `dc_graph.layered_layout` produces 3D layered layouts, utilizing another layout
 that supports fixed nodes and position hints for the layers
 
@@ -1811,11 +1811,11 @@ that supports fixed nodes and position hints for the layers
 
 <a name="dc_graph.constraint_pattern"></a>
 
-### dc_graph.constraint_pattern
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+### dc_graph.constraint\_pattern
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 <a name="new_dc_graph.constraint_pattern_new"></a>
 
-#### new constraint_pattern(diagram, pattern)
+#### new constraint\_pattern(diagram, pattern)
 In cola.js there are three factors which influence the positions of nodes:
 * *edge length* suggestions, controlled by the
 [lengthStrategy](#dc_graph.diagram+lengthStrategy),
@@ -1870,7 +1870,7 @@ Then we'll build back up from the ground up and show how inference works.
 <a name="dc_graph.tip"></a>
 
 ### dc_graph.tip
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 
 * [.tip](#dc_graph.tip)
     * [new tip()](#new_dc_graph.tip_new)
@@ -1940,7 +1940,7 @@ tip.content(dc_graph.tip.table());
 <a name="dc_graph.brush"></a>
 
 ### dc_graph.brush
-**Kind**: static class of [<code>dc_graph</code>](#dc_graph)  
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
 
 * [.brush](#dc_graph.brush)
     * [new brush()](#new_dc_graph.brush_new)
@@ -1987,7 +1987,7 @@ Retrieve whether the brush is currently active
 **Kind**: instance method of [<code>brush</code>](#dc_graph.brush)  
 <a name="dc_graph.flat_group"></a>
 
-### dc_graph.flat_group : <code>object</code>
+### dc_graph.flat\_group : <code>object</code>
 `dc_graph.flat_group` implements a
 ["fake crossfilter group"](https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups)
 for the case of a group which is 1:1 with the rows of the data array.
@@ -1996,7 +1996,7 @@ Although `dc_graph` can be used with aggregated or reduced data, typically the n
 are rows of two data arrays, and each row has a column which contains the unique identifier for
 the node or edge.
 
-**Kind**: static namespace of [<code>dc_graph</code>](#dc_graph)  
+**Kind**: static namespace of [<code>dc\_graph</code>](#dc_graph)  
 
 * [.flat_group](#dc_graph.flat_group) : <code>object</code>
     * [.make(source, id_accessor)](#dc_graph.flat_group.make) ⇒ <code>Object</code>
@@ -2017,7 +2017,7 @@ Create a crossfilter, dimension, and flat group. Returns an object containing al
 The resulting fake group's `.all()` method returns an array of the currently filtered-in
 `{key, value}` pairs where the key is `id_accessor(row)` and the value is the row.
 
-**Kind**: static method of [<code>flat_group</code>](#dc_graph.flat_group)  
+**Kind**: static method of [<code>flat\_group</code>](#dc_graph.flat_group)  
 **Returns**: <code>Object</code> - `{crossfilter, dimension, group}`  
 
 | Param | Type | Description |
@@ -2032,7 +2032,7 @@ The resulting fake group's `.all()` method returns an array of the currently fil
 
 Create a flat dimension and group from an existing crossfilter.
 
-**Kind**: static method of [<code>flat_group</code>](#dc_graph.flat_group)  
+**Kind**: static method of [<code>flat\_group</code>](#dc_graph.flat_group)  
 **Returns**: <code>Object</code> - `{crossfilter, dimension, group}`  
 
 | Param | Type | Description |
