@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.5
+ *  dc.graph 0.9.6
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.5
+ * @version 0.9.6
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.5',
+    version: '0.9.6',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3949,6 +3949,21 @@ dc_graph.diagram = function (parent, chartGroup) {
             _diagram.renderer().rezoom(oldWidth, oldHeight, newWidth, newHeight);
     }
 
+    // extract just the topology-related parts of nodes & edges to see if
+    // graph has changed wrt layout
+    function topology_node(n) {
+        return {orig: get_original(n), cola: {dcg_nodeFixed: n.cola.dcg_nodeFixed}};
+    }
+    function topology_edge(e) {
+        var dcg_fields = Object.keys(e).filter(function(k) {
+            return /^dcg_/.test(k);
+        });
+        return {orig: get_original(e), cola: dcg_fields.reduce(function(p, k) {
+            p[k] = e.cola[k];
+            return p;
+        }, {})};
+    }
+
     _diagram.startLayout = function () {
         var nodes = _diagram.nodeGroup().all();
         var edges = _diagram.edgeGroup().all();
@@ -4142,12 +4157,8 @@ dc_graph.diagram = function (parent, chartGroup) {
         // no layout if the topology and layout parameters haven't changed
         var skip_layout = false;
         if(!_diagram.layoutUnchanged()) {
-            var nodes_snapshot = JSON.stringify(wnodes.map(function(n) {
-                return {orig: get_original(n), cola: {dcg_nodeFixed: n.cola.dcg_nodeFixed}};
-            }));
-            var edges_snapshot = JSON.stringify(wedges.map(function(e) {
-                return {orig: get_original(e), cola: e.cola};
-            }));
+            var nodes_snapshot = JSON.stringify(wnodes.map(topology_node));
+            var edges_snapshot = JSON.stringify(wedges.map(topology_edge));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
@@ -4659,6 +4670,13 @@ dc_graph.diagram = function (parent, chartGroup) {
             _bounds = _diagram.renderer().calculateBounds(drawState);
         }
     }
+
+    _diagram.animateZoom = function(_) {
+        if(!arguments.length)
+            return _animateZoom;
+        _animateZoom = _;
+        return _diagram;
+    };
 
     function auto_zoom(animate) {
         if(_diagram.fitStrategy()) {
