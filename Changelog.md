@@ -1,3 +1,6 @@
+## 0.9.7
+* layout change includes all node and edge .cola fields that start with `dcg_`
+
 ## 0.9.6
 * be more choosy about what counts as a layout change: only `e.cola` fields that start with `dcg_`
 * open up `animateZoom` for those who set translate/zoom themselves and want the animated transition

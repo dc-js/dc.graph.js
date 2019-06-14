@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.6
+ *  dc.graph 0.9.7
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.6
+ * @version 0.9.7
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.6',
+    version: '0.9.7',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -3950,18 +3950,21 @@ dc_graph.diagram = function (parent, chartGroup) {
     }
 
     // extract just the topology-related parts of nodes & edges to see if
-    // graph has changed wrt layout
+    // graph has changed wrt layout. imperfect heuristic: assume that the original
+    // data as well as all cola fields starting with dcg_ are related to topology
+    function dcg_fields(cola) {
+        var entries = Object.entries(cola)
+            .filter(function(entry) { return /^dcg_/.test(entry[0]); });
+        return entries.reduce(function(p, entry) {
+            p[entry[0]] = entry[1];
+            return p;
+        }, {});
+    }
     function topology_node(n) {
-        return {orig: get_original(n), cola: {dcg_nodeFixed: n.cola.dcg_nodeFixed}};
+        return {orig: get_original(n), cola: dcg_fields(n.cola)};
     }
     function topology_edge(e) {
-        var dcg_fields = Object.keys(e).filter(function(k) {
-            return /^dcg_/.test(k);
-        });
-        return {orig: get_original(e), cola: dcg_fields.reduce(function(p, k) {
-            p[k] = e.cola[k];
-            return p;
-        }, {})};
+        return {orig: get_original(e), cola: dcg_fields(e.cola)};
     }
 
     _diagram.startLayout = function () {
