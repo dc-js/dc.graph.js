@@ -3,7 +3,12 @@
 Dynamic, interactive graph visualization using D3.
 
 * smooth D3 animated transitions
-* support for many graph layout libraries, including [WebCola](http://marvl.infotech.monash.edu/webcola/) (and [SetCoLa](https://github.com/uwdata/setcola), [dagre](https://github.com/cpettitt/dagre), [d3-force](https://github.com/d3/d3-force), graphviz via [viz.js](https://github.com/mdaines/viz.js/) (wasm), flexbox via [Yoga](https://yogalayout.com/) 
+* support for many graph layout libraries, including
+  * [WebCola](http://marvl.infotech.monash.edu/webcola/) (and [SetCoLa](https://github.com/uwdata/setcola))
+  * [dagre](https://github.com/cpettitt/dagre)
+  * [d3-force](https://github.com/d3/d3-force)
+  * graphviz via [viz.js](https://github.com/mdaines/viz.js/) (wasm)
+  * flexbox via [Yoga](https://yogalayout.com/) 
 * many modes of interaction, including drawing, editing, exploring, selection, brushing and filtering
 * integrates with [dc.js](http://dc-js.github.io/dc.js/) and [crossfilter](http://crossfilter.github.io/crossfilter/)
 * experimental 3D mode using WebGL, with a novel 2.5D layered force directed layout
