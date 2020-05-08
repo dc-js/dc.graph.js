@@ -9,4 +9,4 @@ Dynamic, interactive graph visualization using D3.
 
 Many [examples are on github.io](http://dc-js.github.io/dc.graph.js), some of which allow you to display or explore your own graph data. No data is uploaded to any server - this is a pure JS client library.
 
-dc.graph.js is by Gordon Woodhull. I also maintain [dc.js](https://github.com/dc-js/dc.js) and [RCloud](https://github.com/att/rcloud)
+dc.graph.js is by Gordon Woodhull. I also maintain [dc.js](https://github.com/dc-js/dc.js) and [RCloud](https://github.com/att/rcloud).
