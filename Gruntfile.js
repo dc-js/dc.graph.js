@@ -310,17 +310,6 @@ module.exports = function (grunt) {
                 command: 'cp -n scripts/pre-commit.sh .git/hooks/pre-commit' +
                     ' || echo \'Cowardly refusing to overwrite your existing git pre-commit hook.\''
             }
-        },
-        browserify: {
-            dev: {
-                src: '<%= conf.pkg.name %>.js',
-                dest: 'bundle.js',
-                options: {
-                    browserifyOptions: {
-                        standalone: 'dc'
-                    }
-                }
-            }
         }
     });
 
