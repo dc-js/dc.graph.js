@@ -156,6 +156,9 @@ dc_graph.d3v4_force_layout = function(id) {
         supportsWebworker: function() {
             return true;
         },
+        supportsMoving: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
             if(arguments.length === 1)
