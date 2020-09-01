@@ -325,6 +325,9 @@ dc_graph.render_svg = function() {
                 .attr('orient', function() {
                     return e.pos.new.orienttail;
                 });
+            _renderer.select('#' + _renderer.parent().edgeId(e) + '-arrows')
+                .attr('d', generate_edge_path('new', true));
+
         })
             .attr('d', generate_edge_path('new'));
         return this;

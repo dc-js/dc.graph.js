@@ -10,6 +10,7 @@
 * built-in zoom uses keyboard mode modkey support, which means that `modKeyZoom` keys must exactly match for zoom to be enabled. previously it was *any* match, and zoom was still enabled if `modKeyZoom` was null/empty and a modkey was pressed.
 * change detection is customizable and defaults to "basic" if the layout algorithm does not support moving - only adding/deleting nodes/edges will register as a change
 * when moving nodes, only connected edges will have their edges redrawn (and desplined if graphviz). splines are completely removed so that they stay that way if relayout is disabled.
+* arrow paths are also recalculated when moving nodes, so that arrowheads/tails are not stranded
 
 ## 0.9.7
 * layout change includes all node and edge .cola fields that start with `dcg_`
