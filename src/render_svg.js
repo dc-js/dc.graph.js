@@ -313,6 +313,7 @@ dc_graph.render_svg = function() {
         edge.each(function(e) {
             e.pos.new = null;
             e.pos.old = null;
+            e.cola.points = null;
             _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
             if(_renderer.parent().edgeArrowhead.eval(e))
                 _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
