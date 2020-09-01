@@ -73,7 +73,12 @@ dc_graph.move_nodes = function(options) {
                         n.cola.x = n.original_position[0] + dx;
                         n.cola.y = n.original_position[1] + dy;
                     });
-                    diagram.reposition(node, edge);
+                    var node2 = node.filter(function(n) { return _selected.includes(n.orig.key); }),
+                        edge2 = edge.filter(function(e) {
+                            return _selected.includes(e.source.orig.key) ||
+                                _selected.includes(e.target.orig.key);
+                        });
+                    diagram.reposition(node2, edge2);
                 }
             }
         }
