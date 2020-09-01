@@ -1,6 +1,6 @@
 dc_graph.fix_nodes = function(options) {
     options = options || {};
-    var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
+    var fix_nodes_group = dc_graph.fix_nodes_group(options.fix_nodes_group || 'fix-nodes-group');
     var _fixedPosTag = options.fixedPosTag || 'fixedPos';
     var _fixes = [], _nodes, _wnodes, _edges, _wedges;
 
