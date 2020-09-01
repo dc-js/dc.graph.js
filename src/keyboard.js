@@ -1,10 +1,23 @@
 dc_graph.keyboard = function() {
-    var _input_anchor, _dispatch = d3.dispatch('keydown', 'keyup');
+    var _input_anchor, _dispatch = d3.dispatch('keydown', 'keyup', 'modkeyschanged');
+    var _mod_keys = d3.set(['Shift', 'Control', 'Alt', 'Meta']),
+        _pressed = d3.set();
 
+    function pressed() {
+        return _pressed.values().sort();
+    }
     function keydown() {
+        if(_mod_keys.has(d3.event.key)) {
+            _pressed.add(d3.event.key);
+            _dispatch.modkeyschanged(pressed());
+        }
         _dispatch.keydown();
     }
     function keyup() {
+        if(_mod_keys.has(d3.event.key)) {
+            _pressed.remove(d3.event.key);
+            _dispatch.modkeyschanged(pressed());
+        }
         _dispatch.keyup();
     }
     function draw(diagram) {
@@ -44,6 +57,19 @@ dc_graph.keyboard = function() {
     };
 
     _mode.disableFocus = property(false);
+    _mode.modKeysPressed = function() {
+        return pressed();
+    };
+    _mode.modKeysMatch = function(keys) {
+        if(!keys || keys === [])
+            return _pressed.empty();
+        if(!Array.isArray(keys))
+            keys = [keys];
+        var p = pressed();
+        if(p.length !== keys.length)
+            return false;
+        return keys.slice().sort().every(function(k, i) { return k === p[i]; });
+    };
 
     return _mode;
 };
