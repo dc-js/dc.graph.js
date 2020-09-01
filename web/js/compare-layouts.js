@@ -104,6 +104,7 @@ function on_load(filename, error, data) {
             .width('auto')
             .height('auto')
             .autoZoom('once')
+            .modKeyZoom('alt')
             .restrictPan(true)
             .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
             .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
@@ -131,6 +132,11 @@ function on_load(filename, error, data) {
 
         const fix_nodes_group = ['fix', side, 'nodes', 'group'].join('-'),
               select_nodes_group = ['select', side, 'nodes', 'group'].join('-');
+        diagram.child('select-nodes', dc_graph.select_nodes({
+            nodeStrokeWidth: 3,
+            nodeFill: '#ddd',
+            nodeStroke: side==='left' ? 'darkgreen' : 'darkblue'
+        }, {select_nodes_group}));
 
         var move_nodes = dc_graph.move_nodes({select_nodes_group, fix_nodes_group});
         diagram.child('move-nodes', move_nodes);
