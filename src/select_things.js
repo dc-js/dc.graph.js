@@ -1,6 +1,7 @@
 dc_graph.select_things = function(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;
     var _mousedownThing = null;
+    var _keyboard;
 
     var contains_predicate = thinginess.keysEqual ?
             function(k1) {
@@ -48,6 +49,15 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 things_group.set_changed([]);
         } : null);
         _have_bce = v;
+    }
+    function modkeyschanged() {
+        if(_mode.multipleSelect()) {
+            var brush_mode = _mode.parent().child('brush');
+            if(_keyboard.modKeysMatch(_mode.modKeys()))
+                brush_mode.activate();
+            else
+                brush_mode.deactivate();
+        }
     }
     function brushstart() {
         if(isUnion(d3.event.sourceEvent) || isToggle(d3.event.sourceEvent))
@@ -103,8 +113,8 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         });
 
         if(_mode.multipleSelect()) {
-            var brush_mode = diagram.child('brush');
-            brush_mode.activate();
+            if(_keyboard.modKeysMatch(_mode.modKeys()))
+                diagram.child('brush').activate();
         }
         else
             background_click_event(diagram, _mode.clickBackgroundClears());
@@ -139,11 +149,16 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                     .on('brushstart.' + things_name, brushstart)
                     .on('brushmove.' + things_name, brushmove);
             }
+            _keyboard = p.child('keyboard');
+            if(!_keyboard)
+                p.child('keyboard', _keyboard = dc_graph.keyboard());
+            _keyboard.on('modkeyschanged.' + things_name, modkeyschanged);
         },
         laterDraw: thinginess.laterDraw || false
     });
 
     _mode.multipleSelect = property(true);
+    _mode.modKeys = property(null);
     _mode.clickBackgroundClears = property(true, false).react(function(v) {
         if(!_mode.multipleSelect() && _mode.parent())
             background_click_event(_mode.parent(), v);

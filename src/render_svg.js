@@ -804,50 +804,17 @@ dc_graph.render_svg = function() {
         if(_renderer.parent().mouseZoomable()) {
             var mod, mods;
             var brush = _renderer.parent().child('brush');
-            if((mod = _renderer.parent().modKeyZoom())) {
-                if (Array.isArray (mod))
-                    mods = mod.slice ();
-                else if (typeof mod === "string")
-                    mods = [mod];
+            var keyboard = _renderer.parent().child('keyboard');
+            if(!keyboard)
+                _renderer.parent().child('keyboard', keyboard = dc_graph.keyboard());
+            var modkeyschanged = function() {
+                if(keyboard.modKeysMatch(_renderer.parent().modKeyZoom()))
+                    enableZoom();
                 else
-                    mods = ['Alt'];
-                var mouseDown = false, modDown = false, zoomEnabled = false;
-                _svg.on('mousedown.modkey-zoom', function() {
-                    mouseDown = true;
-                }).on('mouseup.modkey-zoom', function() {
-                    mouseDown = false;
-                    if(!mouseDown && !modDown && zoomEnabled) {
-                        zoomEnabled = false;
-                        disableZoom();
-                        if(brush)
-                            brush.activate();
-                    }
-                });
-                d3.select(document)
-                    .on('keydown.modkey-zoom-' + _renderer.parent().anchorName(), function() {
-                        if(mods.indexOf (d3.event.key) > -1) {
-                            modDown = true;
-                            if(!mouseDown) {
-                                zoomEnabled = true;
-                                enableZoom();
-                                if(brush)
-                                    brush.deactivate();
-                            }
-                        }
-                    })
-                    .on('keyup.modkey-zoom-' + _renderer.parent().anchorName(), function() {
-                        if(mods.indexOf (d3.event.key) > -1) {
-                            modDown = false;
-                            if(!mouseDown) {
-                                zoomEnabled = false;
-                                disableZoom();
-                                if(brush)
-                                    brush.activate();
-                            }
-                        }
-                    });
-            }
-            else enableZoom();
+                    disableZoom();
+            };
+            keyboard.on('modkeyschanged.zoom', modkeyschanged);
+            modkeyschanged();
         }
 
         return _svg;

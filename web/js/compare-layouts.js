@@ -104,7 +104,7 @@ function on_load(filename, error, data) {
             .width('auto')
             .height('auto')
             .autoZoom('once')
-            .modKeyZoom('alt')
+            .modKeyZoom('Alt')
             .restrictPan(true)
             .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
             .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)

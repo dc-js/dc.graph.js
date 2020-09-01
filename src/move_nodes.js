@@ -3,7 +3,7 @@ dc_graph.move_nodes = function(options) {
     var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
     var fix_nodes_group = dc_graph.fix_nodes_group(options.fix_nodes_group || 'fix-nodes-group');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
-    var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
+    var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick, _keyboard;
     var _maybeSelect = null;
 
     function isUnion(event) {
@@ -31,6 +31,8 @@ dc_graph.move_nodes = function(options) {
         node.on('mousedown.move-nodes', function(n) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
+                return;
+            if(!_keyboard.modKeysMatch(_mode.modKeys()))
                 return;
             _startPos = dc_graph.event_coords(diagram);
             _downNode = d3.select(this);
@@ -120,6 +122,9 @@ dc_graph.move_nodes = function(options) {
                 _brush = p.child('brush');
                 _drawGraphs = p.child('draw-graphs');
                 _selectNodes = p.child('select-nodes');
+                _keyboard = p.child('keyboard');
+                if(!_keyboard)
+                    p.child('keyboard', _keyboard = dc_graph.keyboard());
             }
             else _brush = _drawGraphs = _selectNodes = null;
         }
@@ -127,6 +132,7 @@ dc_graph.move_nodes = function(options) {
 
     // minimum distance that is considered a drag, not a click
     _mode.dragSize = property(5);
+    _mode.modKeys = property(null);
 
     return _mode;
 };
