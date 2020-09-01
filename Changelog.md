@@ -11,6 +11,7 @@
 * change detection is customizable and defaults to "basic" if the layout algorithm does not support moving - only adding/deleting nodes/edges will register as a change
 * when moving nodes, only connected edges will have their edges redrawn (and desplined if graphviz). splines are completely removed so that they stay that way if relayout is disabled.
 * arrow paths are also recalculated when moving nodes, so that arrowheads/tails are not stranded
+* nodes are allowed to be skinny
 
 ## 0.9.7
 * layout change includes all node and edge .cola fields that start with `dcg_`
