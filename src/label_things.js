@@ -11,10 +11,6 @@ dc_graph.label_things = function(options) {
         };
     }
 
-    function grab_focus() {
-        _keyboard.focus();
-    }
-
     function edit_label_listener(diagram) {
         return function(thing, eventOptions) {
             var box = options.thing_box(thing);
@@ -32,7 +28,6 @@ dc_graph.label_things = function(options) {
                     },
                     finally: function() {
                         options.hide_thing_label(thing, false);
-                        grab_focus();
                     }
                 });
         };

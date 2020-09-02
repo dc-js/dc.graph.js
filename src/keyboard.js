@@ -1,5 +1,6 @@
 dc_graph.keyboard = function() {
-    var _input_anchor, _dispatch = d3.dispatch('keydown', 'keyup', 'modkeyschanged');
+    var _dispatch = d3.dispatch('keydown', 'keyup', 'modkeyschanged');
+    var _unique_id = 'keyboard' + Math.floor(Math.random() * 100000);
     var _mod_keys = d3.set(['Shift', 'Control', 'Alt', 'Meta']),
         _pressed = d3.set();
 
@@ -20,23 +21,23 @@ dc_graph.keyboard = function() {
         }
         _dispatch.keyup();
     }
+    function clear() {
+        if(!_pressed.empty()) {
+            _pressed = d3.set();
+            _dispatch.modkeyschanged(pressed());
+        }
+    }
     function draw(diagram) {
-        _input_anchor = diagram.svg().selectAll('a#dcgraph-keyboard').data([1]);
-        _input_anchor.enter()
-            .insert('a', ':first-child').attr({
-                id: 'dcgraph-keyboard',
-                href: '#'
-            });
-        _input_anchor.on('keydown.keyboard', keydown);
-        _input_anchor.on('keyup.keyboard', keyup);
-
-        // grab focus whenever svg is interacted with (?)
-        diagram.svg().on('mouseup.keyboard', function() {
-            _mode.focus();
-        });
+        d3.select(window)
+            .on('keydown.' + _unique_id, keydown)
+            .on('keyup.' + _unique_id, keyup)
+            .on('blur.' + _unique_id, clear);
     }
     function remove(diagram) {
-        _input_anchor.remove();
+        d3.select(window)
+            .on('keydown.' + _unique_id, null)
+            .on('keyup.' + _unique_id, null)
+            .on('blur.' + _unique_id, null);
     }
     var _mode = dc_graph.mode('brush', {
         draw: draw,
@@ -50,13 +51,6 @@ dc_graph.keyboard = function() {
         return this;
     };
 
-    _mode.focus = function() {
-        if(!_mode.disableFocus()) {
-            _input_anchor.node().focus && _input_anchor.node().focus();
-        }
-    };
-
-    _mode.disableFocus = property(false);
     _mode.modKeysPressed = function() {
         return pressed();
     };
