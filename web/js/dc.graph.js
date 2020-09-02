@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.7
+ *  dc.graph 0.9.8
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.7
+ * @version 0.9.8
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.7',
+    version: '0.9.8',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -1100,7 +1100,7 @@ function fit_shape(shape, diagram) {
             // fixme: this is only consistent if regular || !squeeze
             // but we'd need to calculate polygon first in order to find out
             // (not a bad idea, just no time right now)
-            if(w<h) w = h;
+            // if(w<h) w = h;
 
             if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke(n.dcg_shape)) {
                 var pands = diagram.nodePadding.eval(n) + diagram.nodeStrokeWidth.eval(n);
@@ -3540,6 +3540,18 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.layoutUnchanged = property(false);
+    _diagram.nodeChangeSelect = property(function() {
+        if(_diagram.layoutEngine().supportsMoving && _diagram.layoutEngine().supportsMoving())
+            return topology_node;
+        else
+            return basic_node;
+    });
+    _diagram.edgeChangeSelect = property(function() {
+        if(_diagram.layoutEngine().supportsMoving && _diagram.layoutEngine().supportsMoving())
+            return topology_edge;
+        else
+            return basic_edge;
+    });
 
     /**
      * When `layoutUnchanged` is false, this will force layout to happen again. This may be needed
@@ -3966,6 +3978,20 @@ dc_graph.diagram = function (parent, chartGroup) {
     function topology_edge(e) {
         return {orig: get_original(e), cola: dcg_fields(e.cola)};
     }
+    function basic_node(n) {
+        var n0 = get_original(n);
+        return {
+            orig: {
+                key: n0.key,
+                value: Object.fromEntries(
+                    Object.entries(n0.value)
+                        .filter(function(kv) { return kv[0] !== 'fixedPos'; }))
+            }
+        };
+    }
+    function basic_edge(e) {
+        return {orig: get_original(e)};
+    }
 
     _diagram.startLayout = function () {
         var nodes = _diagram.nodeGroup().all();
@@ -4160,8 +4186,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         // no layout if the topology and layout parameters haven't changed
         var skip_layout = false;
         if(!_diagram.layoutUnchanged()) {
-            var nodes_snapshot = JSON.stringify(wnodes.map(topology_node));
-            var edges_snapshot = JSON.stringify(wedges.map(topology_edge));
+            var node_fields = _diagram.nodeChangeSelect()(),
+                edge_fields = _diagram.edgeChangeSelect()();
+            var nodes_snapshot = JSON.stringify(wnodes.map(node_fields));
+            var edges_snapshot = JSON.stringify(wedges.map(edge_fields));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
@@ -5368,6 +5396,7 @@ dc_graph.render_svg = function() {
         edge.each(function(e) {
             e.pos.new = null;
             e.pos.old = null;
+            e.cola.points = null;
             _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
             if(_renderer.parent().edgeArrowhead.eval(e))
                 _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
@@ -5379,6 +5408,9 @@ dc_graph.render_svg = function() {
                 .attr('orient', function() {
                     return e.pos.new.orienttail;
                 });
+            _renderer.select('#' + _renderer.parent().edgeId(e) + '-arrows')
+                .attr('d', generate_edge_path('new', true));
+
         })
             .attr('d', generate_edge_path('new'));
         return this;
@@ -5859,50 +5891,17 @@ dc_graph.render_svg = function() {
         if(_renderer.parent().mouseZoomable()) {
             var mod, mods;
             var brush = _renderer.parent().child('brush');
-            if((mod = _renderer.parent().modKeyZoom())) {
-                if (Array.isArray (mod))
-                    mods = mod.slice ();
-                else if (typeof mod === "string")
-                    mods = [mod];
+            var keyboard = _renderer.parent().child('keyboard');
+            if(!keyboard)
+                _renderer.parent().child('keyboard', keyboard = dc_graph.keyboard());
+            var modkeyschanged = function() {
+                if(keyboard.modKeysMatch(_renderer.parent().modKeyZoom()))
+                    enableZoom();
                 else
-                    mods = ['Alt'];
-                var mouseDown = false, modDown = false, zoomEnabled = false;
-                _svg.on('mousedown.modkey-zoom', function() {
-                    mouseDown = true;
-                }).on('mouseup.modkey-zoom', function() {
-                    mouseDown = false;
-                    if(!mouseDown && !modDown && zoomEnabled) {
-                        zoomEnabled = false;
-                        disableZoom();
-                        if(brush)
-                            brush.activate();
-                    }
-                });
-                d3.select(document)
-                    .on('keydown.modkey-zoom-' + _renderer.parent().anchorName(), function() {
-                        if(mods.indexOf (d3.event.key) > -1) {
-                            modDown = true;
-                            if(!mouseDown) {
-                                zoomEnabled = true;
-                                enableZoom();
-                                if(brush)
-                                    brush.deactivate();
-                            }
-                        }
-                    })
-                    .on('keyup.modkey-zoom-' + _renderer.parent().anchorName(), function() {
-                        if(mods.indexOf (d3.event.key) > -1) {
-                            modDown = false;
-                            if(!mouseDown) {
-                                zoomEnabled = false;
-                                disableZoom();
-                                if(brush)
-                                    brush.activate();
-                            }
-                        }
-                    });
-            }
-            else enableZoom();
+                    disableZoom();
+            };
+            keyboard.on('modkeyschanged.zoom', modkeyschanged);
+            modkeyschanged();
         }
 
         return _svg;
@@ -6785,6 +6784,9 @@ dc_graph.cola_layout = function(id) {
         supportsWebworker: function() {
             return true;
         },
+        supportsMoving: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
             if(arguments.length === 1)
@@ -7301,7 +7303,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             lines.push(indent + 'subgraph "' + c + '" {');
             if(cluster_children[c])
                 cluster_children[c].forEach(print_subgraph.bind(null, i+1));
-            lines.push(indent + '  ' + cluster_nodes[c].join(' '));
+            if(cluster_nodes[c])
+                lines.push(indent + '  ' + cluster_nodes[c].map(function (s) { return JSON.stringify(s) }).join(' '));
             lines.push(indent + '}');
         }
         tops.forEach(print_subgraph.bind(null, 1));
@@ -7355,7 +7358,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             };
         });
         var clusters = (result.objects || []).filter(function(n) {
-            return /^cluster/.test(n.name);
+            return /^cluster/.test(n.name) && n.bb;
         });
         clusters.forEach(function(c) {
             c.dcg_clusterKey = c.name;
@@ -7666,6 +7669,9 @@ dc_graph.d3_force_layout = function(id) {
         supportsWebworker: function() {
             return true;
         },
+        supportsMoving: function() {
+            return true;
+        },
         parent: property(null),
         on: function(event, f) {
             if(arguments.length === 1)
@@ -7870,6 +7876,9 @@ dc_graph.d3v4_force_layout = function(id) {
             return _layoutId;
         },
         supportsWebworker: function() {
+            return true;
+        },
+        supportsMoving: function() {
             return true;
         },
         parent: property(null),
@@ -10509,31 +10518,45 @@ dc_graph.dropdown = function() {
 };
 
 dc_graph.keyboard = function() {
-    var _input_anchor, _dispatch = d3.dispatch('keydown', 'keyup');
+    var _dispatch = d3.dispatch('keydown', 'keyup', 'modkeyschanged');
+    var _unique_id = 'keyboard' + Math.floor(Math.random() * 100000);
+    var _mod_keys = d3.set(['Shift', 'Control', 'Alt', 'Meta']),
+        _pressed = d3.set();
 
+    function pressed() {
+        return _pressed.values().sort();
+    }
     function keydown() {
+        if(_mod_keys.has(d3.event.key)) {
+            _pressed.add(d3.event.key);
+            _dispatch.modkeyschanged(pressed());
+        }
         _dispatch.keydown();
     }
     function keyup() {
+        if(_mod_keys.has(d3.event.key)) {
+            _pressed.remove(d3.event.key);
+            _dispatch.modkeyschanged(pressed());
+        }
         _dispatch.keyup();
     }
+    function clear() {
+        if(!_pressed.empty()) {
+            _pressed = d3.set();
+            _dispatch.modkeyschanged(pressed());
+        }
+    }
     function draw(diagram) {
-        _input_anchor = diagram.svg().selectAll('a#dcgraph-keyboard').data([1]);
-        _input_anchor.enter()
-            .insert('a', ':first-child').attr({
-                id: 'dcgraph-keyboard',
-                href: '#'
-            });
-        _input_anchor.on('keydown.keyboard', keydown);
-        _input_anchor.on('keyup.keyboard', keyup);
-
-        // grab focus whenever svg is interacted with (?)
-        diagram.svg().on('mouseup.keyboard', function() {
-            _mode.focus();
-        });
+        d3.select(window)
+            .on('keydown.' + _unique_id, keydown)
+            .on('keyup.' + _unique_id, keyup)
+            .on('blur.' + _unique_id, clear);
     }
     function remove(diagram) {
-        _input_anchor.remove();
+        d3.select(window)
+            .on('keydown.' + _unique_id, null)
+            .on('keyup.' + _unique_id, null)
+            .on('blur.' + _unique_id, null);
     }
     var _mode = dc_graph.mode('brush', {
         draw: draw,
@@ -10547,13 +10570,19 @@ dc_graph.keyboard = function() {
         return this;
     };
 
-    _mode.focus = function() {
-        if(!_mode.disableFocus()) {
-            _input_anchor.node().focus && _input_anchor.node().focus();
-        }
+    _mode.modKeysPressed = function() {
+        return pressed();
     };
-
-    _mode.disableFocus = property(false);
+    _mode.modKeysMatch = function(keys) {
+        if(!keys || keys === [])
+            return _pressed.empty();
+        if(!Array.isArray(keys))
+            keys = [keys];
+        var p = pressed();
+        if(p.length !== keys.length)
+            return false;
+        return keys.slice().sort().every(function(k, i) { return k === p[i]; });
+    };
 
     return _mode;
 };
@@ -10618,10 +10647,13 @@ dc_graph.edit_text = function(parent, options) {
     }
 
     textdiv.on('keydown.edit-text', function() {
+        // prevent keyboard mode from seeing this (especially delete key!)
+        d3.event.stopPropagation();
         if(d3.event.keyCode===13) {
             d3.event.preventDefault();
         }
     }).on('keyup.edit-text', function() {
+        d3.event.stopPropagation();
         if(d3.event.keyCode===13) {
             accept();
         } else if(d3.event.keyCode===27) {
@@ -10745,6 +10777,7 @@ dc_graph.brush = function() {
 dc_graph.select_things = function(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;
     var _mousedownThing = null;
+    var _keyboard;
 
     var contains_predicate = thinginess.keysEqual ?
             function(k1) {
@@ -10792,6 +10825,15 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                 things_group.set_changed([]);
         } : null);
         _have_bce = v;
+    }
+    function modkeyschanged() {
+        if(_mode.multipleSelect()) {
+            var brush_mode = _mode.parent().child('brush');
+            if(_keyboard.modKeysMatch(_mode.modKeys()))
+                brush_mode.activate();
+            else
+                brush_mode.deactivate();
+        }
     }
     function brushstart() {
         if(isUnion(d3.event.sourceEvent) || isToggle(d3.event.sourceEvent))
@@ -10847,8 +10889,8 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         });
 
         if(_mode.multipleSelect()) {
-            var brush_mode = diagram.child('brush');
-            brush_mode.activate();
+            if(_keyboard.modKeysMatch(_mode.modKeys()))
+                diagram.child('brush').activate();
         }
         else
             background_click_event(diagram, _mode.clickBackgroundClears());
@@ -10883,11 +10925,16 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
                     .on('brushstart.' + things_name, brushstart)
                     .on('brushmove.' + things_name, brushmove);
             }
+            _keyboard = p.child('keyboard');
+            if(!_keyboard)
+                p.child('keyboard', _keyboard = dc_graph.keyboard());
+            _keyboard.on('modkeyschanged.' + things_name, modkeyschanged);
         },
         laterDraw: thinginess.laterDraw || false
     });
 
     _mode.multipleSelect = property(true);
+    _mode.modKeys = property(null);
     _mode.clickBackgroundClears = property(true, false).react(function(v) {
         if(!_mode.multipleSelect() && _mode.parent())
             background_click_event(_mode.parent(), v);
@@ -11014,9 +11061,9 @@ dc_graph.select_ports = function(props, options) {
 dc_graph.move_nodes = function(options) {
     options = options || {};
     var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
-    var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
+    var fix_nodes_group = dc_graph.fix_nodes_group(options.fix_nodes_group || 'fix-nodes-group');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
-    var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
+    var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick, _keyboard;
     var _maybeSelect = null;
 
     function isUnion(event) {
@@ -11044,6 +11091,8 @@ dc_graph.move_nodes = function(options) {
         node.on('mousedown.move-nodes', function(n) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
+                return;
+            if(!_keyboard.modKeysMatch(_mode.modKeys()))
                 return;
             _startPos = dc_graph.event_coords(diagram);
             _downNode = d3.select(this);
@@ -11084,7 +11133,12 @@ dc_graph.move_nodes = function(options) {
                         n.cola.x = n.original_position[0] + dx;
                         n.cola.y = n.original_position[1] + dy;
                     });
-                    diagram.reposition(node, edge);
+                    var node2 = node.filter(function(n) { return _selected.includes(n.orig.key); }),
+                        edge2 = edge.filter(function(e) {
+                            return _selected.includes(e.source.orig.key) ||
+                                _selected.includes(e.target.orig.key);
+                        });
+                    diagram.reposition(node2, edge2);
                 }
             }
         }
@@ -11133,6 +11187,9 @@ dc_graph.move_nodes = function(options) {
                 _brush = p.child('brush');
                 _drawGraphs = p.child('draw-graphs');
                 _selectNodes = p.child('select-nodes');
+                _keyboard = p.child('keyboard');
+                if(!_keyboard)
+                    p.child('keyboard', _keyboard = dc_graph.keyboard());
             }
             else _brush = _drawGraphs = _selectNodes = null;
         }
@@ -11140,13 +11197,14 @@ dc_graph.move_nodes = function(options) {
 
     // minimum distance that is considered a drag, not a click
     _mode.dragSize = property(5);
+    _mode.modKeys = property(null);
 
     return _mode;
 };
 
 dc_graph.fix_nodes = function(options) {
     options = options || {};
-    var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
+    var fix_nodes_group = dc_graph.fix_nodes_group(options.fix_nodes_group || 'fix-nodes-group');
     var _fixedPosTag = options.fixedPosTag || 'fixedPos';
     var _fixes = [], _nodes, _wnodes, _edges, _wedges;
 
@@ -11559,10 +11617,6 @@ dc_graph.label_things = function(options) {
         };
     }
 
-    function grab_focus() {
-        _keyboard.focus();
-    }
-
     function edit_label_listener(diagram) {
         return function(thing, eventOptions) {
             var box = options.thing_box(thing);
@@ -11580,7 +11634,6 @@ dc_graph.label_things = function(options) {
                     },
                     finally: function() {
                         options.hide_thing_label(thing, false);
-                        grab_focus();
                     }
                 });
         };

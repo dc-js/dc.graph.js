@@ -63,7 +63,8 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             lines.push(indent + 'subgraph "' + c + '" {');
             if(cluster_children[c])
                 cluster_children[c].forEach(print_subgraph.bind(null, i+1));
-            lines.push(indent + '  ' + cluster_nodes[c].join(' '));
+            if(cluster_nodes[c])
+                lines.push(indent + '  ' + cluster_nodes[c].map(function (s) { return JSON.stringify(s) }).join(' '));
             lines.push(indent + '}');
         }
         tops.forEach(print_subgraph.bind(null, 1));
@@ -117,7 +118,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
             };
         });
         var clusters = (result.objects || []).filter(function(n) {
-            return /^cluster/.test(n.name);
+            return /^cluster/.test(n.name) && n.bb;
         });
         clusters.forEach(function(c) {
             c.dcg_clusterKey = c.name;

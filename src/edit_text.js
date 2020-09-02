@@ -58,10 +58,13 @@ dc_graph.edit_text = function(parent, options) {
     }
 
     textdiv.on('keydown.edit-text', function() {
+        // prevent keyboard mode from seeing this (especially delete key!)
+        d3.event.stopPropagation();
         if(d3.event.keyCode===13) {
             d3.event.preventDefault();
         }
     }).on('keyup.edit-text', function() {
+        d3.event.stopPropagation();
         if(d3.event.keyCode===13) {
             accept();
         } else if(d3.event.keyCode===27) {

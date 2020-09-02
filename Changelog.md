@@ -1,3 +1,20 @@
+## 0.9.8
+* keyboard mode tracks the modifier keys pressed:
+  * `modKeysPressed` returns the keys
+  * `modKeysMatch` checks if the current keys match zero or more desired keys
+  * `modkeyschanged` event fires when mod keys change
+* `select_things` (and therefore `select_nodes` etc.) supports `modKeys` and only enables the brush when the keys match. Caveats:
+  * selection is still enabled for clicking on nodes and edges even when keys don't match (debatable)
+  * since dc.graph.js still uses d3@3, there are built-in brush modifier keys which are impossible to remove, which may cause the brush to behave weirdly when modkeyed
+* `move_nodes` supports `modKeys`
+* built-in zoom uses keyboard mode modkey support, which means that `modKeyZoom` keys must exactly match for zoom to be enabled. previously it was *any* match, and zoom was still enabled if `modKeyZoom` was null/empty and a modkey was pressed.
+* change detection is customizable and defaults to "basic" if the layout algorithm does not support moving - only adding/deleting nodes/edges will register as a change
+* when moving nodes, only connected edges will have their edges redrawn (and desplined if graphviz). splines are completely removed so that they stay that way if relayout is disabled.
+* arrow paths are also recalculated when moving nodes, so that arrowheads/tails are not stranded
+* nodes are allowed to be skinny
+* keyboard mode now listens on the window for greater reliability (no focus needed); mod keys are cleared when window loses focus
+* `edit_text` stops propagation of keyboard events, since its focus no longer isolates it from keyboard mode
+
 ## 0.9.7
 * layout change includes all node and edge .cola fields that start with `dcg_`
 

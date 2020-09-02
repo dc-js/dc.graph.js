@@ -96,7 +96,7 @@ function on_load(filename, error, data) {
     };
     var edge_flat = dc_graph.flat_group.make(edges, edge_key),
         node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
-    function init_diagram(layout, diagram) {
+    function init_diagram(layout, diagram, side) {
         var engine = dc_graph.spawn_engine(layout, sync_url.vals, sync_url.vals.worker);
         diagram
             .layoutEngine(engine)
@@ -104,6 +104,7 @@ function on_load(filename, error, data) {
             .width('auto')
             .height('auto')
             .autoZoom('once')
+            .modKeyZoom('Alt')
             .restrictPan(true)
             .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
             .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
@@ -129,10 +130,18 @@ function on_load(filename, error, data) {
 
         sync_url.exert();
 
-        var move_nodes = dc_graph.move_nodes();
+        const fix_nodes_group = ['fix', side, 'nodes', 'group'].join('-'),
+              select_nodes_group = ['select', side, 'nodes', 'group'].join('-');
+        diagram.child('select-nodes', dc_graph.select_nodes({
+            nodeStrokeWidth: 3,
+            nodeFill: '#ddd',
+            nodeStroke: side==='left' ? 'darkgreen' : 'darkblue'
+        }, {select_nodes_group}));
+
+        var move_nodes = dc_graph.move_nodes({select_nodes_group, fix_nodes_group});
         diagram.child('move-nodes', move_nodes);
 
-        var fix_nodes = dc_graph.fix_nodes()
+        var fix_nodes = dc_graph.fix_nodes({select_nodes_group, fix_nodes_group})
             .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
         diagram.child('fix-nodes', fix_nodes);
 
@@ -156,8 +165,8 @@ function on_load(filename, error, data) {
                 .child('highlight-neighbors', highlight_neighbors);
         }
     }
-    init_diagram(sync_url.vals.llayout, ldiagram);
-    init_diagram(sync_url.vals.rlayout, rdiagram);
+    init_diagram(sync_url.vals.llayout, ldiagram, 'left');
+    init_diagram(sync_url.vals.rlayout, rdiagram, 'right');
 
     dc.renderAll();
 }

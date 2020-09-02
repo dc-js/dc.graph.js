@@ -1114,6 +1114,18 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.layoutUnchanged = property(false);
+    _diagram.nodeChangeSelect = property(function() {
+        if(_diagram.layoutEngine().supportsMoving && _diagram.layoutEngine().supportsMoving())
+            return topology_node;
+        else
+            return basic_node;
+    });
+    _diagram.edgeChangeSelect = property(function() {
+        if(_diagram.layoutEngine().supportsMoving && _diagram.layoutEngine().supportsMoving())
+            return topology_edge;
+        else
+            return basic_edge;
+    });
 
     /**
      * When `layoutUnchanged` is false, this will force layout to happen again. This may be needed
@@ -1540,6 +1552,20 @@ dc_graph.diagram = function (parent, chartGroup) {
     function topology_edge(e) {
         return {orig: get_original(e), cola: dcg_fields(e.cola)};
     }
+    function basic_node(n) {
+        var n0 = get_original(n);
+        return {
+            orig: {
+                key: n0.key,
+                value: Object.fromEntries(
+                    Object.entries(n0.value)
+                        .filter(function(kv) { return kv[0] !== 'fixedPos'; }))
+            }
+        };
+    }
+    function basic_edge(e) {
+        return {orig: get_original(e)};
+    }
 
     _diagram.startLayout = function () {
         var nodes = _diagram.nodeGroup().all();
@@ -1734,8 +1760,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         // no layout if the topology and layout parameters haven't changed
         var skip_layout = false;
         if(!_diagram.layoutUnchanged()) {
-            var nodes_snapshot = JSON.stringify(wnodes.map(topology_node));
-            var edges_snapshot = JSON.stringify(wedges.map(topology_edge));
+            var node_fields = _diagram.nodeChangeSelect()(),
+                edge_fields = _diagram.edgeChangeSelect()();
+            var nodes_snapshot = JSON.stringify(wnodes.map(node_fields));
+            var edges_snapshot = JSON.stringify(wedges.map(edge_fields));
             if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;

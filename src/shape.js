@@ -387,7 +387,7 @@ function fit_shape(shape, diagram) {
             // fixme: this is only consistent if regular || !squeeze
             // but we'd need to calculate polygon first in order to find out
             // (not a bad idea, just no time right now)
-            if(w<h) w = h;
+            // if(w<h) w = h;
 
             if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke(n.dcg_shape)) {
                 var pands = diagram.nodePadding.eval(n) + diagram.nodeStrokeWidth.eval(n);

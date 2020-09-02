@@ -1,9 +1,9 @@
 dc_graph.move_nodes = function(options) {
     options = options || {};
     var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
-    var fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
+    var fix_nodes_group = dc_graph.fix_nodes_group(options.fix_nodes_group || 'fix-nodes-group');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
-    var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick;
+    var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick, _keyboard;
     var _maybeSelect = null;
 
     function isUnion(event) {
@@ -31,6 +31,8 @@ dc_graph.move_nodes = function(options) {
         node.on('mousedown.move-nodes', function(n) {
             // Need a more general way for modes to say "I got this"
             if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
+                return;
+            if(!_keyboard.modKeysMatch(_mode.modKeys()))
                 return;
             _startPos = dc_graph.event_coords(diagram);
             _downNode = d3.select(this);
@@ -71,7 +73,12 @@ dc_graph.move_nodes = function(options) {
                         n.cola.x = n.original_position[0] + dx;
                         n.cola.y = n.original_position[1] + dy;
                     });
-                    diagram.reposition(node, edge);
+                    var node2 = node.filter(function(n) { return _selected.includes(n.orig.key); }),
+                        edge2 = edge.filter(function(e) {
+                            return _selected.includes(e.source.orig.key) ||
+                                _selected.includes(e.target.orig.key);
+                        });
+                    diagram.reposition(node2, edge2);
                 }
             }
         }
@@ -120,6 +127,9 @@ dc_graph.move_nodes = function(options) {
                 _brush = p.child('brush');
                 _drawGraphs = p.child('draw-graphs');
                 _selectNodes = p.child('select-nodes');
+                _keyboard = p.child('keyboard');
+                if(!_keyboard)
+                    p.child('keyboard', _keyboard = dc_graph.keyboard());
             }
             else _brush = _drawGraphs = _selectNodes = null;
         }
@@ -127,6 +137,7 @@ dc_graph.move_nodes = function(options) {
 
     // minimum distance that is considered a drag, not a click
     _mode.dragSize = property(5);
+    _mode.modKeys = property(null);
 
     return _mode;
 };
