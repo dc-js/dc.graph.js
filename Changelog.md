@@ -12,6 +12,8 @@
 * when moving nodes, only connected edges will have their edges redrawn (and desplined if graphviz). splines are completely removed so that they stay that way if relayout is disabled.
 * arrow paths are also recalculated when moving nodes, so that arrowheads/tails are not stranded
 * nodes are allowed to be skinny
+* keyboard mode now listens on the window for greater reliability (no focus needed); mod keys are cleared when window loses focus
+* `edit_text` stops propagation of keyboard events, since its focus no longer isolates it from keyboard mode
 
 ## 0.9.7
 * layout change includes all node and edge .cola fields that start with `dcg_`
