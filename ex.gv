@@ -1,8 +1,0 @@
-digraph a {
-subgraph cluster_1 { style=invis; a [ fontcolor=black, pos = "10,10" ] }
-subgraph cluster_2 { style=invis; b [ fontcolor=black, pos = "30,10" ] }
-subgraph cluster_3 { style=invis; c [ fontcolor=white, pos = "30,30" ] }
-a -> b
-b -> c
-a -> c
-}
