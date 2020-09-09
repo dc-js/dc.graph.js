@@ -48,6 +48,7 @@ var options = {
             }
         }
     },
+    datalink: false,
     arrows: false,
     tips: true,
     neighbors: true
@@ -112,6 +113,7 @@ function on_load(filename, error, data) {
 
     function update_data_link() {
         d3.select('#data-link')
+            .style('visibility', sync_url.vals.datalink ? 'visible' : 'hidden')
             .attr('href', sync_url.what_if_url({file: dc_graph.data_url({nodes: nodes, edges: edges})}));
     }
     more_output = update_data_link;

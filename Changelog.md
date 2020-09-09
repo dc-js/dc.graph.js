@@ -1,3 +1,6 @@
+## 0.9.9
+* data link hidden by default in simple viewer; use `?datalink=true` to show
+
 ## 0.9.8
 * keyboard mode tracks the modifier keys pressed:
   * `modKeysPressed` returns the keys
