@@ -1,0 +1,14 @@
+#controls {
+    margin: 1em;
+    display: flex;
+    flex-direction: row;
+}
+
+#middle-controls {
+    flex: 1;
+}
+
+#right-controls {
+    z-index: 10;
+}
+
