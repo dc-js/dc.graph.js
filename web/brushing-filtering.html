@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/graph-controls.css"/>
+  <link rel="stylesheet" type="text/css" href="css/graph-error.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
   <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
   <link rel="stylesheet" type="text/css" href="css/brushing-filtering.css">
@@ -17,8 +18,10 @@
   <script type="text/javascript" src="js/dagre.js"></script>
   <script type="text/javascript" src="js/d3v4-force.js"></script>
   <script type="text/javascript" src="js/viz.js"></script>
+  <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
 
   <script type="text/javascript" src="js/dc.graph.js"></script>
+  <script type="text/javascript" src="js/graph-error.js"></script>
   <script type="text/javascript" src="js/chart.registry.js"></script>
 
   <script type="text/javascript" src="js/jquery.js"></script>
@@ -34,8 +37,15 @@
   <div id="main">
     <script type="text/javascript" src="js/example-header.js"></script>
     <div id="controls">
-      <select id="layout"></select>
-      <select id="number"></select>
+      <div id="left-controls">
+        <select id="layout"></select>
+        <select id="number"></select>
+      </div>
+      <div id="middle-controls"></div>
+      <div id="right-controls">
+        <label for='#user-file' title="in-browser: nothing uploaded to server">Load file&nbsp;</label><input type="file" id="user-file" style="display: inline" title="in-browser: nothing uploaded to server">
+        <a id="data-link" target="dcgraph-datalink" style="font-size: 8px" href='#'>DATA LINK</a>
+      </div>
     </div>
     <div id="content">
       <div id="graph"></div>
@@ -45,5 +55,6 @@
       </div>
     </div>
   </div>
+  <div id="message" style="display: none;"></div>
   <script type="text/javascript" src="js/brushing-filtering.js"></script>
 </body>

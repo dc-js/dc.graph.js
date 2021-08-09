@@ -17,6 +17,7 @@ var options = {
     worker: {
         default: false
     },
+    file: null,
     n: {
         default: 100,
         values: [1, 5, 10, 20, 50, 100, 200],
@@ -36,6 +37,19 @@ var options = {
     }
 };
 var sync_url = sync_url_options(options, dcgraph_domain(selectionDiagram), selectionDiagram);
+
+function display_error(heading, message) {
+    d3.select('#message')
+        .style('display', null)
+        .html('<div><h1>' + heading + '</h1>' +
+              (message ? '<code>' + message + '</code></div>' : ''));
+    throw new Error(message);
+}
+
+function hide_error() {
+    d3.select('#message')
+        .style('display', 'none');
+}
 
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
@@ -66,13 +80,8 @@ function build_data(nodes, edges) {
     };
 }
 
-var populate = function(n) {
-    var random = dc_graph.random_graph({
-        ncolors: 3
-    });
-
-    random.generate(n);
-    var data = build_data(random.nodes(), random.edges()),
+var load_graph = function(nodes, edges) {
+    var data = build_data(nodes, edges),
         colorDimension = data.nodef.crossfilter.dimension(function(n) {
             return n.color;
         }),
@@ -90,7 +99,43 @@ var populate = function(n) {
     row
         .dimension(dashDimension)
         .group(dashGroup);
-}
+};
+
+var populate = function(n) {
+    var random = dc_graph.random_graph({
+        ncolors: 3
+    });
+
+    random.generate(n);
+    load_graph(random.nodes(), random.edges());
+};
+
+var on_load = function(filename, error, data) {
+    if(error) {
+        var heading = '';
+        if(error.status)
+            heading = 'Error ' + error.status + ': ';
+        heading += 'Could not load file ' + filename;
+        display_error(heading, error.message);
+    }
+    var graph_data = dc_graph.munge_graph(data);
+    load_graph(graph_data.nodes, graph_data.edges);
+    selectionDiagram.autoZoom('once');
+    dc.redrawAll();
+};
+
+d3.select('#user-file').on('change', function() {
+    var filename = this.value;
+    if(filename) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            hide_error();
+            dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+        };
+        reader.readAsText(this.files[0]);
+    }
+});
+
 var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
 apply_engine_parameters(engine);
 var colors = ['#1b9e77', '#d95f02', '#7570b3'];
@@ -173,6 +218,9 @@ row = dc.rowChart('#row')
         return dasheses[kv.key].name;
     });
 
-populate(sync_url.vals.n);
-
-dc.renderAll();
+if(sync_url.vals.file)
+    dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+else {
+    populate(sync_url.vals.n);
+    dc.renderAll();
+}
