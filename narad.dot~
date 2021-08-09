@@ -1,0 +1,515 @@
+digraph narad_model{
+n98 [label="BgpGroup
+(bgp-group-id)", URL="http://envy15.research.att.com:8089/extract/BgpGroup.html", shape=ellipse];
+n75 [label="L3Network
+(network-id)", URL="http://envy15.research.att.com:8089/extract/L3Network.html", shape=ellipse];
+n55 [label="HardwareCatalogItem
+(item-name)", URL="http://envy15.research.att.com:8089/extract/HardwareCatalogItem.html", shape=ellipse];
+n31 [label="SriovPf
+(pf-pci-id)", URL="http://envy15.research.att.com:8089/extract/SriovPf.html", shape=ellipse];
+n61 [label="ObjectGroup
+(group-type,group-name)", URL="http://envy15.research.att.com:8089/extract/ObjectGroup.html", shape=ellipse];
+n62 [label="Business", style=filled, fillcolor=lightgrey, shape=box];
+n114 [label="LineOfBusiness
+(line-of-business-name)", URL="http://envy15.research.att.com:8089/extract/LineOfBusiness.html", shape=ellipse];
+n35 [label="Vlan
+(vlan-interface)", URL="http://envy15.research.att.com:8089/extract/Vlan.html", shape=ellipse];
+n100 [label="BgpNeighbor
+(bgp-neighbor-id)", URL="http://envy15.research.att.com:8089/extract/BgpNeighbor.html", shape=ellipse];
+n7 [label="Cable
+(cable-name)", URL="http://envy15.research.att.com:8089/extract/Cable.html", shape=ellipse];
+n21 [label="PluggableSlot
+(slot-name)", URL="http://envy15.research.att.com:8089/extract/PluggableSlot.html", shape=ellipse];
+n66 [label="Project
+(project-name)", URL="http://envy15.research.att.com:8089/extract/Project.html", shape=ellipse];
+n85 [label="VlanRange
+(vlan-range-id)", URL="http://envy15.research.att.com:8089/extract/VlanRange.html", shape=ellipse];
+n72 [label="VipIpv4AddressList
+(vip-ipv4-address)", URL="http://envy15.research.att.com:8089/extract/VipIpv4AddressList.html", shape=ellipse];
+n45 [label="Endpoint
+(endpoint-id)", URL="http://envy15.research.att.com:8089/extract/Endpoint.html", shape=ellipse];
+n9 [label="RackUnit
+(rack-unit-name)", URL="http://envy15.research.att.com:8089/extract/RackUnit.html", shape=ellipse];
+n43 [label="ActivityState
+(state-order)", URL="http://envy15.research.att.com:8089/extract/ActivityState.html", shape=ellipse];
+n83 [label="PhysicalLink
+(link-name)", URL="http://envy15.research.att.com:8089/extract/PhysicalLink.html", shape=ellipse];
+n37 [label="L3InterfaceIpv6AddressList
+(l3-interface-ipv6-address)", URL="http://envy15.research.att.com:8089/extract/L3InterfaceIpv6AddressList.html", shape=ellipse];
+n67 [label="Network", style=filled, fillcolor=lightgrey, shape=box];
+n104 [label="Zone
+(zone-id)", URL="http://envy15.research.att.com:8089/extract/Zone.html", shape=ellipse];
+n47 [label="IpAddressList
+(ip-address)", URL="http://envy15.research.att.com:8089/extract/IpAddressList.html", shape=ellipse];
+n3 [label="Complex
+(physical-location-id)", URL="http://envy15.research.att.com:8089/extract/Complex.html", shape=ellipse];
+n0 [label="Inventory", style=filled, fillcolor=lightgrey, shape=box];
+n87 [label="AggregateRoute
+(agg-route-id)", URL="http://envy15.research.att.com:8089/extract/AggregateRoute.html", shape=ellipse];
+n1 [label="CloudInfrastructure", style=filled, fillcolor=lightgrey, shape=box];
+n92 [label="SelectorList
+(selector)", URL="http://envy15.research.att.com:8089/extract/SelectorList.html", shape=ellipse];
+n93 [label="AddressFamilies", style=filled, fillcolor=lightgrey, shape=box];
+n36 [label="L3InterfaceIpv4AddressList
+(l3-interface-ipv4-address)", URL="http://envy15.research.att.com:8089/extract/L3InterfaceIpv4AddressList.html", shape=ellipse];
+n112 [label="Configuration
+(configuration-id)", URL="http://envy15.research.att.com:8089/extract/Configuration.html", shape=ellipse];
+n120 [label="ServiceInstance
+(service-instance-id)", URL="http://envy15.research.att.com:8089/extract/ServiceInstance.html", shape=ellipse];
+n39 [label="LagInterface
+(interface-name)", URL="http://envy15.research.att.com:8089/extract/LagInterface.html", shape=ellipse];
+n11 [label="Pdu
+(pdu-name)", URL="http://envy15.research.att.com:8089/extract/Pdu.html", shape=ellipse];
+n113 [label="LinesOfBusiness", style=filled, fillcolor=lightgrey, shape=box];
+n59 [label="Contact
+(contact-name)", URL="http://envy15.research.att.com:8089/extract/Contact.html", shape=ellipse];
+n88 [label="Policies", style=filled, fillcolor=lightgrey, shape=box];
+n64 [label="OwningEntity
+(owning-entity-id)", URL="http://envy15.research.att.com:8089/extract/OwningEntity.html", shape=ellipse];
+n33 [label="LInterface
+(interface-name)", URL="http://envy15.research.att.com:8089/extract/LInterface.html", shape=ellipse];
+n77 [label="Subnet
+(subnet-id)", URL="http://envy15.research.att.com:8089/extract/Subnet.html", shape=ellipse];
+n29 [label="PInterface
+(interface-name)", URL="http://envy15.research.att.com:8089/extract/PInterface.html", shape=ellipse];
+n73 [label="VipIpv6AddressList
+(vip-ipv6-address)", URL="http://envy15.research.att.com:8089/extract/VipIpv6AddressList.html", shape=ellipse];
+n108 [label="RouteTarget
+(global-route-target,route-target-role)", URL="http://envy15.research.att.com:8089/extract/RouteTarget.html", shape=ellipse];
+n79 [label="HostRoute
+(host-route-id)", URL="http://envy15.research.att.com:8089/extract/HostRoute.html", shape=ellipse];
+n5 [label="Rack
+(rack-name)", URL="http://envy15.research.att.com:8089/extract/Rack.html", shape=ellipse];
+n19 [label="Card
+(card-type)", URL="http://envy15.research.att.com:8089/extract/Card.html", shape=ellipse];
+n81 [label="Pnf
+(pnf-name)", URL="http://envy15.research.att.com:8089/extract/Pnf.html", shape=ellipse];
+n17 [label="CardSlot
+(slot-name)", URL="http://envy15.research.att.com:8089/extract/CardSlot.html", shape=ellipse];
+n25 [label="CloudRegion
+(cloud-owner,cloud-region-id)", URL="http://envy15.research.att.com:8089/extract/CloudRegion.html", shape=ellipse];
+n106 [label="AutonomousSystem
+(autonomous-system-id)", URL="http://envy15.research.att.com:8089/extract/AutonomousSystem.html", shape=ellipse];
+n91 [label="Rule
+(rule-id)", URL="http://envy15.research.att.com:8089/extract/Rule.html", shape=ellipse];
+n52 [label="AvailabilityZone
+(availability-zone-name)", URL="http://envy15.research.att.com:8089/extract/AvailabilityZone.html", shape=ellipse];
+n110 [label="VlanTag
+(vlan-tag-id)", URL="http://envy15.research.att.com:8089/extract/VlanTag.html", shape=ellipse];
+n102 [label="InstanceGroup
+(id)", URL="http://envy15.research.att.com:8089/extract/InstanceGroup.html", shape=ellipse];
+n27 [label="Pserver
+(hostname)", URL="http://envy15.research.att.com:8089/extract/Pserver.html", shape=ellipse];
+n118 [label="ServiceSubscription
+(service-type)", URL="http://envy15.research.att.com:8089/extract/ServiceSubscription.html", shape=ellipse];
+n89 [label="Policy
+(policy-id)", URL="http://envy15.research.att.com:8089/extract/Policy.html", shape=ellipse];
+n57 [label="Profile
+(profile-name)", URL="http://envy15.research.att.com:8089/extract/Profile.html", shape=ellipse];
+n50 [label="HostAggregate
+(host-aggregate-id)", URL="http://envy15.research.att.com:8089/extract/HostAggregate.html", shape=ellipse];
+n13 [label="Chassis
+(chassis-name)", URL="http://envy15.research.att.com:8089/extract/Chassis.html", shape=ellipse];
+n96 [label="Vrf
+(vrf-id)", URL="http://envy15.research.att.com:8089/extract/Vrf.html", shape=ellipse];
+n94 [label="AddressFamily
+(address-family-id)", URL="http://envy15.research.att.com:8089/extract/AddressFamily.html", shape=ellipse];
+n69 [label="LogicalLink
+(link-name)", URL="http://envy15.research.att.com:8089/extract/LogicalLink.html", shape=ellipse];
+n116 [label="Customer
+(global-customer-id)", URL="http://envy15.research.att.com:8089/extract/Customer.html", shape=ellipse];
+n48 [label="PortList
+(port)", URL="http://envy15.research.att.com:8089/extract/PortList.html", shape=ellipse];
+n23 [label="Pluggable
+(pluggable-type)", URL="http://envy15.research.att.com:8089/extract/Pluggable.html", shape=ellipse];
+n53 [label="Common", style=filled, fillcolor=lightgrey, shape=box];
+n41 [label="Activity
+(activity-id)", URL="http://envy15.research.att.com:8089/extract/Activity.html", shape=ellipse];
+n71 [label="VpnBinding
+(vpn-id)", URL="http://envy15.research.att.com:8089/extract/VpnBinding.html", shape=ellipse];
+n46 [label="CommunityList
+(community-value)", URL="http://envy15.research.att.com:8089/extract/CommunityList.html", shape=ellipse];
+n15 [label="Port
+(port-name)", URL="http://envy15.research.att.com:8089/extract/Port.html", shape=ellipse];
+n98 -> n93 [color=black, weight=8];
+n81 -> n98 [color=black, style=dotted];
+n96 -> n98 [color=black, style=dotted];
+n75 -> n77 [color=black, weight=8];
+n29 -> n31 [color=black, style=dotted];
+n61 -> n46 [color=black, weight=8];
+n61 -> n47 [color=black, weight=8];
+n61 -> n48 [color=black, weight=8];
+n61 -> n92 [color=black, weight=8];
+n62 -> n64 [color=black, weight=8];
+n62 -> n66 [color=black, weight=8];
+n62 -> n113 [color=black, weight=8];
+n62 -> n116 [color=black, weight=8];
+n35 -> n36 [color=black, weight=8];
+n35 -> n37 [color=black, weight=8];
+n33 -> n35 [color=black, style=dotted];
+n100 -> n93 [color=black, weight=8];
+n81 -> n100 [color=black, style=dotted];
+n96 -> n100 [color=black, style=dotted];
+n77 -> n100 [color=black, style=dotted];
+n3 -> n7 [color=black, style=dotted];
+n21 -> n23 [color=black, weight=8];
+n13 -> n21 [color=black, style=dotted];
+n19 -> n21 [color=black, style=dotted];
+n85 -> n110 [color=black, weight=8];
+n25 -> n85 [color=black, style=dotted];
+n25 -> n72 [color=black, style=dotted];
+n45 -> n47 [color=black, weight=8];
+n45 -> n48 [color=black, weight=8];
+n45 -> n92 [color=black, weight=8];
+n5 -> n9 [color=black, style=dotted];
+n41 -> n43 [color=black, style=dotted];
+n35 -> n37 [color=black, style=dotted];
+n33 -> n37 [color=black, style=dotted];
+n67 -> n69 [color=black, weight=8];
+n67 -> n71 [color=black, weight=8];
+n67 -> n75 [color=black, weight=8];
+n67 -> n81 [color=black, weight=8];
+n67 -> n83 [color=black, weight=8];
+n67 -> n102 [color=black, weight=8];
+n67 -> n112 [color=black, weight=8];
+n67 -> n104 [color=black, weight=8];
+n67 -> n106 [color=black, weight=8];
+n45 -> n47 [color=black, style=dotted];
+n77 -> n47 [color=black, style=dotted];
+n91 -> n47 [color=black, style=dotted];
+n89 -> n47 [color=black, style=dotted];
+n61 -> n47 [color=black, style=dotted];
+n3 -> n5 [color=black, weight=8];
+n3 -> n7 [color=black, weight=8];
+n0 -> n1 [color=black, weight=8];
+n0 -> n53 [color=black, weight=8];
+n0 -> n62 [color=black, weight=8];
+n0 -> n67 [color=black, weight=8];
+n96 -> n87 [color=black, style=dotted];
+n1 -> n3 [color=black, weight=8];
+n1 -> n25 [color=black, weight=8];
+n1 -> n27 [color=black, weight=8];
+n1 -> n45 [color=black, weight=8];
+n91 -> n92 [color=black, style=dotted];
+n61 -> n92 [color=black, style=dotted];
+n45 -> n92 [color=black, style=dotted];
+n89 -> n92 [color=black, style=dotted];
+n93 -> n94 [color=black, weight=8];
+n35 -> n36 [color=black, style=dotted];
+n33 -> n36 [color=black, style=dotted];
+n118 -> n120 [color=black, style=dotted];
+n39 -> n33 [color=black, weight=8];
+n39 -> n36 [color=black, weight=8];
+n39 -> n37 [color=black, weight=8];
+n27 -> n39 [color=black, style=dotted];
+n81 -> n39 [color=black, style=dotted];
+n5 -> n11 [color=black, style=dotted];
+n113 -> n114 [color=black, weight=8];
+n88 -> n89 [color=black, weight=8];
+n33 -> n35 [color=black, weight=8];
+n33 -> n33 [color=black, weight=8];
+n33 -> n36 [color=black, weight=8];
+n33 -> n37 [color=black, weight=8];
+n29 -> n33 [color=black, style=dotted];
+n39 -> n33 [color=black, style=dotted];
+n33 -> n33 [color=black, style=dotted];
+n77 -> n79 [color=black, weight=8];
+n77 -> n47 [color=black, weight=8];
+n77 -> n100 [color=black, weight=8];
+n75 -> n77 [color=black, style=dotted];
+n29 -> n31 [color=black, weight=8];
+n29 -> n33 [color=black, weight=8];
+n29 -> n41 [color=black, weight=8];
+n29 -> n36 [color=black, weight=8];
+n29 -> n37 [color=black, weight=8];
+n27 -> n29 [color=black, style=dotted];
+n81 -> n29 [color=black, style=dotted];
+n25 -> n73 [color=black, style=dotted];
+n108 -> n96 [color=black, weight=8];
+n71 -> n108 [color=black, style=dotted];
+n96 -> n108 [color=black, style=dotted];
+n77 -> n79 [color=black, style=dotted];
+n5 -> n9 [color=black, weight=8];
+n5 -> n11 [color=black, weight=8];
+n5 -> n13 [color=black, weight=8];
+n3 -> n5 [color=black, style=dotted];
+n19 -> n15 [color=black, weight=8];
+n19 -> n21 [color=black, weight=8];
+n17 -> n19 [color=black, style=dotted];
+n81 -> n29 [color=black, weight=8];
+n81 -> n33 [color=black, weight=8];
+n81 -> n39 [color=black, weight=8];
+n81 -> n41 [color=black, weight=8];
+n81 -> n96 [color=black, weight=8];
+n81 -> n98 [color=black, weight=8];
+n81 -> n100 [color=black, weight=8];
+n17 -> n19 [color=black, weight=8];
+n13 -> n17 [color=black, style=dotted];
+n25 -> n41 [color=black, weight=8];
+n25 -> n85 [color=black, weight=8];
+n25 -> n50 [color=black, weight=8];
+n25 -> n52 [color=black, weight=8];
+n25 -> n72 [color=black, weight=8];
+n25 -> n73 [color=black, weight=8];
+n91 -> n47 [color=black, weight=8];
+n91 -> n48 [color=black, weight=8];
+n91 -> n92 [color=black, weight=8];
+n89 -> n91 [color=black, style=dotted];
+n25 -> n52 [color=black, style=dotted];
+n85 -> n110 [color=black, style=dotted];
+n27 -> n29 [color=black, weight=8];
+n27 -> n33 [color=black, weight=8];
+n27 -> n39 [color=black, weight=8];
+n27 -> n41 [color=black, weight=8];
+n118 -> n120 [color=black, weight=8];
+n116 -> n118 [color=black, style=dotted];
+n89 -> n91 [color=black, weight=8];
+n89 -> n47 [color=black, weight=8];
+n89 -> n92 [color=black, weight=8];
+n25 -> n50 [color=black, style=dotted];
+n13 -> n15 [color=black, weight=8];
+n13 -> n17 [color=black, weight=8];
+n13 -> n21 [color=black, weight=8];
+n5 -> n13 [color=black, style=dotted];
+n96 -> n98 [color=black, weight=8];
+n96 -> n100 [color=black, weight=8];
+n96 -> n87 [color=black, weight=8];
+n96 -> n108 [color=black, weight=8];
+n81 -> n96 [color=black, style=dotted];
+n98 -> n94 [color=black, style=dotted];
+n100 -> n94 [color=black, style=dotted];
+n116 -> n118 [color=black, weight=8];
+n45 -> n48 [color=black, style=dotted];
+n91 -> n48 [color=black, style=dotted];
+n61 -> n48 [color=black, style=dotted];
+n23 -> n15 [color=black, weight=8];
+n21 -> n23 [color=black, style=dotted];
+n53 -> n55 [color=black, weight=8];
+n53 -> n57 [color=black, weight=8];
+n53 -> n59 [color=black, weight=8];
+n53 -> n61 [color=black, weight=8];
+n53 -> n88 [color=black, weight=8];
+n41 -> n43 [color=black, weight=8];
+n27 -> n41 [color=black, style=dotted];
+n81 -> n41 [color=black, style=dotted];
+n25 -> n41 [color=black, style=dotted];
+n71 -> n108 [color=black, weight=8];
+n61 -> n46 [color=black, style=dotted];
+n13 -> n15 [color=black, style=dotted];
+n23 -> n15 [color=black, style=dotted];
+n19 -> n15 [color=black, style=dotted];
+n25 -> n3 [label="LocatedIn", color=red];
+n25 -> n75 [label="Uses", color=blue];
+n25 -> n104 [label="LocatedIn", color=red];
+n72 -> n25 [label="BelongsTo", color=green];
+n73 -> n25 [label="BelongsTo", color=green];
+n3 -> n75 [label="Uses", color=blue];
+n36 -> n102 [label="MemberOf", color=orange];
+n36 -> n75 [label="MemberOf", color=orange];
+n36 -> n77 [label="MemberOf", color=orange];
+n37 -> n102 [label="MemberOf", color=orange];
+n37 -> n75 [label="MemberOf", color=orange];
+n37 -> n77 [label="MemberOf", color=orange];
+n72 -> n102 [label="MemberOf", color=purple];
+n72 -> n77 [label="MemberOf", color=purple];
+n73 -> n102 [label="MemberOf", color=purple];
+n73 -> n77 [label="MemberOf", color=purple];
+n75 -> n102 [label="MemberOf", color=purple];
+n77 -> n75 [label="BelongsTo", color=green];
+n39 -> n69 [label="Uses", color=blue];
+n39 -> n29 [label="Uses", color=blue];
+n33 -> n39 [label="BelongsTo", color=green];
+n33 -> n81 [label="BelongsTo", color=green];
+n33 -> n27 [label="BelongsTo", color=green];
+n39 -> n33 [label="Uses", color=blue];
+n94 -> n98 [label="BelongsTo", color=green];
+n94 -> n100 [label="BelongsTo", color=green];
+n89 -> n94 [label="AppliesTo", color=gold];
+n36 -> n33 [label="BelongsTo", color=green];
+n37 -> n33 [label="BelongsTo", color=green];
+n33 -> n102 [label="MemberOf", color=purple];
+n33 -> n33 [label="BelongsTo", color=green];
+n33 -> n69 [label="LinksTo", color=brown];
+n69 -> n33 [label="Source", color=gray];
+n69 -> n33 [label="Destination", color=pink];
+n35 -> n33 [label="LinksTo", color=brown];
+n69 -> n25 [label="LocatedIn", color=red];
+n69 -> n69 [label="Uses", color=blue];
+n69 -> n81 [label="BridgedTo", color=khaki];
+n69 -> n27 [label="BridgedTo", color=khaki];
+n69 -> n71 [label="Uses", color=blue];
+n33 -> n29 [label="BindsTo", color=darkorange];
+n29 -> n69 [label="LinksTo", color=brown];
+n29 -> n83 [label="LinksTo", color=brown];
+n31 -> n29 [label="BelongsTo", color=green];
+n39 -> n81 [label="BindsTo", color=darkorange];
+n29 -> n81 [label="BindsTo", color=darkorange];
+n81 -> n3 [label="LocatedIn", color=red];
+n81 -> n25 [label="LocatedIn", color=red];
+n81 -> n102 [label="MemberOf", color=purple];
+n81 -> n104 [label="LocatedIn", color=red];
+n39 -> n27 [label="BindsTo", color=darkorange];
+n29 -> n27 [label="BindsTo", color=darkorange];
+n27 -> n25 [label="LocatedIn", color=red];
+n27 -> n3 [label="LocatedIn", color=red];
+n27 -> n104 [label="LocatedIn", color=red];
+n36 -> n35 [label="BelongsTo", color=green];
+n37 -> n35 [label="BelongsTo", color=green];
+n35 -> n69 [label="Uses", color=blue];
+n108 -> n71 [label="BelongsTo", color=green];
+n104 -> n3 [label="LocatedIn", color=red];
+n25 -> n102 [label="Uses", color=blue];
+n5 -> n3 [label="LocatedIn", color=red];
+n5 -> n55 [label="IsA", color=yellowgreen];
+n5 -> n102 [label="MemberOf", color=purple];
+n57 -> n5 [label="AppliesTo", color=gold];
+n9 -> n5 [label="LocatedIn", color=red];
+n57 -> n55 [label="AppliesTo", color=gold];
+n11 -> n55 [label="IsA", color=yellowgreen];
+n13 -> n55 [label="IsA", color=yellowgreen];
+n19 -> n55 [label="IsA", color=yellowgreen];
+n23 -> n55 [label="IsA", color=yellowgreen];
+n11 -> n9 [label="Uses", color=blue];
+n11 -> n5 [label="LocatedIn", color=red];
+n57 -> n11 [label="AppliesTo", color=gold];
+n13 -> n5 [label="LocatedIn", color=red];
+n13 -> n9 [label="Uses", color=blue];
+n13 -> n81 [label="PartOf", color=seagreen];
+n13 -> n27 [label="PartOf", color=seagreen];
+n57 -> n13 [label="AppliesTo", color=gold];
+n15 -> n13 [label="LocatedIn", color=red];
+n7 -> n83 [label="ComposedOf", color=cyan];
+n7 -> n55 [label="IsA", color=yellowgreen];
+n7 -> n3 [label="LocatedIn", color=red];
+n15 -> n29 [label="ComposedOf", color=cyan];
+n15 -> n7 [label="LinksTo", color=brown];
+n19 -> n17 [label="LocatedIn", color=red];
+n57 -> n19 [label="AppliesTo", color=gold];
+n15 -> n19 [label="LocatedIn", color=red];
+n17 -> n13 [label="LocatedIn", color=red];
+n23 -> n21 [label="LocatedIn", color=red];
+n57 -> n23 [label="AppliesTo", color=gold];
+n15 -> n23 [label="LocatedIn", color=red];
+n23 -> n7 [label="PartOf", color=seagreen];
+n21 -> n13 [label="LocatedIn", color=red];
+n21 -> n19 [label="LocatedIn", color=red];
+n57 -> n81 [label="AppliesTo", color=gold];
+n57 -> n27 [label="AppliesTo", color=gold];
+n57 -> n29 [label="AppliesTo", color=gold];
+n57 -> n83 [label="AppliesTo", color=gold];
+n57 -> n77 [label="AppliesTo", color=gold];
+n41 -> n27 [label="AppliesTo", color=gold];
+n41 -> n81 [label="AppliesTo", color=gold];
+n41 -> n29 [label="AppliesTo", color=gold];
+n41 -> n25 [label="AppliesTo", color=gold];
+n43 -> n41 [label="BelongsTo", color=green];
+n25 -> n66 [label="PartOf", color=seagreen];
+n81 -> n66 [label="PartOf", color=seagreen];
+n27 -> n66 [label="PartOf", color=seagreen];
+n25 -> n45 [label="Uses", color=blue];
+n79 -> n77 [label="BelongsTo", color=green];
+n47 -> n45 [label="BelongsTo", color=green];
+n47 -> n77 [label="BelongsTo", color=green];
+n47 -> n91 [label="BelongsTo", color=green];
+n48 -> n45 [label="BelongsTo", color=green];
+n48 -> n91 [label="BelongsTo", color=green];
+n50 -> n25 [label="BelongsTo", color=green];
+n50 -> n27 [label="BelongsTo", color=green];
+n85 -> n25 [label="BelongsTo", color=green];
+n110 -> n85 [label="BelongsTo", color=green];
+n87 -> n96 [label="BelongsTo", color=green];
+n96 -> n81 [label="BelongsTo", color=green];
+n47 -> n89 [label="BelongsTo", color=green];
+n64 -> n85 [label="Uses", color=blue];
+n89 -> n75 [label="AppliesTo", color=gold];
+n75 -> n110 [label="Uses", color=blue];
+n71 -> n87 [label="Uses", color=blue];
+n96 -> n71 [label="AppliesTo", color=gold];
+n96 -> n75 [label="Uses", color=blue];
+n75 -> n71 [label="Uses", color=blue];
+n81 -> n89 [label="Uses", color=blue];
+n25 -> n89 [label="Implements", color=navy];
+n89 -> n71 [label="Uses", color=blue];
+n89 -> n91 [label="Implements", color=navy];
+n92 -> n91 [label="BelongsTo", color=green];
+n52 -> n25 [label="BelongsTo", color=green];
+n52 -> n3 [label="LocatedIn", color=red];
+n27 -> n52 [label="MemberOf", color=purple];
+n118 -> n116 [label="BelongsTo", color=green];
+n120 -> n118 [label="BelongsTo", color=green];
+n120 -> n112 [label="Uses", color=blue];
+n112 -> n75 [label="PartOf", color=seagreen];
+n112 -> n96 [label="Uses", color=blue];
+n112 -> n89 [label="Uses", color=blue];
+n112 -> n77 [label="Uses", color=blue];
+n114 -> n85 [label="Uses", color=blue];
+n75 -> n75 [label="Uses", color=blue];
+n59 -> n3 [label="Supports", color=plum];
+n59 -> n104 [label="Supports", color=plum];
+n59 -> n25 [label="Supports", color=plum];
+n59 -> n81 [label="Supports", color=plum];
+n59 -> n27 [label="Supports", color=plum];
+n36 -> n29 [label="BelongsTo", color=green];
+n37 -> n29 [label="BelongsTo", color=green];
+n36 -> n39 [label="BelongsTo", color=green];
+n37 -> n39 [label="BelongsTo", color=green];
+n27 -> n89 [label="Implements", color=navy];
+n92 -> n61 [label="BelongsTo", color=green];
+n48 -> n61 [label="BelongsTo", color=green];
+n47 -> n61 [label="BelongsTo", color=green];
+n91 -> n61 [label="Uses", color=blue];
+n91 -> n61 [label="AppliesTo", color=gold];
+n61 -> n81 [label="AppliesTo", color=gold];
+n81 -> n45 [label="Uses", color=blue];
+n27 -> n45 [label="Uses", color=blue];
+n3 -> n45 [label="Uses", color=blue];
+n33 -> n110 [label="Uses", color=blue];
+n57 -> n33 [label="AppliesTo", color=gold];
+n57 -> n39 [label="AppliesTo", color=gold];
+n57 -> n69 [label="AppliesTo", color=gold];
+n57 -> n75 [label="AppliesTo", color=gold];
+n57 -> n85 [label="AppliesTo", color=gold];
+n57 -> n110 [label="AppliesTo", color=gold];
+n57 -> n89 [label="AppliesTo", color=gold];
+n57 -> n96 [label="AppliesTo", color=gold];
+n57 -> n71 [label="AppliesTo", color=gold];
+n57 -> n45 [label="AppliesTo", color=gold];
+n96 -> n33 [label="Uses", color=blue];
+n108 -> n96 [label="BelongsTo", color=green];
+n89 -> n96 [label="AppliesTo", color=gold];
+n91 -> n61 [label="Source", color=gray];
+n91 -> n61 [label="Destination", color=pink];
+n104 -> n45 [label="Uses", color=blue];
+n92 -> n45 [label="BelongsTo", color=green];
+n46 -> n61 [label="BelongsTo", color=green];
+n57 -> n102 [label="AppliesTo", color=gold];
+n106 -> n104 [label="LocatedIn", color=red];
+n98 -> n81 [label="BelongsTo", color=green];
+n98 -> n96 [label="BelongsTo", color=green];
+n98 -> n106 [label="Source", color=gray];
+n98 -> n106 [label="Destination", color=pink];
+n98 -> n77 [label="Source", color=gray];
+n98 -> n77 [label="Destination", color=pink];
+n98 -> n36 [label="Source", color=gray];
+n98 -> n36 [label="Destination", color=pink];
+n98 -> n37 [label="Source", color=gray];
+n98 -> n37 [label="Destination", color=pink];
+n98 -> n72 [label="Source", color=gray];
+n98 -> n72 [label="Destination", color=pink];
+n98 -> n73 [label="Source", color=gray];
+n98 -> n73 [label="Destination", color=pink];
+n89 -> n98 [label="AppliesTo", color=gold];
+n100 -> n81 [label="BelongsTo", color=green];
+n100 -> n96 [label="BelongsTo", color=green];
+n89 -> n100 [label="AppliesTo", color=gold];
+n100 -> n69 [label="LinksTo", color=brown];
+n100 -> n106 [label="MemberOf", color=orange];
+n100 -> n77 [label="BelongsTo", color=green];
+n100 -> n36 [label="Uses", color=blue];
+n100 -> n37 [label="Uses", color=blue];
+n100 -> n72 [label="Uses", color=blue];
+n100 -> n73 [label="Uses", color=blue];
+n100 -> n98 [label="MemberOf", color=orange];
+n81 -> n106 [label="LocatedIn", color=red];
+n92 -> n89 [label="BelongsTo", color=green];
+}

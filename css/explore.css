@@ -19,29 +19,6 @@
     flex: 1;
 }
 
-#controls {
-    margin: 1em;
-    display: flex;
-    flex-direction: row;
-}
-
-#middle-controls {
-    flex: 1;
-}
-
-#right-controls {
-    z-index: 10;
-}
-
-#message {
-    position: absolute;
-    left: 0; top: 0; right: 0; bottom: 0;
-    background-color: rgba(255,255,255, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .d3-tip table td {
     font-size: 10px;
     font-weight: normal;
