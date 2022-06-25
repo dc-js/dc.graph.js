@@ -2,6 +2,8 @@
 
 Dynamic, interactive graph visualization using D3.
 
+**NOTE:** This repo will be archived (read-only) at the end of 2022. See discussion in [#122](https://github.com/dc-js/dc.graph.js/issues/122).
+
 * smooth D3 animated transitions
 * support for many graph layout libraries, including
   * [WebCola](http://marvl.infotech.monash.edu/webcola/) (and [SetCoLa](https://github.com/uwdata/setcola))
