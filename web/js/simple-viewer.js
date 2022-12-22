@@ -104,8 +104,15 @@ function on_load(filename, error, data) {
         display_error(heading, error.message);
     }
 
-    var graph_data = dc_graph.munge_graph(data),
-        nodes = graph_data.nodes,
+    var graph_data;
+    try {
+        graph_data = dc_graph.munge_graph(data);
+    }
+    catch(xep) {
+        console.log(xep);
+        display_error(`Error munging ${filename}`, xep.message);
+    }
+    var nodes = graph_data.nodes,
         edges = graph_data.edges,
         sourceattr = graph_data.sourceattr,
         targetattr = graph_data.targetattr,
