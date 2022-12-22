@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # from https://github.com/pre-commit/pre-commit-hooks
 # and made more blunt
 from __future__ import print_function
