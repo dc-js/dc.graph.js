@@ -95,6 +95,32 @@ sync_url.output(function(params) {
         more_output(params);
 });
 
+function color_dfs(node, eq) {
+    if(node.value().equiv)
+        eq = node.value().equiv;
+    else if(eq)
+        node.value().equiv = eq;
+    for(var e of node.outs())
+        color_dfs(e.target(), eq);
+}
+
+function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr}) {
+    const graph = metagraph.graph(nodes, edges, {
+        nodeKey: n => n.key,
+        edgeKey: e => e.key,
+        nodeValue: n => n,
+        edgeValue: e => e,
+        edgeSource: e => e[sourceattr],
+        edgeTarget: e => e[targetattr]
+    });
+    color_dfs(graph.node('1'), 0);
+    return {
+        nodes,
+        edges,
+        clusters, sourceattr, targetattr, nodekeyattr
+    };
+}
+
 function apply_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr}) {
     function update_data_link() {
         d3.select('#data-link')
@@ -178,7 +204,7 @@ function on_load(filename, error, data) {
 
     const cat20 = d3.scale.category20().domain([]);
     collapseDiagram
-        .nodeFill(n => {console.log('eq', n.value.equiv); return n.value.equiv})
+        .nodeFill(n => n.value.equiv)
         .nodeFillScale(v => v == 0 ?
                        'none' :
                        cat20(v - 1));
@@ -210,7 +236,8 @@ function on_load(filename, error, data) {
             .child('highlight-neighbors', highlight_neighbors);
     }
 
-    apply_data(graph_data);
+    const filtered_data = filter_data(graph_data);
+    apply_data(filtered_data);
     collapseDiagram.render();
 }
 
