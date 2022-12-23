@@ -208,6 +208,14 @@ function on_load(filename, error, data) {
         .nodeFillScale(v => v == 0 ?
                        'none' :
                        cat20(v - 1));
+    const exs = d3.range(1, 13).map(i => ({key: i.toString(), name: i.toString(), value: {equiv: i}}));
+    var legend = dc_graph.legend('legend')
+        .nodeWidth(70).nodeHeight(60)
+        .exemplars(exs)
+        .dimension(undefined /* ?! */)
+        .replaceFilter([[]] /* ?! */);
+    collapseDiagram.child('node-legend', legend);
+
 
     var move_nodes = dc_graph.move_nodes();
     collapseDiagram.child('move-nodes', move_nodes);
