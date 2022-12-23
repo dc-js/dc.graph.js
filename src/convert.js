@@ -78,7 +78,15 @@ dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeT
     });
 };
 
+// https://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
+var type_of = obj => ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+var object_to_keyed_array = obj => Object.entries(obj).map(([key,value]) => ({key, ...value}));
+
 dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
+    if(type_of(nodes) === 'object') {
+        var graph = namesIn.multipleGraphs ? Object.values(nodes)[0] : nodes;
+        nodes = object_to_keyed_array(graph);
+    }
     // adjacenciesAttr, edgeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
     var edges = Array.prototype.concat.apply([], nodes.map(function(n) {
         return n[namesIn.adjacencies].map(function(adj) {
@@ -86,15 +94,18 @@ dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
             if(namesOut.edgeKey)
                 e[namesOut.edgeKey] = uuid();
             e[namesOut.edgeSource] = n[namesIn.nodeKey];
-            e[namesOut.edgeTarget] = namesIn.targetKey ? adj[namesIn.targetKey] : adj;
+            e[namesOut.edgeTarget] = (namesIn.targetKey ? adj[namesIn.targetKey] : adj).toString();
             if(namesOut.adjacency)
                 e[namesOut.adjacency] = adj;
             return e;
         });
     }));
     return {
-        nodes: nodes,
-        edges: edges
+        nodes,
+        edges,
+        nodekeyattr: namesIn.nodeKey,
+        sourceattr: namesOut.edgeSource,
+        targetattr: namesOut.edgeTarget
     };
 };
 

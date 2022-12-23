@@ -1,5 +1,5 @@
 function can_get_graph_from_this(data) {
-    return (data.nodes || data.vertices) &&  (data.edges || data.links);
+    return (data.nodes || data.vertices) && (data.edges || data.links);
 }
 
 // general-purpose reader of various json-based graph formats
