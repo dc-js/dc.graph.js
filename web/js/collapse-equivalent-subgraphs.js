@@ -104,6 +104,26 @@ function color_dfs(node, eq) {
         color_dfs(e.target(), eq);
 }
 
+function copy_dfs(node, expanded, deduped, nodes, edges) {
+    nodes.push(node.value());
+    for(var e of node.outs()) {
+        var target = e.target(), tk;
+        if(target.value().equiv != node.value().equiv) {
+            if((tk = deduped[target.value().equiv])) {
+                edges.push({
+                    key: e.key(),
+                    sourcename: node.key(),
+                    targetname: tk
+                });
+                continue;
+            }
+            else deduped[target.value().equiv] = target.key();
+        }
+        edges.push(e.value());
+        copy_dfs(target, expanded, deduped, nodes, edges);
+    }
+}
+
 function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr}) {
     const graph = metagraph.graph(nodes, edges, {
         nodeKey: n => n.key,
@@ -114,9 +134,11 @@ function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyatt
         edgeTarget: e => e[targetattr]
     });
     color_dfs(graph.node('1'), 0);
+    const fnodes = [], fedges = [];
+    copy_dfs(graph.node('1'), [], {}, fnodes, fedges);
     return {
-        nodes,
-        edges,
+        nodes: fnodes,
+        edges: fedges,
         clusters, sourceattr, targetattr, nodekeyattr
     };
 }
