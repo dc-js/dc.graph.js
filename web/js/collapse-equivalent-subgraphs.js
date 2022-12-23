@@ -126,16 +126,17 @@ function copy_dfs(node, expanded, deduped, nodes, edges) {
 
 function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr}) {
     const graph = metagraph.graph(nodes, edges, {
-        nodeKey: n => n.key,
-        edgeKey: e => e.key,
+        nodeKey: n => n[nodekeyattr],
+        edgeKey: e => `${e[sourceattr]}->${e[targetattr]}`,
         nodeValue: n => n,
         edgeValue: e => e,
         edgeSource: e => e[sourceattr],
         edgeTarget: e => e[targetattr]
     });
-    color_dfs(graph.node('1'), 0);
+    const n1 = graph.node('1') || graph.node('n1'); // assumed root
+    color_dfs(n1, 0);
     const fnodes = [], fedges = [];
-    copy_dfs(graph.node('1'), [], {}, fnodes, fedges);
+    copy_dfs(n1, [], {}, fnodes, fedges);
     return {
         nodes: fnodes,
         edges: fedges,
