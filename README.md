@@ -2,8 +2,11 @@
 
 Dynamic, interactive graph visualization using D3.
 
-**NOTE:** This repo will be archived (read-only) at the end of 2022. See discussion in [#122](https://github.com/dc-js/dc.graph.js/issues/122).
+This repo is not actively maintained, but I still dabble with it occasionally. Note that it is based on D3 v3.
 
+Many of [the examples](http://dc-js.github.io/dc.graph.js) allow you to display or explore your own graph data. No data is uploaded to any server - this is a pure JS client library.
+
+Features:
 * smooth D3 animated transitions
 * support for many graph layout libraries, including
   * [WebCola](http://marvl.infotech.monash.edu/webcola/) (and [SetCoLa](https://github.com/uwdata/setcola))
@@ -15,6 +18,5 @@ Dynamic, interactive graph visualization using D3.
 * integrates with [dc.js](http://dc-js.github.io/dc.js/) and [crossfilter](http://crossfilter.github.io/crossfilter/)
 * experimental 3D mode using WebGL, with a novel 2.5D layered force directed layout
 
-Many [examples are on github.io](http://dc-js.github.io/dc.graph.js), some of which allow you to display or explore your own graph data. No data is uploaded to any server - this is a pure JS client library.
 
 dc.graph.js is mostly by Gordon Woodhull (although contributions are welcome if they make sense and don't break things). I also maintain [dc.js](https://github.com/dc-js/dc.js) and [RCloud](https://github.com/att/rcloud).
