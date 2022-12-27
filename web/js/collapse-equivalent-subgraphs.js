@@ -96,7 +96,7 @@ sync_url.output(function(params) {
 });
 
 function color_dfs(node, eq) {
-    if(node.value().equiv)
+    if(node.value().equiv != 0)
         eq = node.value().equiv;
     else if(eq)
         node.value().equiv = eq;
@@ -133,10 +133,12 @@ function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyatt
         edgeSource: e => e[sourceattr],
         edgeTarget: e => e[targetattr]
     });
+    console.log('size of input graph', graph.nodes().length);
     const n1 = graph.node('1') || graph.node('n1'); // assumed root
     color_dfs(n1, 0);
     const fnodes = [], fedges = [];
     copy_dfs(n1, [], {}, fnodes, fedges);
+    console.log('size after filtering', fnodes.length);
     return {
         nodes: fnodes,
         edges: fedges,
@@ -229,14 +231,19 @@ function on_load(filename, error, data) {
     collapseDiagram
         .nodeFill(n => n.value.equiv)
         .nodeFillScale(v => v == 0 ?
-                       'none' :
+                       'white' :
                        cat20(v - 1));
-    const exs = d3.range(1, 13).map(i => ({key: i.toString(), name: i.toString(), value: {equiv: i}}));
+    const exs = d3.range(0, 13).map(i => ({key: i.toString(), name: i ? `class ${i}` : 'no class', value: {equiv: i}}));
     var legend = dc_graph.legend('legend')
         .nodeWidth(70).nodeHeight(60)
         .exemplars(exs)
         .dimension(undefined /* ?! */)
         .replaceFilter([[]] /* ?! */);
+    legend.counter((wnodes, _e, _p) => wnodes.reduce((p, v) => {
+        const eq = v.value.equiv;
+        p[eq] = (p[eq] || 0) + 1;
+        return p;
+    }, {}));
     collapseDiagram.child('node-legend', legend);
 
 
