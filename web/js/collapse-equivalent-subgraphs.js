@@ -104,12 +104,15 @@ function color_dfs(node, eq) {
         color_dfs(e.target(), eq);
 }
 
-function copy_dfs(node, expanded, deduped, nodes, edges) {
+function copy_dfs(node, expanded, seen, deduped, nodes, edges) {
+    if(seen[node.key()])
+        return;
+    seen[node.key()] = true;
     nodes.push(node.value());
     for(var e of node.outs()) {
-        var target = e.target(), tk;
-        if(target.value().equiv != node.value().equiv) {
-            if((tk = deduped[target.value().equiv])) {
+        var target = e.target(), tk, teq = target.value().equiv;
+        if(teq != node.value().equiv) {
+            if(!expanded.includes(teq) && (tk = deduped[teq])) {
                 edges.push({
                     key: e.key(),
                     sourcename: node.key(),
@@ -117,10 +120,10 @@ function copy_dfs(node, expanded, deduped, nodes, edges) {
                 });
                 continue;
             }
-            else deduped[target.value().equiv] = target.key();
+            else deduped[teq] = target.key();
         }
         edges.push(e.value());
-        copy_dfs(target, expanded, deduped, nodes, edges);
+        copy_dfs(target, expanded, seen, deduped, nodes, edges);
     }
 }
 
@@ -133,12 +136,13 @@ function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyatt
         edgeSource: e => e[sourceattr],
         edgeTarget: e => e[targetattr]
     });
-    console.log('size of input graph', graph.nodes().length);
+    console.log('size of input graph', graph.nodes().length, graph.edges().length);
     const n1 = graph.node('1') || graph.node('n1'); // assumed root
     color_dfs(n1, 0);
     const fnodes = [], fedges = [];
-    copy_dfs(n1, [], {}, fnodes, fedges);
-    console.log('size after filtering', fnodes.length);
+    const expanded = []; // d3.range(1,13).map(x => x.toString());
+    copy_dfs(n1, expanded, {}, {}, fnodes, fedges);
+    console.log('size after filtering', fnodes.length, fedges.length);
     return {
         nodes: fnodes,
         edges: fedges,
@@ -188,7 +192,7 @@ function on_load(filename, error, data) {
         // that tries many possibilities
         graph_data = dc_graph.convert_adjacency_list(data, {
             multipleGraphs: true,
-            adjacencies: 'children',
+            revAdjacencies: 'parent',
             nodeKey: 'key'
         }, {
             edgeKey: 'key',
