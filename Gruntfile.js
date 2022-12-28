@@ -327,7 +327,7 @@ module.exports = function (grunt) {
     });
 
     // task aliases
-    grunt.registerTask('build', ['concat', 'uglify']);
+    grunt.registerTask('build', ['concat']);
     grunt.registerTask('docs', ['build', 'copy', 'jsdoc', 'jsdoc2md']);
     grunt.registerTask('web', ['docs', 'gh-pages']);
     grunt.registerTask('server', ['build', 'copy', 'connect:server', 'watch:scripts']);
