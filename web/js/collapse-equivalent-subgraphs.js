@@ -97,7 +97,8 @@ sync_url.output(function(params) {
 });
 
 function color_dfs(node, eq) {
-    if(node.value().equiv != 0)
+    const sks = node.ins().map(e => e.source().value().equiv);
+    if(node.value().equiv != 0 || !sks.every(sk => sk === sks[0]))
         eq = node.value().equiv;
     else if(eq)
         node.value().equiv = eq;
