@@ -282,4 +282,81 @@ function on_load(filename, error, data) {
 if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL</br><small>or browse local file above right</small>');
 
+
+
 dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+
+
+// SEARCH (from spaas-viewer)
+
+var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
+var select_nodes = dc_graph.select_nodes({
+    nodeStroke: 'darkblue',
+    nodeStrokeWidth: 3
+});
+diagram.child('select-nodes', select_nodes);
+var last = null, counter = 0;
+
+function do_search(value) {
+    if(value === last)
+        ++counter;
+    else
+        counter = 0;
+    last = value;
+    show_matching_node_text(null);
+    tip.displayTip(function(d) {
+        return collapseDiagram.nodeKey.eval(d).indexOf(value) !== -1;
+    }, counter, function(d) {
+        d3.select('#search-button').text('Next');
+        select_nodes_group.set_changed([collapseDiagram.nodeKey.eval(d)]);
+    });
+}
+
+function show_matching_node_text(s) {
+    collapseDiagram.selectAllNodes()
+        .select('text.node-label')
+        .html(function(d) {
+            var key = collapseDiagram.nodeKey.eval(d);
+            return s && s.length && key.indexOf(s) !== -1 ?
+                key.replace(s, '<tspan style="font-weight: 800">' + s + '</tspan>') :
+                null;
+        });
+}
+
+d3.select('#search')
+    .on('keydown', function() {
+        if(d3.event.key === "Enter") {
+            do_search(this.value);
+        }
+    })
+    .on('keyup', function() {
+        if(d3.event.key !== "Enter")
+            show_matching_node_text(this.value);
+    })
+    .on('input', function() {
+        d3.select('#search-button').text('Search');
+    });
+
+d3.select('#search-button')
+    .on('click', function() {
+        do_search(d3.select('#search').node().value);
+    });
+
+d3.select('#search-group')
+    .on('keydown', function() {
+        if(d3.event.key === "Escape" || d3.event.key === "Esc") {
+            d3.select('#search').node().blur();
+            d3.select('#search-button').node().blur();
+        }
+    })
+    .on('focusout', function() {
+        if(!this.contains(d3.event.relatedTarget)) {
+            --counter; // if search for same thing, start on same node
+            select_nodes_group.set_changed([]);
+            tip.hideTip();
+            show_matching_node_text(null);
+        }
+    })
+    .on('focusin', function() {
+        show_matching_node_text(d3.select('#search').node().value);
+    });

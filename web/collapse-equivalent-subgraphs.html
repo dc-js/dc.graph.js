@@ -48,6 +48,14 @@
     #graph {
         flex: 1;
     }
+    #search-group {
+        height: calc(1.8125rem + 2px);
+        width: 300px;
+    }
+    #search-button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
   </style>
 
 </head>
@@ -59,6 +67,10 @@
     <script type="text/javascript" src="js/example-header.js"></script>
     <div id="controls">
       <div id="left-controls">
+        <label for="search">Search:</label>&nbsp;&nbsp;<span id="search-group" class="input-group"><input id="search" type="text" class="form-control form-control-sm" placeholder="Node name" aria-label="Node name" aria-describedby="search-next">
+          <span class="input-group-append">
+            <button class="input-group-text" id="search-button">Search</button>
+          </span>
         <select id="layout"></select>&nbsp;&nbsp;&nbsp;
         <div id="cutoff-stuff" style="display: none"><label for="cutoff">&nbsp;Edge cutoff:&nbsp;</label><div style="display: inline-block"><input id="cutoff" type="range" min="0" max="1" step="0.05" style="width: 10em"></div>&nbsp;<span id="cutoff-display"></span>&nbsp;&nbsp;&nbsp;</div>
         <input id="graphviz-attrs" type="checkbox"><label for="graphviz-attrs">&nbsp;Use graphviz <a href="https://graphviz.org/doc/info/attrs.html" target=_blank>attrs</a></label>
