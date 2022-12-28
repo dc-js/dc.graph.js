@@ -131,8 +131,15 @@ function on_load(filename, error, data) {
         heading += 'Could not load file ' + filename;
         display_error(heading, error.message);
     }
-    var graph_data = dc_graph.munge_graph(data),
-        nodes = graph_data.nodes,
+    var graph_data;
+    try {
+        graph_data = dc_graph.munge_graph(data);
+    }
+    catch(xep) {
+        console.log(xep);
+        display_error(`Error munging ${filename}`, xep.message);
+    }
+    var nodes = graph_data.nodes,
         edges = graph_data.edges,
         sourceattr = graph_data.sourceattr,
         targetattr = graph_data.targetattr,
@@ -373,6 +380,6 @@ function on_load(filename, error, data) {
 }
 
 if(!sync_url.vals.file)
-    display_error('Need <code>?file=</code> in URL!');
+    display_error('Need <code>?file=</code> in URL</br><small>or browse local file above right</small>');
 
 dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));

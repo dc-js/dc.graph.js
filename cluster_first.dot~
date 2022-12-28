@@ -1,3 +1,0 @@
-digraph g {
-  subgraph c { a -> b}
-}
