@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.8
+ *  dc.graph 0.9.9.1
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.8
+ * @version 0.9.9.1
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.8',
+    version: '0.9.9.1',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -9348,7 +9348,9 @@ dc_graph.legend = function(legend_namespace) {
     var _svg_renderer;
 
     function apply_filter() {
-        if(_legend.dimension()) {
+        if(_legend.customFilter())
+            _legend.customFilter()(_included);
+        else if(_legend.dimension()) {
             if(_legend.isTagDimension()) {
                 _legend.dimension().filterFunction(function(ks) {
                     return !_included.length || ks.filter(function(k) {
@@ -9531,7 +9533,7 @@ dc_graph.legend = function(legend_namespace) {
             item.attr('cursor', 'pointer')
                 .on('click.' + legend_namespace, function(d) {
                     var key = _legend.parent().nodeKey.eval(d);
-                    if(!_included.length)
+                    if(!_included.length && !_legend.isInclusiveDimension())
                         _included = _items.map(_legend.parent().nodeKey.eval);
                     if(_included.includes(key))
                         _included = _included.filter(function(x) { return x !== key; });
@@ -9602,7 +9604,9 @@ dc_graph.legend = function(legend_namespace) {
                 apply_filter();
             }
         });
+    _legend.isInclusiveDimension = property(false);
     _legend.isTagDimension = property(false);
+    _legend.customFilter = property(null);
 
     return _legend;
 };
@@ -14820,7 +14824,7 @@ dc_graph.data_url = function(data) {
 };
 
 function can_get_graph_from_this(data) {
-    return (data.nodes || data.vertices) &&  (data.edges || data.links);
+    return (data.nodes || data.vertices) && (data.edges || data.links);
 }
 
 // general-purpose reader of various json-based graph formats
@@ -15099,23 +15103,39 @@ dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeT
     });
 };
 
+// https://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
+var type_of = obj => ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+var object_to_keyed_array = obj => Object.entries(obj).map(([key,value]) => ({key, ...value}));
+
 dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
-    // adjacenciesAttr, edgeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
+    if(type_of(nodes) === 'object') {
+        var graph = namesIn.multipleGraphs ? Object.values(nodes)[0] : nodes;
+        nodes = object_to_keyed_array(graph);
+    }
+    const adjkey = namesIn.adjacencies || namesIn.revAdjacencies,
+          revadj = !namesIn.adjacencies;
+    if(!adjkey)
+        throw new Error('must specify namesIn.adjacencies or namesIn.revAdjacencies');
     var edges = Array.prototype.concat.apply([], nodes.map(function(n) {
-        return n[namesIn.adjacencies].map(function(adj) {
+        return n[adjkey].map(function(adj) {
             var e = {};
             if(namesOut.edgeKey)
                 e[namesOut.edgeKey] = uuid();
             e[namesOut.edgeSource] = n[namesIn.nodeKey];
-            e[namesOut.edgeTarget] = namesIn.targetKey ? adj[namesIn.targetKey] : adj;
+            e[namesOut.edgeTarget] = (namesIn.targetKey ? adj[namesIn.targetKey] : adj).toString();
+            if(revadj)
+                [e[namesOut.edgeSource], e[namesOut.edgeTarget]] = [e[namesOut.edgeTarget], e[namesOut.edgeSource]];
             if(namesOut.adjacency)
                 e[namesOut.adjacency] = adj;
             return e;
         });
     }));
     return {
-        nodes: nodes,
-        edges: edges
+        nodes,
+        edges,
+        nodekeyattr: namesIn.nodeKey,
+        sourceattr: namesOut.edgeSource,
+        targetattr: namesOut.edgeTarget
     };
 };
 
