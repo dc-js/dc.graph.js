@@ -13,6 +13,7 @@ var options = {
         }
     },
     worker: true,
+    expandall: false,
     file: null,
     gvattr: {
         default: true,
@@ -140,7 +141,7 @@ function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyatt
     const n1 = graph.node('1') || graph.node('n1'); // assumed root
     color_dfs(n1, 0);
     const fnodes = [], fedges = [];
-    const expanded = []; // d3.range(1,13).map(x => x.toString());
+    const expanded = sync_url.vals.expandall ? d3.range(1,13).map(x => x.toString()) : [];
     copy_dfs(n1, expanded, {}, {}, fnodes, fedges);
     console.log('size after filtering', fnodes.length, fedges.length);
     return {
