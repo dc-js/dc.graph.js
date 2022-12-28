@@ -87,14 +87,19 @@ dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
         var graph = namesIn.multipleGraphs ? Object.values(nodes)[0] : nodes;
         nodes = object_to_keyed_array(graph);
     }
-    // adjacenciesAttr, edgeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
+    const adjkey = namesIn.adjacencies || namesIn.revAdjacencies,
+          revadj = !namesIn.adjacencies;
+    if(!adjkey)
+        throw new Error('must specify namesIn.adjacencies or namesIn.revAdjacencies');
     var edges = Array.prototype.concat.apply([], nodes.map(function(n) {
-        return n[namesIn.adjacencies].map(function(adj) {
+        return n[adjkey].map(function(adj) {
             var e = {};
             if(namesOut.edgeKey)
                 e[namesOut.edgeKey] = uuid();
             e[namesOut.edgeSource] = n[namesIn.nodeKey];
             e[namesOut.edgeTarget] = (namesIn.targetKey ? adj[namesIn.targetKey] : adj).toString();
+            if(revadj)
+                [e[namesOut.edgeSource], e[namesOut.edgeTarget]] = [e[namesOut.edgeTarget], e[namesOut.edgeSource]];
             if(namesOut.adjacency)
                 e[namesOut.adjacency] = adj;
             return e;
