@@ -131,6 +131,8 @@ function copy_dfs(node, expanded, seen, deduped, nodes, edges) {
     }
 }
 
+var selection = sync_url.vals.expandall ? d3.range(1,13).map(x => x.toString()) : [];
+
 function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr}) {
     const graph = metagraph.graph(nodes, edges, {
         nodeKey: n => n[nodekeyattr],
@@ -144,8 +146,7 @@ function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyatt
     const n1 = graph.node('1') || graph.node('n1'); // assumed root
     color_dfs(n1, 0);
     const fnodes = [], fedges = [];
-    const expanded = sync_url.vals.expandall ? d3.range(1,13).map(x => x.toString()) : [];
-    copy_dfs(n1, expanded, {}, {}, fnodes, fedges);
+    copy_dfs(n1, selection, {}, {}, fnodes, fedges);
     console.log('size after filtering', fnodes.length, fedges.length);
     return {
         nodes: fnodes,
@@ -245,8 +246,15 @@ function on_load(filename, error, data) {
     var legend = dc_graph.legend('legend')
         .nodeWidth(70).nodeHeight(60)
         .exemplars(exs)
-        .dimension(undefined /* ?! */)
-        .replaceFilter([[]] /* ?! */);
+        .dimension(true)
+        .isInclusiveDimension(true)
+        .customFilter(items => {
+            selection = [...items];
+            const filtered_data = filter_data(graph_data);
+            apply_data(filtered_data);
+            collapseDiagram.redraw();
+        })
+        .replaceFilter([selection]);
     legend.counter((wnodes, _e, _p) => wnodes.reduce((p, v) => {
         const eq = v.value.equiv;
         p[eq] = (p[eq] || 0) + 1;

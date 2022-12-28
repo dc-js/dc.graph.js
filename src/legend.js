@@ -12,7 +12,9 @@ dc_graph.legend = function(legend_namespace) {
     var _svg_renderer;
 
     function apply_filter() {
-        if(_legend.dimension()) {
+        if(_legend.customFilter())
+            _legend.customFilter()(_included);
+        else if(_legend.dimension()) {
             if(_legend.isTagDimension()) {
                 _legend.dimension().filterFunction(function(ks) {
                     return !_included.length || ks.filter(function(k) {
@@ -195,7 +197,7 @@ dc_graph.legend = function(legend_namespace) {
             item.attr('cursor', 'pointer')
                 .on('click.' + legend_namespace, function(d) {
                     var key = _legend.parent().nodeKey.eval(d);
-                    if(!_included.length)
+                    if(!_included.length && !_legend.isInclusiveDimension())
                         _included = _items.map(_legend.parent().nodeKey.eval);
                     if(_included.includes(key))
                         _included = _included.filter(function(x) { return x !== key; });
@@ -266,7 +268,9 @@ dc_graph.legend = function(legend_namespace) {
                 apply_filter();
             }
         });
+    _legend.isInclusiveDimension = property(false);
     _legend.isTagDimension = property(false);
+    _legend.customFilter = property(null);
 
     return _legend;
 };
