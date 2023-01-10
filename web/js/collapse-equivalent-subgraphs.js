@@ -97,6 +97,8 @@ sync_url.output(function(params) {
 });
 
 function color_dfs(node, eq) {
+    if(node.value().equiv === undefined)
+        node.value().equiv = 0;
     const all_sources_same_eq = node.ins()
           .map(e => e.source().value().equiv)
           .every((sk,_,a) => sk === a[0]);
