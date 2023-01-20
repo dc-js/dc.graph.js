@@ -9460,7 +9460,7 @@ dc_graph.legend = function(legend_namespace) {
 
     function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         if(_legend.counter())
-            _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original));
+            _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original), false);
     }
 
     _legend.redraw = deprecate_function("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
@@ -9490,7 +9490,7 @@ dc_graph.legend = function(legend_namespace) {
             .attr('transform', 'translate(' + (_legend.itemWidth()/2+_legend.gap()) + ',0)')
             .attr('pointer-events', _legend.dimension() ? 'auto' : 'none')
             .text(function(d) {
-                return d.name + (_legend.counter() && _counts ? (' (' + (_counts[d.orig.key] || 0) + (_counts[d.orig.key] !== _totals[d.orig.key] ? '/' + (_totals[d.orig.key] || 0) : '') + ')') : '');
+                return d.name + (_legend.counter() && _legend.filterable()(d) && _counts ? (' (' + (_counts[d.orig.key] || 0) + (_counts[d.orig.key] !== _totals[d.orig.key] ? '/' + (_totals[d.orig.key] || 0) : '') + ')') : '');
             });
         _legend.type().draw(_svg_renderer || _legend.parent(), itemEnter, item);
         if(_legend.noLabel())
@@ -9530,7 +9530,8 @@ dc_graph.legend = function(legend_namespace) {
         }
 
         if(_legend.dimension()) {
-            item.attr('cursor', 'pointer')
+            item.filter(_legend.filterable())
+                .attr('cursor', 'pointer')
                 .on('click.' + legend_namespace, function(d) {
                     var key = _legend.parent().nodeKey.eval(d);
                     if(!_included.length && !_legend.isInclusiveDimension())
@@ -9550,7 +9551,7 @@ dc_graph.legend = function(legend_namespace) {
         }
         item.transition().duration(1000)
             .attr('opacity', function(d) {
-                return (!_included.length || _included.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25;
+                return (!_legend.filterable()(d) || !_included.length || _included.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25;
             });
     };
 
@@ -9559,7 +9560,8 @@ dc_graph.legend = function(legend_namespace) {
             _totals = _legend.counter()(
                 _legend.parent().nodeGroup().all(),
                 _legend.parent().edgeGroup().all(),
-                _legend.parent().portGroup() && _legend.parent().portGroup().all());
+                _legend.parent().portGroup() && _legend.parent().portGroup().all(),
+                true);
     };
 
     _legend.render = deprecate_function("dc_graph.legend is an ordinary mode now; render will go away soon", render);
@@ -9604,6 +9606,7 @@ dc_graph.legend = function(legend_namespace) {
                 apply_filter();
             }
         });
+    _legend.filterable = property(() => true);
     _legend.isInclusiveDimension = property(false);
     _legend.isTagDimension = property(false);
     _legend.customFilter = property(null);
@@ -11787,6 +11790,35 @@ dc_graph.label_edges = function(options) {
 
     var _mode = dc_graph.label_things(options);
     _mode.changeEdgeLabel = property(null);
+    return _mode;
+};
+
+dc_graph.annotate_nodes = () => {
+    function draw(diagram) {
+        const roots = diagram.g().selectAll('g.node-layer g.node');
+        const annots = roots.selectAll('text.node-annotation').data(d =>  d.orig.value.ceq ? [d] : []);
+        annots.enter().append('text')
+            .attr({
+                class: 'node-annotation',
+                fill: d => {
+                    const nf = diagram.nodeFill.eval(d);
+                    return diagram.nodeFillScale()(nf - ((nf%2) ? 0 : 1));
+                },
+                'font-weight': 750,
+                'font-size': '50px',
+                'alignment-baseline': 'central',
+                dx: d => Math.round(d.dcg_rx + 10) + 'px'
+            });
+        annots.exit().remove();
+        annots
+            .text(d => d.orig.value.ceq);
+    }
+    function remove() {}
+    const _mode = dc_graph.mode('annotate-nodes', {
+        draw,
+        remove,
+        laterDraw: true
+    });
     return _mode;
 };
 

@@ -100,55 +100,83 @@ function color_dfs(node, eq) {
     if(node.value().equiv === undefined)
         node.value().equiv = 0;
     const all_sources_same_eq = node.ins()
-          .map(e => e.source().value().equiv)
+          .map(e => e.source().value().subeq)
           .every((sk,_,a) => sk === a[0]);
     if(node.value().equiv != 0 || !all_sources_same_eq)
-        eq = node.value().equiv;
-    else if(eq)
-        node.value().equiv = eq;
+        eq = node.value().subeq = node.value().equiv;
+    else
+        node.value().subeq = eq;
     for(var e of node.outs())
         color_dfs(e.target(), eq);
 }
 
-function copy_dfs(node, expanded, seen, deduped, nodes, edges) {
+function copy_and_count_nonexpanded_dfs(node, expanded, seen, deduped, nodes, edges, dry) {
     if(seen[node.key()])
         return;
     seen[node.key()] = true;
-    nodes.push(node.value());
+    if(!dry)
+        nodes.push(node.value());
     for(var e of node.outs()) {
-        var target = e.target(), tk, teq = target.value().equiv;
-        if(teq != node.value().equiv) {
-            if(!expanded.includes(teq) && (tk = deduped[teq])) {
-                edges.push({
-                    key: e.key(),
-                    sourcename: node.key(),
-                    targetname: tk
-                });
-                continue;
+        let tdry = dry;
+        var target = e.target(), dt, teq = target.value().subeq;
+        if(teq != 0 && teq != node.value().subeq) {
+            if(!expanded.includes(teq)) {
+                if((dt = deduped[teq])) {
+                    ++dt.value().ceq;
+                    edges.push({
+                        key: e.key(),
+                        sourcename: node.key(),
+                        targetname: dt.key()
+                    });
+                    tdry = true;
+                } else {
+                    deduped[teq] = target;
+                    ++target.value().ceq;
+                }
             }
-            else deduped[teq] = target.key();
         }
-        edges.push(e.value());
-        copy_dfs(target, expanded, seen, deduped, nodes, edges);
+        if(!tdry)
+            edges.push(e.value());
+        copy_and_count_nonexpanded_dfs(target, expanded, seen, deduped, nodes, edges, tdry);
+    }
+}
+
+function propagate_expanded_counts_dfs(node, seen, count) {
+    if(seen[node.key()])
+        return;
+    seen[node.key()] = true;
+    for(var e of node.outs()) {
+        let target = e.target(), dt, teq = target.value().subeq,
+            tcount = count;
+        if(teq != 0 && teq != node.value().subeq) {
+            if(target.value().ceq)
+                tcount = target.value().ceq;
+            else if(teq)
+                target.value().ceq = count;
+        }
+        propagate_expanded_counts_dfs(target, seen, tcount);
     }
 }
 
 var selection = sync_url.vals.expandall ? d3.range(1,13).map(x => x.toString()) : [];
-
 function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr}) {
-    const graph = metagraph.graph(nodes, edges, {
+    const graph_spec =  {
         nodeKey: n => n[nodekeyattr],
         edgeKey: e => `${e[sourceattr]}->${e[targetattr]}`,
         nodeValue: n => n,
         edgeValue: e => e,
         edgeSource: e => e[sourceattr],
         edgeTarget: e => e[targetattr]
-    });
+    };
+    const graph = metagraph.graph(nodes, edges, graph_spec);
     console.log('size of input graph', graph.nodes().length, graph.edges().length);
     const n1 = graph.node('1') || graph.node('n1'); // assumed root
     color_dfs(n1, 0);
     const fnodes = [], fedges = [];
-    copy_dfs(n1, selection, {}, {}, fnodes, fedges);
+    for(const n of graph.nodes()) n.value().ceq = 0;
+    copy_and_count_nonexpanded_dfs(n1, selection, {}, {}, fnodes, fedges);
+    const graph2 = metagraph.graph(fnodes, fedges, graph_spec);
+    propagate_expanded_counts_dfs(graph2.node('1') || graph2.node('n1'), {}, 1);
     console.log('size after filtering', fnodes.length, fedges.length);
     return {
         nodes: fnodes,
@@ -240,16 +268,18 @@ function on_load(filename, error, data) {
 
     const cat20 = d3.scale.category20().domain([]);
     collapseDiagram
-        .nodeFill(n => n.value.equiv)
+        .nodeFill(n => n.value.subeq)
         .nodeFillScale(v => v == 0 ?
                        'white' :
                        cat20(v - 1));
-    const exs = d3.range(0, 13).map(i => ({key: i.toString(), name: i ? `class ${i}` : 'no class', value: {equiv: i}}));
+    const maxclass = d3.max(graph_data.nodes, n => +n.equiv);
+    const exs = d3.range(0, maxclass+1).map(i => ({key: i.toString(), name: i ? `class ${i}` : 'unique', value: {subeq: i}}));
     var legend = dc_graph.legend('legend')
         .nodeWidth(70).nodeHeight(60)
         .exemplars(exs)
         .dimension(true)
         .isInclusiveDimension(true)
+        .filterable(d => collapseDiagram.nodeKey.eval(d) !== "0")
         .customFilter(items => {
             selection = [...items];
             const filtered_data = filter_data(graph_data);
@@ -257,13 +287,15 @@ function on_load(filename, error, data) {
             collapseDiagram.redraw();
         })
         .replaceFilter([selection]);
-    legend.counter((wnodes, _e, _p) => wnodes.reduce((p, v) => {
-        const eq = v.value.equiv;
+    legend.counter((_n, _e, _p, is_total) => graph_data.nodes.reduce((p, v) => {
+        const eq = v.equiv;
         p[eq] = (p[eq] || 0) + 1;
         return p;
     }, {}));
     collapseDiagram.child('node-legend', legend);
 
+    const annotate_nodes = dc_graph.annotate_nodes();
+    collapseDiagram.child('annotate-nodes', annotate_nodes);
 
     var move_nodes = dc_graph.move_nodes();
     collapseDiagram.child('move-nodes', move_nodes);

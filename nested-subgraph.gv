@@ -1,0 +1,29 @@
+digraph D {
+
+  subgraph cluster_p {
+    label = "Parent";
+foo;
+
+    subgraph cluster_c1 {
+      label = "Child one";
+      a;
+
+      subgraph cluster_gc_1 {
+        label = "Grand-Child one";
+         b;
+      }
+      subgraph cluster_gc_2 {
+        label = "Grand-Child two";
+          c;
+          d;
+		  c->d;
+      }
+
+    }
+
+    subgraph cluster_c2 {
+      label = "Child two";
+      e;
+    }
+  }
+} 
