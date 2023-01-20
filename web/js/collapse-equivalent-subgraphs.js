@@ -110,7 +110,7 @@ function color_dfs(node, eq) {
         color_dfs(e.target(), eq);
 }
 
-function copy_dfs(node, expanded, seen, deduped, nodes, edges, dry) {
+function copy_and_count_nonexpanded_dfs(node, expanded, seen, deduped, nodes, edges, dry) {
     if(seen[node.key()])
         return;
     seen[node.key()] = true;
@@ -119,44 +119,64 @@ function copy_dfs(node, expanded, seen, deduped, nodes, edges, dry) {
     for(var e of node.outs()) {
         let tdry = dry;
         var target = e.target(), dt, teq = target.value().subeq;
-        if(teq != node.value().subeq) {
-            if(!expanded.includes(teq) && (dt = deduped[teq])) {
-                ++dt.value().ceq;
-                edges.push({
-                    key: e.key(),
-                    sourcename: node.key(),
-                    targetname: dt.key()
-                });
-                tdry = true;
-            } else {
-                if(!deduped[teq])
+        if(teq != 0 && teq != node.value().subeq) {
+            if(!expanded.includes(teq)) {
+                if((dt = deduped[teq])) {
+                    ++dt.value().ceq;
+                    edges.push({
+                        key: e.key(),
+                        sourcename: node.key(),
+                        targetname: dt.key()
+                    });
+                    tdry = true;
+                } else {
                     deduped[teq] = target;
-                ++deduped[teq].value().ceq;
+                    ++target.value().ceq;
+                }
             }
         }
-        if(!dry)
+        if(!tdry)
             edges.push(e.value());
-        copy_dfs(target, expanded, seen, deduped, nodes, edges, tdry);
+        copy_and_count_nonexpanded_dfs(target, expanded, seen, deduped, nodes, edges, tdry);
+    }
+}
+
+function propagate_expanded_counts_dfs(node, seen, count) {
+    if(seen[node.key()])
+        return;
+    seen[node.key()] = true;
+    for(var e of node.outs()) {
+        let target = e.target(), dt, teq = target.value().subeq,
+            tcount = count;
+        if(teq != 0 && teq != node.value().subeq) {
+            if(target.value().ceq)
+                tcount = target.value().ceq;
+            else if(teq)
+                target.value().ceq = count;
+        }
+        propagate_expanded_counts_dfs(target, seen, tcount);
     }
 }
 
 var selection = sync_url.vals.expandall ? d3.range(1,13).map(x => x.toString()) : [];
-
 function filter_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr}) {
-    const graph = metagraph.graph(nodes, edges, {
+    const graph_spec =  {
         nodeKey: n => n[nodekeyattr],
         edgeKey: e => `${e[sourceattr]}->${e[targetattr]}`,
         nodeValue: n => n,
         edgeValue: e => e,
         edgeSource: e => e[sourceattr],
         edgeTarget: e => e[targetattr]
-    });
+    };
+    const graph = metagraph.graph(nodes, edges, graph_spec);
     console.log('size of input graph', graph.nodes().length, graph.edges().length);
     const n1 = graph.node('1') || graph.node('n1'); // assumed root
     color_dfs(n1, 0);
     const fnodes = [], fedges = [];
     for(const n of graph.nodes()) n.value().ceq = 0;
-    copy_dfs(n1, selection, {}, {}, fnodes, fedges);
+    copy_and_count_nonexpanded_dfs(n1, selection, {}, {}, fnodes, fedges);
+    const graph2 = metagraph.graph(fnodes, fedges, graph_spec);
+    propagate_expanded_counts_dfs(graph2.node('1') || graph2.node('n1'), {}, 1);
     console.log('size after filtering', fnodes.length, fedges.length);
     return {
         nodes: fnodes,
