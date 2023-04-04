@@ -1,0 +1,55 @@
+digraph exec_plan{
+n1 [label="1: \nPhysical Plan", htmltip="<!DOCTYPE html> <html> <body></body> </html>"];
+n2 [label="2: (22) AdaptiveSparkPlan\nAdaptiveSparkPlan", htmltip="<!DOCTYPE html> <html> <body>note: AdaptiveSparkPlan; <p>Arguments::  isFinalPlan=false</body> </html>"];
+n3 [label="3: (21) Project\nProject", htmltip="<!DOCTYPE html> <html> <body>note: Project</body> </html>"];
+n4 [label="4: (20) SortAggregate\nSortAggregate", htmltip="<!DOCTYPE html> <html> <body>note: SortAggregate; <p>Keys:  [4]: [Data_dt, SerialNumber, ApplicationName, MacAddress]; <p>Functions:  [10]: [finalmerge_sum(merge sum) AS sum(DownByte_diff), finalmerge_sum(merge sum) AS sum(UpByte_diff), finalmerge_max(merge max) AS max(DownByte_Tput), finalmerge_max(merge max) AS max(UpByte_Tput), finalmerge_count(merge countL) AS count(UTC)L, finalmerge_first(merge first, valueSet) AS first(VendorName)(), finalmerge_first(merge first, valueSet) AS first(OsName)(), finalmerge_first(merge first, valueSet) AS first(ApplicationClassName)(), finalmerge_first(merge first, valueSet) AS first(ApplicationTypeName)(), finalmerge_first(merge first, valueSet) AS first(FamilyName)()]; <p>Aggregate:  Attributes [10]: [sum(DownByte_diff), sum(UpByte_diff), max(DownByte_Tput), max(UpByte_Tput), count(UTC)L, first(VendorName)(), first(OsName)(), first(ApplicationClassName)(), first(ApplicationTypeName)(), first(FamilyName)()]; <p>Results:  [14]: [Data_dt, SerialNumber, ApplicationName, MacAddress, sum(DownByte_diff) AS DL_USAGE_bytes, sum(UpByte_diff) AS UL_USAGE_bytes, max(DownByte_Tput) AS Max_DL_Tput_bps, max(UpByte_Tput) AS Max_UL_Tput_bps, count(UTC)L AS num_recordsL, first(VendorName)() AS Vendor, first(OsName)() AS OsName, first(ApplicationClassName)() AS ApplicationClassName, first(ApplicationTypeName)() AS ApplicationTypeName, first(FamilyName)() AS FamilyName]</body> </html>"];
+n5 [label="5: (19) Sort\nSort
+Data_dt ASC NULLS FIRST, SerialNumber AS ...", htmltip="<!DOCTYPE html> <html> <body>note: Sort; <p>Arguments::  [Data_dt ASC NULLS FIRST, SerialNumber ASC NULLS FIRST, ApplicationName ASC NULLS FIRST, MacAddress ASC NULLS FIRST], false, 0</body> </html>"];
+n6 [label="6: (18) Exchange\nExchange
+hashpartitioning(Data_dt, SerialNumber,  ...", htmltip="<!DOCTYPE html> <html> <body>note: Exchange; <p>Arguments::  hashpartitioning(Data_dt, SerialNumber, ApplicationName, MacAddress, 5000), ENSURE_REQUIREMENTS, [id=]</body> </html>"];
+n7 [label="7: (17) SortAggregate\nSortAggregate", htmltip="<!DOCTYPE html> <html> <body>note: SortAggregate; <p>Keys:  [4]: [Data_dt, SerialNumber, ApplicationName, MacAddress]; <p>Functions:  [10]: [partial_sum(DownByte_diff) AS sum, partial_sum(UpByte_diff) AS sum, partial_max(DownByte_Tput) AS max, partial_max(UpByte_Tput) AS max, partial_count(UTC) AS countL, partial_first(VendorName, false) AS (first, valueSet), partial_first(OsName, false) AS (first, valueSet), partial_first(ApplicationClassName, false) AS (first, valueSet), partial_first(ApplicationTypeName, false) AS (first, valueSet), partial_first(FamilyName, false) AS (first, valueSet)]; <p>Aggregate:  Attributes [15]: [sum, sum, max, max, countL, first, valueSet, first, valueSet, first, valueSet, first, valueSet, first, valueSet]; <p>Results:  [19]: [Data_dt, SerialNumber, ApplicationName, MacAddress, sum, sum, max, max, countL, first, valueSet, first, valueSet, first, valueSet, first, valueSet, first, valueSet]</body> </html>"];
+n8 [label="8: (16) Sort\nSort
+Data_dt ASC NULLS FIRST, SerialNumber AS ...", htmltip="<!DOCTYPE html> <html> <body>note: Sort; <p>Arguments::  [Data_dt ASC NULLS FIRST, SerialNumber ASC NULLS FIRST, ApplicationName ASC NULLS FIRST, MacAddress ASC NULLS FIRST], false, 0</body> </html>"];
+n9 [label="9: (15) Project\nProject", htmltip="<!DOCTYPE html> <html> <body>note: Project</body> </html>"];
+n10 [label="10: (14) Filter\nFilter", htmltip="<!DOCTYPE html> <html> <body>note: Filter; <p>Condition:  : ((isnotnull(DownByte_diff) AND isnotnull(UpByte_diff)) AND ((DownByte_diff > 0.0) AND (UpByte_diff > 0.0)))</body> </html>"];
+n11 [label="11: (13) Window\nWindow", htmltip="<!DOCTYPE html> <html> <body>note: Window; <p>Arguments::  [SerialNumber, ApplicationName, MacAddress, UTC, VendorName, OsName, ApplicationClassName, ApplicationTypeName, FamilyName, Data_dt, (DownByte - lag(DownByte, -1, null) windowspecdefinition(SerialNumber, ApplicationId, ApplicationName, MacAddress, UTC ASC NULLS FIRST, specifiedwindowframe(RowFrame, -1, -1))) AS DownByte_diff, (UpByte - lag(UpByte, -1, null) windowspecdefinition(SerialNumber, ApplicationId, ApplicationName, MacAddress, UTC ASC NULLS FIRST, specifiedwindowframe(RowFrame, -1, -1))) AS UpByte_diff], [SerialNumber, ApplicationId, ApplicationName, MacAddress], [UTC ASC NULLS FIRST]</body> </html>"];
+n12 [label="12: (12) Sort\nSort
+SerialNumber ASC NULLS FIRST, Applicatio ...", htmltip="<!DOCTYPE html> <html> <body>note: Sort; <p>Arguments::  [SerialNumber ASC NULLS FIRST, ApplicationId ASC NULLS FIRST, ApplicationName ASC NULLS FIRST, MacAddress ASC NULLS FIRST, UTC ASC NULLS FIRST], false, 0</body> </html>"];
+n13 [label="13: (11) Exchange\nExchange
+hashpartitioning(SerialNumber, Applicati ...", htmltip="<!DOCTYPE html> <html> <body>note: Exchange; <p>Arguments::  hashpartitioning(SerialNumber, ApplicationId, ApplicationName, MacAddress, 5000), ENSURE_REQUIREMENTS, [id=]</body> </html>"];
+n14 [label="14: (10) Project\nProject", htmltip="<!DOCTYPE html> <html> <body>note: Project</body> </html>"];
+n15 [label="15: (9) Filter\nFilter", htmltip="<!DOCTYPE html> <html> <body>note: Filter; <p>Condition:  : ((isnotnull(DownByte) AND isnotnull(UpByte)) AND (isnotnull(cast(DownByte as double)) AND isnotnull(cast(UpByte as double))))</body> </html>"];
+n16 [label="16: (8) SortAggregate\nSortAggregate", htmltip="<!DOCTYPE html> <html> <body>note: SortAggregate; <p>Keys:  [4]: [SerialNumber, ApplicationName, MacAddress, UTC]; <p>Functions:  [9]: [finalmerge_max(merge max) AS max(UpByte), finalmerge_max(merge max) AS max(DownByte), finalmerge_first(merge first, valueSet) AS first(ApplicationId)(), finalmerge_first(merge first, valueSet) AS first(VendorName)(), finalmerge_first(merge first, valueSet) AS first(OsName)(), finalmerge_first(merge first, valueSet) AS first(ApplicationClassName)(), finalmerge_first(merge first, valueSet) AS first(ApplicationTypeName)(), finalmerge_first(merge first, valueSet) AS first(FamilyName)(), finalmerge_first(merge first, valueSet) AS first(Data_dt)()]; <p>Aggregate:  Attributes [9]: [max(UpByte), max(DownByte), first(ApplicationId)(), first(VendorName)(), first(OsName)(), first(ApplicationClassName)(), first(ApplicationTypeName)(), first(FamilyName)(), first(Data_dt)()]; <p>Results:  [13]: [SerialNumber, ApplicationName, MacAddress, UTC, max(UpByte) AS UpByte, max(DownByte) AS DownByte, first(ApplicationId)() AS ApplicationId, first(VendorName)() AS VendorName, first(OsName)() AS OsName, first(ApplicationClassName)() AS ApplicationClassName, first(ApplicationTypeName)() AS ApplicationTypeName, first(FamilyName)() AS FamilyName, first(Data_dt)() AS Data_dt]</body> </html>"];
+n17 [label="17: (7) Sort\nSort
+SerialNumber ASC NULLS FIRST, Applicatio ...", htmltip="<!DOCTYPE html> <html> <body>note: Sort; <p>Arguments::  [SerialNumber ASC NULLS FIRST, ApplicationName ASC NULLS FIRST, MacAddress ASC NULLS FIRST, UTC ASC NULLS FIRST], false, 0</body> </html>"];
+n18 [label="18: (6) Exchange\nExchange
+hashpartitioning(SerialNumber, Applicati ...", htmltip="<!DOCTYPE html> <html> <body>note: Exchange; <p>Arguments::  hashpartitioning(SerialNumber, ApplicationName, MacAddress, UTC, 5000), ENSURE_REQUIREMENTS, [id=]</body> </html>"];
+n19 [label="19: (5) SortAggregate\nSortAggregate", htmltip="<!DOCTYPE html> <html> <body>note: SortAggregate; <p>Keys:  [4]: [SerialNumber, ApplicationName, MacAddress, UTC]; <p>Functions:  [9]: [partial_max(UpByte) AS max, partial_max(DownByte) AS max, partial_first(ApplicationId, false) AS (first, valueSet), partial_first(VendorName, false) AS (first, valueSet), partial_first(OsName, false) AS (first, valueSet), partial_first(ApplicationClassName, false) AS (first, valueSet), partial_first(ApplicationTypeName, false) AS (first, valueSet), partial_first(FamilyName, false) AS (first, valueSet), partial_first(Data_dt, false) AS (first, valueSet)]; <p>Aggregate:  Attributes [16]: [max, max, first, valueSet, first, valueSet, first, valueSet, first, valueSet, first, valueSet, first, valueSet, first, valueSet]; <p>Results:  [20]: [SerialNumber, ApplicationName, MacAddress, UTC, max, max, first, valueSet, first, valueSet, first, valueSet, first, valueSet, first, valueSet, first, valueSet, first, valueSet]</body> </html>"];
+n20 [label="20: (4) Sort\nSort
+SerialNumber ASC NULLS FIRST, Applicatio ...", htmltip="<!DOCTYPE html> <html> <body>note: Sort; <p>Arguments::  [SerialNumber ASC NULLS FIRST, ApplicationName ASC NULLS FIRST, MacAddress ASC NULLS FIRST, UTC ASC NULLS FIRST], false, 0</body> </html>"];
+n21 [label="21: (3) Project\nProject", htmltip="<!DOCTYPE html> <html> <body>note: Project</body> </html>"];
+n22 [label="22: (2) Filter\nFilter", htmltip="<!DOCTYPE html> <html> <body>note: Filter; <p>Condition:  : (isnotnull(UTC) AND Contains(UTC, 2023-02-03))</body> </html>"];
+n23 [label="23: (1) Scan\nScan parquet \nfs.core.windows.net/App_Table]", htmltip="<!DOCTYPE html> <html> <body>note: Scan parquet; <p>Batched::  true; <p>Location::  PreparedDeltaFileIndex [abfss://gold@cplusstorageaccountprd.dfs.core.windows.net/App_Table]; <p>PartitionFilters::  [isnotnull(Data_dt), Contains(Data_dt, 2023-02-03)]; <p>PushedFilters::  [IsNotNull(UTC), StringContains(UTC,2023-02-03)]; <p>ReadSchema::  struct<SerialNumber:string,UTC:string,ApplicationId:string,ApplicationName:string,MacAddress:string,VendorName:string,OsName:string,ApplicationClassName:string,ApplicationTypeName:string,FamilyName:string,UpByte:string,DownByte:string></body> </html>"];
+n1 -> n2;
+n2 -> n3;
+n3 -> n4;
+n4 -> n5;
+n5 -> n6;
+n6 -> n7;
+n7 -> n8;
+n8 -> n9;
+n9 -> n10;
+n10 -> n11;
+n11 -> n12;
+n12 -> n13;
+n13 -> n14;
+n14 -> n15;
+n15 -> n16;
+n16 -> n17;
+n17 -> n18;
+n18 -> n19;
+n19 -> n20;
+n20 -> n21;
+n21 -> n22;
+n22 -> n23;
+}
