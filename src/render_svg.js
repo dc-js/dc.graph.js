@@ -38,12 +38,15 @@ dc_graph.render_svg = function() {
         _renderer.parent().forEachShape(node, function(shape, node) {
             node.call(shape.update);
         });
-        node.select('.node-shape')
+        node.select('.node-fill')
+            .attr({
+                fill: compose(_renderer.parent().nodeFillScale() || identity, _renderer.parent().nodeFill.eval)
+            });
+        node.select('.node-outline')
             .attr({
                 stroke: _renderer.parent().nodeStroke.eval,
                 'stroke-width': _renderer.parent().nodeStrokeWidth.eval,
-                'stroke-dasharray': _renderer.parent().nodeStrokeDashArray.eval,
-                fill: compose(_renderer.parent().nodeFillScale() || identity, _renderer.parent().nodeFill.eval)
+                'stroke-dasharray': _renderer.parent().nodeStrokeDashArray.eval
             });
         return _renderer;
     };
@@ -800,6 +803,44 @@ dc_graph.render_svg = function() {
         _renderer.resize();
 
         _defs = _svg.append('svg:defs');
+
+        // for lack of a better place
+        _renderer.addOrRemoveDef('node-clip-top', true, 'clipPath', function(clipPath) {
+            clipPath.selectAll('rect').data([0])
+                .enter().append('rect').attr({
+                    x: -1000,
+                    y: -1000,
+                    width: 2000,
+                    height: 1000
+                });
+        });
+        _renderer.addOrRemoveDef('node-clip-bottom', true, 'clipPath', function(clipPath) {
+            clipPath.selectAll('rect').data([0])
+                .enter().append('rect').attr({
+                    x: -1000,
+                    y: 0,
+                    width: 2000,
+                    height: 1000
+                });
+        });
+        _renderer.addOrRemoveDef('node-clip-left', true, 'clipPath', function(clipPath) {
+            clipPath.selectAll('rect').data([0])
+                .enter().append('rect').attr({
+                    x: -1000,
+                    y: -1000,
+                    width: 1000,
+                    height: 2000
+                });
+        });
+        _renderer.addOrRemoveDef('node-clip-right', true, 'clipPath', function(clipPath) {
+            clipPath.selectAll('rect').data([0])
+                .enter().append('rect').attr({
+                    x: 0,
+                    y: -1000,
+                    width: 1000,
+                    height: 2000
+                });
+        });
 
         _zoom = d3.behavior.zoom()
             .on('zoom.diagram', _renderer.parent().doZoom)

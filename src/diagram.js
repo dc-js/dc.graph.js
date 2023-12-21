@@ -695,6 +695,8 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.shape('rounded-rect', dc_graph.rounded_rectangle_shape());
     _diagram.shape('elaborated-rect', dc_graph.elaborated_rectangle_shape());
 
+    _diagram.nodeOutlineClip = property(null);
+
     _diagram.nodeContent = property('text');
     _diagram.content = named_children();
     _diagram.content('text', dc_graph.text_contents());

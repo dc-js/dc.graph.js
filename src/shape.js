@@ -301,6 +301,7 @@ function normalize_shape_def(diagram, n) {
         return default_shape;
     if(typeof def === 'string')
         return {shape: def};
+    def.nodeOutlineClip = diagram.nodeOutlineClip.eval(n);
     return def;
 }
 
@@ -335,6 +336,8 @@ function shape_changed(diagram) {
         var def = normalize_shape_def(diagram, n);
         var old = n.dcg_shape.abstract;
         if(def.shape !== old.shape)
+            return true;
+        else if(def.nodeOutlineClip !== old.nodeOutlineClip)
             return true;
         else if(def.shape === 'polygon') {
             return def.shape.sides !== old.sides || def.shape.skew !== old.skew ||
@@ -407,7 +410,7 @@ function ellipse_attrs(diagram) {
     };
 }
 
-function polygon_attrs(diagram, n) {
+function polygon_attrs(diagram) {
     return {
         d: function(n) {
             var rx = n.dcg_rx, ry = n.dcg_ry,
@@ -732,11 +735,21 @@ dc_graph.ellipse_shape = function() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            nodeEnter.insert('ellipse', ':first-child')
-                .attr('class', 'node-shape');
+            const clipped = nodeEnter.filter(n => _shape.parent().nodeOutlineClip.eval(n));
+            const unclipped = nodeEnter.filter(n => !_shape.parent().nodeOutlineClip.eval(n));
+            clipped.insert('ellipse', ':first-child')
+                .attr('class', 'node-outline')
+                .attr('fill', 'none')
+                .attr('clip-path', n => `url(#node-clip-${_shape.parent().nodeOutlineClip.eval(n)})`);
+            clipped.insert('ellipse', ':first-child')
+                .attr('class', 'node-fill');
+            unclipped.insert('ellipse', ':first-child')
+                .attr('class', 'node-outline node-fill')
         },
         update: function(node) {
-            node.select('ellipse.node-shape')
+            node.select('ellipse.node-fill')
+                .attr(ellipse_attrs(_shape.parent()));
+            node.select('ellipse.node-outline')
                 .attr(ellipse_attrs(_shape.parent()));
         }
     };
