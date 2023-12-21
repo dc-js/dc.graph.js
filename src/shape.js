@@ -300,7 +300,7 @@ function normalize_shape_def(diagram, n) {
     if(!def)
         return default_shape;
     if(typeof def === 'string')
-        return {shape: def};
+        def = {shape: def};
     def.nodeOutlineClip = diagram.nodeOutlineClip.eval(n);
     return def;
 }
@@ -712,6 +712,19 @@ dc_graph.no_shape = function() {
     return _shape;
 };
 
+function create_maybe_clipped(diagram, nodeEnter, element) {
+    const clipped = nodeEnter.filter(n => diagram.nodeOutlineClip.eval(n));
+    const unclipped = nodeEnter.filter(n => !diagram.nodeOutlineClip.eval(n));
+    clipped.insert(element, ':first-child')
+        .attr('class', 'node-outline')
+        .attr('fill', 'none')
+        .attr('clip-path', n => `url(#node-clip-${diagram.nodeOutlineClip.eval(n)})`);
+    clipped.insert(element, ':first-child')
+        .attr('class', 'node-fill');
+    unclipped.insert(element, ':first-child')
+        .attr('class', 'node-outline node-fill');
+}
+
 dc_graph.ellipse_shape = function() {
     var _shape = {
         parent: property(null),
@@ -735,21 +748,10 @@ dc_graph.ellipse_shape = function() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            const clipped = nodeEnter.filter(n => _shape.parent().nodeOutlineClip.eval(n));
-            const unclipped = nodeEnter.filter(n => !_shape.parent().nodeOutlineClip.eval(n));
-            clipped.insert('ellipse', ':first-child')
-                .attr('class', 'node-outline')
-                .attr('fill', 'none')
-                .attr('clip-path', n => `url(#node-clip-${_shape.parent().nodeOutlineClip.eval(n)})`);
-            clipped.insert('ellipse', ':first-child')
-                .attr('class', 'node-fill');
-            unclipped.insert('ellipse', ':first-child')
-                .attr('class', 'node-outline node-fill')
+            create_maybe_clipped(_shape.parent(), nodeEnter, 'ellipse');
         },
         update: function(node) {
-            node.select('ellipse.node-fill')
-                .attr(ellipse_attrs(_shape.parent()));
-            node.select('ellipse.node-outline')
+            node.selectAll('ellipse.node-fill,ellipse.node-outline')
                 .attr(ellipse_attrs(_shape.parent()));
         }
     };
@@ -778,11 +780,10 @@ dc_graph.polygon_shape = function() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            nodeEnter.insert('path', ':first-child')
-                .attr('class', 'node-shape');
+            create_maybe_clipped(_shape.parent(), nodeEnter, 'path');
         },
         update: function(node) {
-            node.select('path.node-shape')
+            node.selectAll('path.node-fill,path.node-outline')
                 .attr(polygon_attrs(_shape.parent()));
         }
     };
@@ -819,13 +820,12 @@ dc_graph.rounded_rectangle_shape = function() {
             };
         },
         create: function(nodeEnter) {
-            nodeEnter.filter(function(n) {
+            create_maybe_clipped(_shape.parent(), nodeEnter.filter(function(n) {
                 return !n.dcg_shape.noshape;
-            }).insert('rect', ':first-child')
-                .attr('class', 'node-shape');
+            }), 'rect');
         },
         update: function(node) {
-            node.select('rect.node-shape')
+            node.selectAll('rect.node-fill,rect.node-outline')
                 .attr({
                     x: function(n) {
                         return -n.dcg_rx;
@@ -869,11 +869,10 @@ dc_graph.elaborated_rectangle_shape = function() {
         };
     };
     _shape.create = function(nodeEnter) {
-        nodeEnter.insert('path', ':first-child')
-            .attr('class', 'node-shape');
+        create_maybe_clipped(_shape.parent(), nodeEnter, 'path');
     };
     _shape.update = function(node) {
-        node.select('path.node-shape')
+        node.selectAll('path.node-fill,path.node-outline')
             .attr('d', function(n) {
                 return generate_path(n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry), 1, true);
             });

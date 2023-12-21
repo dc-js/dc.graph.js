@@ -21,7 +21,7 @@ dc_graph.render_svg = function() {
     };
     _renderer.redrawNode = _renderer._updateNode = function(node) {
         var changedShape = node.filter(shape_changed(_renderer.parent()));
-        changedShape.selectAll('.node-shape').remove();
+        changedShape.selectAll('.node-outline,.node-fill').remove();
         changedShape.each(infer_shape(_renderer.parent()));
         _renderer.parent().forEachShape(changedShape, function(shape, node) {
             node.call(shape.create);
