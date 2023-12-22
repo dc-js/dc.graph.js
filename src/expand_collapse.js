@@ -7,7 +7,7 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
-    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {};
+    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {}, _highlight_expanded;
     var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
     var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
@@ -416,6 +416,14 @@ dc_graph.expand_collapse = function(options) {
         options.expandedNodes(map);
     }
 
+    function nodeOutlineClip(n) {
+        const dirs = _mode.expandedDirs(n.key);
+        console.log('outline clip', n, dirs);
+        if(dirs.length == 0 || dirs.length == 2 || dirs[0] == 'both')
+            return null;
+        return dirs[0] == 'in' ? 'top' : 'bottom';
+    }
+
     var _mode = dc_graph.mode('expand-collapse', {
         draw: draw,
         remove: remove,
@@ -424,6 +432,8 @@ dc_graph.expand_collapse = function(options) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
                     p.child('keyboard', _keyboard = dc_graph.keyboard());
+                _highlight_expanded = p.child(options.highlight_expanded || 'highlight-expanded');
+                _highlight_expanded.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
             }
         }
     });

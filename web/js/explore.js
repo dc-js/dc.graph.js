@@ -324,19 +324,10 @@ function on_load(filename, error, data) {
         exploreDiagram.child('troubleshoot', troubleshoot);
     }
 
-    expand_collapse = dc_graph.expand_collapse(ec_strategy);
-    exploreDiagram.child('expand-collapse', expand_collapse);
     exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
         {
             nodeStrokeWidth: 5,
-            nodeStroke: 'steelblue',
-            nodeOutlineClip: function(n) {
-                const dirs = expand_collapse.expandedDirs(n.key);
-                console.log('outline clip', n, dirs);
-                if(dirs.length == 0 || dirs.length == 2)
-                    return null;
-                return dirs[0] == 'in' ? 'top' : 'bottom';
-            }
+            nodeStroke: 'steelblue'
         },
         {},
         'expanded-highlight', 'expanded-highlight-group', 147
@@ -361,6 +352,8 @@ function on_load(filename, error, data) {
         {},
         'hide-highlight', 'hide-highlight-group', 155
     ).durationOverride(0));
+    expand_collapse = dc_graph.expand_collapse(ec_strategy);
+    exploreDiagram.child('expand-collapse', expand_collapse);
     dc.renderAll();
     exploreDiagram.autoZoom('once-noanim');
     var starter = d3.select('#add-node');

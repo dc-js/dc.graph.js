@@ -1,5 +1,6 @@
 dc_graph.highlight_things = function(includeprops, excludeprops, modename, groupname, cascbase) {
     var highlight_things_group = dc_graph.register_highlight_things_group(groupname || 'highlight-things-group');
+    var _includeprops = {...includeprops}, _excludeprops = {...excludeprops};
     var _active, _nodeset = {}, _edgeset = {};
     cascbase = cascbase || 150;
 
@@ -15,17 +16,17 @@ dc_graph.highlight_things = function(includeprops, excludeprops, modename, group
                 return _nodeset[_mode.parent().nodeKey.eval(n)];
             }, function(e) {
                 return _edgeset[_mode.parent().edgeKey.eval(e)];
-            }, includeprops));
+            }, _includeprops));
         diagram.cascade(cascbase+10, true, node_edge_conditions(
             function(n) {
                 return _active && !_nodeset[_mode.parent().nodeKey.eval(n)];
             }, function(e) {
                 return _active && !_edgeset[_mode.parent().edgeKey.eval(e)];
-            }, excludeprops));
+            }, _excludeprops));
     }
     function remove(diagram) {
-        diagram.cascade(cascbase, false, includeprops);
-        diagram.cascade(cascbase + 10, false, excludeprops);
+        diagram.cascade(cascbase, false, _includeprops);
+        diagram.cascade(cascbase + 10, false, _excludeprops);
     }
     var _mode = dc_graph.mode(modename, {
         draw: draw,
@@ -34,6 +35,8 @@ dc_graph.highlight_things = function(includeprops, excludeprops, modename, group
             highlight_things_group.on('highlight.' + modename, p ? highlight : null);
         }
     });
+    _mode.includeProps = () => _includeprops;
+    _mode.excludeProps = () => _excludeprops;
     _mode.durationOverride = property(undefined);
     return _mode;
 };
