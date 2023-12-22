@@ -19,7 +19,7 @@ var options = {
     worker: true,
     timeLimit: 10000,
     start: null,
-    directional: false,
+    directional: true,
     bigzoom: false,
     rndarrow: null,
     edgeCat: null,
@@ -181,6 +181,7 @@ function on_load(filename, error, data) {
             return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
         });
     dc_graph.apply_graphviz_accessors(exploreDiagram);
+    exploreDiagram.nodeFill('rgba(180,200,220,0.5)') // temporary override
     exploreDiagram.child('tip', dc_graph.tip().content(dc_graph.tip.html_or_json_table()));
     if(sync_url.vals.bigzoom)
         exploreDiagram.zoomExtent([0.001, 200]);
@@ -328,7 +329,14 @@ function on_load(filename, error, data) {
     exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
         {
             nodeStrokeWidth: 5,
-            nodeStroke: 'steelblue'
+            nodeStroke: 'steelblue',
+            nodeOutlineClip: function(n) {
+                const dirs = expand_collapse.expandedDirs(n.key);
+                console.log('outline clip', n, dirs);
+                if(dirs.length == 0 || dirs.length == 2)
+                    return null;
+                return dirs[0] == 'in' ? 'top' : 'bottom';
+            }
         },
         {},
         'expanded-highlight', 'expanded-highlight-group', 147

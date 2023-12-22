@@ -383,12 +383,10 @@ dc_graph.expand_collapse = function(options) {
         if(_expanded.both)
             bothmap = _expanded.both;
         else {
-            bothmap = Object.keys(_expanded.in).filter(function(nk2) {
-                return _expanded.in[nk2] && _expanded.out[nk2];
-            }).reduce(function(p, v) {
-                p[v] = true;
-                return p;
-            }, {});
+            bothmap = Object.fromEntries(
+                [...Object.keys(_expanded.in).filter(nk => _expanded.in[nk]),
+                 ...Object.keys(_expanded.out).filter(nk => _expanded.out[nk])]
+                    .map(nk => [nk, true]));
         }
         expanded_highlight_group.highlight(bothmap, {});
         if(dir === 'both' && !_expanded.both)
@@ -429,6 +427,18 @@ dc_graph.expand_collapse = function(options) {
             }
         }
     });
+    _mode.expandedDirs = function(nk) {
+        if(_expanded.both)
+            return expanded.both[nk] ? ['both'] : [];
+        else {
+            const dirs = [];
+            if(_expanded.in[nk])
+                dirs.push('in');
+            if(_expanded.out[nk])
+                dirs.push('out');
+            return dirs;
+        }
+    };
 
     _mode.expand = expand;
     _mode.expandNodes = expandNodes;

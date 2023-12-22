@@ -298,8 +298,8 @@ var default_shape = {shape: 'ellipse'};
 function normalize_shape_def(diagram, n) {
     var def = diagram.nodeShape.eval(n);
     if(!def)
-        return default_shape;
-    if(typeof def === 'string')
+        def = {...default_shape};
+    else if(typeof def === 'string')
         def = {shape: def};
     def.nodeOutlineClip = diagram.nodeOutlineClip.eval(n);
     return def;
