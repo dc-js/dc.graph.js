@@ -82,15 +82,13 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                     dc.redrawAll();
                 }
             },
-            expandedNodes: function(_) {
+            expandedNodes: function(expanded) {
                 if(!arguments.length)
                     throw new Error('not supported'); // should not be called
                 var that = this;
                 _nodeShown = {};
-                Object.keys(_).forEach(function(nk) {
-                    that.expand(nk, 'out', true);
-                    that.expand(nk, 'in', true);
-                });
+                Object.keys(expanded).forEach(dir =>
+                    expanded[dir].forEach(nk => that.expand(nk, dir, true)));
                 apply_filter();
                 dc.redrawAll();
                 return this;
@@ -137,13 +135,13 @@ dc_graph.expand_collapse.shown_hidden = function(opts) {
                 apply_filter();
                 dc.redrawAll();
             },
-            expandedNodes: function(_) {
+            expandedNodes: function(expanded) {
                 if(!arguments.length)
                     throw new Error('not supported'); // should not be called
                 var that = this;
                 _nodeShown = {};
-                Object.keys(_).forEach(function(nk) {
-                    that.expand(nk);
+                Object.keys(expanded).forEach(function(dir) {
+                    expanded[dir].forEach(nk => that.expand(nk));
                 });
                 return this;
             },

@@ -13,7 +13,7 @@ dc_graph.expand_collapse = function(options) {
     var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
     options.dirs = options.dirs || ['both'];
     options.dirs.forEach(function(dir) {
-        _expanded[dir] = {};
+        _expanded[dir] = new Set();
     });
     options.hideKey = options.hideKey || 'Alt';
     options.linkKey = options.linkKey || (is_a_mac ? 'Meta' : 'Control');
@@ -100,7 +100,7 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function draw_stubs(diagram, node, edge, n, spikes) {
-        if(n && _expanded[spikes.dir][diagram.nodeKey.eval(n)])
+        if(n && _expanded[spikes.dir].has(diagram.nodeKey.eval(n)))
             spikes = null;
         var spike = node
             .selectAll('g.spikes')
@@ -236,7 +236,7 @@ dc_graph.expand_collapse = function(options) {
             }
             draw_stubs(diagram, node, edge, n, spikes);
             var collapse_nodes_set = {}, collapse_edges_set = {};
-            if(_expanded[dir][nk] && options.collapsibles) {
+            if(_expanded[dir].has(nk) && options.collapsibles) {
                 var clps = options.collapsibles(nk, dir);
                 collapse_nodes_set = clps.nodes;
                 collapse_edges_set = clps.edges;
@@ -282,7 +282,7 @@ dc_graph.expand_collapse = function(options) {
             } else {
                 clear_stubs(diagram, node, edge);
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
-                expand(dir, nk, !_expanded[dir][nk]);
+                expand(dir, nk, !_expanded[dir].has(nk));
             }
         }
 
@@ -375,17 +375,22 @@ dc_graph.expand_collapse = function(options) {
     function expand(dir, nk, whether) {
         if(dir === 'both' && !_expanded.both)
             options.dirs.forEach(function(dir2) {
-                _expanded[dir2][nk] = whether;
+                if(whether)
+                    _expanded[dir2].add(nk);
+                else
+                    _expanded[dir2].delete(nk);
             });
+        else if(whether)
+            _expanded[dir].add(nk);
         else
-            _expanded[dir][nk] = whether;
+            _expanded[dir].delete(nk);
         var bothmap;
         if(_expanded.both)
-            bothmap = _expanded.both;
+            bothmap = Object.fromEntries(
+                Array.from(_expanded.both, nk => [nk, true]));
         else {
             bothmap = Object.fromEntries(
-                [...Object.keys(_expanded.in).filter(nk => _expanded.in[nk]),
-                 ...Object.keys(_expanded.out).filter(nk => _expanded.out[nk])]
+                [..._expanded.in, ..._expanded.out]
                     .map(nk => [nk, true]));
         }
         expanded_highlight_group.highlight(bothmap, {});
@@ -405,15 +410,12 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function expandNodes(nks) {
-        var map = nks.reduce(function(p, v) {
-            p[v] = true;
-            return p;
-        }, {});
+        var expset = new Set(nks);
         options.dirs.forEach(function(dir) {
-            _expanded[dir] = Object.assign({}, map);
+            _expanded[dir] = new Set(expset);
         });
-        expanded_highlight_group.highlight(map, {});
-        options.expandedNodes(map);
+        expanded_highlight_group.highlight(Object.fromEntries(Array.from(expset, x => [x, true])), {});
+        options.expandedNodes(_expanded);
     }
 
     function nodeOutlineClip(n) {
@@ -442,12 +444,12 @@ dc_graph.expand_collapse = function(options) {
     };
     _mode.expandedDirs = function(nk) {
         if(_expanded.both)
-            return _expanded.both[nk] ? ['both'] : [];
+            return _expanded.both.has(nk) ? ['both'] : [];
         else {
             const dirs = [];
-            if(_expanded.in[nk])
+            if(_expanded.in.has(nk))
                 dirs.push('in');
-            if(_expanded.out[nk])
+            if(_expanded.out.has(nk))
                 dirs.push('out');
             return dirs;
         }

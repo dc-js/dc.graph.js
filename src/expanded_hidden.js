@@ -13,7 +13,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
 
     function get_shown(expanded) {
         return Object.keys(expanded).reduce(function(p, dir) {
-            return Object.keys(expanded[dir]).filter(nk => expanded[dir][nk]).reduce(function(p, nk) {
+            return Array.from(expanded[dir]).reduce(function(p, nk) {
                 p[nk] = true;
                 let list;
                 switch(dir) {
@@ -92,7 +92,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         collapsibles: function(nk, dir) {
             const expanded = _strategy.expandCollapse().getExpanded();
             var whatif = structuredClone(expanded);
-            delete whatif[dir][nk];
+            whatif[dir].delete(nk);
             var shown = get_shown(expanded), would = get_shown(whatif);
             var going = Object.keys(shown)
                 .filter(function(nk2) { return !would[nk2]; })
