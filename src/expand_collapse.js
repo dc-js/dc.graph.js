@@ -437,9 +437,12 @@ dc_graph.expand_collapse = function(options) {
             }
         }
     });
+    _mode.getExpanded = function() {
+        return _expanded;
+    };
     _mode.expandedDirs = function(nk) {
         if(_expanded.both)
-            return expanded.both[nk] ? ['both'] : [];
+            return _expanded.both[nk] ? ['both'] : [];
         else {
             const dirs = [];
             if(_expanded.in[nk])
@@ -458,6 +461,8 @@ dc_graph.expand_collapse = function(options) {
     });
     _mode.urlTargetWindow = property('dcgraphlink');
     _mode.urlOpener = property(dc_graph.expand_collapse.default_url_opener);
+    if(options.expandCollapse)
+        options.expandCollapse(_mode);
     return _mode;
 };
 

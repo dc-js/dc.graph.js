@@ -5,24 +5,38 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         edgeSource: function(e) { return e.value.source; },
         edgeTarget: function(e) { return e.value.target; }
     }, opts);
-    var _nodeExpanded = {}, _nodeHidden = {}, _edgeHidden = {};
+    var _nodeHidden = {}, _edgeHidden = {};
 
     // independent dimension on keys so that the diagram dimension will observe it
     var _nodeDim = options.nodeCrossfilter.dimension(options.nodeKey),
         _edgeDim = options.edgeCrossfilter && options.edgeCrossfilter.dimension(options.edgeRawKey);
 
     function get_shown(expanded) {
-        return Object.keys(expanded).reduce(function(p, nk) {
-            p[nk] = true;
-            adjacent_nodes(nk).forEach(function(nk2) {
-                if(!_nodeHidden[nk2])
-                    p[nk2] = true;
-            });
-            return p;
+        return Object.keys(expanded).reduce(function(p, dir) {
+            return Object.keys(expanded[dir]).reduce(function(p, nk) {
+                p[nk] = true;
+                let list;
+                switch(dir) {
+                case 'in':
+                    list = in_edges(nk).map(e => options.edgeSource(e));
+                    break;
+                case 'out':
+                    list = out_edges(nk).map(e => options.edgeTarget(e));
+                    break;
+                case 'both':
+                    list = adjacent_nodes(nk);
+                    break;
+                }
+                list.forEach(function(nk2) {
+                    if(!_nodeHidden[nk2])
+                        p[nk2] = true;
+                });
+                return p;
+            }, p);
         }, {});
     }
-    function apply_filter() {
-        var _shown = get_shown(_nodeExpanded);
+    function apply_filter(ec) {
+        var _shown = get_shown(ec.getExpanded());
         _nodeDim.filterFunction(function(nk) {
             return _shown[nk];
         });
@@ -35,23 +49,22 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             return options.edgeSource(e) === nk || options.edgeTarget(e) === nk;
         });
     }
-    // function out_edges(nk) {
-    //     return options.edgeGroup.all().filter(function(e) {
-    //         return options.edgeSource(e) === nk;
-    //     });
-    // }
-    // function in_edges(nk) {
-    //     return options.edgeGroup.all().filter(function(e) {
-    //         return options.edgeTarget(e) === nk;
-    //     });
-    // }
+    function out_edges(nk) {
+        return options.edgeGroup.all().filter(function(e) {
+            return options.edgeSource(e) === nk;
+        });
+    }
+    function in_edges(nk) {
+        return options.edgeGroup.all().filter(function(e) {
+            return options.edgeTarget(e) === nk;
+        });
+    }
     function adjacent_nodes(nk) {
         return adjacent_edges(nk).map(function(e) {
             return options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
         });
     }
 
-    apply_filter();
     var _strategy = {
         get_degree: function(nk) {
             return adjacent_edges(nk).length;
@@ -60,22 +73,21 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             return adjacent_edges(nk);
         },
         expand: function(nk) {
-            _nodeExpanded[nk] = true;
-            apply_filter();
+            apply_filter(_strategy.expandCollapse());
             dc.redrawAll();
         },
         expandedNodes: function(_) {
             if(!arguments.length)
-                return _nodeExpanded;
-            _nodeExpanded = _;
-            apply_filter();
+                throw new Error('not supported'); // should not be called
+            apply_filter(_strategy.expandCollapse());
             dc.redrawAll();
             return this;
         },
         collapsibles: function(nk, dir) {
-            var whatif = Object.assign({}, _nodeExpanded);
-            delete whatif[nk];
-            var shown = get_shown(_nodeExpanded), would = get_shown(whatif);
+            const expanded = _strategy.expandCollapse().getExpanded();
+            var whatif = structuredClone(expanded);
+            delete whatif[dir][nk];
+            var shown = get_shown(expanded), would = get_shown(whatif);
             var going = Object.keys(shown)
                 .filter(function(nk2) { return !would[nk2]; })
                 .reduce(function(p, v) {
@@ -92,9 +104,8 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
                 }, {})
             };
         },
-        collapse: function(nk, collapsible) {
-            delete _nodeExpanded[nk];
-            apply_filter();
+        collapse: function(nk, dir) {
+            apply_filter(_strategy.expandCollapse());
             dc.redrawAll();
         },
         hideNode: function(nk) {
@@ -105,9 +116,14 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             if(!options.edgeCrossfilter)
                 console.warn('expanded_hidden needs edgeCrossfilter to hide edges');
             _edgeHidden[ek] = true;
-            apply_filter();
+            apply_filter(_strategy.expandCollapse());
             dc.redrawAll();
-        }
+        },
+        expandCollapse: property(null).react(function(ec) {
+            if(ec)
+                apply_filter(ec);
+
+        })
     };
     return _strategy;
 };
