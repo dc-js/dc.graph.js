@@ -13,7 +13,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
 
     function get_shown(expanded) {
         return Object.keys(expanded).reduce(function(p, dir) {
-            return Object.keys(expanded[dir]).reduce(function(p, nk) {
+            return Object.keys(expanded[dir]).filter(nk => expanded[dir][nk]).reduce(function(p, nk) {
                 p[nk] = true;
                 let list;
                 switch(dir) {
@@ -66,11 +66,17 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
     }
 
     var _strategy = {
-        get_degree: function(nk) {
-            return adjacent_edges(nk).length;
-        },
-        get_edges: function(nk) {
-            return adjacent_edges(nk);
+        get_edges: function(nk, dir) {
+            switch(dir) {
+            case 'in':
+                return in_edges(nk);
+            case 'out':
+                return out_edges(nk);
+            case 'both':
+                return adjacent_edges(nk);
+            default:
+                throw new Error(`unknown dir ${dir}`);
+            }
         },
         expand: function(nk) {
             apply_filter(_strategy.expandCollapse());
@@ -125,5 +131,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
 
         })
     };
+    if(options.directional)
+        _strategy.dirs = ['out', 'in'];
     return _strategy;
 };
