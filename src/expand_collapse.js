@@ -7,7 +7,8 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
-    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {}, _highlight_expanded;
+    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {}, _expanding;
+    var expanding_highlight_group = dc_graph.register_highlight_things_group(options.expanding_highlight_group || 'expanding-highlight-group');
     var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
     var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
@@ -207,7 +208,7 @@ dc_graph.expand_collapse = function(options) {
         hide_highlight_group.highlight({}, hide_edges_set);
     }
 
-    function highlight_collapse(diagram, n, node, edge, dir) {
+    function highlight_expand_collapse(diagram, n, node, edge, dir) {
         var nk = diagram.nodeKey.eval(n);
         var p;
         if(options.get_edges)
@@ -235,6 +236,8 @@ dc_graph.expand_collapse = function(options) {
                 spikes.invisible = edges.filter(function(e) { return !shown[diagram.edgeKey()(e)]; });
             }
             draw_stubs(diagram, node, edge, n, spikes);
+            _expanding = {nk, dir};
+            expanding_highlight_group.highlight({[nk]: true}, {});
             var collapse_nodes_set = {}, collapse_edges_set = {};
             if(_expanded[dir].has(nk) && options.collapsibles) {
                 var clps = options.collapsibles(nk, dir);
@@ -260,7 +263,7 @@ dc_graph.expand_collapse = function(options) {
                 diagram.requestRefresh(0);
             }
             else
-                highlight_collapse(diagram, n, node, edge, dir);
+                highlight_expand_collapse(diagram, n, node, edge, dir);
         }
         function leave_node(n)  {
             diagram.selectAllNodes()
@@ -269,6 +272,8 @@ dc_graph.expand_collapse = function(options) {
                 }).attr('cursor', null);
             _overNode = null;
             clear_stubs(diagram, node, edge);
+            _expanding = null;
+            expanding_highlight_group.highlight({}, {});
             collapse_highlight_group.highlight({}, {});
             hide_highlight_group.highlight({}, {});
         }
@@ -281,6 +286,8 @@ dc_graph.expand_collapse = function(options) {
                     _mode.urlOpener()(_mode, n, _mode.nodeURL.eval(n));
             } else {
                 clear_stubs(diagram, node, edge);
+                _expanding = null;
+                expanding_highlight_group.highlight({}, {});
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
                 expand(dir, nk, !_expanded[dir].has(nk));
             }
@@ -320,6 +327,8 @@ dc_graph.expand_collapse = function(options) {
                     if(_overEdge)
                         highlight_hiding_edge(diagram, _overEdge);
                     clear_stubs(diagram, node, edge);
+                    _expanding = null;
+                    expanding_highlight_group.highlight({}, {});
                     collapse_highlight_group.highlight({}, {});
                 }
                 else if(d3.event.key === options.linkKey && _overNode) {
@@ -338,7 +347,7 @@ dc_graph.expand_collapse = function(options) {
                 if((d3.event.key === options.hideKey || d3.event.key === options.linkKey) && (_overNode || _overEdge)) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
-                        highlight_collapse(diagram, _overNode, node, edge, _overDir);
+                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir);
                         if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
@@ -447,8 +456,10 @@ dc_graph.expand_collapse = function(options) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
                     p.child('keyboard', _keyboard = dc_graph.keyboard());
-                _highlight_expanded = p.child(options.highlight_expanded || 'highlight-expanded');
-                _highlight_expanded.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
+                const highlight_expanding = p.child(options.highlight_expanding || 'highlight-expanding');
+                highlight_expanding.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
+                const highlight_expanded = p.child(options.highlight_expanded || 'highlight-expanded');
+                highlight_expanded.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
             }
         }
     });
@@ -457,12 +468,12 @@ dc_graph.expand_collapse = function(options) {
     };
     _mode.expandedDirs = function(nk) {
         if(_expanded.both)
-            return _expanded.both.has(nk) ? ['both'] : [];
+            return _expanded.both.has(nk) || _expanding && _expanding.nk === nk ? ['both'] : [];
         else {
             const dirs = [];
-            if(_expanded.in.has(nk))
+            if(_expanded.in.has(nk) || _expanding && _expanding.nk === nk && _expanding.dir === 'in')
                 dirs.push('in');
-            if(_expanded.out.has(nk))
+            if(_expanded.out.has(nk) || _expanding && _expanding.nk === nk && _expanding.dir === 'out')
                 dirs.push('out');
             return dirs;
         }

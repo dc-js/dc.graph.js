@@ -24,7 +24,7 @@ var options = {
     rndarrow: null,
     edgeCat: null,
     edgeExpn: null,
-    expand_strategy: null,
+    expand_strategy: 'expanded_hidden',
     // these three are messy because they overlap / interact
     // it would probably be better to improve sync_url but i don't want to go there
     expanded: {
@@ -372,6 +372,14 @@ function on_load(filename, error, data) {
         exploreDiagram.child('troubleshoot', troubleshoot);
     }
 
+    exploreDiagram.child('highlight-expanding', dc_graph.highlight_things(
+        {
+            nodeStrokeWidth: 5,
+            nodeStroke: 'steelblue'
+        },
+        {},
+        'expanding-highlight', 'expanding-highlight-group', 125
+    ).durationOverride(0));
     exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
         {
             nodeStrokeWidth: 5,
