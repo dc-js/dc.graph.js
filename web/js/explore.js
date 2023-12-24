@@ -372,13 +372,13 @@ function on_load(filename, error, data) {
         exploreDiagram.child('troubleshoot', troubleshoot);
     }
 
-    exploreDiagram.child('highlight-expanding', dc_graph.highlight_things(
+    exploreDiagram.child('highlight-changing', dc_graph.highlight_things(
         {
             nodeStrokeWidth: 5,
             nodeStroke: 'steelblue'
         },
         {},
-        'expanding-highlight', 'expanding-highlight-group', 125
+        'changing-highlight', 'changing-highlight-group', 125
     ).durationOverride(0));
     exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
         {

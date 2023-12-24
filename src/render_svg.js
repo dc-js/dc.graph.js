@@ -841,6 +841,15 @@ dc_graph.render_svg = function() {
                     height: 2000
                 });
         });
+        _renderer.addOrRemoveDef('node-clip-none', true, 'clipPath', function(clipPath) {
+            clipPath.selectAll('rect').data([0])
+                .enter().append('rect').attr({
+                    x: 0,
+                    y: 0,
+                    width: 0,
+                    height: 0
+                });
+        });
 
         _zoom = d3.behavior.zoom()
             .on('zoom.diagram', _renderer.parent().doZoom)

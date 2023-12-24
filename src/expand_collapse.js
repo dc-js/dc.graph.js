@@ -7,8 +7,8 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
-    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {}, _expanding;
-    var expanding_highlight_group = dc_graph.register_highlight_things_group(options.expanding_highlight_group || 'expanding-highlight-group');
+    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {}, _changing;
+    var changing_highlight_group = dc_graph.register_highlight_things_group(options.changing_highlight_group || 'changing-highlight-group');
     var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
     var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
@@ -236,15 +236,17 @@ dc_graph.expand_collapse = function(options) {
                 spikes.invisible = edges.filter(function(e) { return !shown[diagram.edgeKey()(e)]; });
             }
             draw_stubs(diagram, node, edge, n, spikes);
-            _expanding = {nk, dir};
-            expanding_highlight_group.highlight({[nk]: true}, {});
             var collapse_nodes_set = {}, collapse_edges_set = {};
-            if(_expanded[dir].has(nk) && options.collapsibles) {
-                var clps = options.collapsibles(nk, dir);
-                collapse_nodes_set = clps.nodes;
-                collapse_edges_set = clps.edges;
-            }
+            if(_expanded[dir].has(nk)) {
+                _changing = {nk, dir, whether: false};
+                if(options.collapsibles) {
+                    var clps = options.collapsibles(nk, dir);
+                    collapse_nodes_set = clps.nodes;
+                    collapse_edges_set = clps.edges;
+                }
+            } else _changing = {nk, dir, whether: true};
             collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
+            changing_highlight_group.highlight({[nk]: true}, {});
         });
     }
 
@@ -272,8 +274,8 @@ dc_graph.expand_collapse = function(options) {
                 }).attr('cursor', null);
             _overNode = null;
             clear_stubs(diagram, node, edge);
-            _expanding = null;
-            expanding_highlight_group.highlight({}, {});
+            _changing = null;
+            changing_highlight_group.highlight({}, {});
             collapse_highlight_group.highlight({}, {});
             hide_highlight_group.highlight({}, {});
         }
@@ -286,8 +288,8 @@ dc_graph.expand_collapse = function(options) {
                     _mode.urlOpener()(_mode, n, _mode.nodeURL.eval(n));
             } else {
                 clear_stubs(diagram, node, edge);
-                _expanding = null;
-                expanding_highlight_group.highlight({}, {});
+                _changing = null;
+                changing_highlight_group.highlight({}, {});
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
                 expand(dir, nk, !_expanded[dir].has(nk));
             }
@@ -327,8 +329,8 @@ dc_graph.expand_collapse = function(options) {
                     if(_overEdge)
                         highlight_hiding_edge(diagram, _overEdge);
                     clear_stubs(diagram, node, edge);
-                    _expanding = null;
-                    expanding_highlight_group.highlight({}, {});
+                    _changing = null;
+                    changing_highlight_group.highlight({}, {});
                     collapse_highlight_group.highlight({}, {});
                 }
                 else if(d3.event.key === options.linkKey && _overNode) {
@@ -443,7 +445,9 @@ dc_graph.expand_collapse = function(options) {
     function nodeOutlineClip(n) {
         const dirs = _mode.expandedDirs(n.key);
         console.log('outline clip', n, dirs);
-        if(dirs.length == 0 || dirs.length == 2 || dirs[0] == 'both')
+        if(dirs.length == 0) // expanded but
+            return 'none';
+        if(dirs.length == 2 || dirs[0] == 'both')
             return null;
         return dirs[0] == 'in' ? 'top' : 'bottom';
     }
@@ -456,8 +460,8 @@ dc_graph.expand_collapse = function(options) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
                     p.child('keyboard', _keyboard = dc_graph.keyboard());
-                const highlight_expanding = p.child(options.highlight_expanding || 'highlight-expanding');
-                highlight_expanding.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
+                const highlight_changing = p.child(options.highlight_changing || 'highlight-changing');
+                highlight_changing.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
                 const highlight_expanded = p.child(options.highlight_expanded || 'highlight-expanded');
                 highlight_expanded.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
             }
@@ -468,12 +472,18 @@ dc_graph.expand_collapse = function(options) {
     };
     _mode.expandedDirs = function(nk) {
         if(_expanded.both)
-            return _expanded.both.has(nk) || _expanding && _expanding.nk === nk ? ['both'] : [];
+            return _expanded.both.has(nk) || _changing && _changing.nk === nk ? ['both'] : [];
         else {
             const dirs = [];
-            if(_expanded.in.has(nk) || _expanding && _expanding.nk === nk && _expanding.dir === 'in')
+            let has_in = _expanded.in.has(nk);
+            if(_changing && _changing.nk === nk && _changing.dir === 'in')
+                has_in = _changing.whether;
+            if(has_in)
                 dirs.push('in');
-            if(_expanded.out.has(nk) || _expanding && _expanding.nk === nk && _expanding.dir === 'out')
+            let has_out = _expanded.out.has(nk);
+            if(_changing && _changing.nk === nk && _changing.dir === 'out')
+                has_out = _changing.whether;
+            if(has_out)
                 dirs.push('out');
             return dirs;
         }
