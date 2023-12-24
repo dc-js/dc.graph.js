@@ -409,12 +409,25 @@ dc_graph.expand_collapse = function(options) {
         }
     }
 
-    function expandNodes(nks) {
-        var expset = new Set(nks);
-        options.dirs.forEach(function(dir) {
-            _expanded[dir] = new Set(expset);
-        });
-        expanded_highlight_group.highlight(Object.fromEntries(Array.from(expset, x => [x, true])), {});
+    function expandNodes(nks, dir) {
+        if(!Array.isArray(nks)) {
+            Object.keys(nks).forEach(dir => {
+                _expanded[dir] = new Set(nks[dir]);
+            });
+        } else {
+            var expset = new Set(nks);
+            const dirs = dir == 'both' ? options.dirs : [dir];
+            dirs.forEach(dir => {
+                _expanded[dir] = new Set(expset);
+            });
+        }
+        const mm = Object.fromEntries(
+            Array.prototype.concat.apply([], Object.keys(_expanded).map(dir => Array.from(_expanded[dir])))
+                .map(nk => [nk, true]));
+        console.log('mm', mm);
+        expanded_highlight_group.highlight(
+            mm,
+            {});
         options.expandedNodes(_expanded);
     }
 

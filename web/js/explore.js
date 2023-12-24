@@ -25,23 +25,71 @@ var options = {
     edgeCat: null,
     edgeExpn: null,
     expand_strategy: null,
+    // these three are messy because they overlap / interact
+    // it would probably be better to improve sync_url but i don't want to go there
     expanded: {
         default: [],
         subscribe: function(k) {
             var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
-            expanded_highlight_group.on('highlight.sync-url', function(nodeset, edgeset) {
-                k(Object.keys(nodeset).filter(function(nk) {
-                    return nodeset[nk];
-                }));
+            expanded_highlight_group.on('highlight.sync-url-both', function(nodeset, edgeset) {
+                k(sync_url.vals.directional ? [] :
+                  Object.keys(nodeset).filter(function(nk) {
+                      return nodeset[nk];
+                  }));
             });
         },
         dont_exert_after_subscribe: true,
         exert: function(val, diagram) {
+            if(sync_url.vals.directional)
+                return;
             expand_collapse
-                .expandNodes(val);
+                .expandNodes(val, 'both');
         }
+    },
+    expandedIn: {
+        default: [],
+        subscribe: expanded_dir_subscribe,
+        dont_exert_after_subscribe: true,
+        exert: expanded_dir_exert
+    },
+    expandedOut: {
+        default: [],
+        subscribe: expanded_dir_subscribe,
+        dont_exert_after_subscribe: true,
+        exert: expanded_dir_exert
     }
 };
+
+let dir_sub_ks = [];
+function expanded_dir_subscribe(k) {
+    dir_sub_ks.push(k);
+    if(dir_sub_ks.length == 2) {
+        const [kin, kout] = dir_sub_ks;
+        dir_sub_ks = [];
+        var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
+        expanded_highlight_group.on('highlight.sync-url-inout', function(nodeset, edgeset) {
+            if(!sync_url.vals.directional)
+                return;
+            kin(Object.keys(nodeset).filter(function(nk) {
+                return expand_collapse.expandedDirs(nk).includes('in');
+            }));
+            kout(Object.keys(nodeset).filter(function(nk) {
+                return expand_collapse.expandedDirs(nk).includes('out');
+            }));
+        });
+    }
+}
+const dir_exert_vals = [];
+function expanded_dir_exert(val, diagram) {
+    dir_exert_vals.push(val);
+    if(dir_exert_vals.length == 2) {
+        const [invals, outvals] = dir_exert_vals;
+        expand_collapse.expandNodes({
+            in: invals,
+            out: outvals
+        });
+    }
+}
 var exploreDiagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
 
