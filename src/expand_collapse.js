@@ -440,7 +440,18 @@ dc_graph.expand_collapse = function(options) {
             return 'none';
         if(dirs.length == 2 || dirs[0] == 'both')
             return null;
-        return dirs[0] == 'in' ? 'top' : 'bottom';
+        switch(_mode.parent().layoutEngine().rankdir()) {
+        case 'TB':
+            return dirs[0] == 'in' ? 'top' : 'bottom';
+        case 'BT':
+            return dirs[0] == 'in' ? 'bottom' : 'top';
+        case 'LR':
+            return dirs[0] == 'in' ? 'left' : 'right';
+        case 'RL':
+            return dirs[0] == 'in' ? 'right' : 'left';
+        default:
+            throw new Error('unknown rankdir ' + mode.parent().layoutEngine().rankdir());
+        }
     }
 
     var _mode = dc_graph.mode('expand-collapse', {

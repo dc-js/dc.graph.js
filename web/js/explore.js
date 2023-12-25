@@ -24,6 +24,12 @@ var options = {
     rndarrow: null,
     edgeCat: null,
     edgeExpn: null,
+    rankdir: {
+        default: null,
+        exert: (val, diagram) => {
+            diagram.layoutEngine().rankdir(val);
+        }
+    },
     expand_strategy: 'expanded_hidden',
     // these three are messy because they overlap / interact
     // it would probably be better to improve sync_url but i don't want to go there
