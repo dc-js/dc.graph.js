@@ -100,13 +100,11 @@ dc_graph.expand_collapse = function(options) {
         }
     }
 
-    function draw_stubs(diagram, node, edge, n, spikes) {
-        if(n && _expanded[spikes.dir].has(diagram.nodeKey.eval(n)))
-            spikes = null;
+    function draw_stubs(diagram, node, edge, n, spikeses) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(n2) {
-                return spikes && n === n2 ?
+                return spikeses[diagram.nodeKey.eval(n2)] ?
                     [n2] : [];
             });
         spike.exit().remove();
@@ -117,6 +115,7 @@ dc_graph.expand_collapse = function(options) {
           .selectAll('rect.spike')
             .data(function(n) {
                 var key = diagram.nodeKey.eval(n);
+                const spikes = spikeses[key];
                 var dir = spikes.dir,
                     N = spikes.n,
                     af = spike_directioner(diagram.layoutEngine().rankdir(), dir, N),
@@ -155,7 +154,7 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function clear_stubs(diagram, node, edge) {
-        draw_stubs(diagram, node, edge, null, null);
+        draw_stubs(diagram, node, edge, null, {});
     }
 
     function zonedir(diagram, event, dirs, n) {
@@ -211,51 +210,40 @@ dc_graph.expand_collapse = function(options) {
     function highlight_expand_collapse(diagram, n, node, edge, dir, recurse) {
         var nk = diagram.nodeKey.eval(n);
         var p;
-        if(options.get_edges)
-            p = Promise.resolve(options.get_edges(nk, dir));
-        else
-            p = Promise.resolve(options.get_degree(nk, dir));
-        p.then(function(de) {
-            var degree, edges;
-            if(typeof de === 'number')
-                degree = de;
-            else {
-                edges = de;
-                degree = edges.length;
+        let tree_nodes = [nk];
+        if(recurse && options.get_tree_nodes)
+            tree_nodes = options.get_tree_nodes(nk, dir);
+        const spikeses = {};
+        if(!_expanded[dir].has(nk))
+            tree_nodes.forEach(nk => {
+                const edges = options.get_edges(nk, dir);
+                const degree = edges.length;
+                var spikes = {
+                    dir: dir,
+                    visible: visible_edges(diagram, edge, dir, nk)
+                };
+                spikes.n = Math.max(0, degree - spikes.visible.length); // be tolerant of inconsistencies
+                var shown = new Set(spikes.visible.map(e => diagram.edgeKey.eval(e)));
+                spikes.invisible = edges.filter(function(e) { return !shown.has(diagram.edgeKey()(e)); });
+                spikeses[nk] = spikes;
+            });
+        draw_stubs(diagram, node, edge, n, spikeses);
+        var collapse_nodes_set = {}, collapse_edges_set = {};
+        if(_expanded[dir].has(nk)) {
+            // collapse
+            const will_change = tree_nodes.flatMap(nk => _expanded[dir].has(nk) ? [nk] : []);
+            _changing = Object.fromEntries(will_change.map(nk => [nk, {dir, whether: false}]));
+            if(options.collapsibles) {
+                var clps = options.collapsibles(will_change, dir);
+                collapse_nodes_set = clps.nodes;
+                collapse_edges_set = clps.edges;
             }
-            var spikes = {
-                dir: dir,
-                visible: visible_edges(diagram, edge, dir, nk)
-            };
-            spikes.n = Math.max(0, degree - spikes.visible.length); // be tolerant of inconsistencies
-            if(edges) {
-                var shown = spikes.visible.reduce(function(p, e) {
-                    p[diagram.edgeKey.eval(e)] = true;
-                    return p;
-                }, {});
-                spikes.invisible = edges.filter(function(e) { return !shown[diagram.edgeKey()(e)]; });
-            }
-            draw_stubs(diagram, node, edge, n, spikes);
-            var collapse_nodes_set = {}, collapse_edges_set = {};
-            let tree_nodes = [nk];
-            if(recurse && options.get_tree_nodes)
-                tree_nodes = options.get_tree_nodes(nk, dir);
-            if(_expanded[dir].has(nk)) {
-                // collapse
-                const will_change = tree_nodes.flatMap(nk => _expanded[dir].has(nk) ? [nk] : []);
-                _changing = Object.fromEntries(will_change.map(nk => [nk, {dir, whether: false}]));
-                if(options.collapsibles) {
-                    var clps = options.collapsibles(will_change, dir);
-                    collapse_nodes_set = clps.nodes;
-                    collapse_edges_set = clps.edges;
-                }
-                changing_highlight_group.highlight(Object.fromEntries(will_change.map(nk => [nk, true])), {});
-            } else {
-                _changing = Object.fromEntries(tree_nodes.map(nk => [nk, {dir, whether: true}]));
-                changing_highlight_group.highlight(Object.fromEntries(tree_nodes.map(nk => [nk, true])), {});
-            }
-            collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
-        });
+            changing_highlight_group.highlight(Object.fromEntries(will_change.map(nk => [nk, true])), {});
+        } else {
+            _changing = Object.fromEntries(tree_nodes.map(nk => [nk, {dir, whether: true}]));
+            changing_highlight_group.highlight(Object.fromEntries(tree_nodes.map(nk => [nk, true])), {});
+        }
+        collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
     }
 
     function draw(diagram, node, edge, ehover) {
