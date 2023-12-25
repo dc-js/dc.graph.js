@@ -65,6 +65,15 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         });
     }
 
+    const dfs = (nk, seen, traverse, other, f) => {
+        if(seen.has(nk))
+            return;
+        seen.add(nk);
+        f(nk);
+        for(const e of traverse(nk))
+            dfs(other(e), seen, traverse, other, f);
+    };
+
     var _strategy = {
         get_edges: function(nk, dir) {
             switch(dir) {
@@ -78,7 +87,18 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
                 throw new Error(`unknown dir ${dir}`);
             }
         },
-        expand: function(nk) {
+        get_tree_nodes: (nk, dir) => {
+            const traverse = dir === 'in' ? in_edges :
+                  dir === 'out' ? out_edges :
+                  adjacent_nodes;
+            const other = dir === 'in' ? e => options.edgeSource(e) :
+                  dir === 'out' ? e => options.edgeTarget(e) :
+                  n => n;
+            const nodes = [], seen = new Set();
+            dfs(nk, seen, traverse, other, nk => nodes.push(nk));
+            return nodes;
+        },
+        apply_expanded: () => {
             apply_filter(_strategy.expandCollapse());
             dc.redrawAll();
         },
@@ -89,10 +109,12 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             dc.redrawAll();
             return this;
         },
-        collapsibles: function(nk, dir) {
+        collapsibles: function(nks, dir) {
             const expanded = _strategy.expandCollapse().getExpanded();
             var whatif = structuredClone(expanded);
-            whatif[dir].delete(nk);
+            nks.forEach(
+                nk => whatif[dir].delete(nk)
+            );
             var shown = get_shown(expanded), would = get_shown(whatif);
             var going = Object.keys(shown)
                 .filter(function(nk2) { return !would[nk2]; })
@@ -109,10 +131,6 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
                     return p;
                 }, {})
             };
-        },
-        collapse: function(nk, dir) {
-            apply_filter(_strategy.expandCollapse());
-            dc.redrawAll();
         },
         hideNode: function(nk) {
             _nodeHidden[nk] = true;

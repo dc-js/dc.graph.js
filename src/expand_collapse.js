@@ -208,7 +208,7 @@ dc_graph.expand_collapse = function(options) {
         hide_highlight_group.highlight({}, hide_edges_set);
     }
 
-    function highlight_expand_collapse(diagram, n, node, edge, dir) {
+    function highlight_expand_collapse(diagram, n, node, edge, dir, recurse) {
         var nk = diagram.nodeKey.eval(n);
         var p;
         if(options.get_edges)
@@ -237,16 +237,24 @@ dc_graph.expand_collapse = function(options) {
             }
             draw_stubs(diagram, node, edge, n, spikes);
             var collapse_nodes_set = {}, collapse_edges_set = {};
+            let tree_nodes = [nk];
+            if(recurse && options.get_tree_nodes)
+                tree_nodes = options.get_tree_nodes(nk, dir);
             if(_expanded[dir].has(nk)) {
-                _changing = {nk, dir, whether: false};
+                // collapse
+                const will_change = tree_nodes.flatMap(nk => _expanded[dir].has(nk) ? [nk] : []);
+                _changing = Object.fromEntries(will_change.map(nk => [nk, {dir, whether: false}]));
                 if(options.collapsibles) {
-                    var clps = options.collapsibles(nk, dir);
+                    var clps = options.collapsibles(will_change, dir);
                     collapse_nodes_set = clps.nodes;
                     collapse_edges_set = clps.edges;
                 }
-            } else _changing = {nk, dir, whether: true};
+                changing_highlight_group.highlight(Object.fromEntries(will_change.map(nk => [nk, true])), {});
+            } else {
+                _changing = Object.fromEntries(tree_nodes.map(nk => [nk, {dir, whether: true}]));
+                changing_highlight_group.highlight(Object.fromEntries(tree_nodes.map(nk => [nk, true])), {});
+            }
             collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
-            changing_highlight_group.highlight({[nk]: true}, {});
         });
     }
 
@@ -265,7 +273,7 @@ dc_graph.expand_collapse = function(options) {
                 diagram.requestRefresh(0);
             }
             else
-                highlight_expand_collapse(diagram, n, node, edge, dir);
+                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key('Shift'));
         }
         function leave_node(n)  {
             diagram.selectAllNodes()
@@ -291,7 +299,10 @@ dc_graph.expand_collapse = function(options) {
                 _changing = null;
                 changing_highlight_group.highlight({}, {});
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
-                expand(dir, nk, !_expanded[dir].has(nk));
+                let tree_nodes = [nk];
+                if(detect_key('Shift') && options.get_tree_nodes)
+                    tree_nodes = options.get_tree_nodes(nk, dir);
+                expand(dir, tree_nodes, !_expanded[dir].has(nk));
             }
         }
 
@@ -344,12 +355,15 @@ dc_graph.expand_collapse = function(options) {
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
                 }
+                else if(d3.event.key === 'Shift' && _overNode) {
+                    highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true);
+                }
             })
             .on('keyup.expand_collapse', function() {
-                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey) && (_overNode || _overEdge)) {
+                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === 'Shift') && (_overNode || _overEdge)) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
-                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir);
+                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key('Shift'));
                         if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
@@ -383,18 +397,20 @@ dc_graph.expand_collapse = function(options) {
         clear_stubs(diagram, node, edge);
     }
 
-    function expand(dir, nk, whether) {
-        if(dir === 'both' && !_expanded.both)
-            options.dirs.forEach(function(dir2) {
-                if(whether)
-                    _expanded[dir2].add(nk);
-                else
-                    _expanded[dir2].delete(nk);
-            });
-        else if(whether)
-            _expanded[dir].add(nk);
-        else
-            _expanded[dir].delete(nk);
+    function expand(dir, nks, whether) {
+        nks.forEach(nk => {
+            if(dir === 'both' && !_expanded.both)
+                options.dirs.forEach(function(dir2) {
+                    if(whether)
+                        _expanded[dir2].add(nk);
+                    else
+                        _expanded[dir2].delete(nk);
+                });
+            else if(whether)
+                _expanded[dir].add(nk);
+            else
+                _expanded[dir].delete(nk);
+        });
         var bothmap;
         if(_expanded.both)
             bothmap = Object.fromEntries(
@@ -405,19 +421,7 @@ dc_graph.expand_collapse = function(options) {
                     .map(nk => [nk, true]));
         }
         expanded_highlight_group.highlight(bothmap, {});
-        if(dir === 'both' && !_expanded.both)
-            options.dirs.forEach(function(dir2, i) {
-                if(whether)
-                    options.expand(nk, dir2, i !== options.dirs.length-1);
-                else
-                    options.collapse(nk, dir2, i !== options.dirs.length-1);
-            });
-        else {
-            if(whether)
-                options.expand(nk, dir);
-            else
-                options.collapse(nk, dir);
-        }
+        options.apply_expanded();
     }
 
     function expandNodes(nks, dir) {
@@ -444,8 +448,7 @@ dc_graph.expand_collapse = function(options) {
 
     function nodeOutlineClip(n) {
         const dirs = _mode.expandedDirs(n.key);
-        console.log('outline clip', n, dirs);
-        if(dirs.length == 0) // expanded but
+        if(dirs.length == 0) // changing from expanded to not
             return 'none';
         if(dirs.length == 2 || dirs[0] == 'both')
             return null;
@@ -472,17 +475,17 @@ dc_graph.expand_collapse = function(options) {
     };
     _mode.expandedDirs = function(nk) {
         if(_expanded.both)
-            return _expanded.both.has(nk) || _changing && _changing.nk === nk ? ['both'] : [];
+            return _expanded.both.has(nk) || _changing && _changing[nk] ? ['both'] : [];
         else {
             const dirs = [];
             let has_in = _expanded.in.has(nk);
-            if(_changing && _changing.nk === nk && _changing.dir === 'in')
-                has_in = _changing.whether;
+            if(_changing && _changing[nk] && _changing[nk].dir === 'in')
+                has_in = _changing[nk].whether;
             if(has_in)
                 dirs.push('in');
             let has_out = _expanded.out.has(nk);
-            if(_changing && _changing.nk === nk && _changing.dir === 'out')
-                has_out = _changing.whether;
+            if(_changing && _changing[nk] && _changing[nk].dir === 'out')
+                has_out = _changing[nk].whether;
             if(has_out)
                 dirs.push('out');
             return dirs;
