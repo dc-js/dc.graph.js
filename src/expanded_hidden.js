@@ -65,13 +65,13 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         });
     }
 
-    const dfs = (nk, seen, traverse, other, f) => {
+    const dfs = (nk, seen, traverse, other, f, pe = null, pres = null) => {
         if(seen.has(nk))
             return;
         seen.add(nk);
-        f(nk);
+        const nres = f(pe, pres, nk);
         for(const e of traverse(nk))
-            dfs(other(e), seen, traverse, other, f);
+            dfs(other(e), seen, traverse, other, f, e, nres);
     };
 
     var _strategy = {
@@ -87,15 +87,23 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
                 throw new Error(`unknown dir ${dir}`);
             }
         },
-        get_tree_nodes: (nk, dir) => {
+        get_tree_edges: (nk, dir, once = false) => {
             const traverse = dir === 'in' ? in_edges :
                   dir === 'out' ? out_edges :
                   adjacent_nodes;
             const other = dir === 'in' ? e => options.edgeSource(e) :
                   dir === 'out' ? e => options.edgeTarget(e) :
                   n => n;
-            const nodes = [], seen = new Set();
-            dfs(nk, seen, traverse, other, nk => nodes.push(nk));
+            if(once) {
+                console.assert(dir !== 'both'); // implement
+                return {[nk]: traverse(nk)};
+            }
+            const nodes = {}, seen = new Set();
+            dfs(nk, seen, traverse, other, (pe, pres, nk) => {
+                if(pres)
+                    pres.push(pe);
+                return nodes[nk] = [];
+            });
             return nodes;
         },
         apply_expanded: () => {

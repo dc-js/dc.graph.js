@@ -209,14 +209,12 @@ dc_graph.expand_collapse = function(options) {
 
     function highlight_expand_collapse(diagram, n, node, edge, dir, recurse) {
         var nk = diagram.nodeKey.eval(n);
-        var p;
-        let tree_nodes = [nk];
-        if(recurse && options.get_tree_nodes)
-            tree_nodes = options.get_tree_nodes(nk, dir);
+        let tree_edges = options.get_tree_edges(nk, dir, !recurse);
+        let visible_nodes = new Set(node.data().map(n => diagram.nodeKey.eval(n)).filter(nk => tree_edges[nk]));
         const spikeses = {};
         if(!_expanded[dir].has(nk))
-            tree_nodes.forEach(nk => {
-                const edges = options.get_edges(nk, dir);
+            Object.keys(tree_edges).forEach(nk => {
+                const edges = tree_edges[nk];
                 const degree = edges.length;
                 var spikes = {
                     dir: dir,
@@ -231,7 +229,7 @@ dc_graph.expand_collapse = function(options) {
         var collapse_nodes_set = {}, collapse_edges_set = {};
         if(_expanded[dir].has(nk)) {
             // collapse
-            const will_change = tree_nodes.flatMap(nk => _expanded[dir].has(nk) ? [nk] : []);
+            const will_change = Object.keys(tree_edges).flatMap(nk => _expanded[dir].has(nk) ? [nk] : []);
             _changing = Object.fromEntries(will_change.map(nk => [nk, {dir, whether: false}]));
             if(options.collapsibles) {
                 var clps = options.collapsibles(will_change, dir);
@@ -240,8 +238,8 @@ dc_graph.expand_collapse = function(options) {
             }
             changing_highlight_group.highlight(Object.fromEntries(will_change.map(nk => [nk, true])), {});
         } else {
-            _changing = Object.fromEntries(tree_nodes.map(nk => [nk, {dir, whether: true}]));
-            changing_highlight_group.highlight(Object.fromEntries(tree_nodes.map(nk => [nk, true])), {});
+            _changing = Object.fromEntries(Object.keys(tree_edges).map(nk => [nk, {dir, whether: true}]));
+            changing_highlight_group.highlight(Object.fromEntries(Object.keys(tree_edges).map(nk => [nk, true])), {});
         }
         collapse_highlight_group.highlight(collapse_nodes_set, collapse_edges_set);
     }
@@ -288,8 +286,8 @@ dc_graph.expand_collapse = function(options) {
                 changing_highlight_group.highlight({}, {});
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
                 let tree_nodes = [nk];
-                if(detect_key('Shift') && options.get_tree_nodes)
-                    tree_nodes = options.get_tree_nodes(nk, dir);
+                if(detect_key('Shift') && options.get_tree_edges)
+                    tree_nodes = Object.keys(options.get_tree_edges(nk, dir));
                 expand(dir, tree_nodes, !_expanded[dir].has(nk));
             }
         }
