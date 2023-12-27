@@ -20,6 +20,10 @@ var options = {
     timeLimit: 10000,
     start: null,
     directional: true,
+    numerics: false,
+    numeric_colors: {
+        default: []
+    },
     bigzoom: false,
     rndarrow: null,
     edgeCat: null,
@@ -206,6 +210,61 @@ function on_load(filename, error, data) {
     }
     more_output = update_data_link;
     update_data_link();
+
+    const numeric_fields = {};
+    let numeric_colors;
+    if(sync_url.vals.numerics) {
+        if(sync_url.vals.numeric_colors)
+            numeric_colors = d3.scale.ordinal().domain(d3.range(10)).range(sync_url.vals.numeric_colors);
+        else
+            numeric_colors = d3.scale.category10().domain(d3.range(10));
+        graph_data.nodes.forEach(n => {
+            for(const [key, value] of Object.entries(n.value)) {
+                if(key === 'label')
+                    continue;
+                const v = +value;
+                if(!isNaN(v)) {
+                    if(!numeric_fields[key])
+                        numeric_fields[key] = {};
+                    if(!numeric_fields[key][v])
+                        numeric_fields[key][v] = []
+                    numeric_fields[key][v].push(n.name);
+                }
+            }
+        });
+        const numerics = d3.select('#numerics');
+        numerics.append('h4').text('Numeric fields');
+        numerics.append('p').text('Select a value to expand nodes with field at or above that value')
+        const fields = numerics.selectAll('div').data(Object.entries(numeric_fields))
+              .enter().append('div');
+        fields.append('span')
+            .attr('class', 'numeric-heading')
+            .style('color', (_,i) => numeric_colors(i)).text(
+                  ([key,values]) => {
+                      const values2 = Object.keys(values).map(x => +x);
+                      return `${key}: ${d3.min(values2)} - ${d3.max(values2)}`;
+                  });
+        // fields.append('label')
+        //     .attr('for', ([key]) => `#${key}-select`)
+        //     .html('expand above&nbsp;');
+        const field_select = fields.append('select')
+              .attr('id',  ([key]) => `${key}-select`);
+        field_select
+            .selectAll('option').data(([key, values]) => {
+                const values2 = Object.keys(values).map(x => +x);
+                values2.sort(d3.descending);
+                return ['select', ...values2.slice(0, 3)];
+            })
+            .enter().append('option').text(x => x);
+        field_select.on('change', function([key, values]) {
+            const level = +this.value;
+            const [dir, recurse] = get_dir_recurse();
+            const nks = Object.entries(values).flatMap(
+                ([v, keys]) => +v >= level ?
+                    keys.flatMap(key => expand_dir_rec(dir, recurse, key)) : []);
+            expand_collapse.expand(dir, nks, true);
+        });
+    }
 
     var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
@@ -428,17 +487,26 @@ function on_load(filename, error, data) {
         .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
         .text(function(d) { return d.label; });
     var expand = d3.select('#expand');
-
-    starter.on('change', function() {
+    function get_dir_recurse(nk) {
         const exp = expand.node().value;
-        let dir, nks;
+        let dir, recurse = false;
         if(exp.startsWith('all-')) {
             dir = exp.split('-')[1];
-            nks = Object.keys(ec_strategy.get_tree_edges(this.value, dir));
-        } else {
-            dir = exp;
-            nks = [this.value];
-        }
+            recurse = true;
+        } else dir = exp;
+        return [dir, recurse];
+    }
+    function expand_dir_rec(dir, recurse, nk) {
+        let nks;
+        if(recurse)
+            nks = Object.keys(ec_strategy.get_tree_edges(nk, dir));
+        else
+            nks = [nk];
+        return nks;
+    }
+    starter.on('change', function() {
+        const [dir, recurse] = get_dir_recurse();
+        const nks = expand_dir_rec(dir, recurse, this.value);
         expand_collapse.expand(dir, nks, true);
         exploreDiagram.autoZoom('once-noanim');
         dc.redrawAll();
@@ -451,6 +519,8 @@ function on_load(filename, error, data) {
             sync_url.update('expandedOut', []);
         }
         else sync_url.update('expanded', []);
+        if(sync_url.vals.numerics)
+            d3.select('#numerics').selectAll('select').each(function() { this.value = 'select'});
     });
 
     if(sync_url.vals.start)
