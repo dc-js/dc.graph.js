@@ -1,18 +1,18 @@
 import sys
 
 colors = ['black', 'blue', 'red', 'green', 'purple', 'brown']
-def print_tree(parent, depth):
+def print_tree(parent, depth, breadth):
     if not depth:
         return
-    child1 = parent + '0'
-    child2 = parent + '1'
+    children = [parent + chr(ord('0')+i) for i in range(breadth)]
     color = colors[len(parent)-1]
-    print(' '*4, parent, '->', child1, f'[color={color}]')
-    print(' '*4, parent, '->', child2, f'[color={color}]')
-    print_tree(child1, depth-1)
-    print_tree(child2, depth-1)
+    for child in children:
+        print(' '*4, parent, '->', child, f'[color={color}]')
+    for child in children:
+        print_tree(child, depth-1, breadth)
 
-dep = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+depth = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+breadth = int(sys.argv[2]) if len(sys.argv) > 2 else 2
 print('digraph tree {')
-print_tree('T', dep)
+print_tree('T', depth, breadth)
 print('}')
