@@ -71,13 +71,16 @@ dc_graph.expand_collapse = function(options) {
         return edge.filter(fil).data();
     }
 
+    const sweep_angle = (N, ofs) =>
+          i => ofs + ((N-1)*Math.PI/N) * (-.5 + (N > 1 ? i / (N-1) : 0)); // avoid 0/0
+
     function spike_directioner(rankdir, dir, N) {
         if(dir==='both')
             return function(i) {
                 return Math.PI * (2 * i / N - 0.5);
             };
         else {
-            var sweep = (N-1)*Math.PI/N, ofs;
+            var ofs;
             switch(rankdir) {
             case 'LR':
                 ofs = 0;
@@ -94,10 +97,32 @@ dc_graph.expand_collapse = function(options) {
             }
             if(dir === 'in')
                 ofs += Math.PI;
-            return function(i) {
-                return ofs + sweep * (-.5 + (N > 1 ? i / (N-1) : 0)); // avoid 0/0
-            };
+            return sweep_angle(N, ofs);
         }
+    }
+
+    function produce_spikes_helper(cx, cy, rx, ry, a, spike, ret) {
+        const dx = Math.cos(a) * rx,
+              dy = Math.sin(a) * ry;
+        const dash = {
+            a: a * 180 / Math.PI,
+            x: cx + dx,
+            y: cy + dy,
+            edge: spike.pe
+        };
+        ret.push(dash);
+        const sweep = sweep_angle(spike.children.length, a);
+        for(const i of d3.range(spike.children.length))
+            produce_spikes_helper(cx * 2.5*dx, cy + 2.5*dy, rx * 0.7, ry * 0.7, sweep(i), spike.children[i], ret);
+    }
+
+    function produce_spikes(diagram, n, spikes) {
+        const dir = spikes.dir,
+              sweep = spike_directioner(diagram.layoutEngine().rankdir(), dir, spikes.tree.length),
+              ret = [];
+        for(const i of d3.range(spikes.tree.length))
+            produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikes.tree[i], ret);
+        return ret;
     }
 
     function draw_stubs(diagram, node, edge, n, spikeses) {
@@ -115,21 +140,7 @@ dc_graph.expand_collapse = function(options) {
           .selectAll('rect.spike')
             .data(function(n) {
                 var key = diagram.nodeKey.eval(n);
-                const spikes = spikeses[key];
-                var dir = spikes.dir,
-                    N = spikes.n,
-                    af = spike_directioner(diagram.layoutEngine().rankdir(), dir, N),
-                    ret = Array(N);
-                for(var i = 0; i<N; ++i) {
-                    var a = af(i);
-                    ret[i] = {
-                        a: a * 180 / Math.PI,
-                        x: Math.cos(a) * n.dcg_rx*.9,
-                        y: Math.sin(a) * n.dcg_ry*.9,
-                        edge: spikes.invisible ? spikes.invisible[i] : null
-                    };
-                }
-                return ret;
+                return produce_spikes(diagram, n, spikeses[key]);
             });
         rect
           .enter().append('rect')
@@ -207,22 +218,39 @@ dc_graph.expand_collapse = function(options) {
         hide_highlight_group.highlight({}, hide_edges_set);
     }
 
+    function partition_among_visible(tree_edges, visible, parts, nk, pe = null) {
+        const children = tree_edges[nk].nks.flatMap(
+            (nk2, i) => partition_among_visible(tree_edges, visible, parts, nk2, tree_edges[nk].edges[i]));
+        if(visible.has(nk)) {
+            parts[nk] = children;
+            return [];
+        }
+        return [{pe, nk, children}];
+    }
+
     function highlight_expand_collapse(diagram, n, node, edge, dir, recurse) {
         var nk = diagram.nodeKey.eval(n);
         let tree_edges = options.get_tree_edges(nk, dir, !recurse);
         let visible_nodes = new Set(node.data().map(n => diagram.nodeKey.eval(n)).filter(nk => tree_edges[nk]));
+        const parts = {};
+        if(recurse)
+            partition_among_visible(tree_edges, visible_nodes, parts, nk);
         const spikeses = {};
         if(!_expanded[dir].has(nk))
             Object.keys(tree_edges).forEach(nk => {
-                const edges = tree_edges[nk];
-                const degree = edges.length;
-                var spikes = {
-                    dir: dir,
-                    visible: visible_edges(diagram, edge, dir, nk)
-                };
-                spikes.n = Math.max(0, degree - spikes.visible.length); // be tolerant of inconsistencies
-                var shown = new Set(spikes.visible.map(e => diagram.edgeKey.eval(e)));
-                spikes.invisible = edges.filter(function(e) { return !shown.has(diagram.edgeKey()(e)); });
+                let spikes = {dir};
+                if(recurse)
+                    spikes.tree = parts[nk] || [];
+                else {
+                    const edges = tree_edges[nk].edges;
+                    const degree = edges.length;
+                    const visible_e = visible_edges(diagram, edge, dir, nk);
+                    const shown = new Set(visible_e.map(e => diagram.edgeKey.eval(e)));
+                    const invis = edges.filter(function(e) { return !shown.has(diagram.edgeKey()(e)); });
+                    spikes.tree = invis.map(e => ({pe: e, children: []}));
+                    if(degree - visible_e.length !== spikes.tree.length)
+                        console.log('number of stubs', spikes.tree.length, 'does not equal degree - visible edges', degree - visible_e.length);
+                }
                 spikeses[nk] = spikes;
             });
         draw_stubs(diagram, node, edge, n, spikeses);

@@ -65,13 +65,13 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         });
     }
 
-    const dfs = (nk, seen, traverse, other, f, pe = null, pres = null) => {
+    const dfs_pre_order = (nk, seen, traverse, other, f, pe = null, pres = null) => {
         if(seen.has(nk))
             return;
         seen.add(nk);
         const nres = f(pe, pres, nk);
         for(const e of traverse(nk))
-            dfs(other(e), seen, traverse, other, f, e, nres);
+            dfs_pre_order(other(e), seen, traverse, other, f, e, nres);
     };
 
     var _strategy = {
@@ -96,15 +96,20 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
                   n => n;
             if(once) {
                 console.assert(dir !== 'both'); // implement
-                return {[nk]: traverse(nk)};
+                const edges = traverse(nk);
+                return {[nk]: {edges, nks: edges.map(other)}};
             }
             const nodes = {}, seen = new Set();
-            dfs(nk, seen, traverse, other, (pe, pres, nk) => {
-                if(pres)
-                    pres.push(pe);
-                return nodes[nk] = [];
+            dfs_pre_order(nk, seen, traverse, other, (pe, pres, nk) => {
+                if(pres) {
+                    pres.edges.push(pe);
+                    pres.nks.push(nk);
+                }
+                return nodes[nk] = {edges: [], nks: []};
             });
             return nodes;
+        },
+        partition_among_visible: (tree_edges, visible_nodes) => {
         },
         apply_expanded: () => {
             apply_filter(_strategy.expandCollapse());
