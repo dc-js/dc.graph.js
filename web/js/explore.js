@@ -25,7 +25,7 @@ var options = {
     edgeCat: null,
     edgeExpn: null,
     rankdir: {
-        default: null,
+        default: 'TB',
         exert: (val, diagram) => {
             diagram.layoutEngine().rankdir(val);
         }
@@ -427,9 +427,19 @@ function on_load(filename, error, data) {
         .attr('value', function(d) { return d.value; })
         .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
         .text(function(d) { return d.label; });
+    var expand = d3.select('#expand');
 
     starter.on('change', function() {
-        expand_collapse.expand('both', [this.value], true);
+        const exp = expand.node().value;
+        let dir, nks;
+        if(exp.startsWith('all-')) {
+            dir = exp.split('-')[1];
+            nks = Object.keys(ec_strategy.get_tree_edges(this.value, dir));
+        } else {
+            dir = exp;
+            nks = [this.value];
+        }
+        expand_collapse.expand(dir, nks, true);
         exploreDiagram.autoZoom('once-noanim');
         dc.redrawAll();
     });
