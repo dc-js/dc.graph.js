@@ -435,6 +435,7 @@ function on_load(filename, error, data) {
     });
 
     d3.select('#reset').on('click', function() {
+        starter.node().value = 'select one';
         if(sync_url.vals.directional) {
             sync_url.update('expandedIn', []);
             sync_url.update('expandedOut', []);
