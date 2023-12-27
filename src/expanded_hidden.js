@@ -65,13 +65,14 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         });
     }
 
-    const dfs_pre_order = (nk, seen, traverse, other, f, pe = null, pres = null) => {
+    const dfs_pre_order = (nk, seen, traverse, other, fall, funseen, pe = null, pres = null) => {
+        fall(pe, pres, nk);
         if(seen.has(nk))
             return;
         seen.add(nk);
-        const nres = f(pe, pres, nk);
+        const nres = funseen(pe, pres, nk);
         for(const e of traverse(nk))
-            dfs_pre_order(other(e), seen, traverse, other, f, e, nres);
+            dfs_pre_order(other(e), seen, traverse, other, fall, funseen, e, nres);
     };
 
     var _strategy = {
@@ -105,6 +106,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
                     pres.edges.push(pe);
                     pres.nks.push(nk);
                 }
+            }, (pe, pres, nk) => {
                 return nodes[nk] = {edges: [], nks: []};
             });
             return nodes;
