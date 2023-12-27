@@ -71,8 +71,8 @@ dc_graph.expand_collapse = function(options) {
         return edge.filter(fil).data();
     }
 
-    const sweep_angle = (N, ofs) =>
-          i => ofs + ((N-1)*Math.PI/N) * (-.5 + (N > 1 ? i / (N-1) : 0)); // avoid 0/0
+    const sweep_angle = (N, ofs, span = Math.PI) =>
+          i => ofs + ((N-1)*span/N) * (-.5 + (N > 1 ? i / (N-1) : 0)); // avoid 0/0
 
     function spike_directioner(rankdir, dir, N) {
         if(dir==='both')
@@ -101,7 +101,7 @@ dc_graph.expand_collapse = function(options) {
         }
     }
 
-    function produce_spikes_helper(cx, cy, rx, ry, a, spike, ret) {
+    function produce_spikes_helper(cx, cy, rx, ry, a, spike, span, ret) {
         const dx = Math.cos(a) * rx,
               dy = Math.sin(a) * ry;
         const dash = {
@@ -111,9 +111,10 @@ dc_graph.expand_collapse = function(options) {
             edge: spike.pe
         };
         ret.push(dash);
-        const sweep = sweep_angle(spike.children.length, a);
+        span *= 0.75;
+        const sweep = sweep_angle(spike.children.length, a, span);
         for(const i of d3.range(spike.children.length))
-            produce_spikes_helper(cx * 2.5*dx, cy + 2.5*dy, rx * 0.7, ry * 0.7, sweep(i), spike.children[i], ret);
+            produce_spikes_helper(cx + 1.5*dx, cy + 1.5*dy, rx, ry, sweep(i), spike.children[i], span, ret);
     }
 
     function produce_spikes(diagram, n, spikes) {
@@ -121,7 +122,7 @@ dc_graph.expand_collapse = function(options) {
               sweep = spike_directioner(diagram.layoutEngine().rankdir(), dir, spikes.tree.length),
               ret = [];
         for(const i of d3.range(spikes.tree.length))
-            produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikes.tree[i], ret);
+            produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikes.tree[i], Math.PI, ret);
         return ret;
     }
 
@@ -219,11 +220,11 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function partition_among_visible(tree_edges, visible, parts, nk, pe = null) {
-        const children = tree_edges[nk].nks.flatMap(
+        let children = tree_edges[nk].nks.flatMap(
             (nk2, i) => partition_among_visible(tree_edges, visible, parts, nk2, tree_edges[nk].edges[i]));
         if(visible.has(nk)) {
             parts[nk] = children;
-            return [];
+            children = [];
         }
         return [{pe, nk, children}];
     }
