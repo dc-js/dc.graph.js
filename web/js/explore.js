@@ -85,11 +85,12 @@ function expanded_dir_subscribe(k) {
         });
     }
 }
-const dir_exert_vals = [];
+let dir_exert_vals = [];
 function expanded_dir_exert(val, diagram) {
     dir_exert_vals.push(val);
     if(dir_exert_vals.length == 2) {
         const [invals, outvals] = dir_exert_vals;
+        dir_exert_vals = [];
         expand_collapse.expandNodes({
             in: invals,
             out: outvals
@@ -428,13 +429,17 @@ function on_load(filename, error, data) {
         .text(function(d) { return d.label; });
 
     starter.on('change', function() {
-        expand_collapse.expand('both', this.value, true);
+        expand_collapse.expand('both', [this.value], true);
         exploreDiagram.autoZoom('once-noanim');
         dc.redrawAll();
     });
 
     d3.select('#reset').on('click', function() {
-        sync_url.update('expanded', []);
+        if(sync_url.vals.directional) {
+            sync_url.update('expandedIn', []);
+            sync_url.update('expandedOut', []);
+        }
+        else sync_url.update('expanded', []);
     });
 
     if(sync_url.vals.start)
