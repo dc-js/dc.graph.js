@@ -234,7 +234,7 @@ function on_load(filename, error, data) {
         });
         const numerics = d3.select('#numerics');
         numerics.append('h4').text('Numeric fields');
-        numerics.append('p').text('Select a value to expand nodes with field at or above that value')
+        numerics.append('p').text('Select a value to expand nodes with field at or above that value');
         const fields = numerics.selectAll('div').data(Object.entries(numeric_fields))
               .enter().append('div');
         fields.append('span')
