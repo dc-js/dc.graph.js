@@ -59,10 +59,10 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             return options.edgeTarget(e) === nk;
         });
     }
+    const other_node = (e, nk) =>
+          options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
     function adjacent_nodes(nk) {
-        return adjacent_edges(nk).map(function(e) {
-            return options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
-        });
+        return adjacent_edges(nk).map(e => other_node(e, nk));
     }
 
     const dfs_pre_order = (nk, seen, traverse, other, fall, funseen, pe = null, pres = null) => {
@@ -91,20 +91,13 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         get_tree_edges: (nk, dir, once = false) => {
             const traverse = dir === 'in' ? in_edges :
                   dir === 'out' ? out_edges :
-                  adjacent_nodes;
-            const other = dir === 'in' ? e => options.edgeSource(e) :
-                  dir === 'out' ? e => options.edgeTarget(e) :
-                  n => n;
+                  adjacent_edges;
+            const other = dir === 'in' ? options.edgeSource :
+                  dir === 'out' ? options.edgeTarget :
+                  e => other_node(e, nk);
             if(once) {
-                let edges, nks;
-                if(dir === 'both') {
-                    const ie = in_edges(nk), oe = out_edges(nk);
-                    edges = [...ie, ...oe];
-                    nks = [...ie.map(options.edgeSource), ...oe.map(options.edgeTarget)];
-                } else {
-                    edges = traverse(nk);
-                    nks = edges.map(other);
-                }
+                const edges = traverse(nk),
+                      nks = edges.map(other);
                 return {[nk]: {edges, nks}};
             }
             const nodes = {}, seen = new Set();
@@ -116,6 +109,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             }, (pe, pres, nk) => {
                 return nodes[nk] = {edges: [], nks: []};
             });
+            console.log('get', nk, 'tree_edges', Object.keys(nodes).length, 'nodes');
             return nodes;
         },
         partition_among_visible: (tree_edges, visible_nodes) => {
