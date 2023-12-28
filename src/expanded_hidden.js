@@ -96,9 +96,16 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
                   dir === 'out' ? e => options.edgeTarget(e) :
                   n => n;
             if(once) {
-                console.assert(dir !== 'both'); // implement
-                const edges = traverse(nk);
-                return {[nk]: {edges, nks: edges.map(other)}};
+                let edges, nks;
+                if(dir === 'both') {
+                    const ie = in_edges(nk), oe = out_edges(nk);
+                    edges = [...ie, ...oe];
+                    nks = [...ie.map(options.edgeSource), ...oe.map(options.edgeTarget)];
+                } else {
+                    edges = traverse(nk);
+                    nks = edges.map(other);
+                }
+                return {[nk]: {edges, nks}};
             }
             const nodes = {}, seen = new Set();
             dfs_pre_order(nk, seen, traverse, other, (pe, pres, nk) => {

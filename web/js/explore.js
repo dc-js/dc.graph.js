@@ -417,6 +417,12 @@ function on_load(filename, error, data) {
         directional: sync_url.vals.directional
     });
 
+    if(!sync_url.vals.directional)
+        d3.select('#expand').selectAll('option').filter(function() {
+            return this.attributes.getNamedItem('value').value !== 'both';
+        })
+        .remove();
+
     if(sync_url.vals.start) {
         if(!nodes.find(function (n) {
             return n.name === sync_url.vals.start;
