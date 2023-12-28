@@ -149,18 +149,20 @@ dc_graph.expand_collapse = function(options) {
             .attr({
                 width: 25,
                 height: 3,
-                fill: function(s) {
-                    var color = s.edge ? dc_graph.functor_wrap(diagram.edgeStroke())(s.edge) : 'black';
-                    add_gradient_def(color, diagram);
-                    return 'url(#spike-gradient-' + color + ')';
-                },
                 rx: 1,
                 ry: 1,
                 x: 0,
                 y: 0
             });
-        rect.attr('transform', function(d) {
-            return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
+        rect.attr({
+            fill: function(s) {
+                var color = s.edge ? dc_graph.functor_wrap(diagram.edgeStroke())(s.edge) : 'black';
+                add_gradient_def(color, diagram);
+                return 'url(#spike-gradient-' + color + ')';
+            },
+            transform: function(d) {
+                return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
+            }
         });
         rect.exit().remove();
     }
