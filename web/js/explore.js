@@ -488,13 +488,20 @@ function on_load(filename, error, data) {
     dc.renderAll();
     exploreDiagram.autoZoom('once-noanim');
     var starter = d3.select('#add-node');
-    var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
-    option.enter().append('option');
-    option.exit().remove();
-    option
-        .attr('value', function(d) { return d.value; })
-        .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
-        .text(function(d) { return d.label; });
+    function refresh_add_node() {
+        const nodes = nodelist.filter(({label: [label0]}) =>
+            !sync_url.vals.expanded.includes(label0) &&
+            !sync_url.vals.expandedIn.includes(label0) &&
+            !sync_url.vals.expandedOut.includes(label0));
+        var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodes));
+        option.enter().append('option');
+        option.exit().remove();
+        option
+            .attr('value', function(d) { return d.value; })
+            .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
+            .text(function(d) { return d.label; });
+    }
+    exploreDiagram.on('drawn.add-nodes', refresh_add_node);
     var expand = d3.select('#expand');
     function get_dir_recurse(nk) {
         const exp = expand.node().value;
