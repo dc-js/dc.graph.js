@@ -446,7 +446,7 @@ function on_load(filename, error, data) {
 
     exploreDiagram.child('highlight-changing', dc_graph.highlight_things(
         {
-            nodeStrokeWidth: 5,
+            nodeStrokeWidth: 3,
             nodeStroke: 'steelblue'
         },
         {},
@@ -454,7 +454,7 @@ function on_load(filename, error, data) {
     ).durationOverride(0));
     exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
         {
-            nodeStrokeWidth: 5,
+            nodeStrokeWidth: 3,
             nodeStroke: 'steelblue'
         },
         {},
