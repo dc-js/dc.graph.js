@@ -78,8 +78,11 @@ function expanded_dir_subscribe(k) {
         dir_sub_ks = [];
         var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
         expanded_highlight_group.on('highlight.sync-url-inout', function(nodeset, edgeset) {
-            if(!sync_url.vals.directional)
+            if(!sync_url.vals.directional) {
+                kin([]);
+                kout([]);
                 return;
+            }
             kin(Object.keys(nodeset).filter(function(nk) {
                 return expand_collapse.expandedDirs(nk).includes('in');
             }));
