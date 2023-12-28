@@ -120,13 +120,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         },
         partition_among_visible: (tree_edges, visible_nodes) => {
         },
-        apply_expanded: () => {
-            apply_filter(_strategy.expandCollapse());
-            dc.redrawAll();
-        },
-        expandedNodes: function(_) {
-            if(!arguments.length)
-                throw new Error('not supported'); // should not be called
+        refresh: function() {
             apply_filter(_strategy.expandCollapse());
             dc.redrawAll();
             return this;
@@ -156,7 +150,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         },
         hideNode: function(nk) {
             _nodeHidden[nk] = true;
-            this.collapse(nk); // in case
+            _strategy.expandCollapse().expand('both', [nk], false);
         },
         hideEdge: function(ek) {
             if(!options.edgeCrossfilter)

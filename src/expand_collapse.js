@@ -439,7 +439,7 @@ dc_graph.expand_collapse = function(options) {
                     .map(nk => [nk, true]));
         }
         expanded_highlight_group.highlight(bothmap, {});
-        options.apply_expanded();
+        options.refresh();
     }
 
     function expandNodes(nks, dir) {
@@ -461,7 +461,7 @@ dc_graph.expand_collapse = function(options) {
         expanded_highlight_group.highlight(
             mm,
             {});
-        options.expandedNodes(_expanded);
+        options.refresh();
     }
 
     function nodeOutlineClip(n) {
