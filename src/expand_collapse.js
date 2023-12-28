@@ -221,7 +221,8 @@ dc_graph.expand_collapse = function(options) {
 
     function partition_among_visible(tree_edges, visible, parts, nk, pe = null) {
         let children = tree_edges[nk].nks.flatMap(
-            (nk2, i) => partition_among_visible(tree_edges, visible, parts, nk2, tree_edges[nk].edges[i]));
+            (nk2, i) => partition_among_visible(tree_edges, visible, parts, nk2, tree_edges[nk].edges[i]))
+            .filter(({nk}) => !visible.has(nk));
         if(visible.has(nk)) {
             parts[nk] = children;
             children = [];
