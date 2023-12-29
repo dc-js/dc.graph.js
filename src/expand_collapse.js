@@ -118,11 +118,12 @@ dc_graph.expand_collapse = function(options) {
     }
 
     function produce_spikes(diagram, n, spikes) {
-        const dir = spikes.dir,
-              sweep = spike_directioner(diagram.layoutEngine().rankdir(), dir, spikes.tree.length),
-              ret = [];
-        for(const i of d3.range(spikes.tree.length))
-            produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikes.tree[i], Math.PI, ret);
+        const ret = [];
+        Object.keys(spikes).forEach(dir => {
+            const sweep = spike_directioner(diagram.layoutEngine().rankdir(), dir, spikes[dir].length);
+            for(const i of d3.range(spikes[dir].length))
+                produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikes[dir][i], Math.PI, ret);
+        });
         return ret;
     }
 
@@ -246,18 +247,18 @@ dc_graph.expand_collapse = function(options) {
         const spikeses = {};
         if(!_expanded[dir].has(nk))
             Object.keys(tree_edges).forEach(nk => {
-                let spikes = {dir};
+                let spikes = {};
                 if(recurse)
-                    spikes.tree = parts[nk] || [];
+                    spikes[dir] = parts[nk] || [];
                 else {
                     const edges = tree_edges[nk].edges;
                     const degree = edges.length;
                     const visible_e = visible_edges(diagram, edge, dir, nk);
                     const shown = new Set(visible_e.map(e => diagram.edgeKey.eval(e)));
                     const invis = edges.filter(function(e) { return !shown.has(diagram.edgeKey()(e)); });
-                    spikes.tree = invis.map(e => ({pe: e, children: []}));
-                    if(degree - visible_e.length !== spikes.tree.length) {
-                        console.log('number of stubs', spikes.tree.length, 'does not equal degree - visible edges', degree - visible_e.length);
+                    spikes[dir] = invis.map(e => ({pe: e, children: []}));
+                    if(degree - visible_e.length !== spikes[dir].length) {
+                        console.log('number of stubs', spikes[dir].length, 'does not equal degree - visible edges', degree - visible_e.length);
                         debugger;
                     }
                 }
