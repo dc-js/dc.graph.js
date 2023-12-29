@@ -72,7 +72,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
         seen.add(nk);
         const nres = funseen(pe, pres, nk);
         for(const e of traverse(nk))
-            dfs_pre_order(other(e), seen, traverse, other, fall, funseen, e, nres);
+            dfs_pre_order(other(e, nk), seen, traverse, other, fall, funseen, e, nres);
     };
 
     var _strategy = {
@@ -94,7 +94,7 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
                   adjacent_edges;
             const other = dir === 'in' ? options.edgeSource :
                   dir === 'out' ? options.edgeTarget :
-                  e => other_node(e, nk);
+                  other_node;
             if(once) {
                 const edges = traverse(nk),
                       nks = edges.map(other);
@@ -109,7 +109,6 @@ dc_graph.expand_collapse.expanded_hidden = function(opts) {
             }, (pe, pres, nk) => {
                 return nodes[nk] = {edges: [], nks: []};
             });
-            console.log('get', nk, 'tree_edges', Object.keys(nodes).length, 'nodes');
             return nodes;
         },
         partition_among_visible: (tree_edges, visible_nodes) => {
