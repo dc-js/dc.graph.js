@@ -7,7 +7,7 @@ dc_graph.expand_collapse = function(options) {
             dirs: arguments[3]
         };
     }
-    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {}, _changing;
+    var _keyboard, _overNode, _overDir, _overEdge, _expanded = {}, _changing, _ignore = null;
     var changing_highlight_group = dc_graph.register_highlight_things_group(options.changing_highlight_group || 'changing-highlight-group');
     var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
     var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
@@ -283,6 +283,10 @@ dc_graph.expand_collapse = function(options) {
             var dir = zonedir(diagram, d3.event, options.dirs, n);
             _overNode = n;
             _overDir = dir;
+            if(_ignore && _ignore !== n)
+                _ignore = null;
+            if(_ignore)
+                return;
             if(options.hideNode && detect_key(options.hideKey))
                 highlight_hiding_node(diagram, n, edge);
             else if(_mode.nodeURL.eval(_overNode) && detect_key(options.linkKey)) {
@@ -301,6 +305,7 @@ dc_graph.expand_collapse = function(options) {
                     return n === _overNode;
                 }).attr('cursor', null);
             _overNode = null;
+            _ignore = null;
             clear_stubs(diagram, node, edge);
             _changing = null;
             changing_highlight_group.highlight({}, {});
@@ -316,6 +321,7 @@ dc_graph.expand_collapse = function(options) {
                     _mode.urlOpener()(_mode, n, _mode.nodeURL.eval(n));
             } else {
                 clear_stubs(diagram, node, edge);
+                _ignore = n;
                 _changing = null;
                 changing_highlight_group.highlight({}, {});
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
