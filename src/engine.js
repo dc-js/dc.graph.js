@@ -78,6 +78,10 @@ dc_graph.engines = {
     get: function(layoutName) {
         return dc_graph._engines.find(this.entry_pred(layoutName));
     },
+    is_directed: function(layoutName) {
+        // to a first approximation. cola is sometimes directed
+        return ['dagre', 'dot'].includes(layoutName);
+    },
     instantiate: function(layout, args, worker) {
         var entry = this.get(layout);
         if(!entry)

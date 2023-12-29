@@ -117,21 +117,21 @@ dc_graph.expand_collapse = function(options) {
             produce_spikes_helper(cx + 1.5*dx, cy + 1.5*dy, rx, ry, sweep(i), spike.children[i], span, ret);
     }
 
-    function produce_spikes(diagram, n, spikes) {
+    function produce_spikes(diagram, n, spikeses) {
         const ret = [];
-        Object.keys(spikes).forEach(dir => {
-            const sweep = spike_directioner(diagram.layoutEngine().rankdir(), dir, spikes[dir].length);
-            for(const i of d3.range(spikes[dir].length))
-                produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikes[dir][i], Math.PI, ret);
+        Object.keys(spikeses).forEach(dir => {
+            const sweep = spike_directioner(diagram.layoutEngine().rankdir(), dir, spikeses[dir].length);
+            for(const i of d3.range(spikeses[dir].length))
+                produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikeses[dir][i], Math.PI, ret);
         });
         return ret;
     }
 
-    function draw_stubs(diagram, node, edge, n, spikeses) {
+    function draw_stubs(diagram, node, edge, n, spikeseses) {
         var spike = node
             .selectAll('g.spikes')
             .data(function(n2) {
-                return spikeses[diagram.nodeKey.eval(n2)] ?
+                return spikeseses[diagram.nodeKey.eval(n2)] ?
                     [n2] : [];
             });
         spike.exit().remove();
@@ -142,7 +142,7 @@ dc_graph.expand_collapse = function(options) {
           .selectAll('rect.spike')
             .data(function(n) {
                 var key = diagram.nodeKey.eval(n);
-                return produce_spikes(diagram, n, spikeses[key]);
+                return produce_spikes(diagram, n, spikeseses[key]);
             });
         rect
           .enter().append('rect')
@@ -244,27 +244,42 @@ dc_graph.expand_collapse = function(options) {
         const parts = {};
         if(recurse)
             partition_among_visible(tree_edges, visible_nodes, parts, nk);
-        const spikeses = {};
+        const spikeseses = {};
         if(!_expanded[dir].has(nk))
             Object.keys(tree_edges).forEach(nk => {
-                let spikes = {};
-                if(recurse)
-                    spikes[dir] = parts[nk] || [];
+                let spikes;
+                if(recurse) {
+                    spikes = parts[nk] || [];
+                }
                 else {
                     const edges = tree_edges[nk].edges;
                     const degree = edges.length;
                     const visible_e = visible_edges(diagram, edge, dir, nk);
                     const shown = new Set(visible_e.map(e => diagram.edgeKey.eval(e)));
                     const invis = edges.filter(function(e) { return !shown.has(diagram.edgeKey()(e)); });
-                    spikes[dir] = invis.map(e => ({pe: e, children: []}));
-                    if(degree - visible_e.length !== spikes[dir].length) {
-                        console.log('number of stubs', spikes[dir].length, 'does not equal degree - visible edges', degree - visible_e.length);
+                    spikes = invis.map(e => ({pe: e, children: []}));
+                    if(degree - visible_e.length !== spikes.length) {
+                        console.log('number of stubs', spikes.length, 'does not equal degree - visible edges', degree - visible_e.length);
                         debugger;
                     }
                 }
-                spikeses[nk] = spikes;
+                const spikeses = {};
+                if(dir == 'both' && dc_graph.engines.is_directed(diagram.layoutEngine().layoutAlgorithm())) {
+                    spikeses.in = [];
+                    spikeses.out = [];
+                    spikes.forEach(spk => {
+                        if(diagram.edgeSource()(spk.pe) === nk)
+                            spikeses.out.push(spk);
+                        else {
+                            console.assert(diagram.edgeTarget()(spk.pe) === nk);
+                            spikeses.in.push(spk);
+                        }
+                    });
+                }
+                else spikeses[dir] = spikes;
+                spikeseses[nk] = spikeses;
             });
-        draw_stubs(diagram, node, edge, n, spikeses);
+        draw_stubs(diagram, node, edge, n, spikeseses);
         var collapse_nodes_set = {}, collapse_edges_set = {};
         if(_expanded[dir].has(nk)) {
             // collapse
