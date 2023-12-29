@@ -256,8 +256,10 @@ dc_graph.expand_collapse = function(options) {
                     const shown = new Set(visible_e.map(e => diagram.edgeKey.eval(e)));
                     const invis = edges.filter(function(e) { return !shown.has(diagram.edgeKey()(e)); });
                     spikes.tree = invis.map(e => ({pe: e, children: []}));
-                    if(degree - visible_e.length !== spikes.tree.length)
+                    if(degree - visible_e.length !== spikes.tree.length) {
                         console.log('number of stubs', spikes.tree.length, 'does not equal degree - visible edges', degree - visible_e.length);
+                        debugger;
+                    }
                 }
                 spikeses[nk] = spikes;
             });
