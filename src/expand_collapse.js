@@ -17,6 +17,7 @@ dc_graph.expand_collapse = function(options) {
         _expanded[dir] = new Set();
     });
     options.hideKey = options.hideKey || 'Alt';
+    options.recurseKey = options.recurseKey || 'Shift';
     options.linkKey = options.linkKey || (is_a_mac ? 'Meta' : 'Control');
     if(options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
@@ -317,7 +318,7 @@ dc_graph.expand_collapse = function(options) {
                 diagram.requestRefresh(0);
             }
             else
-                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key('Shift'));
+                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key(options.recurseKey));
         }
         function leave_node(n)  {
             diagram.selectAllNodes()
@@ -346,7 +347,7 @@ dc_graph.expand_collapse = function(options) {
                 changing_highlight_group.highlight({}, {});
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
                 let tree_nodes = [nk];
-                if(detect_key('Shift') && options.get_tree_edges)
+                if(detect_key(options.recurseKey) && options.get_tree_edges)
                     tree_nodes = Object.keys(options.get_tree_edges(nk, dir));
                 expand(dir, tree_nodes, !_expanded[dir].has(nk));
             }
@@ -401,15 +402,15 @@ dc_graph.expand_collapse = function(options) {
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
                 }
-                else if(d3.event.key === 'Shift' && _overNode) {
+                else if(d3.event.key === options.recurseKey && _overNode) {
                     highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true);
                 }
             })
             .on('keyup.expand_collapse', function() {
-                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === 'Shift') && (_overNode || _overEdge)) {
+                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === options.recurseKey) && (_overNode || _overEdge)) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
-                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key('Shift'));
+                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey));
                         if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
