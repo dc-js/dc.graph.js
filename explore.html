@@ -38,6 +38,13 @@
     <div id="controls">
       <div id="left-controls">
         <label for='#add-node'>Add node&nbsp;</label><select id="add-node"></select>&nbsp;&nbsp;
+        <label for='#expand'>Expand&nbsp;</label><select id="expand">
+          <option value='out'>out</option>
+          <option value='in'>in</option>
+          <option value='both'>both</option>
+          <option value='all-out'>all out</option>
+          <option value='all-in'>all in</option>
+        </select>&nbsp;&nbsp;
         <button id=reset class="btn-xs btn-default">reset</button>&nbsp;&nbsp;
         <select id="layout"></select>
       </div>
@@ -47,7 +54,9 @@
         <a id="data-link" target="dcgraph-datalink" style="font-size: 8px" href='#'>DATA LINK</a>
       </div>
     </div>
-    <div id="graph"></div>
+    <div id="graph">
+      <div id="numerics"></div>
+    </div>
   </div>
   <div id="message" style="display: none;"></div>
 

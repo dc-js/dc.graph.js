@@ -1,0 +1,16 @@
+digraph tree {
+     T -> T0 [color=black]
+     T -> T1 [color=black]
+     T0 -> T00 [color=blue]
+     T0 -> T01 [color=blue]
+     T00 -> T000 [color=red]
+     T00 -> T001 [color=red]
+     T01 -> T010 [color=red]
+     T01 -> T011 [color=red]
+     T1 -> T10 [color=blue]
+     T1 -> T11 [color=blue]
+     T10 -> T100 [color=red]
+     T10 -> T101 [color=red]
+     T11 -> T110 [color=red]
+     T11 -> T111 [color=red]
+}

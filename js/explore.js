@@ -19,29 +19,91 @@ var options = {
     worker: true,
     timeLimit: 10000,
     start: null,
-    directional: false,
+    directional: true,
+    numerics: false,
+    numeric_colors: {
+        default: []
+    },
     bigzoom: false,
     rndarrow: null,
     edgeCat: null,
     edgeExpn: null,
-    expand_strategy: null,
+    rankdir: {
+        default: 'TB',
+        exert: (val, diagram) => {
+            diagram.layoutEngine().rankdir(val);
+        }
+    },
+    expand_strategy: 'expanded_hidden',
+    // these three are messy because they overlap / interact
+    // it would probably be better to improve sync_url but i don't want to go there
     expanded: {
         default: [],
         subscribe: function(k) {
             var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
-            expanded_highlight_group.on('highlight.sync-url', function(nodeset, edgeset) {
-                k(Object.keys(nodeset).filter(function(nk) {
-                    return nodeset[nk];
-                }));
+            expanded_highlight_group.on('highlight.sync-url-both', function(nodeset, edgeset) {
+                k(sync_url.vals.directional ? [] :
+                  Object.keys(nodeset).filter(function(nk) {
+                      return nodeset[nk];
+                  }));
             });
         },
         dont_exert_after_subscribe: true,
         exert: function(val, diagram) {
+            if(sync_url.vals.directional)
+                return;
             expand_collapse
-                .expandNodes(val);
+                .expandNodes(val, 'both');
         }
+    },
+    expandedIn: {
+        default: [],
+        subscribe: expanded_dir_subscribe,
+        dont_exert_after_subscribe: true,
+        exert: expanded_dir_exert
+    },
+    expandedOut: {
+        default: [],
+        subscribe: expanded_dir_subscribe,
+        dont_exert_after_subscribe: true,
+        exert: expanded_dir_exert
     }
 };
+
+let dir_sub_ks = [];
+function expanded_dir_subscribe(k) {
+    dir_sub_ks.push(k);
+    if(dir_sub_ks.length == 2) {
+        const [kin, kout] = dir_sub_ks;
+        dir_sub_ks = [];
+        var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
+        expanded_highlight_group.on('highlight.sync-url-inout', function(nodeset, edgeset) {
+            if(!sync_url.vals.directional) {
+                kin([]);
+                kout([]);
+                return;
+            }
+            kin(Object.keys(nodeset).filter(function(nk) {
+                return expand_collapse.expandedDirs(nk).includes('in');
+            }));
+            kout(Object.keys(nodeset).filter(function(nk) {
+                return expand_collapse.expandedDirs(nk).includes('out');
+            }));
+        });
+    }
+}
+let dir_exert_vals = [];
+function expanded_dir_exert(val, diagram) {
+    dir_exert_vals.push(val);
+    if(dir_exert_vals.length == 2) {
+        const [invals, outvals] = dir_exert_vals;
+        dir_exert_vals = [];
+        expand_collapse.expandNodes({
+            in: invals,
+            out: outvals
+        });
+    }
+}
 var exploreDiagram = dc_graph.diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
 
@@ -152,6 +214,61 @@ function on_load(filename, error, data) {
     more_output = update_data_link;
     update_data_link();
 
+    const numeric_fields = {};
+    let numeric_colors;
+    if(sync_url.vals.numerics) {
+        if(sync_url.vals.numeric_colors)
+            numeric_colors = d3.scale.ordinal().domain(d3.range(10)).range(sync_url.vals.numeric_colors);
+        else
+            numeric_colors = d3.scale.category10().domain(d3.range(10));
+        graph_data.nodes.forEach(n => {
+            for(const [key, value] of Object.entries(n.value)) {
+                if(key === 'label')
+                    continue;
+                const v = +value;
+                if(!isNaN(v)) {
+                    if(!numeric_fields[key])
+                        numeric_fields[key] = {};
+                    if(!numeric_fields[key][v])
+                        numeric_fields[key][v] = []
+                    numeric_fields[key][v].push(n.name);
+                }
+            }
+        });
+        const numerics = d3.select('#numerics');
+        numerics.append('h4').text('Numeric fields');
+        numerics.append('p').text('Select a value to expand nodes with field at or above that value');
+        const fields = numerics.selectAll('div').data(Object.entries(numeric_fields))
+              .enter().append('div');
+        fields.append('span')
+            .attr('class', 'numeric-heading')
+            .style('color', (_,i) => numeric_colors(i)).text(
+                  ([key,values]) => {
+                      const values2 = Object.keys(values).map(x => +x);
+                      return `${key}: ${d3.min(values2)} - ${d3.max(values2)}`;
+                  });
+        // fields.append('label')
+        //     .attr('for', ([key]) => `#${key}-select`)
+        //     .html('expand above&nbsp;');
+        const field_select = fields.append('select')
+              .attr('id',  ([key]) => `${key}-select`);
+        field_select
+            .selectAll('option').data(([key, values]) => {
+                const values2 = Object.keys(values).map(x => +x);
+                values2.sort(d3.descending);
+                return ['select', ...values2.slice(0, 3)];
+            })
+            .enter().append('option').text(x => x);
+        field_select.on('change', function([key, values]) {
+            const level = +this.value;
+            const [dir, recurse] = get_dir_recurse();
+            const nks = Object.entries(values).flatMap(
+                ([v, keys]) => +v >= level ?
+                    keys.flatMap(key => expand_dir_rec(dir, recurse, key)) : []);
+            expand_collapse.expand(dir, nks, true);
+        });
+    }
+
     var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     };
@@ -181,6 +298,7 @@ function on_load(filename, error, data) {
             return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
         });
     dc_graph.apply_graphviz_accessors(exploreDiagram);
+    exploreDiagram.nodeFill('rgba(180,200,220,0.5)') // temporary override
     exploreDiagram.child('tip', dc_graph.tip().content(dc_graph.tip.html_or_json_table()));
     if(sync_url.vals.bigzoom)
         exploreDiagram.zoomExtent([0.001, 200]);
@@ -302,6 +420,12 @@ function on_load(filename, error, data) {
         directional: sync_url.vals.directional
     });
 
+    if(!sync_url.vals.directional)
+        d3.select('#expand').selectAll('option').filter(function() {
+            return this.attributes.getNamedItem('value').value !== 'both';
+        })
+        .remove();
+
     if(sync_url.vals.start) {
         if(!nodes.find(function (n) {
             return n.name === sync_url.vals.start;
@@ -323,11 +447,17 @@ function on_load(filename, error, data) {
         exploreDiagram.child('troubleshoot', troubleshoot);
     }
 
-    expand_collapse = dc_graph.expand_collapse(ec_strategy);
-    exploreDiagram.child('expand-collapse', expand_collapse);
+    exploreDiagram.child('highlight-changing', dc_graph.highlight_things(
+        {
+            nodeStrokeWidth: 3,
+            nodeStroke: 'steelblue'
+        },
+        {},
+        'changing-highlight', 'changing-highlight-group', 125
+    ).durationOverride(0));
     exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
         {
-            nodeStrokeWidth: 5,
+            nodeStrokeWidth: 3,
             nodeStroke: 'steelblue'
         },
         {},
@@ -353,25 +483,60 @@ function on_load(filename, error, data) {
         {},
         'hide-highlight', 'hide-highlight-group', 155
     ).durationOverride(0));
+    expand_collapse = dc_graph.expand_collapse(ec_strategy);
+    exploreDiagram.child('expand-collapse', expand_collapse);
     dc.renderAll();
     exploreDiagram.autoZoom('once-noanim');
     var starter = d3.select('#add-node');
-    var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodelist));
-    option.enter().append('option');
-    option.exit().remove();
-    option
-        .attr('value', function(d) { return d.value; })
-        .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
-        .text(function(d) { return d.label; });
-
+    function refresh_add_node() {
+        const nodes = nodelist.filter(({label: [label0]}) =>
+            !sync_url.vals.expanded.includes(label0) &&
+            !sync_url.vals.expandedIn.includes(label0) &&
+            !sync_url.vals.expandedOut.includes(label0));
+        var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodes));
+        option.enter().append('option');
+        option.exit().remove();
+        option
+            .attr('value', function(d) { return d.value; })
+            .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
+            .text(function(d) { return d.label; });
+    }
+    exploreDiagram.on('drawn.add-nodes', refresh_add_node);
+    var expand = d3.select('#expand');
+    function get_dir_recurse(nk) {
+        const exp = expand.node().value;
+        let dir, recurse = false;
+        if(exp.startsWith('all-')) {
+            dir = exp.split('-')[1];
+            recurse = true;
+        } else dir = exp;
+        return [dir, recurse];
+    }
+    function expand_dir_rec(dir, recurse, nk) {
+        let nks;
+        if(recurse)
+            nks = Object.keys(ec_strategy.get_tree_edges(nk, dir));
+        else
+            nks = [nk];
+        return nks;
+    }
     starter.on('change', function() {
-        expand_collapse.expand('both', this.value, true);
+        const [dir, recurse] = get_dir_recurse();
+        const nks = expand_dir_rec(dir, recurse, this.value);
+        expand_collapse.expand(dir, nks, true);
         exploreDiagram.autoZoom('once-noanim');
         dc.redrawAll();
     });
 
     d3.select('#reset').on('click', function() {
-        sync_url.update('expanded', []);
+        starter.node().value = 'select one';
+        if(sync_url.vals.directional) {
+            sync_url.update('expandedIn', []);
+            sync_url.update('expandedOut', []);
+        }
+        else sync_url.update('expanded', []);
+        if(sync_url.vals.numerics)
+            d3.select('#numerics').selectAll('select').each(function() { this.value = 'select'});
     });
 
     if(sync_url.vals.start)

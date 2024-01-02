@@ -19,6 +19,17 @@
     flex: 1;
 }
 
+#numerics {
+    position: absolute;
+    left: 1em;
+    top: 1em;
+}
+
+span.numeric-heading {
+    display: inline-block;
+    min-width: 5em;
+}
+
 .d3-tip table td {
     font-size: 10px;
     font-weight: normal;
