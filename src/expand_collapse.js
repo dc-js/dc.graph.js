@@ -238,7 +238,7 @@ dc_graph.expand_collapse = function(options) {
         return [{pe, nk, children}];
     }
 
-    function highlight_expand_collapse(diagram, n, node, edge, dir, recurse) {
+    function highlight_expand_collapse(diagram, n, node, edge, dir, recurse, opposite) {
         var nk = diagram.nodeKey.eval(n);
         let tree_edges = options.get_tree_edges(nk, dir, !recurse);
         let visible_nodes = new Set(node.data().map(n => diagram.nodeKey.eval(n)).filter(nk => tree_edges[nk]));
@@ -246,7 +246,8 @@ dc_graph.expand_collapse = function(options) {
         if(recurse)
             partition_among_visible(tree_edges, visible_nodes, parts, nk);
         const spikeseses = {};
-        if(!_expanded[dir].has(nk))
+        let collapse = _expanded[dir].has(nk) ^ opposite;
+        if(!collapse)
             Object.keys(tree_edges).forEach(nk => {
                 let spikes;
                 if(recurse) {
@@ -282,7 +283,7 @@ dc_graph.expand_collapse = function(options) {
             });
         draw_stubs(diagram, node, edge, n, spikeseses);
         var collapse_nodes_set = {}, collapse_edges_set = {};
-        if(_expanded[dir].has(nk)) {
+        if(collapse) {
             // collapse
             const will_change = Object.keys(tree_edges).flatMap(nk => _expanded[dir].has(nk) ? [nk] : []);
             _changing = Object.fromEntries(will_change.map(nk => [nk, {dir, whether: false}]));
@@ -308,7 +309,7 @@ dc_graph.expand_collapse = function(options) {
                 _ignore = null;
             if(_ignore)
                 return;
-            if(options.hideNode && detect_key(options.hideKey))
+            if(options.hideNode && detect_key(options.hideKey) && !detect_key(options.recurseKey))
                 highlight_hiding_node(diagram, n, edge);
             else if(_mode.nodeURL.eval(_overNode) && detect_key(options.linkKey)) {
                 diagram.selectAllNodes()
@@ -318,7 +319,7 @@ dc_graph.expand_collapse = function(options) {
                 diagram.requestRefresh(0);
             }
             else
-                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key(options.recurseKey));
+                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key(options.recurseKey), detect_key(options.hideKey));
         }
         function leave_node(n)  {
             diagram.selectAllNodes()
@@ -335,7 +336,7 @@ dc_graph.expand_collapse = function(options) {
         }
         function click_node(n) {
             var nk = diagram.nodeKey.eval(n);
-            if(options.hideNode && detect_key(options.hideKey))
+            if(options.hideNode && detect_key(options.hideKey) && !detect_key(options.recurseKey))
                 options.hideNode(nk);
             else if(detect_key(options.linkKey)) {
                 if(_mode.nodeURL.eval(n) && _mode.urlOpener)
@@ -349,7 +350,7 @@ dc_graph.expand_collapse = function(options) {
                 let tree_nodes = [nk];
                 if(detect_key(options.recurseKey) && options.get_tree_edges)
                     tree_nodes = Object.keys(options.get_tree_edges(nk, dir));
-                expand(dir, tree_nodes, !_expanded[dir].has(nk));
+                expand(dir, tree_nodes, !_expanded[dir].has(nk) ^ detect_key(options.hideKey));
             }
         }
 
@@ -381,7 +382,8 @@ dc_graph.expand_collapse = function(options) {
 
         _keyboard
             .on('keydown.expand-collapse', function() {
-                if(d3.event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
+                const pressed = _keyboard.modKeysPressed();
+                if(d3.event.key === options.hideKey && !pressed.includes(options.recurseKey) && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
                     if(_overNode)
                         highlight_hiding_node(diagram, _overNode, edge);
                     if(_overEdge)
@@ -402,15 +404,18 @@ dc_graph.expand_collapse = function(options) {
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
                 }
-                else if(d3.event.key === options.recurseKey && _overNode) {
-                    highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true);
+                else if((d3.event.key === options.recurseKey ||
+                         pressed.includes(options.recurseKey) && d3.event.key === options.hideKey) &&
+                        _overNode) {
+                    highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true, pressed.includes(options.hideKey));
                 }
             })
             .on('keyup.expand_collapse', function() {
                 if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === options.recurseKey) && (_overNode || _overEdge)) {
+                    const pressed = _keyboard.modKeysPressed();
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
-                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey));
+                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, pressed.includes(options.recurseKey), pressed.includes(options.hideKey));
                         if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
