@@ -103,7 +103,8 @@ var load_graph = function(nodes, edges) {
 
 var populate = function(n) {
     var random = dc_graph.random_graph({
-        ncolors: 3
+        ncolors: 3,
+        allowParallelEdges: false
     });
 
     random.generate(n);
