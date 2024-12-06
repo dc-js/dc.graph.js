@@ -65,12 +65,17 @@ dc_graph.dynagraph_layout = function(id, layout) {
                 case 'insert_node': {
                     const {node, attrs} = cmd;
                     console.log('insert node', node, attrs);
+                    console.log('insert node2', _nodes[node])
+                    Object.assign(_nodes[node], incr2dg_node_attrs(attrs));
+                    console.log('insert node3', _nodes[node])
                     break;
                 }
                 case 'modify_node': {
                     const {node, attrs} = cmd;
                     console.log('modify node', node, attrs);
+                    console.log('modify node2', _nodes[node])
                     Object.assign(_nodes[node], incr2dg_node_attrs(attrs));
+                    console.log('modify node3', _nodes[node])
                     break;
                 }
                 case 'delete_node': {
@@ -110,9 +115,11 @@ dc_graph.dynagraph_layout = function(id, layout) {
                     _lock++;
                     break;
                 case 'unlock_graph':
+                    // maybe error on negative lock?
                     if(--_lock <= 0) {
                         runCommands(_incrIn);
                         _incrIn = []
+                        _done();
                     }
                     break;
                 default:
