@@ -49,6 +49,12 @@ dc_graph._engines = [
         }
     },
     {
+        names: ['dynadag'],
+        instantiate: function(layout, args) {
+            return dc_graph.dynagraph_layout(null, layout, args.server);
+        }
+    },
+    {
         name: 'manual',
         instantiate: function() {
             return dc_graph.manual_layout();

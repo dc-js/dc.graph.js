@@ -142,7 +142,15 @@ module.exports = function (grunt) {
             server: {
                 options: {
                     port: process.env.PORT || 8888,
-                    base: '.'
+                    base: '.',
+                    middleware: function(connect, options, middlewares) {
+                        middlewares.unshift(function(req, res, next) {
+                            if(/\.wasm$/.test(res.req.url))
+                                res.setHeader('Content-Type', 'application/wasm');
+                            return next();
+                        });
+                        return middlewares;
+                    },
                 }
             }
         },
@@ -369,6 +377,7 @@ module.exports.jsFiles = [
     'src/dagre_layout.js',
     'src/tree_layout.js',
     'src/graphviz_layout.js',
+    'src/dynagraph_layout.js',
     'src/d3_force_layout.js',
     'src/d3v4_force_layout.js',
     'src/flexbox_layout.js',
