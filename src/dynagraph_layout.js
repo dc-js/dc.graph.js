@@ -37,10 +37,25 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
 
     // incr2dg
+    function incr2dg_coord(c) {
+        const [x, y] = c.map(n => 15*n);
+        return [x, -y];
+    }
     function incr2dg_node_attrs(n) {
         const attrs = {};
         if(n.pos)
-            [attrs.x, attrs.y] = n.pos.split(',').map(Number);
+            [attrs.x, attrs.y] = incr2dg_coord(n.pos.split(',').map(Number));
+        return attrs;
+    }
+    function incr2dg_edge_attrs(e) {
+        const attrs = {};
+        if(e.pos)
+            attrs.cola = {
+                points: e.pos.split(' ')
+                .map(coord => coord.split(',').map(Number))
+                .map(incr2dg_coord)
+                .map(([x,y]) => ({x,y}))
+            };
         return attrs;
     }
 
@@ -86,11 +101,17 @@ dc_graph.dynagraph_layout = function(id, layout) {
                 case 'insert_edge': {
                     const {edge, source, target, attrs} = cmd;
                     console.log('insert edge', edge, source, target, attrs);
+                    console.log('insert edge2', _edges[edge])
+                    Object.assign(_edges[edge], incr2dg_edge_attrs(attrs));
+                    console.log('insert edge3', _edges[edge])
                     break;
                 }
                 case 'modify_edge': {
                     const {edge, attrs} = cmd;
                     console.log('modify edge', edge, attrs);
+                    console.log('modify edge2', _edges[edge])
+                    Object.assign(_edges[edge], incr2dg_edge_attrs(attrs));
+                    console.log('modify edge3', _edges[edge])
                     break;
                 }
                 case 'delete_edge': {
@@ -137,6 +158,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
 
     function data(nodes, edges, clusters) {
+        const linesOutDeleteNode = [];
         var wnodes = regenerate_objects(_nodes, nodes, null,
         function key(v) {
             return v.dcg_nodeKey;
@@ -154,7 +176,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
         }, function create(k, o) {
             _linesOut.push(`insert node ${_Gname} ${k} ${print_incr_attrs(dg2incr_node_attrs(o))}`);
         }, function destroy(k) {
-            _linesOut.push(`delete node ${_Gname} ${k}`);
+            linesOutDeleteNode.push(`delete node ${_Gname} ${k}`);
         });
         var wedges = regenerate_objects(_edges, edges, null, function key(e) {
             return e.dcg_edgeKey;
@@ -167,6 +189,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
         }, function destroy(k, e) {
             _linesOut.push(`delete edge ${_Gname} ${k}`);
         });
+        _linesOut.push(...linesOutDeleteNode);
 
         function dispatchState(event) {
             _dispatch[event](

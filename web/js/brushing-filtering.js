@@ -170,6 +170,7 @@ selectionDiagram
     .nodeFill(function(kv) {
         return kv.value.color;
     })
+    .nodeRadius(5)
     .nodeOpacity(0.25)
     .edgeOpacity(0.25)
     .timeLimit(1000)
