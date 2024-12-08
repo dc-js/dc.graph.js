@@ -16,11 +16,25 @@ dc_graph.dynagraph_layout = function(id, layout) {
 
 
 
+    const _coord_mult = 15;
+    let bb = null;
     // dg2incr
+    function dg2incr_coord(c) {
+        const c2 = [c[0], -(c[1] - (bb && bb[0][1] || 0))];
+        return c2.map(n => n/_coord_mult)
+    }
+
     function dg2incr_node_attrs(n) {
         const attr_pairs = [];
         if(n.x !== undefined && n.y !== undefined)
-            attr_pairs.push(['pos', [n.x, n.y].map(String).join(',')]);
+            attr_pairs.push(['pos', dg2incr_coord([n.x, n.y]).map(String).join(',')]);
+        return attr_pairs;
+    }
+
+    function dg2incr_node_attrs_changed(n, n2) {
+        const attr_pairs = [];
+        if(n2.x !== undefined && n2.y !== undefined && (n2.x !== n.x || n2.y !== n.y))
+            attr_pairs.push(['pos', dg2incr_coord([n.x, n.y]).map(String).join(',')]);
         return attr_pairs;
     }
 
@@ -28,18 +42,26 @@ dc_graph.dynagraph_layout = function(id, layout) {
         return [];
     }
 
-    function mquote(x) {
-        return dc.utils.isNumber(x) ? x : '"' + x + '"';
+    function mq(x) { // maybe quote
+        if(dc.utils.isNumber(x))
+            return x;
+        else if(/^[A-Za-z_][A-Za-z0-9_]*$/.test(x))
+            return x;
+        else return '"' + x + '"';
     }
 
     function print_incr_attrs(attr_pairs) {
-        return '[' + attr_pairs.map(([a,b]) => `${a}=${mquote(b)}`).join(', ') + ']';
+        return '[' + attr_pairs.map(([a,b]) => `${mq(a)}=${mq(b)}`).join(', ') + ']';
     }
 
     // incr2dg
     function incr2dg_coord(c) {
-        const [x, y] = c.map(n => 15*n);
-        return [x, -y];
+        const [x, y] = c.map(n => _coord_mult*n);
+        return [x, (bb && bb[0][1] || 0) - y];
+    }
+    function incr2dg_bb(bb) {
+        const [x1,y1,x2,y2] = bb.split(',');
+        return [incr2dg_coord([x1,y1]), incr2dg_coord([x2,y2])];
     }
     function incr2dg_node_attrs(n) {
         const attrs = {};
@@ -66,11 +88,17 @@ dc_graph.dynagraph_layout = function(id, layout) {
                 case 'open_graph': {
                     const {attrs} = cmd;
                     console.log('open graph', attrs);
+                    console.log('open graph bb', bb)
+                    bb = incr2dg_bb(attrs.bb)
+                    console.log('open graph bb', bb)
                     break;
                 }
                 case 'modify_graph': {
                     const {attrs} = cmd;
                     console.log('modify graph', attrs);
+                    console.log('modify graph bb', bb)
+                    bb = incr2dg_bb(attrs.bb)
+                    console.log('modify graph bb', bb)
                     break;
                 }
                 case 'close_graph': {
@@ -170,13 +198,13 @@ dc_graph.dynagraph_layout = function(id, layout) {
                 v1.x = v.dcg_nodeFixed.x;
                 v1.y = v.dcg_nodeFixed.y;
             }
-            const na = dg2incr_node_attrs(v1);
+            const na = dg2incr_node_attrs_changed(v1, v);
             if(na.length)
-                _linesOut.push(`modify node ${_Gname} ${v1.dcg_nodeKey} ${print_incr_attrs(na)}`);
+                _linesOut.push(`modify node ${mq(_Gname)} ${mq(v1.dcg_nodeKey)} ${print_incr_attrs(na)}`);
         }, function create(k, o) {
-            _linesOut.push(`insert node ${_Gname} ${k} ${print_incr_attrs(dg2incr_node_attrs(o))}`);
+            _linesOut.push(`insert node ${mq(_Gname)} ${mq(k)} ${print_incr_attrs(dg2incr_node_attrs(o))}`);
         }, function destroy(k) {
-            linesOutDeleteNode.push(`delete node ${_Gname} ${k}`);
+            linesOutDeleteNode.push(`delete node ${mq(_Gname)} ${mq(k)}`);
         });
         var wedges = regenerate_objects(_edges, edges, null, function key(e) {
             return e.dcg_edgeKey;
@@ -185,9 +213,9 @@ dc_graph.dynagraph_layout = function(id, layout) {
             e1.dcg_edgeSource = e.dcg_edgeSource;
             e1.dcg_edgeTarget = e.dcg_edgeTarget;
         }, function create(k, o, e) {
-            _linesOut.push(`insert edge ${_Gname} ${k} ${e.dcg_edgeSource} ${e.dcg_edgeTarget} ${print_incr_attrs(dg2incr_edge_attrs(e))}`);
+            _linesOut.push(`insert edge ${mq(_Gname)} ${mq(k)} ${mq(e.dcg_edgeSource)} ${mq(e.dcg_edgeTarget)} ${print_incr_attrs(dg2incr_edge_attrs(e))}`);
         }, function destroy(k, e) {
-            _linesOut.push(`delete edge ${_Gname} ${k}`);
+            _linesOut.push(`delete edge ${mq(_Gname)} ${k}`);
         });
         _linesOut.push(...linesOutDeleteNode);
 
@@ -214,14 +242,14 @@ dc_graph.dynagraph_layout = function(id, layout) {
             if(_linesOut.length > 1)
                 _linesOut = [
                     ...open,
-                    `lock graph ${_Gname}`,
+                    `lock graph ${mq(_Gname)}`,
                     ..._linesOut,
-                    `unlock graph ${_Gname}`
+                    `unlock graph ${mq(_Gname)}`
                 ];
             console.log(window.incrface_input = _linesOut.join('\n'));
             _linesOut = [];
         }
-        _done();
+        else _done();
     }
 
     function stop() {
