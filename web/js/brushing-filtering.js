@@ -181,9 +181,6 @@ selectionDiagram
     .edgeArrowhead(sync_url.vals.arrows === 'head' || sync_url.vals.arrows === 'both' ? 'vee' : null)
     .edgeArrowtail(sync_url.vals.arrows === 'tail' || sync_url.vals.arrows === 'both' ? 'crow' : null);
 
-if(sync_url.vals.layout === "dynadag")
-    selectionDiagram.nodeRadius(5);
-
 selectionDiagram.child('select-nodes', dc_graph.select_nodes(
     {
         nodeOpacity: 1

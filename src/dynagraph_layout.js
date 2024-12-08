@@ -8,20 +8,27 @@
 dc_graph.dynagraph_layout = function(id, layout) {
     var _layoutId = id || uuid();
     const _Gname = 'G';
+    var _layout;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _tick, _done;
     var _nodes = {}, _edges = {};
-    var _linesOut = [], _incrIn = [], _opened = false;
+    var _linesOut = [], _incrIn = [], _opened = false, _open_graph;
     var _lock = 0;
 
 
 
-    const _coord_mult = 15;
     let bb = null;
     // dg2incr
     function dg2incr_coord(c) {
-        const c2 = [c[0], -(c[1] - (bb && bb[0][1] || 0))];
-        return c2.map(n => n/_coord_mult)
+        return [c[0], -(c[1] - (bb && bb[0][1] || 0))];
+    }
+
+    function dg2incr_graph_attrs() {
+        return [
+            ['resolution', [_layout.resolution().x, _layout.resolution().y]],
+            ['defaultsize', [_layout.defaultsize().width, _layout.defaultsize().height]],
+            ['separation', [_layout.separation().x, _layout.separation().y]],
+        ];
     }
 
     function dg2incr_node_attrs(n) {
@@ -56,7 +63,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
 
     // incr2dg
     function incr2dg_coord(c) {
-        const [x, y] = c.map(n => _coord_mult*n);
+        const [x, y] = c;
         return [x, (bb && bb[0][1] || 0) - y];
     }
     function incr2dg_bb(bb) {
@@ -181,8 +188,9 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
 
     function init(options) {
-        window.receiveIncr = receiveIncr;    
+        window.receiveIncr = receiveIncr;
         _opened = false;
+        _open_graph = `open graph ${mq(_Gname)} ${print_incr_attrs(dg2incr_graph_attrs())}`
     }
 
     function data(nodes, edges, clusters) {
@@ -192,8 +200,8 @@ dc_graph.dynagraph_layout = function(id, layout) {
             return v.dcg_nodeKey;
         }, function assign(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
-            // v1.width = v.width;
-            // v1.height = v.height;
+            v1.width = v.width;
+            v1.height = v.height;
             if(v.dcg_nodeFixed) {
                 v1.x = v.dcg_nodeFixed.x;
                 v1.y = v.dcg_nodeFixed.y;
@@ -237,7 +245,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
 
     function start() {
         if(_linesOut.length) {
-            const open = _opened ? [] : ['open graph G'];
+            const open = _opened ? [] : [_open_graph];
             _opened = true;
             if(_linesOut.length > 1)
                 _linesOut = [
@@ -255,7 +263,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     function stop() {
     }
 
-    var layout = {
+    _layout = {
         layoutAlgorithm: function() {
             return layout;
         },
@@ -265,6 +273,9 @@ dc_graph.dynagraph_layout = function(id, layout) {
         supportsWebworker: function() {
             return false;
         },
+        resolution: property({x: 5, y: 5}),
+        defaultsize: property({width: 50, height: 50}),
+        separation: property({x: 20, y: 20}),
         on: function(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
@@ -288,12 +299,12 @@ dc_graph.dynagraph_layout = function(id, layout) {
             stop();
         },
         optionNames: function() {
-            return [];
+            return ['resolution', 'defaultsize', 'separation'];
         },
         populateLayoutNode: function(layout, node) {},
         populateLayoutEdge: function() {}
     };
-    return layout;
+    return _layout;
 };
 
 dc_graph.tree_layout.scripts = [];
