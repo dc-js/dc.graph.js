@@ -145,7 +145,7 @@ module.exports = function (grunt) {
                     base: '.',
                     middleware: function(connect, options, middlewares) {
                         middlewares.unshift(function(req, res, next) {
-                            if(/\.wasm$/.test(res.req.url))
+                            if(res.req && /\.wasm$/.test(res.req.url))
                                 res.setHeader('Content-Type', 'application/wasm');
                             return next();
                         });
