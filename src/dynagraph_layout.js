@@ -20,7 +20,8 @@ dc_graph.dynagraph_layout = function(id, layout) {
     let bb = null;
     // dg2incr
     function dg2incr_coord(c) {
-        return [c[0], -(c[1] - (bb && bb[0][1] || 0))];
+        const [x, y] = c;
+        return [x, (bb && bb[0][1] || 0) - y];
     }
 
     function dg2incr_graph_attrs() {

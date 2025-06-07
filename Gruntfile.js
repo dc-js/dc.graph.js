@@ -193,7 +193,7 @@ module.exports = function (grunt) {
                         src: [
                             'node_modules/jquery-ui-dist/images/*'
                         ],
-                        dest: '<%= conf.web %>/css/images'
+                        dest: '<%= conf.web %>/css/images/'
                     },
                     {
                         expand: true,
@@ -202,7 +202,7 @@ module.exports = function (grunt) {
                         src: [
                             'node_modules/x-editable/dist/jqueryui-editable/img/*'
                         ],
-                        dest: '<%= conf.web %>/img'
+                        dest: '<%= conf.web %>/img/'
                     },
                     {
                         expand: true,
