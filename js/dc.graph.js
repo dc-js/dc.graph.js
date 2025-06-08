@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.9.2
+ *  dc.graph 0.9.92
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.9.2
+ * @version 0.9.92
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.9.2',
+    version: '0.9.92',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -164,9 +164,10 @@ function onetime_trace(level, message) {
         if(said)
             return;
         if(level === 'trace') {
-            console.groupCollapsed(message);
-            console.trace();
-            console.groupEnd();
+            // todo: implement levels?
+            // console.groupCollapsed(message);
+            // console.trace();
+            // console.groupEnd();
         }
         else
             console[level](message);
@@ -3667,7 +3668,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!object)
             return false; // null is always a valid mode for any renderer
         if(!object.supportsRenderer)
-            console.log('could not check if "' + id + '" is compatible with ' + rtype);
+            onetime_trace('trace', 'could not check if "' + id + '" is compatible with ' + rtype);
         else if(!object.supportsRenderer(rtype))
             return 'not installing "' + id + '" because it is not compatible with renderer ' + rtype;
         return false;
@@ -4029,10 +4030,14 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // ordering shouldn't matter, but we support ordering in case it does
         if(_diagram.nodeOrdering()) {
-            nodes = crossfilter.quicksort.by(_diagram.nodeOrdering())(nodes.slice(0), 0, nodes.length);
+            nodes = nodes.slice(0).sort(function(a, b) {
+                return d3.ascending(_diagram.nodeOrdering()(a), _diagram.nodeOrdering()(b));
+            });
         }
         if(_diagram.edgeOrdering()) {
-            edges = crossfilter.quicksort.by(_diagram.edgeOrdering())(edges.slice(0), 0, edges.length);
+            edges = edges.slice(0).sort(function(a, b) {
+                return d3.ascending(_diagram.edgeOrdering()(a), _diagram.edgeOrdering()(b));
+            });
         }
 
         var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
@@ -4333,8 +4338,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         ordered_constraints.forEach(function(c) {
             var sorted = c.nodes.map(function(n) { return _nodes[n]; });
             if(c.ordering) {
-                var sort = crossfilter.quicksort.by(param(c.ordering));
-                sorted = sort(sorted, 0, sorted.length);
+                var orderingFn = param(c.ordering);
+                sorted = sorted.sort(function(a, b) {
+                    return d3.ascending(orderingFn(a), orderingFn(b));
+                });
             }
             var left;
             sorted.forEach(function(n, i) {
@@ -8073,51 +8080,68 @@ dc_graph.flexbox_layout = function(id, options) {
             tree.node = {dcg_nodeKey: tree.address.length ? tree.address[tree.address.length-1] : null};
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
-    var yoga_constants = {
-        alignItems: {
-            stretch: yogaLayout.ALIGN_STRETCH,
-            'flex-start': yogaLayout.ALIGN_FLEX_START,
-            center: yogaLayout.ALIGN_CENTER,
-            'flex-end': yogaLayout.ALIGN_FLEX_END,
-            baseline: yogaLayout.ALIGN_BASELINE
-        },
-        alignSelf: {
-            stretch: yogaLayout.ALIGN_STRETCH,
-            'flex-start': yogaLayout.ALIGN_FLEX_START,
-            center: yogaLayout.ALIGN_CENTER,
-            'flex-end': yogaLayout.ALIGN_FLEX_END,
-            baseline: yogaLayout.ALIGN_BASELINE
-        },
-        alignContent: {
-            'flex-start': yogaLayout.ALIGN_FLEX_START,
-            'flex-end': yogaLayout.ALIGN_FLEX_END,
-            stretch: yogaLayout.ALIGN_STRETCH,
-            center: yogaLayout.ALIGN_CENTER,
-            'space-between': yogaLayout.ALIGN_SPACE_BETWEEN,
-            'space-around': yogaLayout.ALIGN_SPACE_AROUND
-        },
-        flexDirection: {
-            column: yogaLayout.FLEX_DIRECTION_COLUMN,
-            'column-reverse': yogaLayout.FLEX_DIRECTION_COLUMN_REVERSE,
-            row: yogaLayout.FLEX_DIRECTION_ROW,
-            'row-reverse': yogaLayout.FLEX_DIRECTION_ROW_REVERSE
-        },
-        justifyContent: {
-            'flex-start': yogaLayout.JUSTIFY_FLEX_START,
-            center: yogaLayout.JUSTIFY_CENTER,
-            'flex-end': yogaLayout.JUSTIFY_FLEX_END,
-            'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
-            'space-around': yogaLayout.JUSTIFY_SPACE_AROUND,
-            'space-evenly': yogaLayout.JUSTIFY_SPACE_EVENLY
-        }
-    };
+    function getYogaConstants() {
+        // Return constants only if yogaLayout is available
+        if (typeof yogaLayout === 'undefined') return null;
+        
+        return {
+            alignItems: {
+                stretch: yogaLayout.ALIGN_STRETCH,
+                'flex-start': yogaLayout.ALIGN_FLEX_START,
+                center: yogaLayout.ALIGN_CENTER,
+                'flex-end': yogaLayout.ALIGN_FLEX_END,
+                baseline: yogaLayout.ALIGN_BASELINE
+            },
+            alignSelf: {
+                stretch: yogaLayout.ALIGN_STRETCH,
+                'flex-start': yogaLayout.ALIGN_FLEX_START,
+                center: yogaLayout.ALIGN_CENTER,
+                'flex-end': yogaLayout.ALIGN_FLEX_END,
+                baseline: yogaLayout.ALIGN_BASELINE
+            },
+            alignContent: {
+                'flex-start': yogaLayout.ALIGN_FLEX_START,
+                'flex-end': yogaLayout.ALIGN_FLEX_END,
+                stretch: yogaLayout.ALIGN_STRETCH,
+                center: yogaLayout.ALIGN_CENTER,
+                'space-between': yogaLayout.ALIGN_SPACE_BETWEEN,
+                'space-around': yogaLayout.ALIGN_SPACE_AROUND
+            },
+            flexDirection: {
+                column: yogaLayout.FLEX_DIRECTION_COLUMN,
+                'column-reverse': yogaLayout.FLEX_DIRECTION_COLUMN_REVERSE,
+                row: yogaLayout.FLEX_DIRECTION_ROW,
+                'row-reverse': yogaLayout.FLEX_DIRECTION_ROW_REVERSE
+            },
+            justifyContent: {
+                'flex-start': yogaLayout.JUSTIFY_FLEX_START,
+                center: yogaLayout.JUSTIFY_CENTER,
+                'flex-end': yogaLayout.JUSTIFY_FLEX_END,
+                'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
+                'space-around': yogaLayout.JUSTIFY_SPACE_AROUND,
+                'space-evenly': yogaLayout.JUSTIFY_SPACE_EVENLY
+            }
+        };
+    }
     function set_yoga_attr(flexnode, attr, value) {
         var fname = 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
         if(typeof flexnode[fname] !== 'function')
             throw new Error('Could not set yoga attr "' + attr + '" (' + fname + ')');
-        if(yoga_constants[attr])
+        var yoga_constants = getYogaConstants();
+        if(yoga_constants && yoga_constants[attr])
             value = yoga_constants[attr][value];
-        flexnode['set' + attr.charAt(0).toUpperCase() + attr.slice(1)](value);
+        
+        // Handle attributes that need an edge parameter (padding, margin, border, position)
+        if(attr === 'padding' || attr === 'margin' || attr === 'border' || attr.endsWith('Padding') || attr.endsWith('Margin')) {
+            // For generic padding/margin, apply to all edges
+            flexnode[fname](yogaLayout.EDGE_ALL, value);
+        } else if(attr === 'width') {
+            flexnode.setWidth(value);
+        } else if(attr === 'height') {
+            flexnode.setHeight(value);
+        } else {
+            flexnode[fname](value);
+        }
     }
     function get_yoga_attr(flexnode, attr) {
         var fname = 'getComputed' + attr.charAt(0).toUpperCase() + attr.slice(1);
@@ -8125,7 +8149,7 @@ dc_graph.flexbox_layout = function(id, options) {
             throw new Error('Could not get yoga attr "' + attr + '" (' + fname + ')');
         return flexnode[fname]();
     }
-    var internal_attrs = ['sort', 'order', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z'],
+    var internal_attrs = ['sort', 'order', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z', 'nodeOutlineClip'],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
         var flexnode;
@@ -8134,7 +8158,12 @@ dc_graph.flexbox_layout = function(id, options) {
             flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
             break;
         case 'yoga-layout':
-            flexnode = yogaLayout.Node.create();
+            if (typeof yogaLayout === 'undefined') {
+                // Return a placeholder that will be replaced when yoga is ready
+                flexnode = { _yogaPending: true };
+            } else {
+                flexnode = new yogaLayout.Node();
+            }
             break;
         }
         var attrs2 = Object.assign({}, attrs);
@@ -8210,6 +8239,19 @@ dc_graph.flexbox_layout = function(id, options) {
         );
     }
     function start() {
+        // If yoga layout is requested but yoga isn't ready yet, wait for it
+        if (options.algo === 'yoga-layout' && typeof yogaLayout === 'undefined') {
+            if (typeof loadYogaLayout === 'function') {
+                loadYogaLayout().then(function() {
+                    start(); // Retry when yoga is ready
+                });
+                return;
+            } else {
+                console.warn('yoga-layout requested but yogaLayout not available. Falling back to css-layout.');
+                options.algo = 'css-layout';
+            }
+        }
+        
         var defaults = {
             sort: function(a, b) {
                 return d3.ascending(a.node.dcg_nodeKey, b.node.dcg_nodeKey);
@@ -12803,6 +12845,7 @@ dc_graph.expand_collapse = function(options) {
         _expanded[dir] = new Set();
     });
     options.hideKey = options.hideKey || 'Alt';
+    options.recurseKey = options.recurseKey || 'Shift';
     options.linkKey = options.linkKey || (is_a_mac ? 'Meta' : 'Control');
     if(options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
@@ -13103,7 +13146,7 @@ dc_graph.expand_collapse = function(options) {
                 diagram.requestRefresh(0);
             }
             else
-                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key('Shift'));
+                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key(options.recurseKey));
         }
         function leave_node(n)  {
             diagram.selectAllNodes()
@@ -13132,7 +13175,7 @@ dc_graph.expand_collapse = function(options) {
                 changing_highlight_group.highlight({}, {});
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
                 let tree_nodes = [nk];
-                if(detect_key('Shift') && options.get_tree_edges)
+                if(detect_key(options.recurseKey) && options.get_tree_edges)
                     tree_nodes = Object.keys(options.get_tree_edges(nk, dir));
                 expand(dir, tree_nodes, !_expanded[dir].has(nk));
             }
@@ -13187,15 +13230,15 @@ dc_graph.expand_collapse = function(options) {
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
                 }
-                else if(d3.event.key === 'Shift' && _overNode) {
+                else if(d3.event.key === options.recurseKey && _overNode) {
                     highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true);
                 }
             })
             .on('keyup.expand_collapse', function() {
-                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === 'Shift') && (_overNode || _overEdge)) {
+                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === options.recurseKey) && (_overNode || _overEdge)) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
-                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key('Shift'));
+                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey));
                         if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
@@ -13271,7 +13314,6 @@ dc_graph.expand_collapse = function(options) {
         const mm = Object.fromEntries(
             Array.prototype.concat.apply([], Object.keys(_expanded).map(dir => Array.from(_expanded[dir])))
                 .map(nk => [nk, true]));
-        console.log('mm', mm);
         expanded_highlight_group.highlight(
             mm,
             {});

@@ -26,6 +26,7 @@ var options = {
     content: 'text',
     icon: null
 };
+
 var sync_url = sync_url_options(options, dcgraph_domain(growingDiagram), growingDiagram);
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
@@ -117,6 +118,9 @@ growingDiagram
 
 var interval = null;
 function run() {
+    if(interval) {
+        window.clearInterval(interval);
+    }
     interval = window.setInterval(function() {
         for(var i = 0; i < sync_url.vals.batch; ++i) {
             if(Math.random() < sync_url.vals.remove)

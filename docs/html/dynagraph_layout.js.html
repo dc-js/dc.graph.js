@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>dc.graph.js Source: dynagraph_layout.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.yeti.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">dc.graph.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="dc_graph.html">dc_graph</a></li><li><a href="dc_graph.flat_group.html">dc_graph.flat_group</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="dc_graph.brush.html">dc_graph.brush</a></li><li><a href="dc_graph.cola_layout.html">dc_graph.cola_layout</a></li><li><a href="dc_graph.constraint_pattern.html">dc_graph.constraint_pattern</a></li><li><a href="dc_graph.d3_force_layout.html">dc_graph.d3_force_layout</a></li><li><a href="dc_graph.d3v4_force_layout.html">dc_graph.d3v4_force_layout</a></li><li><a href="dc_graph.dagre_layout.html">dc_graph.dagre_layout</a></li><li><a href="dc_graph.diagram.html">dc_graph.diagram</a></li><li><a href="dc_graph.dynagraph_layout.html">dc_graph.dynagraph_layout</a></li><li><a href="dc_graph.flexbox_layout.html">dc_graph.flexbox_layout</a></li><li><a href="dc_graph.graphviz_attrs.html">dc_graph.graphviz_attrs</a></li><li><a href="dc_graph.graphviz_layout.html">dc_graph.graphviz_layout</a></li><li><a href="dc_graph.layered_layout.html">dc_graph.layered_layout</a></li><li><a href="dc_graph.tip.html">dc_graph.tip</a></li><li><a href="dc_graph.tree_layout.html">dc_graph.tree_layout</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: dynagraph_layout.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">/**
+ * `dc_graph.dynagraph_layout` connects to dynagraph-wasm and does dynamic directed graph layout.
+ * @class dynagraph_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.dynagraph_layout}
+ **/
+dc_graph.dynagraph_layout = function(id, layout) {
+    var _layoutId = id || uuid();
+    const _Gname = 'G';
+    var _layout;
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _tick, _done;
+    var _nodes = {}, _edges = {};
+    var _linesOut = [], _incrIn = [], _opened = false, _open_graph;
+    var _lock = 0;
+
+
+
+    let bb = null;
+    // dg2incr
+    function dg2incr_coord(c) {
+        const [x, y] = c;
+        return [x, /*(bb &amp;&amp; bb[0][1] || 0)*/ - y];
+    }
+
+
+    function dg2incr_graph_attrs() {
+        return [
+            ['resolution', [_layout.resolution().x, _layout.resolution().y]],
+            ['defaultsize', [_layout.defaultsize().width, _layout.defaultsize().height]],
+            ['separation', [_layout.separation().x, _layout.separation().y]],
+        ];
+    }
+
+    function dg2incr_node_attrs(n) {
+        const attr_pairs = [];
+        if(n.x !== undefined &amp;&amp; n.y !== undefined)
+            attr_pairs.push(['pos', dg2incr_coord([n.x, n.y]).map(String).join(',')]);
+        return attr_pairs;
+    }
+
+    function dg2incr_node_attrs_changed(n, n2) {
+        const attr_pairs = [];
+        if(n2.x !== undefined &amp;&amp; n2.y !== undefined &amp;&amp; (n2.x !== n.x || n2.y !== n.y))
+            attr_pairs.push(['pos', dg2incr_coord([n.x, n.y]).map(String).join(',')]);
+        return attr_pairs;
+    }
+
+    function dg2incr_edge_attrs(e) {
+        return [];
+    }
+
+    function mq(x) { // maybe quote
+        if(dc.utils.isNumber(x))
+            return x;
+        else if(/^[A-Za-z_][A-Za-z0-9_]*$/.test(x))
+            return x;
+        else return '"' + x + '"';
+    }
+
+    function print_incr_attrs(attr_pairs) {
+        return '[' + attr_pairs.map(([a,b]) => `${mq(a)}=${mq(b)}`).join(', ') + ']';
+    }
+
+    // incr2dg
+    function incr2dg_coord(c) {
+        const [x, y] = c;
+        return [x, /*(bb &amp;&amp; bb[0][1] || 0)*/ - y];
+    }
+    function incr2dg_bb(bb) {
+        const [x1,y1,x2,y2] = bb.split(',');
+        return [incr2dg_coord([x1,y1]), incr2dg_coord([x2,y2])];
+    }
+    function incr2dg_node_attrs(n) {
+        const attrs = {};
+        if(n.pos)
+            [attrs.x, attrs.y] = incr2dg_coord(n.pos.split(',').map(Number));
+        return attrs;
+    }
+    function incr2dg_edge_attrs(e) {
+        const attrs = {};
+        if(e.pos)
+            attrs.cola = {
+                points: e.pos.split(' ')
+                .map(coord => coord.split(',').map(Number))
+                .map(incr2dg_coord)
+                .map(([x,y]) => ({x,y}))
+            };
+        return attrs;
+    }
+
+    function runCommands(cmds) {
+        for(const cmd of cmds) {
+            const {action, kind} = cmd;
+            switch(`${action}_${kind}`) {
+                case 'open_graph': {
+                    const {attrs} = cmd;
+                    console.log('open graph', attrs);
+                    console.log('open graph bb', bb)
+                    bb = incr2dg_bb(attrs.bb)
+                    console.log('open graph bb', bb)
+                    break;
+                }
+                case 'modify_graph': {
+                    const {attrs} = cmd;
+                    console.log('modify graph', attrs);
+                    console.log('modify graph bb', bb)
+                    bb = incr2dg_bb(attrs.bb)
+                    console.log('modify graph bb', bb)
+                    break;
+                }
+                case 'close_graph': {
+                    console.log('close graph');
+                    break;
+                }
+                case 'insert_node': {
+                    const {node, attrs} = cmd;
+                    console.log('insert node', node, attrs);
+                    console.log('insert node2', _nodes[node])
+                    Object.assign(_nodes[node], incr2dg_node_attrs(attrs));
+                    console.log('insert node3', _nodes[node])
+                    break;
+                }
+                case 'modify_node': {
+                    const {node, attrs} = cmd;
+                    console.log('modify node', node, attrs);
+                    console.log('modify node2', _nodes[node])
+                    Object.assign(_nodes[node], incr2dg_node_attrs(attrs));
+                    console.log('modify node3', _nodes[node])
+                    break;
+                }
+                case 'delete_node': {
+                    const {node} = cmd;
+                    console.log('delete node', node);
+                    break;
+                }
+                case 'insert_edge': {
+                    const {edge, source, target, attrs} = cmd;
+                    console.log('insert edge', edge, source, target, attrs);
+                    console.log('insert edge2', _edges[edge])
+                    Object.assign(_edges[edge], incr2dg_edge_attrs(attrs));
+                    console.log('insert edge3', _edges[edge])
+                    break;
+                }
+                case 'modify_edge': {
+                    const {edge, attrs} = cmd;
+                    console.log('modify edge', edge, attrs);
+                    console.log('modify edge2', _edges[edge])
+                    Object.assign(_edges[edge], incr2dg_edge_attrs(attrs));
+                    console.log('modify edge3', _edges[edge])
+                    break;
+                }
+                case 'delete_edge': {
+                    const {edge} = cmd;
+                    console.log('delete edge', edge);
+                    break;
+                }
+            }
+        }
+    }
+    function receiveIncr(text) {
+        console.log(text);
+        const cmds = window.parseIncrface(text);
+        for(const cmd of cmds) {
+            const {action, kind, graph} = cmd;
+            if(graph !== _Gname) {
+                console.warn('graph name mismatch', _Gname, graph);
+                continue;
+            }
+            switch(`${action}_${kind}`) {
+                case 'lock_graph':
+                    _lock++;
+                    break;
+                case 'unlock_graph':
+                    // maybe error on negative lock?
+                    if(--_lock &lt;= 0) {
+                        runCommands(_incrIn);
+                        _incrIn = []
+                        _done();
+                    }
+                    break;
+                default:
+                    if(_lock > 0)
+                        _incrIn.push(cmd);
+                    else
+                        runCommands([cmd]);
+            }
+        }
+    }
+
+    function init(options) {
+        window.receiveIncr = receiveIncr;
+        _opened = false;
+        _open_graph = `open graph ${mq(_Gname)} ${print_incr_attrs(dg2incr_graph_attrs())}`
+    }
+
+    function data(nodes, edges, clusters) {
+        const linesOutDeleteNode = [];
+        var wnodes = regenerate_objects(_nodes, nodes, null,
+        function key(v) {
+            return v.dcg_nodeKey;
+        }, function assign(v1, v) {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.width = v.width;
+            v1.height = v.height;
+            if(v.dcg_nodeFixed) {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+            }
+            const na = dg2incr_node_attrs_changed(v1, v);
+            if(na.length)
+                _linesOut.push(`modify node ${mq(_Gname)} ${mq(v1.dcg_nodeKey)} ${print_incr_attrs(na)}`);
+        }, function create(k, o) {
+            _linesOut.push(`insert node ${mq(_Gname)} ${mq(k)} ${print_incr_attrs(dg2incr_node_attrs(o))}`);
+        }, function destroy(k) {
+            linesOutDeleteNode.push(`delete node ${mq(_Gname)} ${mq(k)}`);
+        });
+        var wedges = regenerate_objects(_edges, edges, null, function key(e) {
+            return e.dcg_edgeKey;
+        }, function assign(e1, e) {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            e1.dcg_edgeSource = e.dcg_edgeSource;
+            e1.dcg_edgeTarget = e.dcg_edgeTarget;
+        }, function create(k, o, e) {
+            _linesOut.push(`insert edge ${mq(_Gname)} ${mq(k)} ${mq(e.dcg_edgeSource)} ${mq(e.dcg_edgeTarget)} ${print_incr_attrs(dg2incr_edge_attrs(e))}`);
+        }, function destroy(k, e) {
+            _linesOut.push(`delete edge ${mq(_Gname)} ${k}`);
+        });
+        _linesOut.push(...linesOutDeleteNode);
+
+        function dispatchState(event) {
+            _dispatch[event](
+                wnodes,
+                wedges.map(function(e) {
+                    return {dcg_edgeKey: e.dcg_edgeKey};
+                })
+            );
+        }
+        _tick = function() {
+            dispatchState('tick');
+        };
+        _done = function() {
+            dispatchState('end');
+        };
+    }
+
+    function start() {
+        if(_linesOut.length) {
+            const open = _opened ? [] : [_open_graph];
+            _opened = true;
+            if(_linesOut.length > 1)
+                _linesOut = [
+                    ...open,
+                    `lock graph ${mq(_Gname)}`,
+                    ..._linesOut,
+                    `unlock graph ${mq(_Gname)}`
+                ];
+            console.log(window.incrface_input = _linesOut.join('\n'));
+            _linesOut = [];
+        }
+        else _done();
+    }
+
+    function stop() {
+    }
+
+    _layout = {
+        ...dc_graph.graphviz_attrs(),
+        layoutAlgorithm: function() {
+            return layout;
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        supportsWebworker: function() {
+            return false;
+        },
+        resolution: property({x: 5, y: 5}),
+        defaultsize: property({width: 50, height: 50}),
+        separation: property({x: 20, y: 20}),
+        on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(graph, nodes, edges) {
+            data(nodes, edges);
+        },
+        start: function() {
+            start();
+        },
+        stop: function() {
+            stop();
+        },
+        optionNames: function() {
+            return ['resolution', 'defaultsize', 'separation'];
+        },
+        populateLayoutNode: function(layout, node) {},
+        populateLayoutEdge: function() {}
+    };
+    return _layout;
+};
+
+dc_graph.tree_layout.scripts = [];
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+	<span class="copyright">
+	dc.graph.js Copyright 2015-2016 AT&T Intellectual Property & the dc.graph.js Developers
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
+	
+		on Sat Jun 7th 2025
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>

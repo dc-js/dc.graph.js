@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.9.2
+ *  dc.graph 0.9.92
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -25,7 +25,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.9.2
+ * @version 0.9.92
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -35,7 +35,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.9.2',
+    version: '0.9.92',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -161,9 +161,10 @@ function onetime_trace(level, message) {
         if(said)
             return;
         if(level === 'trace') {
-            console.groupCollapsed(message);
-            console.trace();
-            console.groupEnd();
+            // todo: implement levels?
+            // console.groupCollapsed(message);
+            // console.trace();
+            // console.groupEnd();
         }
         else
             console[level](message);
