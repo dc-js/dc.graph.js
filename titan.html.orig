@@ -182,5 +182,8 @@
           });
   }
 </script>
+<<<<<<< HEAD
+=======
 </body>
 </html>
+>>>>>>> 8a17c58c (claude: inject autoreload in grunt dev server)

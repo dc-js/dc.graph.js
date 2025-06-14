@@ -110,5 +110,8 @@
 </div>
 
 <script type="text/javascript" src="js/vizgems.js"></script>
+<<<<<<< HEAD
+=======
 </body>
 </html>
+>>>>>>> 8a17c58c (claude: inject autoreload in grunt dev server)
