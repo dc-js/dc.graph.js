@@ -50,7 +50,7 @@ function hide_error() {
     d3.select('#message')
         .style('display', 'none');
 }
-
+ 
 function apply_engine_parameters(engine) {
     switch(engine.layoutAlgorithm()) {
     case 'd3v4-force':

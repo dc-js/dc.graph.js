@@ -1,5 +1,5 @@
 /*!
- *  dc.graph 0.9.9.2
+ *  dc.graph 0.9.93
  *  http://dc-js.github.io/dc.graph.js/
  *  Copyright 2015-2019 AT&T Intellectual Property & the dc.graph.js Developers
  *  https://github.com/dc-js/dc.graph.js/blob/master/AUTHORS
@@ -28,7 +28,7 @@
  * instance whenever it is appropriate.  The getter forms of functions do not participate in function
  * chaining because they return values that are not the diagram.
  * @namespace dc_graph
- * @version 0.9.9.2
+ * @version 0.9.93
  * @example
  * // Example chaining
  * diagram.width(600)
@@ -38,7 +38,7 @@
  */
 
 var dc_graph = {
-    version: '0.9.9.2',
+    version: '0.9.93',
     constants: {
         CHART_CLASS: 'dc-graph'
     }
@@ -164,9 +164,10 @@ function onetime_trace(level, message) {
         if(said)
             return;
         if(level === 'trace') {
-            console.groupCollapsed(message);
-            console.trace();
-            console.groupEnd();
+            // todo: implement levels?
+            // console.groupCollapsed(message);
+            // console.trace();
+            // console.groupEnd();
         }
         else
             console[level](message);
@@ -3667,7 +3668,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         if(!object)
             return false; // null is always a valid mode for any renderer
         if(!object.supportsRenderer)
-            console.log('could not check if "' + id + '" is compatible with ' + rtype);
+            onetime_trace('trace', 'could not check if "' + id + '" is compatible with ' + rtype);
         else if(!object.supportsRenderer(rtype))
             return 'not installing "' + id + '" because it is not compatible with renderer ' + rtype;
         return false;
@@ -4029,10 +4030,14 @@ dc_graph.diagram = function (parent, chartGroup) {
 
         // ordering shouldn't matter, but we support ordering in case it does
         if(_diagram.nodeOrdering()) {
-            nodes = crossfilter.quicksort.by(_diagram.nodeOrdering())(nodes.slice(0), 0, nodes.length);
+            nodes = nodes.slice(0).sort(function(a, b) {
+                return d3.ascending(_diagram.nodeOrdering()(a), _diagram.nodeOrdering()(b));
+            });
         }
         if(_diagram.edgeOrdering()) {
-            edges = crossfilter.quicksort.by(_diagram.edgeOrdering())(edges.slice(0), 0, edges.length);
+            edges = edges.slice(0).sort(function(a, b) {
+                return d3.ascending(_diagram.edgeOrdering()(a), _diagram.edgeOrdering()(b));
+            });
         }
 
         var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
@@ -4333,8 +4338,10 @@ dc_graph.diagram = function (parent, chartGroup) {
         ordered_constraints.forEach(function(c) {
             var sorted = c.nodes.map(function(n) { return _nodes[n]; });
             if(c.ordering) {
-                var sort = crossfilter.quicksort.by(param(c.ordering));
-                sorted = sort(sorted, 0, sorted.length);
+                var orderingFn = param(c.ordering);
+                sorted = sorted.sort(function(a, b) {
+                    return d3.ascending(orderingFn(a), orderingFn(b));
+                });
             }
             var left;
             sorted.forEach(function(n, i) {
@@ -6277,6 +6284,12 @@ dc_graph._engines = [
         }
     },
     {
+        names: ['dynadag'],
+        instantiate: function(layout, args) {
+            return dc_graph.dynagraph_layout(null, layout, args.server);
+        }
+    },
+    {
         name: 'manual',
         instantiate: function() {
             return dc_graph.manual_layout();
@@ -7512,6 +7525,320 @@ dc_graph.graphviz_layout = function(id, layout, server) {
 
 
 /**
+ * `dc_graph.dynagraph_layout` connects to dynagraph-wasm and does dynamic directed graph layout.
+ * @class dynagraph_layout
+ * @memberof dc_graph
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {dc_graph.dynagraph_layout}
+ **/
+dc_graph.dynagraph_layout = function(id, layout) {
+    var _layoutId = id || uuid();
+    const _Gname = 'G';
+    var _layout;
+    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _tick, _done;
+    var _nodes = {}, _edges = {};
+    var _linesOut = [], _incrIn = [], _opened = false, _open_graph;
+    var _lock = 0;
+
+
+
+    let bb = null;
+    // dg2incr
+    function dg2incr_coord(c) {
+        const [x, y] = c;
+        return [x, /*(bb && bb[0][1] || 0)*/ - y];
+    }
+
+
+    function dg2incr_graph_attrs() {
+        return [
+            ['resolution', [_layout.resolution().x, _layout.resolution().y]],
+            ['defaultsize', [_layout.defaultsize().width, _layout.defaultsize().height]],
+            ['separation', [_layout.separation().x, _layout.separation().y]],
+        ];
+    }
+
+    function dg2incr_node_attrs(n) {
+        const attr_pairs = [];
+        if(n.x !== undefined && n.y !== undefined)
+            attr_pairs.push(['pos', dg2incr_coord([n.x, n.y]).map(String).join(',')]);
+        return attr_pairs;
+    }
+
+    function dg2incr_node_attrs_changed(n, n2) {
+        const attr_pairs = [];
+        if(n2.x !== undefined && n2.y !== undefined && (n2.x !== n.x || n2.y !== n.y))
+            attr_pairs.push(['pos', dg2incr_coord([n.x, n.y]).map(String).join(',')]);
+        return attr_pairs;
+    }
+
+    function dg2incr_edge_attrs(e) {
+        return [];
+    }
+
+    function mq(x) { // maybe quote
+        if(dc.utils.isNumber(x))
+            return x;
+        else if(/^[A-Za-z_][A-Za-z0-9_]*$/.test(x))
+            return x;
+        else return '"' + x + '"';
+    }
+
+    function print_incr_attrs(attr_pairs) {
+        return '[' + attr_pairs.map(([a,b]) => `${mq(a)}=${mq(b)}`).join(', ') + ']';
+    }
+
+    // incr2dg
+    function incr2dg_coord(c) {
+        const [x, y] = c;
+        return [x, /*(bb && bb[0][1] || 0)*/ - y];
+    }
+    function incr2dg_bb(bb) {
+        const [x1,y1,x2,y2] = bb.split(',');
+        return [incr2dg_coord([x1,y1]), incr2dg_coord([x2,y2])];
+    }
+    function incr2dg_node_attrs(n) {
+        const attrs = {};
+        if(n.pos)
+            [attrs.x, attrs.y] = incr2dg_coord(n.pos.split(',').map(Number));
+        return attrs;
+    }
+    function incr2dg_edge_attrs(e) {
+        const attrs = {};
+        if(e.pos)
+            attrs.cola = {
+                points: e.pos.split(' ')
+                .map(coord => coord.split(',').map(Number))
+                .map(incr2dg_coord)
+                .map(([x,y]) => ({x,y}))
+            };
+        return attrs;
+    }
+
+    function runCommands(cmds) {
+        for(const cmd of cmds) {
+            const {action, kind} = cmd;
+            switch(`${action}_${kind}`) {
+                case 'open_graph': {
+                    const {attrs} = cmd;
+                    console.log('open graph', attrs);
+                    console.log('open graph bb', bb)
+                    bb = incr2dg_bb(attrs.bb)
+                    console.log('open graph bb', bb)
+                    break;
+                }
+                case 'modify_graph': {
+                    const {attrs} = cmd;
+                    console.log('modify graph', attrs);
+                    console.log('modify graph bb', bb)
+                    bb = incr2dg_bb(attrs.bb)
+                    console.log('modify graph bb', bb)
+                    break;
+                }
+                case 'close_graph': {
+                    console.log('close graph');
+                    break;
+                }
+                case 'insert_node': {
+                    const {node, attrs} = cmd;
+                    console.log('insert node', node, attrs);
+                    console.log('insert node2', _nodes[node])
+                    Object.assign(_nodes[node], incr2dg_node_attrs(attrs));
+                    console.log('insert node3', _nodes[node])
+                    break;
+                }
+                case 'modify_node': {
+                    const {node, attrs} = cmd;
+                    console.log('modify node', node, attrs);
+                    console.log('modify node2', _nodes[node])
+                    Object.assign(_nodes[node], incr2dg_node_attrs(attrs));
+                    console.log('modify node3', _nodes[node])
+                    break;
+                }
+                case 'delete_node': {
+                    const {node} = cmd;
+                    console.log('delete node', node);
+                    break;
+                }
+                case 'insert_edge': {
+                    const {edge, source, target, attrs} = cmd;
+                    console.log('insert edge', edge, source, target, attrs);
+                    console.log('insert edge2', _edges[edge])
+                    Object.assign(_edges[edge], incr2dg_edge_attrs(attrs));
+                    console.log('insert edge3', _edges[edge])
+                    break;
+                }
+                case 'modify_edge': {
+                    const {edge, attrs} = cmd;
+                    console.log('modify edge', edge, attrs);
+                    console.log('modify edge2', _edges[edge])
+                    Object.assign(_edges[edge], incr2dg_edge_attrs(attrs));
+                    console.log('modify edge3', _edges[edge])
+                    break;
+                }
+                case 'delete_edge': {
+                    const {edge} = cmd;
+                    console.log('delete edge', edge);
+                    break;
+                }
+            }
+        }
+    }
+    function receiveIncr(text) {
+        console.log(text);
+        const cmds = window.parseIncrface(text);
+        for(const cmd of cmds) {
+            const {action, kind, graph} = cmd;
+            if(graph !== _Gname) {
+                console.warn('graph name mismatch', _Gname, graph);
+                continue;
+            }
+            switch(`${action}_${kind}`) {
+                case 'lock_graph':
+                    _lock++;
+                    break;
+                case 'unlock_graph':
+                    // maybe error on negative lock?
+                    if(--_lock <= 0) {
+                        runCommands(_incrIn);
+                        _incrIn = []
+                        _done();
+                    }
+                    break;
+                default:
+                    if(_lock > 0)
+                        _incrIn.push(cmd);
+                    else
+                        runCommands([cmd]);
+            }
+        }
+    }
+
+    function init(options) {
+        window.receiveIncr = receiveIncr;
+        _opened = false;
+        _open_graph = `open graph ${mq(_Gname)} ${print_incr_attrs(dg2incr_graph_attrs())}`
+    }
+
+    function data(nodes, edges, clusters) {
+        const linesOutDeleteNode = [];
+        var wnodes = regenerate_objects(_nodes, nodes, null,
+        function key(v) {
+            return v.dcg_nodeKey;
+        }, function assign(v1, v) {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.width = v.width;
+            v1.height = v.height;
+            if(v.dcg_nodeFixed) {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+            }
+            const na = dg2incr_node_attrs_changed(v1, v);
+            if(na.length)
+                _linesOut.push(`modify node ${mq(_Gname)} ${mq(v1.dcg_nodeKey)} ${print_incr_attrs(na)}`);
+        }, function create(k, o) {
+            _linesOut.push(`insert node ${mq(_Gname)} ${mq(k)} ${print_incr_attrs(dg2incr_node_attrs(o))}`);
+        }, function destroy(k) {
+            linesOutDeleteNode.push(`delete node ${mq(_Gname)} ${mq(k)}`);
+        });
+        var wedges = regenerate_objects(_edges, edges, null, function key(e) {
+            return e.dcg_edgeKey;
+        }, function assign(e1, e) {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            e1.dcg_edgeSource = e.dcg_edgeSource;
+            e1.dcg_edgeTarget = e.dcg_edgeTarget;
+        }, function create(k, o, e) {
+            _linesOut.push(`insert edge ${mq(_Gname)} ${mq(k)} ${mq(e.dcg_edgeSource)} ${mq(e.dcg_edgeTarget)} ${print_incr_attrs(dg2incr_edge_attrs(e))}`);
+        }, function destroy(k, e) {
+            _linesOut.push(`delete edge ${mq(_Gname)} ${k}`);
+        });
+        _linesOut.push(...linesOutDeleteNode);
+
+        function dispatchState(event) {
+            _dispatch[event](
+                wnodes,
+                wedges.map(function(e) {
+                    return {dcg_edgeKey: e.dcg_edgeKey};
+                })
+            );
+        }
+        _tick = function() {
+            dispatchState('tick');
+        };
+        _done = function() {
+            dispatchState('end');
+        };
+    }
+
+    function start() {
+        if(_linesOut.length) {
+            const open = _opened ? [] : [_open_graph];
+            _opened = true;
+            if(_linesOut.length > 1)
+                _linesOut = [
+                    ...open,
+                    `lock graph ${mq(_Gname)}`,
+                    ..._linesOut,
+                    `unlock graph ${mq(_Gname)}`
+                ];
+            console.log(window.incrface_input = _linesOut.join('\n'));
+            _linesOut = [];
+        }
+        else _done();
+    }
+
+    function stop() {
+    }
+
+    _layout = {
+        ...dc_graph.graphviz_attrs(),
+        layoutAlgorithm: function() {
+            return layout;
+        },
+        layoutId: function() {
+            return _layoutId;
+        },
+        supportsWebworker: function() {
+            return false;
+        },
+        resolution: property({x: 5, y: 5}),
+        defaultsize: property({width: 50, height: 50}),
+        separation: property({x: 20, y: 20}),
+        on: function(event, f) {
+            if(arguments.length === 1)
+                return _dispatch.on(event);
+            _dispatch.on(event, f);
+            return this;
+        },
+        init: function(options) {
+            this.optionNames().forEach(function(option) {
+                options[option] = options[option] || this[option]();
+            }.bind(this));
+            init(options);
+            return this;
+        },
+        data: function(graph, nodes, edges) {
+            data(nodes, edges);
+        },
+        start: function() {
+            start();
+        },
+        stop: function() {
+            stop();
+        },
+        optionNames: function() {
+            return ['resolution', 'defaultsize', 'separation'];
+        },
+        populateLayoutNode: function(layout, node) {},
+        populateLayoutEdge: function() {}
+    };
+    return _layout;
+};
+
+dc_graph.tree_layout.scripts = [];
+
+/**
  * `dc_graph.d3_force_layout` is an adaptor for d3-force layouts in dc.graph.js
  * @class d3_force_layout
  * @memberof dc_graph
@@ -8073,51 +8400,68 @@ dc_graph.flexbox_layout = function(id, options) {
             tree.node = {dcg_nodeKey: tree.address.length ? tree.address[tree.address.length-1] : null};
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
-    var yoga_constants = {
-        alignItems: {
-            stretch: yogaLayout.ALIGN_STRETCH,
-            'flex-start': yogaLayout.ALIGN_FLEX_START,
-            center: yogaLayout.ALIGN_CENTER,
-            'flex-end': yogaLayout.ALIGN_FLEX_END,
-            baseline: yogaLayout.ALIGN_BASELINE
-        },
-        alignSelf: {
-            stretch: yogaLayout.ALIGN_STRETCH,
-            'flex-start': yogaLayout.ALIGN_FLEX_START,
-            center: yogaLayout.ALIGN_CENTER,
-            'flex-end': yogaLayout.ALIGN_FLEX_END,
-            baseline: yogaLayout.ALIGN_BASELINE
-        },
-        alignContent: {
-            'flex-start': yogaLayout.ALIGN_FLEX_START,
-            'flex-end': yogaLayout.ALIGN_FLEX_END,
-            stretch: yogaLayout.ALIGN_STRETCH,
-            center: yogaLayout.ALIGN_CENTER,
-            'space-between': yogaLayout.ALIGN_SPACE_BETWEEN,
-            'space-around': yogaLayout.ALIGN_SPACE_AROUND
-        },
-        flexDirection: {
-            column: yogaLayout.FLEX_DIRECTION_COLUMN,
-            'column-reverse': yogaLayout.FLEX_DIRECTION_COLUMN_REVERSE,
-            row: yogaLayout.FLEX_DIRECTION_ROW,
-            'row-reverse': yogaLayout.FLEX_DIRECTION_ROW_REVERSE
-        },
-        justifyContent: {
-            'flex-start': yogaLayout.JUSTIFY_FLEX_START,
-            center: yogaLayout.JUSTIFY_CENTER,
-            'flex-end': yogaLayout.JUSTIFY_FLEX_END,
-            'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
-            'space-around': yogaLayout.JUSTIFY_SPACE_AROUND,
-            'space-evenly': yogaLayout.JUSTIFY_SPACE_EVENLY
-        }
-    };
+    function getYogaConstants() {
+        // Return constants only if yogaLayout is available
+        if (typeof yogaLayout === 'undefined') return null;
+        
+        return {
+            alignItems: {
+                stretch: yogaLayout.ALIGN_STRETCH,
+                'flex-start': yogaLayout.ALIGN_FLEX_START,
+                center: yogaLayout.ALIGN_CENTER,
+                'flex-end': yogaLayout.ALIGN_FLEX_END,
+                baseline: yogaLayout.ALIGN_BASELINE
+            },
+            alignSelf: {
+                stretch: yogaLayout.ALIGN_STRETCH,
+                'flex-start': yogaLayout.ALIGN_FLEX_START,
+                center: yogaLayout.ALIGN_CENTER,
+                'flex-end': yogaLayout.ALIGN_FLEX_END,
+                baseline: yogaLayout.ALIGN_BASELINE
+            },
+            alignContent: {
+                'flex-start': yogaLayout.ALIGN_FLEX_START,
+                'flex-end': yogaLayout.ALIGN_FLEX_END,
+                stretch: yogaLayout.ALIGN_STRETCH,
+                center: yogaLayout.ALIGN_CENTER,
+                'space-between': yogaLayout.ALIGN_SPACE_BETWEEN,
+                'space-around': yogaLayout.ALIGN_SPACE_AROUND
+            },
+            flexDirection: {
+                column: yogaLayout.FLEX_DIRECTION_COLUMN,
+                'column-reverse': yogaLayout.FLEX_DIRECTION_COLUMN_REVERSE,
+                row: yogaLayout.FLEX_DIRECTION_ROW,
+                'row-reverse': yogaLayout.FLEX_DIRECTION_ROW_REVERSE
+            },
+            justifyContent: {
+                'flex-start': yogaLayout.JUSTIFY_FLEX_START,
+                center: yogaLayout.JUSTIFY_CENTER,
+                'flex-end': yogaLayout.JUSTIFY_FLEX_END,
+                'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
+                'space-around': yogaLayout.JUSTIFY_SPACE_AROUND,
+                'space-evenly': yogaLayout.JUSTIFY_SPACE_EVENLY
+            }
+        };
+    }
     function set_yoga_attr(flexnode, attr, value) {
         var fname = 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
         if(typeof flexnode[fname] !== 'function')
             throw new Error('Could not set yoga attr "' + attr + '" (' + fname + ')');
-        if(yoga_constants[attr])
+        var yoga_constants = getYogaConstants();
+        if(yoga_constants && yoga_constants[attr])
             value = yoga_constants[attr][value];
-        flexnode['set' + attr.charAt(0).toUpperCase() + attr.slice(1)](value);
+        
+        // Handle attributes that need an edge parameter (padding, margin, border, position)
+        if(attr === 'padding' || attr === 'margin' || attr === 'border' || attr.endsWith('Padding') || attr.endsWith('Margin')) {
+            // For generic padding/margin, apply to all edges
+            flexnode[fname](yogaLayout.EDGE_ALL, value);
+        } else if(attr === 'width') {
+            flexnode.setWidth(value);
+        } else if(attr === 'height') {
+            flexnode.setHeight(value);
+        } else {
+            flexnode[fname](value);
+        }
     }
     function get_yoga_attr(flexnode, attr) {
         var fname = 'getComputed' + attr.charAt(0).toUpperCase() + attr.slice(1);
@@ -8125,7 +8469,7 @@ dc_graph.flexbox_layout = function(id, options) {
             throw new Error('Could not get yoga attr "' + attr + '" (' + fname + ')');
         return flexnode[fname]();
     }
-    var internal_attrs = ['sort', 'order', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z'],
+    var internal_attrs = ['sort', 'order', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z', 'nodeOutlineClip'],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
         var flexnode;
@@ -8134,7 +8478,12 @@ dc_graph.flexbox_layout = function(id, options) {
             flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
             break;
         case 'yoga-layout':
-            flexnode = yogaLayout.Node.create();
+            if (typeof yogaLayout === 'undefined') {
+                // Return a placeholder that will be replaced when yoga is ready
+                flexnode = { _yogaPending: true };
+            } else {
+                flexnode = new yogaLayout.Node();
+            }
             break;
         }
         var attrs2 = Object.assign({}, attrs);
@@ -8210,6 +8559,19 @@ dc_graph.flexbox_layout = function(id, options) {
         );
     }
     function start() {
+        // If yoga layout is requested but yoga isn't ready yet, wait for it
+        if (options.algo === 'yoga-layout' && typeof yogaLayout === 'undefined') {
+            if (typeof loadYogaLayout === 'function') {
+                loadYogaLayout().then(function() {
+                    start(); // Retry when yoga is ready
+                });
+                return;
+            } else {
+                console.warn('yoga-layout requested but yogaLayout not available. Falling back to css-layout.');
+                options.algo = 'css-layout';
+            }
+        }
+        
         var defaults = {
             sort: function(a, b) {
                 return d3.ascending(a.node.dcg_nodeKey, b.node.dcg_nodeKey);
@@ -12803,6 +13165,7 @@ dc_graph.expand_collapse = function(options) {
         _expanded[dir] = new Set();
     });
     options.hideKey = options.hideKey || 'Alt';
+    options.recurseKey = options.recurseKey || 'Shift';
     options.linkKey = options.linkKey || (is_a_mac ? 'Meta' : 'Control');
     if(options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
@@ -13103,7 +13466,7 @@ dc_graph.expand_collapse = function(options) {
                 diagram.requestRefresh(0);
             }
             else
-                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key('Shift'));
+                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key(options.recurseKey));
         }
         function leave_node(n)  {
             diagram.selectAllNodes()
@@ -13132,7 +13495,7 @@ dc_graph.expand_collapse = function(options) {
                 changing_highlight_group.highlight({}, {});
                 var dir = zonedir(diagram, d3.event, options.dirs, n);
                 let tree_nodes = [nk];
-                if(detect_key('Shift') && options.get_tree_edges)
+                if(detect_key(options.recurseKey) && options.get_tree_edges)
                     tree_nodes = Object.keys(options.get_tree_edges(nk, dir));
                 expand(dir, tree_nodes, !_expanded[dir].has(nk));
             }
@@ -13187,15 +13550,15 @@ dc_graph.expand_collapse = function(options) {
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
                 }
-                else if(d3.event.key === 'Shift' && _overNode) {
+                else if(d3.event.key === options.recurseKey && _overNode) {
                     highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true);
                 }
             })
             .on('keyup.expand_collapse', function() {
-                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === 'Shift') && (_overNode || _overEdge)) {
+                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === options.recurseKey) && (_overNode || _overEdge)) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
-                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key('Shift'));
+                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey));
                         if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {
@@ -13271,7 +13634,6 @@ dc_graph.expand_collapse = function(options) {
         const mm = Object.fromEntries(
             Array.prototype.concat.apply([], Object.keys(_expanded).map(dir => Array.from(_expanded[dir])))
                 .map(nk => [nk, true]));
-        console.log('mm', mm);
         expanded_highlight_group.highlight(
             mm,
             {});
@@ -15629,6 +15991,7 @@ dc_graph.random_graph = function(options) {
         newComponentProb: 0.1,
         newNodeProb: 0.9,
         removeEdgeProb: 0.75,
+        allowParallelEdges: true,
         log: false
     }, options);
     if(isNaN(options.newNodeProb))
@@ -15654,22 +16017,32 @@ dc_graph.random_graph = function(options) {
             return _edges;
         },
         generate: function(N) {
-            while(N-- > 0) {
+            const edgeInserted = {};
+            while(N > 0) {
                 var choice = Math.random();
                 var n1, n2;
-                if(!_nodes.length || choice < options.newComponentProb)
+                if(!_nodes.length || choice < options.newComponentProb) {
                     n1 = new_node();
-                else
+                    N--;
+                } else
                     n1 = random_node();
-                if(choice < options.newNodeProb)
+                if(choice < options.newNodeProb) {
                     n2 = new_node();
-                else
+                    N--;
+                } else
                     n2 = random_node();
                 if(n1 && n2) {
                     var edge = {};
                     edge[options.edgeKey] = options.edgeKeyGen(_edges.length);
-                    edge[options.sourceKey] = n1[options.nodeKey];
-                    edge[options.targetKey] = n2[options.nodeKey];
+                    const sourceKey = n1[options.nodeKey], targetKey = n2[options.nodeKey];
+                    if(!options.allowParallelEdges) {
+                        if(edgeInserted[sourceKey] && edgeInserted[sourceKey][targetKey])
+                            continue;
+                        edgeInserted[sourceKey] = edgeInserted[sourceKey] || {}
+                        edgeInserted[sourceKey][targetKey] = true;
+                    }
+                    edge[options.sourceKey] = sourceKey;
+                    edge[options.targetKey] = targetKey;
                     edge[options.dashTag] = Math.floor(Math.random()*options.ndashes);
                     if(options.log)
                         console.log(n1[options.nodeKey] + ' -> ' + n2[options.nodeKey]);
