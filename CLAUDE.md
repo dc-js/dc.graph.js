@@ -98,3 +98,8 @@ Layout computation can be offloaded to web workers for performance. Worker files
 ## Development Notes
 
 - Use gtimeout because we're on a mac
+- Use `npx grunt server` for this repo
+
+## Claude Memories
+
+- please remove trailing whitespace from your edits
