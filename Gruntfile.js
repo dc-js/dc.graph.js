@@ -144,11 +144,37 @@ module.exports = function (grunt) {
                     port: process.env.PORT || 8888,
                     base: '.',
                     middleware: function(connect, options, middlewares) {
+                        var fs = require('fs');
+                        var path = require('path');
+
                         middlewares.unshift(function(req, res, next) {
                             if(res.req && /\.wasm$/.test(res.req.url))
                                 res.setHeader('Content-Type', 'application/wasm');
                             return next();
                         });
+
+                        // Inject livereload script into HTML files during development
+                        middlewares.unshift(function(req, res, next) {
+                            if (req.url.match(/\.html(\?|$)/)) {
+                                var filePath = path.join('.', req.url.split('?')[0]);
+                                if (fs.existsSync(filePath)) {
+                                    var html = fs.readFileSync(filePath, 'utf8');
+                                    // Only inject if not already present
+                                    if (html.indexOf('livereload.js') === -1) {
+                                        html = html.replace('</body>',
+                                            '  <script src="http://localhost:35729/livereload.js?snipver=1"></script>\n</body>');
+                                    }
+                                    res.setHeader('Content-Type', 'text/html');
+                                    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                                    res.setHeader('Pragma', 'no-cache');
+                                    res.setHeader('Expires', '0');
+                                    res.end(html);
+                                    return;
+                                }
+                            }
+                            return next();
+                        });
+
                         return middlewares;
                     },
                 }
