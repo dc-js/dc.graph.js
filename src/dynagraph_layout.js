@@ -43,7 +43,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     function dg2incr_node_attrs_changed(n, n2) {
         const attr_pairs = [];
         if(n2.x !== undefined && n2.y !== undefined && (n2.x !== n.x || n2.y !== n.y))
-            attr_pairs.push(['pos', dg2incr_coord([n.x, n.y]).map(String).join(',')]);
+            attr_pairs.push(['pos', dg2incr_coord([n2.x, n2.y]).map(String).join(',')]);
         return attr_pairs;
     }
 
