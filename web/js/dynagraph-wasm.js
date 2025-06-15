@@ -35,7 +35,7 @@ if (ENVIRONMENT_IS_NODE) {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /home/gordon/src/dynagraph/incrface-print.js
+// include: /Users/gordon/src/dynagraph/incrface-print.js
 Module = {
     print: (...args) => {
         const text = args.join(' ');
@@ -45,7 +45,7 @@ Module = {
             window.receiveIncr(text)
     }
 };
-// end include: /home/gordon/src/dynagraph/incrface-print.js
+// end include: /Users/gordon/src/dynagraph/incrface-print.js
 
 
 // Sometimes an existing Module object exists with properties
@@ -390,6 +390,8 @@ var __ATPOSTRUN__ = []; // functions called after the main() is called
 
 var runtimeInitialized = false;
 
+var runtimeExited = false;
+
 function preRun() {
   if (Module['preRun']) {
     if (typeof Module['preRun'] == 'function') Module['preRun'] = [Module['preRun']];
@@ -422,6 +424,18 @@ function preMain() {
   callRuntimeCallbacks(__ATMAIN__);
 }
 
+function exitRuntime() {
+  assert(!runtimeExited);
+  // ASYNCIFY cannot be used once the runtime starts shutting down.
+  Asyncify.state = Asyncify.State.Disabled;
+  checkStackCookie();
+  ___funcs_on_exit(); // Native atexit() functions
+  callRuntimeCallbacks(__ATEXIT__);
+  FS.quit();
+TTY.shutdown();
+  runtimeExited = true;
+}
+
 function postRun() {
   checkStackCookie();
 
@@ -448,6 +462,7 @@ function addOnPreMain(cb) {
 }
 
 function addOnExit(cb) {
+  __ATEXIT__.unshift(cb);
 }
 
 function addOnPostRun(cb) {
@@ -604,6 +619,7 @@ var isFileURI = (filename) => filename.startsWith('file://');
 function createExportWrapper(name, nargs) {
   return (...args) => {
     assert(runtimeInitialized, `native function \`${name}\` called before runtime initialization`);
+    assert(!runtimeExited, `native function \`${name}\` called after runtime exit (use NO_EXIT_RUNTIME to keep it alive after main() exits)`);
     var f = wasmExports[name];
     assert(f, `exported native function \`${name}\` not found`);
     // Only assert for too many arguments. Too few can be valid since the missing arguments will be zero filled.
@@ -729,6 +745,7 @@ function getWasmImports() {
 // Create the wasm instance.
 // Receives the wasm imports, returns the exports.
 function createWasm() {
+  var info = getWasmImports();
   // Load the wasm module and create an instance of using native support in the JS engine.
   // handle a generated wasm instance, receiving its exports and
   // performing other necessary setup
@@ -771,8 +788,6 @@ function createWasm() {
     // When the regression is fixed, can restore the above PTHREADS-enabled path.
     receiveInstance(result['instance']);
   }
-
-  var info = getWasmImports();
 
   // User shell pages can write their own Module.instantiateWasm = function(imports, successCallback) callback
   // to manually instantiate the Wasm module themselves. This allows pages to
@@ -958,7 +973,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
     }
   }
 
-  var noExitRuntime = Module['noExitRuntime'] || true;
+  var noExitRuntime = Module['noExitRuntime'] || false;
 
   var ptrToString = (ptr) => {
       assert(typeof ptr === 'number');
@@ -1154,8 +1169,9 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
       assert(typeof ptr == 'number', `UTF8ToString expects a number (got ${typeof ptr})`);
       return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : '';
     };
-  var ___assert_fail = (condition, filename, line, func) =>
+  var ___assert_fail = (condition, filename, line, func) => {
       abort(`Assertion failed: ${UTF8ToString(condition)}, at: ` + [filename ? UTF8ToString(filename) : 'unknown filename', line, func ? UTF8ToString(func) : 'unknown function']);
+    };
 
   var exceptionCaught =  [];
   
@@ -1720,7 +1736,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   var MEMFS = {
   ops_table:null,
   mount(mount) {
-        return MEMFS.createNode(null, '/', 16895, 0);
+        return MEMFS.createNode(null, '/', 16384 | 511 /* 0777 */, 0);
       },
   createNode(parent, name, mode, dev) {
         if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
@@ -1875,7 +1891,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
           }
         },
   lookup(parent, name) {
-          throw new FS.ErrnoError(44);
+          throw FS.genericErrors[44];
         },
   mknod(parent, name, mode, dev) {
           return MEMFS.createNode(parent, name, mode, dev);
@@ -1921,7 +1937,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
           return entries;
         },
   symlink(parent, newname, oldpath) {
-          var node = MEMFS.createNode(parent, newname, 0o777 | 40960, 0);
+          var node = MEMFS.createNode(parent, newname, 511 /* 0777 */ | 40960, 0);
           node.link = oldpath;
           return node;
         },
@@ -1948,6 +1964,13 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   write(stream, buffer, offset, length, position, canOwn) {
           // The data buffer should be a typed array view
           assert(!(buffer instanceof ArrayBuffer));
+          // If the buffer is located in main memory (HEAP), and if
+          // memory can grow, we can't hold on to references of the
+          // memory buffer, as they may get invalidated. That means we
+          // need to do copy its contents.
+          if (buffer.buffer === HEAP8.buffer) {
+            canOwn = false;
+          }
   
           if (!length) return 0;
           var node = stream.node;
@@ -2139,7 +2162,9 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   
   
   
-  var strError = (errno) => UTF8ToString(_strerror(errno));
+  var strError = (errno) => {
+      return UTF8ToString(_strerror(errno));
+    };
   
   var ERRNO_CODES = {
       'EPERM': 63,
@@ -2294,6 +2319,8 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
           }
         }
       },
+  genericErrors:{
+  },
   filesystems:null,
   syncFSRequests:0,
   readFiles:{
@@ -2809,35 +2836,14 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
         }
         return parent.node_ops.mknod(parent, name, mode, dev);
       },
-  statfs(path) {
-  
-        // NOTE: None of the defaults here are true. We're just returning safe and
-        //       sane values.
-        var rtn = {
-          bsize: 4096,
-          frsize: 4096,
-          blocks: 1e6,
-          bfree: 5e5,
-          bavail: 5e5,
-          files: FS.nextInode,
-          ffree: FS.nextInode - 1,
-          fsid: 42,
-          flags: 2,
-          namelen: 255,
-        };
-  
-        var parent = FS.lookupPath(path, {follow: true}).node;
-        if (parent?.node_ops.statfs) {
-          Object.assign(rtn, parent.node_ops.statfs(parent.mount.opts.root));
-        }
-        return rtn;
-      },
-  create(path, mode = 0o666) {
+  create(path, mode) {
+        mode = mode !== undefined ? mode : 438 /* 0666 */;
         mode &= 4095;
         mode |= 32768;
         return FS.mknod(path, mode, 0);
       },
-  mkdir(path, mode = 0o777) {
+  mkdir(path, mode) {
+        mode = mode !== undefined ? mode : 511 /* 0777 */;
         mode &= 511 | 512;
         mode |= 16384;
         return FS.mknod(path, mode, 0);
@@ -2858,7 +2864,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   mkdev(path, mode, dev) {
         if (typeof dev == 'undefined') {
           dev = mode;
-          mode = 0o666;
+          mode = 438 /* 0666 */;
         }
         mode |= 8192;
         return FS.mknod(path, mode, dev);
@@ -2956,7 +2962,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
         // do the underlying fs rename
         try {
           old_dir.node_ops.rename(old_node, new_dir, new_name);
-          // update old node (we do this here to avoid each backend
+          // update old node (we do this here to avoid each backend 
           // needing to)
           old_node.parent = new_dir;
         } catch (e) {
@@ -3026,7 +3032,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
         if (!link.node_ops.readlink) {
           throw new FS.ErrnoError(28);
         }
-        return link.node_ops.readlink(link);
+        return PATH_FS.resolve(FS.getPath(link.parent), link.node_ops.readlink(link));
       },
   stat(path, dontFollow) {
         var lookup = FS.lookupPath(path, { follow: !dontFollow });
@@ -3131,12 +3137,13 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
           timestamp: Math.max(atime, mtime)
         });
       },
-  open(path, flags, mode = 0o666) {
+  open(path, flags, mode) {
         if (path === "") {
           throw new FS.ErrnoError(44);
         }
         flags = typeof flags == 'string' ? FS_modeStringToFlags(flags) : flags;
         if ((flags & 64)) {
+          mode = typeof mode == 'undefined' ? 438 /* 0666 */ : mode;
           mode = (mode & 4095) | 32768;
         } else {
           mode = 0;
@@ -3425,7 +3432,6 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
         FS.registerDevice(FS.makedev(1, 3), {
           read: () => 0,
           write: (stream, buffer, offset, length, pos) => length,
-          llseek: () => 0,
         });
         FS.mkdev('/dev/null', FS.makedev(1, 3));
         // setup /dev/tty and /dev/tty1
@@ -3459,7 +3465,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
         FS.mkdir('/proc/self/fd');
         FS.mount({
           mount() {
-            var node = FS.createNode(proc_self, 'fd', 16895, 73);
+            var node = FS.createNode(proc_self, 'fd', 16384 | 511 /* 0777 */, 73);
             node.node_ops = {
               lookup(parent, name) {
                 var fd = +name;
@@ -3511,6 +3517,12 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
         assert(stderr.fd === 2, `invalid handle for stderr (${stderr.fd})`);
       },
   staticInit() {
+        // Some errors may happen quite a bit, to avoid overhead we reuse them (and suffer a lack of stack info)
+        [44].forEach((code) => {
+          FS.genericErrors[code] = new FS.ErrnoError(code);
+          FS.genericErrors[code].stack = '<generic error, no stack>';
+        });
+  
         FS.nameTable = new Array(4096);
   
         FS.mount(MEMFS, {}, '/');
@@ -4102,7 +4114,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   mount(mount) {
         // Do not pollute the real root directory or its child nodes with pipes
         // Looks like it is OK to create another pseudo-root node not linked to the FS.root hierarchy this way
-        return FS.createNode(null, '/', 16384 | 0o777, 0);
+        return FS.createNode(null, '/', 16384 | 511 /* 0777 */, 0);
       },
   createPipe() {
         var pipe = {
@@ -4348,8 +4360,9 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   }
   }
 
-  var __abort_js = () =>
+  var __abort_js = () => {
       abort('native code called abort()');
+    };
 
   var nowIsMonotonic = 1;
   var __emscripten_get_now_is_monotonic = () => nowIsMonotonic;
@@ -4415,17 +4428,78 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   var _emscripten_get_now = () => performance.now();
 
   var getHeapMax = () =>
-      HEAPU8.length;
+      // Stay one Wasm page short of 4GB: while e.g. Chrome is able to allocate
+      // full 4GB Wasm memories, the size will wrap back to 0 bytes in Wasm side
+      // for any code that deals with heap sizes, which would require special
+      // casing all heap size related code to treat 0 specially.
+      2147483648;
   
   
-  var abortOnCannotGrowMemory = (requestedSize) => {
-      abort(`Cannot enlarge memory arrays to size ${requestedSize} bytes (OOM). Either (1) compile with -sINITIAL_MEMORY=X with X higher than the current value ${HEAP8.length}, (2) compile with -sALLOW_MEMORY_GROWTH which allows increasing the size at runtime, or (3) if you want malloc to return NULL (0) instead of this abort, compile with -sABORTING_MALLOC=0`);
+  var growMemory = (size) => {
+      var b = wasmMemory.buffer;
+      var pages = ((size - b.byteLength + 65535) / 65536) | 0;
+      try {
+        // round size grow request up to wasm page size (fixed 64KB per spec)
+        wasmMemory.grow(pages); // .grow() takes a delta compared to the previous size
+        updateMemoryViews();
+        return 1 /*success*/;
+      } catch(e) {
+        err(`growMemory: Attempted to grow heap from ${b.byteLength} bytes to ${size} bytes, but got error: ${e}`);
+      }
+      // implicit 0 return to save code size (caller will cast "undefined" into 0
+      // anyhow)
     };
   var _emscripten_resize_heap = (requestedSize) => {
       var oldSize = HEAPU8.length;
       // With CAN_ADDRESS_2GB or MEMORY64, pointers are already unsigned.
       requestedSize >>>= 0;
-      abortOnCannotGrowMemory(requestedSize);
+      // With multithreaded builds, races can happen (another thread might increase the size
+      // in between), so return a failure, and let the caller retry.
+      assert(requestedSize > oldSize);
+  
+      // Memory resize rules:
+      // 1.  Always increase heap size to at least the requested size, rounded up
+      //     to next page multiple.
+      // 2a. If MEMORY_GROWTH_LINEAR_STEP == -1, excessively resize the heap
+      //     geometrically: increase the heap size according to
+      //     MEMORY_GROWTH_GEOMETRIC_STEP factor (default +20%), At most
+      //     overreserve by MEMORY_GROWTH_GEOMETRIC_CAP bytes (default 96MB).
+      // 2b. If MEMORY_GROWTH_LINEAR_STEP != -1, excessively resize the heap
+      //     linearly: increase the heap size by at least
+      //     MEMORY_GROWTH_LINEAR_STEP bytes.
+      // 3.  Max size for the heap is capped at 2048MB-WASM_PAGE_SIZE, or by
+      //     MAXIMUM_MEMORY, or by ASAN limit, depending on which is smallest
+      // 4.  If we were unable to allocate as much memory, it may be due to
+      //     over-eager decision to excessively reserve due to (3) above.
+      //     Hence if an allocation fails, cut down on the amount of excess
+      //     growth, in an attempt to succeed to perform a smaller allocation.
+  
+      // A limit is set for how much we can grow. We should not exceed that
+      // (the wasm binary specifies it, so if we tried, we'd fail anyhow).
+      var maxHeapSize = getHeapMax();
+      if (requestedSize > maxHeapSize) {
+        err(`Cannot enlarge memory, requested ${requestedSize} bytes, but the limit is ${maxHeapSize} bytes!`);
+        return false;
+      }
+  
+      // Loop through potential heap size increases. If we attempt a too eager
+      // reservation that fails, cut down on the attempted size and reserve a
+      // smaller bump instead. (max 3 times, chosen somewhat arbitrarily)
+      for (var cutDown = 1; cutDown <= 4; cutDown *= 2) {
+        var overGrownHeapSize = oldSize * (1 + 0.2 / cutDown); // ensure geometric growth
+        // but limit overreserving (default to capping at +96MB overgrowth at most)
+        overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + 100663296 );
+  
+        var newSize = Math.min(maxHeapSize, alignMemory(Math.max(requestedSize, overGrownHeapSize), 65536));
+  
+        var replacement = growMemory(newSize);
+        if (replacement) {
+  
+          return true;
+        }
+      }
+      err(`Failed to grow the heap from ${oldSize} bytes to ${newSize} bytes, not enough memory!`);
+      return false;
     };
 
   var handleException = (e) => {
@@ -4464,7 +4538,9 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   var exitJS = (status, implicit) => {
       EXITSTATUS = status;
   
-      checkUnflushedContent();
+      if (!keepRuntimeAlive()) {
+        exitRuntime();
+      }
   
       // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
       if (keepRuntimeAlive() && !implicit) {
@@ -4478,6 +4554,9 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   
   
   var maybeExit = () => {
+      if (runtimeExited) {
+        return;
+      }
       if (!keepRuntimeAlive()) {
         try {
           _exit(EXITSTATUS);
@@ -4487,7 +4566,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
       }
     };
   var callUserCallback = (func) => {
-      if (ABORT) {
+      if (runtimeExited || ABORT) {
         err('user callback triggered after runtime exited or application aborted.  Ignoring.');
         return;
       }
@@ -4498,11 +4577,20 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
         handleException(e);
       }
     };
+  
+  var runtimeKeepalivePush = () => {
+      runtimeKeepaliveCounter += 1;
+    };
+  
+  var runtimeKeepalivePop = () => {
+      assert(runtimeKeepaliveCounter > 0);
+      runtimeKeepaliveCounter -= 1;
+    };
   /** @param {number=} timeout */
   var safeSetTimeout = (func, timeout) => {
-      
+      runtimeKeepalivePush();
       return setTimeout(() => {
-        
+        runtimeKeepalivePop();
         callUserCallback(func);
       }, timeout);
     };
@@ -4518,7 +4606,9 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
   var ENV = {
   };
   
-  var getExecutableName = () => thisProgram || './this.program';
+  var getExecutableName = () => {
+      return thisProgram || './this.program';
+    };
   var getEnvStrings = () => {
       if (!getEnvStrings.strings) {
         // Default values.
@@ -4729,10 +4819,8 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
       var func = wasmTableMirror[funcPtr];
       if (!func) {
         if (funcPtr >= wasmTableMirror.length) wasmTableMirror.length = funcPtr + 1;
-        /** @suppress {checkTypes} */
         wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr);
       }
-      /** @suppress {checkTypes} */
       assert(wasmTable.get(funcPtr) == func, 'JavaScript-side Wasm function table mirror is out of date!');
       return func;
     };
@@ -4767,14 +4855,9 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
       return type;
     };
   
-  var runtimeKeepalivePush = () => {
-      runtimeKeepaliveCounter += 1;
-    };
   
-  var runtimeKeepalivePop = () => {
-      assert(runtimeKeepaliveCounter > 0);
-      runtimeKeepaliveCounter -= 1;
-    };
+  
+  
   
   
   var Asyncify = {
@@ -4871,7 +4954,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
           // the dbg() function itself can call back into WebAssembly to get the
           // current pthread_self() pointer).
           Asyncify.state = Asyncify.State.Normal;
-          
+          runtimeKeepalivePush();
           // Keep the runtime alive so that a re-wind can be done later.
           runAndAbortIfError(_asyncify_stop_unwind);
           if (typeof Fibers != 'undefined') {
@@ -4923,7 +5006,7 @@ function get_incrface_input() { if(window.incrface_input) { let ii = window.incr
         var func = Asyncify.getDataRewindFunc(name);
         // Once we have rewound and the stack we no longer need to artificially
         // keep the runtime alive.
-        
+        runtimeKeepalivePop();
         return func();
       },
   handleSleep(startAsync) {
@@ -5199,6 +5282,7 @@ var ___cxa_get_exception_ptr = createExportWrapper('__cxa_get_exception_ptr', 1)
 var _malloc = createExportWrapper('malloc', 1);
 var _free = createExportWrapper('free', 1);
 var _fflush = createExportWrapper('fflush', 1);
+var ___funcs_on_exit = createExportWrapper('__funcs_on_exit', 0);
 var _strerror = createExportWrapper('strerror', 1);
 var _setThrew = createExportWrapper('setThrew', 2);
 var __emscripten_tempret_set = createExportWrapper('_emscripten_tempret_set', 1);
@@ -5592,7 +5676,6 @@ var missingLibrarySymbols = [
   'convertI32PairToI53',
   'convertU32PairToI53',
   'getTempRet0',
-  'growMemory',
   'inetPton4',
   'inetNtop4',
   'inetPton6',
@@ -5686,8 +5769,8 @@ var missingLibrarySymbols = [
   'checkWasiClock',
   'wasiRightsToMuslOFlags',
   'wasiOFlagsToMuslOFlags',
+  'createDyncallWrapper',
   'setImmediateWrapped',
-  'safeRequestAnimationFrame',
   'clearImmediateWrapped',
   'polyfillSetImmediate',
   'registerPostMainLoop',
@@ -5697,6 +5780,7 @@ var missingLibrarySymbols = [
   'idsToPromises',
   'makePromiseCallback',
   'Browser_asyncPrepareDataCounter',
+  'safeRequestAnimationFrame',
   'isLeapYear',
   'ydayFromDate',
   'arraySum',
@@ -5764,7 +5848,7 @@ var unexportedSymbols = [
   'zeroMemory',
   'exitJS',
   'getHeapMax',
-  'abortOnCannotGrowMemory',
+  'growMemory',
   'ENV',
   'ERRNO_CODES',
   'strError',
@@ -5967,45 +6051,6 @@ function run(args = arguments_) {
     doRun();
   }
   checkStackCookie();
-}
-
-function checkUnflushedContent() {
-  // Compiler settings do not allow exiting the runtime, so flushing
-  // the streams is not possible. but in ASSERTIONS mode we check
-  // if there was something to flush, and if so tell the user they
-  // should request that the runtime be exitable.
-  // Normally we would not even include flush() at all, but in ASSERTIONS
-  // builds we do so just for this check, and here we see if there is any
-  // content to flush, that is, we check if there would have been
-  // something a non-ASSERTIONS build would have not seen.
-  // How we flush the streams depends on whether we are in SYSCALLS_REQUIRE_FILESYSTEM=0
-  // mode (which has its own special function for this; otherwise, all
-  // the code is inside libc)
-  var oldOut = out;
-  var oldErr = err;
-  var has = false;
-  out = err = (x) => {
-    has = true;
-  }
-  try { // it doesn't matter if it fails
-    _fflush(0);
-    // also flush in the JS FS layer
-    ['stdout', 'stderr'].forEach((name) => {
-      var info = FS.analyzePath('/dev/' + name);
-      if (!info) return;
-      var stream = info.object;
-      var rdev = stream.rdev;
-      var tty = TTY.ttys[rdev];
-      if (tty?.output?.length) {
-        has = true;
-      }
-    });
-  } catch(e) {}
-  out = oldOut;
-  err = oldErr;
-  if (has) {
-    warnOnce('stdio streams had content in them that was not flushed. you should set EXIT_RUNTIME to 1 (see the Emscripten FAQ), or make sure to emit a newline when you printf etc.');
-  }
 }
 
 if (Module['preInit']) {
