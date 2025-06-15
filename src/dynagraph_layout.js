@@ -27,6 +27,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
 
     function dg2incr_graph_attrs() {
         return [
+            ['rankdir', _layout.rankdir()],
             ['resolution', [_layout.resolution().x, _layout.resolution().y]],
             ['defaultsize', [_layout.defaultsize().width, _layout.defaultsize().height]],
             ['separation', [_layout.separation().x, _layout.separation().y]],
