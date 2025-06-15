@@ -7533,7 +7533,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
  **/
 dc_graph.dynagraph_layout = function(id, layout) {
     var _layoutId = id || uuid();
-    const _Gname = 'G';
+    const _Gname = _layoutId;
     var _layout;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _tick, _done;
@@ -7553,6 +7553,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
 
     function dg2incr_graph_attrs() {
         return [
+            ['rankdir', _layout.rankdir()],
             ['resolution', [_layout.resolution().x, _layout.resolution().y]],
             ['defaultsize', [_layout.defaultsize().width, _layout.defaultsize().height]],
             ['separation', [_layout.separation().x, _layout.separation().y]],
@@ -7569,7 +7570,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     function dg2incr_node_attrs_changed(n, n2) {
         const attr_pairs = [];
         if(n2.x !== undefined && n2.y !== undefined && (n2.x !== n.x || n2.y !== n.y))
-            attr_pairs.push(['pos', dg2incr_coord([n.x, n.y]).map(String).join(',')]);
+            attr_pairs.push(['pos', dg2incr_coord([n2.x, n2.y]).map(String).join(',')]);
         return attr_pairs;
     }
 
@@ -7592,7 +7593,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     // incr2dg
     function incr2dg_coord(c) {
         const [x, y] = c;
-        return [x, /*(bb && bb[0][1] || 0)*/ - y];
+        return [+x, /*(bb && bb[0][1] || 0)*/ - y];
     }
     function incr2dg_bb(bb) {
         const [x1,y1,x2,y2] = bb.split(',');
@@ -7687,7 +7688,14 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
     function receiveIncr(text) {
         console.log(text);
-        const cmds = window.parseIncrface(text);
+        let cmds = null;
+        try {
+            cmds = window.parseIncrface(text);
+        } catch(xep) {
+            console.log('incrface parse failed', xep)
+        }
+        if (!cmds)
+            return;
         for(const cmd of cmds) {
             const {action, kind, graph} = cmd;
             if(graph !== _Gname) {
@@ -7775,14 +7783,12 @@ dc_graph.dynagraph_layout = function(id, layout) {
         if(_linesOut.length) {
             const open = _opened ? [] : [_open_graph];
             _opened = true;
-            if(_linesOut.length > 1)
-                _linesOut = [
-                    ...open,
-                    `lock graph ${mq(_Gname)}`,
-                    ..._linesOut,
-                    `unlock graph ${mq(_Gname)}`
-                ];
-            console.log(window.incrface_input = _linesOut.join('\n'));
+            const actions = _linesOut.length > 1 ? [
+                `lock graph ${mq(_Gname)}`,
+                ... _linesOut,
+                `unlock graph ${mq(_Gname)}`
+            ] : _linesOut;
+            console.log(window.incrface_input = [...open, ...actions].join('\n'));
             _linesOut = [];
         }
         else _done();
