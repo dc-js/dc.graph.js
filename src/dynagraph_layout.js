@@ -7,7 +7,7 @@
  **/
 dc_graph.dynagraph_layout = function(id, layout) {
     var _layoutId = id || uuid();
-    const _Gname = 'G';
+    const _Gname = _layoutId;
     var _layout;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _tick, _done;
@@ -161,7 +161,14 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
     function receiveIncr(text) {
         console.log(text);
-        const cmds = window.parseIncrface(text);
+        let cmds = null;
+        try {
+            cmds = window.parseIncrface(text);
+        } catch(xep) {
+            console.log('incrface parse failed', xep)
+        }
+        if (!cmds)
+            return;
         for(const cmd of cmds) {
             const {action, kind, graph} = cmd;
             if(graph !== _Gname) {
