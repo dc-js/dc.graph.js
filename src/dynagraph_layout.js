@@ -66,7 +66,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     // incr2dg
     function incr2dg_coord(c) {
         const [x, y] = c;
-        return [x, /*(bb && bb[0][1] || 0)*/ - y];
+        return [+x, /*(bb && bb[0][1] || 0)*/ - y];
     }
     function incr2dg_bb(bb) {
         const [x1,y1,x2,y2] = bb.split(',');
