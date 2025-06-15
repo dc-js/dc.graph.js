@@ -256,14 +256,12 @@ dc_graph.dynagraph_layout = function(id, layout) {
         if(_linesOut.length) {
             const open = _opened ? [] : [_open_graph];
             _opened = true;
-            if(_linesOut.length > 1)
-                _linesOut = [
-                    ...open,
-                    `lock graph ${mq(_Gname)}`,
-                    ..._linesOut,
-                    `unlock graph ${mq(_Gname)}`
-                ];
-            console.log(window.incrface_input = _linesOut.join('\n'));
+            const actions = _linesOut.length > 1 ? [
+                `lock graph ${mq(_Gname)}`,
+                ... _linesOut,
+                `unlock graph ${mq(_Gname)}`
+            ] : _linesOut;
+            console.log(window.incrface_input = [...open, ...actions].join('\n'));
             _linesOut = [];
         }
         else _done();
