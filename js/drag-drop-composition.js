@@ -489,6 +489,35 @@ var _ionicons = {
     Predictor: 'ion-stats-bars.png'
 };
 
+function apply_engine_parameters(engine) {
+    switch(engine.layoutAlgorithm()) {
+        case 'cola':
+            engine
+                .baseLength(5)
+                .groupConnected(true)
+                .handleDisconnected(false)
+                .unconstrainedIterations(5)
+                .userConstraintIterations(5)
+                .allConstraintsIterations(5)
+                .flowLayout({
+                    axis: options.rankdir === 'TB' ? 'y' : 'x',
+                    minSeparation: options.rankdir === 'TB' ? function(e) {
+                        return (e.source.height + e.target.height) / 2 + engine.ranksep();
+                    } : function(e) {
+                        return (e.source.width + e.target.width) / 2 + engine.ranksep();
+                    }
+                });
+            break;
+        case 'dagre':
+            engine.rankdir('LR');
+            break;
+        case 'dynadag':
+            engine
+                .rankdir('LR')
+                .defaultsize({width: 150, height: 40});
+    }
+}
+
 //
 // INITIALIZATION
 //
@@ -516,26 +545,13 @@ get_catalog().then(function(catalog) {
 
     // CANVAS
     _compositionDiagram = dc_graph.diagram('#canvas');
-    var layout = dc_graph.cola_layout()
-            .baseLength(5)
-            .groupConnected(true)
-            .handleDisconnected(false)
-            .unconstrainedIterations(5)
-            .userConstraintIterations(5)
-            .allConstraintsIterations(5)
-            .flowLayout({
-                axis: options.rankdir === 'TB' ? 'y' : 'x',
-                minSeparation: options.rankdir === 'TB' ? function(e) {
-                    return (e.source.height + e.target.height) / 2 + layout.ranksep();
-                } : function(e) {
-                    return (e.source.width + e.target.width) / 2 + layout.ranksep();
-                }
-            });
+    var engine = dc_graph.spawn_engine(qs.layout || 'cola', qs, qs.worker);
+    apply_engine_parameters(engine);
 
     _compositionDiagram
         .width('auto')
         .height('auto')
-        .layoutEngine(layout)
+        .layoutEngine(engine)
         .timeLimit(500)
         .margins({left: 5, top: 5, right: 5, bottom: 5})
         .modKeyZoom(options.mkzoom || null)

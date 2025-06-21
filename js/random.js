@@ -116,12 +116,12 @@ growingDiagram
     .render()
     .autoZoom('once-noanim');
 
-var interval = null;
-function run() {
-    if(interval) {
-        window.clearInterval(interval);
+var randomDemoInterval = null;
+function runRandomDemo() {
+    if(randomDemoInterval) {
+        window.clearInterval(randomDemoInterval);
     }
-    interval = window.setInterval(function() {
+    randomDemoInterval = window.setInterval(function() {
         for(var i = 0; i < sync_url.vals.batch; ++i) {
             if(Math.random() < sync_url.vals.remove)
                 random.remove(1)
@@ -135,15 +135,15 @@ function run() {
             .redraw();
     }, sync_url.vals.interval);
 }
-run();
+runRandomDemo();
 
 d3.select('#play-stop').on('click', function() {
-    if(interval) {
+    if(randomDemoInterval) {
         d3.select('#play-stop').attr('class', 'fas fa-play');
-        window.clearInterval(interval);
-        interval = null;
+        window.clearInterval(randomDemoInterval);
+        randomDemoInterval = null;
     } else {
         d3.select('#play-stop').attr('class', 'fas fa-pause');
-        run();
+        runRandomDemo();
     }
 });

@@ -9,7 +9,7 @@ instance whenever it is appropriate.  The getter forms of functions do not parti
 chaining because they return values that are not the diagram.
 
 **Kind**: global namespace  
-**Version**: 0.9.92  
+**Version**: 0.9.93  
 **Example**  
 ```js
 // Example chaining
@@ -123,6 +123,8 @@ diagram.width(600)
         * [new tree_layout([id])](#new_dc_graph.tree_layout_new)
     * [.graphviz_layout](#dc_graph.graphviz_layout)
         * [new graphviz_layout([id])](#new_dc_graph.graphviz_layout_new)
+    * [.dynagraph_layout](#dc_graph.dynagraph_layout)
+        * [new dynagraph_layout([id])](#new_dc_graph.dynagraph_layout_new)
     * [.d3_force_layout](#dc_graph.d3_force_layout)
         * [new d3_force_layout([id])](#new_dc_graph.d3_force_layout_new)
     * [.d3v4_force_layout](#dc_graph.d3v4_force_layout)
@@ -1688,6 +1690,20 @@ tries to position the nodes as a tree.
 
 In addition to the below layout attributes, `graphviz_layout` also implements the attributes from
 [graphviz_attrs](#dc_graph.graphviz_attrs)
+
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [id] | <code>String</code> | <code>uuid()</code> | Unique identifier |
+
+<a name="dc_graph.dynagraph_layout"></a>
+
+### dc_graph.dynagraph\_layout
+**Kind**: static class of [<code>dc\_graph</code>](#dc_graph)  
+<a name="new_dc_graph.dynagraph_layout_new"></a>
+
+#### new dynagraph\_layout([id])
+`dc_graph.dynagraph_layout` connects to dynagraph-wasm and does dynamic directed graph layout.
 
 
 | Param | Type | Default | Description |
