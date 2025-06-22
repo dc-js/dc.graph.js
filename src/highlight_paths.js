@@ -1,5 +1,6 @@
 import { mode } from './mode.js';
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
+import { nodeEdgeConditions } from './utils.js';
 
 export function highlightPaths(pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
@@ -78,17 +79,17 @@ export function highlightPaths(pathprops, hoverprops, selectprops, pathsgroup) {
 
     function draw(diagram, node, edge, ehover) {
         diagram
-            .cascade(200, true, node_edge_conditions(function(n) {
+            .cascade(200, true, nodeEdgeConditions(function(n) {
                 return !!node_on_paths[diagram.nodeKey.eval(n)];
             }, function(e) {
                 return !!edge_on_paths[diagram.edgeKey.eval(e)];
             }, pathprops))
-            .cascade(300, true, node_edge_conditions(function(n) {
+            .cascade(300, true, nodeEdgeConditions(function(n) {
                 return intersect_paths(node_on_paths[diagram.nodeKey.eval(n)], selected);
             }, function(e) {
                 return intersect_paths(edge_on_paths[diagram.edgeKey.eval(e)], selected);
             }, selectprops))
-            .cascade(400, true, node_edge_conditions(function(n) {
+            .cascade(400, true, nodeEdgeConditions(function(n) {
                 return intersect_paths(node_on_paths[diagram.nodeKey.eval(n)], hoverpaths);
             }, function(e) {
                 return intersect_paths(edge_on_paths[diagram.edgeKey.eval(e)], hoverpaths);

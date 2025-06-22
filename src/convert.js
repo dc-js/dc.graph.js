@@ -1,3 +1,5 @@
+import { uuid } from './core.js';
+
 var convert_tree_helper = function(data, attrs, options, parent, level, inherit) {
     level = level || 0;
     if(attrs.length > (options.valuesByAttr ? 1 : 0)) {

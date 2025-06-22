@@ -13,6 +13,7 @@
  **/
 import { property } from './core.js';
 import { mode } from './mode.js';
+import { ancestorHasClass } from './utils.js';
 
 // External dependency loaded as global
 const d3 = globalThis.d3;
@@ -299,7 +300,7 @@ export function selectNodeAndEdge() {
             return selection;
         },
         exclude: function(element) {
-            return ancestor_has_class(element, 'port');
+            return ancestorHasClass(element, 'port');
         }
     };
 };
@@ -310,7 +311,7 @@ export function selectNode() {
             return node;
         },
         exclude: function(element) {
-            return ancestor_has_class(element, 'port');
+            return ancestorHasClass(element, 'port');
         }
     };
 };

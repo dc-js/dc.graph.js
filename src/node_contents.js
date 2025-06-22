@@ -1,4 +1,5 @@
 import { property, getBBoxNoThrow, isIe, isSafari } from './core.js';
+import { nodeLabelPadding } from './shape.js';
 
 export function textContents() {
     var _contents = {
@@ -87,7 +88,7 @@ export function withIconContents(contents, width, height) {
             contents.parent(parent);
         }),
         padding: function(n) {
-            var padding = node_label_padding(_contents.parent(), n);
+            var padding = nodeLabelPadding(_contents.parent(), n);
             return {
                 x: padding.x * 3,
                 y: padding.y * 3
@@ -111,7 +112,7 @@ export function withIconContents(contents, width, height) {
                 href: _contents.parent().nodeIcon.eval,
                 x: function(n) {
                     var totwid = width + contents.textbox(d3.select(this.parentNode)).width;
-                    return -totwid/2 - node_label_padding(_contents.parent(), n).x;
+                    return -totwid/2 - nodeLabelPadding(_contents.parent(), n).x;
                 },
                 y: -height/2
             });

@@ -350,7 +350,7 @@ export function shapeChanged(diagram) {
     };
 }
 
-function node_label_padding(diagram, n) {
+export function nodeLabelPadding(diagram, n) {
     var nlp = diagram.nodeLabelPadding.eval(n);
     if(typeof nlp === 'number' || typeof nlp === 'string')
         return {x: +nlp, y: +nlp};
@@ -585,7 +585,7 @@ export function asBezier3(path) {
 }
 
 // from https://www.jasondavies.com/animated-bezier/
-function interpolate(d, p) {
+export function interpolate(d, p) {
     var r = [];
     for (var i=1; i<d.length; i++) {
         var d0 = d[i-1], d1 = d[i];

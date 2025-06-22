@@ -1,4 +1,5 @@
 import { mode } from './mode.js';
+import { arrowParts, addPoints, multPoint, arrowOffsets } from './arrows.js';
 
 export function troubleshoot() {
     var _debugLayer = null;
@@ -187,30 +188,30 @@ export function troubleshoot() {
             .attr('d', 'M0,3 L3,0 L0,-3');
     }
     function edge_arrow_points(arrows, defn, arrowSize, stemWidth, orient, endp, strokeWidth) {
-        var parts = arrow_parts(arrows, defn),
-            offsets = arrow_offsets(parts, stemWidth),
+        var parts = arrowParts(arrows, defn),
+            offsets = arrowOffsets(parts, stemWidth),
             xunit = [Math.cos(orient), Math.sin(orient)];
         endp = [endp.x, endp.y];
         if(!parts.length)
             return [[endp[0] - xunit[0]*strokeWidth/2,
                      endp[1] - xunit[1]*strokeWidth/2]];
-        var globofs = add_points(
+        var globofs = addPoints(
             [-strokeWidth/arrowSize/2,0],
-            mult_point(front_ref(parts[0].frontRef), -1));
+            multPoint(front_ref(parts[0].frontRef), -1));
         var pts = offsets.map(function(ofs, i) {
-            return mult_point([
+            return multPoint([
                 globofs,
                 front_ref(parts[i].frontRef),
                 ofs.offset
             ].reduce(add_points), arrowSize);
         });
-        pts.push(mult_point([
+        pts.push(multPoint([
             globofs,
             back_ref(parts[parts.length-1].backRef),
             offsets[parts.length-1].offset
         ].reduce(add_points), arrowSize));
         return pts.map(function(p) {
-            return add_points(
+            return addPoints(
                 endp,
                 [p[0]*xunit[0] - p[1]*xunit[1], p[0]*xunit[1] + p[1]*xunit[0]]
             );

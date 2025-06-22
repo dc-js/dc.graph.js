@@ -115,6 +115,12 @@ export { wildcardPorts } from './wildcard_ports.js';
 export { annotateLayers } from './annotate_layers.js';
 export { drawClusters } from './draw_clusters.js';
 export { labelNodes } from './label_nodes.js';
+export { 
+  multiplyProperties, conditionalProperties, nodeEdgeConditions, 
+  param, clone, uniq, ancestorHasClass 
+} from './utils.js';
+export { nodeLabelPadding } from './shape.js';
+export { arrowParts, addPoints, multPoint, arrowOffsets } from './arrows.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';

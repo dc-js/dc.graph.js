@@ -492,7 +492,7 @@ function arrow_def(arrdefs, shape, open, side) {
     return arrdefs[shape](open, side);
 }
 
-function arrow_parts(arrdefs, desc) {
+export function arrowParts(arrdefs, desc) {
     // graphviz appears to use a real parser for this
     var parts = [];
     while(desc && desc.length) {
@@ -538,11 +538,11 @@ function subtract_points(p1, p2) {
     return [p1[0] - p2[0], p1[1] - p2[1]];
 }
 
-function add_points(p1, p2) {
+export function addPoints(p1, p2) {
     return [p1[0] + p2[0], p1[1] + p2[1]];
 }
 
-function mult_point(p, s) {
+export function multPoint(p, s) {
     return p.map(function(x) { return x*s; });
 }
 
@@ -556,7 +556,7 @@ var view_box = defaulted([0, -5, 10, 10]),
     front_ref = defaulted([10, 0]),
     back_ref = defaulted([0, 0]);
 
-function arrow_offsets(parts, stemWidth) {
+export function arrowOffsets(parts, stemWidth) {
     var frontRef = null, backRef = null;
     return parts.map(function(p, i) {
         var fr = front_ref(p.frontRef).slice(),
@@ -589,14 +589,14 @@ function arrow_offsets(parts, stemWidth) {
             return {backRef: backRef, offset: [0, 0]};
         } else {
             var ofs = subtract_points(backRef, fr);
-            backRef = add_points(br, ofs);
+            backRef = addPoints(br, ofs);
             return {backRef: backRef, offset: ofs};
         }
     });
 }
 
 function arrow_bounds(parts, stemWidth) {
-    var viewBox = null, offsets = arrow_offsets(parts, stemWidth);
+    var viewBox = null, offsets = arrowOffsets(parts, stemWidth);
     parts.forEach(function(p, i) {
         var vb = view_box(p.viewBox);
         var ofs = offsets[i].offset;
@@ -611,7 +611,7 @@ function arrow_bounds(parts, stemWidth) {
 function arrow_length(parts, stemWidth) {
     if(!parts.length)
         return 0;
-    var offsets = arrow_offsets(parts, stemWidth);
+    var offsets = arrowOffsets(parts, stemWidth);
     return front_ref(parts[0].frontRef)[0] - offsets[parts.length-1].backRef[0];
 }
 
@@ -620,10 +620,10 @@ export function scaledArrowLengths(diagram, e) {
     var arrowSize = diagram.edgeArrowSize.eval(e),
         stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize;
     var headLength = arrowSize *
-        (arrow_length(arrow_parts(diagram.arrows(), diagram.edgeArrowhead.eval(e)), stemWidth) +
+        (arrow_length(arrowParts(diagram.arrows(), diagram.edgeArrowhead.eval(e)), stemWidth) +
          diagram.nodeStrokeWidth.eval(e.target) / 2),
         tailLength = arrowSize *
-        (arrow_length(arrow_parts(diagram.arrows(), diagram.edgeArrowtail.eval(e)), stemWidth) +
+        (arrow_length(arrowParts(diagram.arrows(), diagram.edgeArrowtail.eval(e)), stemWidth) +
          diagram.nodeStrokeWidth.eval(e.source) / 2);
     return {headLength: headLength, tailLength: tailLength};
 }
@@ -680,7 +680,7 @@ export function edgeArrow(diagram, arrdefs, e, kind, desc) {
         if(e[kind + 'ArrowLast'] === arrow_sig())
             return id;
     }
-    var parts = arrow_parts(arrdefs, desc),
+    var parts = arrowParts(arrdefs, desc),
         marker = diagram.addOrRemoveDef(id, !!parts.length, 'svg:marker');
 
     if(parts.length) {
@@ -703,7 +703,7 @@ export function edgeArrow(diagram, arrdefs, e, kind, desc) {
         parts.forEach(function(p, i) {
             marker
                 .call(p.drawFunction,
-                      add_points([-strokeOfs/arrowSize,0], bounds.offsets[i].offset),
+                      addPoints([-strokeOfs/arrowSize,0], bounds.offsets[i].offset),
                       stemWidth);
         });
     }
