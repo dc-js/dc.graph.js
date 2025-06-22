@@ -1,5 +1,8 @@
-dc_graph.highlight_things = function(includeprops, excludeprops, modename, groupname, cascbase) {
-    var highlight_things_group = dc_graph.register_highlight_things_group(groupname || 'highlight-things-group');
+import { mode } from './mode.js';
+import { registerHighlightThingsGroup } from './highlight_things_group.js';
+
+export function highlightThings(includeprops, excludeprops, modename, groupname, cascbase) {
+    var highlight_things_group = registerHighlightThingsGroup(groupname || 'highlight-things-group');
     var _includeprops = {...includeprops}, _excludeprops = {...excludeprops};
     var _active, _nodeset = {}, _edgeset = {};
     cascbase = cascbase || 150;
@@ -28,7 +31,7 @@ dc_graph.highlight_things = function(includeprops, excludeprops, modename, group
         diagram.cascade(cascbase, false, _includeprops);
         diagram.cascade(cascbase + 10, false, _excludeprops);
     }
-    var _mode = dc_graph.mode(modename, {
+    var _mode = mode(modename, {
         draw: draw,
         remove: remove,
         parent: function(p) {

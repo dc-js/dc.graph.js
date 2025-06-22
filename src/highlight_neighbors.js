@@ -1,6 +1,11 @@
-dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgroup, thingsgroup) {
-    var highlight_neighbors_group = dc_graph.register_highlight_neighbors_group(neighborsgroup || 'highlight-neighbors-group');
-    var highlight_things_group = dc_graph.register_highlight_things_group(thingsgroup || 'highlight-things-group');
+import { mode } from './mode.js';
+import { registerHighlightNeighborsGroup } from './highlight_neighbors_group.js';
+import { registerHighlightThingsGroup } from './highlight_things_group.js';
+import { highlightThings } from './highlight_things.js';
+
+export function highlightNeighbors(includeprops, excludeprops, neighborsgroup, thingsgroup) {
+    var highlight_neighbors_group = registerHighlightNeighborsGroup(neighborsgroup || 'highlight-neighbors-group');
+    var highlight_things_group = registerHighlightThingsGroup(thingsgroup || 'highlight-things-group');
 
     function highlight_node(nodeid) {
         var diagram = _mode.parent();
@@ -38,7 +43,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
         highlight_neighbors_group.highlight_node(null);
     }
 
-    var _mode = dc_graph.mode('highlight-neighbors', {
+    var _mode = mode('highlight-neighbors', {
         draw: draw,
         remove: function(diagram, node, edge) {
             remove(diagram, node, edge);
@@ -47,7 +52,7 @@ dc_graph.highlight_neighbors = function(includeprops, excludeprops, neighborsgro
             highlight_neighbors_group.on('highlight_node.highlight-neighbors', p ? highlight_node : null);
             if(p && !p.child('highlight-things'))
                 p.child('highlight-things',
-                        dc_graph.highlight_things(includeprops, excludeprops)
+                        highlightThings(includeprops, excludeprops)
                           .durationOverride(_mode.durationOverride()));
         }
     });

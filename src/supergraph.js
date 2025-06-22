@@ -1,5 +1,5 @@
-dc_graph.supergraph = function(data, options) {
-    if(!dc_graph.supergraph.pattern) {
+export function supergraph(data, options) {
+    if(!supergraph.pattern) {
         var mg = metagraph;
         var graph_and_subgraph = {
             nodes: {
@@ -20,7 +20,7 @@ dc_graph.supergraph = function(data, options) {
                 }
             }
         };
-        dc_graph.supergraph.pattern = mg.compose(mg.graph_detect(graph_and_subgraph));
+        supergraph.pattern = mg.compose(mg.graph_detect(graph_and_subgraph));
     }
-    return dc_graph.supergraph.pattern.node('graph.Graph').value().create(data);
+    return supergraph.pattern.node('graph.Graph').value().create(data);
 };

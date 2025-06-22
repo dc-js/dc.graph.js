@@ -84,6 +84,10 @@ export { registerHighlightPathsGroup } from './highlight_paths_group.js';
 export { matchOpposites } from './match_opposites.js';
 export { matchPorts } from './match_ports.js';
 export { mungeGraph } from './munge_graph.js';
+export { highlightThings } from './highlight_things.js';
+export { highlightNeighbors } from './highlight_neighbors.js';
+export { treePositions } from './tree_positions.js';
+export { supergraph } from './supergraph.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';
