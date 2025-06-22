@@ -1,4 +1,5 @@
 import { mode } from './mode.js';
+import { property } from './core.js';
 import { is_a_mac } from './utils.js';
 import { keyboard } from './keyboard.js';
 import { eventCoords } from './utils.js';
