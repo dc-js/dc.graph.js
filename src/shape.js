@@ -1,7 +1,7 @@
 import { getBBoxNoThrow, property } from './core.js';
 import { generatePath } from './utils.js';
 
-function point_on_ellipse(A, B, dx, dy) {
+function pointOnEllipse(A, B, dx, dy) {
     var tansq = Math.tan(Math.atan2(dy, dx));
     tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
     var ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
@@ -18,7 +18,7 @@ function between(a, b, c) {
 }
 
 // Adapted from http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect/1968345#1968345
-function segment_intersection(x1,y1,x2,y2, x3,y3,x4,y4) {
+function segmentIntersection(x1,y1,x2,y2, x3,y3,x4,y4) {
     var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)) /
             ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
     var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)) /
@@ -51,10 +51,10 @@ function segment_intersection(x1,y1,x2,y2, x3,y3,x4,y4) {
 }
 
 
-function point_on_polygon(points, x0, y0, x1, y1) {
+function pointOnPolygon(points, x0, y0, x1, y1) {
     for(var i = 0; i < points.length; ++i) {
         var next = i===points.length-1 ? 0 : i+1;
-        var isect = segment_intersection(points[i].x, points[i].y, points[next].x, points[next].y,
+        var isect = segmentIntersection(points[i].x, points[i].y, points[next].x, points[next].y,
                                          x0, y0, x1, y1);
         if(isect)
             return isect;
@@ -298,7 +298,7 @@ export function availableShapes() {
 
 export const defaultShape = {shape: 'ellipse'};
 
-function normalize_shape_def(diagram, n) {
+function normalizeShapeDef(diagram, n) {
     var def = diagram.nodeShape.eval(n);
     if(!def)
         def = {...defaultShape};
@@ -308,7 +308,7 @@ function normalize_shape_def(diagram, n) {
     return def;
 }
 
-function elaborate_shape(diagram, def) {
+function elaborateShape(diagram, def) {
     var shape = def.shape, def2 = Object.assign({}, def);
     delete def2.shape;
     if(shape === 'random') {
@@ -328,15 +328,15 @@ function elaborate_shape(diagram, def) {
 
 export function inferShape(diagram) {
     return function(n) {
-        var def = normalize_shape_def(diagram, n);
-        n.dcg_shape = elaborate_shape(diagram, def);
+        var def = normalizeShapeDef(diagram, n);
+        n.dcg_shape = elaborateShape(diagram, def);
         n.dcg_shape.abstract = def;
     };
 }
 
 export function shapeChanged(diagram) {
     return function(n) {
-        var def = normalize_shape_def(diagram, n);
+        var def = normalizeShapeDef(diagram, n);
         var old = n.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
@@ -406,14 +406,14 @@ export function fitShape(shape, diagram) {
     };
 }
 
-function ellipse_attrs(diagram) {
+function ellipseAttrs(diagram) {
     return {
         rx: function(n) { return n.dcg_rx; },
         ry: function(n) { return n.dcg_ry; }
     };
 }
 
-function polygon_attrs(diagram) {
+function polygonAttrs(diagram) {
     return {
         d: function(n) {
             var rx = n.dcg_rx, ry = n.dcg_ry,
@@ -448,7 +448,7 @@ function polygon_attrs(diagram) {
     };
 }
 
-function binary_search(f, a, b) {
+function binarySearch(f, a, b) {
     var patience = 100;
     if(f(a).val >= 0)
         throw new Error("f(a) must be less than 0");
@@ -514,14 +514,14 @@ export function drawEdgeToShapes(diagram, e, sx, sy, tx, ty,
 
         // don't like this but throwing is unacceptable
         try {
-            bss = binary_search(compare_dist(e.source, neighbor.sourcePort, offset),
+            bss = binarySearch(compare_dist(e.source, neighbor.sourcePort, offset),
                                 srcang, srcang + 2 * dir * offset / source_padding);
         }
         catch(x) {
             bss = {ang: srcang, port: neighbor.sourcePort};
         }
         try {
-            bst = binary_search(compare_dist(e.target, neighbor.targetPort, offset),
+            bst = binarySearch(compare_dist(e.target, neighbor.targetPort, offset),
                                 tarang, tarang - 2 * dir * offset / source_padding);
         }
         catch(x) {
@@ -603,14 +603,14 @@ function getLevels(points, t_) {
 }
 
 // get a point on a bezier segment, where 0 <= t <= 1
-function bezier_point(points, t_) {
+function bezierPoint(points, t_) {
     var q = getLevels(points, t_);
     return q[q.length-1][0];
 }
 
 // from https://stackoverflow.com/questions/8369488/splitting-a-bezier-curve#8405756
 // somewhat redundant with the above but different objective
-function split_bezier(p, t) {
+function splitBezier(p, t) {
     var x1 = p[0].x, y1 = p[0].y,
         x2 = p[1].x, y2 = p[1].y,
         x3 = p[2].x, y3 = p[2].y,
@@ -642,7 +642,7 @@ function split_bezier(p, t) {
 export function splitBezierN(p, n) {
     var ret = [];
     while(n > 1) {
-        var parts = split_bezier(p, 1/n);
+        var parts = splitBezier(p, 1/n);
         ret.push(parts[0][0], parts[0][1], parts[0][2]);
         p = parts[1];
         --n;
@@ -667,7 +667,7 @@ export function chopBezier(points, end, dist) {
     }
     var parts, d2, t = 0.5, dt = 0.5, dx, dy;
     do {
-        parts = split_bezier(segment, t);
+        parts = splitBezier(segment, t);
         dx = ref.x - parts[1][0].x;
         dy = ref.y - parts[1][0].y;
         d2 = dx*dx + dy*dy;
@@ -715,7 +715,7 @@ export function noShape() {
     return _shape;
 };
 
-function create_maybe_clipped(diagram, nodeEnter, element) {
+function createMaybeClipped(diagram, nodeEnter, element) {
     const clipped = nodeEnter.filter(n => diagram.nodeOutlineClip.eval(n));
     const unclipped = nodeEnter.filter(n => !diagram.nodeOutlineClip.eval(n));
     clipped.insert(element, ':first-child')
@@ -735,7 +735,7 @@ export function ellipseShape() {
             return Object.assign(preset, def);
         },
         intersect_vec: function(n, deltaX, deltaY) {
-            return point_on_ellipse(n.dcg_rx, n.dcg_ry, deltaX, deltaY);
+            return pointOnEllipse(n.dcg_rx, n.dcg_ry, deltaX, deltaY);
         },
         calc_radii: function(n, ry, bbox) {
             // make sure we can fit height in r
@@ -751,11 +751,11 @@ export function ellipseShape() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            create_maybe_clipped(_shape.parent(), nodeEnter, 'ellipse');
+            createMaybeClipped(_shape.parent(), nodeEnter, 'ellipse');
         },
         update: function(node) {
             node.selectAll('ellipse.node-fill,ellipse.node-outline')
-                .attr(ellipse_attrs(_shape.parent()));
+                .attr(ellipseAttrs(_shape.parent()));
         }
     };
     return _shape;
@@ -768,7 +768,7 @@ export function polygonShape() {
             return Object.assign(preset, def);
         },
         intersect_vec: function(n, deltaX, deltaY) {
-            return point_on_polygon(n.dcg_points, 0, 0, deltaX, deltaY);
+            return pointOnPolygon(n.dcg_points, 0, 0, deltaX, deltaY);
         },
         calc_radii: function(n, ry, bbox) {
             // make sure we can fit height in r
@@ -783,11 +783,11 @@ export function polygonShape() {
             return {rx: rx, ry: ry};
         },
         create: function(nodeEnter) {
-            create_maybe_clipped(_shape.parent(), nodeEnter, 'path');
+            createMaybeClipped(_shape.parent(), nodeEnter, 'path');
         },
         update: function(node) {
             node.selectAll('path.node-fill,path.node-outline')
-                .attr(polygon_attrs(_shape.parent()));
+                .attr(polygonAttrs(_shape.parent()));
         }
     };
     return _shape;
@@ -807,7 +807,7 @@ export function roundedRectangleShape() {
                 {x: -n.dcg_rx, y: -n.dcg_ry},
                 {x: -n.dcg_rx, y:  n.dcg_ry}
             ];
-            return point_on_polygon(points, 0, 0, deltaX, deltaY); // not rounded
+            return pointOnPolygon(points, 0, 0, deltaX, deltaY); // not rounded
         },
         useRadius: function(shape) {
             return !shape.noshape;
@@ -823,7 +823,7 @@ export function roundedRectangleShape() {
             };
         },
         create: function(nodeEnter) {
-            create_maybe_clipped(_shape.parent(), nodeEnter.filter(function(n) {
+            createMaybeClipped(_shape.parent(), nodeEnter.filter(function(n) {
                 return !n.dcg_shape.noshape;
             }), 'rect');
         },
@@ -860,7 +860,7 @@ export function elaboratedRectangleShape() {
     var _shape = roundedRectangleShape();
     _shape.intersect_vec = function(n, deltaX, deltaY) {
         var points = n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry);
-        return point_on_polygon(points, 0, 0, deltaX, deltaY);
+        return pointOnPolygon(points, 0, 0, deltaX, deltaY);
     };
     delete _shape.useRadius;
     var orig_radii = _shape.calc_radii;

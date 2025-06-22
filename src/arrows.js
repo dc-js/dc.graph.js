@@ -488,7 +488,7 @@ export const builtinArrows = {
     }
 };
 
-function arrow_def(arrdefs, shape, open, side) {
+function arrowDef(arrdefs, shape, open, side) {
     return arrdefs[shape](open, side);
 }
 
@@ -514,7 +514,7 @@ export function arrowParts(arrdefs, desc) {
         for(var aname in arrdefs)
             if(desc.substring(0, aname.length) === aname) {
                 ok = true;
-                parts.push(arrow_def(arrdefs, aname, open, side));
+                parts.push(arrowDef(arrdefs, aname, open, side));
                 desc = desc.slice(aname.length);
                 break;
             }
@@ -526,7 +526,7 @@ export function arrowParts(arrdefs, desc) {
     return parts;
 }
 
-function union_viewbox(vb1, vb2) {
+function unionViewbox(vb1, vb2) {
     var left = Math.min(vb1[0], vb2[0]),
         bottom = Math.min(vb1[1], vb2[1]),
         right = Math.max(vb1[0] + vb1[2], vb2[0] + vb2[2]),
@@ -534,7 +534,7 @@ function union_viewbox(vb1, vb2) {
     return [left, bottom, right - left, top - bottom];
 }
 
-function subtract_points(p1, p2) {
+function subtractPoints(p1, p2) {
     return [p1[0] - p2[0], p1[1] - p2[1]];
 }
 
@@ -588,14 +588,14 @@ export function arrowOffsets(parts, stemWidth) {
             backRef = br;
             return {backRef: backRef, offset: [0, 0]};
         } else {
-            var ofs = subtract_points(backRef, fr);
+            var ofs = subtractPoints(backRef, fr);
             backRef = addPoints(br, ofs);
             return {backRef: backRef, offset: ofs};
         }
     });
 }
 
-function arrow_bounds(parts, stemWidth) {
+function arrowBounds(parts, stemWidth) {
     var viewBox = null, offsets = arrowOffsets(parts, stemWidth);
     parts.forEach(function(p, i) {
         var vb = view_box(p.viewBox);
@@ -603,12 +603,12 @@ function arrow_bounds(parts, stemWidth) {
         if(!viewBox)
             viewBox = vb.slice();
         else
-            viewBox = union_viewbox(viewBox, [vb[0] + ofs[0], vb[1] + ofs[1], vb[2], vb[3]]);
+            viewBox = unionViewbox(viewBox, [vb[0] + ofs[0], vb[1] + ofs[1], vb[2], vb[3]]);
     });
     return {offsets: offsets, viewBox: viewBox};
 }
 
-function arrow_length(parts, stemWidth) {
+function arrowLength(parts, stemWidth) {
     if(!parts.length)
         return 0;
     var offsets = arrowOffsets(parts, stemWidth);
@@ -620,10 +620,10 @@ export function scaledArrowLengths(diagram, e) {
     var arrowSize = diagram.edgeArrowSize.eval(e),
         stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize;
     var headLength = arrowSize *
-        (arrow_length(arrowParts(diagram.arrows(), diagram.edgeArrowhead.eval(e)), stemWidth) +
+        (arrowLength(arrowParts(diagram.arrows(), diagram.edgeArrowhead.eval(e)), stemWidth) +
          diagram.nodeStrokeWidth.eval(e.target) / 2),
         tailLength = arrowSize *
-        (arrow_length(arrowParts(diagram.arrows(), diagram.edgeArrowtail.eval(e)), stemWidth) +
+        (arrowLength(arrowParts(diagram.arrows(), diagram.edgeArrowtail.eval(e)), stemWidth) +
          diagram.nodeStrokeWidth.eval(e.source) / 2);
     return {headLength: headLength, tailLength: tailLength};
 }
@@ -656,7 +656,7 @@ export function placeArrowsOnSpline(diagram, e, points) {
 
 
 // determine pre-transition orientation that won't spin a lot going to new orientation
-function unsurprising_orient(oldorient, neworient) {
+function unsurprisingOrient(oldorient, neworient) {
     var oldang = +oldorient.slice(0, -3),
         newang = +neworient.slice(0, -3);
     if(Math.abs(oldang - newang) > Math.PI) {
@@ -686,7 +686,7 @@ export function edgeArrow(diagram, arrdefs, e, kind, desc) {
     if(parts.length) {
         var arrowSize = diagram.edgeArrowSize.eval(e),
             stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize,
-            bounds = arrow_bounds(parts, stemWidth),
+            bounds = arrowBounds(parts, stemWidth),
             frontRef = front_ref(parts[0].frontRef);
         bounds.viewBox[0] -= strokeOfs/arrowSize;
         bounds.viewBox[3] += strokeOfs/arrowSize;

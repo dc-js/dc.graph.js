@@ -1,4 +1,4 @@
-function can_get_graph_from_this(data) {
+function canGetGraphFromThis(data) {
     return (data.nodes || data.vertices) && (data.edges || data.links);
 }
 
@@ -10,9 +10,9 @@ export function mungeGraph(data, nodekeyattr, sourceattr, targetattr) {
     var nodes, edges, nka = nodekeyattr || "name",
         sa = sourceattr || "sourcename", ta = targetattr || "targetname";
 
-    if(!can_get_graph_from_this(data)) {
+    if(!canGetGraphFromThis(data)) {
         var wrappers = ['database', 'response'];
-        var wi = wrappers.findIndex(function(f) { return data[f] && can_get_graph_from_this(data[f]); });
+        var wi = wrappers.findIndex(function(f) { return data[f] && canGetGraphFromThis(data[f]); });
         if(wi<0)
             throw new Error("couldn't find the data!");
         data = data[wrappers[wi]];

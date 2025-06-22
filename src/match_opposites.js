@@ -1,5 +1,5 @@
 import { property } from './core.js';
-import { multiplyProperties } from './utils.js';
+import { multiplyProperties, propertyInterpolate } from './utils.js';
 
 // External dependency loaded as global
 const d3 = globalThis.d3;
@@ -13,7 +13,7 @@ export function matchOpposites(diagram, deleteProps, options) {
 
     diagram.cascade(100, true, multiplyProperties(function(e) {
         return options.ease(e.deleting || 0);
-    }, deleteProps, property_interpolate));
+    }, deleteProps, propertyInterpolate));
     diagram.on('data.match-opposites', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         _ports = ports;
         _wports = wports;

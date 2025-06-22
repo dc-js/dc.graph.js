@@ -150,7 +150,7 @@ export function gapX(gap, equality) {
     };
 }
 
-function align_f(axis) {
+function alignF(axis) {
     var ret = function() {
         return {
             type: 'alignment',
@@ -163,10 +163,10 @@ function align_f(axis) {
 }
 
 export function alignY() {
-    return align_f('y');
+    return alignF('y');
 }
 export function alignX() {
-    return align_f('x');
+    return alignF('x');
 }
 
 export function orderX(gap, ordering) {

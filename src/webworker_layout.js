@@ -9,7 +9,7 @@ import { scriptPath } from './utils.js';
 
 var _workers = {};
 var NUMBER_RESULTS = 3;
-function create_worker(workerName) {
+function createWorker(workerName) {
     if(!_workers[workerName]) {
         var worker = _workers[workerName] = {
             worker: new Worker(scriptPath() + 'dc.graph.' + workerName + '.worker.js'),
@@ -33,7 +33,7 @@ function create_worker(workerName) {
 
 export function webworkerLayout(layoutEngine, workerName) {
     var _tick, _done, _dispatch = d3.dispatch('init', 'start', 'tick', 'end');
-    var _worker = create_worker(workerName || layoutEngine.layoutAlgorithm());
+    var _worker = createWorker(workerName || layoutEngine.layoutAlgorithm());
     var engine = {};
     _worker.layouts[layoutEngine.layoutId()] = engine;
 

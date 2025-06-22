@@ -1,10 +1,10 @@
-function property_if(pred, curr) {
+export function propertyIf(pred, curr) {
     return function(o, last) {
         return pred(o) ? curr(o) : last();
     };
 }
 
-function property_interpolate(value, curr) {
+export function propertyInterpolate(value, curr) {
     return function(o, last) {
         return d3.interpolate(last(o), curr(o))(value(o));
     };
@@ -18,7 +18,7 @@ export function multiplyProperties(pred, props, blend) {
 }
 
 export function conditionalProperties(pred, props) {
-    return multiplyProperties(pred, props, property_if);
+    return multiplyProperties(pred, props, propertyIf);
 }
 
 export function nodeEdgeConditions(npred, epred, props) {
@@ -204,7 +204,7 @@ export function eventCoords(diagram) {
                               d3.event.clientY - bound.top]);
 }
 
-function promise_identity(x) {
+export function promiseIdentity(x) {
     return Promise.resolve(x);
 }
 
@@ -215,7 +215,7 @@ var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
 export function ancestorHasClass(element, classname) {
     if(d3.select(element).classed(classname))
         return true;
-    return element.parentElement && ancestor_has_class(element.parentElement, classname);
+    return element.parentElement && ancestorHasClass(element.parentElement, classname);
 }
 
 if (typeof SVGElement.prototype.contains == 'undefined') {

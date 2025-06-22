@@ -1,4 +1,4 @@
-function process_dot(callback, error, text) {
+function processDot(callback, error, text) {
     if(error) {
         callback(error, null);
         return;
@@ -71,7 +71,7 @@ function process_dot(callback, error, text) {
     callback(null, graph);
 }
 
-function process_dsv(callback, error, data) {
+function processDsv(callback, error, data) {
     if(error) {
         callback(error, null);
         return;
@@ -111,7 +111,7 @@ export const fileFormats = [
             d3.text(url, process_dot.bind(null, callback));
         },
         from_text: function(text, callback) {
-            process_dot(callback, null, text);
+            processDot(callback, null, text);
         }
     },
     {
@@ -121,7 +121,7 @@ export const fileFormats = [
             d3.dsv('|', 'text/plain')(url, process_dsv.bind(null, callback));
         },
         from_text: function(text, callback) {
-            process_dsv(callback, null, d3.dsv('|').parse(text));
+            processDsv(callback, null, d3.dsv('|').parse(text));
         }
     },
     {
@@ -131,7 +131,7 @@ export const fileFormats = [
             d3.csv(url, process_dsv.bind(null, callback));
         },
         from_text: function(text, callback) {
-            process_dsv(callback, null, d3.csv.parse(text));
+            processDsv(callback, null, d3.csv.parse(text));
         }
     }
 ];
@@ -156,7 +156,7 @@ export function matchMimeType(mime) {
     });
 };
 
-function unknown_format_error(filename) {
+function unknownFormatError(filename) {
     var spl = filename.split('.');
     if(spl.length)
         return new Error('do not know how to process graph file extension ' + spl[spl.length-1]);
@@ -164,7 +164,7 @@ function unknown_format_error(filename) {
         return new Error('need file extension to process graph file automatically, filename ' + filename);
 }
 
-function unknown_mime_error(mime) {
+function unknownMimeError(mime) {
     return new Error('do not know how to process mime type ' + mime);
 }
 
@@ -206,13 +206,13 @@ export function loadGraph() {
             format = matchMimeType(parts[0]);
             if(format)
                 format.from_text(parts[1], callback);
-            else callback(unknown_mime_error(parts[0]));
+            else callback(unknownMimeError(parts[0]));
         } else {
             var file1noq = ignore_query(file1);
             format = matchFileFormat(file1noq);
             if(format)
                 format.from_url(file1, callback);
-            else callback(unknown_format_error(file1noq));
+            else callback(unknownFormatError(file1noq));
         }
     }
 };
@@ -221,7 +221,7 @@ export function loadGraphText(text, filename, callback) {
     var format = matchFileFormat(filename);
     if(format)
         format.from_text(text, callback);
-    else callback(unknown_format_error(filename));
+    else callback(unknownFormatError(filename));
 };
 
 export function dataUrl(data) {

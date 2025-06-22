@@ -1,5 +1,5 @@
 import { mode } from './mode.js';
-import { eventCoords } from './utils.js';
+import { eventCoords, promiseIdentity } from './utils.js';
 import { selectThingsGroup } from './select_things.js';
 import { labelThingsGroup } from './label_things.js';
 import { fixNodesGroup } from './fix_nodes.js';
@@ -87,7 +87,7 @@ export function drawGraphs(options) {
     function create_node(diagram, pos, data) {
         if(!_mode.nodeCrossfilter())
             throw new Error('need nodeCrossfilter');
-        var node, callback = _mode.addNode() || promise_identity;
+        var node, callback = _mode.addNode() || promiseIdentity;
         if(data)
             node = data;
         else {
@@ -109,7 +109,7 @@ export function drawGraphs(options) {
     function create_edge(diagram, source, target) {
         if(!_mode.edgeCrossfilter())
             throw new Error('need edgeCrossfilter');
-        var edge = {}, callback = _mode.addEdge() || promise_identity;
+        var edge = {}, callback = _mode.addEdge() || promiseIdentity;
         edge[_edgeIdTag] = uuid();
         edge[_edgeLabelTag] = '';
         if(_mode.conduct().detectReversedEdge && _mode.conduct().detectReversedEdge(edge, source.port, target.port)) {
