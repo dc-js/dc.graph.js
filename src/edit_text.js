@@ -1,7 +1,10 @@
 // adapted from
 // http://stackoverflow.com/questions/9308938/inline-text-editing-in-svg/#26644652
 
-dc_graph.edit_text = function(parent, options) {
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function editText(parent, options) {
     var foreign = parent.append('foreignObject').attr({
         height: '100%',
         width: '100%' // don't wrap

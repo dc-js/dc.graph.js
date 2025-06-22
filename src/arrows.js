@@ -4,7 +4,7 @@ function offsetx(ofsx) {
     };
 }
 
-dc_graph.builtin_arrows = {
+export const builtinArrows = {
     box: function(open, side) {
         if(!open) return {
             frontRef: [8,0],

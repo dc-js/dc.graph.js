@@ -1,4 +1,9 @@
-dc_graph.expand_collapse.expanded_hidden = function(opts) {
+import { property } from './core.js';
+
+// External dependency loaded as global  
+const dc = globalThis.dc;
+
+export function expandedHidden(opts) {
     var options = Object.assign({
         nodeKey: function(n) { return n.key; },
         edgeKey: function(e) { return e.key; },

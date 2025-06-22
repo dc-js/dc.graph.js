@@ -73,6 +73,9 @@ export {
 } from './load_graph.js';
 export { registerHighlightThingsGroup } from './highlight_things_group.js';
 export { expandCollapse } from './expand_collapse.js';
+export { builtinArrows } from './arrows.js';
+export { editText } from './edit_text.js';
+export { expandedHidden } from './expanded_hidden.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';
