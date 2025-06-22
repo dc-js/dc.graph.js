@@ -1,12 +1,14 @@
+import { engines, spawnEngine, diagram, flatGroup, drawGraphs, deleteNodes, deleteThings, labelEdges, labelNodes, selectEdges, selectNodes, selectThingsGroup } from './dc-graph.js';
+
 var options = {
     rankdir: 'TB',
     layout: {
         default: 'dagre',
-        values: dc_graph.engines.available(),
+        values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
         exert: function(val, diagram) {
-            var engine = dc_graph.spawn_engine(val);
+            var engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine);
@@ -16,13 +18,13 @@ var options = {
     worker: true
 };
 
-var drawDiagram = dc_graph.diagram('#graph');
+var drawDiagram = diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(drawDiagram), drawDiagram);
 
-var node_flat = dc_graph.flat_group.make([], function(d) { return d.id; }),
-    edge_flat = dc_graph.flat_group.make([], function(d) { return d.id; });
+var node_flat = flatGroup.make([], function(d) { return d.id; }),
+    edge_flat = flatGroup.make([], function(d) { return d.id; });
 
-var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+var engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
 apply_engine_parameters(engine);
 
 drawDiagram
@@ -76,21 +78,21 @@ function apply_engine_parameters(engine) {
 
 drawDiagram.timeLimit(1000);
 
-var select_nodes = dc_graph.select_nodes({
+var select_nodes = selectNodes({
     nodeStroke: '#16b',
     nodeStrokeWidth: 5,
     nodeRadius: 22.5
 }).multipleSelect(false);
 
-var select_edges = dc_graph.select_edges({
+var select_edges = selectEdges({
     edgeStroke: 'darkgreen',
     edgeStrokeWidth: 2
 }).multipleSelect(false);
 
-var label_nodes = dc_graph.label_nodes({class: 'node-label'}),
-    label_edges = dc_graph.label_edges({class: 'edge-label'});
+var label_nodes = labelNodes({class: 'node-label'}),
+    label_edges = labelEdges({class: 'edge-label'});
 
-var delete_nodes = dc_graph.delete_nodes()
+var delete_nodes = deleteNodes()
         .crossfilterAccessor(function(diagram) {
             return node_flat.crossfilter;
         })
@@ -98,8 +100,8 @@ var delete_nodes = dc_graph.delete_nodes()
             return node_flat.dimension;
         });
 
-var delete_edges = dc_graph.delete_things(
-    dc_graph.select_things_group('select-edges-group', 'select-edges'),
+var delete_edges = deleteThings(
+    selectThingsGroup('select-edges-group', 'select-edges'),
     'delete-edges')
         .crossfilterAccessor(function(diagram) {
             return edge_flat.crossfilter;
@@ -114,7 +116,7 @@ function add_object(d) {
     return Promise.resolve(d);
 }
 
-var draw_graphs = dc_graph.draw_graphs({
+var draw_graphs = drawGraphs({
     nodeCrossfilter: node_flat.crossfilter,
     edgeCrossfilter: edge_flat.crossfilter
 }).addNode(add_object).addEdge(add_object);
@@ -129,8 +131,8 @@ drawDiagram
     .child('delete-edges', delete_edges);
 
 // make node selection and edge selection mutually exclusive
-var select_nodes_group = dc_graph.select_things_group('select-nodes-group', 'select-nodes');
-var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
+var select_nodes_group = selectThingsGroup('select-nodes-group', 'select-nodes');
+var select_edges_group = selectThingsGroup('select-edges-group', 'select-edges');
 select_nodes_group.on('set_changed.show-info', function(nodes) {
     if(nodes.length)
         select_edges_group.set_changed([]); // selecting node clears selected edge
