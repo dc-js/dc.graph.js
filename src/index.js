@@ -72,7 +72,10 @@ export {
   fileFormats, matchFileFormat, matchMimeType, loadGraph, loadGraphText, dataUrl 
 } from './load_graph.js';
 export { registerHighlightThingsGroup } from './highlight_things_group.js';
-export { expandCollapse } from './expand_collapse.js';
+export { expandCollapse, defaultUrlOpener } from './expand_collapse.js';
+export { selectThings, selectThingsGroup } from './select_things.js';
+export { labelThings, labelThingsGroup } from './label_things.js';
+export { moveNodes } from './move_nodes.js';
 export { builtinArrows } from './arrows.js';
 export { editText } from './edit_text.js';
 export { expandedHidden } from './expanded_hidden.js';

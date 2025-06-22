@@ -1,4 +1,8 @@
 import { registerHighlightThingsGroup } from './highlight_things_group.js';
+import { mode } from './mode.js';
+import { keyboard } from './keyboard.js';
+import { functorWrap } from './core.js';
+import { engines } from './engine.js';
 
 export function expandCollapse(options) {
     if(typeof options === 'function') {
@@ -160,7 +164,7 @@ export function expandCollapse(options) {
             });
         rect.attr({
             fill: function(s) {
-                var color = s.edge ? dc_graph.functor_wrap(diagram.edgeStroke())(s.edge) : 'black';
+                var color = s.edge ? functorWrap(diagram.edgeStroke())(s.edge) : 'black';
                 add_gradient_def(color, diagram);
                 return 'url(#spike-gradient-' + color + ')';
             },
@@ -267,7 +271,7 @@ export function expandCollapse(options) {
                     }
                 }
                 const spikeses = {};
-                if(dir == 'both' && dc_graph.engines.is_directed(diagram.layoutEngine().layoutAlgorithm())) {
+                if(dir == 'both' && engines.is_directed(diagram.layoutEngine().layoutAlgorithm())) {
                     spikeses.in = [];
                     spikeses.out = [];
                     spikes.forEach(spk => {
@@ -514,14 +518,14 @@ export function expandCollapse(options) {
         }
     }
 
-    var _mode = dc_graph.mode('expand-collapse', {
+    var _mode = mode('expand-collapse', {
         draw: draw,
         remove: remove,
         parent: function(p) {
             if(p) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
-                    p.child('keyboard', _keyboard = dc_graph.keyboard());
+                    p.child('keyboard', _keyboard = keyboard());
                 const highlight_changing = p.child(options.highlight_changing || 'highlight-changing');
                 highlight_changing.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
                 const highlight_expanded = p.child(options.highlight_expanded || 'highlight-expanded');
@@ -558,12 +562,12 @@ export function expandCollapse(options) {
         return n.value && n.value.value && n.value.value.URL;
     });
     _mode.urlTargetWindow = property('dcgraphlink');
-    _mode.urlOpener = property(dc_graph.expand_collapse.default_url_opener);
+    _mode.urlOpener = property(defaultUrlOpener);
     if(options.expandCollapse)
         options.expandCollapse(_mode);
     return _mode;
 };
 
-dc_graph.expand_collapse.default_url_opener = function(mode, node, url) {
+export function defaultUrlOpener(mode, node, url) {
     window.open(mode.nodeURL.eval(node), mode.urlTargetWindow());
 };

@@ -1,7 +1,13 @@
-dc_graph.move_nodes = function(options) {
+import { mode } from './mode.js';
+import { keyboard } from './keyboard.js';
+import { eventCoords } from './utils.js';
+import { selectThingsGroup } from './select_things.js';
+import { fixNodesGroup } from './fix_nodes.js';
+
+export function moveNodes(options) {
     options = options || {};
-    var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
-    var fix_nodes_group = dc_graph.fix_nodes_group(options.fix_nodes_group || 'fix-nodes-group');
+    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    var fix_nodes_group = fixNodesGroup(options.fix_nodes_group || 'fix-nodes-group');
     var _selected = [], _startPos = null, _downNode, _moveStarted;
     var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick, _keyboard;
     var _maybeSelect = null;
@@ -34,7 +40,7 @@ dc_graph.move_nodes = function(options) {
                 return;
             if(!_keyboard.modKeysMatch(_mode.modKeys()))
                 return;
-            _startPos = dc_graph.event_coords(diagram);
+            _startPos = eventCoords(diagram);
             _downNode = d3.select(this);
             // if the node under the mouse is not in the selection, need to
             // make that node selected
@@ -59,7 +65,7 @@ dc_graph.move_nodes = function(options) {
                 }
                 if(_maybeSelect)
                     select_nodes_group.set_changed([_maybeSelect]);
-                var pos = dc_graph.event_coords(diagram);
+                var pos = eventCoords(diagram);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
                 if(!_moveStarted && Math.hypot(dx, dy) > _mode.dragSize()) {
@@ -118,7 +124,7 @@ dc_graph.move_nodes = function(options) {
         node.on('mouseup.move-nodes', null);
     }
 
-    var _mode = dc_graph.mode('move-nodes', {
+    var _mode = mode('move-nodes', {
         draw: draw,
         remove: remove,
         parent: function(p) {
@@ -129,7 +135,7 @@ dc_graph.move_nodes = function(options) {
                 _selectNodes = p.child('select-nodes');
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
-                    p.child('keyboard', _keyboard = dc_graph.keyboard());
+                    p.child('keyboard', _keyboard = keyboard());
             }
             else _brush = _drawGraphs = _selectNodes = null;
         }

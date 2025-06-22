@@ -1,4 +1,11 @@
-dc_graph.select_things = function(things_group, things_name, thinginess) {
+import { mode } from './mode.js';
+import { brush } from './brush.js';
+import { keyboard } from './keyboard.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function selectThings(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;
     var _mousedownThing = null;
     var _keyboard;
@@ -134,7 +141,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
         thinginess.removeStyles();
     }
 
-    var _mode = dc_graph.mode(things_name, {
+    var _mode = mode(things_name, {
         draw: draw,
         remove: remove,
         parent: function(p) {
@@ -142,7 +149,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
             if(p && _mode.multipleSelect()) {
                 var brush_mode = p.child('brush');
                 if(!brush_mode) {
-                    brush_mode = dc_graph.brush();
+                    brush_mode = brush();
                     p.child('brush', brush_mode);
                 }
                 brush_mode
@@ -151,7 +158,7 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
             }
             _keyboard = p.child('keyboard');
             if(!_keyboard)
-                p.child('keyboard', _keyboard = dc_graph.keyboard());
+                p.child('keyboard', _keyboard = keyboard());
             _keyboard.on('modkeyschanged.' + things_name, modkeyschanged);
         },
         laterDraw: thinginess.laterDraw || false
@@ -175,10 +182,10 @@ dc_graph.select_things = function(things_group, things_name, thinginess) {
     return _mode;
 };
 
-dc_graph.select_things_group = function(brushgroup, type) {
+export function selectThingsGroup(brushgroup, type) {
     window.chart_registry.create_type(type, function() {
         return d3.dispatch('set_changed');
     });
 
     return window.chart_registry.create_group(type, brushgroup);
-};
+}

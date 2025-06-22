@@ -1,7 +1,15 @@
-dc_graph.label_things = function(options) {
+import { mode } from './mode.js';
+import { keyboard } from './keyboard.js';
+import { editText } from './edit_text.js';
+import { selectThingsGroup } from './select_things.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function labelThings(options) {
     options = options || {};
-    var select_things_group = dc_graph.select_things_group(options.select_group, options.select_type),
-        label_things_group = dc_graph.label_things_group(options.label_group, options.label_type);
+    var select_things_group = selectThingsGroup(options.select_group, options.select_type),
+        label_things_group = labelThingsGroup(options.label_group, options.label_type);
     var _selected = [];
     var _keyboard, _selectThings;
 
@@ -15,7 +23,7 @@ dc_graph.label_things = function(options) {
         return function(thing, eventOptions) {
             var box = options.thing_box(thing);
             options.hide_thing_label(thing, true);
-            dc_graph.edit_text(
+            editText(
                 diagram.g(),
                 {
                     text: eventOptions.text || options.thing_label(thing) || options.default_label,
@@ -65,7 +73,7 @@ dc_graph.label_things = function(options) {
     function remove(diagram, node, edge) {
     }
 
-    var _mode = dc_graph.mode(options.label_type, {
+    var _mode = mode(options.label_type, {
         draw: draw,
         remove: remove,
         parent: function(p) {
@@ -74,7 +82,7 @@ dc_graph.label_things = function(options) {
             if(p) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
-                    p.child('keyboard', _keyboard = dc_graph.keyboard());
+                    p.child('keyboard', _keyboard = keyboard());
                 _selectThings = p.child(options.select_type);
             }
         }
@@ -85,10 +93,10 @@ dc_graph.label_things = function(options) {
     return _mode;
 };
 
-dc_graph.label_things_group = function(brushgroup, type) {
+export function labelThingsGroup(brushgroup, type) {
     window.chart_registry.create_type(type, function() {
         return d3.dispatch('edit_label');
     });
 
     return window.chart_registry.create_group(type, brushgroup);
-};
+}
