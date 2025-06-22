@@ -1,4 +1,9 @@
-dc_graph.match_opposites = function(diagram, deleteProps, options) {
+import { property } from './core.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function matchOpposites(diagram, deleteProps, options) {
     options = Object.assign({
         multiplier: 2,
         ease: d3.ease('cubic')

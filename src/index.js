@@ -76,6 +76,11 @@ export { expandCollapse } from './expand_collapse.js';
 export { builtinArrows } from './arrows.js';
 export { editText } from './edit_text.js';
 export { expandedHidden } from './expanded_hidden.js';
+export { registerHighlightNeighborsGroup } from './highlight_neighbors_group.js';
+export { registerHighlightPathsGroup } from './highlight_paths_group.js';
+export { matchOpposites } from './match_opposites.js';
+export { matchPorts } from './match_ports.js';
+export { mungeGraph } from './munge_graph.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';

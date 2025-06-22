@@ -5,7 +5,7 @@ function can_get_graph_from_this(data) {
 // general-purpose reader of various json-based graph formats
 // (esp but not limited to titan graph database-like formats)
 // this could be generalized a lot
-dc_graph.munge_graph = function(data, nodekeyattr, sourceattr, targetattr) {
+export function mungeGraph(data, nodekeyattr, sourceattr, targetattr) {
     // we want data = {nodes, edges} and the field names for keys; find those in common json formats
     var nodes, edges, nka = nodekeyattr || "name",
         sa = sourceattr || "sourcename", ta = targetattr || "targetname";

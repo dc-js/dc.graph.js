@@ -1,4 +1,6 @@
-dc_graph.match_ports = function(diagram, symbolPorts) {
+import { property } from './core.js';
+
+export function matchPorts(diagram, symbolPorts) {
     var _ports, _wports, _wedges, _validTargets;
     diagram.on('data.match-ports', function(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         _ports = ports;
