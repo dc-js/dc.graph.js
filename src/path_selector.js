@@ -1,10 +1,15 @@
-dc_graph.path_selector = function(parent, reader, pathsgroup, chartgroup) {
-    var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
+import { registerHighlightPathsGroup } from './highlight_paths_group.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function pathSelector(parent, reader, pathsgroup, chartgroup) {
+    var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
     var root = d3.select(parent).append('svg');
     var paths_ = [];
     var hovered = null, selected = null;
 
-    // unfortunately these functions are copied from dc_graph.highlight_paths
+    // unfortunately these functions are copied from highlightPaths
     function contains_path(paths) {
         return function(path) {
             return paths ? paths.indexOf(path)>=0 : false;

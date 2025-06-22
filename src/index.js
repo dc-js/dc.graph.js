@@ -97,6 +97,7 @@ export { selectNodes } from './select_nodes.js';
 export { selectEdges } from './select_edges.js';
 export { selectPorts } from './select_ports.js';
 export { treeConstraints } from './tree_constraints.js';
+export { pathSelector } from './path_selector.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';
