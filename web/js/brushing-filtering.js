@@ -1,13 +1,15 @@
-var selectionDiagram = dc_graph.diagram('#graph'), pie, row;
+import { diagram, engines, spawnEngine, flatGroup, randomGraph, mungeGraph, loadGraphText, loadGraph, selectNodes, filterSelection, moveNodes, fixNodes, selectEdges } from './dc-graph.js';
+
+var selectionDiagram = diagram('#graph'), pie, row;
 
 var options = {
     layout: {
         default: 'dagre',
-        values: dc_graph.engines.available(),
+        values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
         exert: function(val, diagram) {
-            var engine = dc_graph.spawn_engine(val);
+            var engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine)
@@ -71,10 +73,10 @@ function apply_engine_parameters(engine) {
 function build_data(nodes, edges) {
     // build crossfilters from scratch
     return {
-        edgef: dc_graph.flat_group.make(edges, function(d) {
+        edgef: flatGroup.make(edges, function(d) {
             return d.key;
         }),
-        nodef: dc_graph.flat_group.make(nodes, function(d) {
+        nodef: flatGroup.make(nodes, function(d) {
             return d.key;
         })
     };
@@ -102,7 +104,7 @@ var load_graph = function(nodes, edges) {
 };
 
 var populate = function(n) {
-    var random = dc_graph.random_graph({
+    var random = randomGraph({
         ncolors: 3,
         allowParallelEdges: false
     });
@@ -119,7 +121,7 @@ var on_load = function(filename, error, data) {
         heading += 'Could not load file ' + filename;
         display_error(heading, error.message);
     }
-    var graph_data = dc_graph.munge_graph(data);
+    var graph_data = mungeGraph(data);
     load_graph(graph_data.nodes, graph_data.edges);
     selectionDiagram.autoZoom('once');
     dc.redrawAll();
@@ -131,13 +133,13 @@ d3.select('#user-file').on('change', function() {
         var reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
-            dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+            loadGraphText(e.target.result, filename, on_load.bind(null, filename));
         };
         reader.readAsText(this.files[0]);
     }
 });
 
-var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
+var engine = spawnEngine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
 apply_engine_parameters(engine);
 var colors = ['#1b9e77', '#d95f02', '#7570b3'];
 var dasheses = [
@@ -181,27 +183,27 @@ selectionDiagram
     .edgeArrowhead(sync_url.vals.arrows === 'head' || sync_url.vals.arrows === 'both' ? 'vee' : null)
     .edgeArrowtail(sync_url.vals.arrows === 'tail' || sync_url.vals.arrows === 'both' ? 'crow' : null);
 
-selectionDiagram.child('select-nodes', dc_graph.select_nodes(
+selectionDiagram.child('select-nodes', selectNodes(
     {
         nodeOpacity: 1
     }).noneIsAll(true)
               .autoCropSelection(false));
-selectionDiagram.child('filter-selection-nodes', dc_graph.filter_selection('select-nodes-group', 'select-nodes'));
+selectionDiagram.child('filter-selection-nodes', filterSelection('select-nodes-group', 'select-nodes'));
 
-selectionDiagram.child('move-nodes', dc_graph.move_nodes());
+selectionDiagram.child('move-nodes', moveNodes());
 
-selectionDiagram.child('fix-nodes', dc_graph.fix_nodes({
+selectionDiagram.child('fix-nodes', fixNodes({
     fixedPosTag: 'fixed'
 }));
 
-selectionDiagram.child('select-edges', dc_graph.select_edges(
+selectionDiagram.child('select-edges', selectEdges(
     {
         edgeStrokeWidth: 2,
         edgeOpacity: 1
     }).noneIsAll(true)
               .autoCropSelection(false));
 selectionDiagram.child('filter-selection-edges',
-              dc_graph.filter_selection('select-edges-group', 'select-edges')
+              filterSelection('select-edges-group', 'select-edges')
               .dimensionAccessor(function(c) { return c.edgeDimension(); }));
 
 pie = dc.pieChart('#pie')
@@ -220,7 +222,7 @@ row = dc.rowChart('#row')
     });
 
 if(sync_url.vals.file)
-    dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+    loadGraph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
 else {
     populate(sync_url.vals.n);
     dc.renderAll();

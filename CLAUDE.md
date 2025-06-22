@@ -19,33 +19,27 @@ dc.graph.js is a JavaScript library for dynamic, interactive graph visualization
 
 ## Build System
 
-The project uses Grunt for building. Key commands:
+The project uses npm scripts with Rollup for building. Key commands:
 
 ```bash
-# Build the library (concatenates source files)
-grunt build
+# Build the library (bundles ES6 modules with Rollup)
+npm run build
 
-# Build and copy assets to web directory  
-grunt copy
+# Build and watch for changes during development
+npm run dev
 
-# Run development server with live reload on port 8888
-grunt server
+# Run development server on port 8888
+npm run serve
 
-# Generate documentation
-grunt docs
-
-# Run linting
-grunt lint
-
-# Build minified version
-grunt uglify
+# Build and start development server
+npm start
 ```
 
 **Build outputs:**
-- `dc.graph.js` - main library file (concatenated from src/ files in order defined in Gruntfile.js)
-- `dc.graph.min.js` - minified version
+- `dist/dc-graph.js` - main library file (ES6 modules bundled with Rollup)
+- `dist/dc-graph.js.map` - source map
 - `dc.graph.*.worker.js` - web worker files for different layout engines
-- Files are also copied to `web/js/` for examples
+- Files are copied to `web/js/` for examples
 
 ## Source Architecture 
 
@@ -83,7 +77,7 @@ Layout computation can be offloaded to web workers for performance. Worker files
 
 - Example files in `web/` directory demonstrate various features
 - No automated test suite - examples serve as integration tests
-- `grunt server` runs local development server for testing examples
+- `npm run serve` runs local development server for testing examples
 
 ## Dependencies
 
@@ -98,7 +92,7 @@ Layout computation can be offloaded to web workers for performance. Worker files
 ## Development Notes
 
 - Use gtimeout because we're on a mac
-- Use `npx grunt server` for this repo
+- Use `npm run serve` for development server
 
 ## Claude Memories
 
