@@ -1,3 +1,5 @@
+import { diagram, troubleshoot, grid, flatGroup, manualLayout } from './dc-graph.js';
+
 var options = {
     arrowhead: {
         default: 'vee',
@@ -21,11 +23,11 @@ var options = {
         selector: '#debug',
         needs_redraw: true,
         exert: function(val, diagram) {
-            var troubleshoot = val ? dc_graph.troubleshoot()
+            var troubleshootMode = val ? troubleshoot()
                 .boundsWidth(5)
                 .boundsHeight(5)
                 .arrowLength(0) : null;
-            diagram.child('troubleshoot', troubleshoot)
+            diagram.child('troubleshoot', troubleshootMode)
                 .redraw();
         }
     },
@@ -39,13 +41,13 @@ var options = {
         selector: '#grid',
         needs_redraw: true,
         exert: function(val, diagram) {
-            var grid = val ? dc_graph.grid() : null;
-            diagram.child('grid', grid)
+            var gridMode = val ? grid() : null;
+            diagram.child('grid', gridMode)
                 .redraw();
         }
     }
 };
-var arrowDiagram = dc_graph.diagram('#graph');
+var arrowDiagram = diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(arrowDiagram), arrowDiagram);
 
 var nodes = [
@@ -89,14 +91,14 @@ var edges = [
     }
 ];
 
-var edge_flat = dc_graph.flat_group.make(edges, function (e) {
+var edge_flat = flatGroup.make(edges, function (e) {
     return e.key;
 }),
-    node_flat = dc_graph.flat_group.make(nodes, function (n) {
+    node_flat = flatGroup.make(nodes, function (n) {
     return n.key;
 });
 
-var engine = dc_graph.manual_layout();
+var engine = manualLayout();
 
 arrowDiagram
     .width('auto')
