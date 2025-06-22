@@ -1,4 +1,7 @@
-dc_graph.label_nodes = function(options) {
+import { labelThings } from './label_things.js';
+import { property } from './core.js';
+
+export function labelNodes(options) {
     options = options || {};
     var _labelTag = options.labelTag || 'label';
     options.select_group = options.select_group || 'select-nodes-group';
@@ -37,7 +40,7 @@ dc_graph.label_nodes = function(options) {
         });
     };
 
-    var _mode = dc_graph.label_things(options);
+    var _mode = labelThings(options);
     _mode.changeNodeLabel = property(null);
     return _mode;
 };

@@ -1,4 +1,4 @@
-import { property } from './core.js';
+import { property, deprecateFunction } from './core.js';
 
 export function mode(event_namespace, options) {
     var _mode = {};
@@ -60,4 +60,4 @@ export function mode(event_namespace, options) {
     return _mode;
 };
 
-dc_graph.behavior = deprecate_function('dc_graph.behavior has been renamed dc_graph.mode', dc_graph.mode);
+export const behavior = deprecateFunction('behavior has been renamed mode', mode);

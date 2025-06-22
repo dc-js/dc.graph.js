@@ -7,6 +7,7 @@
 const d3 = globalThis.d3;
 import { uuid, property } from './core.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
+import { supergraph } from './supergraph.js';
 
 /**
  * `layeredLayout` produces 3D layered layouts, utilizing another layout
@@ -27,7 +28,7 @@ export function layeredLayout(id) {
     }
 
     function data(nodes, edges, constraints) {
-        _supergraph = dc_graph.supergraph({nodes: nodes, edges: edges}, {
+        _supergraph = supergraph({nodes: nodes, edges: edges}, {
             nodeKey: function(n) { return n.dcg_nodeKey; },
             edgeKey: function(n) { return n.dcg_edgeKey; },
             nodeValue: function(n) { return n; },

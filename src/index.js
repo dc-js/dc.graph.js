@@ -55,7 +55,7 @@ export {
 } from './shape.js';
 export { textContents, withIconContents } from './node_contents.js';
 export { renderSvg } from './render_svg.js';
-export { mode } from './mode.js';
+export { mode, behavior } from './mode.js';
 export { 
   tip, tipTable, tipJsonTable, tipHtmlOrJsonTable,
   selectNodeAndEdge, selectNode, selectEdge, selectPort
@@ -108,6 +108,13 @@ export { lineBreaks } from './line_breaks.js';
 export { annotateNodes } from './annotate_nodes.js';
 export { filterSelection } from './filter_selection.js';
 export { pathReader } from './path_reader.js';
+export { labelEdges } from './label_edges.js';
+export { placePorts } from './place_ports.js';
+export { deparallelize } from './transform.js';
+export { wildcardPorts } from './wildcard_ports.js';
+export { annotateLayers } from './annotate_layers.js';
+export { drawClusters } from './draw_clusters.js';
+export { labelNodes } from './label_nodes.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';

@@ -1,10 +1,13 @@
-dc_graph.annotate_layers = function() {
+import { mode } from './mode.js';
+import { property } from './core.js';
+
+export function annotateLayers() {
     // svg-specific
     var _drawLayer;
     // wegl-specific
     var _planes = [];
     var _planeGeometry;
-    var _mode = dc_graph.mode('annotate-layers', {
+    var _mode = mode('annotate-layers', {
         laterDraw: true,
         renderers: ['svg', 'webgl'],
         draw: draw,

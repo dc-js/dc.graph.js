@@ -1,5 +1,5 @@
 // collapse edges between same source and target
-dc_graph.deparallelize = function(group, sourceTag, targetTag, options) {
+export function deparallelize(group, sourceTag, targetTag, options) {
     options = options || {};
     var both = options.both || false,
         reduce = options.reduce || null;

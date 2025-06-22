@@ -29,7 +29,7 @@ function project_port(diagram, n, p) {
     p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
 }
 
-dc_graph.place_ports = function() {
+export function placePorts() {
     function received_layout(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         var node_ports = diagram.nodePorts();
 

@@ -1,4 +1,4 @@
-dc_graph.wildcard_ports = function(options) {
+export function wildcardPorts(options) {
     var diagram = options.diagram,
         get_type = options.get_type || function(p) { return p.orig.value.type; },
         set_type = options.set_type || function(p, src) { p.orig.value.type = src.orig.value.type; },

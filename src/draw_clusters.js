@@ -1,4 +1,7 @@
-dc_graph.draw_clusters = function() {
+import { mode } from './mode.js';
+import { property } from './core.js';
+
+export function drawClusters() {
 
     function apply_bounds(rect) {
         rect.attr({
@@ -48,7 +51,7 @@ dc_graph.draw_clusters = function() {
     }
     function remove(diagram, node, edge, ehover) {
     }
-    var _mode = dc_graph.mode('draw-clusters', {
+    var _mode = mode('draw-clusters', {
         laterDraw: true,
         draw: draw,
         remove: remove
