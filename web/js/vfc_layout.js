@@ -1,3 +1,6 @@
+import { gapY, alignY } from './dc-graph.js';
+import { app_layouts } from './app_layout.js';
+
 app_layouts.vfc = function() {
     function rank(label) {
         return label.split(':')[2];
@@ -29,11 +32,11 @@ app_layouts.vfc = function() {
                  typename: function(id, value) { return value; }}
             ],
             edges: [
-                {source: 'VNF', target: 'VFC', produce: dc_graph.gap_y(100, true)},
-                {source: 'VFC', target: 'VM', produce: dc_graph.gap_y(100, true)},
-                {source: 'VM', target: 'Host', produce: dc_graph.gap_y(100, true)},
+                {source: 'VNF', target: 'VFC', produce: gapY(100, true)},
+                {source: 'VFC', target: 'VM', produce: gapY(100, true)},
+                {source: 'VM', target: 'Host', produce: gapY(100, true)},
 
-                {source: 'VNF', target: 'VNF', produce: dc_graph.align_y()},
+                {source: 'VNF', target: 'VNF', produce: alignY()},
                 /*
                  {source: 'VFC', target: 'VFC', produce: dc_graph.align_y()},
                  {source: 'VM', target: 'VM', produce: dc_graph.align_y()},

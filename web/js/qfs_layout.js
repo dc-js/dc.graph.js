@@ -1,10 +1,14 @@
+import { gapY, alignY, orderX } from './dc-graph.js';
+import { app_layouts } from './app_layout.js';
+import { show_stepper } from './original-test-page.js';
+
 app_layouts.qfs = {
     rules: {
         nodes: [
             {id: 'class', partition: 'class', typename: function(id, value) { return value; }}
         ],
         edges: [
-            {source: 'Client', target: 'Metaserver', produce: dc_graph.gap_y(100, true)},
+            {source: 'Client', target: 'Metaserver', produce: gapY(100, true)},
             {source: 'Client', target: 'Metaserver',
              reverse: true,
              produce: function(members) {
@@ -14,22 +18,22 @@ app_layouts.qfs = {
                      equality: true
                  };
              }},
-            {source: 'Client', target: 'ChunkServer', produce: dc_graph.gap_y(200, true)},
-            {source: 'Client', target: 'Attached Volume', produce: dc_graph.gap_y(300, true)},
-            {source: 'Metaserver', target: 'Attached Volume', produce: dc_graph.gap_y(200, true)},
-            {source: 'Metaserver', target: 'ChunkServer', produce: dc_graph.gap_y(100, true)},
-            {source: 'ChunkServer', target: 'Attached Volume', produce: dc_graph.gap_y(100, true)},
+            {source: 'Client', target: 'ChunkServer', produce: gapY(200, true)},
+            {source: 'Client', target: 'Attached Volume', produce: gapY(300, true)},
+            {source: 'Metaserver', target: 'Attached Volume', produce: gapY(200, true)},
+            {source: 'Metaserver', target: 'ChunkServer', produce: gapY(100, true)},
+            {source: 'ChunkServer', target: 'Attached Volume', produce: gapY(100, true)},
 
-            {source: 'ChunkServer', target: 'ChunkServer', produce: dc_graph.align_y()},
-            {source: 'Attached Volume', target: 'Attached Volume', produce: dc_graph.align_y()},
+            {source: 'ChunkServer', target: 'ChunkServer', produce: alignY()},
+            {source: 'Attached Volume', target: 'Attached Volume', produce: alignY()},
 
             {source: 'ChunkServer', target: 'ChunkServer',
-             produce: dc_graph.order_x(60, function(kv) {
+             produce: orderX(60, function(kv) {
                  return +kv.value.label.slice(2);
              })
             },
             {source: 'Attached Volume', target: 'Attached Volume',
-             produce: dc_graph.order_x(60, function(kv) {
+             produce: orderX(60, function(kv) {
                  if(!this.idex) // is this optimization necessary?
                      this.idex = /^Vol([0-9]+)_([A-Za-z]+)([0-9]+)$/;
                  var match = this.idex.exec(kv.value.name);

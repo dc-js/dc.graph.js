@@ -1,3 +1,5 @@
+import { app_layouts } from './app_layout.js';
+
 app_layouts.ceph = function() {
     var view_ = 'ceph';
     var edgetypes_;

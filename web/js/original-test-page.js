@@ -1,3 +1,6 @@
+import { diagram, loadGraph, generate, buildTypeGraph, flatGroup, mungeGraph, constraintPattern, spawnEngine, highlightNeighbors, expandCollapse } from './dc-graph.js';
+import { app_layouts } from './app_layout.js';
+
 var qs = querystring.parse();
 
 var steptime = +qs.interval || 1000, // ms per step
@@ -8,7 +11,7 @@ var steptime = +qs.interval || 1000, // ms per step
     tickSize = qs.ticksize || 1,
     file = qs.file || null,
     paths = qs.paths || null,
-    generate = qs.gen || null,
+    generateName = qs.gen || null,
     shape = qs.shape || null,
     radius = +qs.radius || 25,
     fill = qs.fill || 'white',
@@ -35,8 +38,9 @@ if(edgeStroke && (/[0-9A-Fa-f]{6}/.test(edgeStroke) || /[0-9A-Fa-f]{3}/.test(edg
 var min = 2, max = 12;
 var begin = 2, end = 12, curr = begin;
 var doRender = true;
+var done = false;
 
-var demoDiagram = dc_graph.diagram('#graph'), runner;
+var demoDiagram = diagram('#graph'), runner;
 var overview;
 
 function do_status() {
@@ -51,7 +55,7 @@ function show_stats(data_stats, layout_stats) {
                             '<tr><td>Avg time</td><td>' + (runner.avgTime()/1000).toFixed(3) + 's</td></tr>',
                             '</table>'].join(''));
 }
-function show_stepper() {
+export function show_stepper() {
     $('#stepper').show();
     $('#controls').width(300);
 }
@@ -59,7 +63,7 @@ function show_stepper() {
 do_status();
 
 var source;
-if(!generate && !file)
+if(!generateName && !file)
     file = "qfs.json";
 appLayout = qs.applayout || file === 'qfs.json' && 'qfs';
 if(appLayout === 'none' || !app_layouts[appLayout])
@@ -75,19 +79,19 @@ if(appLayout) {
 }
 if(file)
     source = function(callback) {
-        dc_graph.load_graph(file, callback);
+        loadGraph(file, callback);
     };
-else if(generate)
+else if(generateName)
     source = function(callback) {
         // name plus at least one number, separated by commas
-        var parts = /^([a-zA-Z]+)([0-9]+(?:,[0-9]+)*)$/.exec(generate);
+        var parts = /^([a-zA-Z]+)([0-9]+(?:,[0-9]+)*)$/.exec(generateName);
         if(!parts || !parts[0]) throw new Error("couldn't parse generator");
         var name = parts[1], args = parts[2].split(',').map(function(n) { return +n; });
         var env = {
             linkLength: linkLength,
             nodePrefix: nodePrefix
         };
-        dc_graph.generate(name, args, env, callback);
+        generate(name, args, env, callback);
     };
 if(shape) {
     var parts = shape.split(',');
@@ -107,14 +111,14 @@ if(shape) {
 function show_type_graph(nodes, edges, sourceattr, targetattr) {
     $('#overview').show();
     if(!overview)
-        overview = dc_graph.diagram('#overview', 'overview');
-    var typegraph = dc_graph.build_type_graph(nodes, edges,
+        overview = diagram('#overview', 'overview');
+    var typegraph = buildTypeGraph(nodes, edges,
                                               function(n) { return n.name; },
                                               function(n) { return n.type; },
                                               function(e) { return e[sourceattr]; },
                                               function(e) { return e[targetattr]; });
-    var tedges = dc_graph.flat_group.make(typegraph.edges, function(d) { return d.type; }),
-        tnodes = dc_graph.flat_group.make(typegraph.nodes, function(d) { return d.type; });
+    var tedges = flatGroup.make(typegraph.edges, function(d) { return d.type; }),
+        tnodes = flatGroup.make(typegraph.nodes, function(d) { return d.type; });
 
     overview.width(250)
         .height(250)
@@ -133,7 +137,7 @@ source(function(error, data) {
         console.log(error);
         return;
     }
-    var graph_data = dc_graph.munge_graph(data),
+    var graph_data = mungeGraph(data),
         nodes = graph_data.nodes,
         edges = graph_data.edges,
         sourceattr = graph_data.sourceattr,
@@ -148,10 +152,10 @@ source(function(error, data) {
     if(false) // appLayout)
         show_type_graph(nodes, edges, sourceattr, targetattr);
 
-    var edge_flat = dc_graph.flat_group.make(edges, function(d) {
+    var edge_flat = flatGroup.make(edges, function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     }),
-        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
+        node_flat = flatGroup.make(nodes, function(d) { return d[nodekeyattr]; });
 
     appLayout && app_layouts[appLayout].data && app_layouts[appLayout].data(nodes, edges);
 
@@ -193,7 +197,7 @@ source(function(error, data) {
             if(!doOrdering && c.produce && c.produce.type === 'ordering')
                 c.disable = true;
         });
-        rule_constraints = dc_graph.constraint_pattern(rules);
+        rule_constraints = constraintPattern(rules);
     }
 
     function constrain(diagram, nodes, edges) {
@@ -220,7 +224,7 @@ source(function(error, data) {
         return Array.prototype.concat.apply([], constraintses);
     }
 
-    var engine = dc_graph.spawn_engine(qs.layout || 'cola', qs, qs.worker != 'false');
+    var engine = spawnEngine(qs.layout || 'cola', qs, qs.worker != 'false');
     demoDiagram
         .width('auto')
         .height('auto')
@@ -252,7 +256,7 @@ source(function(error, data) {
             runner.endStep();
             show_stats({totnodes: nodes.length, totedges: edges.length}, demoDiagram.getStats());
         })
-        .child('highlight-neighbors', dc_graph.highlight_neighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
+        .child('highlight-neighbors', highlightNeighbors({edgeStroke: 'orangered', edgeStrokeWidth: 3}));
 
     if(qs.elabel)
         demoDiagram.edgeLabel(function(e) { return e.value[qs.elabel]; });
@@ -312,7 +316,7 @@ source(function(error, data) {
         apply_expander_filter();
         if(qs.directional) {
             demoDiagram.child('expand-collapse',
-                          dc_graph.expand_collapse(function(key, dir) { // get_degree
+                          expandCollapse(function(key, dir) { // get_degree
                               switch(dir) {
                               case 'out': return out_edges(key).length;
                               case 'in': return in_edges(key).length;
@@ -355,7 +359,7 @@ source(function(error, data) {
                           }, ['out', 'in']));
         } else {
             demoDiagram.child('expand-collapse',
-                          dc_graph.expand_collapse(function(key) { // get_degree
+                          expandCollapse(function(key) { // get_degree
                               return adjacent_edges(key).length;
                           }, function(key) { // expand
                               adjacent_nodes(key).forEach(function(nk) {
