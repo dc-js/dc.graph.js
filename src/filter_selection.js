@@ -1,4 +1,5 @@
 import { selectThingsGroup } from './select_things.js';
+import { property } from './core.js';
 
 export function filterSelection(things_group, things_name) {
     things_name = things_name || 'select-nodes';
