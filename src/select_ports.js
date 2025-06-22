@@ -1,7 +1,9 @@
-dc_graph.select_ports = function(props, options) {
+import { selectThings, selectThingsGroup } from './select_things.js';
+
+export function selectPorts(props, options) {
     options = options || {};
     var port_style = options.portStyle || 'symbols';
-    var select_ports_group = dc_graph.select_things_group(options.select_ports_group || 'select-ports-group', 'select-ports');
+    var select_ports_group = selectThingsGroup(options.select_ports_group || 'select-ports-group', 'select-ports');
     var thinginess = {
         laterDraw: true,
         intersectRect: null, // multiple selection not supported for now
@@ -24,6 +26,6 @@ dc_graph.select_ports = function(props, options) {
             return k1.name === k2.name && (k1.node ? k1.node === k2.node : k1.edge === k2.edge);
         }
     };
-    var _mode = dc_graph.select_things(select_ports_group, 'select-ports', thinginess);
+    var _mode = selectThings(select_ports_group, 'select-ports', thinginess);
     return _mode;
 };

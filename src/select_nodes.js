@@ -1,6 +1,8 @@
-dc_graph.select_nodes = function(props, options) {
+import { selectThings, selectThingsGroup } from './select_things.js';
+
+export function selectNodes(props, options) {
     options = options || {};
-    var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
 
     var thinginess = {
         intersectRect: function(ext) {
@@ -25,6 +27,6 @@ dc_graph.select_nodes = function(props, options) {
             _mode.parent().cascade(50, false, props);
         }
     };
-    var _mode = dc_graph.select_things(select_nodes_group, 'select-nodes', thinginess);
+    var _mode = selectThings(select_nodes_group, 'select-nodes', thinginess);
     return _mode;
 };

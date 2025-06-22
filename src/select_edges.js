@@ -1,6 +1,8 @@
-dc_graph.select_edges = function(props, options) {
+import { selectThings, selectThingsGroup } from './select_things.js';
+
+export function selectEdges(props, options) {
     options = options || {};
-    var select_edges_group = dc_graph.select_things_group(options.select_edges_group || 'select-edges-group', 'select-edges');
+    var select_edges_group = selectThingsGroup(options.select_edges_group || 'select-edges-group', 'select-edges');
     var thinginess = {
         intersectRect: function(ext) {
             return this.clickables().data().filter(function(e) {
@@ -32,6 +34,6 @@ dc_graph.select_edges = function(props, options) {
             _mode.parent().cascade(50, false, props);
         }
     };
-    var _mode = dc_graph.select_things(select_edges_group, 'select-edges', thinginess);
+    var _mode = selectThings(select_edges_group, 'select-edges', thinginess);
     return _mode;
 };

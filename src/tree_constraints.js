@@ -1,10 +1,12 @@
 // this naive tree-drawer is paraphrased from memory from dot
-dc_graph.tree_constraints = function(rootf, treef, xgap, ygap) {
-    console.warn('dc_graph.tree_constraints is deprecated - it never worked right and may not be a good idea');
+import { depthFirstTraversal } from './depth_first_traversal.js';
+
+export function treeConstraints(rootf, treef, xgap, ygap) {
+    console.warn('treeConstraints is deprecated - it never worked right and may not be a good idea');
     return function(diagram, nodes, edges) {
         var constraints = [];
         var x = 0;
-        var dfs = dc_graph.depth_first_traversal({
+        var dfs = depthFirstTraversal({
             root: rootf,
             tree: treef,
             place: function(n, r, row) {

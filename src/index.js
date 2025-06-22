@@ -93,6 +93,10 @@ export { splinePaths, drawSplinePaths } from './spline_paths.js';
 export { convertTree, convertNest, convertAdjacencyList } from './convert.js';
 export { deleteThings } from './delete_things.js';
 export { deleteNodes } from './delete_nodes.js';
+export { selectNodes } from './select_nodes.js';
+export { selectEdges } from './select_edges.js';
+export { selectPorts } from './select_ports.js';
+export { treeConstraints } from './tree_constraints.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';
