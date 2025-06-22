@@ -1,4 +1,4 @@
-import { property, getBBoxNoThrow, identity, deprecate_function } from './core.js';
+import { property, getBBoxNoThrow, identity } from './core.js';
 import { cascade } from './utils.js';
 
 export function symbolPortStyle() {

@@ -1,4 +1,9 @@
-dc_graph.keyboard = function() {
+import { mode } from './mode.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function keyboard() {
     var _dispatch = d3.dispatch('keydown', 'keyup', 'modkeyschanged');
     var _unique_id = 'keyboard' + Math.floor(Math.random() * 100000);
     var _mod_keys = d3.set(['Shift', 'Control', 'Alt', 'Meta']),
@@ -39,7 +44,7 @@ dc_graph.keyboard = function() {
             .on('keyup.' + _unique_id, null)
             .on('blur.' + _unique_id, null);
     }
-    var _mode = dc_graph.mode('brush', {
+    var _mode = mode('brush', {
         draw: draw,
         remove: remove
     });

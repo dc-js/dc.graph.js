@@ -11,7 +11,13 @@
  * @memberof dc_graph
  * @return {Object}
  **/
-dc_graph.tip = function(options) {
+import { property } from './core.js';
+import { mode } from './mode.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function tip(options) {
     options = options || {};
     var _namespace = options.namespace || 'tip';
     var _d3tip = null;
@@ -112,7 +118,7 @@ dc_graph.tip = function(options) {
             .on('mouseout.' + _namespace, null);
     }
 
-    var _mode = dc_graph.mode(_namespace, {
+    var _mode = mode(_namespace, {
         draw: draw,
         remove: remove,
         laterDraw: true
@@ -192,7 +198,7 @@ dc_graph.tip = function(options) {
         }
         return _mode;
     };
-    _mode.selection = property(dc_graph.tip.select_node_and_edge());
+    _mode.selection = property(selectNodeAndEdge());
     _mode.showDelay = _mode.delay = property(0);
     _mode.hideDelay = property(200);
     _mode.offset = property(null);
@@ -215,7 +221,7 @@ dc_graph.tip = function(options) {
  * var tip = dc_graph.tip();
  * tip.content(dc_graph.tip.table());
  **/
-dc_graph.tip.table = function() {
+export function tipTable() {
     var gen = function(d, k) {
         d = gen.fetch()(d);
         if(!d)
@@ -252,8 +258,8 @@ dc_graph.tip.table = function() {
     return gen;
 };
 
-dc_graph.tip.json_table = function() {
-    var table = dc_graph.tip.table().fetch(function(d) {
+export function tipJsonTable() {
+    var table = tipTable().fetch(function(d) {
         var jsontip = table.json()(d);
         if(!jsontip) return null;
         try {
@@ -268,8 +274,8 @@ dc_graph.tip.json_table = function() {
     return table;
 };
 
-dc_graph.tip.html_or_json_table = function() {
-    var json_table = dc_graph.tip.json_table();
+export function tipHtmlOrJsonTable() {
+    var json_table = tipJsonTable();
     var gen = function(d, k) {
         var html = gen.html()(d);
         if(html)
@@ -284,7 +290,7 @@ dc_graph.tip.html_or_json_table = function() {
     return gen;
 };
 
-dc_graph.tip.select_node_and_edge = function() {
+export function selectNodeAndEdge() {
     return {
         select: function(diagram, node, edge, ehover) {
             // hack to merge selections, not supported d3v3
@@ -298,7 +304,7 @@ dc_graph.tip.select_node_and_edge = function() {
     };
 };
 
-dc_graph.tip.select_node = function() {
+export function selectNode() {
     return {
         select: function(diagram, node, edge, ehover) {
             return node;
@@ -309,7 +315,7 @@ dc_graph.tip.select_node = function() {
     };
 };
 
-dc_graph.tip.select_edge = function() {
+export function selectEdge() {
     return {
         select: function(diagram, node, edge, ehover) {
             return edge;
@@ -317,7 +323,7 @@ dc_graph.tip.select_edge = function() {
     };
 };
 
-dc_graph.tip.select_port = function() {
+export function selectPort() {
     return {
         select: function(diagram, node, edge, ehover) {
             return node.selectAll('g.port');

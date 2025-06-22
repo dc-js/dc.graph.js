@@ -95,7 +95,7 @@ function process_dsv(callback, error, data) {
     });
 }
 
-dc_graph.file_formats = [
+export const fileFormats = [
     {
         exts: 'json',
         mimes: 'application/json',
@@ -136,8 +136,8 @@ dc_graph.file_formats = [
     }
 ];
 
-dc_graph.match_file_format = function(filename) {
-    return dc_graph.file_formats.find(function(format) {
+export function matchFileFormat(filename) {
+    return fileFormats.find(function(format) {
         var exts = format.exts;
         if(!Array.isArray(exts))
             exts = [exts];
@@ -147,8 +147,8 @@ dc_graph.match_file_format = function(filename) {
     });
 };
 
-dc_graph.match_mime_type = function(mime) {
-    return dc_graph.file_formats.find(function(format) {
+export function matchMimeType(mime) {
+    return fileFormats.find(function(format) {
         var mimes = format.mimes;
         if(!Array.isArray(mimes))
             mimes = [mimes];
@@ -169,7 +169,7 @@ function unknown_mime_error(mime) {
 }
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
-dc_graph.load_graph = function() {
+export function loadGraph() {
     // ignore any query parameters for checking extension
     function ignore_query(file) {
         if(!file)
@@ -203,13 +203,13 @@ dc_graph.load_graph = function() {
         var format;
         if(/^data:/.test(file1)) {
             var parts = file1.slice(5).split(/,(.+)/);
-            format = dc_graph.match_mime_type(parts[0]);
+            format = matchMimeType(parts[0]);
             if(format)
                 format.from_text(parts[1], callback);
             else callback(unknown_mime_error(parts[0]));
         } else {
             var file1noq = ignore_query(file1);
-            format = dc_graph.match_file_format(file1noq);
+            format = matchFileFormat(file1noq);
             if(format)
                 format.from_url(file1, callback);
             else callback(unknown_format_error(file1noq));
@@ -217,13 +217,13 @@ dc_graph.load_graph = function() {
     }
 };
 
-dc_graph.load_graph_text = function(text, filename, callback) {
-    var format = dc_graph.match_file_format(filename);
+export function loadGraphText(text, filename, callback) {
+    var format = matchFileFormat(filename);
     if(format)
         format.from_text(text, callback);
     else callback(unknown_format_error(filename));
 };
 
-dc_graph.data_url = function(data) {
+export function dataUrl(data) {
     return 'data:application/json,' + JSON.stringify(data);
 };

@@ -3,7 +3,14 @@
 
 The dc_graph.legend shows labeled examples of nodes & edges, within the frame of a dc_graph.diagram.
 **/
-dc_graph.legend = function(legend_namespace) {
+import { property, deprecateFunction } from './core.js';
+import { mode } from './mode.js';
+import { renderSvg } from './render_svg.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function legend(legend_namespace) {
     legend_namespace = legend_namespace || 'node-legend';
     var _items, _included = [];
     var _dispatch = d3.dispatch('filtered');
@@ -30,7 +37,7 @@ dc_graph.legend = function(legend_namespace) {
         }
     }
 
-    var _legend = dc_graph.mode(legend_namespace, {
+    var _legend = mode(legend_namespace, {
         renderers: ['svg', 'webgl'],
         draw: redraw,
         remove: function() {},
@@ -52,7 +59,7 @@ dc_graph.legend = function(legend_namespace) {
      #### .type([value])
      Set or get the handler for the specific type of item to be displayed. Default: dc_graph.legend.node_legend()
      **/
-    _legend.type = property(dc_graph.legend.node_legend());
+    _legend.type = property(nodeLegend());
 
     /**
      #### .x([value])
@@ -127,7 +134,7 @@ dc_graph.legend = function(legend_namespace) {
             _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original), false);
     }
 
-    _legend.redraw = deprecate_function("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
+    _legend.redraw = deprecateFunction("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
     function redraw() {
         var legend = (_svg_renderer || _legend.parent()).svg()
                 .selectAll('g.dc-graph-legend.' + legend_namespace)
@@ -228,10 +235,10 @@ dc_graph.legend = function(legend_namespace) {
                 true);
     };
 
-    _legend.render = deprecate_function("dc_graph.legend is an ordinary mode now; render will go away soon", render);
+    _legend.render = deprecateFunction("dc_graph.legend is an ordinary mode now; render will go away soon", render);
     function render() {
         if(_legend.parent().renderer().rendererType() !== 'svg') {
-            _svg_renderer = dc_graph.render_svg();
+            _svg_renderer = renderSvg();
             _svg_renderer.parent(_legend.parent())
                 .svg(_legend.parent().root().append('svg')
                      .style({
@@ -279,7 +286,7 @@ dc_graph.legend = function(legend_namespace) {
 };
 
 
-dc_graph.legend.node_legend = function() {
+export function nodeLegend() {
     return {
         itemSelector: function() {
             return '.node';
@@ -299,7 +306,7 @@ dc_graph.legend.node_legend = function() {
     };
 };
 
-dc_graph.legend.edge_legend = function() {
+export function edgeLegend() {
     var _type = {
         itemSelector: function() {
             return '.edge-container';
@@ -356,7 +363,7 @@ dc_graph.legend.edge_legend = function() {
     return _type;
 };
 
-dc_graph.legend.symbol_legend = function(symbolScale) {
+export function symbolLegend(symbolScale) {
     return {
         itemSelector: function() {
             return '.symbol';

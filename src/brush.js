@@ -1,11 +1,12 @@
+import { mode } from './mode.js';
+
 /**
- * `dc_graph.brush` is a {@link dc_graph.mode mode} providing a simple wrapper over
+ * `brush` is a {@link mode mode} providing a simple wrapper over
  * [d3.svg.brush](https://github.com/d3/d3-3.x-api-reference/blob/master/SVG-Controls.md#brush)
  * @class brush
- * @memberof dc_graph
- * @return {dc_graph.brush}
+ * @return {brush}
  **/
-dc_graph.brush = function() {
+export function brush() {
     var _brush = null, _gBrush, _dispatch = d3.dispatch('brushstart', 'brushmove', 'brushend');
 
     function brushstart() {
@@ -39,7 +40,7 @@ dc_graph.brush = function() {
             _gBrush = null;
         }
     }
-    var _mode = dc_graph.mode('brush', {
+    var _mode = mode('brush', {
         draw: function() {},
         remove: remove_brush
     });

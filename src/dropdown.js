@@ -1,7 +1,9 @@
-dc_graph.dropdown = function() {
-    dc_graph.dropdown.unique_id = (dc_graph.dropdown.unique_id || 16) + 1;
+import { property } from './core.js';
+
+export function dropdown() {
+    dropdown.unique_id = (dropdown.unique_id || 16) + 1;
     var _dropdown = {
-        id: 'id' + dc_graph.dropdown.unique_id,
+        id: 'id' + dropdown.unique_id,
         parent: property(null),
         show: function(key, x, y) {
             var dropdown = _dropdown.parent().root()

@@ -1,9 +1,7 @@
 /**
  * In cola.js there are three factors which influence the positions of nodes:
  * * *edge length* suggestions, controlled by the
- * {@link #dc_graph.diagram+lengthStrategy lengthStrategy},
- * {@link #dc_graph.diagram+baseLength baseLength}, and
- * {@link #dc_graph.diagram+edgeLength edgeLength} parameters in dc.graph.js
+ * lengthStrategy, baseLength, and edgeLength parameters
  * * *automatic constraints* based on the global edge flow direction (`cola.flowLayout`) and overlap
  * avoidance parameters (`cola.avoidOverlaps`)
  * * *manual constraints* such as alignment, inequality and equality constraints in a dimension/axis.
@@ -11,12 +9,6 @@
  * Generally when the
  * {@link https://github.com/tgdwyer/WebCola/wiki/Constraints cola.js documentation mentions constraints},
  * it means the manual constraints.
- *
- * dc.graph.js allows generation of manual constraints using
- * {@link #dc_graph.diagram+constrain diagram.constrain} but it can be tedious to write these
- * functions because it usually means looping over the nodes and edges multiple times to
- * determine what classes or types of nodes to apply constraints to, and which edges should
- * take additional constraints.
  *
  * This utility creates a constraint generator function from a *pattern*, a graph where:
  *  1. Nodes represent *types* or classes of layout nodes, annotated with a specification
@@ -32,7 +24,7 @@
  * </ol>
  * (It is also conceivable to want constraints between individual nodes which don't
  * have edges between them. This is not directly supported at this time; right now the workaround
- * is to create the edge but not draw it, e.g. by setting its {@link #dc_graph.diagram+edgeOpacity}
+ * is to create the edge but not draw it, e.g. by setting its edgeOpacity
  * to zero. If you have a use-case for this, please
  * {@link https://github.com/dc-js/dc.graph.js/issues/new file an issue}.
  *
@@ -43,14 +35,10 @@
  * gain more control.
  *
  * Then we'll build back up from the ground up and show how inference works.
- * @class constraint_pattern
- * @memberof dc_graph
- * @param {dc_graph.diagram} diagram - the diagram to pull attributes from, mostly to determine
- * the keys of nodes and edge sources and targets
  * @param {Object} pattern - a graph which defines the constraints to be generated
  * @return {Function}
  */
-dc_graph.constraint_pattern = function(pattern) {
+export function constraintPattern(pattern) {
     var types = {}, rules = [];
 
     pattern.nodes.forEach(function(n) {
@@ -145,20 +133,20 @@ dc_graph.constraint_pattern = function(pattern) {
 };
 
 // constraint generation convenience functions
-dc_graph.gap_y = function(gap, equality) {
+export function gapY(gap, equality) {
     return {
         axis: 'y',
         gap: gap,
         equality: !!equality
     };
-};
-dc_graph.gap_x = function(gap, equality) {
+}
+export function gapX(gap, equality) {
     return {
         axis: 'x',
         gap: gap,
         equality: !!equality
     };
-};
+}
 
 function align_f(axis) {
     var ret = function() {
@@ -172,26 +160,26 @@ function align_f(axis) {
     return ret;
 }
 
-dc_graph.align_y = function() {
+export function alignY() {
     return align_f('y');
-};
-dc_graph.align_x = function() {
+}
+export function alignX() {
     return align_f('x');
-};
+}
 
-dc_graph.order_x = function(gap, ordering) {
+export function orderX(gap, ordering) {
     return {
         type: 'ordering',
         axis: 'x',
         gap: 60,
         ordering: ordering
     };
-};
-dc_graph.order_y = function(gap, ordering) {
+}
+export function orderY(gap, ordering) {
     return {
         type: 'ordering',
         axis: 'y',
         gap: 60,
         ordering: ordering
     };
-};
+}

@@ -1,4 +1,6 @@
-dc_graph.mode = function(event_namespace, options) {
+import { property } from './core.js';
+
+export function mode(event_namespace, options) {
     var _mode = {};
     var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
     var draw = options.draw, remove = options.remove;

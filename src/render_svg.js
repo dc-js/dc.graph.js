@@ -1,4 +1,5 @@
 import { property } from './core.js';
+import { keyboard as keyboardMode } from './keyboard.js';
 
 export function renderSvg() {
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
@@ -862,7 +863,7 @@ export function renderSvg() {
             var brush = _renderer.parent().child('brush');
             var keyboard = _renderer.parent().child('keyboard');
             if(!keyboard)
-                _renderer.parent().child('keyboard', keyboard = dc_graph.keyboard());
+                _renderer.parent().child('keyboard', keyboard = keyboardMode());
             var modkeyschanged = function() {
                 if(keyboard.modKeysMatch(_renderer.parent().modKeyZoom()))
                     enableZoom();

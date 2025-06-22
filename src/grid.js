@@ -1,4 +1,10 @@
-dc_graph.grid = function() {
+import { property } from './core.js';
+import { mode } from './mode.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
+export function grid() {
     var _gridLayer = null;
     var _translate, _scale, _xDomain, _yDomain;
 
@@ -63,7 +69,7 @@ dc_graph.grid = function() {
         draw(diagram);
     }
 
-    var _mode = dc_graph.mode('highlight-paths', {
+    var _mode = mode('highlight-paths', {
         draw: draw,
         remove: remove,
         parent: function(p) {

@@ -1,4 +1,6 @@
-dc_graph.expand_collapse = function(options) {
+import { registerHighlightThingsGroup } from './highlight_things_group.js';
+
+export function expandCollapse(options) {
     if(typeof options === 'function') {
         options = {
             get_degree: arguments[0],
@@ -8,10 +10,10 @@ dc_graph.expand_collapse = function(options) {
         };
     }
     var _keyboard, _overNode, _overDir, _overEdge, _expanded = {}, _changing, _ignore = null;
-    var changing_highlight_group = dc_graph.register_highlight_things_group(options.changing_highlight_group || 'changing-highlight-group');
-    var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
-    var collapse_highlight_group = dc_graph.register_highlight_things_group(options.collapse_highlight_group || 'collapse-highlight-group');
-    var hide_highlight_group = dc_graph.register_highlight_things_group(options.hide_highlight_group || 'hide-highlight-group');
+    var changing_highlight_group = registerHighlightThingsGroup(options.changing_highlight_group || 'changing-highlight-group');
+    var expanded_highlight_group = registerHighlightThingsGroup(options.expanded_highlight_group || 'expanded-highlight-group');
+    var collapse_highlight_group = registerHighlightThingsGroup(options.collapse_highlight_group || 'collapse-highlight-group');
+    var hide_highlight_group = registerHighlightThingsGroup(options.hide_highlight_group || 'hide-highlight-group');
     options.dirs = options.dirs || ['both'];
     options.dirs.forEach(function(dir) {
         _expanded[dir] = new Set();

@@ -55,6 +55,24 @@ export {
 } from './shape.js';
 export { textContents, withIconContents } from './node_contents.js';
 export { renderSvg } from './render_svg.js';
+export { mode } from './mode.js';
+export { 
+  tip, tipTable, tipJsonTable, tipHtmlOrJsonTable,
+  selectNodeAndEdge, selectNode, selectEdge, selectPort
+} from './tip.js';
+export { legend, nodeLegend, edgeLegend, symbolLegend } from './legend.js';
+export { brush } from './brush.js';
+export { keyboard } from './keyboard.js';
+export { dropdown } from './dropdown.js';
+export { grid } from './grid.js';
+export { 
+  constraintPattern, gapY, gapX, alignY, alignX, orderX, orderY 
+} from './constraint_pattern.js';
+export { 
+  fileFormats, matchFileFormat, matchMimeType, loadGraph, loadGraphText, dataUrl 
+} from './load_graph.js';
+export { registerHighlightThingsGroup } from './highlight_things_group.js';
+export { expandCollapse } from './expand_collapse.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';
