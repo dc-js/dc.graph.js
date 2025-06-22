@@ -1,14 +1,24 @@
 /**
- * `dc_graph.dagre_layout` is an adaptor for dagre.js layouts in dc.graph.js
+ * Dagre.js layout adaptor for dc.graph.js
+ * @module dagre_layout
+ */
+
+// External dependencies loaded as globals
+const d3 = globalThis.d3;
+const dagre = globalThis.dagre;
+import { uuid, property } from './core.js';
+import { regenerateObjects } from './generate_objects.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `dagreLayout` is an adaptor for dagre.js layouts in dc.graph.js
  *
- * In addition to the below layout attributes, `dagre_layout` also implements the attributes from
- * {@link dc_graph.graphviz_attrs graphviz_attrs}
- * @class dagre_layout
- * @memberof dc_graph
+ * In addition to the below layout attributes, `dagreLayout` also implements the attributes from
+ * {@link graphvizAttrs graphviz_attrs}
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.dagre_layout}
+ * @return {Object} dagre layout engine
  **/
-dc_graph.dagre_layout = function(id) {
+export function dagreLayout(id) {
     var _layoutId = id || uuid();
     var _dagreGraph = null, _tick, _done;
     var _dispatch = d3.dispatch('tick', 'start', 'end');
@@ -28,7 +38,7 @@ dc_graph.dagre_layout = function(id) {
     }
 
     function data(nodes, edges, clusters) {
-        var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
+        var wnodes = regenerateObjects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -46,7 +56,7 @@ dc_graph.dagre_layout = function(id) {
         }, function(k) {
             _dagreGraph.removeNode(k);
         });
-        var wedges = regenerate_objects(_edges, edges, null, function(e) {
+        var wedges = regenerateObjects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -107,7 +117,7 @@ dc_graph.dagre_layout = function(id) {
     function stop() {
     }
 
-    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
     return Object.assign(graphviz, {
         layoutAlgorithm: function() {
             return 'dagre';
@@ -148,4 +158,5 @@ dc_graph.dagre_layout = function(id) {
     });
 };
 
-dc_graph.dagre_layout.scripts = ['d3.js', 'dagre.js'];
+// Scripts needed for web worker
+dagreLayout.scripts = ['d3.js', 'dagre.js'];

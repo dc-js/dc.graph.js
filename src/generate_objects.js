@@ -1,5 +1,10 @@
+/**
+ * Object generation and management utilities
+ * @module generate_objects
+ */
+
 // create or re-use objects in a map, delete the ones that were not reused
-function regenerate_objects(preserved, list, need, key, assign, create, destroy) {
+export function regenerateObjects(preserved, list, need, key, assign, create, destroy) {
     if(!create) create = function(k, o) { };
     if(!destroy) destroy = function(k) { };
     var keep = {};

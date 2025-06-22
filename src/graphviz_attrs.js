@@ -1,14 +1,19 @@
 /**
- * `dc_graph.graphviz_attrs defines a basic set of attributes which layout engines should
+ * Graphviz attributes for layout engines
+ * @module graphviz_attrs
+ */
+
+import { property } from './core.js';
+
+/**
+ * `graphvizAttrs` defines a basic set of attributes which layout engines should
  * implement - although these are not required, they make it easier for clients and
  * modes (like expand_collapse) to work with multiple layout engines.
  *
  * these attributes are {@link http://www.graphviz.org/doc/info/attrs.html from graphviz}
- * @class graphviz_attrs
- * @memberof dc_graph
  * @return {Object}
  **/
-dc_graph.graphviz_attrs = function() {
+export function graphvizAttrs() {
     return {
         /**
          * Direction to draw ranks.
@@ -45,7 +50,7 @@ function nvalue(n) {
 
 // apply standard accessors to a diagram in order to style it as graphviz would
 // this is a work in progress
-dc_graph.apply_graphviz_accessors = function(diagram) {
+export function applyGraphvizAccessors(diagram) {
     diagram
         .nodeLabel(function(n) {
             var label = nvalue(n).label;
@@ -116,7 +121,7 @@ dc_graph.apply_graphviz_accessors = function(diagram) {
     }
 };
 
-dc_graph.snapshot_graphviz = function(diagram) {
+export function snapshotGraphviz(diagram) {
     var xDomain = diagram.x().domain(), yDomain = diagram.y().domain();
     return {
         nodes: diagram.nodeGroup().all().map(function(n) {

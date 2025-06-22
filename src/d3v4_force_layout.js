@@ -1,11 +1,20 @@
 /**
- * `dc_graph.d3v4_force_layout` is an adaptor for d3-force version 4 layouts in dc.graph.js
- * @class d3v4_force_layout
- * @memberof dc_graph
+ * D3 v4 force layout adaptor for dc.graph.js
+ * @module d3v4_force_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { uuid, property } from './core.js';
+import { regenerateObjects } from './generate_objects.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `d3v4ForceLayout` is an adaptor for d3-force version 4 layouts in dc.graph.js
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.d3v4_force_layout}
+ * @return {Object} d3v4 force layout engine
  **/
-dc_graph.d3v4_force_layout = function(id) {
+export function d3v4ForceLayout(id) {
     var _layoutId = id || uuid();
     var _simulation = null; // d3-force simulation
     var _dispatch = d3.dispatch('tick', 'start', 'end');
@@ -44,7 +53,7 @@ dc_graph.d3v4_force_layout = function(id) {
             nodeIDs[d.dcg_nodeKey] = i;
         });
 
-        _wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
+        _wnodes = regenerateObjects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -57,7 +66,7 @@ dc_graph.d3v4_force_layout = function(id) {
             } else v1.fx = v1.fy = null;
         });
 
-        _wedges = regenerate_objects(_edges, edges, null, function(e) {
+        _wedges = regenerateObjects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -144,7 +153,7 @@ dc_graph.d3v4_force_layout = function(id) {
         dispatchState('end');
     }
 
-    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
 
     var engine = Object.assign(graphviz, {
         layoutAlgorithm: function() {
@@ -206,4 +215,5 @@ dc_graph.d3v4_force_layout = function(id) {
     return engine;
 };
 
-dc_graph.d3v4_force_layout.scripts = ['d3.js', 'd3v4-force.js'];
+// Scripts needed for web worker
+d3v4ForceLayout.scripts = ['d3.js', 'd3v4-force.js'];

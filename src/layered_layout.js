@@ -1,12 +1,20 @@
 /**
- * `dc_graph.layered_layout` produces 3D layered layouts, utilizing another layout
+ * Layered layout for dc.graph.js
+ * @module layered_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { uuid, property } from './core.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `layeredLayout` produces 3D layered layouts, utilizing another layout
  * that supports fixed nodes and position hints for the layers
- * @class layered_layout
- * @memberof dc_graph
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.layered_layout}
+ * @return {Object} layered layout engine
  **/
-dc_graph.layered_layout = function(id) {
+export function layeredLayout(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _supergraph, _subgraphs;
@@ -155,7 +163,7 @@ dc_graph.layered_layout = function(id) {
     function stop() {
     }
 
-    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
 
     var engine = Object.assign(graphviz, {
         layoutAlgorithm: function() {

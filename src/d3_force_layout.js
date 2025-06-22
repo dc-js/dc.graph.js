@@ -1,11 +1,20 @@
 /**
- * `dc_graph.d3_force_layout` is an adaptor for d3-force layouts in dc.graph.js
- * @class d3_force_layout
- * @memberof dc_graph
+ * D3 force layout adaptor for dc.graph.js
+ * @module d3_force_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { uuid, property } from './core.js';
+import { regenerateObjects } from './generate_objects.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `d3ForceLayout` is an adaptor for d3-force layouts in dc.graph.js
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.d3_force_layout}
+ * @return {Object} d3 force layout engine
  **/
-dc_graph.d3_force_layout = function(id) {
+export function d3ForceLayout(id) {
     var _layoutId = id || uuid();
     var _simulation = null; // d3-force simulation
     var _dispatch = d3.dispatch('tick', 'start', 'end');
@@ -54,7 +63,7 @@ dc_graph.d3_force_layout = function(id) {
             nodeIDs[d.dcg_nodeKey] = i;
         });
 
-        _wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
+        _wnodes = regenerateObjects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -68,7 +77,7 @@ dc_graph.d3_force_layout = function(id) {
             } else v1.fixed = false;
         });
 
-        _wedges = regenerate_objects(_edges, edges, null, function(e) {
+        _wedges = regenerateObjects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -212,7 +221,7 @@ dc_graph.d3_force_layout = function(id) {
         });
     }
 
-    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
 
     var engine = Object.assign(graphviz, {
         layoutAlgorithm: function() {
@@ -273,4 +282,5 @@ dc_graph.d3_force_layout = function(id) {
     return engine;
 };
 
-dc_graph.d3_force_layout.scripts = ['d3.js'];
+// Scripts needed for web worker
+d3ForceLayout.scripts = ['d3.js'];

@@ -1,4 +1,6 @@
-dc_graph.render_svg = function() {
+import { property } from './core.js';
+
+export function renderSvg() {
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _animating = false; // do not refresh during animations
     var _zoom;

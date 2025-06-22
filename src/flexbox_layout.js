@@ -30,7 +30,16 @@
  * @param {String} [id=uuid()] - Unique identifier
  * @return {dc_graph.flexbox_layout}
  **/
-dc_graph.flexbox_layout = function(id, options) {
+/**
+ * Flexbox layout for dc.graph.js
+ * @module flexbox_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { uuid, property } from './core.js';
+
+export function flexboxLayout(id, options) {
     var _layoutId = id || uuid();
     options = options || {algo: 'yoga-layout'};
     var _dispatch = d3.dispatch('tick', 'start', 'end');
@@ -377,4 +386,5 @@ dc_graph.flexbox_layout = function(id, options) {
     return _engine;
 };
 
-dc_graph.flexbox_layout.scripts = ['css-layout.js'];
+// Scripts needed for web worker
+flexboxLayout.scripts = ['css-layout.js'];

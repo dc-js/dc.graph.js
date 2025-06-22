@@ -1,6 +1,9 @@
-dc_graph.fix_nodes = function(options) {
+import { property } from './core.js';
+import { undirectedDfs } from './depth_first_traversal.js';
+
+export function fixNodes(options) {
     options = options || {};
-    var fix_nodes_group = dc_graph.fix_nodes_group(options.fix_nodes_group || 'fix-nodes-group');
+    var fix_nodes_group = fixNodesGroup(options.fix_nodes_group || 'fix-nodes-group');
     var _fixedPosTag = options.fixedPosTag || 'fixedPos';
     var _fixes = [], _nodes, _wnodes, _edges, _wedges;
 
@@ -140,15 +143,15 @@ dc_graph.fix_nodes = function(options) {
         // (should probably be automatic though)
         fixAllNodes: fix_all_nodes,
         clearFixes: clear_fixes,
-        strategy: property(dc_graph.fix_nodes.strategy.fix_last()),
+        strategy: property(fixNodes.strategy.fixLast()),
         reportOverridesAsynchronously: property(true)
     };
 
     return _mode;
 };
 
-dc_graph.fix_nodes.strategy = {};
-dc_graph.fix_nodes.strategy.fix_last = function() {
+fixNodes.strategy = {};
+fixNodes.strategy.fixLast = function() {
     return {
         request_fixes: function(exec, fixes) {
             exec.clear_fixes();
@@ -165,7 +168,7 @@ dc_graph.fix_nodes.strategy.fix_last = function() {
         }
     };
 };
-dc_graph.fix_nodes.strategy.last_N_per_component = function(maxf) {
+fixNodes.strategy.lastNPerComponent = function(maxf) {
     maxf = maxf || 1;
     var _age = 0;
     var _allFixes = {};
@@ -195,7 +198,7 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(maxf) {
             });
             // determine components
             var components = [];
-            var dfs = dc_graph.undirected_dfs({
+            var dfs = undirectedDfs({
                 nodeid: exec.nodeid,
                 sourceid: exec.sourceid,
                 targetid: exec.targetid,
@@ -262,7 +265,7 @@ dc_graph.fix_nodes.strategy.last_N_per_component = function(maxf) {
     };
 };
 
-dc_graph.fix_nodes_group = function(brushgroup) {
+export function fixNodesGroup(brushgroup) {
     window.chart_registry.create_type('fix-nodes', function() {
         return d3.dispatch('request_fixes', 'new_node', 'new_edge');
     });

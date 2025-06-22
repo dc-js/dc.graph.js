@@ -1,9 +1,18 @@
+/**
+ * Web worker layout wrapper
+ * @module webworker_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { scriptPath } from './utils.js';
+
 var _workers = {};
 var NUMBER_RESULTS = 3;
 function create_worker(workerName) {
     if(!_workers[workerName]) {
         var worker = _workers[workerName] = {
-            worker: new Worker(script_path() + 'dc.graph.' + workerName + '.worker.js'),
+            worker: new Worker(scriptPath() + 'dc.graph.' + workerName + '.worker.js'),
             layouts: {}
         };
         worker.worker.onmessage = function(e) {
@@ -22,7 +31,7 @@ function create_worker(workerName) {
     return _workers[workerName];
 }
 
-dc_graph.webworker_layout = function(layoutEngine, workerName) {
+export function webworkerLayout(layoutEngine, workerName) {
     var _tick, _done, _dispatch = d3.dispatch('init', 'start', 'tick', 'end');
     var _worker = create_worker(workerName || layoutEngine.layoutAlgorithm());
     var engine = {};

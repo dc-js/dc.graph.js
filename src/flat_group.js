@@ -1,18 +1,14 @@
 /**
- * `dc_graph.flat_group` implements a
+ * `flatGroup` implements a
  * ["fake crossfilter group"](https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups)
  * for the case of a group which is 1:1 with the rows of the data array.
  *
  * Although `dc_graph` can be used with aggregated or reduced data, typically the nodes and edges
  * are rows of two data arrays, and each row has a column which contains the unique identifier for
  * the node or edge.
- *
- * @namespace flat_group
- * @memberof dc_graph
- * @type {{}}
-**/
+ */
 
-dc_graph.flat_group = (function() {
+export const flatGroup = (function() {
     var reduce_01 = {
         add: function(p, v) { return v; },
         remove: function() { return null; },
@@ -78,9 +74,10 @@ dc_graph.flat_group = (function() {
          * unique identifier
          * @return {Object} `{crossfilter, dimension, group}`
          **/
-        another: deprecate_function('use .make() instead', function(cf, id_accessor) {
+        another: function(cf, id_accessor) {
+            console.warn('flat_group.another() is deprecated, use .make() instead');
             return this.make(cf, id_accessor);
-        })
+        }
     };
 })();
 

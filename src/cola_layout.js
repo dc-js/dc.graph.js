@@ -1,11 +1,22 @@
 /**
- * `dc_graph.cola_layout` is an adaptor for cola.js layouts in dc.graph.js
- * @class cola_layout
- * @memberof dc_graph
+ * Cola.js layout adaptor for dc.graph.js
+ * @module cola_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+// webcola is loaded as a global script
+const cola = globalThis.cola;
+import { uuid, property } from './core.js';
+import { regenerateObjects } from './generate_objects.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `colaLayout` is an adaptor for cola.js layouts in dc.graph.js
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.cola_layout}
+ * @return {Object} cola layout engine
  **/
-dc_graph.cola_layout = function(id) {
+export function colaLayout(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
     var _setcola_nodes;
@@ -47,7 +58,7 @@ dc_graph.cola_layout = function(id) {
     }
 
     function data(nodes, edges, clusters, constraints) {
-        var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
+        var wnodes = regenerateObjects(_nodes, nodes, null, function(v) {
             return v.dcg_nodeKey;
         }, function(v1, v) {
             v1.dcg_nodeKey = v.dcg_nodeKey;
@@ -71,7 +82,7 @@ dc_graph.cola_layout = function(id) {
                     v1.y = v.y;
             }
         });
-        var wedges = regenerate_objects(_edges, edges, null, function(e) {
+        var wedges = regenerateObjects(_edges, edges, null, function(e) {
             return e.dcg_edgeKey;
         }, function(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -192,7 +203,7 @@ dc_graph.cola_layout = function(id) {
             _d3cola.stop();
     }
 
-    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
     graphviz.rankdir(null);
 
     var engine = Object.assign(graphviz, {
@@ -336,5 +347,6 @@ dc_graph.cola_layout = function(id) {
     return engine;
 };
 
-dc_graph.cola_layout.scripts = ['d3.js', 'cola.js'];
-dc_graph.cola_layout.optional_scripts = ['setcola.js'];
+// Scripts needed for web worker
+colaLayout.scripts = ['d3.js', 'cola.js'];
+colaLayout.optionalScripts = ['setcola.js'];

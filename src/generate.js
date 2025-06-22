@@ -1,22 +1,22 @@
-dc_graph.node_name = function(i) {
+export function nodeName(i) {
     // a-z, A-Z, aa-Zz, then quit
     if(i<26)
         return String.fromCharCode(97+i);
     else if(i<52)
         return String.fromCharCode(65+i-26);
     else if(i<52*52)
-        return dc_graph.node_name(Math.floor(i/52)) + dc_graph.node_name(i%52);
+        return nodeName(Math.floor(i/52)) + nodeName(i%52);
     else throw new Error("no, that's too large");
 };
-dc_graph.node_object = function(i, attrs) {
+export function nodeObject(i, attrs) {
     attrs = attrs || {};
     return _.extend({
         id: i,
-        name: dc_graph.node_name(i)
+        name: nodeName(i)
     }, attrs);
 };
 
-dc_graph.edge_object = function(namef, i, j, attrs) {
+export function edgeObject(namef, i, j, attrs) {
     attrs = attrs || {};
     return _.extend({
         source: i,
@@ -26,7 +26,7 @@ dc_graph.edge_object = function(namef, i, j, attrs) {
     }, attrs);
 };
 
-dc_graph.generate = function(type, args, env, callback) {
+export function generate(type, args, env, callback) {
     var nodes, edges, i, j;
     var nodePrefix = env.nodePrefix || '';
     var namef = function(i) {
@@ -40,23 +40,23 @@ dc_graph.generate = function(type, args, env, callback) {
         nodes = new Array(N);
         edges = [];
         for(i = 0; i<N; ++i) {
-            nodes[i] = dc_graph.node_object(i, {circle: "A", name: nodePrefix+dc_graph.node_name(i)});
+            nodes[i] = nodeObject(i, {circle: "A", name: nodePrefix+nodeName(i)});
             for(j=0; j<i; ++j)
-                edges.push(dc_graph.edge_object(namef, i, j, {notLayout: true, undirected: true}));
+                edges.push(edgeObject(namef, i, j, {notLayout: true, undirected: true}));
         }
         if(type==='cliquestf')
             for(i = 0; i<N; ++i) {
-                nodes[i+N] = dc_graph.node_object(i+N);
-                nodes[i+2*N] = dc_graph.node_object(i+2*N);
-                edges.push(dc_graph.edge_object(namef, i, i+N, {undirected: true}));
-                edges.push(dc_graph.edge_object(namef, i, i+2*N, {undirected: true}));
+                nodes[i+N] = nodeObject(i+N);
+                nodes[i+2*N] = nodeObject(i+2*N);
+                edges.push(edgeObject(namef, i, i+N, {undirected: true}));
+                edges.push(edgeObject(namef, i, i+2*N, {undirected: true}));
             }
         break;
     case 'wheel':
         nodes = new Array(N);
         for(i = 0; i < N; ++i)
-            nodes[i] = dc_graph.node_object(i, {name: nodePrefix+dc_graph.node_name(i)});
-        edges = dc_graph.wheel_edges(namef, _.range(N), N*linkLength/2);
+            nodes[i] = nodeObject(i, {name: nodePrefix+nodeName(i)});
+        edges = wheelEdges(namef, _.range(N), N*linkLength/2);
         var rimLength = edges[0].distance;
         for(i = 0; i < args[1]; ++i)
             for(j = 0; j < N; ++j) {
@@ -66,7 +66,7 @@ dc_graph.generate = function(type, args, env, callback) {
                     a = b;
                     b = t;
                 }
-                edges.push(dc_graph.edge_object(namef, a, b, {distance: rimLength, par: i+2}));
+                edges.push(edgeObject(namef, a, b, {distance: rimLength, par: i+2}));
             }
         break;
     default:
@@ -76,23 +76,23 @@ dc_graph.generate = function(type, args, env, callback) {
     callback(null, graph);
 };
 
-dc_graph.wheel_edges = function(namef, nindices, R) {
+export function wheelEdges(namef, nindices, R) {
     var N = nindices.length;
     var edges = [];
     var strutSkip = Math.floor(N/2),
         rimLength = 2 * R * Math.sin(Math.PI / N),
         strutLength = 2 * R * Math.sin(strutSkip * Math.PI / N);
     for(var i = 0; i < N; ++i)
-        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+1)%N], {distance: rimLength}));
+        edges.push(edgeObject(namef, nindices[i], nindices[(i+1)%N], {distance: rimLength}));
     for(i = 0; i < N/2; ++i) {
-        edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+strutSkip)%N], {distance: strutLength}));
+        edges.push(edgeObject(namef, nindices[i], nindices[(i+strutSkip)%N], {distance: strutLength}));
         if(N%2 && i != Math.floor(N/2))
-            edges.push(dc_graph.edge_object(namef, nindices[i], nindices[(i+N-strutSkip)%N], {distance: strutLength}));
+            edges.push(edgeObject(namef, nindices[i], nindices[(i+N-strutSkip)%N], {distance: strutLength}));
     }
     return edges;
 };
 
-dc_graph.random_graph = function(options) {
+export function randomGraph(options) {
     options = Object.assign({
         ncolors: 5,
         ndashes: 4,

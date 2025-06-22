@@ -1,4 +1,6 @@
-dc_graph.text_contents = function() {
+import { property, isIe, isSafari } from './core.js';
+
+export function textContents() {
     var _contents = {
         parent: property(null),
         update: function(container) {
@@ -16,7 +18,7 @@ dc_graph.text_contents = function() {
                 var first = 0.5 - ((lines.length - 1) * lineHeight + 1)/2;
                 // IE, Edge, and Safari do not seem to support
                 // dominant-baseline: central although they say they do
-                if(is_ie() || is_safari())
+                if(isIe() || isSafari())
                     first += 0.3;
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
@@ -79,7 +81,7 @@ dc_graph.text_contents = function() {
     return _contents;
 };
 
-dc_graph.with_icon_contents = function(contents, width, height) {
+export function withIconContents(contents, width, height) {
     var _contents = {
         parent: property(null).react(function(parent) {
             contents.parent(parent);

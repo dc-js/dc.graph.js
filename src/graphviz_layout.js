@@ -1,14 +1,24 @@
 /**
- * `dc_graph.graphviz_layout` is an adaptor for viz.js (graphviz) layouts in dc.graph.js
+ * Graphviz layout for dc.graph.js
+ * @module graphviz_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { uuid, property } from './core.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `graphvizLayout` is an adaptor for viz.js (graphviz) layouts in dc.graph.js
  *
- * In addition to the below layout attributes, `graphviz_layout` also implements the attributes from
- * {@link dc_graph.graphviz_attrs graphviz_attrs}
- * @class graphviz_layout
- * @memberof dc_graph
+ * In addition to the below layout attributes, `graphvizLayout` also implements the attributes from
+ * {@link graphvizAttrs graphviz_attrs}
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.graphviz_layout}
+ * @param {String} [layout] - Layout algorithm
+ * @param {String} [server] - Server URL
+ * @return {Object} graphviz layout engine
  **/
-dc_graph.graphviz_layout = function(id, layout, server) {
+export function graphvizLayout(id, layout, server) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _dotInput, _dotString;
@@ -157,7 +167,7 @@ dc_graph.graphviz_layout = function(id, layout, server) {
     function stop() {
     }
 
-    var graphviz = dc_graph.graphviz_attrs(), graphviz_keys = Object.keys(graphviz);
+    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
     return Object.assign(graphviz, {
         layoutAlgorithm: function() {
             return layout;

@@ -1,36 +1,22 @@
 /**
- * The entire dc.graph.js library is scoped under the **dc_graph** name space. It does not introduce
- * anything else into the global name space.
- *
- * Like in dc.js and most libraries built on d3, most `dc_graph` functions are designed to allow function chaining, meaning they return the current diagram
- * instance whenever it is appropriate.  The getter forms of functions do not participate in function
- * chaining because they return values that are not the diagram.
- * @namespace dc_graph
- * @version <%= conf.pkg.version %>
- * @example
- * // Example chaining
- * diagram.width(600)
- *      .height(400)
- *      .nodeDimension(nodeDim)
- *      .nodeGroup(nodeGroup);
+ * Core utilities and functions for dc.graph.js
+ * @module core
  */
 
-var dc_graph = {
-    version: '<%= conf.pkg.version %>',
-    constants: {
-        CHART_CLASS: 'dc-graph'
-    }
+export const version = '0.9.93';
+export const constants = {
+    CHART_CLASS: 'dc-graph'
 };
 
 function get_original(x) {
     return x.orig;
 }
 
-function identity(x) {
+export function identity(x) {
     return x;
-};
+}
 
-var property = function (defaultValue, unwrap) {
+export const property = function (defaultValue, unwrap) {
     if(unwrap === undefined)
         unwrap = get_original;
     else if(unwrap === false)
@@ -63,7 +49,7 @@ var property = function (defaultValue, unwrap) {
     };
     ret._eval = function(o, n) {
         if(n===0 || !cascade.length)
-            return dc_graph.functor_wrap(ret(), unwrap)(o);
+            return functorWrap(ret(), unwrap)(o);
         else {
             var last = cascade[n-1];
             return last.f(o, function() {
@@ -84,7 +70,7 @@ var property = function (defaultValue, unwrap) {
     return ret;
 };
 
-function named_children() {
+export function namedChildren() {
     var _children = {};
     var f = function(id, object) {
         if(arguments.length === 1)
@@ -120,7 +106,7 @@ function named_children() {
     return f;
 }
 
-function deprecated_property(message, defaultValue) {
+export function deprecatedProperty(message, defaultValue) {
     var prop = property(defaultValue);
     var ret = function() {
         if(arguments.length) {
@@ -136,7 +122,7 @@ function deprecated_property(message, defaultValue) {
     return ret;
 }
 
-function onetime_trace(level, message) {
+function onetimeTrace(level, message) {
     var said = false;
     return function() {
         if(said)
@@ -153,30 +139,31 @@ function onetime_trace(level, message) {
     };
 }
 
-function deprecation_warning(message) {
-    return onetime_trace('warn', message);
+export function deprecationWarning(message) {
+    return onetimeTrace('warn', message);
 }
 
-function trace_function(level, message, f) {
-    var dep = onetime_trace(level, message);
+function traceFunction(level, message, f) {
+    var dep = onetimeTrace(level, message);
     return function() {
         dep();
         return f.apply(this, arguments);
     };
 }
-function deprecate_function(message, f) {
-    return trace_function('warn', message, f);
+
+export function deprecateFunction(message, f) {
+    return traceFunction('warn', message, f);
 }
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-function uuid() {
+export function uuid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
         return v.toString(16);
     });
 }
 
-function is_ie() {
+export function isIe() {
     var ua = window.navigator.userAgent;
 
     return(ua.indexOf('MSIE ') > 0 ||
@@ -184,7 +171,7 @@ function is_ie() {
            ua.indexOf('Edge/') > 0);
 }
 
-function is_safari() {
+export function isSafari() {
     return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 }
 
@@ -312,7 +299,7 @@ Object.values = Object.values ? Object.values : function(obj) {
     }
 };
 
-function getBBoxNoThrow(elem) {
+export function getBBoxNoThrow(elem) {
     // firefox seems to have issues with some of my texts
     // just catch for now
     try {
@@ -320,4 +307,17 @@ function getBBoxNoThrow(elem) {
     } catch(xep) {
         return {x: 0, y: 0, width:0, height: 0};
     }
+}
+
+// version of d3.functor that optionally wraps the function with another
+// one, if the parameter is a function
+export function functorWrap(v, wrap) {
+    if(typeof v === "function") {
+        return wrap ? function(x) {
+            return v(wrap(x));
+        } : v;
+    }
+    else return function() {
+        return v;
+    };
 }

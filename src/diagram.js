@@ -1,21 +1,39 @@
 /**
- * `dc_graph.diagram` is a dc.js-compatible network visualization component. It registers in
+ * Main diagram component for dc.graph.js
+ * @module diagram
+ */
+
+// External dependencies loaded as globals
+const d3 = globalThis.d3;
+const dc = globalThis.dc;
+import { uuid, property, deprecatedProperty, namedChildren, getBBoxNoThrow, isIe, isSafari, deprecateFunction } from './core.js';
+import { defaultShape, noShape, ellipseShape, polygonShape, roundedRectangleShape, elaboratedRectangleShape } from './shape.js';
+import { textContents } from './node_contents.js';
+import { regenerateObjects } from './generate_objects.js';
+import { spawnEngine } from './engine.js';
+import { colaLayout } from './cola_layout.js';
+import { dagreLayout } from './dagre_layout.js';
+import { webworkerLayout } from './webworker_layout.js';
+import { wheelEdges } from './generate.js';
+import { renderSvg } from './render_svg.js';
+import { cascade } from './utils.js';
+
+/**
+ * `diagram` is a dc.js-compatible network visualization component. It registers in
  * the dc.js chart registry and its nodes and edges are generated from crossfilter groups. It
  * logically derives from the dc.js
  * {@link https://github.com/dc-js/dc.js/blob/develop/web/docs/api-latest.md#dc.baseMixin baseMixin},
  * but it does not physically derive from it since so much is different about network
  * visualization versus conventional charts.
- * @class diagram
- * @memberof dc_graph
  * @param {String|node} parent - Any valid
  * {@link https://github.com/mbostock/d3/wiki/Selections#selecting-elements d3 single selector}
  * specifying a dom block element such as a div; or a dom element.
  * @param {String} [chartGroup] - The name of the dc.js chart group this diagram instance
  * should be placed in. Filter interaction with a diagram will only trigger events and redraws
  * within the diagram's group.
- * @return {dc_graph.diagram}
+ * @return {Object} diagram instance
  **/
-dc_graph.diagram = function (parent, chartGroup) {
+export function diagram(parent, chartGroup) {
     // different enough from regular dc charts that we don't use dc.baseMixin
     // but attempt to implement most of that interface, copying some of the most basic stuff
     var _diagram = dc.marginMixin({});
@@ -412,7 +430,7 @@ dc_graph.diagram = function (parent, chartGroup) {
     _diagram.portStyleName = property(null);
     _diagram.portElastic = property(true);
 
-    _diagram.portStyle = named_children();
+    _diagram.portStyle = namedChildren();
 
     _diagram.portBounds = property(null); // position limits, in radians
 
@@ -684,22 +702,22 @@ dc_graph.diagram = function (parent, chartGroup) {
      *   return {shape: kv.value.flag ? 'diamond' : 'parallelogram'};
      * });
      **/
-    _diagram.nodeShape = property(default_shape);
+    _diagram.nodeShape = property(defaultShape);
 
     // for defining custom (and standard) shapes
-    _diagram.shape = named_children();
+    _diagram.shape = namedChildren();
 
-    _diagram.shape('nothing', dc_graph.no_shape());
-    _diagram.shape('ellipse', dc_graph.ellipse_shape());
-    _diagram.shape('polygon', dc_graph.polygon_shape());
-    _diagram.shape('rounded-rect', dc_graph.rounded_rectangle_shape());
-    _diagram.shape('elaborated-rect', dc_graph.elaborated_rectangle_shape());
+    _diagram.shape('nothing', noShape());
+    _diagram.shape('ellipse', ellipseShape());
+    _diagram.shape('polygon', polygonShape());
+    _diagram.shape('rounded-rect', roundedRectangleShape());
+    _diagram.shape('elaborated-rect', elaboratedRectangleShape());
 
     _diagram.nodeOutlineClip = property(null);
 
     _diagram.nodeContent = property('text');
-    _diagram.content = named_children();
-    _diagram.content('text', dc_graph.text_contents());
+    _diagram.content = namedChildren();
+    _diagram.content('text', textContents());
 
     // really looks like these should reside in an open namespace - this used only by an extension
     // but it's no less real than any other computed property
@@ -1159,9 +1177,9 @@ dc_graph.diagram = function (parent, chartGroup) {
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
-    _diagram.initialLayout = deprecated_property('initialLayout is deprecated - use layout algorithms instead', null);
+    _diagram.initialLayout = deprecatedProperty('initialLayout is deprecated - use layout algorithms instead', null);
 
-    _diagram.initialOnly = deprecated_property('initialOnly is deprecated - see the initialLayout deprecation notice in the documentation', false);
+    _diagram.initialOnly = deprecatedProperty('initialOnly is deprecated - see the initialLayout deprecation notice in the documentation', false);
 
     /**
      * By default, all nodes are included, and edges are only included if both end-nodes are
@@ -1222,7 +1240,7 @@ dc_graph.diagram = function (parent, chartGroup) {
      * diagram.child('tip', tip);
      * @return {dc_graph.diagram}
      **/
-    _diagram.mode = _diagram.child = named_children();
+    _diagram.mode = _diagram.child = namedChildren();
 
     _diagram.mode.reject = function(id, object) {
         var rtype = _diagram.renderer().rendererType();
@@ -1235,7 +1253,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         return false;
     };
 
-    _diagram.legend = deprecate_function(".legend() is deprecated; use .child() for more control & multiple legends", function(_) {
+    _diagram.legend = deprecateFunction(".legend() is deprecated; use .child() for more control & multiple legends", function(_) {
         if(!arguments.length)
             return _diagram.child('node-legend');
         _diagram.child('node-legend', _);
@@ -1266,12 +1284,12 @@ dc_graph.diagram = function (parent, chartGroup) {
         var engine;
         switch(value) {
         case 'cola':
-            engine = dc_graph.cola_layout();
+            engine = colaLayout();
             break;
         case 'dagre':
-            engine = dc_graph.dagre_layout();
+            engine = dagreLayout();
         }
-        engine = dc_graph.webworker_layout(engine);
+        engine = webworkerLayout(engine);
         _diagram.layoutEngine(engine);
         return this;
     };
@@ -1301,7 +1319,7 @@ dc_graph.diagram = function (parent, chartGroup) {
         }
     });
 
-    _diagram.renderer = property(dc_graph.render_svg().parent(_diagram)).react(function(r) {
+    _diagram.renderer = property(renderSvg().parent(_diagram)).react(function(r) {
         if(_diagram.renderer())
             _diagram.renderer().parent(null);
         r.parent(_diagram);
@@ -1601,7 +1619,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             });
         }
 
-        var wnodes = regenerate_objects(_nodes, nodes, null, function(v) {
+        var wnodes = regenerateObjects(_nodes, nodes, null, function(v) {
             return _diagram.nodeKey()(v);
         }, function(v1, v) {
             v1.orig = v;
@@ -1610,7 +1628,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             v1.cola.dcg_nodeParentCluster = _diagram.nodeParentCluster.eval(v1);
             _diagram.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
-        var wedges = regenerate_objects(_edges, edges, null, function(e) {
+        var wedges = regenerateObjects(_edges, edges, null, function(e) {
             return _diagram.edgeKey()(e);
         }, function(e1, e) {
             e1.orig = e;
@@ -1649,7 +1667,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             return _diagram.portNodeKey() && _diagram.portNodeKey()(p) ||
                 _diagram.portEdgeKey() && _diagram.portEdgeKey()(p);
         });
-        var wports = regenerate_objects(_ports, ports, needports, function(p) {
+        var wports = regenerateObjects(_ports, ports, needports, function(p) {
             return port_name(_diagram.portNodeKey() && _diagram.portNodeKey()(p),
                              _diagram.portEdgeKey() && _diagram.portEdgeKey()(p),
                              _diagram.portName()(p));
@@ -1703,7 +1721,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             return _diagram.nodeParentCluster.eval(n);
         }).filter(identity)).values();
 
-        var wclusters = regenerate_objects(_clusters, clusters, needclusters, function(c) {
+        var wclusters = regenerateObjects(_clusters, clusters, needclusters, function(c) {
             return _diagram.clusterKey()(c);
         }, function(c1, c) { // assign
             c1.orig = c;
@@ -1879,7 +1897,7 @@ dc_graph.diagram = function (parent, chartGroup) {
             var namef = function(i) {
                 return _diagram.nodeKey.eval(wnodes[i]);
             };
-            var wheel = dc_graph.wheel_edges(namef, nindices, R)
+            var wheel = wheelEdges(namef, nindices, R)
                     .map(function(e) {
                         var e1 = {internal: e};
                         e1.source = _nodes[e.sourcename];

@@ -1,3 +1,5 @@
+import { property } from './core.js';
+
 function point_on_ellipse(A, B, dx, dy) {
     var tansq = Math.tan(Math.atan2(dy, dx));
     tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
@@ -61,7 +63,7 @@ function point_on_polygon(points, x0, y0, x1, y1) {
 
 // as many as we can get from
 // http://www.graphviz.org/doc/info/shapes.html
-dc_graph.shape_presets = {
+export const shapePresets = {
     egg: {
         // not really: an ovoid should be two half-ellipses stuck together
         // https://en.wikipedia.org/wiki/Oval
@@ -286,19 +288,19 @@ dc_graph.shape_presets = {
     },
 };
 
-dc_graph.shape_presets.box = dc_graph.shape_presets.rect = dc_graph.shape_presets.rectangle;
+shapePresets.box = shapePresets.rect = shapePresets.rectangle;
 
-dc_graph.available_shapes = function() {
-    var shapes = Object.keys(dc_graph.shape_presets);
+export function availableShapes() {
+    var shapes = Object.keys(shapePresets);
     return shapes.slice(0, shapes.length-1); // not including polygon
-};
+}
 
-var default_shape = {shape: 'ellipse'};
+export const defaultShape = {shape: 'ellipse'};
 
 function normalize_shape_def(diagram, n) {
     var def = diagram.nodeShape.eval(n);
     if(!def)
-        def = {...default_shape};
+        def = {...defaultShape};
     else if(typeof def === 'string')
         def = {shape: def};
     def.nodeOutlineClip = diagram.nodeOutlineClip.eval(n);
@@ -309,17 +311,17 @@ function elaborate_shape(diagram, def) {
     var shape = def.shape, def2 = Object.assign({}, def);
     delete def2.shape;
     if(shape === 'random') {
-        var available = dc_graph.available_shapes(); // could include diagram.shape !== ellipse, polygon
+        var available = availableShapes(); // could include diagram.shape !== ellipse, polygon
         shape = available[Math.floor(Math.random()*available.length)];
     }
     else if(diagram.shape.enum().indexOf(shape) !== -1)
         return diagram.shape(shape).elaborate({shape: shape}, def2);
-    if(!dc_graph.shape_presets[shape]) {
+    if(!shapePresets[shape]) {
         console.warn('unknown shape ', shape);
-        return default_shape;
+        return defaultShape;
     }
-    var preset = dc_graph.shape_presets[shape].preset(def2);
-    preset.shape = dc_graph.shape_presets[shape].generator;
+    var preset = shapePresets[shape].preset(def2);
+    preset.shape = shapePresets[shape].generator;
     return diagram.shape(preset.shape).elaborate(preset, def2);
 }
 
@@ -687,7 +689,7 @@ function angle_between_points(p0, p1) {
     return Math.atan2(p1.y - p0.y, p1.x - p0.x);
 }
 
-dc_graph.no_shape = function() {
+export function noShape() {
     var _shape = {
         parent: property(null),
         elaborate: function(preset, def) {
@@ -725,7 +727,7 @@ function create_maybe_clipped(diagram, nodeEnter, element) {
         .attr('class', 'node-outline node-fill');
 }
 
-dc_graph.ellipse_shape = function() {
+export function ellipseShape() {
     var _shape = {
         parent: property(null),
         elaborate: function(preset, def) {
@@ -758,7 +760,7 @@ dc_graph.ellipse_shape = function() {
     return _shape;
 };
 
-dc_graph.polygon_shape = function() {
+export function polygonShape() {
     var _shape = {
         parent: property(null),
         elaborate: function(preset, def) {
@@ -790,7 +792,7 @@ dc_graph.polygon_shape = function() {
     return _shape;
 };
 
-dc_graph.rounded_rectangle_shape = function() {
+export function roundedRectangleShape() {
     var _shape = {
         parent: property(null),
         elaborate: function(preset, def) {
@@ -853,8 +855,8 @@ dc_graph.rounded_rectangle_shape = function() {
 
 // this is not all that accurate - idea is that arrows, houses, etc, are rectangles
 // in terms of sizing, but elaborated drawing & clipping. refine until done.
-dc_graph.elaborated_rectangle_shape = function() {
-    var _shape = dc_graph.rounded_rectangle_shape();
+export function elaboratedRectangleShape() {
+    var _shape = roundedRectangleShape();
     _shape.intersect_vec = function(n, deltaX, deltaY) {
         var points = n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry);
         return point_on_polygon(points, 0, 0, deltaX, deltaY);

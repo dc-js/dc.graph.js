@@ -1,89 +1,106 @@
-dc_graph.spawn_engine = function(layout, args, worker) {
+/**
+ * Layout engine registry and management
+ * @module engine
+ */
+
+import { dagreLayout } from './dagre_layout.js';
+import { d3ForceLayout } from './d3_force_layout.js';
+import { d3v4ForceLayout } from './d3v4_force_layout.js';
+import { treeLayout } from './tree_layout.js';
+import { graphvizLayout } from './graphviz_layout.js';
+import { colaLayout } from './cola_layout.js';
+import { dynagraphLayout } from './dynagraph_layout.js';
+import { manualLayout } from './manual_layout.js';
+import { flexboxLayout } from './flexbox_layout.js';
+import { layeredLayout } from './layered_layout.js';
+import { webworkerLayout } from './webworker_layout.js';
+
+export function spawnEngine(layout, args, worker) {
     args = args || {};
     worker = worker && !!window.Worker;
-    var engine = dc_graph.engines.instantiate(layout, args, worker);
+    var engine = engines.instantiate(layout, args, worker);
     if(!engine) {
-        console.warn('layout engine ' + layout + ' not found; using default ' + dc_graph._default_engine);
-        engine = dc_graph.engines.instantiate(dc_graph._default_engine, args, worker);
+        console.warn('layout engine ' + layout + ' not found; using default ' + _defaultEngine);
+        engine = engines.instantiate(_defaultEngine, args, worker);
     }
     return engine;
-};
+}
 
-dc_graph._engines = [
+const _engines = [
     {
         name: 'dagre',
         params: ['rankdir'],
         instantiate: function() {
-            return dc_graph.dagre_layout();
+            return dagreLayout();
         }
     },
     {
         name: 'd3force',
         instantiate: function() {
-            return dc_graph.d3_force_layout();
+            return d3ForceLayout();
         }
     },
     {
         name: 'd3v4force',
         instantiate: function() {
-            return dc_graph.d3v4_force_layout();
+            return d3v4ForceLayout();
         }
     },
     {
         name: 'tree',
         instantiate: function() {
-            return dc_graph.tree_layout();
+            return treeLayout();
         }
     },
     {
         names: ['circo', 'dot', 'neato', 'osage', 'twopi', 'fdp'],
         instantiate: function(layout, args) {
-            return dc_graph.graphviz_layout(null, layout, args.server);
+            return graphvizLayout(null, layout, args.server);
         }
     },
     {
         name: 'cola',
         params: ['lengthStrategy'],
         instantiate: function() {
-            return dc_graph.cola_layout();
+            return colaLayout();
         }
     },
     {
         names: ['dynadag'],
         workerName: 'dynagraph',
         instantiate: function(layout, args) {
-            return dc_graph.dynagraph_layout(null, layout, args.server);
+            return dynagraphLayout(null, layout, args.server);
         }
     },
     {
         name: 'manual',
         instantiate: function() {
-            return dc_graph.manual_layout();
+            return manualLayout();
         }
     },
     {
         name: 'flexbox',
         instantiate: function() {
-            return dc_graph.flexbox_layout();
+            return flexboxLayout();
         }
     },
     {
         name: 'layered',
         instantiate: function() {
-            return dc_graph.layered_layout();
+            return layeredLayout();
         }
     }
 ];
-dc_graph._default_engine = 'cola';
+const _defaultEngine = 'cola';
 
-dc_graph.engines = {
+export const engines = {
     entry_pred: function(layoutName) {
         return function(e) {
             return e.name && e.name === layoutName || e.names && e.names.includes(layoutName);
         };
     },
     get: function(layoutName) {
-        return dc_graph._engines.find(this.entry_pred(layoutName));
+        return _engines.find(this.entry_pred(layoutName));
     },
     is_directed: function(layoutName) {
         // to a first approximation. cola is sometimes directed
@@ -100,21 +117,21 @@ dc_graph.engines = {
                 engine[p](args[p]);
         });
         if(engine.supportsWebworker && engine.supportsWebworker() && worker)
-            engine = dc_graph.webworker_layout(engine, entry.workerName);
+            engine = webworkerLayout(engine, entry.workerName);
         return engine;
     },
     available: function() {
-        return dc_graph._engines.reduce(function(avail, entry) {
+        return _engines.reduce(function(avail, entry) {
             return avail.concat(entry.name ? [entry.name] : entry.names);
         }, []);
     },
     unregister: function(layoutName) {
         // meh. this is a bit much. there is such a thing as making the api too "easy".
-        var i = dc_graph._engines.findIndex(this.entry_pred(layoutName));
+        var i = _engines.findIndex(this.entry_pred(layoutName));
         var remove = false;
         if(i < 0)
             return false;
-        var entry = dc_graph._engines[i];
+        var entry = _engines[i];
         if(entry.name === layoutName)
             remove = true;
         else {
@@ -127,7 +144,7 @@ dc_graph.engines = {
                 remove = true;
         }
         if(remove)
-            dc_graph._engines.splice(i, 1);
+            _engines.splice(i, 1);
         return true;
     },
     register: function(entry) {
@@ -146,7 +163,7 @@ dc_graph.engines = {
             console.error('engine definition needs name or names[]');
             return this;
         }
-        dc_graph._engines.push(entry);
+        _engines.push(entry);
         return this;
     }
 };

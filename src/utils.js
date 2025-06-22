@@ -38,7 +38,7 @@ function node_edge_conditions(npred, epred, props) {
     return props2;
 }
 
-function cascade(parent) {
+export function cascade(parent) {
     return function(level, add, props) {
         for(var p in props) {
             if(!parent[p])
@@ -57,7 +57,7 @@ function compose(f, g) {
 
 // version of d3.functor that optionally wraps the function with another
 // one, if the parameter is a function
-dc_graph.functor_wrap = function (v, wrap) {
+export function functorWrap(v, wrap) {
     if(typeof v === "function") {
         return wrap ? function(x) {
             return v(wrap(x));
@@ -66,13 +66,13 @@ dc_graph.functor_wrap = function (v, wrap) {
     else return function() {
         return v;
     };
-};
+}
 
 // we want to allow either values or functions to be passed to specify parameters.
 // if a function, the function needs a preprocessor to extract the original key/value
 // pair from the wrapper object we put it in.
 function param(v) {
-    return dc_graph.functor_wrap(v, get_original);
+    return functorWrap(v, get_original);
 }
 
 // http://jsperf.com/cloning-an-object/101
@@ -177,7 +177,7 @@ if (!Array.prototype.find) {
   });
 }
 
-var script_path = function() {
+export var scriptPath = function() {
     var _path;
     return function() {
         if(_path === undefined) {
@@ -198,11 +198,11 @@ var script_path = function() {
     };
 }();
 
-dc_graph.event_coords = function(diagram) {
+export function eventCoords(diagram) {
     var bound = diagram.root().node().getBoundingClientRect();
     return diagram.invertCoord([d3.event.clientX - bound.left,
                               d3.event.clientY - bound.top]);
-};
+}
 
 function promise_identity(x) {
     return Promise.resolve(x);

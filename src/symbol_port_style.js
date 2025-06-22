@@ -1,4 +1,7 @@
-dc_graph.symbol_port_style = function() {
+import { property, getBBoxNoThrow, identity, deprecate_function } from './core.js';
+import { cascade } from './utils.js';
+
+export function symbolPortStyle() {
     var _style = {};
     var _nodePorts, _node;
     var _drawConduct;
@@ -14,8 +17,8 @@ dc_graph.symbol_port_style = function() {
     }
     _style.symbol = _style.portSymbol = property(name_or_edge, false); // non standard properties taking "outer datum"
     _style.color = _style.portColor = property(name_or_edge, false);
-    _style.outline = property(dc_graph.symbol_port_style.outline.circle());
-    _style.content = property(dc_graph.symbol_port_style.content.d3symbol());
+    _style.outline = property(symbolPortStyle.outline.circle());
+    _style.content = property(symbolPortStyle.content.d3symbol());
     _style.smallRadius = _style.portRadius = property(7);
     _style.mediumRadius = _style.portHoverNodeRadius = property(10);
     _style.largeRadius = _style.portHoverPortRadius = property(14);
@@ -344,8 +347,8 @@ dc_graph.symbol_port_style = function() {
     return _style;
 };
 
-dc_graph.symbol_port_style.outline = {};
-dc_graph.symbol_port_style.outline.circle = function() {
+symbolPortStyle.outline = {};
+symbolPortStyle.outline.circle = function() {
     return {
         tag: function() {
             return 'circle';
@@ -357,7 +360,7 @@ dc_graph.symbol_port_style.outline.circle = function() {
         }
     };
 };
-dc_graph.symbol_port_style.outline.square = function() {
+symbolPortStyle.outline.square = function() {
     return {
         tag: function() {
             return 'rect';
@@ -378,7 +381,7 @@ dc_graph.symbol_port_style.outline.square = function() {
         }
     };
 };
-dc_graph.symbol_port_style.outline.arrow = function() {
+symbolPortStyle.outline.arrow = function() {
     // offset needed for body in order to keep centroid at 0,0
     var left_portion = 3/4 - Math.PI/8;
     var _outline = {
@@ -410,8 +413,8 @@ dc_graph.symbol_port_style.outline.arrow = function() {
     return _outline;
 };
 
-dc_graph.symbol_port_style.content = {};
-dc_graph.symbol_port_style.content.d3symbol = function() {
+symbolPortStyle.content = {};
+symbolPortStyle.content.d3symbol = function() {
     var _symbol = {
         tag: function() {
             return 'path';
@@ -442,7 +445,7 @@ dc_graph.symbol_port_style.content.d3symbol = function() {
     };
     return _symbol;
 };
-dc_graph.symbol_port_style.content.letter = function() {
+symbolPortStyle.content.letter = function() {
     var _symbol = {
         tag: function() {
             return 'text';

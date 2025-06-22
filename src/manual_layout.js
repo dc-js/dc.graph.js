@@ -1,4 +1,13 @@
-dc_graph.manual_layout = function(id) {
+/**
+ * Manual layout for dc.graph.js
+ * @module manual_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { uuid, property } from './core.js';
+
+export function manualLayout(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
 
@@ -72,4 +81,5 @@ dc_graph.manual_layout = function(id) {
     return _engine;
 };
 
-dc_graph.manual_layout.scripts = ['css-layout.js'];
+// Scripts needed for web worker
+manualLayout.scripts = ['css-layout.js'];

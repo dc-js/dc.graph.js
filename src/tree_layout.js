@@ -1,12 +1,20 @@
 /**
- * `dc_graph.tree_layout` is a very simple and not very bright tree layout. It can draw any DAG, but
+ * Tree layout for dc.graph.js
+ * @module tree_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { uuid, property } from './core.js';
+import { depthFirstTraversal } from './depth_first_traversal.js';
+
+/**
+ * `treeLayout` is a very simple and not very bright tree layout. It can draw any DAG, but
  * tries to position the nodes as a tree.
- * @class tree_layout
- * @memberof dc_graph
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.tree_layout}
+ * @return {Object} tree layout engine
  **/
-dc_graph.tree_layout = function(id) {
+export function treeLayout(id) {
     var _layoutId = id || uuid();
     var _dispatch = d3.dispatch('tick', 'start', 'end');
     var _dfs;
@@ -17,7 +25,7 @@ dc_graph.tree_layout = function(id) {
         function best_dist(left, right) {
             return (nodeWidth(left) + nodeWidth(right)) / 2;
         }
-        _dfs = dc_graph.depth_first_traversal({
+        _dfs = depthFirstTraversal({
             nodeid: function(n) {
                 return n.dcg_nodeKey;
             },
@@ -164,4 +172,5 @@ dc_graph.tree_layout = function(id) {
     return layout;
 };
 
-dc_graph.tree_layout.scripts = [];
+// Scripts needed for web worker
+treeLayout.scripts = [];

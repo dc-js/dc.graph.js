@@ -1,11 +1,21 @@
 /**
- * `dc_graph.dynagraph_layout` connects to dynagraph-wasm and does dynamic directed graph layout.
- * @class dynagraph_layout
- * @memberof dc_graph
+ * Dynagraph-wasm layout adaptor for dc.graph.js
+ * @module dynagraph_layout
+ */
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+import { uuid, property } from './core.js';
+import { regenerateObjects } from './generate_objects.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `dynagraphLayout` connects to dynagraph-wasm and does dynamic directed graph layout.
  * @param {String} [id=uuid()] - Unique identifier
- * @return {dc_graph.dynagraph_layout}
+ * @param {String} [layout] - Layout algorithm name
+ * @return {Object} dynagraph layout engine
  **/
-dc_graph.dynagraph_layout = function(id, layout) {
+export function dynagraphLayout(id, layout) {
     var _layoutId = id || uuid();
     const _Gname = _layoutId;
     var _layout;
@@ -212,7 +222,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
 
     function data(nodes, edges, clusters) {
         const linesOutDeleteNode = [];
-        var wnodes = regenerate_objects(_nodes, nodes, null,
+        var wnodes = regenerateObjects(_nodes, nodes, null,
         function key(v) {
             return v.dcg_nodeKey;
         }, function assign(v1, v) {
@@ -231,7 +241,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
         }, function destroy(k) {
             linesOutDeleteNode.push(`delete node ${mq(_Gname)} ${mq(k)}`);
         });
-        var wedges = regenerate_objects(_edges, edges, null, function key(e) {
+        var wedges = regenerateObjects(_edges, edges, null, function key(e) {
             return e.dcg_edgeKey;
         }, function assign(e1, e) {
             e1.dcg_edgeKey = e.dcg_edgeKey;
@@ -279,7 +289,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
 
     _layout = {
-        ...dc_graph.graphviz_attrs(),
+        ...graphvizAttrs(),
         layoutAlgorithm: function() {
             return layout;
         },
@@ -323,4 +333,5 @@ dc_graph.dynagraph_layout = function(id, layout) {
     return _layout;
 };
 
-dc_graph.dynagraph_layout.scripts = ['d3.js', 'dynagraph-wasm.js', 'incrface-umd.js'];
+// Scripts needed for web worker
+dynagraphLayout.scripts = ['d3.js', 'dynagraph-wasm.js', 'incrface-umd.js'];

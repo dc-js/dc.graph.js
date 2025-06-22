@@ -4,7 +4,12 @@
 
 // this is an argument for providing a graph API which could make it
 // easy to just write a recursive function instead of using this
-dc_graph.depth_first_traversal = function(callbacks) { // {[init, root, row, tree, place, sib, push, pop, skip,] finish, nodeid, sourceid, targetid}
+/**
+ * Depth first traversal utility
+ * @module depth_first_traversal
+ */
+
+export function depthFirstTraversal(callbacks) { // {[init, root, row, tree, place, sib, push, pop, skip,] finish, nodeid, sourceid, targetid}
     return function(nodes, edges) {
         callbacks.init && callbacks.init();
         if(callbacks.tree)
@@ -69,7 +74,7 @@ dc_graph.depth_first_traversal = function(callbacks) { // {[init, root, row, tre
 // basically, see if it's any simpler if we start from scratch
 // (well, of course it's simpler because we have less callbacks)
 // same caveats as above
-dc_graph.undirected_dfs = function(callbacks) { // {[comp, node], nodeid, sourceid, targetid}
+export function undirectedDfs(callbacks) { // {[comp, node], nodeid, sourceid, targetid}
     return function(nodes, edges) {
         var adjacencies = edges.reduce(function(m, e) {
             var tail = callbacks.sourceid(e),
