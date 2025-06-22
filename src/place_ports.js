@@ -1,11 +1,11 @@
-function port_name(nodeId, edgeId, portName) {
+export function portName(nodeId, edgeId, portName) {
     if(!(nodeId || edgeId))
         return null; // must have one key or the other
     if(nodeId) nodeId = nodeId.replace(/\//g, '%2F');
     if(edgeId) edgeId = edgeId.replace(/\//g, '%2F');
     return (nodeId ? 'node/' + nodeId : 'edge/' + edgeId) + '/' + portName;
 };
-function split_port_name(portname) {
+export function splitPortName(portname) {
     var parts = portname.split('/');
     console.assert(parts.length === 3);
     parts = parts.map(function(p) {
@@ -21,7 +21,7 @@ function split_port_name(portname) {
         name: parts[2]
     };
 }
-function project_port(diagram, n, p) {
+export function projectPort(diagram, n, p) {
     if(!p.vec) {
         console.assert(!p.edges.length);
         throw new Error("port has not been placed, maybe install place_ports? " + p.name);
@@ -127,7 +127,7 @@ export function placePorts() {
 
             // determine positions of all satisfied
             inside.forEach(function(p) {
-                project_port(diagram, n, p);
+                projectPort(diagram, n, p);
             });
 
             // detect any existing collisions, unplace the one without edges or second one
@@ -156,7 +156,7 @@ export function placePorts() {
             while(unplaced.length) {
                 var p = unplaced[0];
                 p.vec = a_to_v(rand_within(p.abounds[0], p.abounds[1]));
-                project_port(diagram, n, p);
+                projectPort(diagram, n, p);
                 var mindist = d3.min(inside, function(p2) { return distance(p, p2); });
                 if(mindist > maxdist) {
                     maxdist = mindist;
@@ -166,7 +166,7 @@ export function placePorts() {
                     if(patience<0) {
                         console.warn('ran out of patience placing a port');
                         p.vec = maxvec;
-                        project_port(diagram, n, p);
+                        projectPort(diagram, n, p);
                     }
                     inside.push(p);
                     unplaced.shift();

@@ -1,3 +1,6 @@
+import { angleBetweenPoints, asBezier3, chopBezier } from "./shape.js";
+import { generatePath } from "./utils.js";
+
 function offsetx(ofsx) {
     return function(p) {
         return {x: p.x + ofsx, y: p.y};
@@ -122,7 +125,7 @@ export const builtinArrows = {
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr({
-                        d: generate_path(points, 1, true),
+                        d: generatePath(points, 1, true),
                         'stroke-width': 0
                     });
                 if(side) {
@@ -156,7 +159,7 @@ export const builtinArrows = {
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr({
-                        d: generate_path(points, 1, !side),
+                        d: generatePath(points, 1, !side),
                         'stroke-width': 1,
                         fill: 'none'
                     });
@@ -260,7 +263,7 @@ export const builtinArrows = {
                     upoints.push({x: 0, y: -3});
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr('d', generate_path(points, 1, true))
+                    .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
                 if(side) {
                     marker.append('svg:path')
@@ -297,7 +300,7 @@ export const builtinArrows = {
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr({
-                        d: generate_path(points, 1, !side),
+                        d: generatePath(points, 1, !side),
                         'stroke-width': 1,
                         fill: 'none'
                     });
@@ -343,7 +346,7 @@ export const builtinArrows = {
                     upoints.push({x: 8, y: -3});
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr('d', generate_path(points, 1, true))
+                    .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
                 if(side) {
                     marker.append('svg:path')
@@ -381,7 +384,7 @@ export const builtinArrows = {
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr({
-                        d: generate_path(points, 1, !side),
+                        d: generatePath(points, 1, !side),
                         'stroke-width': 1,
                         fill: 'none'
                     });
@@ -412,7 +415,7 @@ export const builtinArrows = {
                     {x: 2, y: b}
                 ].map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr('d', generate_path(points, 1, true))
+                    .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
                 marker.append('svg:path')
                     .attr('d', ['M', ofs[0], 0, 'h', 5].join(' '))
@@ -444,7 +447,7 @@ export const builtinArrows = {
                                   {x: 5, y: stemWidth/2});
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr('d', generate_path(points, 1, true))
+                    .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
                 marker.append('svg:path')
                     .attr('d', ['M', ofs[0]+5, 0, 'h',-5].join(' '))
@@ -475,7 +478,7 @@ export const builtinArrows = {
                                   {x: 5, y: stemWidth/2});
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr('d', generate_path(points, 1, true))
+                    .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
                 marker.append('svg:path')
                     .attr('d', ['M', ofs[0]+5, 0, 'h',5].join(' '))
@@ -613,7 +616,7 @@ function arrow_length(parts, stemWidth) {
 }
 
 
-function scaled_arrow_lengths(diagram, e) {
+export function scaledArrowLengths(diagram, e) {
     var arrowSize = diagram.edgeArrowSize.eval(e),
         stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize;
     var headLength = arrowSize *
@@ -625,29 +628,29 @@ function scaled_arrow_lengths(diagram, e) {
     return {headLength: headLength, tailLength: tailLength};
 }
 
-function clip_path_to_arrows(headLength, tailLength, path) {
-    var points0 = as_bezier3(path),
-        points = chop_bezier(points0, 'head', headLength);
+export function clipPathToArrows(headLength, tailLength, path) {
+    var points0 = asBezier3(path),
+        points = chopBezier(points0, 'head', headLength);
     return {
         bezDegree: 3,
-        points: chop_bezier(points, 'tail', tailLength),
+        points: chopBezier(points, 'tail', tailLength),
         sourcePort: path.sourcePort,
         targetPort: path.targetPort
     };
 }
 
-function place_arrows_on_spline(diagram, e, points) {
-    var alengths = scaled_arrow_lengths(diagram, e);
+export function placeArrowsOnSpline(diagram, e, points) {
+    var alengths = scaledArrowLengths(diagram, e);
     var path0 = {
         points: points,
         bezDegree: 3
     };
-    var path = clip_path_to_arrows(alengths.headLength, alengths.tailLength, path0);
+    var path = clipPathToArrows(alengths.headLength, alengths.tailLength, path0);
     return {
         path: path,
         full: path0,
-        orienthead: angle_between_points(path.points[path.points.length-1], path0.points[path0.points.length-1]) + 'rad', //calculate_arrowhead_orientation(e.cola.points, 'head'),
-        orienttail: angle_between_points(path.points[0], path0.points[0]) + 'rad' //calculate_arrowhead_orientation(e.cola.points, 'tail')
+        orienthead: angleBetweenPoints(path.points[path.points.length-1], path0.points[path0.points.length-1]) + 'rad', //calculate_arrowhead_orientation(e.cola.points, 'head'),
+        orienttail: angleBetweenPoints(path.points[0], path0.points[0]) + 'rad' //calculate_arrowhead_orientation(e.cola.points, 'tail')
     };
 }
 
@@ -665,7 +668,7 @@ function unsurprising_orient(oldorient, neworient) {
 }
 
 
-function edgeArrow(diagram, arrdefs, e, kind, desc) {
+export function edgeArrow(diagram, arrdefs, e, kind, desc) {
     var id = diagram.arrowId(e, kind);
     var strokeOfs, edgeStroke;
     function arrow_sig() {

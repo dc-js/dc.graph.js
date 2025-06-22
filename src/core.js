@@ -8,7 +8,7 @@ export const constants = {
     CHART_CLASS: 'dc-graph'
 };
 
-function get_original(x) {
+export function getOriginal(x) {
     return x.orig;
 }
 
@@ -18,7 +18,7 @@ export function identity(x) {
 
 export const property = function (defaultValue, unwrap) {
     if(unwrap === undefined)
-        unwrap = get_original;
+        unwrap = getOriginal;
     else if(unwrap === false)
         unwrap = identity;
     var value = defaultValue, react = null;
@@ -122,7 +122,7 @@ export function deprecatedProperty(message, defaultValue) {
     return ret;
 }
 
-function onetimeTrace(level, message) {
+export function onetimeTrace(level, message) {
     var said = false;
     return function() {
         if(said)
@@ -143,7 +143,7 @@ export function deprecationWarning(message) {
     return onetimeTrace('warn', message);
 }
 
-function traceFunction(level, message, f) {
+export function traceFunction(level, message, f) {
     var dep = onetimeTrace(level, message);
     return function() {
         dep();

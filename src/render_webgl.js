@@ -1,3 +1,5 @@
+import {inferShape} from "./shape.js"
+
 export function renderWebgl() {
     //var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _camera, _scene, _webgl_renderer;
@@ -77,7 +79,7 @@ export function renderWebgl() {
     };
 
     _renderer.startRedraw = function(dispatch, wnodes, wedges) {
-        wnodes.forEach(infer_shape(_renderer.parent()));
+        wnodes.forEach(inferShape(_renderer.parent()));
         var rnodes = regenerate_objects(_nodes, wnodes, null, function(n) {
             return _renderer.parent().nodeKey.eval(n);
         }, function(rn, n) {

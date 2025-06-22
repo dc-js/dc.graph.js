@@ -1,4 +1,5 @@
-import { property } from './core.js';
+import { getBBoxNoThrow, property } from './core.js';
+import { generatePath } from './utils.js';
 
 function point_on_ellipse(A, B, dx, dy) {
     var tansq = Math.tan(Math.atan2(dy, dx));
@@ -325,7 +326,7 @@ function elaborate_shape(diagram, def) {
     return diagram.shape(preset.shape).elaborate(preset, def2);
 }
 
-function infer_shape(diagram) {
+export function inferShape(diagram) {
     return function(n) {
         var def = normalize_shape_def(diagram, n);
         n.dcg_shape = elaborate_shape(diagram, def);
@@ -333,7 +334,7 @@ function infer_shape(diagram) {
     };
 }
 
-function shape_changed(diagram) {
+export function shapeChanged(diagram) {
     return function(n) {
         var def = normalize_shape_def(diagram, n);
         var old = n.dcg_shape.abstract;
@@ -356,7 +357,7 @@ function node_label_padding(diagram, n) {
     else return nlp;
 }
 
-function fit_shape(shape, diagram) {
+export function fitShape(shape, diagram) {
     return function(content) {
         content.each(function(n) {
             var bbox = null;
@@ -442,7 +443,7 @@ function polygon_attrs(diagram) {
                 x -= skew*y/2;
                 return {x: x, y: y};
             });
-            return generate_path(n.dcg_points, 1, true);
+            return generatePath(n.dcg_points, 1, true);
         }
     };
 }
@@ -467,7 +468,7 @@ function binary_search(f, a, b) {
     }
 }
 
-function draw_edge_to_shapes(diagram, e, sx, sy, tx, ty,
+export function drawEdgeToShapes(diagram, e, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
     var deltaX, deltaY,
         sp, tp, points, bezDegree,
@@ -553,12 +554,12 @@ function draw_edge_to_shapes(diagram, e, sx, sy, tx, ty,
     };
 }
 
-function is_one_segment(path) {
+export function isOneSegment(path) {
     return path.bezDegree === 1 && path.points.length === 2 ||
         path.bezDegree === 3 && path.points.length === 4;
 }
 
-function as_bezier3(path) {
+export function asBezier3(path) {
     var p = path.points;
     if(path.bezDegree === 3) return p;
     else if(path.bezDegree === 1)
@@ -638,7 +639,7 @@ function split_bezier(p, t) {
         [{x: x1234, y: y1234}, {x: x234, y: y234}, {x: x34, y: y34}, {x: x4, y: y4}]
     ];
 }
-function split_bezier_n(p, n) {
+export function splitBezierN(p, n) {
     var ret = [];
     while(n > 1) {
         var parts = split_bezier(p, 1/n);
@@ -652,7 +653,7 @@ function split_bezier_n(p, n) {
 
 // binary search for a point along a bezier that is a certain distance from one of the end points
 // return the bezier cut at that point.
-function chop_bezier(points, end, dist) {
+export function chopBezier(points, end, dist) {
     var EPS = 0.1, dist2 = dist*dist;
     var ref, dir, segment;
     if(end === 'head') {
@@ -685,7 +686,7 @@ function chop_bezier(points, end, dist) {
         return parts[1].concat(points.slice(4));
 }
 
-function angle_between_points(p0, p1) {
+export function angleBetweenPoints(p0, p1) {
     return Math.atan2(p1.y - p0.y, p1.x - p0.x);
 }
 
@@ -876,7 +877,7 @@ export function elaboratedRectangleShape() {
     _shape.update = function(node) {
         node.selectAll('path.node-fill,path.node-outline')
             .attr('d', function(n) {
-                return generate_path(n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry), 1, true);
+                return generatePath(n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry), 1, true);
             });
     };
     return _shape;

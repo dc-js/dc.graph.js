@@ -49,7 +49,7 @@ export function cascade(parent) {
     };
 }
 
-function compose(f, g) {
+export function compose(f, g) {
     return function() {
         return f(g.apply(null, arguments));
     };
@@ -91,7 +91,7 @@ var bez_cmds = {
     1: 'L', 2: 'Q', 3: 'C'
 };
 
-function generate_path(pts, bezDegree, close) {
+export function generatePath(pts, bezDegree, close) {
     var cats = ['M', pts[0].x, ',', pts[0].y], remain = bezDegree;
     var hasNaN = false;
     for(var i = 1; i < pts.length; ++i) {

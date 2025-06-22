@@ -128,7 +128,7 @@ if(sync_url.vals.ports) {
 }
 
 const fixNodesMode = fixNodes()
-    .strategy(fixNodes.strategy.last_N_per_component(1));
+    .strategy(fixNodes.strategy.lastNPerComponent(1));
 growingDiagram.child('fix-nodes', fixNodesMode);
 
 growingDiagram

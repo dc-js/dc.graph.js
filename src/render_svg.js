@@ -1,5 +1,8 @@
+import { compose, generatePath } from './utils.js'
 import { property } from './core.js';
 import { keyboard as keyboardMode } from './keyboard.js';
+import { asBezier3, fitShape, inferShape, isOneSegment, shapeChanged, splitBezierN } from './shape.js'
+import { edgeArrow, placeArrowsOnSpline } from './arrows.js'
 
 export function renderSvg() {
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
@@ -16,16 +19,16 @@ export function renderSvg() {
     _renderer.renderNode = _renderer._enterNode = function(nodeEnter) {
         if(_renderer.parent().nodeTitle())
             nodeEnter.append('title');
-        nodeEnter.each(infer_shape(_renderer.parent()));
+        nodeEnter.each(inferShape(_renderer.parent()));
         _renderer.parent().forEachShape(nodeEnter, function(shape, node) {
             node.call(shape.create);
         });
         return _renderer;
     };
     _renderer.redrawNode = _renderer._updateNode = function(node) {
-        var changedShape = node.filter(shape_changed(_renderer.parent()));
+        var changedShape = node.filter(shapeChanged(_renderer.parent()));
         changedShape.selectAll('.node-outline,.node-fill').remove();
-        changedShape.each(infer_shape(_renderer.parent()));
+        changedShape.each(inferShape(_renderer.parent()));
         _renderer.parent().forEachShape(changedShape, function(shape, node) {
             node.call(shape.create);
         });
@@ -35,7 +38,7 @@ export function renderSvg() {
             node.call(contentType.update);
             _renderer.parent().forEachShape(contentType.selectContent(node), function(shape, content) {
                 content
-                    .call(fit_shape(shape, _renderer.parent()));
+                    .call(fitShape(shape, _renderer.parent()));
             });
         });
         _renderer.parent().forEachShape(node, function(shape, node) {
@@ -343,7 +346,7 @@ export function renderSvg() {
         var field = full ? 'full' : 'path';
         return function(e) {
             var path = e.pos[age][field];
-            return generate_path(path.points, path.bezDegree);
+            return generatePath(path.points, path.bezDegree);
         };
     };
 
@@ -352,7 +355,7 @@ export function renderSvg() {
             var path = e.pos[age].path;
             var points = path.points[path.points.length-1].x < path.points[0].x ?
                     path.points.slice(0).reverse() : path.points;
-            return generate_path(points, path.bezDegree);
+            return generatePath(points, path.bezDegree);
         };
     };
 
@@ -417,7 +420,7 @@ export function renderSvg() {
         });
         edge.each(function(e) {
             if(e.cola.points) {
-                e.pos.new = place_arrows_on_spline(_renderer.parent(), e, e.cola.points);
+                e.pos.new = placeArrowsOnSpline(_renderer.parent(), e, e.cola.points);
             }
             else {
                 if(!e.pos.old)
@@ -430,15 +433,15 @@ export function renderSvg() {
                 if(e.pos.old.path.bezDegree !== e.pos.new.path.bezDegree ||
                    e.pos.old.path.points.length !== e.pos.new.path.points.length) {
                     //console.log('old', e.pos.old.path.points.length, 'new', e.pos.new.path.points.length);
-                    if(is_one_segment(e.pos.old.path)) {
-                        e.pos.new.path.points = as_bezier3(e.pos.new.path);
-                        e.pos.old.path.points = split_bezier_n(as_bezier3(e.pos.old.path),
+                    if(isOneSegment(e.pos.old.path)) {
+                        e.pos.new.path.points = asBezier3(e.pos.new.path);
+                        e.pos.old.path.points = splitBezierN(asBezier3(e.pos.old.path),
                                                                (e.pos.new.path.points.length-1)/3);
                         e.pos.old.path.bezDegree = e.pos.new.bezDegree = 3;
                     }
-                    else if(is_one_segment(e.pos.new.path)) {
-                        e.pos.old.path.points = as_bezier3(e.pos.old.path);
-                        e.pos.new.path.points = split_bezier_n(as_bezier3(e.pos.new.path),
+                    else if(isOneSegment(e.pos.new.path)) {
+                        e.pos.old.path.points = asBezier3(e.pos.old.path);
+                        e.pos.new.path.points = splitBezierN(asBezier3(e.pos.new.path),
                                                                (e.pos.old.path.points.length-1)/3);
                         e.pos.old.path.bezDegree = e.pos.new.bezDegree = 3;
                     }

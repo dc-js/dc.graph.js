@@ -6,10 +6,11 @@
 // External dependencies loaded as globals
 const d3 = globalThis.d3;
 const dc = globalThis.dc;
-import { uuid, property, deprecatedProperty, namedChildren, getBBoxNoThrow, isIe, isSafari, deprecateFunction } from './core.js';
-import { defaultShape, noShape, ellipseShape, polygonShape, roundedRectangleShape, elaboratedRectangleShape } from './shape.js';
+import { uuid, getOriginal, property, identity, deprecatedProperty, namedChildren, getBBoxNoThrow, isIe, isSafari, constants, deprecateFunction, onetimeTrace, traceFunction } from './core.js';
+import { angleBetweenPoints, defaultShape, drawEdgeToShapes, noShape, ellipseShape, polygonShape, roundedRectangleShape, elaboratedRectangleShape } from './shape.js';
 import { textContents } from './node_contents.js';
 import { regenerateObjects } from './generate_objects.js';
+import { portName, projectPort, splitPortName } from './place_ports.js'
 import { spawnEngine } from './engine.js';
 import { colaLayout } from './cola_layout.js';
 import { dagreLayout } from './dagre_layout.js';
@@ -17,7 +18,7 @@ import { webworkerLayout } from './webworker_layout.js';
 import { wheelEdges } from './generate.js';
 import { renderSvg } from './render_svg.js';
 import { cascade } from './utils.js';
-import { builtinArrows } from './arrows.js';
+import { builtinArrows, clipPathToArrows, scaledArrowLengths } from './arrows.js';
 
 /**
  * `diagram` is a dc.js-compatible network visualization component. It registers in
@@ -1249,7 +1250,7 @@ export function diagram(parent, chartGroup) {
         if(!object)
             return false; // null is always a valid mode for any renderer
         if(!object.supportsRenderer)
-            onetime_trace('trace', 'could not check if "' + id + '" is compatible with ' + rtype);
+            onetimeTrace('trace', 'could not check if "' + id + '" is compatible with ' + rtype);
         else if(!object.supportsRenderer(rtype))
             return 'not installing "' + id + '" because it is not compatible with renderer ' + rtype;
         return false;
@@ -1370,7 +1371,7 @@ export function diagram(parent, chartGroup) {
 
     // again, awful, we need an ADT
     _diagram.getPort = function(nid, eid, name) {
-        return _ports[port_name(nid, eid, name)];
+        return _ports[portName(nid, eid, name)];
     };
 
     _diagram.nodePorts = function() {
@@ -1440,13 +1441,13 @@ export function diagram(parent, chartGroup) {
     };
 
     function svg_specific(name) {
-        return trace_function('trace', name + '() is specific to the SVG renderer', function() {
+        return traceFunction('trace', name + '() is specific to the SVG renderer', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
 
     function call_on_renderer(name) {
-        return trace_function('trace', 'calling ' + name + '() on renderer', function() {
+        return traceFunction('trace', 'calling ' + name + '() on renderer', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -1464,7 +1465,7 @@ export function diagram(parent, chartGroup) {
     _diagram.scale = svg_specific('scale');
 
     function renderer_specific(name) {
-        return trace_function('trace', name + '() will have renderer-specific arguments', function() {
+        return traceFunction('trace', name + '() will have renderer-specific arguments', function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -1571,13 +1572,13 @@ export function diagram(parent, chartGroup) {
         }, {});
     }
     function topology_node(n) {
-        return {orig: get_original(n), cola: dcg_fields(n.cola)};
+        return {orig: getOriginal(n), cola: dcg_fields(n.cola)};
     }
     function topology_edge(e) {
-        return {orig: get_original(e), cola: dcg_fields(e.cola)};
+        return {orig: getOriginal(e), cola: dcg_fields(e.cola)};
     }
     function basic_node(n) {
-        var n0 = get_original(n);
+        var n0 = getOriginal(n);
         return {
             orig: {
                 key: n0.key,
@@ -1588,7 +1589,7 @@ export function diagram(parent, chartGroup) {
         };
     }
     function basic_edge(e) {
-        return {orig: get_original(e)};
+        return {orig: getOriginal(e)};
     }
 
     _diagram.startLayout = function () {
@@ -1658,13 +1659,13 @@ export function diagram(parent, chartGroup) {
         // now we know which ports should exist
         var needports = wedges.map(function(e) {
             if(_diagram.edgeSourcePortName.eval(e))
-                return port_name(_diagram.edgeSource.eval(e), null, _diagram.edgeSourcePortName.eval(e));
-            else return port_name(null, _diagram.edgeKey.eval(e), 'source');
+                return portName(_diagram.edgeSource.eval(e), null, _diagram.edgeSourcePortName.eval(e));
+            else return portName(null, _diagram.edgeKey.eval(e), 'source');
         });
         needports = needports.concat(wedges.map(function(e) {
             if(_diagram.edgeTargetPortName.eval(e))
-                return port_name(_diagram.edgeTarget.eval(e), null, _diagram.edgeTargetPortName.eval(e));
-            else return port_name(null, _diagram.edgeKey.eval(e), 'target');
+                return portName(_diagram.edgeTarget.eval(e), null, _diagram.edgeTargetPortName.eval(e));
+            else return portName(null, _diagram.edgeKey.eval(e), 'target');
         }));
         // remove any invalid ports so they don't crash in confusing ways later
         ports = ports.filter(function(p) {
@@ -1672,7 +1673,7 @@ export function diagram(parent, chartGroup) {
                 _diagram.portEdgeKey() && _diagram.portEdgeKey()(p);
         });
         var wports = regenerateObjects(_ports, ports, needports, function(p) {
-            return port_name(_diagram.portNodeKey() && _diagram.portNodeKey()(p),
+            return portName(_diagram.portNodeKey() && _diagram.portNodeKey()(p),
                              _diagram.portEdgeKey() && _diagram.portEdgeKey()(p),
                              _diagram.portName()(p));
         }, function(p1, p) {
@@ -1682,7 +1683,7 @@ export function diagram(parent, chartGroup) {
         }, function(k, p) {
             console.assert(k, 'should have screened out invalid ports');
             // it's dumb to parse the id we just created. as usual, i blame the lack of metagraphs
-            var parse = split_port_name(k);
+            var parse = splitPortName(k);
             if(parse.nodeKey) {
                 p.node = _nodes[parse.nodeKey];
                 p.named = true;
@@ -1702,10 +1703,10 @@ export function diagram(parent, chartGroup) {
         wedges.forEach(function(e) {
             var name = _diagram.edgeSourcePortName.eval(e);
             if(name)
-                _ports[port_name(_diagram.nodeKey.eval(e.source), null, name)].edges.push(e);
+                _ports[portName(_diagram.nodeKey.eval(e.source), null, name)].edges.push(e);
             name = _diagram.edgeTargetPortName.eval(e);
             if(name)
-                _ports[port_name(_diagram.nodeKey.eval(e.target), null, name)].edges.push(e);
+                _ports[portName(_diagram.nodeKey.eval(e.target), null, name)].edges.push(e);
         });
 
         // optionally, delete nodes that have no edges
@@ -2130,18 +2131,18 @@ export function diagram(parent, chartGroup) {
             var n = nodes[nid];
             _nodePorts[nid].forEach(function(p) {
                 if(!p.pos)
-                    project_port(_diagram, n, p);
+                    projectPort(_diagram, n, p);
             });
         }
 
         // propagate port positions to edge endpoints
         wedges.forEach(function(e) {
             var name = _diagram.edgeSourcePortName.eval(e);
-            e.sourcePort.pos = name ? ports[port_name(_diagram.nodeKey.eval(e.source), null, name)].pos :
-                ports[port_name(null, _diagram.edgeKey.eval(e), 'source')].pos;
+            e.sourcePort.pos = name ? ports[portName(_diagram.nodeKey.eval(e.source), null, name)].pos :
+                ports[portName(null, _diagram.edgeKey.eval(e), 'source')].pos;
             name = _diagram.edgeTargetPortName.eval(e);
-            e.targetPort.pos = name ? ports[port_name(_diagram.nodeKey.eval(e.target), null, name)].pos :
-                ports[port_name(null, _diagram.edgeKey.eval(e), 'target')].pos;
+            e.targetPort.pos = name ? ports[portName(_diagram.nodeKey.eval(e.target), null, name)].pos :
+                ports[portName(null, _diagram.edgeKey.eval(e), 'target')].pos;
             console.assert(e.sourcePort.pos && e.targetPort.pos);
         });
     }
@@ -2227,7 +2228,7 @@ export function diagram(parent, chartGroup) {
             var dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                 port = Math.floor((p+1)/2),
                 last = port > 0 ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
-            var path = draw_edge_to_shapes(_diagram, e, sx, sy, tx, ty,
+            var path = drawEdgeToShapes(_diagram, e, sx, sy, tx, ty,
                                            last, dir, _diagram.parallelEdgeOffset(),
                                            source_padding, target_padding
                                           );
@@ -2239,14 +2240,14 @@ export function diagram(parent, chartGroup) {
                 points: path.points,
                 bezDegree: path.bezDegree
             };
-            var alengths = scaled_arrow_lengths(_diagram, parallel.edges[p]);
-            path = clip_path_to_arrows(alengths.headLength, alengths.tailLength, path);
+            var alengths = scaledArrowLengths(_diagram, parallel.edges[p]);
+            path = clipPathToArrows(alengths.headLength, alengths.tailLength, path);
             var points = path.points, points0 = path0.points;
             parallel.edges[p].pos[age] = {
                 path: path,
                 full: path0,
-                orienthead: angle_between_points(points[points.length-1], points0[points0.length-1]) + 'rad',
-                orienttail: angle_between_points(points[0], points0[0]) + 'rad'
+                orienthead: angleBetweenPoints(points[points.length-1], points0[points0.length-1]) + 'rad',
+                orienttail: angleBetweenPoints(points[0], points0[0]) + 'rad'
             };
         }
     };
@@ -2385,7 +2386,7 @@ export function diagram(parent, chartGroup) {
         return function(p, ev) {
             var namespace = {};
             p[ev] = function(ns) {
-                return namespace[ns] = namespace[ns] || onetime_trace('trace', msg_fun(ns, ev));
+                return namespace[ns] = namespace[ns] || onetimeTrace('trace', msg_fun(ns, ev));
             };
             return p;
         };
@@ -2644,7 +2645,7 @@ export function diagram(parent, chartGroup) {
                 _anchor = parent;
             }
             _diagram.root(d3.select(_anchor));
-            _diagram.root().classed(dc_graph.constants.CHART_CLASS, true);
+            _diagram.root().classed(constants.CHART_CLASS, true);
             dc.registerChart(_diagram, chartGroup);
         } else {
             throw new dc.errors.BadArgumentException('parent must be defined');

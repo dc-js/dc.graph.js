@@ -1,4 +1,4 @@
-import { property, isIe, isSafari } from './core.js';
+import { property, getBBoxNoThrow, isIe, isSafari } from './core.js';
 
 export function textContents() {
     var _contents = {
