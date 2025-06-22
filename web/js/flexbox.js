@@ -1,3 +1,5 @@
+import { diagram, flatGroup, flexboxLayout } from './dc-graph.js';
+
 var params = new URLSearchParams(window.location.search);
 
 var parentNodes = [
@@ -37,15 +39,15 @@ var data = d3.range(7).map(function(i) {
     };
 }));
 
-var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), function (n) {
+var node_flat = flatGroup.make(parentNodes.concat(data), function (n) {
     return n.id;
 }),
-    edge_flat = dc_graph.flat_group.make([], function (e) {
+    edge_flat = flatGroup.make([], function (e) {
     return e.id;
 });
 
-var flexboxDiagram = dc_graph.diagram('#graph')
-        .layoutEngine(dc_graph.flexbox_layout(null, {algo: params.get('algo') || 'yoga-layout'})
+var flexboxDiagram = diagram('#graph')
+        .layoutEngine(flexboxLayout(null, {algo: params.get('algo') || 'yoga-layout'})
                       .addressToKey(function (ad) {
                           return 'flex+' + ad.join(',');
                       })
