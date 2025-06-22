@@ -1,9 +1,15 @@
-dc_graph.draw_graphs = function(options) {
-    var select_nodes_group =  dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes'),
-        select_edges_group = dc_graph.select_things_group(options.select_edges_group || 'select-edges-group', 'select-edges'),
-        label_nodes_group = dc_graph.label_things_group('label-nodes-group', 'label-nodes'),
-        label_edges_group = dc_graph.label_things_group('label-edges-group', 'label-edges'),
-        fix_nodes_group = dc_graph.fix_nodes_group('fix-nodes-group');
+import { mode } from './mode.js';
+import { eventCoords } from './utils.js';
+import { selectThingsGroup } from './select_things.js';
+import { labelThingsGroup } from './label_things.js';
+import { fixNodesGroup } from './fix_nodes.js';
+
+export function drawGraphs(options) {
+    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes'),
+        select_edges_group = selectThingsGroup(options.select_edges_group || 'select-edges-group', 'select-edges'),
+        label_nodes_group = labelThingsGroup('label-nodes-group', 'label-nodes'),
+        label_edges_group = labelThingsGroup('label-edges-group', 'label-edges'),
+        fix_nodes_group = fixNodesGroup('fix-nodes-group');
     var _nodeIdTag = options.idTag || 'id',
         _edgeIdTag = options.edgeIdTag || _nodeIdTag,
         _sourceTag = options.sourceTag || 'source',
@@ -195,7 +201,7 @@ dc_graph.draw_graphs = function(options) {
                 var msg;
                 d3.event.stopPropagation();
                 if(_sourceDown) {
-                    var coords = dc_graph.event_coords(diagram);
+                    var coords = eventCoords(diagram);
                     if(check_invalid_drag(coords))
                         return;
                     var oldTarget = _targetMove;
@@ -310,7 +316,7 @@ dc_graph.draw_graphs = function(options) {
             .on('mousemove.draw-graphs', function() {
                 var data = [];
                 if(_sourceDown) { // drawing edge
-                    var coords = dc_graph.event_coords(diagram);
+                    var coords = eventCoords(diagram);
                     _crossout = null;
                     if(check_invalid_drag(coords))
                         return;
@@ -340,7 +346,7 @@ dc_graph.draw_graphs = function(options) {
                     erase_hint();
                 } else { // click-node
                     if(d3.event.target === this && _mode.clickCreatesNodes())
-                        create_node(diagram, dc_graph.event_coords(diagram));
+                        create_node(diagram, eventCoords(diagram));
                 }
                 update_crossout();
             });
@@ -359,7 +365,7 @@ dc_graph.draw_graphs = function(options) {
             .on('mouseup.draw-graphs', null);
     }
 
-    var _mode = dc_graph.mode('highlight-paths', {
+    var _mode = mode('highlight-paths', {
         draw: draw,
         remove: remove
     });

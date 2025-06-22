@@ -88,6 +88,11 @@ export { highlightThings } from './highlight_things.js';
 export { highlightNeighbors } from './highlight_neighbors.js';
 export { treePositions } from './tree_positions.js';
 export { supergraph } from './supergraph.js';
+export { drawGraphs } from './draw_graphs.js';
+export { splinePaths, drawSplinePaths } from './spline_paths.js';
+export { convertTree, convertNest, convertAdjacencyList } from './convert.js';
+export { deleteThings } from './delete_things.js';
+export { deleteNodes } from './delete_nodes.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';

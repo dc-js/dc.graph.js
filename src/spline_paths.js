@@ -1,5 +1,9 @@
-dc_graph.spline_paths = function(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
-    var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
+import { mode } from './mode.js';
+import { deprecateFunction } from './core.js';
+import { registerHighlightPathsGroup } from './highlight_paths_group.js';
+
+export function splinePaths(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
+    var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
     var _paths = null, _hoverpaths = null, _selected = null;
@@ -454,7 +458,7 @@ dc_graph.spline_paths = function(pathreader, pathprops, hoverprops, selectprops,
     function remove(diagram, node, edge, ehover) {
     }
 
-    var _mode = dc_graph.mode('draw-spline-paths', {
+    var _mode = mode('draw-spline-paths', {
         laterDraw: true,
         draw: draw,
         remove: function(diagram, node, edge, ehover) {
@@ -479,4 +483,4 @@ dc_graph.spline_paths = function(pathreader, pathprops, hoverprops, selectprops,
     return _mode;
 };
 
-dc_graph.draw_spline_paths = deprecate_function("draw_spline_paths has been renamed spline_paths, please update", dc_graph.spline_paths);
+export const drawSplinePaths = deprecateFunction("draw_spline_paths has been renamed spline_paths, please update", splinePaths);

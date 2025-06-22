@@ -1,4 +1,7 @@
-dc_graph.delete_things = function(things_group, mode_name, id_tag) {
+import { mode } from './mode.js';
+import { keyboard } from './keyboard.js';
+
+export function deleteThings(things_group, mode_name, id_tag) {
     id_tag = id_tag || 'id';
     var _deleteKey = is_a_mac ? 'Backspace' : 'Delete';
     var _keyboard, _selected = [];
@@ -47,7 +50,7 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
     }
     function remove(diagram) {
     }
-    var _mode = dc_graph.mode(mode_name, {
+    var _mode = mode(mode_name, {
         draw: draw,
         remove: remove,
         parent: function(p) {
@@ -55,7 +58,7 @@ dc_graph.delete_things = function(things_group, mode_name, id_tag) {
             if(p) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
-                    p.child('keyboard', _keyboard = dc_graph.keyboard());
+                    p.child('keyboard', _keyboard = keyboard());
             }
         }
     });

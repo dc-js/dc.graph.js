@@ -1,8 +1,11 @@
-dc_graph.delete_nodes = function(id_tag, options) {
+import { selectThingsGroup } from './select_things.js';
+import { deleteThings } from './delete_things.js';
+
+export function deleteNodes(id_tag, options) {
     options = options || {};
-    var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
-    var select_edges_group = dc_graph.select_things_group(options.select_edges_group || 'select-edges-group', 'select-edges');
-    var _mode = dc_graph.delete_things(select_nodes_group, 'delete-nodes', id_tag);
+    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    var select_edges_group = selectThingsGroup(options.select_edges_group || 'select-edges-group', 'select-edges');
+    var _mode = deleteThings(select_nodes_group, 'delete-nodes', id_tag);
 
     _mode.preDelete(function(nodes) {
         // request a delete of all attached edges, using the delete edges mode

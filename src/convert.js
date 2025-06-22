@@ -48,7 +48,7 @@ var convert_tree_helper = function(data, attrs, options, parent, level, inherit)
     })};
 };
 
-dc_graph.convert_tree = function(data, attrs, options) {
+export function convertTree(data, attrs, options) {
     options = Object.assign({
         nodeKey: 'key',
         edgeKey: 'key',
@@ -64,8 +64,8 @@ dc_graph.convert_tree = function(data, attrs, options) {
     }
 };
 
-dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
-    return dc_graph.convert_tree(nest, attrs, {
+export function convertNest(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTargetAttr, parent, inherit) {
+    return convertTree(nest, attrs, {
         nodeKey: nodeKeyAttr,
         edgeSource: edgeSourceAttr,
         edgeTarget: edgeTargetAttr,
@@ -82,7 +82,7 @@ dc_graph.convert_nest = function(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeT
 var type_of = obj => ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
 var object_to_keyed_array = obj => Object.entries(obj).map(([key,value]) => ({key, ...value}));
 
-dc_graph.convert_adjacency_list = function(nodes, namesIn, namesOut) {
+export function convertAdjacencyList(nodes, namesIn, namesOut) {
     if(type_of(nodes) === 'object') {
         var graph = namesIn.multipleGraphs ? Object.values(nodes)[0] : nodes;
         nodes = object_to_keyed_array(graph);
