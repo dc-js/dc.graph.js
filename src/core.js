@@ -3,7 +3,8 @@
  * @module core
  */
 
-export const version = '0.9.93';
+import { version } from '../package.json';
+export { version };
 export const constants = {
     CHART_CLASS: 'dc-graph'
 };
