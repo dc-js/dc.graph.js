@@ -10,18 +10,18 @@ function property_interpolate(value, curr) {
     };
 }
 
-function multiply_properties(pred, props, blend) {
+export function multiplyProperties(pred, props, blend) {
     var props2 = {};
     for(var p in props)
         props2[p] = blend(pred, param(props[p]));
     return props2;
 }
 
-function conditional_properties(pred, props) {
-    return multiply_properties(pred, props, property_if);
+export function conditionalProperties(pred, props) {
+    return multiplyProperties(pred, props, property_if);
 }
 
-function node_edge_conditions(npred, epred, props) {
+export function nodeEdgeConditions(npred, epred, props) {
     var nprops = {}, eprops = {}, badprops = [];
     for(var p in props) {
         if(/^node/.test(p))
@@ -32,9 +32,9 @@ function node_edge_conditions(npred, epred, props) {
     }
     if(badprops.length)
         console.error('only know how to deal with properties that start with "node" or "edge"', badprops);
-    var props2 = npred ? conditional_properties(npred, nprops) : {};
+    var props2 = npred ? conditionalProperties(npred, nprops) : {};
     if(epred)
-        Object.assign(props2, conditional_properties(epred, eprops));
+        Object.assign(props2, conditionalProperties(epred, eprops));
     return props2;
 }
 
@@ -71,12 +71,12 @@ export function functorWrap(v, wrap) {
 // we want to allow either values or functions to be passed to specify parameters.
 // if a function, the function needs a preprocessor to extract the original key/value
 // pair from the wrapper object we put it in.
-function param(v) {
+export function param(v) {
     return functorWrap(v, get_original);
 }
 
 // http://jsperf.com/cloning-an-object/101
-function clone(obj) {
+export function clone(obj) {
     var target = {};
     for(var i in obj) {
         if(obj.hasOwnProperty(i)) {
@@ -123,7 +123,7 @@ Math.hypot = Math.hypot || function() {
 };
 
 // outputs the array with adjacent identical lines collapsed to one
-function uniq(a) {
+export function uniq(a) {
     var ret = [];
     a.forEach(function(x, i) {
         if(i === 0 || x !== a[i-1])
@@ -212,7 +212,7 @@ function promise_identity(x) {
 var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
 
 // https://stackoverflow.com/questions/16863917/check-if-class-exists-somewhere-in-parent-vanilla-js
-function ancestor_has_class(element, classname) {
+export function ancestorHasClass(element, classname) {
     if(d3.select(element).classed(classname))
         return true;
     return element.parentElement && ancestor_has_class(element.parentElement, classname);

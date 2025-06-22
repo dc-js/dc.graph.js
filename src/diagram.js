@@ -17,7 +17,7 @@ import { dagreLayout } from './dagre_layout.js';
 import { webworkerLayout } from './webworker_layout.js';
 import { wheelEdges } from './generate.js';
 import { renderSvg } from './render_svg.js';
-import { cascade } from './utils.js';
+import { cascade, param } from './utils.js';
 import { builtinArrows, clipPathToArrows, scaledArrowLengths } from './arrows.js';
 
 /**

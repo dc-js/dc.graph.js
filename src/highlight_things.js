@@ -1,5 +1,6 @@
 import { mode } from './mode.js';
 import { registerHighlightThingsGroup } from './highlight_things_group.js';
+import { nodeEdgeConditions } from './utils.js';
 
 export function highlightThings(includeprops, excludeprops, modename, groupname, cascbase) {
     var highlight_things_group = registerHighlightThingsGroup(groupname || 'highlight-things-group');
@@ -14,13 +15,13 @@ export function highlightThings(includeprops, excludeprops, modename, groupname,
         _mode.parent().requestRefresh(_mode.durationOverride());
     }
     function draw(diagram) {
-        diagram.cascade(cascbase, true, node_edge_conditions(
+        diagram.cascade(cascbase, true, nodeEdgeConditions(
             function(n) {
                 return _nodeset[_mode.parent().nodeKey.eval(n)];
             }, function(e) {
                 return _edgeset[_mode.parent().edgeKey.eval(e)];
             }, _includeprops));
-        diagram.cascade(cascbase+10, true, node_edge_conditions(
+        diagram.cascade(cascbase+10, true, nodeEdgeConditions(
             function(n) {
                 return _active && !_nodeset[_mode.parent().nodeKey.eval(n)];
             }, function(e) {

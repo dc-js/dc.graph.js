@@ -1,4 +1,5 @@
 import { selectThings, selectThingsGroup } from './select_things.js';
+import { nodeEdgeConditions } from './utils.js';
 
 export function selectEdges(props, options) {
     options = options || {};
@@ -28,7 +29,7 @@ export function selectEdges(props, options) {
             return _mode.parent().edgeKey.eval(e);
         },
         applyStyles: function(pred) {
-            _mode.parent().cascade(50, true, node_edge_conditions(null, pred, props));
+            _mode.parent().cascade(50, true, nodeEdgeConditions(null, pred, props));
         },
         removeStyles: function() {
             _mode.parent().cascade(50, false, props);

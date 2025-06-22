@@ -1,3 +1,5 @@
+import { clone } from './utils.js';
+
 /**
  * In cola.js there are three factors which influence the positions of nodes:
  * * *edge length* suggestions, controlled by the

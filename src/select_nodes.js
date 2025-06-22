@@ -1,4 +1,5 @@
 import { selectThings, selectThingsGroup } from './select_things.js';
+import { nodeEdgeConditions, ancestorHasClass } from './utils.js';
 
 export function selectNodes(props, options) {
     options = options || {};
@@ -15,13 +16,13 @@ export function selectNodes(props, options) {
             return node;
         },
         excludeClick: function(element) {
-            return ancestor_has_class(element, 'port');
+            return ancestorHasClass(element, 'port');
         },
         key: function(n) {
             return _mode.parent().nodeKey.eval(n);
         },
         applyStyles: function(pred) {
-            _mode.parent().cascade(50, true, node_edge_conditions(pred, null, props));
+            _mode.parent().cascade(50, true, nodeEdgeConditions(pred, null, props));
         },
         removeStyles: function() {
             _mode.parent().cascade(50, false, props);

@@ -1,4 +1,5 @@
 import { selectThings, selectThingsGroup } from './select_things.js';
+import { conditionalProperties } from './utils.js';
 
 export function selectPorts(props, options) {
     options = options || {};
@@ -17,7 +18,7 @@ export function selectPorts(props, options) {
             {edge: _mode.parent().edgeKey.eval(p.edges[0]), name: p.name};
         },
         applyStyles: function(pred) {
-            _mode.parent().portStyle(port_style).cascade(50, true, conditional_properties(pred, props));
+            _mode.parent().portStyle(port_style).cascade(50, true, conditionalProperties(pred, props));
         },
         removeStyles: function() {
             _mode.parent().portStyle(port_style).cascade(50, false, props);
