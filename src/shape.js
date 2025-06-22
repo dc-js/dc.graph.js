@@ -872,7 +872,7 @@ export function elaboratedRectangleShape() {
         };
     };
     _shape.create = function(nodeEnter) {
-        create_maybe_clipped(_shape.parent(), nodeEnter, 'path');
+        createMaybeClipped(_shape.parent(), nodeEnter, 'path');
     };
     _shape.update = function(node) {
         node.selectAll('path.node-fill,path.node-outline')
