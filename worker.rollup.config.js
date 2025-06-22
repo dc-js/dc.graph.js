@@ -24,7 +24,8 @@ export default [
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */`
+ */
+importScripts('d3.js', 'cola.js');`
         }
     },
     {
@@ -51,7 +52,8 @@ export default [
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */`
+ */
+importScripts('d3.js', 'dagre.js');`
         }
     },
     {
@@ -78,7 +80,8 @@ export default [
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */`
+ */
+importScripts('d3.js', 'd3v4-force.js');`
         }
     },
     {
@@ -105,7 +108,8 @@ export default [
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */`
+ */
+importScripts('d3.js');`
         }
     },
     {
@@ -132,7 +136,8 @@ export default [
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */`
+ */
+importScripts('d3.js', 'dynagraph-wasm.js', 'incrface-umd.js');`
         }
     }
 ];

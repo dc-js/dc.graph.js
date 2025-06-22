@@ -1,6 +1,5 @@
 // Dagre layout web worker entry point
-import '../core.js';
-import '../generate_objects.js';
-import '../graphviz_attrs.js';
-import '../dagre_layout.js';
-import '../webworker_message.js';
+import { dagreLayout } from '../dagre_layout.js';
+import { createWorkerHandler } from './worker_common.js';
+
+onmessage = createWorkerHandler(dagreLayout);
