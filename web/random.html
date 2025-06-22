@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Randomly build a graph</title>
+  <title>Randomly build a graph (ES6 Module Version)</title>
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
@@ -9,10 +9,12 @@
   <link rel="stylesheet" type="text/css" href="css/fontawesome-all.css"/>
   <link rel="stylesheet" type="text/css" href="css/example-common.css"/>
 
+  <!-- External dependencies -->
   <script type="text/javascript" src="js/d3.js"></script>
   <script type="text/javascript" src="js/crossfilter.js"></script>
   <script type="text/javascript" src="js/dc.js"></script>
 
+  <!-- Layout engine dependencies -->
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dagre.js"></script>
   <script type="text/javascript" src="js/d3v4-force.js"></script>
@@ -20,11 +22,9 @@
   <script type="text/javascript" src="js/dynagraph-wasm.js"></script>
   <script type="module" src="js/parse-incrface.js"></script>
 
-  <script type="text/javascript" src="js/dc.graph.js"></script>
-  
+  <!-- Supporting utilities -->
   <script type="text/javascript" src="js/chart.registry.js"></script>
   <script type="text/javascript" src="js/querystring.js"></script>
-
   <script type="text/javascript" src="js/promise-polyfill.js"></script>
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/sync-url-options.js"></script>
@@ -59,16 +59,17 @@
 
 </head>
 
-
 <body>
 
   <div id="main">
-    <script type="text/javascript" src="js/example-header.js"></script>
+    <script type="module" src="js/example-header-es6.js"></script>
     <div id="controls">
       <i id="play-stop" class="fas fa-pause"></i>&emsp;&emsp;<select id="layout"></select>
     </div>
     <div id="graph" class="chart"></div>
   </div>
 
-  <script type="text/javascript" src="js/random.js"></script>
+  <!-- ES6 Module Script -->
+  <script type="module" src="js/random.js"></script>
 </body>
+</html>

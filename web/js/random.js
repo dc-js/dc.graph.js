@@ -1,15 +1,25 @@
-var growingDiagram = dc_graph.diagram('#graph');
-var options = {
+// ES6 Module version of random.js
+import { 
+  diagram, 
+  spawnEngine, 
+  engines,
+  randomGraph,
+  flatGroup,
+  symbolPortStyle,
+  fixNodes
+} from './dc-graph.js';
+
+const growingDiagram = diagram('#graph');
+const options = {
     layout: {
         default: 'cola',
-        values: dc_graph.engines.available(),
+        values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
         exert: function(val, diagram) {
-            var engine = dc_graph.spawn_engine(val);
-            apply_engine_parameters(engine);
-            diagram
-                .layoutEngine(engine);
+            const engine = spawnEngine(val);
+            applyEngineParameters(engine);
+            diagram.layoutEngine(engine);
         }
     },
     worker: false,
@@ -27,8 +37,11 @@ var options = {
     icon: null
 };
 
-var sync_url = sync_url_options(options, dcgraph_domain(growingDiagram), growingDiagram);
-function apply_engine_parameters(engine) {
+// Note: These are still global functions from the legacy scripts
+// In a full ES6 conversion, these would also be converted to modules
+const sync_url = sync_url_options(options, dcgraph_domain(growingDiagram), growingDiagram);
+
+function applyEngineParameters(engine) {
     switch(engine.layoutAlgorithm()) {
     case 'd3v4-force':
         engine
@@ -44,35 +57,39 @@ function apply_engine_parameters(engine) {
     return engine;
 }
 
-function build_data(nodes, edges) {
+function buildData(nodes, edges) {
     // build crossfilters from scratch
     return {
-        edgef: dc_graph.flat_group.make(edges, function(d) {
+        edgef: flatGroup.make(edges, function(d) {
             return d.id;
         }),
-        nodef: dc_graph.flat_group.make(nodes, function(d) {
+        nodef: flatGroup.make(nodes, function(d) {
             return d.id;
         })
     };
 }
 
-var engine = dc_graph.spawn_engine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
-apply_engine_parameters(engine);
+const engine = spawnEngine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
+applyEngineParameters(engine);
+
 // don't do multiple components for cola unless user specified
 // layout is that unstable
-if(engine.layoutAlgorithm()==='cola')
+if(engine.layoutAlgorithm() === 'cola')
     if(typeof sync_url.vals.newcomp !== 'string')
         sync_url.vals.newcomp = 0;
 
-var random = dc_graph.random_graph({
-    nodeKey: 'id', edgeKey: 'id',
+const random = randomGraph({
+    nodeKey: 'id', 
+    edgeKey: 'id',
     ncolors: 12,
     newNodeProb: sync_url.vals.newnode,
     newComponentProb: sync_url.vals.newcomp,
     removeEdgeProb: sync_url.vals.remedge,
     log: sync_url.vals.log && sync_url.vals.log !== 'false'
 });
-var data = build_data(random.nodes(), random.edges());
+
+let data = buildData(random.nodes(), random.edges());
+
 growingDiagram
     .layoutEngine(engine)
     .width('auto')
@@ -88,9 +105,9 @@ growingDiagram
     .nodeStrokeWidth(0) // turn off outlines
     .nodeLabel(function(kv) { return kv.key; })
     .nodeLabelFill(sync_url.vals.shape === 'plain' ? 'black' : function(n) {
-        var rgb = d3.rgb(growingDiagram.nodeFillScale()(growingDiagram.nodeFill()(n))),
-            // https://www.w3.org/TR/AERT#color-contrast
-            brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+        const rgb = d3.rgb(growingDiagram.nodeFillScale()(growingDiagram.nodeFill()(n)));
+        // https://www.w3.org/TR/AERT#color-contrast
+        const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
         return brightness > 127 ? 'black' : 'ghostwhite';
     })
     .nodeFill(function(kv) {
@@ -106,36 +123,39 @@ growingDiagram
 
 if(sync_url.vals.ports) {
     growingDiagram
-        .portStyle('symbols', dc_graph.symbol_port_style())
+        .portStyle('symbols', symbolPortStyle())
         .portStyleName('symbols');
 }
-var fix_nodes = dc_graph.fix_nodes()
-    .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(1));
-growingDiagram.child('fix-nodes', fix_nodes);
+
+const fixNodesMode = fixNodes()
+    .strategy(fixNodes.strategy.lastNPerComponent(1));
+growingDiagram.child('fix-nodes', fixNodesMode);
 
 growingDiagram
     .render()
     .autoZoom('once-noanim');
 
-var randomDemoInterval = null;
+let randomDemoInterval = null;
+
 function runRandomDemo() {
     if(randomDemoInterval) {
         window.clearInterval(randomDemoInterval);
     }
     randomDemoInterval = window.setInterval(function() {
-        for(var i = 0; i < sync_url.vals.batch; ++i) {
+        for(let i = 0; i < sync_url.vals.batch; ++i) {
             if(Math.random() < sync_url.vals.remove)
-                random.remove(1)
+                random.remove(1);
             else
                 random.generate(1);
         }
-        data = build_data(random.nodes(), random.edges());
+        data = buildData(random.nodes(), random.edges());
         growingDiagram
             .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
             .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
             .redraw();
     }, sync_url.vals.interval);
 }
+
 runRandomDemo();
 
 d3.select('#play-stop').on('click', function() {
