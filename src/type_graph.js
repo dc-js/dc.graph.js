@@ -1,4 +1,4 @@
-dc_graph.build_type_graph = function(nodes, edges, nkey, ntype, esource, etarget) {
+export function buildTypeGraph(nodes, edges, nkey, ntype, esource, etarget) {
     var nmap = {}, tnodes = {}, tedges = {};
     nodes.forEach(function(n) {
         nmap[nkey(n)] = n;

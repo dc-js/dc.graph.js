@@ -1,5 +1,7 @@
-dc_graph.path_reader = function(pathsgroup) {
-    var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
+import { registerHighlightPathsGroup } from './highlight_paths_group.js';
+
+export function pathReader(pathsgroup) {
+    var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
     var _intervals, _intervalTree, _time;
 
     function register_path_objs(path, nop, eop) {

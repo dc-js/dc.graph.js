@@ -1,4 +1,6 @@
-dc_graph.troubleshoot = function() {
+import { mode } from './mode.js';
+
+export function troubleshoot() {
     var _debugLayer = null;
     var _translate, _scale = 1, _xDomain, _yDomain;
 
@@ -238,7 +240,7 @@ dc_graph.troubleshoot = function() {
             _debugLayer.remove();
     }
 
-    var _mode = dc_graph.mode('highlight-paths', {
+    var _mode = mode('highlight-paths', {
         laterDraw: true,
         draw: draw,
         remove: remove,

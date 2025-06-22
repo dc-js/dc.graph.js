@@ -1,6 +1,8 @@
-dc_graph.filter_selection = function(things_group, things_name) {
+import { selectThingsGroup } from './select_things.js';
+
+export function filterSelection(things_group, things_name) {
     things_name = things_name || 'select-nodes';
-    var select_nodes_group = dc_graph.select_things_group(things_group || 'select-nodes-group', things_name);
+    var select_nodes_group = selectThingsGroup(things_group || 'select-nodes-group', things_name);
 
     function selection_changed(diagram) {
         return function(selection) {

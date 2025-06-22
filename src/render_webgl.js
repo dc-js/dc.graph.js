@@ -1,4 +1,4 @@
-dc_graph.render_webgl = function() {
+export function renderWebgl() {
     //var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
     var _camera, _scene, _webgl_renderer;
     var _directionalLight, _ambientLight;

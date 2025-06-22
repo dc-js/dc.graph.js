@@ -98,6 +98,16 @@ export { selectEdges } from './select_edges.js';
 export { selectPorts } from './select_ports.js';
 export { treeConstraints } from './tree_constraints.js';
 export { pathSelector } from './path_selector.js';
+export { renderWebgl } from './render_webgl.js';
+export { troubleshoot } from './troubleshoot.js';
+export { highlightRadius } from './highlight_radius.js';
+export { highlightPaths } from './highlight_paths.js';
+export { buildTypeGraph } from './type_graph.js';
+export { validate } from './validate.js';
+export { lineBreaks } from './line_breaks.js';
+export { annotateNodes } from './annotate_nodes.js';
+export { filterSelection } from './filter_selection.js';
+export { pathReader } from './path_reader.js';
 
 // Example usage:
 // import { diagram, colaLayout, dagreLayout } from 'dc-graph';

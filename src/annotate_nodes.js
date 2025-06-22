@@ -1,4 +1,6 @@
-dc_graph.annotate_nodes = () => {
+import { mode } from './mode.js';
+
+export const annotateNodes = () => {
     function draw(diagram) {
         const roots = diagram.g().selectAll('g.node-layer g.node');
         const annots = roots.selectAll('text.node-annotation').data(d =>  d.orig.value.ceq ? [d] : []);
@@ -19,7 +21,7 @@ dc_graph.annotate_nodes = () => {
             .text(d => d.orig.value.ceq);
     }
     function remove() {}
-    const _mode = dc_graph.mode('annotate-nodes', {
+    const _mode = mode('annotate-nodes', {
         draw,
         remove,
         laterDraw: true

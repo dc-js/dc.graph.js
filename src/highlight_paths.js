@@ -1,5 +1,8 @@
-dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgroup) {
-    var highlight_paths_group = dc_graph.register_highlight_paths_group(pathsgroup || 'highlight-paths-group');
+import { mode } from './mode.js';
+import { registerHighlightPathsGroup } from './highlight_paths_group.js';
+
+export function highlightPaths(pathprops, hoverprops, selectprops, pathsgroup) {
+    var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
     selectprops = selectprops || {};
@@ -131,7 +134,7 @@ dc_graph.highlight_paths = function(pathprops, hoverprops, selectprops, pathsgro
             .cascade(400, false, hoverprops);
     }
 
-    var _mode = dc_graph.mode('highlight-paths', {
+    var _mode = mode('highlight-paths', {
         draw: draw,
         remove: function(diagram, node, edge, ehover) {
             remove(diagram, node, edge, ehover);

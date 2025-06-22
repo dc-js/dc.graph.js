@@ -1,6 +1,8 @@
-var dont_use_key = deprecation_warning('dc_graph.line_breaks now takes a string - d.key behavior is deprecated and will be removed in a later version');
+import { deprecationWarning } from './core.js';
 
-dc_graph.line_breaks = function(charexp, max_line_length) {
+var dont_use_key = deprecationWarning('line_breaks now takes a string - d.key behavior is deprecated and will be removed in a later version');
+
+export function lineBreaks(charexp, max_line_length) {
     var regexp = new RegExp(charexp, 'g');
     return function(s) {
         if(typeof s === 'object') { // backward compatibility

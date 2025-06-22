@@ -1,7 +1,10 @@
-dc_graph.highlight_radius = function(options) {
+import { selectThingsGroup } from './select_things.js';
+import { registerHighlightThingsGroup } from './highlight_things_group.js';
+
+export function highlightRadius(options) {
     options = options || {};
-    var select_nodes_group = dc_graph.select_things_group(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
-    var highlight_things_group = dc_graph.register_highlight_things_group(options.highlight_things_group || 'highlight-things-group');
+    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    var highlight_things_group = registerHighlightThingsGroup(options.highlight_things_group || 'highlight-things-group');
     var _graph, _selection = [];
 
     function recurse(n, r, nodeset, edgeset) {

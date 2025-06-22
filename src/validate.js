@@ -1,4 +1,6 @@
- dc_graph.validate = function(title) {
+import { functorWrap } from './core.js';
+
+export function validate(title) {
     function falsy(objects, accessor, what, who) {
         var f = objects.filter(function(o) {
             return !accessor(o);
@@ -40,7 +42,7 @@
         check(falsy(edges, diagram.edgeTarget(), 'edgeTarget', 'edges'));
 
         var contentTypes = d3.set(diagram.content.enum());
-        var ct = dc_graph.functor_wrap(diagram.nodeContent());
+        var ct = functorWrap(diagram.nodeContent());
         var noContentNodes = nodes.filter(function(kv) {
             return !contentTypes.has(ct(kv));
         });
