@@ -186,15 +186,36 @@ export var scriptPath = function() {
     var _path;
     return function() {
         if(_path === undefined) {
-            // adapted from http://stackoverflow.com/a/18283141/676195
             _path = null; // only try once
-            var filename = 'dc.graph.js';
+            
+            // For ES6 modules, try to use import.meta.url if available
+            try {
+                if (import.meta && import.meta.url) {
+                    var url = new URL(import.meta.url);
+                    _path = url.pathname.replace(/[^/]*$/, '');
+                    return _path;
+                }
+            } catch(e) {
+                // fallback to script tag detection
+            }
+            
+            // Fallback: look for script tags
             var scripts = document.getElementsByTagName('script');
             if (scripts && scripts.length > 0) {
+                // Try dc-graph.js (ES6 module version)
                 for (var i in scripts) {
-                    if (scripts[i].src && scripts[i].src.match(new RegExp(filename+'$'))) {
-                        _path = scripts[i].src.replace(new RegExp('(.*)'+filename+'$'), '$1');
+                    if (scripts[i].src && scripts[i].src.match(/dc-graph\.js$/)) {
+                        _path = scripts[i].src.replace(/(.*)dc-graph\.js$/, '$1');
                         break;
+                    }
+                }
+                // Try dc.graph.js (legacy version)
+                if(!_path) {
+                    for (var i in scripts) {
+                        if (scripts[i].src && scripts[i].src.match(/dc\.graph\.js$/)) {
+                            _path = scripts[i].src.replace(/(.*)dc\.graph\.js$/, '$1');
+                            break;
+                        }
                     }
                 }
             }

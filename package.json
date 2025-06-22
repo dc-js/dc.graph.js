@@ -1,6 +1,6 @@
 {
   "name": "dc.graph",
-  "version": "0.9.93",
+  "version": "0.9.94",
   "license": "Apache-2.0",
   "copyright": "2015-2023",
   "description": "Graph visualizations integrated with crossfilter and dc.js",
@@ -74,10 +74,12 @@
   },
   "scripts": {
     "build": "rollup -c && cp dist/dc-graph.js web/js/ && cp dist/dc-graph.js.map web/js/",
+    "build:workers": "rollup -c worker.rollup.config.js && cp *.worker.js web/js/ && cp *.worker.js.map web/js/",
+    "build:all": "npm run build && npm run build:workers",
     "build:watch": "rollup -c -w",
     "dev": "rollup -c -w",
     "serve": "cd web && python3 -m http.server 8888",
-    "start": "npm run build && npm run serve",
+    "start": "npm run build:all && npm run serve",
     "legacy:test": "grunt test",
     "legacy:d3v4-force": "rollup -c d3v4-force.rollup.config.js",
     "legacy:interval-tree": "rollup -c lysenko-interval-tree.rollup.config.js",
