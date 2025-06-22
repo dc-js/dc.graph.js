@@ -1,3 +1,5 @@
+import { engines, spawnEngine, diagram, mungeGraph, loadGraph, loadGraphText, flatGroup, applyGraphvizAccessors, builtinArrows, dataUrl, expandCollapse, highlightThings, registerHighlightThingsGroup, legend, tip, tipHtmlOrJsonTable, troubleshoot } from './dc-graph.js';
+
 var options = {
     file: null,
     tickSize: 1,
@@ -6,11 +8,11 @@ var options = {
     linkLength: 30,
     layout: {
         default: 'cola',
-        values: dc_graph.engines.available(),
+        values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
         exert: function(val, diagram) {
-            var engine = dc_graph.spawn_engine(val);
+            var engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine);
@@ -40,7 +42,7 @@ var options = {
     expanded: {
         default: [],
         subscribe: function(k) {
-            var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
+            var expanded_highlight_group = registerHighlightThingsGroup(options.expanded_highlight_group || 'expanded-highlight-group');
             expanded_highlight_group.on('highlight.sync-url-both', function(nodeset, edgeset) {
                 k(sync_url.vals.directional ? [] :
                   Object.keys(nodeset).filter(function(nk) {
@@ -76,7 +78,7 @@ function expanded_dir_subscribe(k) {
     if(dir_sub_ks.length == 2) {
         const [kin, kout] = dir_sub_ks;
         dir_sub_ks = [];
-        var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
+        var expanded_highlight_group = registerHighlightThingsGroup(options.expanded_highlight_group || 'expanded-highlight-group');
         expanded_highlight_group.on('highlight.sync-url-inout', function(nodeset, edgeset) {
             if(!sync_url.vals.directional) {
                 kin([]);
@@ -104,7 +106,7 @@ function expanded_dir_exert(val, diagram) {
         });
     }
 }
-var exploreDiagram = dc_graph.diagram('#graph');
+var exploreDiagram = diagram('#graph');
 var sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
 
 function apply_engine_parameters(engine) {
@@ -163,7 +165,7 @@ d3.select('#user-file').on('change', function() {
         var reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
-            dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+            loadGraph_text(e.target.result, filename, on_load.bind(null, filename));
             sync_url.update('expanded', []);
         };
         reader.readAsText(this.files[0]);
@@ -195,7 +197,7 @@ function on_load(filename, error, data) {
     }
     var graph_data;
     try {
-        graph_data = dc_graph.munge_graph(data);
+        graph_data = mungeGraph(data);
     }
     catch(xep) {
         console.log(xep);
@@ -209,7 +211,7 @@ function on_load(filename, error, data) {
 
     function update_data_link() {
         d3.select('#data-link')
-            .attr('href', sync_url.what_if_url({file: dc_graph.data_url({nodes: nodes, edges: edges})}));
+            .attr('href', sync_url.what_if_url({file: dataUrl({nodes: nodes, edges: edges})}));
     }
     more_output = update_data_link;
     update_data_link();
@@ -272,10 +274,10 @@ function on_load(filename, error, data) {
     var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     };
-    var edge_flat = dc_graph.flat_group.make(edges, edge_key),
-        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
+    var edge_flat = flatGroup.make(edges, edge_key),
+        node_flat = flatGroup.make(nodes, function(d) { return d[nodekeyattr]; });
 
-    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+    var engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     apply_engine_parameters(engine);
 
     exploreDiagram
@@ -297,14 +299,14 @@ function on_load(filename, error, data) {
             var e2 = exploreDiagram.getWholeEdge(e.key);
             return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
         });
-    dc_graph.apply_graphviz_accessors(exploreDiagram);
+    applyGraphvizAccessors(exploreDiagram);
     exploreDiagram.nodeFill('rgba(180,200,220,0.5)') // temporary override
-    exploreDiagram.child('tip', dc_graph.tip().content(dc_graph.tip.html_or_json_table()));
+    exploreDiagram.child('tip', tip().content(tipHtmlOrJsonTable()));
     if(sync_url.vals.bigzoom)
         exploreDiagram.zoomExtent([0.001, 200]);
     if(sync_url.vals.rndarrow) {
         var arrowheadscale, arrowtailscale;
-        var anames = Object.keys(dc_graph.builtin_arrows);
+        var anames = Object.keys(builtinArrows);
 
         function arrowgen(rnd) {
             return d3.range(Math.floor(rnd() * 5))
@@ -315,8 +317,8 @@ function on_load(filename, error, data) {
         var now = String(new Date());
         switch(sync_url.vals.rndarrow) {
         case 'one':
-            arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
-            arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
+            arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(builtinArrows)));
+            arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(builtinArrows)));
             break;
         case 'lots':
             arrowheadscale = arrowtailscale = function(label) {
@@ -371,10 +373,10 @@ function on_load(filename, error, data) {
                     return null;
                 }
             );
-        var edge_legend = dc_graph.legend('edge-legend')
+        var edge_legend = legend('edge-legend')
                 .x(20).y(20)
                 .itemWidth(75).itemHeight(20)
-                .type(dc_graph.legend.edge_legend())
+                .type(legend.edge_legend())
                 .omitEmpty(true)
                 .exemplars(edge_group.all().map(function(kv) {
                     return {name: kv.key, key: kv.key, value: {color: kv.value} };
@@ -401,7 +403,7 @@ function on_load(filename, error, data) {
     });
 
     var expand_strategy = sync_url.vals.expand_strategy || 'expanded_hidden';
-    var ec_strategy = dc_graph.expand_collapse[expand_strategy]({
+    var ec_strategy = expandCollapse[expand_strategy]({
         nodeCrossfilter: node_flat.crossfilter,
         edgeCrossfilter: edge_flat.crossfilter,
         edgeGroup: edge_flat.group,
@@ -443,11 +445,11 @@ function on_load(filename, error, data) {
     }
 
     if(sync_url.vals.debug) {
-        var troubleshoot = dc_graph.troubleshoot();
+        var troubleshoot = troubleshoot();
         exploreDiagram.child('troubleshoot', troubleshoot);
     }
 
-    exploreDiagram.child('highlight-changing', dc_graph.highlight_things(
+    exploreDiagram.child('highlight-changing', highlightThings(
         {
             nodeStrokeWidth: 3,
             nodeStroke: 'steelblue'
@@ -455,7 +457,7 @@ function on_load(filename, error, data) {
         {},
         'changing-highlight', 'changing-highlight-group', 125
     ).durationOverride(0));
-    exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
+    exploreDiagram.child('highlight-expanded', highlightThings(
         {
             nodeStrokeWidth: 3,
             nodeStroke: 'steelblue'
@@ -463,7 +465,7 @@ function on_load(filename, error, data) {
         {},
         'expanded-highlight', 'expanded-highlight-group', 147
     ).durationOverride(0));
-    exploreDiagram.child('highlight-collapse', dc_graph.highlight_things(
+    exploreDiagram.child('highlight-collapse', highlightThings(
         {
             nodeOpacity: 0.2,
             nodeStroke: 'darkred',
@@ -473,7 +475,7 @@ function on_load(filename, error, data) {
         {},
         'collapse-highlight', 'collapse-highlight-group', 150
     ).durationOverride(0));
-    exploreDiagram.child('highlight-hide', dc_graph.highlight_things(
+    exploreDiagram.child('highlight-hide', highlightThings(
         {
             nodeOpacity: 0.2,
             nodeStroke: 'darkred',
@@ -483,7 +485,7 @@ function on_load(filename, error, data) {
         {},
         'hide-highlight', 'hide-highlight-group', 155
     ).durationOverride(0));
-    expand_collapse = dc_graph.expand_collapse(ec_strategy);
+    expand_collapse = expandCollapse(ec_strategy);
     exploreDiagram.child('expand-collapse', expand_collapse);
     dc.renderAll();
     exploreDiagram.autoZoom('once-noanim');
@@ -547,4 +549,4 @@ function on_load(filename, error, data) {
 if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL</br><small>or browse local file above right</small>');
 
-dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+loadGraph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));

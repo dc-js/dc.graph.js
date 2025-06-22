@@ -1,8 +1,8 @@
 import { registerHighlightThingsGroup } from './highlight_things_group.js';
 import { mode } from './mode.js';
-import { is_a_mac } from './utils.js';
+import { is_a_mac, conditionalProperties } from './utils.js';
 import { keyboard } from './keyboard.js';
-import { functorWrap } from './core.js';
+import { functorWrap, deprecatedProperty, property } from './core.js';
 import { engines } from './engine.js';
 
 export function expandCollapse(options) {
@@ -427,7 +427,7 @@ export function expandCollapse(options) {
                     }
                 }
             });
-        diagram.cascade(97, true, conditional_properties(
+        diagram.cascade(97, true, conditionalProperties(
             function(n) {
                 return n === _overNode && n.orig.value.value && n.orig.value.value.URL;
             },
@@ -558,7 +558,7 @@ export function expandCollapse(options) {
 
     _mode.expand = expand;
     _mode.expandNodes = expandNodes;
-    _mode.clickableLinks = deprecated_property("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
+    _mode.clickableLinks = deprecatedProperty("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
     _mode.nodeURL = property(function(n) {
         return n.value && n.value.value && n.value.value.URL;
     });
@@ -571,4 +571,10 @@ export function expandCollapse(options) {
 
 export function defaultUrlOpener(mode, node, url) {
     window.open(mode.nodeURL.eval(node), mode.urlTargetWindow());
-};
+}
+
+// Import strategy functions
+import { expandedHidden } from './expanded_hidden.js';
+
+// Attach strategies to expandCollapse function for backward compatibility
+expandCollapse.expanded_hidden = expandedHidden;
