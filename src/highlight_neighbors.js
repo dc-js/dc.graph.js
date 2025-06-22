@@ -1,4 +1,5 @@
 import { mode } from './mode.js';
+import { property } from './core.js';
 import { registerHighlightNeighborsGroup } from './highlight_neighbors_group.js';
 import { registerHighlightThingsGroup } from './highlight_things_group.js';
 import { highlightThings } from './highlight_things.js';

@@ -1,4 +1,5 @@
 import { mode } from './mode.js';
+import { property } from './core.js';
 import { registerHighlightThingsGroup } from './highlight_things_group.js';
 import { nodeEdgeConditions } from './utils.js';
 

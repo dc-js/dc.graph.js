@@ -1,11 +1,13 @@
+import { engines, spawnEngine, applyGraphvizAccessors, diagram, loadGraphText, mungeGraph, dataUrl, flatGroup, drawClusters, moveNodes, fixNodes, tip, tipHtmlOrJsonTable, highlightNeighbors, loadGraph } from './dc-graph.js';
+
 var options = {
     layout: {
         default: 'cola',
-        values: dc_graph.engines.available(),
+        values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
         exert: function(val, diagram) {
-            var engine = dc_graph.spawn_engine(val);
+            var engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine)
@@ -20,7 +22,7 @@ var options = {
         needs_redraw: 'refresh',
         exert: function(val, diagram) {
             if(val)
-                dc_graph.apply_graphviz_accessors(simpleDiagram);
+                applyGraphvizAccessors(simpleDiagram);
             else {
                 simpleDiagram
                     .nodeFixed(function (n) {
@@ -54,7 +56,7 @@ var options = {
     neighbors: true
 };
 
-var simpleDiagram = dc_graph.diagram('#graph');
+var simpleDiagram = diagram('#graph');
 var filters = {};
 var sync_url = sync_url_options(options, dcgraph_domain(simpleDiagram), simpleDiagram, filters);
 
@@ -82,7 +84,7 @@ d3.select('#user-file').on('change', function() {
         var reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
-            dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+            loadGraphText(e.target.result, filename, on_load.bind(null, filename));
         };
         reader.readAsText(this.files[0]);
     }
@@ -106,7 +108,7 @@ function on_load(filename, error, data) {
 
     var graph_data;
     try {
-        graph_data = dc_graph.munge_graph(data);
+        graph_data = mungeGraph(data);
     }
     catch(xep) {
         console.log(xep);
@@ -121,7 +123,7 @@ function on_load(filename, error, data) {
     function update_data_link() {
         d3.select('#data-link')
             .style('visibility', sync_url.vals.datalink ? 'visible' : 'hidden')
-            .attr('href', sync_url.what_if_url({file: dc_graph.data_url({nodes: nodes, edges: edges})}));
+            .attr('href', sync_url.what_if_url({file: dataUrl({nodes: nodes, edges: edges})}));
     }
     more_output = update_data_link;
     update_data_link();
@@ -129,11 +131,11 @@ function on_load(filename, error, data) {
     var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     };
-    var edge_flat = dc_graph.flat_group.make(edges, edge_key),
-        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; }),
-        cluster_flat = dc_graph.flat_group.make(data.clusters || [], function(d) { return d.key; });
+    var edge_flat = flatGroup.make(edges, edge_key),
+        node_flat = flatGroup.make(nodes, function(d) { return d[nodekeyattr]; }),
+        cluster_flat = flatGroup.make(data.clusters || [], function(d) { return d.key; });
 
-    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+    var engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     simpleDiagram
         .layoutEngine(engine)
         .timeLimit(5000)
@@ -163,39 +165,39 @@ function on_load(filename, error, data) {
         };
     }
 
-    var draw_clusters = dc_graph.draw_clusters();
-    simpleDiagram.child('draw-clusters', draw_clusters);
+    var drawClustersMode = drawClusters();
+    simpleDiagram.child('draw-clusters', drawClustersMode);
 
     sync_url.exert();
 
-    var move_nodes = dc_graph.move_nodes();
-    simpleDiagram.child('move-nodes', move_nodes);
+    var moveNodesMode = moveNodes();
+    simpleDiagram.child('move-nodes', moveNodesMode);
 
-    var fix_nodes = dc_graph.fix_nodes()
-        .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
-    simpleDiagram.child('fix-nodes', fix_nodes);
+    var fixNodesMode = fixNodes()
+        .strategy(fixNodes.strategy.lastNPerComponent(Infinity));
+    simpleDiagram.child('fix-nodes', fixNodesMode);
 
     if(sync_url.vals.tips) {
-        var tip = dc_graph.tip();
-        var json_table = dc_graph.tip.html_or_json_table()
+        var tipMode = tip();
+        var json_table = tipHtmlOrJsonTable()
             .json(function(d) {
                 return (d.orig.value.value || d.orig.value).jsontip || JSON.stringify(d.orig.value);
             });
-        tip
+        tipMode
             .showDelay(250)
             .content(json_table);
-        simpleDiagram.child('tip', tip);
+        simpleDiagram.child('tip', tipMode);
     }
     if(sync_url.vals.neighbors) {
-        var highlight_neighbors = dc_graph.highlight_neighbors({
+        var highlightNeighborsMode = highlightNeighbors({
             edgeStroke: 'orangered',
             edgeStrokeWidth: 3
         }).durationOverride(0);
         simpleDiagram
-            .child('highlight-neighbors', highlight_neighbors);
+            .child('highlight-neighbors', highlightNeighborsMode);
     }
 
     simpleDiagram.render();
 }
 
-dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+loadGraph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
