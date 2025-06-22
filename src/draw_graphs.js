@@ -1,4 +1,5 @@
 import { mode } from './mode.js';
+import { property, uuid } from './core.js';
 import { eventCoords, promiseIdentity } from './utils.js';
 import { selectThingsGroup } from './select_things.js';
 import { labelThingsGroup } from './label_things.js';

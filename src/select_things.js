@@ -1,6 +1,8 @@
 import { mode } from './mode.js';
+import { property } from './core.js';
 import { brush } from './brush.js';
 import { keyboard } from './keyboard.js';
+import { is_a_mac } from './utils.js';
 
 // External dependency loaded as global
 const d3 = globalThis.d3;

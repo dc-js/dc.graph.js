@@ -656,7 +656,7 @@ export function placeArrowsOnSpline(diagram, e, points) {
 
 
 // determine pre-transition orientation that won't spin a lot going to new orientation
-function unsurprisingOrient(oldorient, neworient) {
+export function unsurprisingOrient(oldorient, neworient) {
     var oldang = +oldorient.slice(0, -3),
         newang = +neworient.slice(0, -3);
     if(Math.abs(oldang - newang) > Math.PI) {

@@ -38,6 +38,7 @@
 // External dependency loaded as global
 const d3 = globalThis.d3;
 import { uuid, property } from './core.js';
+import yoga from 'yoga-layout';
 
 export function flexboxLayout(id, options) {
     var _layoutId = id || uuid();
@@ -82,61 +83,58 @@ export function flexboxLayout(id, options) {
             tree.node = {dcg_nodeKey: tree.address.length ? tree.address[tree.address.length-1] : null};
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
-    function getYogaConstants() {
-        // Return constants only if yogaLayout is available
-        if (typeof yogaLayout === 'undefined') return null;
-        
-        return {
-            alignItems: {
-                stretch: yogaLayout.ALIGN_STRETCH,
-                'flex-start': yogaLayout.ALIGN_FLEX_START,
-                center: yogaLayout.ALIGN_CENTER,
-                'flex-end': yogaLayout.ALIGN_FLEX_END,
-                baseline: yogaLayout.ALIGN_BASELINE
-            },
-            alignSelf: {
-                stretch: yogaLayout.ALIGN_STRETCH,
-                'flex-start': yogaLayout.ALIGN_FLEX_START,
-                center: yogaLayout.ALIGN_CENTER,
-                'flex-end': yogaLayout.ALIGN_FLEX_END,
-                baseline: yogaLayout.ALIGN_BASELINE
-            },
-            alignContent: {
-                'flex-start': yogaLayout.ALIGN_FLEX_START,
-                'flex-end': yogaLayout.ALIGN_FLEX_END,
-                stretch: yogaLayout.ALIGN_STRETCH,
-                center: yogaLayout.ALIGN_CENTER,
-                'space-between': yogaLayout.ALIGN_SPACE_BETWEEN,
-                'space-around': yogaLayout.ALIGN_SPACE_AROUND
-            },
-            flexDirection: {
-                column: yogaLayout.FLEX_DIRECTION_COLUMN,
-                'column-reverse': yogaLayout.FLEX_DIRECTION_COLUMN_REVERSE,
-                row: yogaLayout.FLEX_DIRECTION_ROW,
-                'row-reverse': yogaLayout.FLEX_DIRECTION_ROW_REVERSE
-            },
-            justifyContent: {
-                'flex-start': yogaLayout.JUSTIFY_FLEX_START,
-                center: yogaLayout.JUSTIFY_CENTER,
-                'flex-end': yogaLayout.JUSTIFY_FLEX_END,
-                'space-between': yogaLayout.JUSTIFY_SPACE_BETWEEN,
-                'space-around': yogaLayout.JUSTIFY_SPACE_AROUND,
-                'space-evenly': yogaLayout.JUSTIFY_SPACE_EVENLY
-            }
-        };
-    }
     function set_yoga_attr(flexnode, attr, value) {
         var fname = 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
         if(typeof flexnode[fname] !== 'function')
             throw new Error('Could not set yoga attr "' + attr + '" (' + fname + ')');
-        var yoga_constants = getYogaConstants();
-        if(yoga_constants && yoga_constants[attr])
-            value = yoga_constants[attr][value];
+        
+        // Map string values to yoga constants
+        var constantMaps = {
+            alignItems: {
+                stretch: yoga.ALIGN_STRETCH,
+                'flex-start': yoga.ALIGN_FLEX_START,
+                center: yoga.ALIGN_CENTER,
+                'flex-end': yoga.ALIGN_FLEX_END,
+                baseline: yoga.ALIGN_BASELINE
+            },
+            alignSelf: {
+                stretch: yoga.ALIGN_STRETCH,
+                'flex-start': yoga.ALIGN_FLEX_START,
+                center: yoga.ALIGN_CENTER,
+                'flex-end': yoga.ALIGN_FLEX_END,
+                baseline: yoga.ALIGN_BASELINE
+            },
+            alignContent: {
+                'flex-start': yoga.ALIGN_FLEX_START,
+                'flex-end': yoga.ALIGN_FLEX_END,
+                stretch: yoga.ALIGN_STRETCH,
+                center: yoga.ALIGN_CENTER,
+                'space-between': yoga.ALIGN_SPACE_BETWEEN,
+                'space-around': yoga.ALIGN_SPACE_AROUND
+            },
+            flexDirection: {
+                column: yoga.FLEX_DIRECTION_COLUMN,
+                'column-reverse': yoga.FLEX_DIRECTION_COLUMN_REVERSE,
+                row: yoga.FLEX_DIRECTION_ROW,
+                'row-reverse': yoga.FLEX_DIRECTION_ROW_REVERSE
+            },
+            justifyContent: {
+                'flex-start': yoga.JUSTIFY_FLEX_START,
+                center: yoga.JUSTIFY_CENTER,
+                'flex-end': yoga.JUSTIFY_FLEX_END,
+                'space-between': yoga.JUSTIFY_SPACE_BETWEEN,
+                'space-around': yoga.JUSTIFY_SPACE_AROUND,
+                'space-evenly': yoga.JUSTIFY_SPACE_EVENLY
+            }
+        };
+        
+        if(constantMaps[attr] && constantMaps[attr][value])
+            value = constantMaps[attr][value];
         
         // Handle attributes that need an edge parameter (padding, margin, border, position)
         if(attr === 'padding' || attr === 'margin' || attr === 'border' || attr.endsWith('Padding') || attr.endsWith('Margin')) {
             // For generic padding/margin, apply to all edges
-            flexnode[fname](yogaLayout.EDGE_ALL, value);
+            flexnode[fname](yoga.EDGE_ALL, value);
         } else if(attr === 'width') {
             flexnode.setWidth(value);
         } else if(attr === 'height') {
@@ -160,12 +158,7 @@ export function flexboxLayout(id, options) {
             flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
             break;
         case 'yoga-layout':
-            if (typeof yogaLayout === 'undefined') {
-                // Return a placeholder that will be replaced when yoga is ready
-                flexnode = { _yogaPending: true };
-            } else {
-                flexnode = new yogaLayout.Node();
-            }
+            flexnode = new yoga.Node();
             break;
         }
         var attrs2 = Object.assign({}, attrs);
@@ -241,19 +234,6 @@ export function flexboxLayout(id, options) {
         );
     }
     function start() {
-        // If yoga layout is requested but yoga isn't ready yet, wait for it
-        if (options.algo === 'yoga-layout' && typeof yogaLayout === 'undefined') {
-            if (typeof loadYogaLayout === 'function') {
-                loadYogaLayout().then(function() {
-                    start(); // Retry when yoga is ready
-                });
-                return;
-            } else {
-                console.warn('yoga-layout requested but yogaLayout not available. Falling back to css-layout.');
-                options.algo = 'css-layout';
-            }
-        }
-        
         var defaults = {
             sort: function(a, b) {
                 return d3.ascending(a.node.dcg_nodeKey, b.node.dcg_nodeKey);
@@ -377,14 +357,13 @@ export function flexboxLayout(id, options) {
          **/
         keyToAddress: property(function(nid) { return nid.split(','); }),
         yogaConstants: function() {
-            // in case any are missing, they can be added
-            // please file PRs for any missing constants!
-            return yoga_constants;
+            // Direct access to yoga constants
+            return yoga;
         },
         logStuff: property(false)
     };
     return _engine;
 };
 
-// Scripts needed for web worker
-flexboxLayout.scripts = ['css-layout.js'];
+// No external scripts needed - yoga-layout is imported as ES6 module
+flexboxLayout.scripts = [];

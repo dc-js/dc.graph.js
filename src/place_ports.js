@@ -1,3 +1,5 @@
+import { property } from './core.js';
+
 export function portName(nodeId, edgeId, portName) {
     if(!(nodeId || edgeId))
         return null; // must have one key or the other

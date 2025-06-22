@@ -1,5 +1,7 @@
 import { mode } from './mode.js';
+import { property } from './core.js';
 import { keyboard } from './keyboard.js';
+import { is_a_mac } from './utils.js';
 
 export function deleteThings(things_group, mode_name, id_tag) {
     id_tag = id_tag || 'id';

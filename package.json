@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "crossfilter2": "~1.4.8",
-    "css-layout": "1.x",
     "d3": "3.x",
     "dagre": "^0.8.5",
     "dc": "~2.2.2",
@@ -82,7 +81,6 @@
     "legacy:test": "grunt test",
     "legacy:d3v4-force": "rollup -c d3v4-force.rollup.config.js",
     "legacy:interval-tree": "rollup -c lysenko-interval-tree.rollup.config.js",
-    "legacy:yoga": "rollup -c yoga.rollup.config.js; sed -i .bak 's/_a = _typeModule(_typeModule),/var _a = _typeModule(_typeModule);/' yoga-layout.js",
     "legacy:incrface": "rollup -c incrface.rollup.config.js"
   },
   "npmName": "dc.graph",

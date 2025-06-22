@@ -1,5 +1,6 @@
 import { registerHighlightThingsGroup } from './highlight_things_group.js';
 import { mode } from './mode.js';
+import { is_a_mac } from './utils.js';
 import { keyboard } from './keyboard.js';
 import { functorWrap } from './core.js';
 import { engines } from './engine.js';

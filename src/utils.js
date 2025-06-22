@@ -1,3 +1,8 @@
+import { getOriginal } from './core.js';
+
+// External dependency loaded as global
+const d3 = globalThis.d3;
+
 export function propertyIf(pred, curr) {
     return function(o, last) {
         return pred(o) ? curr(o) : last();
@@ -72,7 +77,7 @@ export function functorWrap(v, wrap) {
 // if a function, the function needs a preprocessor to extract the original key/value
 // pair from the wrapper object we put it in.
 export function param(v) {
-    return functorWrap(v, get_original);
+    return functorWrap(v, getOriginal);
 }
 
 // http://jsperf.com/cloning-an-object/101
@@ -209,7 +214,7 @@ export function promiseIdentity(x) {
 }
 
 // http://stackoverflow.com/questions/7044944/jquery-javascript-to-detect-os-without-a-plugin
-var is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
+export const is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
 
 // https://stackoverflow.com/questions/16863917/check-if-class-exists-somewhere-in-parent-vanilla-js
 export function ancestorHasClass(element, classname) {

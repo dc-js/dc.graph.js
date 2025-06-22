@@ -1,8 +1,8 @@
 import { compose, generatePath } from './utils.js'
-import { property } from './core.js';
+import { property, identity } from './core.js';
 import { keyboard as keyboardMode } from './keyboard.js';
 import { asBezier3, fitShape, inferShape, isOneSegment, shapeChanged, splitBezierN } from './shape.js'
-import { edgeArrow, placeArrowsOnSpline } from './arrows.js'
+import { edgeArrow, placeArrowsOnSpline, unsurprisingOrient } from './arrows.js'
 
 export function renderSvg() {
     var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
@@ -366,7 +366,7 @@ export function renderSvg() {
     }
 
     function unsurprising_orient_rad(oldorient, neworient) {
-        return with_rad(unsurprising_orient)(oldorient, neworient);
+        return with_rad(unsurprisingOrient)(oldorient, neworient);
    }
 
     function has_source_and_target(e) {

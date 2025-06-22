@@ -1,3 +1,19 @@
+import { 
+    diagram, 
+    flexboxLayout, 
+    flatGroup, 
+    validate, 
+    troubleshoot, 
+    placePorts, 
+    symbolPortStyle, 
+    drawGraphs, 
+    selectEdges, 
+    selectThingsGroup, 
+    deleteThings, 
+    matchOpposites, 
+    selectPorts 
+} from './dc-graph.js';
+
 var qs = querystring.parse();
 var options = Object.assign({
     min: 3,
@@ -74,17 +90,17 @@ var ports = data.map(function (n) {
     };
 });
 
-var node_flat = dc_graph.flat_group.make(parentNodes.concat(data), function (n) {
+var node_flat = flatGroup.make(parentNodes.concat(data), function (n) {
     return n.id;
 }),
-    edge_flat = dc_graph.flat_group.make([], function (e) {
+    edge_flat = flatGroup.make([], function (e) {
     return e.id;
 }),
-    port_flat = dc_graph.flat_group.make(ports, function (p) {
+    port_flat = flatGroup.make(ports, function (p) {
     return p.nodeId + '/' + p.side;
 });
 
-var layout = dc_graph.flexbox_layout(null, {algo: options.algo})
+var layout = flexboxLayout(null, {algo: options.algo})
     .logStuff(qs.log && qs.log !== 'false')
     .addressToKey(function(ad) {
         switch(ad.length) {
@@ -101,7 +117,7 @@ var layout = dc_graph.flexbox_layout(null, {algo: options.algo})
         else throw new Error('couldn\'t parse key: ' + key);
     });
 
-var matchDiagram = dc_graph.diagram('#graph')
+var matchDiagram = diagram('#graph')
         .layoutEngine(layout)
         .width('auto').height('auto')
         .transitionDuration(250)
@@ -133,12 +149,12 @@ var matchDiagram = dc_graph.diagram('#graph')
         })
         .portElastic(false);
 
-matchDiagram.child('validate', dc_graph.validate());
+matchDiagram.child('validate', validate());
 if(options.trouble)
-    matchDiagram.child('troubleshoot', dc_graph.troubleshoot());
-matchDiagram.child('place-ports', dc_graph.place_ports());
+    matchDiagram.child('troubleshoot', troubleshoot());
+matchDiagram.child('place-ports', placePorts());
 
-var circlePorts = dc_graph.symbol_port_style()
+var circlePorts = symbolPortStyle()
         .portSymbol(null)
         .displacement(0)
         .smallRadius(2).mediumRadius(4).largeRadius(6)
@@ -147,7 +163,7 @@ var circlePorts = dc_graph.symbol_port_style()
 matchDiagram.portStyle('circle-ports', circlePorts)
     .portStyleName('circle-ports');
 
-var drawGraphs = dc_graph.draw_graphs({
+var drawGraphsMode = drawGraphs({
     idTag: 'id',
     sourceTag: 'sourcename',
     targetTag: 'targetname'
@@ -156,16 +172,16 @@ var drawGraphs = dc_graph.draw_graphs({
         .clickCreatesNodes(false)
         .edgeCrossfilter(edge_flat.crossfilter);
 
-matchDiagram.child('draw-graphs', drawGraphs);
+matchDiagram.child('draw-graphs', drawGraphsMode);
 
-var select_edges = dc_graph.select_edges({
+var select_edges = selectEdges({
     edgeStroke: 'lightblue',
     edgeStrokeWidth: 3
 }).multipleSelect(false);
 matchDiagram.child('select-edges', select_edges);
 
-var select_edges_group = dc_graph.select_things_group('select-edges-group', 'select-edges');
-var delete_edges = dc_graph.delete_things(select_edges_group, 'delete-edges', 'id')
+var select_edges_group = selectThingsGroup('select-edges-group', 'select-edges');
+var delete_edges = deleteThings(select_edges_group, 'delete-edges', 'id')
         .crossfilterAccessor(function(matchDiagram) {
             return edge_flat.crossfilter;
         })
@@ -174,15 +190,15 @@ var delete_edges = dc_graph.delete_things(select_edges_group, 'delete-edges', 'i
         });
 matchDiagram.child('delete-edges', delete_edges);
 
-var oppositeMatcher = dc_graph.match_opposites(matchDiagram, {
+var oppositeMatcher = matchOpposites(matchDiagram, {
     edgeStroke: 'orangered'
 }, {
     delete_edges: delete_edges
 });
-drawGraphs.conduct(oppositeMatcher);
+drawGraphsMode.conduct(oppositeMatcher);
 
 if(qs.selports) {
-    var select_ports = dc_graph.select_ports({
+    var select_ports = selectPorts({
         portBackgroundFill: 'lightgreen',
         outlineStroke: 'orange',
         outlineStrokeWidth: 2,
@@ -193,7 +209,7 @@ if(qs.selports) {
         portStyle: 'circle-ports'
     }).multipleSelect(false);
     matchDiagram.child('select-ports', select_ports);
-    var select_ports_group = dc_graph.select_things_group('select-ports-group', 'select-ports');
+    var select_ports_group = selectThingsGroup('select-ports-group', 'select-ports');
     select_ports_group.on('set_changed.show-info', function(ports) {
         if(ports.length>0) {
             select_edges_group.set_changed([]);

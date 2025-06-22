@@ -1,4 +1,4 @@
-import { functorWrap } from './core.js';
+import { functorWrap, property } from './core.js';
 
 export function validate(title) {
     function falsy(objects, accessor, what, who) {

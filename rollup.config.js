@@ -16,7 +16,6 @@ export default {
     'dagre',
     'viz.js',
     'css-layout',
-    'yoga-layout',
     'metagraph',
     'queue-async'
   ],
