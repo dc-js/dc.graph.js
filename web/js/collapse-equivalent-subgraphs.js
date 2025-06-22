@@ -1,11 +1,13 @@
+import { engines, spawnEngine, applyGraphvizAccessors, diagram, loadGraphText, dataUrl, flatGroup, mungeGraph, convertAdjacencyList, drawClusters, legend, annotateNodes, moveNodes, fixNodes, tip, tipHtmlOrJsonTable, highlightNeighbors, loadGraph } from './dc-graph.js';
+
 var options = {
     layout: {
         default: 'cola',
-        values: dc_graph.engines.available(),
+        values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
         exert: function(val, diagram) {
-            var engine = dc_graph.spawn_engine(val);
+            var engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine)
@@ -21,7 +23,7 @@ var options = {
         needs_redraw: 'refresh',
         exert: function(val, diagram) {
             if(val)
-                dc_graph.apply_graphviz_accessors(collapseDiagram);
+                applyGraphvizAccessors(collapseDiagram);
             else {
                 collapseDiagram
                     .nodeFixed(function (n) {
@@ -55,7 +57,7 @@ var options = {
     neighbors: true
 };
 
-var collapseDiagram = dc_graph.diagram('#graph');
+var collapseDiagram = diagram('#graph');
 var filters = {};
 var sync_url = sync_url_options(options, dcgraph_domain(collapseDiagram), collapseDiagram, filters);
 
@@ -83,7 +85,7 @@ d3.select('#user-file').on('change', function() {
         var reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
-            dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+            loadGraphText(e.target.result, filename, on_load.bind(null, filename));
         };
         reader.readAsText(this.files[0]);
     }
@@ -189,7 +191,7 @@ function apply_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr
     function update_data_link() {
         d3.select('#data-link')
             .style('visibility', sync_url.vals.datalink ? 'visible' : 'hidden')
-            .attr('href', sync_url.what_if_url({file: dc_graph.data_url({nodes: nodes, edges: edges})}));
+            .attr('href', sync_url.what_if_url({file: dataUrl({nodes: nodes, edges: edges})}));
     }
     more_output = update_data_link;
     update_data_link();
@@ -197,9 +199,9 @@ function apply_data({nodes, edges, clusters, sourceattr, targetattr, nodekeyattr
     var edge_key = function(d) {
         return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
     };
-    var edge_flat = dc_graph.flat_group.make(edges, edge_key),
-        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; }),
-        cluster_flat = dc_graph.flat_group.make(clusters || [], function(d) { return d.key; });
+    var edge_flat = flatGroup.make(edges, edge_key),
+        node_flat = flatGroup.make(nodes, function(d) { return d[nodekeyattr]; }),
+        cluster_flat = flatGroup.make(clusters || [], function(d) { return d.key; });
     collapseDiagram
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
@@ -219,13 +221,13 @@ function on_load(filename, error, data) {
 
     var graph_data;
     try {
-        graph_data = dc_graph.munge_graph(data);
+        graph_data = mungeGraph(data);
     }
     catch(munge_xep) {
         // specific to current application
         // convert and munge could be combined in some better thing
         // that tries many possibilities
-        graph_data = dc_graph.convert_adjacency_list(data, {
+        graph_data = convertAdjacencyList(data, {
             multipleGraphs: true,
             revAdjacencies: 'parent',
             nodeKey: 'key'
@@ -236,7 +238,7 @@ function on_load(filename, error, data) {
         });
     }
 
-    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+    var engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     collapseDiagram
         .layoutEngine(engine)
         .timeLimit(5000)
@@ -261,8 +263,8 @@ function on_load(filename, error, data) {
         };
     }
 
-    var draw_clusters = dc_graph.draw_clusters();
-    collapseDiagram.child('draw-clusters', draw_clusters);
+    var drawClustersMode = drawClusters();
+    collapseDiagram.child('draw-clusters', drawClustersMode);
 
     sync_url.exert();
 
@@ -274,7 +276,7 @@ function on_load(filename, error, data) {
                        cat20(v - 1));
     const maxclass = d3.max(graph_data.nodes, n => +n.equiv);
     const exs = d3.range(0, maxclass+1).map(i => ({key: i.toString(), name: i ? `class ${i}` : 'unique', value: {subeq: i}}));
-    var legend = dc_graph.legend('legend')
+    var legendMode = legend('legend')
         .nodeWidth(70).nodeHeight(60)
         .exemplars(exs)
         .dimension(true)
@@ -287,41 +289,41 @@ function on_load(filename, error, data) {
             collapseDiagram.redraw();
         })
         .replaceFilter([selection]);
-    legend.counter((_n, _e, _p, is_total) => graph_data.nodes.reduce((p, v) => {
+    legendMode.counter((_n, _e, _p, is_total) => graph_data.nodes.reduce((p, v) => {
         const eq = v.equiv;
         p[eq] = (p[eq] || 0) + 1;
         return p;
     }, {}));
-    collapseDiagram.child('node-legend', legend);
+    collapseDiagram.child('node-legend', legendMode);
 
-    const annotate_nodes = dc_graph.annotate_nodes();
-    collapseDiagram.child('annotate-nodes', annotate_nodes);
+    const annotateNodesMode = annotateNodes();
+    collapseDiagram.child('annotate-nodes', annotateNodesMode);
 
-    var move_nodes = dc_graph.move_nodes();
-    collapseDiagram.child('move-nodes', move_nodes);
+    var moveNodesMode = moveNodes();
+    collapseDiagram.child('move-nodes', moveNodesMode);
 
-    var fix_nodes = dc_graph.fix_nodes()
-        .strategy(dc_graph.fix_nodes.strategy.last_N_per_component(Infinity));
-    collapseDiagram.child('fix-nodes', fix_nodes);
+    var fixNodesMode = fixNodes()
+        .strategy(fixNodes.strategy.lastNPerComponent(Infinity));
+    collapseDiagram.child('fix-nodes', fixNodesMode);
 
     if(sync_url.vals.tips) {
-        var tip = dc_graph.tip();
-        var json_table = dc_graph.tip.html_or_json_table()
+        var tipMode = tip();
+        var json_table = tipHtmlOrJsonTable()
             .json(function(d) {
                 return (d.orig.value.value || d.orig.value).jsontip || JSON.stringify(d.orig.value);
             });
-        tip
+        tipMode
             .showDelay(250)
             .content(json_table);
-        collapseDiagram.child('tip', tip);
+        collapseDiagram.child('tip', tipMode);
     }
     if(sync_url.vals.neighbors) {
-        var highlight_neighbors = dc_graph.highlight_neighbors({
+        var highlightNeighborsMode = highlightNeighbors({
             edgeStroke: 'orangered',
             edgeStrokeWidth: 3
         }).durationOverride(0);
         collapseDiagram
-            .child('highlight-neighbors', highlight_neighbors);
+            .child('highlight-neighbors', highlightNeighborsMode);
     }
 
     const filtered_data = filter_data(graph_data);
@@ -332,4 +334,4 @@ function on_load(filename, error, data) {
 if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL</br><small>or browse local file above right</small>');
 
-dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+loadGraph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));

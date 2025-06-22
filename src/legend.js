@@ -3,7 +3,7 @@
 
 The dc_graph.legend shows labeled examples of nodes & edges, within the frame of a dc_graph.diagram.
 **/
-import { property, deprecateFunction } from './core.js';
+import { property, deprecateFunction, getOriginal } from './core.js';
 import { mode } from './mode.js';
 import { renderSvg } from './render_svg.js';
 
@@ -131,7 +131,7 @@ export function legend(legend_namespace) {
 
     function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
         if(_legend.counter())
-            _counts = _legend.counter()(wnodes.map(get_original), wedges.map(get_original), wports.map(get_original), false);
+            _counts = _legend.counter()(wnodes.map(getOriginal), wedges.map(getOriginal), wports.map(getOriginal), false);
     }
 
     _legend.redraw = deprecateFunction("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
