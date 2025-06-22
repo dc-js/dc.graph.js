@@ -6285,6 +6285,7 @@ dc_graph._engines = [
     },
     {
         names: ['dynadag'],
+        workerName: 'dynagraph',
         instantiate: function(layout, args) {
             return dc_graph.dynagraph_layout(null, layout, args.server);
         }
@@ -6334,7 +6335,7 @@ dc_graph.engines = {
                 engine[p](args[p]);
         });
         if(engine.supportsWebworker && engine.supportsWebworker() && worker)
-            engine = dc_graph.webworker_layout(engine);
+            engine = dc_graph.webworker_layout(engine, entry.workerName);
         return engine;
     },
     available: function() {
@@ -6387,10 +6388,10 @@ dc_graph.engines = {
 
 var _workers = {};
 var NUMBER_RESULTS = 3;
-function create_worker(layoutAlgorithm) {
-    if(!_workers[layoutAlgorithm]) {
-        var worker = _workers[layoutAlgorithm] = {
-            worker: new Worker(script_path() + 'dc.graph.' + layoutAlgorithm + '.worker.js'),
+function create_worker(workerName) {
+    if(!_workers[workerName]) {
+        var worker = _workers[workerName] = {
+            worker: new Worker(script_path() + 'dc.graph.' + workerName + '.worker.js'),
             layouts: {}
         };
         worker.worker.onmessage = function(e) {
@@ -6402,13 +6403,16 @@ function create_worker(layoutAlgorithm) {
                 engine.processExtraWorkerResults.apply(engine, e.data.args.slice(NUMBER_RESULTS));
             worker.layouts[layoutId].dispatch()[e.data.response].apply(null, e.data.args);
         };
+        worker.worker.onerror = function(e) {
+            console.error('Worker error:', e);
+        };
     }
-    return _workers[layoutAlgorithm];
+    return _workers[workerName];
 }
 
-dc_graph.webworker_layout = function(layoutEngine) {
+dc_graph.webworker_layout = function(layoutEngine, workerName) {
     var _tick, _done, _dispatch = d3.dispatch('init', 'start', 'tick', 'end');
-    var _worker = create_worker(layoutEngine.layoutAlgorithm());
+    var _worker = create_worker(workerName || layoutEngine.layoutAlgorithm());
     var engine = {};
     _worker.layouts[layoutEngine.layoutId()] = engine;
 
@@ -7579,7 +7583,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
 
     function mq(x) { // maybe quote
-        if(dc.utils.isNumber(x))
+        if(x === +x) // isNumber
             return x;
         else if(/^[A-Za-z_][A-Za-z0-9_]*$/.test(x))
             return x;
@@ -7688,7 +7692,12 @@ dc_graph.dynagraph_layout = function(id, layout) {
         console.log(text);
         let cmds = null;
         try {
-            cmds = window.parseIncrface(text);
+            const parseIncrface = self.parseIncrface || (self.incrface && self.incrface.parse);
+            if(!parseIncrface) {
+                console.log('parseIncrface not available, skipping');
+                return;
+            }
+            cmds = parseIncrface(text);
         } catch(xep) {
             console.log('incrface parse failed', xep)
         }
@@ -7726,7 +7735,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
 
     function init(options) {
-        window.receiveIncr = receiveIncr;
+        self.receiveIncr = receiveIncr;
         _opened = false;
         _open_graph = `open graph ${mq(_Gname)} ${print_incr_attrs(dg2incr_graph_attrs())}`
     }
@@ -7788,7 +7797,9 @@ dc_graph.dynagraph_layout = function(id, layout) {
                 ... _linesOut,
                 `unlock graph ${mq(_Gname)}`
             ] : _linesOut;
-            console.log(window.incrface_input = [...open, ...actions].join('\n'));
+            const input = [...open, ...actions].join('\n');
+            console.log('dynagraph input:', input);
+            self.incrface_input = input;
             _linesOut = [];
         }
         else _done();
@@ -7806,7 +7817,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
             return _layoutId;
         },
         supportsWebworker: function() {
-            return false;
+            return true;
         },
         resolution: property({x: 5, y: 5}),
         defaultsize: property({width: 50, height: 50}),
@@ -7842,7 +7853,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     return _layout;
 };
 
-dc_graph.tree_layout.scripts = [];
+dc_graph.dynagraph_layout.scripts = ['d3.js', 'dynagraph-wasm.js', 'incrface-umd.js'];
 
 /**
  * `dc_graph.d3_force_layout` is an adaptor for d3-force layouts in dc.graph.js

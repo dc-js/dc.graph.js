@@ -132,7 +132,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
 
     function mq(x) { // maybe quote
-        if(dc.utils.isNumber(x))
+        if(x === +x) // isNumber
             return x;
         else if(/^[A-Za-z_][A-Za-z0-9_]*$/.test(x))
             return x;
@@ -241,7 +241,12 @@ dc_graph.dynagraph_layout = function(id, layout) {
         console.log(text);
         let cmds = null;
         try {
-            cmds = window.parseIncrface(text);
+            const parseIncrface = self.parseIncrface || (self.incrface &amp;&amp; self.incrface.parse);
+            if(!parseIncrface) {
+                console.log('parseIncrface not available, skipping');
+                return;
+            }
+            cmds = parseIncrface(text);
         } catch(xep) {
             console.log('incrface parse failed', xep)
         }
@@ -279,7 +284,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     }
 
     function init(options) {
-        window.receiveIncr = receiveIncr;
+        self.receiveIncr = receiveIncr;
         _opened = false;
         _open_graph = `open graph ${mq(_Gname)} ${print_incr_attrs(dg2incr_graph_attrs())}`
     }
@@ -341,7 +346,9 @@ dc_graph.dynagraph_layout = function(id, layout) {
                 ... _linesOut,
                 `unlock graph ${mq(_Gname)}`
             ] : _linesOut;
-            console.log(window.incrface_input = [...open, ...actions].join('\n'));
+            const input = [...open, ...actions].join('\n');
+            console.log('dynagraph input:', input);
+            self.incrface_input = input;
             _linesOut = [];
         }
         else _done();
@@ -359,7 +366,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
             return _layoutId;
         },
         supportsWebworker: function() {
-            return false;
+            return true;
         },
         resolution: property({x: 5, y: 5}),
         defaultsize: property({width: 50, height: 50}),
@@ -395,7 +402,7 @@ dc_graph.dynagraph_layout = function(id, layout) {
     return _layout;
 };
 
-dc_graph.tree_layout.scripts = [];
+dc_graph.dynagraph_layout.scripts = ['d3.js', 'dynagraph-wasm.js', 'incrface-umd.js'];
 </pre>
     </article>
 </section>

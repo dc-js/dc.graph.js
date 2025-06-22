@@ -41,8 +41,8 @@ Module = {
         const text = args.join(' ');
         // console.log('incrface received');
         // console.log(text);
-        if(window.receiveIncr)
-            window.receiveIncr(text)
+        if(self.receiveIncr)
+            self.receiveIncr(text)
     }
 };
 // end include: /Users/gordon/src/dynagraph/incrface-print.js
@@ -933,7 +933,7 @@ function dbg(...args) {
 // end include: runtime_debug.js
 // === Body ===
 
-function get_incrface_input() { if(window.incrface_input) { let ii = window.incrface_input + '\n@'; window.incrface_input = null; return stringToNewUTF8(ii); } return null; }
+function get_incrface_input() { if(self.incrface_input) { let ii = self.incrface_input + '\n@'; self.incrface_input = null; return stringToNewUTF8(ii); } return null; }
 
 // end include: preamble.js
 

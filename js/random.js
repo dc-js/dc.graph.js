@@ -78,6 +78,7 @@ growingDiagram
     .width('auto')
     .height('auto')
     .restrictPan(true)
+    .mouseZoomable(true)
     .zoomExtent([0.1, 1.5])
     .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
     .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group)
