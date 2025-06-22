@@ -1,6 +1,8 @@
+import { availableShapes, flatGroup, diagram, spawnEngine } from './dc-graph.js';
+
 var qs = querystring.parse();
 
-var shapes = dc_graph.available_shapes();
+var shapes = availableShapes();
 
 function rand(n) {
     return Math.floor(Math.random()*n);
@@ -25,15 +27,15 @@ for(var i=0; i<nshapes; ++i) {
     });
 }
 
-var node_flat = dc_graph.flat_group.make(nodes, function(d) { return d.id; }),
-    edge_flat = dc_graph.flat_group.make([], function(d) { return d.source + '-' + d.target; });
+var node_flat = flatGroup.make(nodes, function(d) { return d.id; }),
+    edge_flat = flatGroup.make([], function(d) { return d.source + '-' + d.target; });
 
-var shapeDiagram = dc_graph.diagram('#graph');
+var shapeDiagram = diagram('#graph');
 
 shapeDiagram
     .width(window.innerWidth)
     .height(window.innerHeight)
-    .layoutEngine(dc_graph.spawn_engine('cola'))
+    .layoutEngine(spawnEngine('cola'))
     .transitionDuration(500)
     .stageTransitions('insmod')
     .showLayoutSteps(false)
