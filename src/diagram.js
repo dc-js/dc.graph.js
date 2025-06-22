@@ -17,6 +17,7 @@ import { webworkerLayout } from './webworker_layout.js';
 import { wheelEdges } from './generate.js';
 import { renderSvg } from './render_svg.js';
 import { cascade } from './utils.js';
+import { builtinArrows } from './arrows.js';
 
 /**
  * `diagram` is a dc.js-compatible network visualization component. It registers in
@@ -1221,17 +1222,18 @@ export function diagram(parent, chartGroup) {
 
     /**
      * Specifies another kind of child layer or interface. For example, this can
-     * be used to display tooltips on nodes using `dc_graph.tip`.
+     * be used to display tooltips on nodes using `tip`.
 
      * The child needs to support a `parent` method, the diagram to modify.
      * @method child
-     * @memberof dc_graph.diagram
+     * @memberof diagram
      * @instance
      * @param {String} [id] - the name of the child to modify or add
      * @param {Object} [object] - the child object to add, or null to remove
      * @example
      * // Display tooltips on node hover, via the d3-tip library
-     * var tip = dc_graph.tip()
+     * import { tip } from 'dc-graph';
+     * var myTip = tip()
      * tip.content(function(n, k) {
      *   // you can do an asynchronous call here, e.g. d3.json, if you need
      *   // to fetch data to show the tooltip - just call k() with the content
@@ -1302,9 +1304,11 @@ export function diagram(parent, chartGroup) {
      * @param {Object} [engine=null] - the layout engine to use
      * @example
      * // use cola with no webworker
-     * diagram.layoutEngine(dc_graph.cola_layout());
+     * import { colaLayout } from 'dc-graph';
+     * diagram.layoutEngine(colaLayout());
      * // use dagre with a webworker
-     * diagram.layoutEngine(dc_graph.webworker_layout(dc_graph.dagre_layout()));
+     * import { webworkerLayout, dagreLayout } from 'dc-graph';
+     * diagram.layoutEngine(webworkerLayout(dagreLayout()));
      **/
     _diagram.layoutEngine = property(null).react(function(val) {
         if(val && val.parent)
@@ -1593,7 +1597,7 @@ export function diagram(parent, chartGroup) {
         var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
         var clusters = _diagram.clusterGroup() ? _diagram.clusterGroup().all() : [];
         if(_running) {
-            throw new Error('dc_graph.diagram.redraw already running!');
+            throw new Error('diagram.redraw already running!');
         }
         _running = true;
 
@@ -2509,8 +2513,8 @@ export function diagram(parent, chartGroup) {
         return _arrows;
     };
 
-    Object.keys(dc_graph.builtin_arrows).forEach(function(aname) {
-        var defn = dc_graph.builtin_arrows[aname];
+    Object.keys(builtinArrows).forEach(function(aname) {
+        var defn = builtinArrows[aname];
         _diagram.defineArrow(aname, defn);
     });
 
