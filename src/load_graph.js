@@ -108,7 +108,7 @@ export const fileFormats = [
         exts: ['gv', 'dot'],
         mimes: 'text/vnd.graphviz',
         from_url: function(url, callback) {
-            d3.text(url, process_dot.bind(null, callback));
+            d3.text(url, processDot.bind(null, callback));
         },
         from_text: function(text, callback) {
             processDot(callback, null, text);
@@ -118,7 +118,7 @@ export const fileFormats = [
         exts: 'psv',
         mimes: 'text/psv',
         from_url: function(url, callback) {
-            d3.dsv('|', 'text/plain')(url, process_dsv.bind(null, callback));
+            d3.dsv('|', 'text/plain')(url, processDsv.bind(null, callback));
         },
         from_text: function(text, callback) {
             processDsv(callback, null, d3.dsv('|').parse(text));
@@ -128,7 +128,7 @@ export const fileFormats = [
         exts: 'csv',
         mimes: 'text/csv',
         from_url: function(url, callback) {
-            d3.csv(url, process_dsv.bind(null, callback));
+            d3.csv(url, processDsv.bind(null, callback));
         },
         from_text: function(text, callback) {
             processDsv(callback, null, d3.csv.parse(text));
