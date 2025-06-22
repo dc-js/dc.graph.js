@@ -369,7 +369,7 @@ export function fitShape(shape, diagram) {
                 if(content && diagram.content(content).padding)
                     padding = diagram.content(content).padding(n);
                 else {
-                    var padding2 = node_label_padding(diagram, n);
+                    var padding2 = nodeLabelPadding(diagram, n);
                     padding = {
                         x: padding2.x*2,
                         y: padding2.y*2
