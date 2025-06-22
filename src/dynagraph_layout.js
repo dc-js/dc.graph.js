@@ -105,71 +105,103 @@ export function dynagraphLayout(id, layout) {
             switch(`${action}_${kind}`) {
                 case 'open_graph': {
                     const {attrs} = cmd;
-                    console.log('open graph', attrs);
-                    console.log('open graph bb', bb)
+                    if(_layout.verbose()) {
+                        console.log('open graph', attrs);
+                        console.log('open graph bb', bb)
+                    }
                     bb = incr2dg_bb(attrs.bb)
-                    console.log('open graph bb', bb)
+                    if(_layout.verbose()) {
+                        console.log('open graph bb', bb)
+                    }
                     break;
                 }
                 case 'modify_graph': {
                     const {attrs} = cmd;
-                    console.log('modify graph', attrs);
-                    console.log('modify graph bb', bb)
+                    if(_layout.verbose()) {
+                        console.log('modify graph', attrs);
+                        console.log('modify graph bb', bb)
+                    }
                     bb = incr2dg_bb(attrs.bb)
-                    console.log('modify graph bb', bb)
+                    if(_layout.verbose()) {
+                        console.log('modify graph bb', bb)
+                    }
                     break;
                 }
                 case 'close_graph': {
-                    console.log('close graph');
+                    if(_layout.verbose()) {
+                        console.log('close graph');
+                    }
                     break;
                 }
                 case 'insert_node': {
                     const {node, attrs} = cmd;
-                    console.log('insert node', node, attrs);
-                    console.log('insert node2', _nodes[node])
+                    if(_layout.verbose()) {
+                        console.log('insert node', node, attrs);
+                        console.log('insert node2', _nodes[node])
+                    }
                     Object.assign(_nodes[node], incr2dg_node_attrs(attrs));
-                    console.log('insert node3', _nodes[node])
+                    if(_layout.verbose()) {
+                        console.log('insert node3', _nodes[node])
+                    }
                     break;
                 }
                 case 'modify_node': {
                     const {node, attrs} = cmd;
-                    console.log('modify node', node, attrs);
-                    console.log('modify node2', _nodes[node])
+                    if(_layout.verbose()) {
+                        console.log('modify node', node, attrs);
+                        console.log('modify node2', _nodes[node])
+                    }
                     Object.assign(_nodes[node], incr2dg_node_attrs(attrs));
-                    console.log('modify node3', _nodes[node])
+                    if(_layout.verbose()) {
+                        console.log('modify node3', _nodes[node])
+                    }
                     break;
                 }
                 case 'delete_node': {
                     const {node} = cmd;
-                    console.log('delete node', node);
+                    if(_layout.verbose()) {
+                        console.log('delete node', node);
+                    }
                     break;
                 }
                 case 'insert_edge': {
                     const {edge, source, target, attrs} = cmd;
-                    console.log('insert edge', edge, source, target, attrs);
-                    console.log('insert edge2', _edges[edge])
+                    if(_layout.verbose()) {
+                        console.log('insert edge', edge, source, target, attrs);
+                        console.log('insert edge2', _edges[edge])
+                    }
                     Object.assign(_edges[edge], incr2dg_edge_attrs(attrs));
-                    console.log('insert edge3', _edges[edge])
+                    if(_layout.verbose()) {
+                        console.log('insert edge3', _edges[edge])
+                    }
                     break;
                 }
                 case 'modify_edge': {
                     const {edge, attrs} = cmd;
-                    console.log('modify edge', edge, attrs);
-                    console.log('modify edge2', _edges[edge])
+                    if(_layout.verbose()) {
+                        console.log('modify edge', edge, attrs);
+                        console.log('modify edge2', _edges[edge])
+                    }
                     Object.assign(_edges[edge], incr2dg_edge_attrs(attrs));
-                    console.log('modify edge3', _edges[edge])
+                    if(_layout.verbose()) {
+                        console.log('modify edge3', _edges[edge])
+                    }
                     break;
                 }
                 case 'delete_edge': {
                     const {edge} = cmd;
-                    console.log('delete edge', edge);
+                    if(_layout.verbose()) {
+                        console.log('delete edge', edge);
+                    }
                     break;
                 }
             }
         }
     }
     function receiveIncr(text) {
-        console.log(text);
+        if(_layout.verbose()) {
+            console.log(text);
+        }
         let cmds = null;
         try {
             const parseIncrface = self.parseIncrface || (self.incrface && self.incrface.parse);
@@ -278,7 +310,9 @@ export function dynagraphLayout(id, layout) {
                 `unlock graph ${mq(_Gname)}`
             ] : _linesOut;
             const input = [...open, ...actions].join('\n');
-            console.log('dynagraph input:', input);
+            if(_layout.verbose()) {
+                console.log('dynagraph input:', input);
+            }
             self.incrface_input = input;
             _linesOut = [];
         }
@@ -302,6 +336,7 @@ export function dynagraphLayout(id, layout) {
         resolution: property({x: 5, y: 5}),
         defaultsize: property({width: 50, height: 50}),
         separation: property({x: 20, y: 20}),
+        verbose: property(false),
         on: function(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
@@ -325,7 +360,7 @@ export function dynagraphLayout(id, layout) {
             stop();
         },
         optionNames: function() {
-            return ['resolution', 'defaultsize', 'separation'];
+            return ['resolution', 'defaultsize', 'separation', 'verbose'];
         },
         populateLayoutNode: function(layout, node) {},
         populateLayoutEdge: function() {}
