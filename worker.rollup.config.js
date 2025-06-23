@@ -1,7 +1,10 @@
+import json from '@rollup/plugin-json';
+
 // Rollup configuration for web workers
 export default [
     {
         input: 'src/workers/cola-worker.js',
+        plugins: [json()],
         output: {
             file: 'dc.graph.cola.worker.js',
             format: 'iife',
@@ -30,6 +33,7 @@ importScripts('d3.js', 'cola.js');`
     },
     {
         input: 'src/workers/dagre-worker.js',
+        plugins: [json()],
         output: {
             file: 'dc.graph.dagre.worker.js',
             format: 'iife',
@@ -58,6 +62,7 @@ importScripts('d3.js', 'dagre.js');`
     },
     {
         input: 'src/workers/d3v4-force-worker.js',
+        plugins: [json()],
         output: {
             file: 'dc.graph.d3v4-force.worker.js',
             format: 'iife',
@@ -86,6 +91,7 @@ importScripts('d3.js', 'd3v4-force.js');`
     },
     {
         input: 'src/workers/d3-force-worker.js',
+        plugins: [json()],
         output: {
             file: 'dc.graph.d3-force.worker.js',
             format: 'iife',
@@ -114,6 +120,7 @@ importScripts('d3.js');`
     },
     {
         input: 'src/workers/dynagraph-worker.js',
+        plugins: [json()],
         output: {
             file: 'dc.graph.dynagraph.worker.js',
             format: 'iife',
