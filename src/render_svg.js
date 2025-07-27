@@ -725,7 +725,7 @@ export function renderSvg() {
     };
 
     _renderer.fireTSEvent = function(dispatch, drawState) {
-        dispatch.call("transitionsStarted", drawState.node, drawState.edge, drawState.edgeHover);
+        dispatch.call("transitionsStarted", null, drawState.node, drawState.edge, drawState.edgeHover);
     };
 
     _renderer.calculateBounds = function(drawState) {

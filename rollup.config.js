@@ -18,7 +18,8 @@ export default {
     'viz.js',
     'css-layout',
     'metagraph',
-    'queue-async'
+    'queue-async',
+    'tippy.js'
   ],
   plugins: [
     json(),

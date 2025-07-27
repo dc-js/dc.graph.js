@@ -34,6 +34,7 @@
     "ink-docstrap": "^1.3.2",
     "metagraph": "^0.0.7",
     "queue-async": "~1.x",
+    "tippy.js": "^6.3.7",
     "viz.js": "^1.8.2",
     "webcola": "^3.4.0",
     "yoga-layout": "^3.2.1"
@@ -47,7 +48,6 @@
     "classlist-polyfill": "1.2.x",
     "d3-force": "^1.2.1",
     "d3-force-straighten-paths": "^1.0.2",
-    "d3-tip": "0.7.1",
     "graphlib-dot": "dagrejs/graphlib-dot#v0.6.4",
     "grunt": "^1.3.0",
     "grunt-cli": "^1.5.0",
@@ -74,7 +74,7 @@
     "x-editable": "1.5.x"
   },
   "scripts": {
-    "vendor": "cp sync-url-options.js web/js/ && cp querystring.js web/js/",
+    "vendor": "cp sync-url-options.js web/js/ && cp querystring.js web/js/ && cp dc.graph.css web/css/",
     "build": "rollup -c && cp dist/dc-graph.js web/js/ && cp dist/dc-graph.js.map web/js/",
     "build:workers": "rollup -c worker.rollup.config.js && cp *.worker.js web/js/ && cp *.worker.js.map web/js/",
     "build:all": "npm run vendor && npm run build && npm run build:workers",

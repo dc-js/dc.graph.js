@@ -52,7 +52,7 @@ const options = {
     },
     datalink: false,
     arrows: false,
-    tips: false,
+    tips: true,
     neighbors: true
 };
 
