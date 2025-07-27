@@ -22,24 +22,26 @@ export function grid() {
         _gridLayer.enter().append('g').attr('class', 'grid-layer');
         var ofs = _mode.wholeOnLines() ? 0 : 0.5;
         var vline_data = _scale >= _mode.threshold() ? range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1]) + 1) : [];
-        var vlines = _gridLayer.selectAll('line.grid-line.vertical')
+        let vlines = _gridLayer.selectAll('line.grid-line.vertical')
             .data(vline_data, function(d) { return d - ofs; });
         vlines.exit().remove();
-        vlines.enter().append('line')
+        const vlinesEnter = vlines.enter().append('line')
             .attr('class', 'grid-line vertical')
             .attr('x1', d => d - ofs)
             .attr('x2', d => d - ofs);
+        vlines = vlines.merge(vlinesEnter);
         vlines.attr('stroke-width', 1/_scale)
             .attr('y1', _yDomain[0])
             .attr('y2', _yDomain[1]);
         var hline_data = _scale >= _mode.threshold() ? range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1]) + 1) : [];
-        var hlines = _gridLayer.selectAll('line.grid-line.horizontal')
+        let hlines = _gridLayer.selectAll('line.grid-line.horizontal')
             .data(hline_data, function(d) { return d - ofs; });
         hlines.exit().remove();
-        hlines.enter().append('line')
+        const hlinesEnter = hlines.enter().append('line')
             .attr('class', 'grid-line horizontal')
             .attr('y1', d => d - ofs)
             .attr('y2', d => d - ofs);
+        hlines = hlines.merge(hlinesEnter);
         hlines.attr('stroke-width', 1/_scale)
             .attr('x1', _xDomain[0])
             .attr('x2', _xDomain[1]);

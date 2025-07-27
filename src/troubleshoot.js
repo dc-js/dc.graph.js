@@ -16,9 +16,10 @@ export function troubleshoot() {
                 y: n.cola.y
             };
         });
-        var crosshairs = _debugLayer.selectAll('path.nodecenter').data(centers);
+        let crosshairs = _debugLayer.selectAll('path.nodecenter').data(centers);
         crosshairs.exit().remove();
-        crosshairs.enter().append('path').attr('class', 'nodecenter');
+        const crosshairsEnter = crosshairs.enter().append('path').attr('class', 'nodecenter');
+        crosshairs = crosshairs.merge(crosshairsEnter);
         crosshairs.attr('d', c => 'M' + (c.x - _mode.xhairWidth()/2) + ',' + c.y + ' h' + _mode.xhairWidth() +
                     ' M' + c.x + ',' + (c.y - _mode.xhairHeight()/2) + ' v' + _mode.xhairHeight())
             .attr('opacity', _mode.xhairOpacity() !== null ? _mode.xhairOpacity() : _mode.opacity())
@@ -99,8 +100,9 @@ export function troubleshoot() {
         var tp = _debugLayer.selectAll('path.tail-point').data(tailpts);
         draw_x(tp, 'tail-point', _mode.arrowTailColor());
 
-        var domain = _debugLayer.selectAll('rect.domain').data([0]);
-        domain.enter().append('rect');
+        let domain = _debugLayer.selectAll('rect.domain').data([0]);
+        const domainEnter = domain.enter().append('rect');
+        domain = domain.merge(domainEnter);
         var xd = _mode.parent().x().domain(), yd = _mode.parent().y().domain();
         domain.attr('class', 'domain')
             .attr('fill', 'none')

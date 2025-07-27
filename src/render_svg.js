@@ -1,5 +1,5 @@
 import { select, selectAll } from 'd3-selection';
-import { zoom } from 'd3-zoom';
+import { zoom, zoomIdentity, zoomTransform } from 'd3-zoom';
 import { compose, generatePath } from './utils.js'
 import { property, identity } from './core.js';
 import { keyboard as keyboardMode } from './keyboard.js';
@@ -42,6 +42,13 @@ export function renderSvg() {
                 content
                     .call(fitShape(shape, _renderer.parent()));
             });
+        });
+        // Ensure nodes without content also get their dimensions calculated
+        var nodesWithoutContent = node.filter(function(n) {
+            return !_renderer.parent().nodeContent.eval(n);
+        });
+        _renderer.parent().forEachShape(nodesWithoutContent, function(shape, node) {
+            node.call(fitShape(shape, _renderer.parent()));
         });
         _renderer.parent().forEachShape(node, function(shape, node) {
             node.call(shape.update);
@@ -108,8 +115,9 @@ export function renderSvg() {
     };
 
     _renderer.rezoom = function(oldWidth, oldHeight, newWidth, newHeight) {
-        var scale = _zoom.scale(), translate = _zoom.translate();
-        _zoom.scale(1).translate([0,0]);
+        const currentTransform = zoomTransform(_svg.node());
+        const scale = currentTransform.k, translate = [currentTransform.x, currentTransform.y];
+        _svg.call(_zoom.transform, zoomIdentity);
         var xDomain = _renderer.parent().x().domain(), yDomain = _renderer.parent().y().domain();
         _renderer.parent().x()
             .domain([xDomain[0], xDomain[0] + (xDomain[1] - xDomain[0])*newWidth/oldWidth])
@@ -132,23 +140,26 @@ export function renderSvg() {
     };
 
     _renderer.translate = function(_) {
-        if(!arguments.length)
-            return _zoom.translate();
-        _zoom.translate(_);
+        if(!arguments.length) {
+            const transform = zoomTransform(_svg.node());
+            return [transform.x, transform.y];
+        }
+        const currentTransform = zoomTransform(_svg.node());
+        _svg.call(_zoom.transform, zoomIdentity.translate(_[0], _[1]).scale(currentTransform.k));
         return this;
     };
 
     _renderer.scale = function(_) {
-        if(!arguments.length)
-            return _zoom ? _zoom.scale() : 1;
-        _zoom.scale(_);
+        if(!arguments.length) {
+            if(!_zoom) return 1;
+            const transform = zoomTransform(_svg.node());
+            return transform.k;
+        }
+        const currentTransform = zoomTransform(_svg.node());
+        _svg.call(_zoom.transform, zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(_));
         return this;
     };
 
-    // argh
-    _renderer.commitTranslateScale = function() {
-        _zoom.event(_svg);
-    };
 
     _renderer.zoom = function(_) {
         if(!arguments.length)
@@ -168,6 +179,7 @@ export function renderSvg() {
             .each(function(e) {
                 e.deleted = false;
             });
+        edge = edge.merge(edgeEnter);
         edge.exit().each(function(e) {
             e.deleted = true;
         }).transition()
@@ -185,6 +197,7 @@ export function renderSvg() {
                 })
                 .attr('fill', 'none')
                 .attr('opacity', 0);
+        edgeArrows = edgeArrows.merge(edgeArrowsEnter);
         edgeArrows.exit().transition()
             .duration(_renderer.parent().stagedDuration())
             .delay(_renderer.parent().deleteDelay())
@@ -219,6 +232,7 @@ export function renderSvg() {
                 _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
                     .attr('visibility', 'hidden');
             });
+        edgeHover = edgeHover.merge(edgeHoverEnter);
         edgeHover.exit().remove();
 
         var edgeLabels = _edgeLayer.selectAll('g.edge-label-wrapper')
@@ -230,12 +244,14 @@ export function renderSvg() {
               .attr('id', function(e) {
                   return _renderer.parent().edgeId(e) + '-label';
               });
+        edgeLabels = edgeLabels.merge(edgeLabelsEnter);
         var textPaths = _defs.selectAll('path.edge-label-path')
                 .data(wedges, _renderer.parent().textpathId);
         var textPathsEnter = textPaths.enter()
                 .append('svg:path')
                 .attr('class', 'edge-label-path')
                 .attr('id', _renderer.parent().textpathId);
+        textPaths = textPaths.merge(textPathsEnter);
         edgeLabels.exit().transition()
             .duration(_renderer.parent().stagedDuration())
             .delay(_renderer.parent().deleteDelay())
@@ -250,6 +266,7 @@ export function renderSvg() {
             .each(function(n) {
                 n.deleted = false;
             });
+        node = node.merge(nodeEnter);
         // .call(_d3cola.drag);
 
         _renderer.renderNode(nodeEnter);

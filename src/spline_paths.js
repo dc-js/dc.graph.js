@@ -386,14 +386,15 @@ export function splinePaths(pathreader, pathprops, hoverprops, selectprops, path
             selected = _selected || [];
 
         // edge spline
-        var edge = _layer.selectAll(".spline-edge").data(paths, function(path) { return path_keys(path).join(','); });
+        let edge = _layer.selectAll(".spline-edge").data(paths, function(path) { return path_keys(path).join(','); });
         edge.exit().remove();
-        var edgeEnter = edge.enter().append("svg:path")
+        const edgeEnter = edge.enter().append("svg:path")
             .attr('class', 'spline-edge')
             .attr('id', function(d, i) { return "spline-path-"+i; })
             .attr('stroke-width', pathprops.edgeStrokeWidth || 1)
             .attr('fill', 'none')
             .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _mode.avoidSharpTurns()); });
+        edge = edge.merge(edgeEnter);
         edge
             .attr('stroke', function(p) {
                 return selected.indexOf(p) !== -1 && selectprops.edgeStroke ||
@@ -419,10 +420,10 @@ export function splinePaths(pathreader, pathprops, hoverprops, selectprops, path
             .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _mode.avoidSharpTurns()); });
 
         // another wider copy of the edge just for hover events
-        var edgeHover = _layer.selectAll('.spline-edge-hover')
+        let edgeHover = _layer.selectAll('.spline-edge-hover')
             .data(paths, function(path) { return path_keys(path).join(','); });
         edgeHover.exit().remove();
-        var edgeHoverEnter = edgeHover.enter().append('svg:path')
+        const edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'spline-edge-hover')
             .attr('d', function(d) { return genPath(d, true, pathprops.lineTension, _mode.avoidSharpTurns()); })
             .attr('opacity', 0)
@@ -446,6 +447,7 @@ export function splinePaths(pathreader, pathprops, hoverprops, selectprops, path
                     selected = [d];
                 highlight_paths_group.select_changed(selected);
              });
+        edgeHover = edgeHover.merge(edgeHoverEnter);
         edgeHover.transition().duration(_mode.parent().transitionDuration())
             .attr('d', function(d) { return genPath(d, false, pathprops.lineTension, _mode.avoidSharpTurns()); });
     };

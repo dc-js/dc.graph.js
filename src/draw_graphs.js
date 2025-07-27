@@ -24,15 +24,16 @@ export function drawGraphs(options) {
         var data = _hintData.filter(function(h) {
             return h.source && h.target;
         });
-        var line = _edgeLayer.selectAll('line.hint-edge').data(data);
+        let line = _edgeLayer.selectAll('line.hint-edge').data(data);
         line.exit().remove();
-        line.enter().append('line')
+        const lineEnter = line.enter().append('line')
             .attr('class', 'hint-edge')
             .style({
                 fill: 'none',
                 stroke: 'black',
                 'pointer-events': 'none'
             });
+        line = line.merge(lineEnter);
 
         line.attr('x1', n => n.source.x)
             .attr('y1', n => n.source.y)
@@ -59,10 +60,11 @@ export function drawGraphs(options) {
         else data = [];
 
         var size = _mode.crossSize(), wid = _mode.crossWidth();
-        var cross = _edgeLayer.selectAll('polygon.graph-draw-crossout').data(data);
+        let cross = _edgeLayer.selectAll('polygon.graph-draw-crossout').data(data);
         cross.exit().remove();
-        cross.enter().append('polygon')
+        const crossEnter = cross.enter().append('polygon')
             .attr('class', 'graph-draw-crossout');
+        cross = cross.merge(crossEnter);
         cross
             .attr('points', function(d) {
                 var x = d.x, y = d.y;

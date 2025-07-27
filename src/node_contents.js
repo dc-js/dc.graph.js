@@ -6,11 +6,12 @@ export function textContents() {
     var _contents = {
         parent: property(null),
         update: function(container) {
-            var text = container.selectAll('text.node-label')
+            let text = container.selectAll('text.node-label')
                     .data(function(n) { return [n]; });
-            text.enter().append('text')
+            const textEnter = text.enter().append('text')
                 .attr('class', 'node-label');
-            var tspan = text.selectAll('tspan').data(function(n) {
+            text = text.merge(textEnter);
+            let tspan = text.selectAll('tspan').data(function(n) {
                 var lines = _contents.parent().nodeLabel.eval(n);
                 if(!lines)
                     return [];
@@ -24,7 +25,8 @@ export function textContents() {
                     first += 0.3;
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
-            tspan.enter().append('tspan');
+            const tspanEnter = tspan.enter().append('tspan');
+            tspan = tspan.merge(tspanEnter);
             tspan
                 .attr('text-anchor', 'start')
                 .attr('text-decoration', function(line) {
@@ -95,15 +97,16 @@ export function withIconContents(contents, width, height) {
             };
         },
         update: function(container) {
-            var g = container.selectAll('g.with-icon')
+            let g = container.selectAll('g.with-icon')
                     .data(function(n) { return [n]; });
-            var gEnter = g.enter();
+            const gEnter = g.enter();
             gEnter.append('g')
                 .attr('class', 'with-icon')
               .append('image')
                 .attr('class', 'icon')
                 .attr('width', width + 'px')
                 .attr('height', height + 'px');
+            g = g.merge(gEnter.select('g.with-icon'));
             g.call(contents.update);
             contents.selectContent(g)
                 .attr('transform',  'translate(' + width/2 + ')');

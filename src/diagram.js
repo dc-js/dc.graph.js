@@ -4,7 +4,7 @@
  */
 
 // External dependencies as ES6 modules
-import { dispatch, scaleLinear, ascending, sum, set, select, json } from 'd3';
+import { dispatch, scaleLinear, ascending, sum, set, select, json, event } from 'd3';
 import { MarginMixin, utils, BadArgumentException, pluck, redrawAll, registerChart, renderAll } from 'dc';
 import * as crossfilter from 'crossfilter2';
 import { uuid, getOriginal, property, identity, deprecatedProperty, namedChildren, getBBoxNoThrow, isIe, isSafari, constants, deprecateFunction, onetimeTrace, traceFunction } from './core.js';
@@ -2033,7 +2033,7 @@ export function diagram(parent, chartGroup) {
             engine.data(
                 { width: _diagram.width(), height: _diagram.height() },
                 wnodes.map(function(v) {
-                    var lv = Object.assign({}, v.cola, v.dcg_shape);
+                    var lv = Object.assign({}, v.dcg_shape, v.cola);
                     if(engine.annotateNode)
                         engine.annotateNode(lv, v);
                     else if(engine.extractNodeAttrs)

@@ -194,9 +194,10 @@ export function symbolPortStyle() {
             return nodePorts[_style.parent().nodeKey.eval(n)] || [];
         }, name_or_edge);
         port.exit().remove();
-        var portEnter = port.enter().append('g')
+        const portEnter = port.enter().append('g')
             .attr('class', 'port')
             .attr('transform', port_transform);
+        port = port.merge(portEnter);
         port.transition('port-position')
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
@@ -206,11 +207,12 @@ export function symbolPortStyle() {
             return outline_fill(p) !== 'none' ? [p] : [];
         });
         outline.exit().remove();
-        var outlineEnter = outline.enter().append(_style.outline().tag())
+        const outlineEnter = outline.enter().append(_style.outline().tag())
             .attr('class', 'port-outline')
             .attr('fill', outline_fill)
             .attr('stroke-width', outline_stroke_width)
             .attr('stroke', outline_stroke);
+        outline = outline.merge(outlineEnter);
         if(_style.outline().init)
             outlineEnter.call(_style.outline().init);
         outlineEnter
