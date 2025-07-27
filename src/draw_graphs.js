@@ -4,7 +4,7 @@ import { eventCoords, promiseIdentity } from './utils.js';
 import { selectThingsGroup } from './select_things.js';
 import { labelThingsGroup } from './label_things.js';
 import { fixNodesGroup } from './fix_nodes.js';
-import { event as d3Event } from 'd3-selection';
+import { event as d3Event, select } from 'd3-selection';
 
 export function drawGraphs(options) {
     var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes'),
@@ -29,12 +29,11 @@ export function drawGraphs(options) {
         line.exit().remove();
         const lineEnter = line.enter().append('line')
             .attr('class', 'hint-edge')
-            .style({
-                fill: 'none',
-                stroke: 'black',
-                'pointer-events': 'none'
-            });
-        line = line.merge(lineEnter);
+            .attr('stroke', _mode.hintStroke())
+            .style('fill', 'none')
+            .style('pointer-events', 'none');
+        
+        line = lineEnter.merge(line);
 
         line.attr('x1', n => n.source.x)
             .attr('y1', n => n.source.y)
@@ -152,7 +151,6 @@ export function drawGraphs(options) {
                 } else {
                     if(_mode.conduct().invalidSourceMessage) {
                         msg = _mode.conduct().invalidSourceMessage(_sourceDown);
-                        console.log(msg);
                         if(options.negativeTip) {
                             options.negativeTip
                                 .content(function(_, k) { k(msg); })
@@ -190,7 +188,6 @@ export function drawGraphs(options) {
                         activePort = _mode.usePorts().eventPort(d3Event);
                     else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'out')
                         || diagram.getPort(diagram.nodeKey.eval(n), null, 'in');
-                    console.log('draw_graphs mousedown - activePort:', activePort, 'usePorts:', _mode.usePorts());
                     if(!activePort)
                         return;
                     _sourceDown = {node: n, port: activePort};
@@ -259,8 +256,7 @@ export function drawGraphs(options) {
                                     if(options.positiveTip)
                                         options.positiveTip.hideTip();
                                     msg = _mode.conduct().invalidTargetMessage(_sourceDown, _targetMove);
-                                    console.log(msg);
-                                    if(options.negativeTip) {
+                                                if(options.negativeTip) {
                                         options.negativeTip
                                             .content(function(_, k) { k(msg); })
                                             .displayTip(_mode.usePorts() ? _targetMove.port : _targetMove.node);
@@ -310,6 +306,8 @@ export function drawGraphs(options) {
                 erase_hint();
                 update_crossout();
             });
+        // TODO: Fix zoom behavior to allow mouseup events properly
+        
         diagram.svg()
             .on('mousedown.draw-graphs', function() {
                 _sourceDown = null;
@@ -346,13 +344,18 @@ export function drawGraphs(options) {
                         _mode.conduct().cancelDragEdge(_sourceDown);
                     erase_hint();
                 } else { // click-node
-                    if(event.target === event.currentTarget && _mode.clickCreatesNodes())
+                    if(d3Event.target === d3Event.currentTarget && _mode.clickCreatesNodes())
                         create_node(diagram, eventCoords(diagram, d3Event));
                 }
                 update_crossout();
             });
-        if(!_edgeLayer)
-            _edgeLayer = diagram.g().append('g').attr('class', 'draw-graphs');
+        const diagramG = diagram.g();
+        
+        const edgeLayerSelection = diagramG.selectAll('g.draw-graphs')
+            .data([1]);
+        _edgeLayer = edgeLayerSelection.enter().append('g')
+            .attr('class', 'draw-graphs')
+            .merge(edgeLayerSelection);
     }
 
     function remove(diagram, node, edge, ehover) {
@@ -384,6 +387,9 @@ export function drawGraphs(options) {
     // draw attributes of indicator for failed edge
     _mode.crossSize = property(15);
     _mode.crossWidth = property(5);
+    
+    // hint line stroke color
+    _mode.hintStroke = property('black');
 
     // really this is a behavior or strategy
     _mode.conduct = property({});

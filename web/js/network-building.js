@@ -1,30 +1,32 @@
 import { engines, spawnEngine, diagram, flatGroup, drawGraphs, deleteNodes, deleteThings, labelEdges, labelNodes, selectEdges, selectNodes, selectThingsGroup } from './dc-graph.js';
+import sync_url_options from './sync-url-options.js';
+import dcgraph_domain from './dc.graph.tracker.domain.js';
+import { DataTable, renderAll } from 'dc';
 
-var options = {
+const options = {
     rankdir: 'TB',
     layout: {
         default: 'dagre',
         values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
-        exert: function(val, diagram) {
-            var engine = spawnEngine(val);
+        exert: (val, diagram) => {
+            const engine = spawnEngine(val);
             apply_engine_parameters(engine);
-            diagram
-                .layoutEngine(engine);
+            diagram.layoutEngine(engine);
         }
     },
     shape: 'ellipse',
     worker: true
 };
 
-var drawDiagram = diagram('#graph');
-var sync_url = sync_url_options(options, dcgraph_domain(drawDiagram), drawDiagram);
+const drawDiagram = diagram('#graph');
+const sync_url = sync_url_options(options, dcgraph_domain(drawDiagram), drawDiagram);
 
-var node_flat = flatGroup.make([], function(d) { return d.id; }),
-    edge_flat = flatGroup.make([], function(d) { return d.id; });
+const node_flat = flatGroup.make([], d => d.id),
+    edge_flat = flatGroup.make([], d => d.id);
 
-var engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+const engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
 apply_engine_parameters(engine);
 
 drawDiagram
@@ -37,18 +39,18 @@ drawDiagram
     .showLayoutSteps(false)
     .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
-    .edgeSource(function(e) { return e.value.source; })
-    .edgeTarget(function(e) { return e.value.target; })
+    .edgeSource(e => e.value.source)
+    .edgeTarget(e => e.value.target)
     .nodeShape(sync_url.vals.shape || 'ellipse')
-    .nodeLabel(function(n) { return n.value.label; })
+    .nodeLabel(n => n.value.label)
     .nodeStrokeWidth(0)
     .nodeFill('#001')
     .nodeLabelFill('#eee')
     .nodeLabelPadding({x: 4, y: 4})
-    .nodeFixed(function(n) { return n.value.fixedPos; })
-    .edgeLabel(function(e) { return e.value.label || ''; })
-    .edgeLength(function(e) {
-        var e2 = drawDiagram.getWholeEdge(e.key);
+    .nodeFixed(n => n.value.fixedPos)
+    .edgeLabel(e => e.value.label || '')
+    .edgeLength(e => {
+        const e2 = drawDiagram.getWholeEdge(e.key);
         return 10 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
     })
     .edgeArrowhead('vee');
@@ -78,48 +80,43 @@ function apply_engine_parameters(engine) {
 
 drawDiagram.timeLimit(1000);
 
-var select_nodes = selectNodes({
+const select_nodes = selectNodes({
     nodeStroke: '#16b',
     nodeStrokeWidth: 5,
     nodeRadius: 22.5
 }).multipleSelect(false);
 
-var select_edges = selectEdges({
+const select_edges = selectEdges({
     edgeStroke: 'darkgreen',
     edgeStrokeWidth: 2
 }).multipleSelect(false);
 
-var label_nodes = labelNodes({class: 'node-label'}),
+const label_nodes = labelNodes({class: 'node-label'}),
     label_edges = labelEdges({class: 'edge-label'});
 
-var delete_nodes = deleteNodes()
-        .crossfilterAccessor(function(diagram) {
-            return node_flat.crossfilter;
-        })
-        .dimensionAccessor(function(diagram) {
-            return node_flat.dimension;
-        });
+const delete_nodes = deleteNodes()
+        .crossfilterAccessor(diagram => node_flat.crossfilter)
+        .dimensionAccessor(diagram => node_flat.dimension);
 
-var delete_edges = deleteThings(
+const delete_edges = deleteThings(
     selectThingsGroup('select-edges-group', 'select-edges'),
     'delete-edges')
-        .crossfilterAccessor(function(diagram) {
-            return edge_flat.crossfilter;
-        })
-        .dimensionAccessor(function(diagram) {
-            return edge_flat.dimension;
-        });
+        .crossfilterAccessor(diagram => edge_flat.crossfilter)
+        .dimensionAccessor(diagram => edge_flat.dimension);
 
-var timestamp = 0;
-function add_object(d) {
+let timestamp = 0;
+const add_object = d => {
     d.timestamp = timestamp++;
     return Promise.resolve(d);
-}
+};
 
-var draw_graphs = drawGraphs({
+const draw_graphs = drawGraphs({
     nodeCrossfilter: node_flat.crossfilter,
     edgeCrossfilter: edge_flat.crossfilter
-}).addNode(add_object).addEdge(add_object);
+})
+    .addNode(add_object)
+    .addEdge(add_object)
+    .hintStroke('#007acc');
 
 drawDiagram
     .child('select-nodes', select_nodes)
@@ -131,65 +128,59 @@ drawDiagram
     .child('delete-edges', delete_edges);
 
 // make node selection and edge selection mutually exclusive
-var select_nodes_group = selectThingsGroup('select-nodes-group', 'select-nodes');
-var select_edges_group = selectThingsGroup('select-edges-group', 'select-edges');
-select_nodes_group.on('set_changed.show-info', function(nodes) {
+const select_nodes_group = selectThingsGroup('select-nodes-group', 'select-nodes');
+const select_edges_group = selectThingsGroup('select-edges-group', 'select-edges');
+select_nodes_group.on('set_changed.show-info', nodes => {
     if(nodes.length)
-        select_edges_group.set_changed([]); // selecting node clears selected edge
+        select_edges_group.call('set_changed', null, []); // selecting node clears selected edge
 });
-select_edges_group.on('set_changed.show-info', function(edges) {
+select_edges_group.on('set_changed.show-info', edges => {
     if(edges.length)
-        select_nodes_group.set_changed([]); // selecting edge clears selected node
+        select_nodes_group.call('set_changed', null, []); // selecting edge clears selected node
 });
 
-var nodeDim = node_flat.crossfilter.dimension(function(d) { return d.timestamp; });
-var outnodes = dc.dataTable('#output-nodes-table')
+const nodeDim = node_flat.crossfilter.dimension(d => d.timestamp);
+const outnodes = new DataTable('#output-nodes-table')
     .dimension(nodeDim)
     .size(Infinity)
-    .group(function() { return ''; })
-    .sortBy(function(v) { return  v.timestamp; })
+    .group(() => '')
+    .sortBy(v => v.timestamp)
     .showGroups(false)
     .columns(['label']);
 
-var node_labels = {};
-function update_node_labels() {
-    node_labels = node_flat.dimension.top(Infinity).reduce(
-        function(p, v) {
-            p[v.id] = v.label;
-            return p;
-        }, {});
-}
+let node_labels = {};
+const update_node_labels = () => {
+    node_labels = node_flat.dimension.top(Infinity).reduce((p, v) => {
+        p[v.id] = v.label;
+        return p;
+    }, {});
+};
 
-var edgeDim = edge_flat.crossfilter.dimension(function(d) { return d.timestamp; });
-var outedges = dc.dataTable('#output-edges-table')
+const edgeDim = edge_flat.crossfilter.dimension(d => d.timestamp);
+const outedges = new DataTable('#output-edges-table')
     .dimension(edgeDim)
     .size(Infinity)
-    .group(function() { return ''; })
-    .sortBy(function(e) {
-        return node_labels[e.source] + ',' + node_labels[e.target];
-    })
+    .group(() => '')
+    .sortBy(e => node_labels[e.source] + ',' + node_labels[e.target])
     .showGroups(false)
     .on('preRender', update_node_labels)
     .on('preRedraw', update_node_labels)
     .columns([
         {
             label: 'Source',
-            format: function(d) {
-                return node_labels[d.source];
-            }
+            format: d => node_labels[d.source]
         },
         {
             label: 'Target',
-            format: function(d) {
-                return node_labels[d.target];
-            }
+            format: d => node_labels[d.target]
         },
         {
             label: 'Label',
-            format: function(d) {
-                return d.label;
-            }
+            format: d => d.label
         }
     ]);
 
-dc.renderAll();
+renderAll();
+
+// Trigger initial diagram render
+drawDiagram.render();

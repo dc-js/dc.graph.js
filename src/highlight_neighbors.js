@@ -23,17 +23,17 @@ export function highlightNeighbors(includeprops, excludeprops, neighborsgroup, t
                     nodeset[diagram.nodeKey.eval(e.source)] = true;
                 }
             });
-            highlight_things_group.highlight(nodeset, edgeset);
+            highlight_things_group.call('highlight', null, nodeset, edgeset);
         }
-        else highlight_things_group.highlight(null, null);
+        else highlight_things_group.call('highlight', null, null, null);
     }
     function draw(diagram, node, edge) {
         node
             .on('mouseover.highlight-neighbors', function(n) {
-                highlight_neighbors_group.highlight_node(_mode.parent().nodeKey.eval(n));
+                highlight_neighbors_group.call('highlight_node', null, _mode.parent().nodeKey.eval(n));
             })
             .on('mouseout.highlight-neighbors', function(n) {
-                highlight_neighbors_group.highlight_node(null);
+                highlight_neighbors_group.call('highlight_node', null, null);
             });
     }
 
@@ -41,7 +41,7 @@ export function highlightNeighbors(includeprops, excludeprops, neighborsgroup, t
         node
             .on('mouseover.highlight-neighbors', null)
             .on('mouseout.highlight-neighbors', null);
-        highlight_neighbors_group.highlight_node(null);
+        highlight_neighbors_group.call('highlight_node', null, null);
     }
 
     var _mode = mode('highlight-neighbors', {

@@ -82,12 +82,12 @@ Layout computation can be offloaded to web workers for performance. Worker files
 ## Dependencies
 
 **Runtime dependencies:**
-- D3 v3 (core visualization)
-- dc.js ~2.1.0 (chart integration) 
+- D3 v3 (core visualization) - migrating to D3 v5.16.0
+- dc.js 4.0.5 (chart integration) - IMPORTANT: Use 4.0.5, not newer versions
 - crossfilter2 (data filtering)
 - Various layout libraries: webcola, dagre, viz.js
 
-**Note:** Project is based on older D3 v3 and is not actively maintained but still functional.
+**Note:** Project is being migrated from D3 v3 to D3 v5. Currently using dc.js 4.0.5 for compatibility.
 
 ## Development Notes
 
@@ -100,6 +100,10 @@ Layout computation can be offloaded to web workers for performance. Worker files
 
 - ❌ D3 v3: `dispatch.selected(data)`
 - ✅ D3 v5: `dispatch.call('selected', null, data)`
+
+**Event Handling Issues**: 
+- TODO: SVG mouseup events aren't firing properly in D3 v5 - temporarily using click events for node creation in draw_graphs.js
+- Event handling may need further investigation for full mouse interaction compatibility
 
 ## Claude Memories
 

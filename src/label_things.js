@@ -54,7 +54,7 @@ export function labelThings(options) {
             console.error("found too many things for '" + _selected[0] + "' (" + thing.size() + ")!");
             return;
         }
-        label_things_group.edit_label(thing, eventOptions);
+        label_things_group.call('edit_label', null, thing, eventOptions);
     }
     function draw(diagram, node, edge) {
         _keyboard.on('keyup.' + options.label_type, function() {

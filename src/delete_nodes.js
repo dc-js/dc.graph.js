@@ -26,7 +26,7 @@ export function deleteNodes(id_tag, options) {
                 return nodes.indexOf(diagram.edgeSource()(e)) !== -1 ||
                     nodes.indexOf(diagram.edgeTarget()(e)) !== -1;
             }).map(diagram.edgeKey());
-            select_edges_group.set_changed(deleteEdges);
+            select_edges_group.call('set_changed', null, deleteEdges);
             return deleteEdgesMode.deleteSelection().then(function() {
                 return nodes;
             });

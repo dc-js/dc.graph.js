@@ -125,9 +125,8 @@ export function renderSvg() {
         _renderer.parent().y()
             .domain([yDomain[0], yDomain[0] + (yDomain[1] - yDomain[0])*newHeight/oldHeight])
             .range([0, newHeight]);
-        _zoom
-            .x(_renderer.parent().x()).y(_renderer.parent().y())
-            .translate(translate).scale(scale);
+        // D3 v5: apply the transform directly instead of using .x()/.y() methods
+        _svg.call(_zoom.transform, zoomIdentity.translate(translate[0], translate[1]).scale(scale));
     };
 
     _renderer.globalTransform = function(pos, scale, animate) {
@@ -282,7 +281,7 @@ export function renderSvg() {
             .attr('opacity', 0)
             .remove();
 
-        dispatch.call("drawn", node, edge, edgeHover);
+        dispatch.call("drawn", null, node, edge, edgeHover);
 
         var drawState = {
             node: node,
@@ -644,7 +643,9 @@ export function renderSvg() {
 
     _renderer.initializeDrawing = function () {
         _renderer.resetSvg();
-        _g = _svg.append('g')
+        _g = _svg.selectAll('g.draw')
+            .data([1])
+            .enter().append('g')
             .attr('class', 'draw');
 
         var layers = ['edge-layer', 'node-layer'];
@@ -811,10 +812,15 @@ export function renderSvg() {
 
 
     function generateSvg() {
-        _svg = _renderer.parent().root().append('svg');
+        var root = _renderer.parent().root();
+        _svg = root.selectAll('svg')
+            .data([1])
+            .enter().append('svg');
         _renderer.resize();
 
-        _defs = _svg.append('svg:defs');
+        _defs = _svg.selectAll('defs')
+            .data([1])
+            .enter().append('svg:defs');
 
         // for lack of a better place
         _renderer.addOrRemoveDef('node-clip-top', true, 'clipPath', function(clipPath) {
@@ -862,22 +868,9 @@ export function renderSvg() {
             .on('zoom.diagram', _renderer.parent().doZoom)
             .scaleExtent(_renderer.parent().zoomExtent());
         
-        if(_renderer.parent().mouseZoomable()) {
-            var brush = _renderer.parent().child('brush');
-            var keyboard = _renderer.parent().child('keyboard');
-            if(!keyboard)
-                _renderer.parent().child('keyboard', keyboard = keyboardMode());
-            
-            _zoom.filter(function(event) {
-                return keyboard.modKeysMatch(_renderer.parent().modKeyZoom());
-            });
-            
-            _svg.call(_zoom);
-            _svg.on('dblclick.zoom', null);
-        } else {
-            _zoom.filter(function() { return false; });
-            _svg.call(_zoom);
-        }
+        // TEMP: Disable zoom entirely to test if it's blocking mouseup events
+        _zoom.filter(function() { return false; });
+        _svg.call(_zoom);
 
         return _svg;
     }

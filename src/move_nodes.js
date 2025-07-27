@@ -67,7 +67,7 @@ export function moveNodes(options) {
                     return;
                 }
                 if(_maybeSelect)
-                    select_nodes_group.set_changed([_maybeSelect]);
+                    select_nodes_group.call('set_changed', null, [_maybeSelect]);
                 var pos = eventCoords(diagram, event);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
@@ -106,7 +106,7 @@ export function moveNodes(options) {
                             pos: {x: n.cola.x, y: n.cola.y}
                         });
                     });
-                    fix_nodes_group.request_fixes(fixes);
+                    fix_nodes_group.call('request_fixes', null, fixes);
                 }
                 if(_brush)
                     _brush.activate();

@@ -48,7 +48,7 @@ export function highlightRadius(options) {
         });
         if(sel2.length < _selection.length)
             window.setTimeout(function() {
-                select_nodes_group.set_changed(sel2);
+                select_nodes_group.call('set_changed', null, sel2);
             }, 0);
     }
     var _mode = {
