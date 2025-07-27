@@ -4,7 +4,7 @@
  */
 
 // External dependencies as ES6 modules
-import { dispatch, scaleLinear, ascending, sum, set, select, json, event } from 'd3';
+import { dispatch, scaleLinear, ascending, sum, set, select, json } from 'd3';
 import { MarginMixin, utils, BadArgumentException, pluck, redrawAll, registerChart, renderAll } from 'dc';
 import * as crossfilter from 'crossfilter2';
 import { uuid, getOriginal, property, identity, deprecatedProperty, namedChildren, getBBoxNoThrow, isIe, isSafari, constants, deprecateFunction, onetimeTrace, traceFunction } from './core.js';

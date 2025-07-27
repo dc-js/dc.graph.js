@@ -133,9 +133,9 @@ export function drawGraphs(options) {
         });
     }
 
-    function check_invalid_drag(coords) {
+    function check_invalid_drag(coords, event) {
         var msg;
-        if(!(d3.event.buttons & 1)) {
+        if(!(event.buttons & 1)) {
             // mouse button was released but we missed it
             _crossout = null;
             if(_mode.conduct().cancelDragEdge)
@@ -173,8 +173,8 @@ export function drawGraphs(options) {
                 select_nodes.clickBackgroundClears(false);
         }
         node
-            .on('mousedown.draw-graphs', function(n) {
-                d3.event.stopPropagation();
+            .on('mousedown.draw-graphs', (event, n) => {
+                event.stopPropagation();
                 if(!_mode.dragCreatesEdges())
                     return;
                 if(options.tipsDisable)
@@ -198,12 +198,12 @@ export function drawGraphs(options) {
                     _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
                 }
             })
-            .on('mousemove.draw-graphs', function(n) {
+            .on('mousemove.draw-graphs', (event, n) => {
                 var msg;
-                d3.event.stopPropagation();
+                event.stopPropagation();
                 if(_sourceDown) {
                     var coords = eventCoords(diagram);
-                    if(check_invalid_drag(coords))
+                    if(check_invalid_drag(coords, event))
                         return;
                     var oldTarget = _targetMove;
                     if(n === _sourceDown.node) {
@@ -280,7 +280,7 @@ export function drawGraphs(options) {
                     update_crossout();
                 }
             })
-            .on('mouseup.draw-graphs', function(n) {
+            .on('mouseup.draw-graphs', (event, n) => {
                 _crossout = null;
                 if(options.negativeTip)
                     options.negativeTip.hideTip(true);
@@ -319,7 +319,7 @@ export function drawGraphs(options) {
                 if(_sourceDown) { // drawing edge
                     var coords = eventCoords(diagram);
                     _crossout = null;
-                    if(check_invalid_drag(coords))
+                    if(check_invalid_drag(coords, event))
                         return;
                     if(_mode.conduct().dragCanvas)
                         _mode.conduct().dragCanvas(_sourceDown, coords);
@@ -331,7 +331,7 @@ export function drawGraphs(options) {
                     update_crossout();
                 }
             })
-            .on('mouseup.draw-graphs', function() {
+            .on('mouseup.draw-graphs', (event) => {
                 _crossout = null;
                 if(options.negativeTip)
                     options.negativeTip.hideTip(true);
@@ -346,7 +346,7 @@ export function drawGraphs(options) {
                         _mode.conduct().cancelDragEdge(_sourceDown);
                     erase_hint();
                 } else { // click-node
-                    if(d3.event.target === this && _mode.clickCreatesNodes())
+                    if(event.target === event.currentTarget && _mode.clickCreatesNodes())
                         create_node(diagram, eventCoords(diagram));
                 }
                 update_crossout();

@@ -59,9 +59,9 @@ export function moveNodes(options) {
             if(_brush)
                 _brush.deactivate();
         });
-        function mouse_move() {
+        function mouse_move(event) {
             if(_startPos) {
-                if(!(d3.event.buttons & 1)) {
+                if(!(event.buttons & 1)) {
                     mouse_up();
                     return;
                 }
