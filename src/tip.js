@@ -32,7 +32,7 @@ export function tip(options) {
         }
 
         const instance = tippy(element, {
-            content: 'Loading...',
+            content: '',
             placement: directionMap[_mode.direction()] || 'top',
             delay: [_mode.showDelay(), _mode.hideDelay()],
             interactive: _mode.clickable(),
@@ -42,16 +42,37 @@ export function tip(options) {
             animation: 'scale-subtle',
             maxWidth: 350,
             arrow: true,
+            trigger: 'mouseenter',
             onShow(instance) {
+                // Stop propagation to prevent parent tips from showing
+                if (d3Event) {
+                    d3Event.stopPropagation();
+                }
+                
                 if (_mode.disabled() || (_mode.selection().exclude && _mode.selection().exclude(element))) {
                     return false;
                 }
                 
+                // Hide all other instances first
+                _instances.forEach(otherInstance => {
+                    if (otherInstance !== instance) {
+                        otherInstance.hide();
+                    }
+                });
+                
                 const d = element._dcgraph_datum || datum;
                 _mode.content()(d, content => {
+                    // Don't show if content is empty
+                    if (!content || content.trim() === '') {
+                        return false;
+                    }
                     instance.setContent(content);
                     _dispatch.call("tipped", null, d);
                 });
+            },
+            onTrigger(instance, event) {
+                // Stop propagation at trigger time
+                event.stopPropagation();
             },
             onHidden() {}
         });
@@ -152,18 +173,14 @@ export function tip(options) {
 
     _mode.hideTip = (delay) => {
         _instances.forEach(instance => {
-            if (delay) {
-                setTimeout(() => instance.hide(), _mode.hideDelay());
-            } else {
-                instance.hide();
-            }
+            instance.hide();
         });
         return _mode;
     };
 
     _mode.selection = property(selectNodeAndEdge());
     _mode.showDelay = _mode.delay = property(0);
-    _mode.hideDelay = property(200);
+    _mode.hideDelay = property(50);
     _mode.offset = property(null); // Not used with tippy, but kept for API compatibility
     _mode.clickable = property(false);
     _mode.linkCallback = property(null);

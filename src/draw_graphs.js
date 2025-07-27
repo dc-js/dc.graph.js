@@ -306,7 +306,6 @@ export function drawGraphs(options) {
                 erase_hint();
                 update_crossout();
             });
-        // TODO: Fix zoom behavior to allow mouseup events properly
         
         diagram.svg()
             .on('mousedown.draw-graphs', function() {

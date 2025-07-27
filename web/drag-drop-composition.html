@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="css/jquery-ui.css"/>
     <link rel="stylesheet" href="css/jqueryui-editable.css">
     <link rel="stylesheet" type="text/css" href="css/drag-drop-composition.css"/>
-    <link rel="stylesheet" type="text/css" href="css/d3-tip.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy.css"/>
 
   <script type="importmap">
   {
@@ -29,6 +29,7 @@
       "d3-drag": "https://cdn.jsdelivr.net/npm/d3-drag@1.2.5/+esm",
       "d3-fetch": "https://cdn.jsdelivr.net/npm/d3-fetch@1.2.0/+esm",
       "d3-queue": "https://cdn.jsdelivr.net/npm/d3-queue@3.0.7/+esm",
+      "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm",
       "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
       "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
       "querystring": "./js/querystring.js"
@@ -36,38 +37,10 @@
   }
   </script>
 
-  <!-- Make d3 available globally for webcola and d3-tip -->
+  <!-- Setup global d3 for libraries that expect it -->
   <script type="module">
-  import * as d3 from 'd3';
-  window.d3 = d3;
-  
-  // Try a more reliable CDN for d3-tip
-  const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/d3-tip@0.9.1/dist/d3-tip.min.js';
-  script.onload = () => {
-    console.log('d3-tip loaded, d3.tip:', window.d3.tip);
-    // If d3.tip is still not available, manually create it
-    if (!window.d3.tip && window.d3Tip) {
-      window.d3.tip = window.d3Tip;
-      console.log('Manually assigned d3.tip from d3Tip global');
-    }
-  };
-  script.onerror = (e) => {
-    console.error('Failed to load d3-tip.js from jsdelivr, trying fallback');
-    // Fallback to cdnjs
-    const fallbackScript = document.createElement('script');
-    fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js';
-    fallbackScript.onload = () => {
-      console.log('d3-tip fallback loaded, d3.tip:', window.d3.tip);
-      if (!window.d3.tip && window.d3Tip) {
-        window.d3.tip = window.d3Tip;
-        console.log('Manually assigned d3.tip from fallback d3Tip global');
-      }
-    };
-    fallbackScript.onerror = () => console.error('Fallback d3-tip also failed to load');
-    document.head.appendChild(fallbackScript);
-  };
-  document.head.appendChild(script);
+    import * as d3 from 'd3';
+    window.d3 = d3;
   </script>
 
     <script type="text/javascript" src="js/lodash.js"></script>
