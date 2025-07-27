@@ -54,7 +54,7 @@ export function selectThings(things_group, things_name, thinginess) {
             return;
         diagram.svg().on('click.' + things_name, v ? function(t) {
             if(event.target === this)
-                things_group.set_changed([]);
+                things_group.call('set_changed', null, []);
         } : null);
         _have_bce = v;
     }
@@ -72,7 +72,7 @@ export function selectThings(things_group, things_name, thinginess) {
             _oldSelected = _selected.slice();
         else {
             _oldSelected = [];
-            things_group.set_changed([]);
+            things_group.call('set_changed', null, []);
         }
     }
     function brushmove(ext) {
@@ -86,7 +86,7 @@ export function selectThings(things_group, things_name, thinginess) {
             newSelected = rectSelect.reduce(toggle_array, _oldSelected);
         else
             newSelected = rectSelect;
-        things_group.set_changed(newSelected);
+        things_group.call('set_changed', null, newSelected);
     }
 
     function draw(diagram, node, edge) {
@@ -117,7 +117,7 @@ export function selectThings(things_group, things_name, thinginess) {
             }
             if(!newSelected)
                 newSelected = [key];
-            things_group.set_changed(newSelected);
+            things_group.call('set_changed', null, newSelected);
         });
 
         if(_mode.multipleSelect()) {
@@ -132,7 +132,7 @@ export function selectThings(things_group, things_name, thinginess) {
             var present = thinginess.clickables(diagram, node, edge).data().map(thinginess.key);
             var now_selected = _selected.filter(function(k) { return contains(present, k); });
             if(_selected.length !== now_selected.length)
-                things_group.set_changed(now_selected, false);
+                things_group.call('set_changed', null, now_selected, false);
         }
     }
 

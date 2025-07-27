@@ -4,6 +4,8 @@ import { is_a_mac, conditionalProperties } from './utils.js';
 import { keyboard } from './keyboard.js';
 import { functorWrap, deprecatedProperty, property } from './core.js';
 import { engines } from './engine.js';
+import { range } from 'd3-array';
+import { event as d3Event } from 'd3-selection';
 
 export function expandCollapse(options) {
     if(typeof options === 'function') {
@@ -112,7 +114,7 @@ export function expandCollapse(options) {
         ret.push(dash);
         span *= 0.75;
         const sweep = sweep_angle(spike.children.length, a, span);
-        for(const i of d3.range(spike.children.length))
+        for(const i of range(spike.children.length))
             produce_spikes_helper(cx + 1.5*dx, cy + 1.5*dy, rx, ry, sweep(i), spike.children[i], span, ret);
     }
 
@@ -120,7 +122,7 @@ export function expandCollapse(options) {
         const ret = [];
         Object.keys(spikeses).forEach(dir => {
             const sweep = spike_directioner(diagram.layoutEngine().rankdir(), dir, spikeses[dir].length);
-            for(const i of d3.range(spikeses[dir].length))
+            for(const i of range(spikeses[dir].length))
                 produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikeses[dir][i], Math.PI, ret);
         });
         return ret;
@@ -372,8 +374,8 @@ export function expandCollapse(options) {
             .on('click.expand-collapse', click_edge);
 
         _keyboard
-            .on('keydown.expand-collapse', (event) => {
-                if(event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
+            .on('keydown.expand-collapse', () => {
+                if(d3Event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
                     if(_overNode)
                         highlight_hiding_node(diagram, _overNode, edge);
                     if(_overEdge)
@@ -398,11 +400,11 @@ export function expandCollapse(options) {
                     highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true);
                 }
             })
-            .on('keyup.expand_collapse', (event) => {
-                if((event.key === options.hideKey || event.key === options.linkKey || event.key === options.recurseKey) && (_overNode || _overEdge)) {
+            .on('keyup.expand_collapse', () => {
+                if((d3Event.key === options.hideKey || d3Event.key === options.linkKey || d3Event.key === options.recurseKey) && (_overNode || _overEdge)) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
-                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey, event));
+                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey, d3Event));
                         if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {

@@ -4,6 +4,7 @@ import { eventCoords, promiseIdentity } from './utils.js';
 import { selectThingsGroup } from './select_things.js';
 import { labelThingsGroup } from './label_things.js';
 import { fixNodesGroup } from './fix_nodes.js';
+import { event as d3Event } from 'd3-selection';
 
 export function drawGraphs(options) {
     var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes'),
@@ -97,13 +98,13 @@ export function drawGraphs(options) {
             node[_nodeLabelTag] = '';
         }
         if(pos)
-            fix_nodes_group.new_node(node[_nodeIdTag], node, {x: pos[0], y: pos[1]});
+            fix_nodes_group.call('new_node', null, node[_nodeIdTag], node, {x: pos[0], y: pos[1]});
         callback(node).then(function(node2) {
             if(!node2)
                 return;
             _mode.nodeCrossfilter().add([node2]);
             diagram.redrawGroup();
-            select_nodes_group.set_changed([node2[_nodeIdTag]]);
+            select_nodes_group.call('set_changed', null, [node2[_nodeIdTag]]);
         });
     }
 
@@ -125,10 +126,10 @@ export function drawGraphs(options) {
         callback(edge, source.port, target.port).then(function(edge2) {
             if(!edge2)
                 return;
-            fix_nodes_group.new_edge(edge[_edgeIdTag], edge2[_sourceTag], edge2[_targetTag]);
+            fix_nodes_group.call('new_edge', null, edge[_edgeIdTag], edge2[_sourceTag], edge2[_targetTag]);
             _mode.edgeCrossfilter().add([edge2]);
-            select_nodes_group.set_changed([], false);
-            select_edges_group.set_changed([edge2[_edgeIdTag]], false);
+            select_nodes_group.call('set_changed', null, [], false);
+            select_edges_group.call('set_changed', null, [edge2[_edgeIdTag]], false);
             diagram.redrawGroup();
         });
     }
@@ -173,8 +174,8 @@ export function drawGraphs(options) {
                 select_nodes.clickBackgroundClears(false);
         }
         node
-            .on('mousedown.draw-graphs', (event, n) => {
-                event.stopPropagation();
+            .on('mousedown.draw-graphs', (n) => {
+                d3Event.stopPropagation();
                 if(!_mode.dragCreatesEdges())
                     return;
                 if(options.tipsDisable)
@@ -186,9 +187,10 @@ export function drawGraphs(options) {
                 if(_mode.usePorts()) {
                     var activePort;
                     if(typeof _mode.usePorts() === 'object' && _mode.usePorts().eventPort)
-                        activePort = _mode.usePorts().eventPort(event);
+                        activePort = _mode.usePorts().eventPort(d3Event);
                     else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'out')
                         || diagram.getPort(diagram.nodeKey.eval(n), null, 'in');
+                    console.log('draw_graphs mousedown - activePort:', activePort, 'usePorts:', _mode.usePorts());
                     if(!activePort)
                         return;
                     _sourceDown = {node: n, port: activePort};
@@ -198,12 +200,12 @@ export function drawGraphs(options) {
                     _hintData = [{source: {x: _sourceDown.node.cola.x, y: _sourceDown.node.cola.y}}];
                 }
             })
-            .on('mousemove.draw-graphs', (event, n) => {
+            .on('mousemove.draw-graphs', (n) => {
                 var msg;
-                event.stopPropagation();
+                d3Event.stopPropagation();
                 if(_sourceDown) {
-                    var coords = eventCoords(diagram, event);
-                    if(check_invalid_drag(coords, event))
+                    var coords = eventCoords(diagram, d3Event);
+                    if(check_invalid_drag(coords, d3Event))
                         return;
                     var oldTarget = _targetMove;
                     if(n === _sourceDown.node) {
@@ -215,7 +217,7 @@ export function drawGraphs(options) {
                     else if(_mode.usePorts()) {
                         var activePort;
                         if(typeof _mode.usePorts() === 'object' && _mode.usePorts().eventPort)
-                            activePort = _mode.usePorts().eventPort(event);
+                            activePort = _mode.usePorts().eventPort(d3Event);
                         else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'in')
                             || diagram.getPort(diagram.nodeKey.eval(n), null, 'out');
                         if(activePort)
@@ -280,7 +282,7 @@ export function drawGraphs(options) {
                     update_crossout();
                 }
             })
-            .on('mouseup.draw-graphs', (event, n) => {
+            .on('mouseup.draw-graphs', (n) => {
                 _crossout = null;
                 if(options.negativeTip)
                     options.negativeTip.hideTip(true);
@@ -312,12 +314,12 @@ export function drawGraphs(options) {
             .on('mousedown.draw-graphs', function() {
                 _sourceDown = null;
             })
-            .on('mousemove.draw-graphs', (event) => {
+            .on('mousemove.draw-graphs', () => {
                 var data = [];
                 if(_sourceDown) { // drawing edge
-                    var coords = eventCoords(diagram, event);
+                    var coords = eventCoords(diagram, d3Event);
                     _crossout = null;
-                    if(check_invalid_drag(coords, event))
+                    if(check_invalid_drag(coords, d3Event))
                         return;
                     if(_mode.conduct().dragCanvas)
                         _mode.conduct().dragCanvas(_sourceDown, coords);
@@ -329,7 +331,7 @@ export function drawGraphs(options) {
                     update_crossout();
                 }
             })
-            .on('mouseup.draw-graphs', (event) => {
+            .on('mouseup.draw-graphs', () => {
                 _crossout = null;
                 if(options.negativeTip)
                     options.negativeTip.hideTip(true);
@@ -345,7 +347,7 @@ export function drawGraphs(options) {
                     erase_hint();
                 } else { // click-node
                     if(event.target === event.currentTarget && _mode.clickCreatesNodes())
-                        create_node(diagram, eventCoords(diagram, event));
+                        create_node(diagram, eventCoords(diagram, d3Event));
                 }
                 update_crossout();
             });

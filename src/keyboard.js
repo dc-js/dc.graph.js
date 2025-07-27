@@ -3,7 +3,7 @@ import { mode } from './mode.js';
 // External dependencies
 import { dispatch } from 'd3-dispatch';
 import { set } from 'd3-collection';
-import { select } from 'd3-selection';
+import { select, event } from 'd3-selection';
 
 export function keyboard() {
     var _dispatch = dispatch('keydown', 'keyup', 'modkeyschanged');
@@ -19,14 +19,14 @@ export function keyboard() {
             _pressed.add(event.key);
             _dispatch.call("modkeyschanged", null, pressed());
         }
-        _dispatch.call("keydown");
+        _dispatch.call("keydown", null, event);
     }
     function keyup() {
         if(_mod_keys.has(event.key)) {
             _pressed.remove(event.key);
             _dispatch.call("modkeyschanged", null, pressed());
         }
-        _dispatch.call("keyup");
+        _dispatch.call("keyup", null, event);
     }
     function clear() {
         if(!_pressed.empty()) {

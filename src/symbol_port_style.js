@@ -1,4 +1,9 @@
-import { select } from 'd3-selection';
+import { select, event as d3Event } from 'd3-selection';
+import { scaleOrdinal } from 'd3-scale';
+import { shuffle, range } from 'd3-array';
+import { set } from 'd3-collection';
+import { symbols, symbol } from 'd3-shape';
+import { easeBounce, easeSin } from 'd3-ease';
 import { property, getBBoxNoThrow, identity } from './core.js';
 import { cascade } from './utils.js';
 
@@ -8,9 +13,9 @@ export function symbolPortStyle() {
     var _drawConduct;
 
     _style.symbolScale = property(null);
-    _style.colorScale = property(d3.scale.ordinal().range(
+    _style.colorScale = property(scaleOrdinal().range(
          // colorbrewer light qualitative scale
-        d3.shuffle(['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462',
+        shuffle(['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462',
                     '#b3de69','#fccde5','#d9d9d9','#bc80bd','#ccebc5','#ffed6f'])));
 
     function name_or_edge(p) {
@@ -65,7 +70,7 @@ export function symbolPortStyle() {
     }
     function port_symbol(p) {
         if(!_style.symbolScale())
-            _style.symbolScale(d3.scale.ordinal().range(d3.shuffle(_style.content().enum())));
+            _style.symbolScale(scaleOrdinal().range(shuffle(_style.content().enum())));
         var symname = _style.symbol.eval(p);
         return symname && (_style.symbolScale() ? _style.symbolScale()(symname) : symname);
     }
@@ -109,7 +114,7 @@ export function symbolPortStyle() {
         return typeof sw === 'number' ? sw : _style.parent().nodeStrokeWidth.eval(p.node);
     }
     _style.animateNodes = function(nids, before) {
-        var setn = d3.set(nids);
+        var setn = set(nids);
         var node = _node
                 .filter(function(n) {
                     return setn.has(_style.parent().nodeKey.eval(n));
@@ -126,7 +131,7 @@ export function symbolPortStyle() {
         function repeat() {
             var shimin = shimmer.transition()
                     .duration(1000)
-                    .ease("bounce");
+                    .ease(easeBounce);
             shimin.selectAll('.port-outline')
                 .call(_style.outline().draw(function(p) {
                     return shimmer_radius(p) + _style.portPadding.eval(p);
@@ -135,7 +140,7 @@ export function symbolPortStyle() {
                 .call(_style.content().draw(port_symbol, shimmer_radius));
             var shimout = shimin.transition()
                     .duration(1000)
-                    .ease('sin');
+                    .ease(easeSin);
             shimout.selectAll('.port-outline')
                 .call(_style.outline().draw(function(p) {
                     return _style.smallRadius.eval(p) + _style.portPadding.eval(p);
@@ -184,9 +189,11 @@ export function symbolPortStyle() {
         return trans;
     };
     _style.eventPort = function(event) {
-        if(!event) return null; // Guard for when called without event
-        var parent = select(event.target.parentNode);
-        if(event.target.parentNode.tagName === 'g' && parent.classed('port'))
+        // In D3 v5, use the global event if no event passed
+        const evt = event || d3Event;
+        if(!evt || !evt.target) return null;
+        var parent = select(evt.target.parentNode);
+        if(evt.target.parentNode.tagName === 'g' && parent.classed('port'))
             return parent.datum();
         return null;
     };
@@ -289,9 +296,10 @@ export function symbolPortStyle() {
         }
         var namespace = 'grow-ports-' + _style.parent().portStyle.nameOf(this);
         if(whether) {
-            _node.on('mouseover.' + namespace, (event, n) => {
-                var nid = _style.parent().nodeKey.eval(n);
-                var activePort = _style.eventPort(event);
+            _node.on('mouseover.' + namespace, function(d) {
+                // In D3 v5, use global event and data is first parameter
+                var nid = _style.parent().nodeKey.eval(d);
+                var activePort = _style.eventPort();
                 if(_nodePorts[nid])
                     _nodePorts[nid].forEach(function(p) {
                         p.state = p === activePort ? 'large' : activePort ? 'small' : 'medium';
@@ -392,13 +400,13 @@ symbolPortStyle.content.d3symbol = function() {
             return 'path';
         },
         enum: function() {
-            return d3.svg.symbolTypes;
+            return symbols;
         },
         draw: function(symf, rf) {
             return function(symbols) {
                 symbols.attr('d', function(p) {
                     var sym = symf(p), r = rf(p);
-                    return sym ? d3.svg.symbol()
+                    return sym ? symbol()
                         .type(sym)
                         .size(r*r)
                     () : '';
@@ -423,7 +431,7 @@ symbolPortStyle.content.letter = function() {
             return 'text';
         },
         enum: function() {
-            return d3.range(65, 91).map(String.fromCharCode);
+            return range(65, 91).map(String.fromCharCode);
         },
         draw: function(symf, rf) {
             return function(symbols) {

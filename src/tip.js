@@ -16,9 +16,6 @@ import { mode } from './mode.js';
 import { ancestorHasClass } from './utils.js';
 import { dispatch } from 'd3-dispatch';
 import { event, select } from 'd3-selection';
-import { tip as d3tip } from 'd3-tip';
-
-const d3Tip = globalThis.d3 && globalThis.d3.tip || d3tip;
 
 export function tip(options) {
     options = options || {};
@@ -29,7 +26,11 @@ export function tip(options) {
 
     function init(parent) {
         if(!_d3tip) {
-            _d3tip = d3Tip()
+            if (!globalThis.d3?.tip || typeof globalThis.d3.tip !== 'function') {
+                console.warn('d3.tip not available, tooltips will be disabled');
+                return;
+            }
+            _d3tip = globalThis.d3.tip()
                 .attr('class', options.class || 'd3-tip')
                 .html(function(d) { return "<span>" + d + "</span>"; })
                 .direction(_mode.direction());

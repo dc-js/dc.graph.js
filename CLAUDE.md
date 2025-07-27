@@ -94,6 +94,13 @@ Layout computation can be offloaded to web workers for performance. Worker files
 - Use gtimeout because we're on a mac
 - Use `npm run serve` for development server
 
+## D3 v5 Migration Rules
+
+**Dispatch API Changes**: In D3 v3→v5, dispatch calls changed from `dispatch.eventName(args...)` to `dispatch.call('eventName', thisArg, args...)`. Always use `null` as the thisArg parameter.
+
+- ❌ D3 v3: `dispatch.selected(data)`
+- ✅ D3 v5: `dispatch.call('selected', null, data)`
+
 ## Claude Memories
 
 - please remove trailing whitespace from your edits
@@ -103,3 +110,6 @@ Layout computation can be offloaded to web workers for performance. Worker files
 - yes but please stop adding useless comments
 - use arrow functions wherever possible
 - remember to user jsdelivr for d3 imports
+- use conditional chaining
+- always use let and const not var
+- i'm running the server, you just need to build for me

@@ -1,4 +1,5 @@
 import { property } from './core.js';
+import { min } from 'd3-array';
 
 export function portName(nodeId, edgeId, portName) {
     if(!(nodeId || edgeId))
@@ -159,7 +160,7 @@ export function placePorts() {
                 var p = unplaced[0];
                 p.vec = a_to_v(rand_within(p.abounds[0], p.abounds[1]));
                 projectPort(diagram, n, p);
-                var mindist = d3.min(inside, function(p2) { return distance(p, p2); });
+                var mindist = min(inside, function(p2) { return distance(p, p2); });
                 if(mindist > maxdist) {
                     maxdist = mindist;
                     maxvec = p.vec;

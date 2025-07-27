@@ -1,11 +1,8 @@
 import { set } from 'd3-collection';
 import { json, text, dsv, csv } from 'd3-fetch';
 
-function processDot(callback, error, text) {
-    if(error) {
-        callback(error, null);
-        return;
-    }
+function processDot(text) {
+    return new Promise((resolve, reject) => {
     var nodes, edges, node_cluster = {}, clusters = [];
     if(graphlibDot.parse) { // graphlib-dot 1.1.0 (where did i get it from?)
         var digraph = graphlibDot.parse(text);
@@ -71,14 +68,12 @@ function processDot(callback, error, text) {
         });
     }
     var graph = {nodes: nodes, links: edges, node_cluster: node_cluster, clusters: clusters};
-    callback(null, graph);
+    resolve(graph);
+    });
 }
 
-function processDsv(callback, error, data) {
-    if(error) {
-        callback(error, null);
-        return;
-    }
+function processDsv(data) {
+    return new Promise((resolve, reject) => {
     var keys = Object.keys(data[0]);
     var source = keys[0], target = keys[1];
     var nodes = set(data.map(function(r) { return r[source]; }));
@@ -86,7 +81,7 @@ function processDsv(callback, error, data) {
         nodes.add(r[target]);
     });
     nodes = nodes.values().map(function(k) { return {name: k}; });
-    callback(null, {
+    resolve({
         nodes: nodes,
         links: data.map(function(r, i) {
             return {
@@ -96,46 +91,33 @@ function processDsv(callback, error, data) {
             };
         })
     });
+    });
 }
 
 export const fileFormats = [
     {
         exts: 'json',
         mimes: 'application/json',
-        from_url: json,
-        from_text: function(text, callback) {
-            callback(null, JSON.parse(text));
-        }
+        from_url: url => json(url),
+        from_text: text => Promise.resolve(JSON.parse(text))
     },
     {
         exts: ['gv', 'dot'],
         mimes: 'text/vnd.graphviz',
-        from_url: function(url, callback) {
-            text(url, processDot.bind(null, callback));
-        },
-        from_text: function(text, callback) {
-            processDot(callback, null, text);
-        }
+        from_url: url => text(url).then(textData => processDot(textData)),
+        from_text: text => processDot(text)
     },
     {
         exts: 'psv',
         mimes: 'text/psv',
-        from_url: function(url, callback) {
-            dsv('|', 'text/plain')(url, processDsv.bind(null, callback));
-        },
-        from_text: function(text, callback) {
-            processDsv(callback, null, dsv('|').parse(text));
-        }
+        from_url: url => dsv('|', 'text/plain')(url).then(data => processDsv(data)),
+        from_text: text => processDsv(dsv('|').parse(text))
     },
     {
         exts: 'csv',
         mimes: 'text/csv',
-        from_url: function(url, callback) {
-            csv(url, processDsv.bind(null, callback));
-        },
-        from_text: function(text, callback) {
-            processDsv(callback, null, csv.parse(text));
-        }
+        from_url: url => csv(url).then(data => processDsv(data)),
+        from_text: text => processDsv(csv.parse(text))
     }
 ];
 
@@ -172,59 +154,40 @@ function unknownMimeError(mime) {
 }
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
-export function loadGraph() {
+export function loadGraph(file1, file2) {
     // ignore any query parameters for checking extension
-    function ignore_query(file) {
-        if(!file)
-            return null;
-        return file.replace(/\?.*/, '');
-    }
-    var file1, file2, callback;
-    file1 = arguments[0];
-    if(arguments.length===3) {
-        file2 = arguments[1];
-        callback = arguments[2];
-    }
-    else if(arguments.length===2) {
-        callback = arguments[1];
-    }
-    else throw new Error('need two or three arguments');
-
+    const ignore_query = file => file ? file.replace(/\?.*/, '') : null;
+    
     if(file2) {
         // this is not general - really titan-specific
-        queue()
-            .defer(json, file1)
-            .defer(json, file2)
-            .await(function(error, nodes, edges) {
-                if(error)
-                    callback(error, null);
-                else
-                    callback(null, {nodes: nodes.results, edges: edges.results});
-            });
+        return Promise.all([json(file1), json(file2)])
+            .then(([nodes, edges]) => ({nodes: nodes.results, edges: edges.results}));
     }
     else {
-        var format;
         if(/^data:/.test(file1)) {
-            var parts = file1.slice(5).split(/,(.+)/);
-            format = matchMimeType(parts[0]);
+            const parts = file1.slice(5).split(/,(.+)/);
+            const format = matchMimeType(parts[0]);
             if(format)
-                format.from_text(parts[1], callback);
-            else callback(unknownMimeError(parts[0]));
+                return format.from_text(parts[1]);
+            else 
+                return Promise.reject(unknownMimeError(parts[0]));
         } else {
-            var file1noq = ignore_query(file1);
-            format = matchFileFormat(file1noq);
+            const file1noq = ignore_query(file1);
+            const format = matchFileFormat(file1noq);
             if(format)
-                format.from_url(file1, callback);
-            else callback(unknownFormatError(file1noq));
+                return format.from_url(file1);
+            else 
+                return Promise.reject(unknownFormatError(file1noq));
         }
     }
 };
 
-export function loadGraphText(text, filename, callback) {
-    var format = matchFileFormat(filename);
+export function loadGraphText(text, filename) {
+    const format = matchFileFormat(filename);
     if(format)
-        format.from_text(text, callback);
-    else callback(unknownFormatError(filename));
+        return format.from_text(text);
+    else 
+        return Promise.reject(unknownFormatError(filename));
 };
 
 export function dataUrl(data) {

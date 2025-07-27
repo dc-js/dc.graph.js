@@ -1,4 +1,5 @@
 import {inferShape} from "./shape.js"
+import {extent} from "d3-array";
 
 export function renderWebgl() {
     //var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
@@ -142,9 +143,9 @@ export function renderWebgl() {
                 _scene.add(rn.mesh);
         });
 
-        var xext = d3.extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
-            yext = d3.extent(drawState.wnodes, function(n) { return -n.cola.y * MULT; }),
-            zext = d3.extent(drawState.wnodes, function(n) { return n.cola.z * MULT || 0; });
+        var xext = extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
+            yext = extent(drawState.wnodes, function(n) { return -n.cola.y * MULT; }),
+            zext = extent(drawState.wnodes, function(n) { return n.cola.z * MULT || 0; });
         var cx = (xext[0] + xext[1])/2,
             cy = (yext[0] + yext[1])/2,
             cz = (zext[0] + zext[1])/2;

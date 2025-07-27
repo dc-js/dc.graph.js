@@ -1,3 +1,10 @@
+import { select, selectAll } from 'd3-selection';
+import { json, text } from 'd3-fetch';
+import { set, map, nest } from 'd3-collection';
+import { dispatch } from 'd3-dispatch';
+import { ascending, range, shuffle } from 'd3-array';
+import { scaleOrdinal } from 'd3-scale';
+import querystring from 'querystring';
 import { 
     diagram, 
     spawnEngine, 
@@ -83,31 +90,18 @@ var catalog_readers = {
 
 
 function show_while_promise(selector, promise) {
-    d3.select(selector).style('visibility', 'visible');
+    select(selector).style('visibility', 'visible');
     promise.then(function() {
         // let it run a little longer so that it's guaranteed to show
         window.setTimeout(function() {
-            d3.select(selector).style('visibility', 'hidden');
+            select(selector).style('visibility', 'hidden');
         }, 100);
     });
     return promise;
 }
 
-function json_promise(url) {
-    var request = d3.json(url).get;
-    return new Promise(function(resolve, reject) {
-        request(function(error, data) {
-            if(error)
-                reject(error);
-            else {
-                resolve(data);
-            }
-        });
-    });
-}
-
 function get_catalog() {
-    return json_promise(options.catalog);
+    return json(options.catalog);
 }
 
 // canvas
@@ -167,12 +161,12 @@ function display_solution(catalog, solution) {
     _compositionDiagram.child('fix-nodes')
         .clearFixes();
     _description.editable('setValue', solution.description || null);
-    var types = d3.set(solution.nodes.map(function (n) {
+    var types = set(solution.nodes.map(function (n) {
         return n.type;
     })).values();
     Promise.all(types.map(function (t) {
         return _components.get(t).url;
-    }).map(json_promise)).then(function (defns) {
+    }).map(json)).then(function (defns) {
         var defn = {};
         types.forEach(function (t, i) {
             return defn[t] = defns[i];
@@ -209,7 +203,7 @@ function display_solution(catalog, solution) {
 function load_solution(name, url) {
     if(_fakeDB[name])
         return Promise.resolve(_fakeDB[name]);
-    else return json_promise(url);
+    else return json(url);
 }
 function load_sol(name, url) {
     load_solution(name, url).then(function(solution) {
@@ -280,9 +274,9 @@ function print_value(v) {
         return JSON.stringify(v);
 }
 function display_properties(catalog, content) {
-    var dest = d3.select('#properties-content');
+    var dest = select('#properties-content');
     if(typeof content === 'string') { // url
-        json_promise(content).then(function(content) {
+        json(content).then(function(content) {
             display_properties(catalog, content);
         });
     } else if(typeof content === 'object') { // json
@@ -290,9 +284,9 @@ function display_properties(catalog, content) {
         var name = catalog.fTypeName(content);
         delete content.name;
         dest.style('visibility', 'visible');
-        d3.select('#selected-name')
+        select('#selected-name')
             .text(name);
-        var table = d3.select('#properties-table');
+        var table = select('#properties-table');
         var keys = Object.keys(content).sort();
         var rows = table.selectAll('tr.property').data(keys);
         rows.exit().remove();
@@ -309,7 +303,7 @@ function display_properties(catalog, content) {
 //
 
 function make_palette(selector) {
-    var _dispatch = d3.dispatch('selected');
+    var _dispatch = dispatch('selected');
     var _categories, _keyFunction, _nameFunction;
     function sanitize_id(key) {
         return key.toLowerCase().replace(' ', '-').replace(/[.]/g, '');
@@ -340,58 +334,50 @@ function make_palette(selector) {
             else ++i;
         });
         categories = categories.filter(function(c) { return !!c; });
-        var card = d3.select('#palette')
+        var card = select('#palette')
                 .selectAll('div.card').data(categories, function(kvs) { return kvs.key; } );
         var cardEnter = card.enter().append('div')
                 .attr('class', 'card');
         cardEnter.each(function() {
-            var card = d3.select(this);
+            var card = select(this);
             if(!card.datum().noheader) {
                 card = card.append('div')
-                    .attr({
-                        class: 'card-header',
-                        role: 'tab'
-                    })
+                    .attr('class', 'card-header')
+                    .attr('role', 'tab')
                     .append('h5')
                     .attr('class', 'mb-0');
             }
             card.append('a')
-                .attr({
-                    class: 'collapser',
-                    'data-toggle': 'collapse',
-                    'data-parent': '#palette',
-                    'aria-expanded': 'true'
-                })
+                .attr('class', 'collapser')
+                .attr('data-toggle', 'collapse')
+                .attr('data-parent', '#palette')
+                .attr('aria-expanded', 'true')
                 .text(function(kvs) { return kvs.key; } );
         });
+        card = card.merge(cardEnter);
         card.selectAll('div.card-header')
             .data(pass_through)
             .attr('id', heading_id);
-        card.selectAll('a.collapser')
-            .data(pass_through)
-            .attr({
-                'href': function(kvs) {
-                    return '#' + collapse_id(kvs);
-                },
-                'aria-controls': collapse_id
-            });
+        var collapser = card.selectAll('a.collapser')
+            .data(pass_through);
+        collapser
+            .attr('href', function(kvs) {
+                return '#' + collapse_id(kvs);
+            })
+            .attr('aria-controls', collapse_id);
         var contentEnter = cardEnter.insert('div')
-                .attr({
-                    class: 'collapse',
-                    role: 'tabpanel'
-                })
+                .attr('class', 'collapse')
+                .attr('role', 'tabpanel')
                 .append('div')
                 .attr('class', 'card-block');
         card.selectAll('div.collapse')
             .data(pass_through)
-            .attr({
-                id: collapse_id,
-                'aria-labelledby': heading_id
-            });
+            .attr('id', collapse_id)
+            .attr('aria-labelledby', heading_id);
         card.exit().remove();
-        d3.select('#palette hr.separator').remove();
+        select('#palette hr.separator').remove();
         nulls.forEach(function(j) {
-            d3.select('#palette')
+            select('#palette')
                 .insert('hr', 'div.card:nth-child(' + (j+1) + ')')
                 .attr('class', 'separator');
         });
@@ -402,18 +388,19 @@ function make_palette(selector) {
             .attr('class', 'component-selection');
         var selection = card.selectAll('ul.component-selection')
                 .data(pass_through);
-        var components = selection.selectAll('li')
+        let components = selection.selectAll('li')
                 .data(function(kvs) { return kvs.values; });
-        components.enter().append('li')
+        const componentsEnter = components.enter().append('li')
             .on('mousedown', function(comp) {
-                show_selection(d3.select(this.parentElement), _keyFunction(comp));
-                _dispatch.selected(comp);
+                show_selection(select(this.parentElement), _keyFunction(comp));
+                _dispatch.call('selected', comp);
             });
+        components = components.merge(componentsEnter);
         components
             .attr('id', select_id)
             .text(function(comp) { return _nameFunction(comp); });
         $('ul.component-selection').each(function() {
-            if(d3.select(this).datum().draggable)
+            if(select(this).datum().draggable)
                 $('li', this).draggable({
                     helper: "clone",
                     opacity: 0.5
@@ -443,8 +430,8 @@ function make_palette(selector) {
         },
         select: function(id) {
             if(!id) {
-                _dispatch.selected(null);
-                d3.selectAll('ul.component-selection li.ui-selected')
+                _dispatch.call('selected', null);
+                selectAll('ul.component-selection li.ui-selected')
                     .classed('ui-selected', false);
             } else {
                 throw new Error('not implemented');
@@ -469,8 +456,8 @@ function make_palette(selector) {
 function update_palette(catalog) {
     // throw out any models which don't have a category, to avoid "null drawer"
     var models = catalog.models().filter(catalog.fModelCategory);
-    var categories = d3.nest().key(catalog.fModelCategory)
-            .sortKeys(d3.ascending)
+    var categories = nest().key(catalog.fModelCategory)
+            .sortKeys(ascending)
             .entries(models);
     categories.forEach(function(kvs) {
         kvs.draggable = true;
@@ -484,7 +471,7 @@ function update_palette(catalog) {
             v.category = 'solution';
             return v;
         }).sort(function(a,b) {
-            return d3.ascending(catalog.fModelName(a), catalog.fModelName(b));
+            return ascending(catalog.fModelName(a), catalog.fModelName(b));
         })
     });
     _palette.data(categories);
@@ -502,7 +489,7 @@ function hashCode(s) {
   return hash >>> 0; // convert to unsigned
 };
 var _icons;
-d3.text('iconlist.txt', function(error, list) {
+text('iconlist.txt').then(function(list) {
     _icons = list.split(/\n/);
 });
 function hashIcon(icons, type) {
@@ -551,8 +538,9 @@ function apply_engine_parameters(engine) {
 //
 
 get_catalog().then(function(catalog) {
+    console.log('Catalog loaded successfully:', catalog);
     _catalog = catalog = catalog_readers[options.catformat](catalog);
-    _components = d3.map(catalog.models(), catalog.fModelName);
+    _components = map(catalog.models(), catalog.fModelName);
 
     // PALETTE
     _palette = make_palette('#palette')
@@ -636,9 +624,9 @@ get_catalog().then(function(catalog) {
             return p.orig.value.type;
         }).color(function (p) {
             return p.orig.value.type;
-        }).colorScale(d3.scale.ordinal().range(
+        }).colorScale(scaleOrdinal().range(
             // colorbrewer qualitative scale
-            d3.shuffle(
+            shuffle(
                 ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#eebb22','#a65628','#f781bf'] // 8-class set1
                 //['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666'] // 8-class dark2
             )));
@@ -739,8 +727,8 @@ get_catalog().then(function(catalog) {
         if(nodes.length>1)
             throw new Error('not expecting multiple select');
         else if(nodes.length === 1) {
-            select_edges_group.set_changed([], refresh);
-            select_ports_group.set_changed([], refresh);
+            select_edges_group.call('set_changed', null, [], refresh);
+            select_ports_group.call('set_changed', null, [], refresh);
             var type = _compositionDiagram.getNode(nodes[0]).value.type;
             var comps = catalog.models().filter(function(comp) {
                 return catalog.fModelName(comp) === type;
@@ -759,8 +747,8 @@ get_catalog().then(function(catalog) {
     select_edges_group.on('set_changed.show-info', function(edges, refresh) {
         _palette.select(null);
         if(edges.length>0) {
-            select_nodes_group.set_changed([], refresh);
-            select_ports_group.set_changed([], refresh);
+            select_nodes_group.call('set_changed', null, [], refresh);
+            select_ports_group.call('set_changed', null, [], refresh);
             var edge = _compositionDiagram.getEdge(edges[0]);
             display_properties(catalog, edge);
         } else display_properties(catalog, null);
@@ -776,8 +764,8 @@ get_catalog().then(function(catalog) {
     select_ports_group.on('set_changed.show-info', function(ports, refresh) {
         _palette.select(null);
         if(ports.length>0) {
-            select_nodes_group.set_changed([], refresh);
-            select_edges_group.set_changed([], refresh);
+            select_nodes_group.call('set_changed', null, [], refresh);
+            select_edges_group.call('set_changed', null, [], refresh);
             display_properties(catalog, ports[0]);
         } else display_properties(catalog, null);
     });
@@ -850,7 +838,7 @@ get_catalog().then(function(catalog) {
 
     function generate_operation(id) {
         var op = operations[Math.floor(id%operations.length)],
-            msgs = d3.range(Math.floor(id%3)).map(function() {
+            msgs = range(Math.floor(id%3)).map(function() {
                 return messages[Math.floor(id%messages.length)];
             });
         return op + '(' + msgs.map(function(msg) {
@@ -916,7 +904,7 @@ get_catalog().then(function(catalog) {
     $('#canvas').droppable({
         drop: function(event, ui) {
             set_dirty(true);
-            var component = d3.select(ui.draggable[0]).datum();
+            var component = select(ui.draggable[0]).datum();
             var type = catalog.fModelName(component);
             var max = 0;
             _drawGraphs.nodeCrossfilter().all().forEach(function(n) {
@@ -935,7 +923,7 @@ get_catalog().then(function(catalog) {
             var bound = _compositionDiagram.root().node().getBoundingClientRect();
             var pos = _compositionDiagram.invertCoord([event.clientX - bound.left,
                                             event.clientY - bound.top]);
-            json_promise(catalog.fModelUrl(_components.get(type))).then(function(def) {
+            json(catalog.fModelUrl(_components.get(type))).then(function(def) {
                 _ports = _ports.concat(catalog.ports(data.id, def));
                 update_ports();
                 _drawGraphs.createNode(pos, data);
@@ -1015,4 +1003,7 @@ get_catalog().then(function(catalog) {
         _solution = {nodes: [], edges: []};
         display_solution(catalog, _solution);
     }
+}).catch(function(error) {
+    console.error('Failed to load catalog:', error);
+    console.error('Attempted to load:', options.catalog);
 });

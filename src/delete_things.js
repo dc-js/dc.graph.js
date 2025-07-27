@@ -2,6 +2,7 @@ import { mode } from './mode.js';
 import { property } from './core.js';
 import { keyboard } from './keyboard.js';
 import { is_a_mac } from './utils.js';
+import { event as d3Event } from 'd3-selection';
 
 export function deleteThings(things_group, mode_name, id_tag) {
     id_tag = id_tag || 'id';
@@ -45,8 +46,8 @@ export function deleteThings(things_group, mode_name, id_tag) {
         });
     }
     function draw(diagram) {
-        _keyboard.on('keyup.' + mode_name, (event) => {
-            if(event.code === _deleteKey)
+        _keyboard.on('keyup.' + mode_name, () => {
+            if(d3Event.code === _deleteKey)
                 delete_selection();
         });
     }

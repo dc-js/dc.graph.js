@@ -7,7 +7,7 @@ export function treePositions(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
         console.warn('treePositions: rootf and treef are ignored');
     }
     var x;
-    nwidth = d3.functor(nwidth);
+    nwidth = typeof nwidth === 'function' ? nwidth : () => nwidth;
     function best_dist(left, right) {
         return (nwidth(left) + nwidth(right)) / 2;
     }
