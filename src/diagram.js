@@ -4,7 +4,12 @@
  */
 
 // External dependencies as ES6 modules
-import { dispatch, scaleLinear, ascending, sum, set, select, json } from 'd3';
+import { dispatch } from 'd3-dispatch';
+import { scaleLinear } from 'd3-scale';
+import { ascending, sum } from 'd3-array';
+import { set } from 'd3-collection';
+import { select } from 'd3-selection';
+import { json } from 'd3-fetch';
 import { zoomTransform } from 'd3-zoom';
 import { MarginMixin, utils, BadArgumentException, pluck, redrawAll, registerChart, renderAll } from 'dc';
 import * as crossfilter from 'crossfilter2';
@@ -2604,19 +2609,11 @@ export function diagram(parent, chartGroup) {
 
     }
 
-    _diagram.doZoom = function(event) {
+    _diagram.doZoom = function() {
         if(_diagram.width_is_automatic() || _diagram.height_is_automatic())
             detect_size_change();
         
-        // Handle case where event object doesn't have transform (programmatic calls)
-        var transform;
-        if(event && event.transform) {
-            transform = event.transform;
-        } else {
-            // Get current transform from SVG element
-            transform = zoomTransform(_diagram.renderer().svg().node());
-        }
-        
+        var transform = zoomTransform(_diagram.renderer().svg().node());
         var translate, scale = transform.k;
         if(_diagram.restrictPan())
             translate = bring_in_bounds([transform.x, transform.y]);

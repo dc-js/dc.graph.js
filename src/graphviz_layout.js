@@ -4,7 +4,8 @@
  */
 
 // External dependencies
-import { dispatch, json } from 'd3';
+import { dispatch } from 'd3-dispatch';
+import { json } from 'd3-fetch';
 import { uuid, property } from './core.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
 

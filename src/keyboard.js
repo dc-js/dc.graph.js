@@ -1,7 +1,9 @@
 import { mode } from './mode.js';
 
 // External dependencies
-import { dispatch, set, select, event } from 'd3';
+import { dispatch } from 'd3-dispatch';
+import { set } from 'd3-collection';
+import { select } from 'd3-selection';
 
 export function keyboard() {
     var _dispatch = dispatch('keydown', 'keyup', 'modkeyschanged');

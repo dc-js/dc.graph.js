@@ -1,4 +1,5 @@
-import { set, json, text, dsv, csv } from 'd3';
+import { set } from 'd3-collection';
+import { json, text, dsv, csv } from 'd3-fetch';
 
 function processDot(callback, error, text) {
     if(error) {

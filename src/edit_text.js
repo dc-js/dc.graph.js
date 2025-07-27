@@ -1,8 +1,6 @@
 // adapted from
 // http://stackoverflow.com/questions/9308938/inline-text-editing-in-svg/#26644652
 
-// External dependencies
-import { event } from 'd3';
 
 export function editText(parent, options) {
     var foreign = parent.append('foreignObject')

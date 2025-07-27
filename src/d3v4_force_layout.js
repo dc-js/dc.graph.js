@@ -4,7 +4,8 @@
  */
 
 // External dependencies
-import { dispatch, set } from 'd3';
+import { dispatch } from 'd3-dispatch';
+import { set } from 'd3-collection';
 import { uuid, property } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';

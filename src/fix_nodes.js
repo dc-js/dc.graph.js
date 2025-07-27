@@ -1,4 +1,4 @@
-import { dispatch } from 'd3';
+import { dispatch } from 'd3-dispatch';
 import { property } from './core.js';
 import { undirectedDfs } from './depth_first_traversal.js';
 

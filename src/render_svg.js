@@ -809,13 +809,6 @@ export function renderSvg() {
         return sel;
     };
 
-    function enableZoom() {
-        _svg.call(_zoom);
-        _svg.on('dblclick.zoom', null);
-    }
-    function disableZoom() {
-        _svg.on('.zoom', null);
-    }
 
     function generateSvg() {
         _svg = _renderer.parent().root().append('svg');
@@ -868,20 +861,22 @@ export function renderSvg() {
         _zoom = zoom()
             .on('zoom.diagram', _renderer.parent().doZoom)
             .scaleExtent(_renderer.parent().zoomExtent());
+        
         if(_renderer.parent().mouseZoomable()) {
-            var mod, mods;
             var brush = _renderer.parent().child('brush');
             var keyboard = _renderer.parent().child('keyboard');
             if(!keyboard)
                 _renderer.parent().child('keyboard', keyboard = keyboardMode());
-            var modkeyschanged = function() {
-                if(keyboard.modKeysMatch(_renderer.parent().modKeyZoom()))
-                    enableZoom();
-                else
-                    disableZoom();
-            };
-            keyboard.on('modkeyschanged.zoom', modkeyschanged);
-            modkeyschanged();
+            
+            _zoom.filter(function(event) {
+                return keyboard.modKeysMatch(_renderer.parent().modKeyZoom());
+            });
+            
+            _svg.call(_zoom);
+            _svg.on('dblclick.zoom', null);
+        } else {
+            _zoom.filter(function() { return false; });
+            _svg.call(_zoom);
         }
 
         return _svg;
