@@ -1,55 +1,49 @@
 import { angleBetweenPoints, asBezier3, chopBezier } from "./shape.js";
 import { generatePath } from "./utils.js";
 
-function offsetx(ofsx) {
-    return function(p) {
+const offsetx = (ofsx) => {
+    return (p) => {
         return {x: p.x + ofsx, y: p.y};
     };
 }
 
 export const builtinArrows = {
-    box: function(open, side) {
+    box: (open, side) => {
         if(!open) return {
             frontRef: [8,0],
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 marker.append('rect')
-                    .attr({
-                        x: ofs[0],
-                        y: side==='right' ? -stemWidth/2 : -4,
-                        width: 8,
-                        height: side ? 4+stemWidth/2 : 8,
-                        'stroke-width': 0
-                    });
+                    .attr('x', ofs[0])
+                    .attr('y', side==='right' ? -stemWidth/2 : -4)
+                    .attr('width', 8)
+                    .attr('height', side ? 4+stemWidth/2 : 8)
+                    .attr('stroke-width', 0);
             }
         };
         else return {
             frontRef: [8,0],
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 marker.append('rect')
-                    .attr({
-                        x: ofs[0] + 0.5,
-                        y: side==='right' ? 0 : -3.5,
-                        width: 7,
-                        height: side ? 3.5 : 7,
-                        'stroke-width': 1,
-                        fill: 'none'
-                    });
+                    .attr('x', ofs[0] + 0.5)
+                    .attr('y', side==='right' ? 0 : -3.5)
+                    .attr('width', 7)
+                    .attr('height', side ? 3.5 : 7)
+                    .attr('stroke-width', 1)
+                    .attr('fill', 'none');
                 if(side)
                 marker.append('svg:path')
-                    .attr({
-                        d: ['M', ofs[0], 0, 'h',8].join(' '),
-                        'stroke-width': stemWidth,
-                        fill: 'none'
-                    });
+                    .attr('d', ['M', ofs[0], 0, 'h',8].join(' '))
+                    .attr('stroke-width', stemWidth)
+                    .attr('fill', 'none');
             }
         };
     },
-    curve: function(open, side) {
+    curve: (open, side) => {
         return {
             stems: [true,false],
             kernstems: [0, 0.25],
             frontRef: [8,0],
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var instrs = [];
                 instrs.push('M', (side==='left' ? 7.5 : 4) + ofs[0], side==='left' ? stemWidth/2 : 3.5);
                 if(side==='left')
@@ -59,27 +53,23 @@ export const builtinArrows = {
                 if(side==='right')
                     instrs.push('v', -stemWidth/2);
                 marker.append('svg:path')
-                    .attr({
-                        d: instrs.join(' '),
-                        'stroke-width': 1,
-                        fill: 'none'
-                    });
+                    .attr('d', instrs.join(' '))
+                    .attr('stroke-width', 1)
+                    .attr('fill', 'none');
                 marker.append('svg:path')
-                    .attr({
-                        d: ['M', 7 + ofs[0],  0,
-                            'h  -7'].join(' '),
-                        'stroke-width': stemWidth,
-                        fill: 'none'
-                    });
+                    .attr('d', ['M', 7 + ofs[0],  0,
+                            'h  -7'].join(' '))
+                    .attr('stroke-width', stemWidth)
+                    .attr('fill', 'none');
             }
         };
     },
-    icurve: function(open, side) {
+    icurve: (open, side) => {
         return {
             stems: [false,true],
             kernstems: [0.25,0],
             frontRef: [8,0],
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var instrs = [];
                 instrs.push('M', (side==='left' ? 0.5 : 4) + ofs[0], side==='left' ? stemWidth/2 : 3.5);
                 if(side==='left')
@@ -89,31 +79,27 @@ export const builtinArrows = {
                 if(side==='right')
                     instrs.push('v', -stemWidth/2);
                 marker.append('svg:path')
-                    .attr({
-                        d: instrs.join(' '),
-                        'stroke-width': 1,
-                        fill: 'none'
-                    });
+                    .attr('d', instrs.join(' '))
+                    .attr('stroke-width', 1)
+                    .attr('fill', 'none');
                 marker.append('svg:path')
-                    .attr({
-                        d: ['M', 1 + ofs[0],  0,
-                            'h 7'].join(' '),
-                        'stroke-width': stemWidth,
-                        fill: 'none'
-                    });
+                    .attr('d', ['M', 1 + ofs[0],  0,
+                            'h 7'].join(' '))
+                    .attr('stroke-width', stemWidth)
+                    .attr('fill', 'none');
             }
         };
     },
-    diamond: function(open, side) {
+    diamond: (open, side) => {
         if(!open) return {
             frontRef: [side ? 11.25 : 12, 0],
             backRef: [side ? 0.75 : 0, 0],
             viewBox: [0, -4, 12, 8],
             stems: [!!side, !!side],
-            kernstems: function(stemWidth) {
+            kernstems: (stemWidth) => {
                 return [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth];
             },
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var upoints = [{x: 0, y: 0}];
                 if(side !== 'left')
                     upoints.push({x: 6, y: 4});
@@ -124,18 +110,14 @@ export const builtinArrows = {
                     upoints.push({x: 6, y: -4});
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr({
-                        d: generatePath(points, 1, true),
-                        'stroke-width': 0
-                    });
+                    .attr('d', generatePath(points, 1, true))
+                    .attr('stroke-width', 0);
                 if(side) {
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', 0.75 + ofs[0],  0,
-                                'h 10.5'].join(' '),
-                            'stroke-width': stemWidth,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', 0.75 + ofs[0],  0,
+                                'h 10.5'].join(' '))
+                        .attr('stroke-width', stemWidth)
+                        .attr('fill', 'none');
                 }
             }
         };
@@ -144,10 +126,10 @@ export const builtinArrows = {
             backRef: [side ? 0.75 : 0, 0],
             viewBox: [0, -4, 12, 8],
             stems: [!!side, !!side],
-            kernstems: function(stemWidth) {
+            kernstems: (stemWidth) => {
                 return [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth];
             },
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var upoints = [{x: 0.9, y: 0}];
                 if(side !== 'left')
                     upoints.push({x: 6, y: 3.4});
@@ -158,19 +140,15 @@ export const builtinArrows = {
                     upoints.push({x: 6, y: -3.4});
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr({
-                        d: generatePath(points, 1, !side),
-                        'stroke-width': 1,
-                        fill: 'none'
-                    });
+                    .attr('d', generatePath(points, 1, !side))
+                    .attr('stroke-width', 1)
+                    .attr('fill', 'none');
                 if(side) {
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', 0.75 + ofs[0],  0,
-                                'h 10.5'].join(' '),
-                            'stroke-width': stemWidth,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', 0.75 + ofs[0],  0,
+                                'h 10.5'].join(' '))
+                        .attr('stroke-width', stemWidth)
+                        .attr('fill', 'none');
                 }
             }
         };
@@ -179,21 +157,17 @@ export const builtinArrows = {
         if(!open) return {
             frontRef: [8,0],
             stems: [!!side, !!side],
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 if(side) {
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', ofs[0], 0,
-                                'A', 4, 4, 0, 0, side==='left'?1:0, 8 + ofs[0], 0].join(' '),
-                            'stroke-width': 0
-                        });
+                        .attr('d', ['M', ofs[0], 0,
+                                'A', 4, 4, 0, 0, side==='left'?1:0, 8 + ofs[0], 0].join(' '))
+                        .attr('stroke-width', 0);
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', ofs[0],  0,
-                                'h 8'].join(' '),
-                            'stroke-width': stemWidth,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', ofs[0],  0,
+                                'h 8'].join(' '))
+                        .attr('stroke-width', stemWidth)
+                        .attr('fill', 'none');
                 }
                 else {
                     marker.append('svg:circle')
@@ -207,22 +181,18 @@ export const builtinArrows = {
         else return {
             frontRef: [8,0],
             stems: [!!side, !!side],
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 if(side) {
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', 0.5 + ofs[0], 0,
-                                'A', 3.5, 3.5, 0, 0, side==='left'?1:0, 7.5 + ofs[0], 0].join(' '),
-                            'stroke-width': 1,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', 0.5 + ofs[0], 0,
+                                'A', 3.5, 3.5, 0, 0, side==='left'?1:0, 7.5 + ofs[0], 0].join(' '))
+                        .attr('stroke-width', 1)
+                        .attr('fill', 'none');
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', ofs[0],  0,
-                                'h 8'].join(' '),
-                            'stroke-width': stemWidth,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', ofs[0],  0,
+                                'h 8'].join(' '))
+                        .attr('stroke-width', stemWidth)
+                        .attr('fill', 'none');
                 } else {
                     marker.append('svg:circle')
                         .attr('r', 3.5)
@@ -241,7 +211,7 @@ export const builtinArrows = {
             kernstems: function(stemWidth) {
                 return [0,stemWidth*4/3];
             },
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var upoints = [];
                 if(side === 'left')
                     upoints.push({x: 0, y: 0});
@@ -267,12 +237,10 @@ export const builtinArrows = {
                     .attr('stroke-width', '0px');
                 if(side) {
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', ofs[0],  0,
-                                'h', 8-4*stemWidth/3].join(' '),
-                            'stroke-width': stemWidth,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', ofs[0],  0,
+                                'h', 8-4*stemWidth/3].join(' '))
+                        .attr('stroke-width', stemWidth)
+                        .attr('fill', 'none');
                 }
             }
         };
@@ -282,7 +250,7 @@ export const builtinArrows = {
             kernstems: function(stemWidth) {
                 return [0,stemWidth*4/3];
             },
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var upoints = [];
                 if(!side) {
                     upoints = [
@@ -299,19 +267,15 @@ export const builtinArrows = {
                 }
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr({
-                        d: generatePath(points, 1, !side),
-                        'stroke-width': 1,
-                        fill: 'none'
-                    });
+                    .attr('d', generatePath(points, 1, !side))
+                    .attr('stroke-width', 1)
+                    .attr('fill', 'none');
                 if(side) {
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', ofs[0],  0,
-                                'h', 8-4/3].join(' '),
-                            'stroke-width': stemWidth,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', ofs[0],  0,
+                                'h', 8-4/3].join(' '))
+                        .attr('stroke-width', stemWidth)
+                        .attr('fill', 'none');
                 }
             }
         };
@@ -324,7 +288,7 @@ export const builtinArrows = {
             kernstems: function(stemWidth) {
                 return [stemWidth*4/3,0];
             },
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var upoints = [];
                 if(side === 'left')
                     upoints.push({x: 8, y: 0});
@@ -350,12 +314,10 @@ export const builtinArrows = {
                     .attr('stroke-width', '0px');
                 if(side) {
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', 4*stemWidth/3 + ofs[0],  0,
-                                'h', 8-4*stemWidth/3].join(' '),
-                            'stroke-width': stemWidth,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', 4*stemWidth/3 + ofs[0],  0,
+                                'h', 8-4*stemWidth/3].join(' '))
+                        .attr('stroke-width', stemWidth)
+                        .attr('fill', 'none');
                 }
             }
         };
@@ -366,7 +328,7 @@ export const builtinArrows = {
             kernstems: function(stemWidth) {
                 return [stemWidth*4/3,0];
             },
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var upoints = [];
                 if(!side) {
                     upoints = [
@@ -383,19 +345,15 @@ export const builtinArrows = {
                 }
                 var points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
-                    .attr({
-                        d: generatePath(points, 1, !side),
-                        'stroke-width': 1,
-                        fill: 'none'
-                    });
+                    .attr('d', generatePath(points, 1, !side))
+                    .attr('stroke-width', 1)
+                    .attr('fill', 'none');
                 if(side) {
                     marker.append('svg:path')
-                        .attr({
-                            d: ['M', 4*stemWidth/3 + ofs[0],  0,
-                                'h', 8-4/3].join(' '),
-                            'stroke-width': stemWidth,
-                            fill: 'none'
-                        });
+                        .attr('d', ['M', 4*stemWidth/3 + ofs[0],  0,
+                                'h', 8-4/3].join(' '))
+                        .attr('stroke-width', stemWidth)
+                        .attr('fill', 'none');
                 }
             }
         };
@@ -405,7 +363,7 @@ export const builtinArrows = {
             frontRef: [5,0],
             viewBox: [0, -5, 5, 10],
             stems: [true,false],
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var b = side === 'right' ? 0 : -5,
                     t = side === 'left' ? 0 : 5;
                 var points = [
@@ -430,7 +388,7 @@ export const builtinArrows = {
             kernstems: function(stemWidth) {
                 return [0,stemWidth];
             },
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var upoints = [
                     {x: 0, y: -5},
                     {x: 10, y: 0},
@@ -461,7 +419,7 @@ export const builtinArrows = {
             kernstems: function(stemWidth) {
                 return [stemWidth,0];
             },
-            drawFunction: function(marker, ofs, stemWidth) {
+            drawFunction: (marker, ofs, stemWidth) => {
                 var upoints = [
                     {x: 10, y: -5},
                     {x: 0, y: 0},

@@ -1,8 +1,8 @@
 import { property } from './core.js';
 import { mode } from './mode.js';
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+// External dependencies
+import { range } from 'd3-array';
 
 export function grid() {
     var _gridLayer = null;
@@ -21,36 +21,28 @@ export function grid() {
         _gridLayer = diagram.g().selectAll('g.grid-layer').data([0]);
         _gridLayer.enter().append('g').attr('class', 'grid-layer');
         var ofs = _mode.wholeOnLines() ? 0 : 0.5;
-        var vline_data = _scale >= _mode.threshold() ? d3.range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1]) + 1) : [];
+        var vline_data = _scale >= _mode.threshold() ? range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1]) + 1) : [];
         var vlines = _gridLayer.selectAll('line.grid-line.vertical')
             .data(vline_data, function(d) { return d - ofs; });
         vlines.exit().remove();
         vlines.enter().append('line')
-            .attr({
-                class: 'grid-line vertical',
-                x1: function(d) { return d - ofs; },
-                x2: function(d) { return d - ofs; }
-            });
-        vlines.attr({
-            'stroke-width': 1/_scale,
-            y1: _yDomain[0],
-            y2: _yDomain[1]
-        });
-        var hline_data = _scale >= _mode.threshold() ? d3.range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1]) + 1) : [];
+            .attr('class', 'grid-line vertical')
+            .attr('x1', d => d - ofs)
+            .attr('x2', d => d - ofs);
+        vlines.attr('stroke-width', 1/_scale)
+            .attr('y1', _yDomain[0])
+            .attr('y2', _yDomain[1]);
+        var hline_data = _scale >= _mode.threshold() ? range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1]) + 1) : [];
         var hlines = _gridLayer.selectAll('line.grid-line.horizontal')
             .data(hline_data, function(d) { return d - ofs; });
         hlines.exit().remove();
         hlines.enter().append('line')
-            .attr({
-                class: 'grid-line horizontal',
-                y1: function(d) { return d - ofs; },
-                y2: function(d) { return d - ofs; }
-            });
-        hlines.attr({
-            'stroke-width': 1/_scale,
-            x1: _xDomain[0],
-            x2: _xDomain[1]
-        });
+            .attr('class', 'grid-line horizontal')
+            .attr('y1', d => d - ofs)
+            .attr('y2', d => d - ofs);
+        hlines.attr('stroke-width', 1/_scale)
+            .attr('x1', _xDomain[0])
+            .attr('x2', _xDomain[1]);
     }
 
     function on_zoom(translate, scale, xDomain, yDomain) {

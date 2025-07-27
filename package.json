@@ -27,10 +27,10 @@
     "url": "https://github.com/dc-js/dc.graph.js.git"
   },
   "dependencies": {
-    "crossfilter2": "~1.4.8",
-    "d3": "3.x",
+    "crossfilter2": "^1.5.4",
+    "d3": "^5.8.0",
     "dagre": "^0.8.5",
-    "dc": "~2.2.2",
+    "dc": "4.0.5",
     "ink-docstrap": "^1.3.2",
     "metagraph": "^0.0.7",
     "queue-async": "~1.x",
@@ -74,9 +74,10 @@
     "x-editable": "1.5.x"
   },
   "scripts": {
+    "vendor": "cp sync-url-options.js web/js/ && cp querystring.js web/js/",
     "build": "rollup -c && cp dist/dc-graph.js web/js/ && cp dist/dc-graph.js.map web/js/",
     "build:workers": "rollup -c worker.rollup.config.js && cp *.worker.js web/js/ && cp *.worker.js.map web/js/",
-    "build:all": "npm run build && npm run build:workers",
+    "build:all": "npm run vendor && npm run build && npm run build:workers",
     "build:watch": "rollup -c -w",
     "dev": "rollup -c -w",
     "serve": "cd web && python3 -m http.server 8888",

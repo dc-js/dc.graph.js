@@ -2,3 +2,15 @@ node_modules
 .grunt
 web/docs/html
 *~
+
+# Build outputs
+dist/
+*.worker.js
+*.worker.js.map
+web/js/dc-graph.js
+web/js/dc-graph.js.map
+d3v4-force.js
+lysenko-interval-tree.js
+
+# Package manager lock files (keep package-lock.json, ignore yarn)
+yarn.lock

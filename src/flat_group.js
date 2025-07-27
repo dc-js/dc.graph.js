@@ -8,6 +8,8 @@
  * the node or edge.
  */
 
+import crossfilter from 'crossfilter2';
+
 export const flatGroup = (function() {
     var reduce_01 = {
         add: function(p, v) { return v; },

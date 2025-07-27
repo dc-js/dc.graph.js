@@ -1,11 +1,11 @@
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
 
 // External dependency loaded as global
-const d3 = globalThis.d3;
+import { select } from 'd3-selection';
 
 export function pathSelector(parent, reader, pathsgroup, chartgroup) {
     var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
-    var root = d3.select(parent).append('svg');
+    var root = select(parent).append('svg');
     var paths_ = [];
     var hovered = null, selected = null;
 
@@ -56,7 +56,7 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
           .each(function(path_data, i) {
             var nodes = path_data.element_list.filter(function(d) { return d.element_type === 'node'; });
             // line
-            var line = d3.select(this).append('line');
+            var line = select(this).append('line');
             line.attr('x1', xpadding+space)
               .attr('y1', radius+1)
               .attr('x2', xpadding+space*nodes.length)
@@ -66,7 +66,7 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
               .attr('stroke', '#bdbdbd');
 
             // dots
-            var path = d3.select(this).selectAll('circle').data(nodes);
+            var path = select(this).selectAll('circle').data(nodes);
             path.enter()
               .append('circle')
               .attr('cx', function(d, i) { return xpadding+space*(i+1); })
@@ -80,7 +80,7 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
               });
 
             // label
-            var text = d3.select(this).append('text');
+            var text = select(this).append('text');
             text.text('Path '+i)
               .attr('class', 'path_label')
               .attr('x', 0)
@@ -105,11 +105,11 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
           var textColor = is_hovered(d) ? '#e41a1c' : 'black';
           var lineColor = is_hovered(d) ? 'black' : '#bdbdbd';
           var opacity = is_hovered(d) ? '1' : '0.4';
-          d3.select(this).select('.path_label').attr('fill', textColor);
-          d3.select(this).selectAll('line')
+          select(this).select('.path_label').attr('fill', textColor);
+          select(this).selectAll('line')
             .attr('stroke', lineColor)
             .attr('opacity', opacity);
-          d3.select(this).selectAll('circle').attr('opacity', opacity);
+          select(this).selectAll('circle').attr('opacity', opacity);
         });
     }
 
@@ -120,12 +120,12 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
             var textWeight = is_selected(d) ? 'bold' : 'normal';
             var lineColor = is_selected(d) ? 'black' : '#bdbdbd';
             var opacity = is_selected(d) ? '1' : '0.4';
-            d3.select(this).select('.path_label')
+            select(this).select('.path_label')
               .attr('font-weight', textWeight);
-            d3.select(this).selectAll('line')
+            select(this).selectAll('line')
               .attr('stroke', lineColor)
               .attr('opacity', opacity);
-            d3.select(this).selectAll('circle').attr('opacity', opacity);
+            select(this).selectAll('circle').attr('opacity', opacity);
           });
     }
 

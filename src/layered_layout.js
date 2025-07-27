@@ -3,8 +3,7 @@
  * @module layered_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+import { dispatch } from 'd3-dispatch';
 import { uuid, property } from './core.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
 import { supergraph } from './supergraph.js';
@@ -17,7 +16,7 @@ import { supergraph } from './supergraph.js';
  **/
 export function layeredLayout(id) {
     var _layoutId = id || uuid();
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
     var _supergraph, _subgraphs;
     var _layers;
     var _options = null;
@@ -95,7 +94,7 @@ export function layeredLayout(id) {
                 layout_layers(layout, max, ups),
                 layout_layers(layout, max, downs)
             ]).then(function() {
-                _dispatch.end(
+                _dispatch.call("end", null,
                     _supergraph.nodes().map(function(n) { return n.value(); }),
                     _supergraph.edges().map(function(e) { return e.value(); }));
             });
@@ -158,7 +157,7 @@ export function layeredLayout(id) {
     }
 
     function start() {
-        _dispatch.start();
+        _dispatch.call("start");
     }
 
     function stop() {

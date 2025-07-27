@@ -1,4 +1,6 @@
 import { mode } from './mode.js';
+import { dispatch } from 'd3-dispatch';
+import { brush as d3Brush, brushSelection } from 'd3-brush';
 
 /**
  * `brush` is a {@link mode mode} providing a simple wrapper over
@@ -7,26 +9,26 @@ import { mode } from './mode.js';
  * @return {brush}
  **/
 export function brush() {
-    var _brush = null, _gBrush, _dispatch = d3.dispatch('brushstart', 'brushmove', 'brushend');
+    var _brush = null, _gBrush, _dispatch = dispatch('brushstart', 'brushmove', 'brushend');
 
     function brushstart() {
-        _dispatch.brushstart();
+        _dispatch.call("brushstart");
     }
-    function brushmove() {
-        var ext = _brush.extent();
-        _dispatch.brushmove(ext);
+    function brushmove(event) {
+        var ext = event.selection;
+        _dispatch.call("brushmove", null, ext);
     }
     function brushend() {
-        _dispatch.brushend();
-        _gBrush.call(_brush.clear());
+        _dispatch.call("brushend");
+        _gBrush.call(_brush.move, null);
     }
     function install_brush(diagram) {
         if(!_brush) {
-            _brush = d3.svg.brush()
-                .x(diagram.x()).y(diagram.y())
-                .on('brushstart.brush-mode', brushstart)
+            _brush = d3Brush()
+                .extent([[diagram.x().range()[0], diagram.y().range()[1]], [diagram.x().range()[1], diagram.y().range()[0]]])
+                .on('start.brush-mode', brushstart)
                 .on('brush.brush-mode', brushmove)
-                .on('brushend.brush-mode', brushend);
+                .on('end.brush-mode', brushend);
         }
         if(!_gBrush) {
             _gBrush = diagram.svg().insert('g', ':first-child')

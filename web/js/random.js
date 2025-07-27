@@ -8,6 +8,12 @@ import {
   symbolPortStyle,
   fixNodes
 } from './dc-graph.js';
+import sync_url_options from './sync-url-options.js';
+import dcgraph_domain from './dc.graph.tracker.domain.js';
+import querystring from './querystring.js';
+import { select } from 'd3-selection';
+import { rgb } from 'd3-color';
+import { scaleOrdinal } from 'd3-scale';
 
 const growingDiagram = diagram('#graph');
 const options = {
@@ -105,15 +111,15 @@ growingDiagram
     .nodeStrokeWidth(0) // turn off outlines
     .nodeLabel(function(kv) { return kv.key; })
     .nodeLabelFill(sync_url.vals.shape === 'plain' ? 'black' : function(n) {
-        const rgb = d3.rgb(growingDiagram.nodeFillScale()(growingDiagram.nodeFill()(n)));
+        const color = rgb(growingDiagram.nodeFillScale()(growingDiagram.nodeFill()(n)));
         // https://www.w3.org/TR/AERT#color-contrast
-        const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+        const brightness = (color.r * 299 + color.g * 587 + color.b * 114) / 1000;
         return brightness > 127 ? 'black' : 'ghostwhite';
     })
     .nodeFill(function(kv) {
         return kv.value.color;
     })
-    .nodeFillScale(d3.scale.ordinal().range(
+    .nodeFillScale(scaleOrdinal().range(
         ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
          '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
     .nodeOpacity(sync_url.vals.opacity)
@@ -158,13 +164,13 @@ function runRandomDemo() {
 
 runRandomDemo();
 
-d3.select('#play-stop').on('click', function() {
+select('#play-stop').on('click', function() {
     if(randomDemoInterval) {
-        d3.select('#play-stop').attr('class', 'fas fa-play');
+        select('#play-stop').attr('class', 'fas fa-play');
         window.clearInterval(randomDemoInterval);
         randomDemoInterval = null;
     } else {
-        d3.select('#play-stop').attr('class', 'fas fa-pause');
+        select('#play-stop').attr('class', 'fas fa-pause');
         runRandomDemo();
     }
 });

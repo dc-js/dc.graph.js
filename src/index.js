@@ -28,7 +28,6 @@ export { diagram } from './diagram.js';
 export { colaLayout } from './cola_layout.js';
 export { dagreLayout } from './dagre_layout.js';
 export { dynagraphLayout } from './dynagraph_layout.js';
-export { d3ForceLayout } from './d3_force_layout.js';
 export { d3v4ForceLayout } from './d3v4_force_layout.js';
 export { treeLayout } from './tree_layout.js';
 export { manualLayout } from './manual_layout.js';

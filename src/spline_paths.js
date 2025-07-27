@@ -2,6 +2,7 @@ import { mode } from './mode.js';
 import { deprecateFunction } from './core.js';
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
 import { uniq } from './utils.js';
+import { event } from 'd3-selection';
 
 export function splinePaths(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
@@ -439,7 +440,7 @@ export function splinePaths(pathreader, pathprops, hoverprops, selectprops, path
                     i = selected.indexOf(d);
                 if(i !== -1)
                     selected.splice(i, 1);
-                else if(d3.event.shiftKey)
+                else if(event.shiftKey)
                     selected.push(d);
                 else
                     selected = [d];

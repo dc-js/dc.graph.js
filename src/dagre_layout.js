@@ -3,8 +3,8 @@
  * @module dagre_layout
  */
 
-// External dependencies loaded as globals
-const d3 = globalThis.d3;
+// External dependencies
+import { dispatch } from 'd3-dispatch';
 const dagre = globalThis.dagre;
 import { uuid, property } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
@@ -21,7 +21,7 @@ import { graphvizAttrs } from './graphviz_attrs.js';
 export function dagreLayout(id) {
     var _layoutId = id || uuid();
     var _dagreGraph = null, _tick, _done;
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
     // node and edge objects preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
@@ -83,7 +83,7 @@ export function dagreLayout(id) {
         });
 
         function dispatchState(event) {
-            _dispatch[event](
+            _dispatch.call(event, null,
                 wnodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
@@ -109,7 +109,7 @@ export function dagreLayout(id) {
     }
 
     function start(options) {
-        _dispatch.start();
+        _dispatch.call("start");
         dagre.layout(_dagreGraph);
         _done();
     }

@@ -1,5 +1,6 @@
 import { selectThingsGroup } from './select_things.js';
 import { property } from './core.js';
+import { set } from 'd3-collection';
 
 export function filterSelection(things_group, things_name) {
     things_name = things_name || 'select-nodes';
@@ -8,7 +9,7 @@ export function filterSelection(things_group, things_name) {
     function selection_changed(diagram) {
         return function(selection) {
             if(selection.length) {
-                var set = d3.set(selection);
+                var set = set(selection);
                 _mode.dimensionAccessor()(diagram).filterFunction(function(k) {
                     return set.has(k);
                 });

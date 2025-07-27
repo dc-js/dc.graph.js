@@ -1,13 +1,13 @@
 import { property } from './core.js';
 import { multiplyProperties, propertyInterpolate } from './utils.js';
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+// External dependencies
+import { easeCubic } from 'd3-ease';
 
 export function matchOpposites(diagram, deleteProps, options) {
     options = Object.assign({
         multiplier: 2,
-        ease: d3.ease('cubic')
+        ease: easeCubic
     }, options);
     var _ports, _wports, _wedges, _validTargets;
 

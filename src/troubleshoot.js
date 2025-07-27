@@ -7,10 +7,9 @@ export function troubleshoot() {
 
     function draw(diagram, node, edge, ehover) {
         if(!_debugLayer)
-            _debugLayer = diagram.g().append('g').attr({
-                class: 'troubleshoot',
-                'pointer-events': 'none'
-            });
+            _debugLayer = diagram.g().append('g')
+                .attr('class', 'troubleshoot')
+                .attr('pointer-events', 'none');
         var centers = node.data().map(function(n) {
             return {
                 x: n.cola.x,
@@ -20,15 +19,11 @@ export function troubleshoot() {
         var crosshairs = _debugLayer.selectAll('path.nodecenter').data(centers);
         crosshairs.exit().remove();
         crosshairs.enter().append('path').attr('class', 'nodecenter');
-        crosshairs.attr({
-            d: function(c) {
-                return 'M' + (c.x - _mode.xhairWidth()/2) + ',' + c.y + ' h' + _mode.xhairWidth() +
-                    ' M' + c.x + ',' + (c.y - _mode.xhairHeight()/2) + ' v' + _mode.xhairHeight();
-            },
-            opacity: _mode.xhairOpacity() !== null ? _mode.xhairOpacity() : _mode.opacity(),
-            stroke: _mode.xhairColor(),
-            'stroke-width': 1/_scale
-        });
+        crosshairs.attr('d', c => 'M' + (c.x - _mode.xhairWidth()/2) + ',' + c.y + ' h' + _mode.xhairWidth() +
+                    ' M' + c.x + ',' + (c.y - _mode.xhairHeight()/2) + ' v' + _mode.xhairHeight())
+            .attr('opacity', _mode.xhairOpacity() !== null ? _mode.xhairOpacity() : _mode.opacity())
+            .attr('stroke', _mode.xhairColor())
+            .attr('stroke-width', 1/_scale);
         function cola_point(n) {
             return {x: n.cola.x, y: n.cola.y};
         }
@@ -107,17 +102,15 @@ export function troubleshoot() {
         var domain = _debugLayer.selectAll('rect.domain').data([0]);
         domain.enter().append('rect');
         var xd = _mode.parent().x().domain(), yd = _mode.parent().y().domain();
-        domain.attr({
-            class: 'domain',
-            fill: 'none',
-            opacity: _mode.domainOpacity(),
-            stroke: _mode.domainColor(),
-            'stroke-width': _mode.domainStrokeWidth()/_scale,
-            x: xd[0],
-            y: yd[0],
-            width: xd[1] - xd[0],
-            height: yd[1] - yd[0]
-        });
+        domain.attr('class', 'domain')
+            .attr('fill', 'none')
+            .attr('opacity', _mode.domainOpacity())
+            .attr('stroke', _mode.domainColor())
+            .attr('stroke-width', _mode.domainStrokeWidth()/_scale)
+            .attr('x', xd[0])
+            .attr('y', yd[0])
+            .attr('width', xd[1] - xd[0])
+            .attr('height', yd[1] - yd[0]);
     }
     function on_zoom(translate, scale, xDomain, yDomain) {
         _translate = translate;
@@ -149,13 +142,11 @@ export function troubleshoot() {
     function draw_corners(binding, classname, color) {
         binding.exit().remove();
         binding.enter().append('path').attr('class', classname);
-        binding.attr({
-            d: corners,
-            opacity: _mode.boundsOpacity() !== null ? _mode.boundsOpacity() : _mode.opacity(),
-            stroke: color,
-            'stroke-width': 1/_scale,
-            fill: 'none'
-        });
+        binding.attr('d', corners)
+            .attr('opacity', _mode.boundsOpacity() !== null ? _mode.boundsOpacity() : _mode.opacity())
+            .attr('stroke', color)
+            .attr('stroke-width', 1/_scale)
+            .attr('fill', 'none');
     }
         function unrad(orient) {
             return +orient.replace('rad','');
@@ -163,25 +154,21 @@ export function troubleshoot() {
     function draw_arrow_orient(binding, classname, color, markerUrl) {
         binding.exit().remove();
         binding.enter().append('line').attr('class', classname);
-        binding.attr({
-            x1: function(d) { return d.pos.x; },
-            y1: function(d) { return d.pos.y; },
-            x2: function(d) { return d.pos.x - Math.cos(unrad(d.orient))*_mode.arrowLength(); },
-            y2: function(d) { return d.pos.y - Math.sin(unrad(d.orient))*_mode.arrowLength(); },
-            stroke: color,
-            'stroke-width': _mode.arrowStrokeWidth()/_scale,
-            opacity: _mode.arrowOpacity() !== null ? _mode.arrowOpacity() : _mode.opacity(),
-            'marker-end': 'url(' + markerUrl + ')'
-        });
+        binding.attr('x1', d => d.pos.x)
+            .attr('y1', d => d.pos.y)
+            .attr('x2', d => d.pos.x - Math.cos(unrad(d.orient))*_mode.arrowLength())
+            .attr('y2', d => d.pos.y - Math.sin(unrad(d.orient))*_mode.arrowLength())
+            .attr('stroke', color)
+            .attr('stroke-width', _mode.arrowStrokeWidth()/_scale)
+            .attr('opacity', _mode.arrowOpacity() !== null ? _mode.arrowOpacity() : _mode.opacity())
+            .attr('marker-end', 'url(' + markerUrl + ')');
     }
     function orient_marker(color, markerEnter) {
         markerEnter
-            .attr({
-                viewBox: '0 -3 3 6',
-                refX: 3,
-                refY: 0,
-                orient: 'auto'
-            });
+            .attr('viewBox', '0 -3 3 6')
+            .attr('refX', 3)
+            .attr('refY', 0)
+            .attr('orient', 'auto');
         markerEnter.append('path')
             .attr('stroke', color)
             .attr('fill', 'none')
@@ -223,18 +210,11 @@ export function troubleshoot() {
         var xw = _mode.xWidth()/2, xh = _mode.xHeight()/2;
         binding.exit().remove();
         binding.enter().append('path').attr('class', classname);
-        binding.attr({
-            d: function(pos) {
-                return [[[-xw,-xh],[xw,xh]], [[xw,-xh], [-xw,xh]]].map(function(seg) {
-                    return 'M' + seg.map(function(p) {
-                        return (pos[0] + p[0]) + ',' + (pos[1] + p[1]);
-                    }).join(' L');
-                }).join(' ');
-            },
-            'stroke-width': 2/_scale,
-            stroke: color,
-            opacity: _mode.xOpacity()
-        });
+        binding.attr('d', pos => [[[-xw,-xh],[xw,xh]], [[xw,-xh], [-xw,xh]]].map(seg => 
+                    'M' + seg.map(p => (pos[0] + p[0]) + ',' + (pos[1] + p[1])).join(' L')).join(' '))
+            .attr('stroke-width', 2/_scale)
+            .attr('stroke', color)
+            .attr('opacity', _mode.xOpacity());
     }
     function remove(diagram, node, edge, ehover) {
         if(_debugLayer)

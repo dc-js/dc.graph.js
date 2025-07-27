@@ -1,4 +1,5 @@
 import { functorWrap, property } from './core.js';
+import { set } from 'd3-collection';
 
 export function validate(title) {
     function falsy(objects, accessor, what, who) {
@@ -41,7 +42,7 @@ export function validate(title) {
         check(falsy(edges, diagram.edgeSource(), 'edgeSource', 'edges'));
         check(falsy(edges, diagram.edgeTarget(), 'edgeTarget', 'edges'));
 
-        var contentTypes = d3.set(diagram.content.enum());
+        var contentTypes = set(diagram.content.enum());
         var ct = functorWrap(diagram.nodeContent());
         var noContentNodes = nodes.filter(function(kv) {
             return !contentTypes.has(ct(kv));
@@ -74,11 +75,11 @@ export function validate(title) {
             });
             if(diagram.edgeSourcePortName())
                 check(not_found(pindex, edges, function(e) {
-                    return diagram.edgeSource()(e) + ' - ' + d3.functor(diagram.edgeSourcePortName())(e);
+                    return diagram.edgeSource()(e) + ' - ' + functorWrap(diagram.edgeSourcePortName())(e);
                 }, 'edgeSourcePortName', 'ports', 'edges'));
             if(diagram.edgeTargetPortName())
                 check(not_found(pindex, edges,  function(e) {
-                    return diagram.edgeTarget()(e) + ' - ' + d3.functor(diagram.edgeTargetPortName())(e);
+                    return diagram.edgeTarget()(e) + ' - ' + functorWrap(diagram.edgeTargetPortName())(e);
                 }, 'edgeTargetPortName', 'ports', 'edges'));
         }
 

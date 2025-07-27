@@ -214,7 +214,7 @@ export function renderWebgl() {
     };
 
     _renderer.fireTSEvent = function(dispatch, drawState) {
-        dispatch.transitionsStarted(_scene, drawState);
+        dispatch.call("transitionsStarted", _scene, drawState);
     };
 
     _renderer.calculateBounds = function(drawState) {

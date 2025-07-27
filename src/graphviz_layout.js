@@ -3,8 +3,8 @@
  * @module graphviz_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+// External dependencies
+import { dispatch, json } from 'd3';
 import { uuid, property } from './core.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
 
@@ -20,7 +20,7 @@ import { graphvizAttrs } from './graphviz_attrs.js';
  **/
 export function graphvizLayout(id, layout, server) {
     var _layoutId = id || uuid();
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
     var _dotInput, _dotString;
 
     function init(options) {
@@ -111,7 +111,7 @@ export function graphvizLayout(id, layout, server) {
             console.warn("graphviz layout failed: ", error);
             return;
         }
-        _dispatch.start();
+        _dispatch.call("start");
         var bb = result.bb.split(',').map(function(x) { return +x; });
         var nodes = (result.objects || []).filter(function(n) {
             return n.pos; // remove non-nodes like clusters
@@ -148,12 +148,12 @@ export function graphvizLayout(id, layout, server) {
             }
             return e2;
         });
-        _dispatch.end(nodes, edges, clusters);
+        _dispatch.call("end", null, nodes, edges, clusters);
     }
 
     function start() {
         if(server) {
-            d3.json(server)
+            json(server)
                 .header("Content-type", "application/x-www-form-urlencoded")
                 .post('layouttool=' + layout + '&' + encodeURIComponent(_dotString), process_response);
         }

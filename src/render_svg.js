@@ -1,3 +1,5 @@
+import { select, selectAll } from 'd3-selection';
+import { zoom } from 'd3-zoom';
 import { compose, generatePath } from './utils.js'
 import { property, identity } from './core.js';
 import { keyboard as keyboardMode } from './keyboard.js';
@@ -45,15 +47,11 @@ export function renderSvg() {
             node.call(shape.update);
         });
         node.select('.node-fill')
-            .attr({
-                fill: compose(_renderer.parent().nodeFillScale() || identity, _renderer.parent().nodeFill.eval)
-            });
+            .attr('fill', compose(_renderer.parent().nodeFillScale() || identity, _renderer.parent().nodeFill.eval));
         node.select('.node-outline')
-            .attr({
-                stroke: _renderer.parent().nodeStroke.eval,
-                'stroke-width': _renderer.parent().nodeStrokeWidth.eval,
-                'stroke-dasharray': _renderer.parent().nodeStrokeDashArray.eval
-            });
+            .attr('stroke', _renderer.parent().nodeStroke.eval)
+            .attr('stroke-width', _renderer.parent().nodeStrokeWidth.eval)
+            .attr('stroke-dasharray', _renderer.parent().nodeStrokeDashArray.eval);
         return _renderer;
     };
     _renderer.redrawEdge = _renderer._updateEdge = function(edge, edgeArrows) {
@@ -85,20 +83,20 @@ export function renderSvg() {
         selector = selector || '.node';
         return _nodeLayer && _nodeLayer.selectAll(selector).filter(function(n) {
             return !n.deleted;
-        }) || d3.selectAll('.foo-this-does-not-exist');
+        }) || selectAll('.foo-this-does-not-exist');
     };
 
     _renderer.selectAllEdges = function(selector) {
         selector = selector || '.edge';
         return _edgeLayer && _edgeLayer.selectAll(selector).filter(function(e) {
             return !e.deleted;
-        }) || d3.selectAll('.foo-this-does-not-exist');
+        }) || selectAll('.foo-this-does-not-exist');
     };
 
     _renderer.selectAllDefs = function(selector) {
         return _defs && _defs.selectAll(selector).filter(function(def) {
             return !def.deleted;
-        }) || d3.selectAll('.foo-this-does-not-exist');
+        }) || selectAll('.foo-this-does-not-exist');
     };
 
     _renderer.resize = function(w, h) {
@@ -164,11 +162,9 @@ export function renderSvg() {
         var edge = _edgeLayer.selectAll('.edge')
                 .data(wedges, _renderer.parent().edgeKey.eval);
         var edgeEnter = edge.enter().append('svg:path')
-                .attr({
-                    class: 'edge',
-                    id: _renderer.parent().edgeId,
-                    opacity: 0
-                })
+                .attr('class', 'edge')
+                .attr('id', _renderer.parent().edgeId)
+                .attr('opacity', 0)
             .each(function(e) {
                 e.deleted = false;
             });
@@ -183,20 +179,18 @@ export function renderSvg() {
         var edgeArrows = _edgeLayer.selectAll('.edge-arrows')
                 .data(wedges, _renderer.parent().edgeKey.eval);
         var edgeArrowsEnter = edgeArrows.enter().append('svg:path')
-                .attr({
-                    class: 'edge-arrows',
-                    id: function(d) {
-                        return _renderer.parent().edgeId(d) + '-arrows';
-                    },
-                    fill: 'none',
-                    opacity: 0
-                });
+                .attr('class', 'edge-arrows')
+                .attr('id', function(d) {
+                    return _renderer.parent().edgeId(d) + '-arrows';
+                })
+                .attr('fill', 'none')
+                .attr('opacity', 0);
         edgeArrows.exit().transition()
             .duration(_renderer.parent().stagedDuration())
             .delay(_renderer.parent().deleteDelay())
             .attr('opacity', 0)
             .remove()
-            .each('end.delarrow', function(e) {
+            .on('end.delarrow', function(e) {
                 edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'head', null);
                 edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'tail', null);
             });
@@ -239,10 +233,9 @@ export function renderSvg() {
         var textPaths = _defs.selectAll('path.edge-label-path')
                 .data(wedges, _renderer.parent().textpathId);
         var textPathsEnter = textPaths.enter()
-                .append('svg:path').attr({
-                    class: 'edge-label-path',
-                    id: _renderer.parent().textpathId
-                });
+                .append('svg:path')
+                .attr('class', 'edge-label-path')
+                .attr('id', _renderer.parent().textpathId);
         edgeLabels.exit().transition()
             .duration(_renderer.parent().stagedDuration())
             .delay(_renderer.parent().deleteDelay())
@@ -269,7 +262,7 @@ export function renderSvg() {
             .attr('opacity', 0)
             .remove();
 
-        dispatch.drawn(node, edge, edgeHover);
+        dispatch.call("drawn", node, edge, edgeHover);
 
         var drawState = {
             node: node,
@@ -308,7 +301,7 @@ export function renderSvg() {
         edgeHover = edgeHover || _renderer.selectAllEdges('.edge-hover');
         edgeLabels = edgeLabels || _renderer.selectAllEdges('.edge-label-wrapper');
         textPaths = textPaths || _renderer.selectAllDefs('path.edge-label-path');
-        var nullSel = d3.select(null); // no enters
+        var nullSel = select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, edgeArrows, nullSel, textPaths, nullSel, false);
         return this;
     };
@@ -345,14 +338,16 @@ export function renderSvg() {
     function generate_edge_path(age, full) {
         var field = full ? 'full' : 'path';
         return function(e) {
-            var path = e.pos[age][field];
+            var path = e.pos?.[age]?.[field];
+            if (!path) return '';
             return generatePath(path.points, path.bezDegree);
         };
     };
 
     function generate_edge_label_path(age) {
         return function(e) {
-            var path = e.pos[age].path;
+            var path = e.pos?.[age]?.path;
+            if (!path) return '';
             var points = path.points[path.points.length-1].x < path.points[0].x ?
                     path.points.slice(0).reverse() : path.points;
             return generatePath(points, path.bezDegree);
@@ -409,7 +404,7 @@ export function renderSvg() {
                 .attr('transform', function (n) {
                     return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
                 })
-                .each('end.record', function(n) {
+                .on('end.record', function(n) {
                     n.prevX = n.cola.x;
                     n.prevY = n.cola.y;
                 });
@@ -534,12 +529,10 @@ export function renderSvg() {
             });
         elabels.enter()
           .append('text')
-            .attr({
-                'class': 'edge-label',
-                'text-anchor': 'middle',
-                dy: function(_, i) {
-                    return i * _renderer.parent().edgeLabelSpacing.eval(this.parentNode) -2;
-                }
+            .attr('class', 'edge-label')
+            .attr('text-anchor', 'middle')
+            .attr('dy', function(_, i) {
+                return i * _renderer.parent().edgeLabelSpacing.eval(this.parentNode) -2;
             })
           .append('textPath')
             .attr('startOffset', '50%');
@@ -547,10 +540,10 @@ export function renderSvg() {
           .select('textPath')
             .html(function(t) { return t; })
             .attr('opacity', function() {
-                return _renderer.parent().edgeOpacity.eval(d3.select(this.parentNode.parentNode).datum());
+                return _renderer.parent().edgeOpacity.eval(select(this.parentNode.parentNode).datum());
             })
             .attr('xlink:href', function(e) {
-                var id = _renderer.parent().textpathId(d3.select(this.parentNode.parentNode).datum());
+                var id = _renderer.parent().textpathId(select(this.parentNode.parentNode).datum());
                 // angular on firefox needs absolute paths for fragments
                 return window.location.href.split('#')[0] + '#' + id;
             });
@@ -621,7 +614,7 @@ export function renderSvg() {
         transitions.forEach(function(transition) {
             transition
                 .each(function() { ++n; })
-                .each('end.all', function() { if (!--n) callback(); });
+                .on('end.all', function() { if (!--n) callback(); });
         });
     }
 
@@ -712,7 +705,7 @@ export function renderSvg() {
     };
 
     _renderer.fireTSEvent = function(dispatch, drawState) {
-        dispatch.transitionsStarted(drawState.node, drawState.edge, drawState.edgeHover);
+        dispatch.call("transitionsStarted", drawState.node, drawState.edge, drawState.edgeHover);
     };
 
     _renderer.calculateBounds = function(drawState) {
@@ -813,53 +806,47 @@ export function renderSvg() {
         // for lack of a better place
         _renderer.addOrRemoveDef('node-clip-top', true, 'clipPath', function(clipPath) {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect').attr({
-                    x: -1000,
-                    y: -1000,
-                    width: 2000,
-                    height: 1000
-                });
+                .enter().append('rect')
+                .attr('x', -1000)
+                .attr('y', -1000)
+                .attr('width', 2000)
+                .attr('height', 1000);
         });
         _renderer.addOrRemoveDef('node-clip-bottom', true, 'clipPath', function(clipPath) {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect').attr({
-                    x: -1000,
-                    y: 0,
-                    width: 2000,
-                    height: 1000
-                });
+                .enter().append('rect')
+                .attr('x', -1000)
+                .attr('y', 0)
+                .attr('width', 2000)
+                .attr('height', 1000);
         });
         _renderer.addOrRemoveDef('node-clip-left', true, 'clipPath', function(clipPath) {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect').attr({
-                    x: -1000,
-                    y: -1000,
-                    width: 1000,
-                    height: 2000
-                });
+                .enter().append('rect')
+                .attr('x', -1000)
+                .attr('y', -1000)
+                .attr('width', 1000)
+                .attr('height', 2000);
         });
         _renderer.addOrRemoveDef('node-clip-right', true, 'clipPath', function(clipPath) {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect').attr({
-                    x: 0,
-                    y: -1000,
-                    width: 1000,
-                    height: 2000
-                });
+                .enter().append('rect')
+                .attr('x', 0)
+                .attr('y', -1000)
+                .attr('width', 1000)
+                .attr('height', 2000);
         });
         _renderer.addOrRemoveDef('node-clip-none', true, 'clipPath', function(clipPath) {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect').attr({
-                    x: 0,
-                    y: 0,
-                    width: 0,
-                    height: 0
-                });
+                .enter().append('rect')
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr('width', 0)
+                .attr('height', 0);
         });
 
-        _zoom = d3.behavior.zoom()
+        _zoom = zoom()
             .on('zoom.diagram', _renderer.parent().doZoom)
-            .x(_renderer.parent().x()).y(_renderer.parent().y())
             .scaleExtent(_renderer.parent().zoomExtent());
         if(_renderer.parent().mouseZoomable()) {
             var mod, mods;

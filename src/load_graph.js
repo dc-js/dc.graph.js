@@ -1,3 +1,5 @@
+import { set, json, text, dsv, csv } from 'd3';
+
 function processDot(callback, error, text) {
     if(error) {
         callback(error, null);
@@ -78,7 +80,7 @@ function processDsv(callback, error, data) {
     }
     var keys = Object.keys(data[0]);
     var source = keys[0], target = keys[1];
-    var nodes = d3.set(data.map(function(r) { return r[source]; }));
+    var nodes = set(data.map(function(r) { return r[source]; }));
     data.forEach(function(r) {
         nodes.add(r[target]);
     });
@@ -99,7 +101,7 @@ export const fileFormats = [
     {
         exts: 'json',
         mimes: 'application/json',
-        from_url: d3.json,
+        from_url: json,
         from_text: function(text, callback) {
             callback(null, JSON.parse(text));
         }
@@ -108,7 +110,7 @@ export const fileFormats = [
         exts: ['gv', 'dot'],
         mimes: 'text/vnd.graphviz',
         from_url: function(url, callback) {
-            d3.text(url, processDot.bind(null, callback));
+            text(url, processDot.bind(null, callback));
         },
         from_text: function(text, callback) {
             processDot(callback, null, text);
@@ -118,20 +120,20 @@ export const fileFormats = [
         exts: 'psv',
         mimes: 'text/psv',
         from_url: function(url, callback) {
-            d3.dsv('|', 'text/plain')(url, processDsv.bind(null, callback));
+            dsv('|', 'text/plain')(url, processDsv.bind(null, callback));
         },
         from_text: function(text, callback) {
-            processDsv(callback, null, d3.dsv('|').parse(text));
+            processDsv(callback, null, dsv('|').parse(text));
         }
     },
     {
         exts: 'csv',
         mimes: 'text/csv',
         from_url: function(url, callback) {
-            d3.csv(url, processDsv.bind(null, callback));
+            csv(url, processDsv.bind(null, callback));
         },
         from_text: function(text, callback) {
-            processDsv(callback, null, d3.csv.parse(text));
+            processDsv(callback, null, csv.parse(text));
         }
     }
 ];
@@ -190,8 +192,8 @@ export function loadGraph() {
     if(file2) {
         // this is not general - really titan-specific
         queue()
-            .defer(d3.json, file1)
-            .defer(d3.json, file2)
+            .defer(json, file1)
+            .defer(json, file2)
             .await(function(error, nodes, edges) {
                 if(error)
                     callback(error, null);

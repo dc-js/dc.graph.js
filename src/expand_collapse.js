@@ -35,25 +35,16 @@ export function expandCollapse(options) {
             return;
         _gradients_added[color] = true;
         diagram.addOrRemoveDef('spike-gradient-' + color, true, 'linearGradient', function(gradient) {
-            gradient.attr({
-                x1: '0%',
-                y1: '0%',
-                x2: '100%',
-                y2: '0%',
-                spreadMethod: 'pad'
-            });
+            gradient.attr('x1', '0%')
+                .attr('y1', '0%')
+                .attr('x2', '100%')
+                .attr('y2', '0%')
+                .attr('spreadMethod', 'pad');
             gradient.selectAll('stop').data([[0, color, 1], [100, color, '0']])
-                .enter().append('stop').attr({
-                    offset: function(d) {
-                        return d[0] + '%';
-                    },
-                    'stop-color': function(d) {
-                        return d[1];
-                    },
-                    'stop-opacity': function(d) {
-                        return d[2];
-                    }
-                });
+                .enter().append('stop')
+                    .attr('offset', d => d[0] + '%')
+                    .attr('stop-color', d => d[1])
+                    .attr('stop-opacity', d => d[2]);
         });
     }
 
@@ -155,24 +146,18 @@ export function expandCollapse(options) {
         rect
           .enter().append('rect')
             .classed('spike', true)
-            .attr({
-                width: 25,
-                height: 3,
-                rx: 1,
-                ry: 1,
-                x: 0,
-                y: 0
-            });
-        rect.attr({
-            fill: function(s) {
+            .attr('width', 25)
+            .attr('height', 3)
+            .attr('rx', 1)
+            .attr('ry', 1)
+            .attr('x', 0)
+            .attr('y', 0);
+        rect.attr('fill', s => {
                 var color = s.edge ? functorWrap(diagram.edgeStroke())(s.edge) : 'black';
                 add_gradient_def(color, diagram);
                 return 'url(#spike-gradient-' + color + ')';
-            },
-            transform: function(d) {
-                return 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')';
-            }
-        });
+            })
+            .attr('transform', d => 'translate(' + d.x + ',' + d.y + ') rotate(' + d.a + ')');
         rect.exit().remove();
     }
 

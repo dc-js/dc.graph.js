@@ -1,3 +1,4 @@
+import { dispatch } from 'd3';
 import { property } from './core.js';
 import { undirectedDfs } from './depth_first_traversal.js';
 
@@ -112,6 +113,7 @@ export function fixNodes(options) {
         _execute.clear_fixes();
     }
     function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
+        console.assert(Array.isArray(wnodes), 'fix_nodes.on_data: wnodes should be an array, got:', wnodes);
         _nodes = nodes;
         _wnodes = wnodes;
         _edges = edges;
@@ -191,6 +193,7 @@ fixNodes.strategy.lastNPerComponent = function(maxf) {
         on_data: function(exec, nodes, wnodes, edges, wedges, ports, wports) {
             ++_age;
             // add any existing fixes as requests
+            console.assert(Array.isArray(wnodes), 'fix_nodes strategy.on_data: wnodes should be an array, got:', wnodes);
             wnodes.forEach(function(n) {
                 var nid = exec.nodeid(n), pos = exec.get_fix(n);
                 if(pos && !_allFixes[nid])
@@ -267,7 +270,7 @@ fixNodes.strategy.lastNPerComponent = function(maxf) {
 
 export function fixNodesGroup(brushgroup) {
     window.chart_registry.create_type('fix-nodes', function() {
-        return d3.dispatch('request_fixes', 'new_node', 'new_edge');
+        return dispatch('request_fixes', 'new_node', 'new_edge');
     });
 
     return window.chart_registry.create_group('fix-nodes', brushgroup);

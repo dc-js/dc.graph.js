@@ -3,9 +3,9 @@
  * @module cola_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
-// webcola is loaded as a global script
+// External dependencies
+import { dispatch } from 'd3-dispatch';
+// webcola is loaded as a global script and expects global d3
 const cola = globalThis.cola;
 import { uuid, property } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
@@ -20,7 +20,7 @@ export function colaLayout(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
     var _setcola_nodes;
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
     var _flowLayout;
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
@@ -29,7 +29,7 @@ export function colaLayout(id) {
 
     function init(options) {
         _options = options;
-        _d3cola = cola.d3adaptor()
+        _d3cola = cola.d3adaptor(globalThis.d3)
             .avoidOverlaps(true)
             .size([options.width, options.height])
             .handleDisconnected(options.handleDisconnected);
@@ -133,15 +133,18 @@ export function colaLayout(id) {
         }
 
         function dispatchState(event) {
-            // clean up extra setcola annotations
-            wnodes.forEach(function(n) {
-                Object.keys(n).forEach(function(key) {
-                    if(/^get/.test(key) && typeof n[key] === 'function')
-                        delete n[key];
+            // Get the actual nodes that WebCola is working with and make copies
+            var currentNodes = _d3cola.nodes().map(function(n) {
+                var copy = Object.assign({}, n);
+                // clean up extra setcola annotations from the copy
+                Object.keys(copy).forEach(function(key) {
+                    if(/^get/.test(key) && typeof copy[key] === 'function')
+                        delete copy[key];
                 });
+                return copy;
             });
-            _dispatch[event](
-                wnodes,
+            _dispatch.call(event, null,
+                currentNodes,
                 wedges.map(function(e) {
                     return {dcg_edgeKey: e.dcg_edgeKey};
                 }),
@@ -163,7 +166,7 @@ export function colaLayout(id) {
         _d3cola.on('tick', /* _tick = */ function() {
             dispatchState('tick');
         }).on('start', function() {
-            _dispatch.start();
+            _dispatch.call("start");
         }).on('end', /* _done = */ function() {
             dispatchState('end');
         });
@@ -178,6 +181,7 @@ export function colaLayout(id) {
                 .layout();
 
             _setcola_nodes = setcola_result.nodes.filter(function(n) { return n._cid; });
+            wnodes = setcola_result.nodes;
             _d3cola.nodes(setcola_result.nodes)
                 .links(setcola_result.links)
                 .constraints(setcola_result.constraints)

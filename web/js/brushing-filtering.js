@@ -1,4 +1,11 @@
 import { diagram, engines, spawnEngine, flatGroup, randomGraph, mungeGraph, loadGraphText, loadGraph, selectNodes, filterSelection, moveNodes, fixNodes, selectEdges } from './dc-graph.js';
+import sync_url_options from './sync-url-options.js';
+import dcgraph_domain from './dc.graph.tracker.domain.js';
+import { select } from 'd3-selection';
+import { rgb } from 'd3-color';
+import { scaleOrdinal } from 'd3-scale';
+import { redrawAll, renderAll, pluck, PieChart, RowChart } from 'dc';
+import querystring from 'querystring';
 
 var selectionDiagram = diagram('#graph'), pie, row;
 
@@ -41,7 +48,7 @@ var options = {
 var sync_url = sync_url_options(options, dcgraph_domain(selectionDiagram), selectionDiagram);
 
 function display_error(heading, message) {
-    d3.select('#message')
+    select('#message')
         .style('display', null)
         .html('<div><h1>' + heading + '</h1>' +
               (message ? '<code>' + message + '</code></div>' : ''));
@@ -49,7 +56,7 @@ function display_error(heading, message) {
 }
 
 function hide_error() {
-    d3.select('#message')
+    select('#message')
         .style('display', 'none');
 }
 
@@ -124,10 +131,10 @@ var on_load = function(filename, error, data) {
     var graph_data = mungeGraph(data);
     load_graph(graph_data.nodes, graph_data.edges);
     selectionDiagram.autoZoom('once');
-    dc.redrawAll();
+    redrawAll();
 };
 
-d3.select('#user-file').on('change', function() {
+select('#user-file').on('change', function() {
     var filename = this.value;
     if(filename) {
         var reader = new FileReader();
@@ -164,9 +171,9 @@ selectionDiagram
     .nodeStrokeWidth(0) // turn off outlines
     .nodeLabel('')
     .nodeLabelFill(function(n) {
-        var rgb = d3.rgb(selectionDiagram.nodeFillScale()(selectionDiagram.nodeFill()(n))),
+        var rgbColor = rgb(selectionDiagram.nodeFillScale()(selectionDiagram.nodeFill()(n))),
             // https://www.w3.org/TR/AERT#color-contrast
-            brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+            brightness = (rgbColor.r * 299 + rgbColor.g * 587 + rgbColor.b * 114) / 1000;
         return brightness > 127 ? 'black' : 'ghostwhite';
     })
     .nodeFill(function(kv) {
@@ -175,8 +182,8 @@ selectionDiagram
     .nodeOpacity(0.25)
     .edgeOpacity(0.25)
     .timeLimit(1000)
-    .nodeFillScale(d3.scale.ordinal().domain([0,1,2]).range(colors))
-    .nodeTitle(dc.pluck('key'))
+    .nodeFillScale(scaleOrdinal().domain([0,1,2]).range(colors))
+    .nodeTitle(pluck('key'))
     .edgeStrokeDashArray(function(e) {
         return dasheses[e.value.dash].ray;
     })
@@ -206,16 +213,16 @@ selectionDiagram.child('filter-selection-edges',
               filterSelection('select-edges-group', 'select-edges')
               .dimensionAccessor(function(c) { return c.edgeDimension(); }));
 
-pie = dc.pieChart('#pie')
+pie = new PieChart('#pie')
     .width(150).height(150)
     .radius(75)
-    .colors(d3.scale.ordinal().domain([0,1,2]).range(colors))
+    .colors(scaleOrdinal().domain([0,1,2]).range(colors))
     .label(function() { return ''; })
     .title(function(kv) {
         return colors[kv.key] + ' nodes (' + kv.value + ')';
     });
 
-row = dc.rowChart('#row')
+row = new RowChart('#row')
     .width(300).height(150)
     .label(function(kv) {
         return dasheses[kv.key].name;
@@ -225,5 +232,5 @@ if(sync_url.vals.file)
     loadGraph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
 else {
     populate(sync_url.vals.n);
-    dc.renderAll();
+    renderAll();
 }

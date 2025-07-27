@@ -1,45 +1,45 @@
 import { mode } from './mode.js';
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+// External dependencies
+import { dispatch, set, select, event } from 'd3';
 
 export function keyboard() {
-    var _dispatch = d3.dispatch('keydown', 'keyup', 'modkeyschanged');
+    var _dispatch = dispatch('keydown', 'keyup', 'modkeyschanged');
     var _unique_id = 'keyboard' + Math.floor(Math.random() * 100000);
-    var _mod_keys = d3.set(['Shift', 'Control', 'Alt', 'Meta']),
-        _pressed = d3.set();
+    var _mod_keys = set(['Shift', 'Control', 'Alt', 'Meta']),
+        _pressed = set();
 
     function pressed() {
         return _pressed.values().sort();
     }
     function keydown() {
-        if(_mod_keys.has(d3.event.key)) {
-            _pressed.add(d3.event.key);
-            _dispatch.modkeyschanged(pressed());
+        if(_mod_keys.has(event.key)) {
+            _pressed.add(event.key);
+            _dispatch.call("modkeyschanged", null, pressed());
         }
-        _dispatch.keydown();
+        _dispatch.call("keydown");
     }
     function keyup() {
-        if(_mod_keys.has(d3.event.key)) {
-            _pressed.remove(d3.event.key);
-            _dispatch.modkeyschanged(pressed());
+        if(_mod_keys.has(event.key)) {
+            _pressed.remove(event.key);
+            _dispatch.call("modkeyschanged", null, pressed());
         }
-        _dispatch.keyup();
+        _dispatch.call("keyup");
     }
     function clear() {
         if(!_pressed.empty()) {
-            _pressed = d3.set();
-            _dispatch.modkeyschanged(pressed());
+            _pressed = set();
+            _dispatch.call("modkeyschanged", null, pressed());
         }
     }
     function draw(diagram) {
-        d3.select(window)
+        select(window)
             .on('keydown.' + _unique_id, keydown)
             .on('keyup.' + _unique_id, keyup)
             .on('blur.' + _unique_id, clear);
     }
     function remove(diagram) {
-        d3.select(window)
+        select(window)
             .on('keydown.' + _unique_id, null)
             .on('keyup.' + _unique_id, null)
             .on('blur.' + _unique_id, null);

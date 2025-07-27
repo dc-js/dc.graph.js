@@ -34,12 +34,10 @@ export function drawGraphs(options) {
                 'pointer-events': 'none'
             });
 
-        line.attr({
-            x1: function(n) { return n.source.x; },
-            y1: function(n) { return n.source.y; },
-            x2: function(n) { return n.target.x; },
-            y2: function(n) { return n.target.y; }
-        });
+        line.attr('x1', n => n.source.x)
+            .attr('y1', n => n.source.y)
+            .attr('x2', n => n.target.x)
+            .attr('y2', n => n.target.y);
     }
 
     function port_pos(p) {

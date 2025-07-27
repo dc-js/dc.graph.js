@@ -1,4 +1,5 @@
 import { property, getBBoxNoThrow, isIe, isSafari } from './core.js';
+import { select } from 'd3-selection';
 import { nodeLabelPadding } from './shape.js';
 
 export function textContents() {
@@ -24,13 +25,13 @@ export function textContents() {
                 return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
             });
             tspan.enter().append('tspan');
-            tspan.attr({
-                'text-anchor': 'start',
-                'text-decoration': function(line) {
+            tspan
+                .attr('text-anchor', 'start')
+                .attr('text-decoration', function(line) {
                     return _contents.parent().nodeLabelDecoration.eval(line.node);
-                },
-                x: 0
-            }).html(function(s) { return s.line; });
+                })
+                .attr('x', 0)
+                .html(function(s) { return s.line; });
             text
                 .each(function(n) {
                     n.xofs = 0;
@@ -49,20 +50,19 @@ export function textContents() {
                     }
                 })
                 .selectAll('tspan');
-            tspan.attr({
-                'text-anchor': function(s) {
+            tspan
+                .attr('text-anchor', function(s) {
                     switch(_contents.parent().nodeLabelAlignment.eval(s.node)) {
                     case 'left': return 'start';
                     case 'center': return 'middle';
                     case 'right': return 'end';
                     }
                     return null;
-                },
-                x: function(s) {
+                })
+                .attr('x', function(s) {
                     return s.node.xofs;
-                },
-                dy: function(d) { return d.yofs; }
-            });
+                })
+                .attr('dy', function(d) { return d.yofs; });
 
             tspan.exit().remove();
             text
@@ -100,22 +100,20 @@ export function withIconContents(contents, width, height) {
             var gEnter = g.enter();
             gEnter.append('g')
                 .attr('class', 'with-icon')
-              .append('image').attr({
-                class: 'icon',
-                width: width + 'px',
-                height: height + 'px'
-            });
+              .append('image')
+                .attr('class', 'icon')
+                .attr('width', width + 'px')
+                .attr('height', height + 'px');
             g.call(contents.update);
             contents.selectContent(g)
                 .attr('transform',  'translate(' + width/2 + ')');
-            g.selectAll('image.icon').attr({
-                href: _contents.parent().nodeIcon.eval,
-                x: function(n) {
-                    var totwid = width + contents.textbox(d3.select(this.parentNode)).width;
+            g.selectAll('image.icon')
+                .attr('href', _contents.parent().nodeIcon.eval)
+                .attr('x', function(n) {
+                    var totwid = width + contents.textbox(select(this.parentNode)).width;
                     return -totwid/2 - nodeLabelPadding(_contents.parent(), n).x;
-                },
-                y: -height/2
-            });
+                })
+                .attr('y', -height/2);
         },
         textbox: function(container) {
             var box = contents.textbox(container);

@@ -3,13 +3,13 @@
  * @module manual_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+// External dependencies
+import { dispatch } from 'd3-dispatch';
 import { uuid, property } from './core.js';
 
 export function manualLayout(id) {
     var _layoutId = id || uuid();
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
 
     var _wnodes;
 
@@ -19,7 +19,7 @@ export function manualLayout(id) {
         _wnodes = nodes;
     }
     function dispatchState(wnodes, wedges, event) {
-        _dispatch[event](
+        _dispatch.call(event, null,
             wnodes,
             wedges.map(function(e) {
                 return {dcg_edgeKey: e.dcg_edgeKey};

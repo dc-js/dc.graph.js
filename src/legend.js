@@ -6,14 +6,13 @@ The dc_graph.legend shows labeled examples of nodes & edges, within the frame of
 import { property, deprecateFunction, getOriginal } from './core.js';
 import { mode } from './mode.js';
 import { renderSvg } from './render_svg.js';
-
-// External dependency loaded as global
-const d3 = globalThis.d3;
+import { dispatch } from 'd3-dispatch';
+import { select } from 'd3-selection';
 
 export function legend(legend_namespace) {
     legend_namespace = legend_namespace || 'node-legend';
     var _items, _included = [];
-    var _dispatch = d3.dispatch('filtered');
+    var _dispatch = dispatch('filtered');
     var _totals, _counts;
 
     var _svg_renderer;
@@ -179,7 +178,7 @@ export function legend(legend_namespace) {
                 .html('&emsp;&#x25BC;');
             caret
                 .attr('dx', function(d) {
-                    return (_legend.itemWidth()/2+_legend.gap()) + getBBoxNoThrow(d3.select(this.parentNode).select('text.legend-label').node()).width;
+                    return (_legend.itemWidth()/2+_legend.gap()) + getBBoxNoThrow(select(this.parentNode).select('text.legend-label').node()).width;
                 })
                 .on('mouseenter.' + legend_namespace, function(n) {
                     var rect = this.getBoundingClientRect();
@@ -190,12 +189,12 @@ export function legend(legend_namespace) {
             item
                 .on('mouseenter.' + legend_namespace, function(d) {
                     if(_counts && _counts[d.orig.key]) {
-                        d3.select(this).selectAll('.dropdown-caret')
+                        select(this).selectAll('.dropdown-caret')
                             .style('visibility', 'visible');
                     }
                 })
                 .on('mouseleave.' + legend_namespace, function(d) {
-                    d3.select(this).selectAll('.dropdown-caret')
+                    select(this).selectAll('.dropdown-caret')
                         .style('visibility', 'hidden');
                 });
         }
@@ -212,7 +211,7 @@ export function legend(legend_namespace) {
                     else
                         _included.push(key);
                     apply_filter();
-                    _dispatch.filtered(_legend, key);
+                    _dispatch.call("filtered", null, _legend, key);
                     if(_svg_renderer)
                         window.setTimeout(redraw, 250);
                 });
@@ -320,37 +319,29 @@ export function edgeLegend() {
                 .attr('opacity', 0);
             edgeEnter
                 .append('rect')
-                .attr({
-                    x: -w/2,
-                    y: -h/2,
-                    width: w,
-                    height: h,
-                    fill: 'green',
-                    opacity: 0
-                });
+                .attr('x', -w/2)
+                .attr('y', -h/2)
+                .attr('width', w)
+                .attr('height', h)
+                .attr('fill', 'green')
+                .attr('opacity', 0);
             edgeEnter
                 .selectAll('circle')
                 .data([-1, 1])
               .enter()
                 .append('circle')
-                .attr({
-                    r: _type.fakeNodeRadius(),
-                    fill: 'none',
-                    stroke: 'black',
-                    "stroke-dasharray": "4,4",
-                    opacity: 0.15,
-                    transform: function(d) {
-                        return 'translate(' + [d * _type.length() / 2, 0].join(',') + ')';
-                    }
-                });
+                .attr('r', _type.fakeNodeRadius())
+                .attr('fill', 'none')
+                .attr('stroke', 'black')
+                .attr('stroke-dasharray', '4,4')
+                .attr('opacity', 0.15)
+                .attr('transform', d => 'translate(' + [d * _type.length() / 2, 0].join(',') + ')');
             var edgex = _type.length()/2 - _type.fakeNodeRadius();
             edgeEnter.append('svg:path')
-                .attr({
-                    class: 'edge',
-                    id: function(d) { return d.name; },
-                    d: 'M' + -edgex + ',0 L' + edgex + ',0',
-                    opacity: diagram.edgeOpacity.eval
-                });
+                .attr('class', 'edge')
+                .attr('id', d => d.name)
+                .attr('d', 'M' + -edgex + ',0 L' + edgex + ',0')
+                .attr('opacity', diagram.edgeOpacity.eval);
 
             return edgeEnter;
         },

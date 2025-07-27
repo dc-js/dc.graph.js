@@ -100,3 +100,5 @@ Layout computation can be offloaded to web workers for performance. Worker files
 - not necessary to build, we have a server with live reload running
 - be terse and avoid purple prose in commit messages
 - do not check artifacts into the repo
+- yes but please stop adding useless comments
+- use arrow functions wherever possible

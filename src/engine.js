@@ -4,7 +4,6 @@
  */
 
 import { dagreLayout } from './dagre_layout.js';
-import { d3ForceLayout } from './d3_force_layout.js';
 import { d3v4ForceLayout } from './d3v4_force_layout.js';
 import { treeLayout } from './tree_layout.js';
 import { graphvizLayout } from './graphviz_layout.js';
@@ -32,12 +31,6 @@ const _engines = [
         params: ['rankdir'],
         instantiate: function() {
             return dagreLayout();
-        }
-    },
-    {
-        name: 'd3force',
-        instantiate: function() {
-            return d3ForceLayout();
         }
     },
     {

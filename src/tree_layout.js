@@ -3,8 +3,8 @@
  * @module tree_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+// External dependencies
+import { dispatch } from 'd3-dispatch';
 import { uuid, property } from './core.js';
 import { depthFirstTraversal } from './depth_first_traversal.js';
 
@@ -16,12 +16,12 @@ import { depthFirstTraversal } from './depth_first_traversal.js';
  **/
 export function treeLayout(id) {
     var _layoutId = id || uuid();
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
     var _dfs;
 
     function init(options) {
         var x;
-        var nodeWidth = d3.functor(options.nodeWidth);
+        var nodeWidth = typeof options.nodeWidth === 'function' ? options.nodeWidth : function() { return options.nodeWidth; };
         function best_dist(left, right) {
             return (nodeWidth(left) + nodeWidth(right)) / 2;
         }
@@ -117,7 +117,7 @@ export function treeLayout(id) {
 
     function start() {
         _dfs(_nodes, _edges);
-        _dispatch.end(_nodes, _edges);
+        _dispatch.call("end", null, _nodes, _edges);
     }
 
     function stop() {

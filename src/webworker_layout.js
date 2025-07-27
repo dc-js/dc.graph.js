@@ -3,8 +3,7 @@
  * @module webworker_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+import { dispatch } from 'd3-dispatch';
 import { scriptPath } from './utils.js';
 
 var _workers = {};
@@ -32,7 +31,7 @@ function createWorker(workerName) {
 }
 
 export function webworkerLayout(layoutEngine, workerName) {
-    var _tick, _done, _dispatch = d3.dispatch('init', 'start', 'tick', 'end');
+    var _tick, _done, _dispatch = dispatch('init', 'start', 'tick', 'end');
     var _worker = createWorker(workerName || layoutEngine.layoutAlgorithm());
     var engine = {};
     _worker.layouts[layoutEngine.layoutId()] = engine;

@@ -3,9 +3,10 @@
  * @module diagram
  */
 
-// External dependencies loaded as globals
-const d3 = globalThis.d3;
-const dc = globalThis.dc;
+// External dependencies as ES6 modules
+import { dispatch, scaleLinear, ascending, sum, set, select, json } from 'd3';
+import { MarginMixin, utils, BadArgumentException, pluck, redrawAll, registerChart, renderAll } from 'dc';
+import * as crossfilter from 'crossfilter2';
 import { uuid, getOriginal, property, identity, deprecatedProperty, namedChildren, getBBoxNoThrow, isIe, isSafari, constants, deprecateFunction, onetimeTrace, traceFunction } from './core.js';
 import { angleBetweenPoints, defaultShape, drawEdgeToShapes, noShape, ellipseShape, polygonShape, roundedRectangleShape, elaboratedRectangleShape } from './shape.js';
 import { textContents } from './node_contents.js';
@@ -38,10 +39,10 @@ import { builtinArrows, clipPathToArrows, scaledArrowLengths } from './arrows.js
 export function diagram(parent, chartGroup) {
     // different enough from regular dc charts that we don't use dc.baseMixin
     // but attempt to implement most of that interface, copying some of the most basic stuff
-    var _diagram = dc.marginMixin({});
-    _diagram.__dcFlag__ = dc.utils.uniqueId();
+    var _diagram = new MarginMixin({});
+    _diagram.__dcFlag__ = utils.uniqueId();
     _diagram.margins({left: 10, top: 10, right: 10, bottom: 10});
-    var _dispatch = d3.dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
+    var _dispatch = dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
     var _nodes = {}, _edges = {}; // hold state between runs
     var _ports = {}; // id = node|edge/id/name
     var _clusters = {};
@@ -116,7 +117,7 @@ export function diagram(parent, chartGroup) {
       **/
     _diagram.height = function (height) {
         if (!arguments.length) {
-            if (!dc.utils.isNumber(_height)) {
+            if (!utils.isNumber(_height)) {
                 _lastHeight = _heightCalc(_diagram.root().node());
                 if(_height === 'auto') // 'auto' => calculate every time
                     return _lastHeight;
@@ -125,7 +126,7 @@ export function diagram(parent, chartGroup) {
             }
             return _height;
         }
-        if(dc.utils.isNumber(height) || !height || height === 'auto')
+        if(utils.isNumber(height) || !height || height === 'auto')
             _height = height;
         else if(typeof height === 'function') {
             _heightCalc = height;
@@ -166,7 +167,7 @@ export function diagram(parent, chartGroup) {
      **/
     _diagram.width = function (width) {
         if (!arguments.length) {
-            if (!dc.utils.isNumber(_width)) {
+            if (!utils.isNumber(_width)) {
                 _lastWidth = _widthCalc(_diagram.root().node());
                 if(_width === 'auto') // 'auto' => calculate every time
                     return _lastWidth;
@@ -175,7 +176,7 @@ export function diagram(parent, chartGroup) {
             }
             return _width;
         }
-        if(dc.utils.isNumber(width) || !width || width === 'auto')
+        if(utils.isNumber(width) || !width || width === 'auto')
             _width = width;
         else if(typeof width === 'function') {
             _widthCalc = width;
@@ -484,7 +485,7 @@ export function diagram(parent, chartGroup) {
      * @return {Function}
      * @return {dc_graph.diagram}
      **/
-    _diagram.clusterKey = property(dc.pluck('key'));
+    _diagram.clusterKey = property(pluck('key'));
 
     /**
      * Set or get the function which will be used to retrieve the key of the parent of a cluster,
@@ -1521,7 +1522,7 @@ export function diagram(parent, chartGroup) {
      **/
     _diagram.render = function() {
         if(_diagram.renderer().isRendered())
-            _dispatch.reset();
+            _dispatch.call("reset");
         if(!_diagram.initLayoutOnRedraw())
             initLayout();
 
@@ -1531,14 +1532,14 @@ export function diagram(parent, chartGroup) {
         _clusters = {};
 
         // start out with 1:1 zoom
-        _diagram.x(d3.scale.linear()
+        _diagram.x(scaleLinear()
                    .domain([0, _diagram.width()])
                    .range([0, _diagram.width()]));
-        _diagram.y(d3.scale.linear()
+        _diagram.y(scaleLinear()
                    .domain([0, _diagram.height()])
                    .range([0, _diagram.height()]));
         _diagram.renderer().initializeDrawing();
-        _dispatch.render();
+        _dispatch.call("render");
         _diagram.redraw();
         return this;
     };
@@ -1610,17 +1611,17 @@ export function diagram(parent, chartGroup) {
         if(_diagram.initLayoutOnRedraw())
             initLayout();
         _diagram.layoutEngine().stop();
-        _dispatch.preDraw();
+        _dispatch.call("preDraw");
 
         // ordering shouldn't matter, but we support ordering in case it does
         if(_diagram.nodeOrdering()) {
             nodes = nodes.slice(0).sort(function(a, b) {
-                return d3.ascending(_diagram.nodeOrdering()(a), _diagram.nodeOrdering()(b));
+                return ascending(_diagram.nodeOrdering()(a), _diagram.nodeOrdering()(b));
             });
         }
         if(_diagram.edgeOrdering()) {
             edges = edges.slice(0).sort(function(a, b) {
-                return d3.ascending(_diagram.edgeOrdering()(a), _diagram.edgeOrdering()(b));
+                return ascending(_diagram.edgeOrdering()(a), _diagram.edgeOrdering()(b));
             });
         }
 
@@ -1722,7 +1723,7 @@ export function diagram(parent, chartGroup) {
                     delete _nodes[k];
         }
 
-        var needclusters = d3.set(wnodes.map(function(n) {
+        var needclusters = set(wnodes.map(function(n) {
             return _diagram.nodeParentCluster.eval(n);
         }).filter(identity)).values();
 
@@ -1742,7 +1743,7 @@ export function diagram(parent, chartGroup) {
         });
 
         // announce new data
-        _dispatch.data(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
+        _dispatch.call("data", null, _diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
         _stats = {nnodes: wnodes.length, nedges: wedges.length};
 
         // fixed nodes may have been affected by .data() so calculate now
@@ -1924,7 +1925,7 @@ export function diagram(parent, chartGroup) {
             if(c.ordering) {
                 var orderingFn = param(c.ordering);
                 sorted = sorted.sort(function(a, b) {
-                    return d3.ascending(orderingFn(a), orderingFn(b));
+                    return ascending(orderingFn(a), orderingFn(b));
                 });
             }
             var left;
@@ -1963,7 +1964,7 @@ export function diagram(parent, chartGroup) {
                 n.cola.y = rn.y;
                 n.cola.z = rn.z;
             });
-            redges.forEach(function(re) {
+            (redges || []).forEach(function(re) {
                 var e = _edges[re.dcg_edgeKey];
                 if(!e) {
                     console.warn('received edge "' + re.dcg_edgeKey + '" that we did not send, ignored');
@@ -1972,7 +1973,7 @@ export function diagram(parent, chartGroup) {
                 if(re.points)
                     e.cola.points = re.points;
             });
-            wclusters.forEach(function(c) {
+            (wclusters || []).forEach(function(c) {
                 c.cola.bounds = null;
             });
             if(rclusters)
@@ -1993,7 +1994,7 @@ export function diagram(parent, chartGroup) {
                     populate_cola(nodes, edges, clusters);
                 if(_diagram.showLayoutSteps()) {
                     init_node_ports(_nodes, wports);
-                    _dispatch.receivedLayout(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
+                    _dispatch.call("receivedLayout", null, _diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
                     propagate_port_positions(_nodes, wedges, _ports);
                     _diagram.renderer().draw(drawState, true);
                     _diagram.renderer().drawPorts(drawState);
@@ -2010,7 +2011,7 @@ export function diagram(parent, chartGroup) {
                     if(!_diagram.initialOnly())
                         populate_cola(nodes, edges, clusters);
                     init_node_ports(_nodes, wports);
-                    _dispatch.receivedLayout(_diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
+                    _dispatch.call("receivedLayout", null, _diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
                     propagate_port_positions(_nodes, wedges, _ports);
                     _diagram.renderer().draw(drawState, true);
                     _diagram.renderer().drawPorts(drawState);
@@ -2021,13 +2022,13 @@ export function diagram(parent, chartGroup) {
             })
             .on('start.diagram', function() {
                 console.log('algo ' + _diagram.layoutEngine().layoutAlgorithm() + ' started.');
-                _dispatch.start();
+                _dispatch.call("start");
             });
 
         if(_diagram.initialOnly())
             _diagram.layoutEngine().dispatch().end(wnodes, wedges);
         else {
-            _dispatch.start(); // cola doesn't seem to fire this itself?
+            _dispatch.call("start"); // cola doesn't seem to fire this itself?
             var engine = _diagram.layoutEngine();
             engine.data(
                 { width: _diagram.width(), height: _diagram.height() },
@@ -2117,8 +2118,8 @@ export function diagram(parent, chartGroup) {
                 if(_diagram.portElastic.eval(p) && p.edges.length) {
                     var vecs = p.edges.map(edge_vec.bind(null, n));
                     p.vec = [
-                        d3.sum(vecs, function(v) { return v[0]; })/vecs.length,
-                        d3.sum(vecs, function(v) { return v[1]; })/vecs.length
+                        sum(vecs, function(v) { return v[0]; })/vecs.length,
+                        sum(vecs, function(v) { return v[1]; })/vecs.length
                     ];
                 } else p.vec = p.vec || undefined;
                 p.pos = null;
@@ -2161,7 +2162,7 @@ export function diagram(parent, chartGroup) {
     };
 
     _diagram.layoutDone = function(happens) {
-        _dispatch.end(happens);
+        _dispatch.call("end", null, happens);
         _running = false;
         if(_needsRedraw) {
             _needsRedraw = false;
@@ -2478,7 +2479,7 @@ export function diagram(parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.redrawGroup = function () {
-        dc.redrawAll(_chartGroup);
+        redrawAll(_chartGroup);
     };
 
     /**
@@ -2491,7 +2492,7 @@ export function diagram(parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     _diagram.renderGroup = function () {
-        dc.renderAll(_chartGroup);
+        renderAll(_chartGroup);
     };
 
     /**
@@ -2602,15 +2603,20 @@ export function diagram(parent, chartGroup) {
 
     }
 
-    _diagram.doZoom = function() {
+    _diagram.doZoom = function(event) {
         if(_diagram.width_is_automatic() || _diagram.height_is_automatic())
             detect_size_change();
-        var translate, scale = d3.event.scale;
+        var translate, scale = event.transform.k;
         if(_diagram.restrictPan())
-            _diagram.renderer().translate(translate = bring_in_bounds(d3.event.translate));
-        else translate = d3.event.translate;
+            _diagram.renderer().translate(translate = bring_in_bounds([event.transform.x, event.transform.y]));
+        else translate = [event.transform.x, event.transform.y];
+        
+        // Manually rescale x and y scales for D3 v5
+        var newX = event.transform.rescaleX(_diagram.x());
+        var newY = event.transform.rescaleY(_diagram.y());
+        
         _diagram.renderer().globalTransform(translate, scale, _animateZoom);
-        _dispatch.zoomed(translate, scale, _diagram.x().domain(), _diagram.y().domain());
+        _dispatch.call("zoomed", null, translate, scale, newX.domain(), newY.domain());
     };
 
     _diagram.invertCoord = function(clientCoord) {
@@ -2644,11 +2650,11 @@ export function diagram(parent, chartGroup) {
             } else {
                 _anchor = parent;
             }
-            _diagram.root(d3.select(_anchor));
+            _diagram.root(select(_anchor));
             _diagram.root().classed(constants.CHART_CLASS, true);
-            dc.registerChart(_diagram, chartGroup);
+            registerChart(_diagram, chartGroup);
         } else {
-            throw new dc.errors.BadArgumentException('parent must be defined');
+            throw new BadArgumentException('parent must be defined');
         }
         _chartGroup = chartGroup;
         return _diagram;

@@ -4,7 +4,8 @@ import { editText } from './edit_text.js';
 import { selectThingsGroup } from './select_things.js';
 
 // External dependency loaded as global
-const d3 = globalThis.d3;
+import { dispatch } from 'd3-dispatch';
+import { event } from 'd3-selection';
 
 export function labelThings(options) {
     options = options || {};
@@ -59,9 +60,9 @@ export function labelThings(options) {
         _keyboard.on('keyup.' + options.label_type, function() {
             if(_selected.length) {
                 // printable characters should start edit
-                if(d3.event.key.length !== 1)
+                if(event.key.length !== 1)
                     return;
-                edit_selection(node, edge, {text: d3.event.key, selectText: false});
+                edit_selection(node, edge, {text: event.key, selectText: false});
             }
         });
         if(_selectThings)
@@ -95,7 +96,7 @@ export function labelThings(options) {
 
 export function labelThingsGroup(brushgroup, type) {
     window.chart_registry.create_type(type, function() {
-        return d3.dispatch('edit_label');
+        return dispatch('edit_label');
     });
 
     return window.chart_registry.create_group(type, brushgroup);

@@ -3,8 +3,8 @@
  * @module d3v4_force_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+// External dependencies
+import { dispatch, set } from 'd3';
 import { uuid, property } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
@@ -17,7 +17,7 @@ import { graphvizAttrs } from './graphviz_attrs.js';
 export function d3v4ForceLayout(id) {
     var _layoutId = id || uuid();
     var _simulation = null; // d3-force simulation
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
     // node and edge objects shared with d3-force, preserved from one iteration
     // to the next (as long as the object is still in the layout)
     var _nodes = {}, _edges = {};
@@ -39,9 +39,9 @@ export function d3v4ForceLayout(id) {
     }
 
     function dispatchState(event) {
-        _dispatch[event](
+        _dispatch.call(event, null,
             _wnodes,
-            _wedges.map(function(e) {
+            (_wedges || []).map(function(e) {
                 return {dcg_edgeKey: e.dcg_edgeKey};
             })
         );
@@ -81,7 +81,7 @@ export function d3v4ForceLayout(id) {
     }
 
     function start() {
-        _dispatch.start();
+        _dispatch.call("start");
         installForces(_paths);
         runSimulation(_options.iterations);
     }
@@ -115,7 +115,7 @@ export function d3v4ForceLayout(id) {
         } else {
             var nodesOnPath;
             if(_options.fixOffPathNodes) {
-                nodesOnPath = d3.set();
+                nodesOnPath = set();
                 paths.forEach(function(path) {
                     path.nodes.forEach(function(nid) {
                         nodesOnPath.add(nid);

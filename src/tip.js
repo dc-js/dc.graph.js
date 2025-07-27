@@ -11,23 +11,25 @@
  * @memberof dc_graph
  * @return {Object}
  **/
-import { property } from './core.js';
+import { property, functorWrap } from './core.js';
 import { mode } from './mode.js';
 import { ancestorHasClass } from './utils.js';
+import { dispatch } from 'd3-dispatch';
+import { event, select } from 'd3-selection';
+import { tip as d3tip } from 'd3-tip';
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+const d3Tip = globalThis.d3 && globalThis.d3.tip || d3tip;
 
 export function tip(options) {
     options = options || {};
     var _namespace = options.namespace || 'tip';
     var _d3tip = null;
     var _showTimeout, _hideTimeout;
-    var _dispatch = d3.dispatch('tipped');
+    var _dispatch = dispatch('tipped');
 
     function init(parent) {
         if(!_d3tip) {
-            _d3tip = d3.tip()
+            _d3tip = d3Tip()
                 .attr('class', options.class || 'd3-tip')
                 .html(function(d) { return "<span>" + d + "</span>"; })
                 .direction(_mode.direction());
@@ -37,7 +39,7 @@ export function tip(options) {
         }
     }
     function fetch_and_show_content(d) {
-        if(_mode.disabled() || _mode.selection().exclude && _mode.selection().exclude(d3.event.target)) {
+        if(_mode.disabled() || _mode.selection().exclude && _mode.selection().exclude(event.target)) {
             hide_tip.call(this);
             return;
         }
@@ -45,14 +47,14 @@ export function tip(options) {
             next = function() {
                 _mode.content()(d, function(content) {
                     _d3tip.show.call(target, content, target);
-                    d3.select('div.d3-tip')
+                    select('div.d3-tip')
                         .selectAll('a.tip-link')
                         .on('click.' + _namespace, function() {
-                            d3.event.preventDefault();
+                            event.preventDefault();
                             if(_mode.linkCallback())
                                 _mode.linkCallback()(this.id);
                         });
-                    _dispatch.tipped(d);
+                    _dispatch.call("tipped", null, d);
                 });
             };
         if(_hideTimeout)
@@ -65,10 +67,10 @@ export function tip(options) {
     }
 
     function check_hide_tip() {
-        if(d3.event.relatedTarget &&
-           (!_mode.selection().exclude || !_mode.selection().exclude(d3.event.target)) &&
-           (this && this.contains(d3.event.relatedTarget) || // do not hide when mouse is still over a child
-            _mode.clickable() && d3.event.relatedTarget.classList.contains('d3-tip')))
+        if(event.relatedTarget &&
+           (!_mode.selection().exclude || !_mode.selection().exclude(event.target)) &&
+           (this && this.contains(event.relatedTarget) || // do not hide when mouse is still over a child
+            _mode.clickable() && event.relatedTarget.classList.contains('d3-tip')))
             return false;
         return true;
     }
@@ -105,7 +107,7 @@ export function tip(options) {
             .on('mouseover.' + _namespace, fetch_and_show_content)
             .on('mouseout.' + _namespace, hide_tip_delay);
         if(_mode.clickable()) {
-            d3.select('div.d3-tip')
+            select('div.d3-tip')
                 .on('mouseover.' + _namespace, function() {
                     if(_hideTimeout)
                         window.clearTimeout(_hideTimeout);
@@ -180,8 +182,8 @@ export function tip(options) {
                 return p.concat(v);
             }, []);
             var which = (n || 0) % flattened.length;
-            action.call(flattened[which], d3.select(flattened[which]).datum());
-            d = d3.select(flattened[which]).datum();
+            action.call(flattened[which], select(flattened[which]).datum());
+            d = select(flattened[which]).datum();
             if(cb)
                 cb(d);
             if(_mode.programmatic())
@@ -233,12 +235,12 @@ export function tipTable() {
         else if(typeof d === 'number' || typeof d === 'string')
             data = [d];
         else { // object
-            data = keys = Object.keys(d).filter(d3.functor(gen.filter()))
+            data = keys = Object.keys(d).filter(functorWrap(gen.filter()))
                 .filter(function(k) {
                     return d[k] !== undefined;
                 });
         }
-        var table = d3.select(document.createElement('table'));
+        var table = select(document.createElement('table'));
         var rows = table.selectAll('tr').data(data);
         var rowsEnter = rows.enter().append('tr');
         rowsEnter.append('td').text(function(item) {

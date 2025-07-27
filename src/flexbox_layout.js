@@ -35,15 +35,15 @@
  * @module flexbox_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+import { dispatch } from 'd3-dispatch';
+import { ascending } from 'd3-array';
 import { uuid, property } from './core.js';
 import yoga from 'yoga-layout';
 
 export function flexboxLayout(id, options) {
     var _layoutId = id || uuid();
     options = options || {algo: 'yoga-layout'};
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
 
     var _graph, _tree, _nodes = {}, _wnodes;
 
@@ -226,7 +226,7 @@ export function flexboxLayout(id, options) {
             });
     }
     function dispatchState(wnodes, wedges, event) {
-        _dispatch[event](
+        _dispatch.call(event, null,
             wnodes,
             wedges.map(function(e) {
                 return {dcg_edgeKey: e.dcg_edgeKey};
@@ -236,7 +236,7 @@ export function flexboxLayout(id, options) {
     function start() {
         var defaults = {
             sort: function(a, b) {
-                return d3.ascending(a.node.dcg_nodeKey, b.node.dcg_nodeKey);
+                return ascending(a.node.dcg_nodeKey, b.node.dcg_nodeKey);
             }
         };
         ensure_inner_nodes(_tree);

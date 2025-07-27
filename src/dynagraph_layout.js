@@ -3,8 +3,7 @@
  * @module dynagraph_layout
  */
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+import { dispatch } from 'd3-dispatch';
 import { uuid, property } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
@@ -19,7 +18,7 @@ export function dynagraphLayout(id, layout) {
     var _layoutId = id || uuid();
     const _Gname = _layoutId;
     var _layout;
-    var _dispatch = d3.dispatch('tick', 'start', 'end');
+    var _dispatch = dispatch('tick', 'start', 'end');
     var _tick, _done;
     var _nodes = {}, _edges = {};
     var _linesOut = [], _incrIn = [], _opened = false, _open_graph;
@@ -287,7 +286,7 @@ export function dynagraphLayout(id, layout) {
         _linesOut.push(...linesOutDeleteNode);
 
         function dispatchState(event) {
-            _dispatch[event](
+            _dispatch.call(event, null,
                 wnodes,
                 wedges
             );

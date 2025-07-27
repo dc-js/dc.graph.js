@@ -1,3 +1,5 @@
+import { redrawAll } from 'dc';
+
 function dcgraph_domain(diagram, chartgroup) {
     return {
         on_exert: function(opt) {
@@ -7,7 +9,7 @@ function dcgraph_domain(diagram, chartgroup) {
                 if(opt.needs_redraw === 'refresh')
                     diagram.refresh();
                 else
-                    dc.redrawAll(chartgroup);
+                    redrawAll(chartgroup);
         }
     };
 }
@@ -22,7 +24,10 @@ function dcgraph_multi_domain(diagrams, chartgroup) {
                 if(opt.needs_redraw === 'refresh')
                     diagram.refresh();
                 else
-                    dc.redrawAll(chartgroup);
+                    redrawAll(chartgroup);
         }
     };
 }
+
+
+export default dcgraph_domain;

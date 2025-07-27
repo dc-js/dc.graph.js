@@ -28,19 +28,13 @@ export function annotateLayers() {
                 lines.exit().remove();
                 lines.enter().append('line')
                     .attr('class', 'divider');
-                lines.attr({
-                    stroke: _mode.stroke(),
-                    'stroke-width': _mode.strokeWidth(),
-                    'stroke-dasharray': _mode.strokeDashArray(),
-                    x1: -5000,
-                    y1: function(n) {
-                        return n.y;
-                    },
-                    x2: 5000,
-                    y2:  function(n) {
-                        return n.y;
-                    }
-                });
+                lines.attr('stroke', _mode.stroke())
+                    .attr('stroke-width', _mode.strokeWidth())
+                    .attr('stroke-dasharray', _mode.strokeDashArray())
+                    .attr('x1', -5000)
+                    .attr('y1', n => n.y)
+                    .attr('x2', 5000)
+                    .attr('y2', n => n.y);
             }
         } else if(rendererType === 'webgl') {
             var MULT = _mode.parent().renderer().multiplier();

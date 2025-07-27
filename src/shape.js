@@ -1,4 +1,5 @@
 import { getBBoxNoThrow, property } from './core.js';
+import { extent } from 'd3-array';
 import { generatePath } from './utils.js';
 
 function pointOnEllipse(A, B, dx, dy) {
@@ -381,13 +382,13 @@ export function fitShape(shape, diagram) {
             }
             var r = 0, radii;
             if(!shape.useRadius || shape.useRadius(n.dcg_shape))
-                r = diagram.nodeRadius.eval(n);
+                r = Math.max(0, diagram.nodeRadius.eval(n) || 0);
             if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize(n.dcg_shape))
                 radii = shape.calc_radii(n, r, bbox);
             else
                 radii = {rx: r, ry: r};
-            n.dcg_rx = radii.rx;
-            n.dcg_ry = radii.ry;
+            n.dcg_rx = Math.max(0, radii.rx || 0);
+            n.dcg_ry = Math.max(0, radii.ry || 0);
 
             var w = radii.rx*2, h = radii.ry*2;
             // fixme: this is only consistent if regular || !squeeze
@@ -406,46 +407,36 @@ export function fitShape(shape, diagram) {
     };
 }
 
-function ellipseAttrs(diagram) {
-    return {
-        rx: function(n) { return n.dcg_rx; },
-        ry: function(n) { return n.dcg_ry; }
-    };
-}
 
-function polygonAttrs(diagram) {
-    return {
-        d: function(n) {
-            var rx = n.dcg_rx, ry = n.dcg_ry,
-                def = n.dcg_shape,
-                sides = def.sides || 4,
-                skew = def.skew || 0,
-                distortion = def.distortion || 0,
-                rotation = def.rotation || 0,
-                align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
-                angles = [];
-            rotation = rotation/360 + 0.25; // start at y axis not x
-            for(var i = 0; i<sides; ++i) {
-                var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
-                angles.push({x: Math.cos(theta), y: Math.sin(theta)});
-            }
-            var yext = d3.extent(angles, function(theta) { return theta.y; });
-            if(def.regular)
-                rx = ry = Math.max(rx, ry);
-            else if(rx < ry && !def.squeeze)
-                rx = ry;
-            else
-                ry = ry / Math.min(-yext[0], yext[1]);
-            n.dcg_points = angles.map(function(theta) {
-                var x = rx*theta.x,
-                    y = ry*theta.y;
-                x *= 1 + distortion*((ry-y)/ry - 1);
-                x -= skew*y/2;
-                return {x: x, y: y};
-            });
-            return generatePath(n.dcg_points, 1, true);
-        }
-    };
+function polygonPath(n) {
+    var rx = n.dcg_rx, ry = n.dcg_ry,
+        def = n.dcg_shape,
+        sides = def.sides || 4,
+        skew = def.skew || 0,
+        distortion = def.distortion || 0,
+        rotation = def.rotation || 0,
+        align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
+        angles = [];
+    rotation = rotation/360 + 0.25; // start at y axis not x
+    for(var i = 0; i<sides; ++i) {
+        var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
+        angles.push({x: Math.cos(theta), y: Math.sin(theta)});
+    }
+    var yext = extent(angles, theta => theta.y);
+    if(def.regular)
+        rx = ry = Math.max(rx, ry);
+    else if(rx < ry && !def.squeeze)
+        rx = ry;
+    else
+        ry = ry / Math.min(-yext[0], yext[1]);
+    n.dcg_points = angles.map(theta => {
+        var x = rx*theta.x,
+            y = ry*theta.y;
+        x *= 1 + distortion*((ry-y)/ry - 1);
+        x -= skew*y/2;
+        return {x: x, y: y};
+    });
+    return generatePath(n.dcg_points, 1, true);
 }
 
 function binarySearch(f, a, b) {
@@ -755,7 +746,8 @@ export function ellipseShape() {
         },
         update: function(node) {
             node.selectAll('ellipse.node-fill,ellipse.node-outline')
-                .attr(ellipseAttrs(_shape.parent()));
+                .attr('rx', n => n.dcg_rx)
+                .attr('ry', n => n.dcg_ry);
         }
     };
     return _shape;
@@ -787,7 +779,7 @@ export function polygonShape() {
         },
         update: function(node) {
             node.selectAll('path.node-fill,path.node-outline')
-                .attr(polygonAttrs(_shape.parent()));
+                .attr('d', polygonPath);
         }
     };
     return _shape;
@@ -829,26 +821,12 @@ export function roundedRectangleShape() {
         },
         update: function(node) {
             node.selectAll('rect.node-fill,rect.node-outline')
-                .attr({
-                    x: function(n) {
-                        return -n.dcg_rx;
-                    },
-                    y: function(n) {
-                        return -n.dcg_ry;
-                    },
-                    width: function(n) {
-                        return 2*n.dcg_rx;
-                    },
-                    height: function(n) {
-                        return 2*n.dcg_ry;
-                    },
-                    rx: function(n) {
-                        return n.dcg_shape.rx + 'px';
-                    },
-                    ry: function(n) {
-                        return n.dcg_shape.ry + 'px';
-                    }
-                });
+                .attr('x', n => -n.dcg_rx)
+                .attr('y', n => -n.dcg_ry)
+                .attr('width', n => 2*n.dcg_rx)
+                .attr('height', n => 2*n.dcg_ry)
+                .attr('rx', n => n.dcg_shape.rx + 'px')
+                .attr('ry', n => n.dcg_shape.ry + 'px');
         }
     };
     return _shape;

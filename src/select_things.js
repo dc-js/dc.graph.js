@@ -3,9 +3,8 @@ import { property } from './core.js';
 import { brush } from './brush.js';
 import { keyboard } from './keyboard.js';
 import { is_a_mac } from './utils.js';
-
-// External dependency loaded as global
-const d3 = globalThis.d3;
+import { dispatch } from 'd3-dispatch';
+import { event } from 'd3-selection';
 
 export function selectThings(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;
@@ -54,7 +53,7 @@ export function selectThings(things_group, things_name, thinginess) {
         if(_have_bce === v)
             return;
         diagram.svg().on('click.' + things_name, v ? function(t) {
-            if(d3.event.target === this)
+            if(event.target === this)
                 things_group.set_changed([]);
         } : null);
         _have_bce = v;
@@ -69,7 +68,7 @@ export function selectThings(things_group, things_name, thinginess) {
         }
     }
     function brushstart() {
-        if(isUnion(d3.event.sourceEvent) || isToggle(d3.event.sourceEvent))
+        if(isUnion(event.sourceEvent) || isToggle(event.sourceEvent))
             _oldSelected = _selected.slice();
         else {
             _oldSelected = [];
@@ -81,9 +80,9 @@ export function selectThings(things_group, things_name, thinginess) {
             return;
         var rectSelect = thinginess.intersectRect(ext);
         var newSelected;
-        if(isUnion(d3.event.sourceEvent))
+        if(isUnion(event.sourceEvent))
             newSelected = rectSelect.reduce(add_array, _oldSelected);
-        else if(isToggle(d3.event.sourceEvent))
+        else if(isToggle(event.sourceEvent))
             newSelected = rectSelect.reduce(toggle_array, _oldSelected);
         else
             newSelected = rectSelect;
@@ -103,7 +102,7 @@ export function selectThings(things_group, things_name, thinginess) {
         });
 
         thinginess.clickables(diagram, node, edge).on('mouseup.' + things_name, function(t) {
-            if(thinginess.excludeClick && thinginess.excludeClick(d3.event.target))
+            if(thinginess.excludeClick && thinginess.excludeClick(event.target))
                 return;
             // it's only a click if the same target was mousedown & mouseup
             // but we can't use click event because things may have been reordered
@@ -111,9 +110,9 @@ export function selectThings(things_group, things_name, thinginess) {
                 return;
             var key = thinginess.key(t), newSelected;
             if(_mode.multipleSelect()) {
-                if(isUnion(d3.event))
+                if(isUnion(event))
                     newSelected = add_array(_selected, key);
-                else if(isToggle(d3.event))
+                else if(isToggle(event))
                     newSelected = toggle_array(_selected, key);
             }
             if(!newSelected)
@@ -186,7 +185,7 @@ export function selectThings(things_group, things_name, thinginess) {
 
 export function selectThingsGroup(brushgroup, type) {
     window.chart_registry.create_type(type, function() {
-        return d3.dispatch('set_changed');
+        return dispatch('set_changed');
     });
 
     return window.chart_registry.create_group(type, brushgroup);

@@ -3,10 +3,13 @@
 // Copyright 2016-2017 AT&T Intellectual Property
 // License: Apache v2
 
-var sync_url_options = (function() {
-    if(!querystring)
-        throw new Error('need querystring library');
-    function read_query(type, val) {
+import { select } from 'd3-selection';
+import querystring from './querystring.js';
+
+if(!querystring)
+    throw new Error('need querystring library');
+
+function read_query(type, val) {
         switch(type) {
         case 'boolean':
             return val === 'true';
@@ -81,13 +84,13 @@ var sync_url_options = (function() {
                 }
             }
             if(opt.values) { // generate <select> options
-                var select = d3.select(opt.selector);
-                var opts = select.selectAll('option').data(opt.values);
-                opts.enter().append('option').attr({
-                    value: function(x) { return x; },
-                    selected: function(x) { return x === settings[key]; }
-                }).text(function(x) { return x; });
-                select
+                var selection = select(opt.selector);
+                var opts = selection.selectAll('option').data(opt.values);
+                opts.enter().append('option')
+                    .attr('value', function(x) { return x; })
+                    .attr('selected', function(x) { return x === settings[key]; })
+                    .text(function(x) { return x; });
+                selection
                     .property('value', settings[key]);
             }
             if(opt.selector) {
@@ -177,10 +180,9 @@ var sync_url_options = (function() {
             }
         };
     }
-    return function(options, domain /* ... arguments for exert ... */) {
-        var args = Array.prototype.slice.call(arguments, 2);
-        args.unshift(0);
-        return option_synchronizer(options, domain, args);
-    };
-})();
+export default function sync_url_options(options, domain /* ... arguments for exert ... */) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    args.unshift(0);
+    return option_synchronizer(options, domain, args);
+}
 

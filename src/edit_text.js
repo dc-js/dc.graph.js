@@ -1,14 +1,13 @@
 // adapted from
 // http://stackoverflow.com/questions/9308938/inline-text-editing-in-svg/#26644652
 
-// External dependency loaded as global
-const d3 = globalThis.d3;
+// External dependencies
+import { event } from 'd3';
 
 export function editText(parent, options) {
-    var foreign = parent.append('foreignObject').attr({
-        height: '100%',
-        width: '100%' // don't wrap
-    });
+    var foreign = parent.append('foreignObject')
+        .attr('height', '100%')
+        .attr('width', '100%'); // don't wrap
     var padding = options.padding !== undefined ? options.padding : 2;
     function reposition() {
         var pos;
@@ -28,18 +27,17 @@ export function editText(parent, options) {
     }
     var textdiv = foreign.append('xhtml:div');
     var text = options.text || "type on me";
-    textdiv.text(text).attr({
-        contenteditable: true,
-        width: 'auto',
-        class: options.class || null
-    }).style({
+    textdiv.text(text)
+        .attr('contenteditable', true)
+        .attr('width', 'auto')
+        .attr('class', options.class || null).style({
         display: 'inline-block',
         'background-color': 'white',
         padding: padding + 'px'
     });
 
     function stopProp() {
-        d3.event.stopPropagation();
+        event.stopPropagation();
     }
     foreign
         .on('mousedown.edit-text', stopProp)
@@ -62,15 +60,15 @@ export function editText(parent, options) {
 
     textdiv.on('keydown.edit-text', function() {
         // prevent keyboard mode from seeing this (especially delete key!)
-        d3.event.stopPropagation();
-        if(d3.event.keyCode===13) {
-            d3.event.preventDefault();
+        event.stopPropagation();
+        if(event.keyCode===13) {
+            event.preventDefault();
         }
     }).on('keyup.edit-text', function() {
-        d3.event.stopPropagation();
-        if(d3.event.keyCode===13) {
+        event.stopPropagation();
+        if(event.keyCode===13) {
             accept();
-        } else if(d3.event.keyCode===27) {
+        } else if(event.keyCode===27) {
             cancel();
         }
         reposition();

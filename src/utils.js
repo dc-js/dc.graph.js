@@ -1,7 +1,6 @@
 import { getOriginal } from './core.js';
-
-// External dependency loaded as global
-const d3 = globalThis.d3;
+import { interpolate } from 'd3-interpolate';
+import { event, select } from 'd3-selection';
 
 export function propertyIf(pred, curr) {
     return function(o, last) {
@@ -11,7 +10,7 @@ export function propertyIf(pred, curr) {
 
 export function propertyInterpolate(value, curr) {
     return function(o, last) {
-        return d3.interpolate(last(o), curr(o))(value(o));
+        return interpolate(last(o), curr(o))(value(o));
     };
 }
 
@@ -226,8 +225,8 @@ export var scriptPath = function() {
 
 export function eventCoords(diagram) {
     var bound = diagram.root().node().getBoundingClientRect();
-    return diagram.invertCoord([d3.event.clientX - bound.left,
-                              d3.event.clientY - bound.top]);
+    return diagram.invertCoord([event.clientX - bound.left,
+                              event.clientY - bound.top]);
 }
 
 export function promiseIdentity(x) {
@@ -239,7 +238,7 @@ export const is_a_mac = navigator.platform.toUpperCase().indexOf('MAC')!==-1;
 
 // https://stackoverflow.com/questions/16863917/check-if-class-exists-somewhere-in-parent-vanilla-js
 export function ancestorHasClass(element, classname) {
-    if(d3.select(element).classed(classname))
+    if(select(element).classed(classname))
         return true;
     return element.parentElement && ancestorHasClass(element.parentElement, classname);
 }
