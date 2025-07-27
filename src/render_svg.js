@@ -806,7 +806,7 @@ export function renderSvg() {
         if(selEnter.size() && onEnter)
             selEnter.call(onEnter);
         sel.exit().remove();
-        return sel;
+        return sel.merge(selEnter);
     };
 
 

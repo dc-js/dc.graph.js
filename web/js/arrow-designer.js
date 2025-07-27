@@ -1,4 +1,7 @@
+import { selectAll } from 'd3-selection';
 import { diagram, troubleshoot, grid, flatGroup, manualLayout } from './dc-graph.js';
+import dcgraph_domain from './dc.graph.tracker.domain.js';
+import sync_url_options from './sync-url-options.js';
 
 var options = {
     arrowhead: {
@@ -15,7 +18,7 @@ var options = {
         default: 4,
         selector: '#zoom',
         exert: function(val, diagram) {
-            diagram.zoom().scale(+val).event(diagram.svg());
+            diagram.renderer().scale(+val);
         }
     },
     debug: {
@@ -125,7 +128,7 @@ arrowDiagram
 
 var syntax = "concatenate up to four: optional 'o' then optional 'l' or 'r' then one of " + Object.keys(arrowDiagram.arrows()).join(' ');
 
-d3.selectAll('label[for*="arrow"]').attr('title', syntax);
+selectAll('label[for*="arrow"]').attr('title', syntax);
 
 arrowDiagram.render();
 sync_url.exert();

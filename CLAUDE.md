@@ -102,3 +102,4 @@ Layout computation can be offloaded to web workers for performance. Worker files
 - do not check artifacts into the repo
 - yes but please stop adding useless comments
 - use arrow functions wherever possible
+- remember to user jsdelivr for d3 imports
