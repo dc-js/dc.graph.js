@@ -5,6 +5,7 @@
 
 // External dependencies as ES6 modules
 import { dispatch, scaleLinear, ascending, sum, set, select, json } from 'd3';
+import { zoomTransform } from 'd3-zoom';
 import { MarginMixin, utils, BadArgumentException, pluck, redrawAll, registerChart, renderAll } from 'dc';
 import * as crossfilter from 'crossfilter2';
 import { uuid, getOriginal, property, identity, deprecatedProperty, namedChildren, getBBoxNoThrow, isIe, isSafari, constants, deprecateFunction, onetimeTrace, traceFunction } from './core.js';
@@ -2606,14 +2607,24 @@ export function diagram(parent, chartGroup) {
     _diagram.doZoom = function(event) {
         if(_diagram.width_is_automatic() || _diagram.height_is_automatic())
             detect_size_change();
-        var translate, scale = event.transform.k;
+        
+        // Handle case where event object doesn't have transform (programmatic calls)
+        var transform;
+        if(event && event.transform) {
+            transform = event.transform;
+        } else {
+            // Get current transform from SVG element
+            transform = zoomTransform(_diagram.renderer().svg().node());
+        }
+        
+        var translate, scale = transform.k;
         if(_diagram.restrictPan())
-            _diagram.renderer().translate(translate = bring_in_bounds([event.transform.x, event.transform.y]));
-        else translate = [event.transform.x, event.transform.y];
+            translate = bring_in_bounds([transform.x, transform.y]);
+        else translate = [transform.x, transform.y];
         
         // Manually rescale x and y scales for D3 v5
-        var newX = event.transform.rescaleX(_diagram.x());
-        var newY = event.transform.rescaleY(_diagram.y());
+        var newX = transform.rescaleX(_diagram.x());
+        var newY = transform.rescaleY(_diagram.y());
         
         _diagram.renderer().globalTransform(translate, scale, _animateZoom);
         _dispatch.call("zoomed", null, translate, scale, newX.domain(), newY.domain());

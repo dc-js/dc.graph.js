@@ -160,6 +160,9 @@ export function renderSvg() {
         return this;
     };
 
+    _renderer.commitTranslateScale = function() {
+        return this;
+    };
 
     _renderer.zoom = function(_) {
         if(!arguments.length)

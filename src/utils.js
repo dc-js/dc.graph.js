@@ -1,6 +1,6 @@
 import { getOriginal } from './core.js';
 import { interpolate } from 'd3-interpolate';
-import { event, select } from 'd3-selection';
+import { select } from 'd3-selection';
 
 export function propertyIf(pred, curr) {
     return function(o, last) {
@@ -223,7 +223,7 @@ export var scriptPath = function() {
     };
 }();
 
-export function eventCoords(diagram) {
+export function eventCoords(diagram, event) {
     var bound = diagram.root().node().getBoundingClientRect();
     return diagram.invertCoord([event.clientX - bound.left,
                               event.clientY - bound.top]);

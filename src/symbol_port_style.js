@@ -1,3 +1,4 @@
+import { select } from 'd3-selection';
 import { property, getBBoxNoThrow, identity } from './core.js';
 import { cascade } from './utils.js';
 
@@ -182,9 +183,10 @@ export function symbolPortStyle() {
         });
         return trans;
     };
-    _style.eventPort = function() {
-        var parent = d3.select(d3.event.target.parentNode);
-        if(d3.event.target.parentNode.tagName === 'g' && parent.classed('port'))
+    _style.eventPort = function(event) {
+        if(!event) return null; // Guard for when called without event
+        var parent = select(event.target.parentNode);
+        if(event.target.parentNode.tagName === 'g' && parent.classed('port'))
             return parent.datum();
         return null;
     };
@@ -287,9 +289,9 @@ export function symbolPortStyle() {
         }
         var namespace = 'grow-ports-' + _style.parent().portStyle.nameOf(this);
         if(whether) {
-            _node.on('mouseover.' + namespace, function(n) {
+            _node.on('mouseover.' + namespace, (event, n) => {
                 var nid = _style.parent().nodeKey.eval(n);
-                var activePort = _style.eventPort();
+                var activePort = _style.eventPort(event);
                 if(_nodePorts[nid])
                     _nodePorts[nid].forEach(function(p) {
                         p.state = p === activePort ? 'large' : activePort ? 'small' : 'medium';

@@ -185,16 +185,16 @@ export function expandCollapse(options) {
         throw new Error('unknown rankdir ' + diagram.layoutEngine().rankdir());
     }
 
-    function detect_key(key) {
+    function detect_key(key, event) {
         switch(key) {
         case 'Alt':
-            return d3.event.altKey;
+            return event.altKey;
         case 'Meta':
-            return d3.event.metaKey;
+            return event.metaKey;
         case 'Shift':
-            return d3.event.shiftKey;
+            return event.shiftKey;
         case 'Control':
-            return d3.event.ctrlKey;
+            return event.ctrlKey;
         }
         return false;
     }
@@ -292,17 +292,17 @@ export function expandCollapse(options) {
     }
 
     function draw(diagram, node, edge, ehover) {
-        function over_node(n) {
-            var dir = zonedir(diagram, d3.event, options.dirs, n);
+        function over_node(event, n) {
+            var dir = zonedir(diagram, event, options.dirs, n);
             _overNode = n;
             _overDir = dir;
             if(_ignore && _ignore !== n)
                 _ignore = null;
             if(_ignore)
                 return;
-            if(options.hideNode && detect_key(options.hideKey))
+            if(options.hideNode && detect_key(options.hideKey, event))
                 highlight_hiding_node(diagram, n, edge);
-            else if(_mode.nodeURL.eval(_overNode) && detect_key(options.linkKey)) {
+            else if(_mode.nodeURL.eval(_overNode) && detect_key(options.linkKey, event)) {
                 diagram.selectAllNodes()
                     .filter(function(n) {
                         return n === _overNode;
@@ -310,7 +310,7 @@ export function expandCollapse(options) {
                 diagram.requestRefresh(0);
             }
             else
-                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key(options.recurseKey));
+                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key(options.recurseKey, event));
         }
         function leave_node(n)  {
             diagram.selectAllNodes()
@@ -325,11 +325,11 @@ export function expandCollapse(options) {
             collapse_highlight_group.highlight({}, {});
             hide_highlight_group.highlight({}, {});
         }
-        function click_node(n) {
+        function click_node(event, n) {
             var nk = diagram.nodeKey.eval(n);
-            if(options.hideNode && detect_key(options.hideKey))
+            if(options.hideNode && detect_key(options.hideKey, event))
                 options.hideNode(nk);
-            else if(detect_key(options.linkKey)) {
+            else if(detect_key(options.linkKey, event)) {
                 if(_mode.nodeURL.eval(n) && _mode.urlOpener)
                     _mode.urlOpener()(_mode, n, _mode.nodeURL.eval(n));
             } else {
@@ -337,25 +337,25 @@ export function expandCollapse(options) {
                 _ignore = n;
                 _changing = null;
                 changing_highlight_group.highlight({}, {});
-                var dir = zonedir(diagram, d3.event, options.dirs, n);
+                var dir = zonedir(diagram, event, options.dirs, n);
                 let tree_nodes = [nk];
-                if(detect_key(options.recurseKey) && options.get_tree_edges)
+                if(detect_key(options.recurseKey, event) && options.get_tree_edges)
                     tree_nodes = Object.keys(options.get_tree_edges(nk, dir));
                 expand(dir, tree_nodes, !_expanded[dir].has(nk));
             }
         }
 
-        function enter_edge(e) {
+        function enter_edge(event, e) {
             _overEdge = e;
-            if(options.hideEdge && detect_key(options.hideKey))
+            if(options.hideEdge && detect_key(options.hideKey, event))
                 highlight_hiding_edge(diagram, e);
         }
         function leave_edge(e) {
             _overEdge = null;
             hide_highlight_group.highlight({}, {});
         }
-        function click_edge(e) {
-            if(options.hideEdge && detect_key(options.hideKey))
+        function click_edge(event, e) {
+            if(options.hideEdge && detect_key(options.hideKey, event))
                 options.hideEdge(diagram.edgeKey.eval(e));
         }
 
@@ -372,8 +372,8 @@ export function expandCollapse(options) {
             .on('click.expand-collapse', click_edge);
 
         _keyboard
-            .on('keydown.expand-collapse', function() {
-                if(d3.event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
+            .on('keydown.expand-collapse', (event) => {
+                if(event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
                     if(_overNode)
                         highlight_hiding_node(diagram, _overNode, edge);
                     if(_overEdge)
@@ -383,7 +383,7 @@ export function expandCollapse(options) {
                     changing_highlight_group.highlight({}, {});
                     collapse_highlight_group.highlight({}, {});
                 }
-                else if(d3.event.key === options.linkKey && _overNode) {
+                else if(event.key === options.linkKey && _overNode) {
                     if(_overNode && _mode.nodeURL.eval(_overNode)) {
                         diagram.selectAllNodes()
                             .filter(function(n) {
@@ -394,15 +394,15 @@ export function expandCollapse(options) {
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.highlight({}, {});
                 }
-                else if(d3.event.key === options.recurseKey && _overNode) {
+                else if(event.key === options.recurseKey && _overNode) {
                     highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true);
                 }
             })
-            .on('keyup.expand_collapse', function() {
-                if((d3.event.key === options.hideKey || d3.event.key === options.linkKey || d3.event.key === options.recurseKey) && (_overNode || _overEdge)) {
+            .on('keyup.expand_collapse', (event) => {
+                if((event.key === options.hideKey || event.key === options.linkKey || event.key === options.recurseKey) && (_overNode || _overEdge)) {
                     hide_highlight_group.highlight({}, {});
                     if(_overNode) {
-                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey));
+                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey, event));
                         if(_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
                                 .filter(function(n) {

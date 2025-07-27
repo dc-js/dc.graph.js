@@ -186,7 +186,7 @@ export function drawGraphs(options) {
                 if(_mode.usePorts()) {
                     var activePort;
                     if(typeof _mode.usePorts() === 'object' && _mode.usePorts().eventPort)
-                        activePort = _mode.usePorts().eventPort();
+                        activePort = _mode.usePorts().eventPort(event);
                     else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'out')
                         || diagram.getPort(diagram.nodeKey.eval(n), null, 'in');
                     if(!activePort)
@@ -202,7 +202,7 @@ export function drawGraphs(options) {
                 var msg;
                 event.stopPropagation();
                 if(_sourceDown) {
-                    var coords = eventCoords(diagram);
+                    var coords = eventCoords(diagram, event);
                     if(check_invalid_drag(coords, event))
                         return;
                     var oldTarget = _targetMove;
@@ -215,7 +215,7 @@ export function drawGraphs(options) {
                     else if(_mode.usePorts()) {
                         var activePort;
                         if(typeof _mode.usePorts() === 'object' && _mode.usePorts().eventPort)
-                            activePort = _mode.usePorts().eventPort();
+                            activePort = _mode.usePorts().eventPort(event);
                         else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'in')
                             || diagram.getPort(diagram.nodeKey.eval(n), null, 'out');
                         if(activePort)
@@ -290,8 +290,6 @@ export function drawGraphs(options) {
                     options.tipsDisable.forEach(function(tip) {
                         tip.disabled(false);
                     });
-                // allow keyboard mode to hear this one (again, we need better cooperation)
-                // d3.event.stopPropagation();
                 if(_sourceDown && _targetValid) {
                     var finishPromise;
                     if(_mode.conduct().finishDragEdge)
@@ -314,10 +312,10 @@ export function drawGraphs(options) {
             .on('mousedown.draw-graphs', function() {
                 _sourceDown = null;
             })
-            .on('mousemove.draw-graphs', function() {
+            .on('mousemove.draw-graphs', (event) => {
                 var data = [];
                 if(_sourceDown) { // drawing edge
-                    var coords = eventCoords(diagram);
+                    var coords = eventCoords(diagram, event);
                     _crossout = null;
                     if(check_invalid_drag(coords, event))
                         return;
@@ -347,7 +345,7 @@ export function drawGraphs(options) {
                     erase_hint();
                 } else { // click-node
                     if(event.target === event.currentTarget && _mode.clickCreatesNodes())
-                        create_node(diagram, eventCoords(diagram));
+                        create_node(diagram, eventCoords(diagram, event));
                 }
                 update_crossout();
             });

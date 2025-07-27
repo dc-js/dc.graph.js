@@ -45,8 +45,8 @@ export function deleteThings(things_group, mode_name, id_tag) {
         });
     }
     function draw(diagram) {
-        _keyboard.on('keyup.' + mode_name, function() {
-            if(d3.event.code === _deleteKey)
+        _keyboard.on('keyup.' + mode_name, (event) => {
+            if(event.code === _deleteKey)
                 delete_selection();
         });
     }

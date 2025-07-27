@@ -1,3 +1,4 @@
+import { select } from 'd3-selection';
 import { mode } from './mode.js';
 import { property } from './core.js';
 import { is_a_mac } from './utils.js';
@@ -36,14 +37,14 @@ export function moveNodes(options) {
         });
     }
     function draw(diagram, node, edge) {
-        node.on('mousedown.move-nodes', function(n) {
+        node.on('mousedown.move-nodes', (event, n) => {
             // Need a more general way for modes to say "I got this"
-            if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort())
+            if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort(event))
                 return;
             if(!_keyboard.modKeysMatch(_mode.modKeys()))
                 return;
-            _startPos = eventCoords(diagram);
-            _downNode = d3.select(this);
+            _startPos = eventCoords(diagram, event);
+            _downNode = select(this);
             // if the node under the mouse is not in the selection, need to
             // make that node selected
             var key = diagram.nodeKey.eval(n);
@@ -67,7 +68,7 @@ export function moveNodes(options) {
                 }
                 if(_maybeSelect)
                     select_nodes_group.set_changed([_maybeSelect]);
-                var pos = eventCoords(diagram);
+                var pos = eventCoords(diagram, event);
                 var dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
                 if(!_moveStarted && Math.hypot(dx, dy) > _mode.dragSize()) {
