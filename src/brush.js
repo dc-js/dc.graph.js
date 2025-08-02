@@ -1,6 +1,7 @@
 import { mode } from './mode.js';
 import { dispatch } from 'd3-dispatch';
 import { brush as d3Brush, brushSelection } from 'd3-brush';
+import { event } from 'd3-selection';
 
 /**
  * `brush` is a {@link mode mode} providing a simple wrapper over
@@ -10,22 +11,32 @@ import { brush as d3Brush, brushSelection } from 'd3-brush';
  **/
 export function brush() {
     var _brush = null, _gBrush, _dispatch = dispatch('brushstart', 'brushmove', 'brushend');
+    var _clearing = false;
 
     function brushstart() {
-        _dispatch.call("brushstart");
+        if(!_clearing) {
+            _dispatch.call("brushstart");
+        }
     }
-    function brushmove(event) {
-        var ext = event.selection;
-        _dispatch.call("brushmove", null, ext);
+    function brushmove() {
+        if(!_clearing) {
+            var ext = event.selection;
+            _dispatch.call("brushmove", null, ext);
+        }
     }
     function brushend() {
-        _dispatch.call("brushend");
-        _gBrush.call(_brush.move, null);
+        if(!_clearing) {
+            _dispatch.call("brushend");
+            _clearing = true;
+            _gBrush.call(_brush.move, null);
+            _clearing = false;
+        }
     }
     function install_brush(diagram) {
         if(!_brush) {
+            const extent = [[diagram.x().range()[0], diagram.y().range()[0]], [diagram.x().range()[1], diagram.y().range()[1]]];
             _brush = d3Brush()
-                .extent([[diagram.x().range()[0], diagram.y().range()[1]], [diagram.x().range()[1], diagram.y().range()[0]]])
+                .extent(extent)
                 .on('start.brush-mode', brushstart)
                 .on('brush.brush-mode', brushmove)
                 .on('end.brush-mode', brushend);

@@ -61,7 +61,7 @@ export function selectThings(things_group, things_name, thinginess) {
     function modkeyschanged() {
         if(_mode.multipleSelect()) {
             var brush_mode = _mode.parent().child('brush');
-            if(_keyboard.modKeysMatch(_mode.modKeys()))
+            if(_keyboard.modKeysMatch(_mode.modKeys(), is_a_mac ? 'Meta' : 'Control'))
                 brush_mode.activate();
             else
                 brush_mode.deactivate();
@@ -78,7 +78,7 @@ export function selectThings(things_group, things_name, thinginess) {
     function brushmove(ext) {
         if(!thinginess.intersectRect)
             return;
-        var rectSelect = thinginess.intersectRect(ext);
+        var rectSelect = ext ? thinginess.intersectRect(ext) : [];
         var newSelected;
         if(isUnion(event.sourceEvent))
             newSelected = rectSelect.reduce(add_array, _oldSelected);

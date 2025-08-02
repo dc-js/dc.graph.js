@@ -61,15 +61,21 @@ export function keyboard() {
     _mode.modKeysPressed = function() {
         return pressed();
     };
-    _mode.modKeysMatch = function(keys) {
+    _mode.modKeysMatch = function(keys, ignoreKeys) {
+        const pressed = set(_pressed.values());
+        if(ignoreKeys) {
+            if(!Array.isArray(ignoreKeys))
+                ignoreKeys = [ignoreKeys];
+            ignoreKeys.forEach(key => pressed.remove(key))
+        }
         if(!keys || keys === [])
-            return _pressed.empty();
+            return pressed.empty();
         if(!Array.isArray(keys))
             keys = [keys];
-        var p = pressed();
-        if(p.length !== keys.length)
+        const pv = pressed.values();
+        if(pv.length !== keys.length)
             return false;
-        return keys.slice().sort().every(function(k, i) { return k === p[i]; });
+        return keys.slice().sort().every(function(k, i) { return k === pv[i]; });
     };
 
     return _mode;

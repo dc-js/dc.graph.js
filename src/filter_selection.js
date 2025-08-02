@@ -9,9 +9,9 @@ export function filterSelection(things_group, things_name) {
     function selection_changed(diagram) {
         return function(selection) {
             if(selection.length) {
-                var set = set(selection);
+                var selectionSet = set(selection);
                 _mode.dimensionAccessor()(diagram).filterFunction(function(k) {
-                    return set.has(k);
+                    return selectionSet.has(k);
                 });
             } else _mode.dimensionAccessor()(diagram).filter(null);
             diagram.redrawGroup();
