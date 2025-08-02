@@ -1,7 +1,5 @@
 import { property } from './core.js';
-
-// External dependency loaded as global  
-const dc = globalThis.dc;
+import { redrawAll } from 'dc';
 
 export function expandedHidden(opts) {
     var options = Object.assign({
@@ -120,7 +118,7 @@ export function expandedHidden(opts) {
         },
         refresh: function() {
             apply_filter(_strategy.expandCollapse());
-            dc.redrawAll();
+            redrawAll();
             return this;
         },
         collapsibles: function(nks, dir) {
@@ -155,7 +153,7 @@ export function expandedHidden(opts) {
                 console.warn('expanded_hidden needs edgeCrossfilter to hide edges');
             _edgeHidden[ek] = true;
             apply_filter(_strategy.expandCollapse());
-            dc.redrawAll();
+            redrawAll();
         },
         expandCollapse: property(null).react(function(ec) {
             if(ec)

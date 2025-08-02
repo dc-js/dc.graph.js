@@ -1,4 +1,12 @@
 import { engines, spawnEngine, diagram, mungeGraph, loadGraph, loadGraphText, flatGroup, applyGraphvizAccessors, builtinArrows, dataUrl, expandCollapse, highlightThings, registerHighlightThingsGroup, legend, tip, tipHtmlOrJsonTable, troubleshoot } from './dc-graph.js';
+import { select } from 'd3-selection';
+import { scaleOrdinal } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
+import { range, min, max, descending, shuffle } from 'd3';
+import sync_url_options from './sync-url-options.js';
+import dcgraph_domain from './dc.graph.tracker.domain.js';
+import { renderAll, redrawAll } from 'dc';
+import { display_error, hide_error } from './graph-error.js';
 
 var options = {
     file: null,
@@ -159,13 +167,13 @@ function rand(s) {
     return sfc32(seed(), seed(), seed(), seed());
 }
 
-d3.select('#user-file').on('change', function() {
+select('#user-file').on('change', function() {
     var filename = this.value;
     if(filename) {
         var reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
-            loadGraph_text(e.target.result, filename, on_load.bind(null, filename));
+            loadGraphText(e.target.result, filename).then(data => on_load(filename, null, data));
             sync_url.update('expanded', []);
         };
         reader.readAsText(this.files[0]);
@@ -210,7 +218,7 @@ function on_load(filename, error, data) {
         nodekeyattr = graph_data.nodekeyattr;
 
     function update_data_link() {
-        d3.select('#data-link')
+        select('#data-link')
             .attr('href', sync_url.what_if_url({file: dataUrl({nodes: nodes, edges: edges})}));
     }
     more_output = update_data_link;
@@ -220,9 +228,9 @@ function on_load(filename, error, data) {
     let numeric_colors;
     if(sync_url.vals.numerics) {
         if(sync_url.vals.numeric_colors)
-            numeric_colors = d3.scale.ordinal().domain(d3.range(10)).range(sync_url.vals.numeric_colors);
+            numeric_colors = scaleOrdinal().domain(range(10)).range(sync_url.vals.numeric_colors);
         else
-            numeric_colors = d3.scale.category10().domain(d3.range(10));
+            numeric_colors = scaleOrdinal(schemeCategory10).domain(range(10));
         graph_data.nodes.forEach(n => {
             for(const [key, value] of Object.entries(n.value)) {
                 if(key === 'label')
@@ -237,7 +245,7 @@ function on_load(filename, error, data) {
                 }
             }
         });
-        const numerics = d3.select('#numerics');
+        const numerics = select('#numerics');
         numerics.append('h4').text('Numeric fields');
         numerics.append('p').text('Select a value to expand nodes with field at or above that value');
         const fields = numerics.selectAll('div').data(Object.entries(numeric_fields))
@@ -247,7 +255,7 @@ function on_load(filename, error, data) {
             .style('color', (_,i) => numeric_colors(i)).text(
                   ([key,values]) => {
                       const values2 = Object.keys(values).map(x => +x);
-                      return `${key}: ${d3.min(values2)} - ${d3.max(values2)}`;
+                      return `${key}: ${min(values2)} - ${max(values2)}`;
                   });
         // fields.append('label')
         //     .attr('for', ([key]) => `#${key}-select`)
@@ -257,7 +265,7 @@ function on_load(filename, error, data) {
         field_select
             .selectAll('option').data(([key, values]) => {
                 const values2 = Object.keys(values).map(x => +x);
-                values2.sort(d3.descending);
+                values2.sort(descending);
                 return ['select', ...values2.slice(0, 3)];
             })
             .enter().append('option').text(x => x);
@@ -309,7 +317,7 @@ function on_load(filename, error, data) {
         var anames = Object.keys(builtinArrows);
 
         function arrowgen(rnd) {
-            return d3.range(Math.floor(rnd() * 5))
+            return range(Math.floor(rnd() * 5))
                 .map(function (i) {
                     return (rnd() > 0.5 ? 'o' : '') + anames[Math.floor(rnd() * anames.length)];
                 }).join('');
@@ -317,8 +325,8 @@ function on_load(filename, error, data) {
         var now = String(new Date());
         switch(sync_url.vals.rndarrow) {
         case 'one':
-            arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(builtinArrows)));
-            arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(builtinArrows)));
+            arrowheadscale = scaleOrdinal().range(shuffle(Object.keys(builtinArrows)));
+            arrowtailscale = scaleOrdinal().range(shuffle(Object.keys(builtinArrows)));
             break;
         case 'lots':
             arrowheadscale = arrowtailscale = function(label) {
@@ -423,7 +431,7 @@ function on_load(filename, error, data) {
     });
 
     if(!sync_url.vals.directional)
-        d3.select('#expand').selectAll('option').filter(function() {
+        select('#expand').selectAll('option').filter(function() {
             return this.attributes.getNamedItem('value').value !== 'both';
         })
         .remove();
@@ -487,24 +495,24 @@ function on_load(filename, error, data) {
     ).durationOverride(0));
     expand_collapse = expandCollapse(ec_strategy);
     exploreDiagram.child('expand-collapse', expand_collapse);
-    dc.renderAll();
+    renderAll();
     exploreDiagram.autoZoom('once-noanim');
-    var starter = d3.select('#add-node');
+    var starter = select('#add-node');
     function refresh_add_node() {
         const nodes = nodelist.filter(({label: [label0]}) =>
             !sync_url.vals.expanded.includes(label0) &&
             !sync_url.vals.expandedIn.includes(label0) &&
             !sync_url.vals.expandedOut.includes(label0));
         var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodes));
-        option.enter().append('option');
         option.exit().remove();
-        option
+        option.enter().append('option')
+            .merge(option)
             .attr('value', function(d) { return d.value; })
             .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
             .text(function(d) { return d.label; });
     }
     exploreDiagram.on('drawn.add-nodes', refresh_add_node);
-    var expand = d3.select('#expand');
+    var expand = select('#expand');
     function get_dir_recurse(nk) {
         const exp = expand.node().value;
         let dir, recurse = false;
@@ -527,10 +535,10 @@ function on_load(filename, error, data) {
         const nks = expand_dir_rec(dir, recurse, this.value);
         expand_collapse.expand(dir, nks, true);
         exploreDiagram.autoZoom('once-noanim');
-        dc.redrawAll();
+        redrawAll();
     });
 
-    d3.select('#reset').on('click', function() {
+    select('#reset').on('click', function() {
         starter.node().value = 'select one';
         if(sync_url.vals.directional) {
             sync_url.update('expandedIn', []);
@@ -538,7 +546,7 @@ function on_load(filename, error, data) {
         }
         else sync_url.update('expanded', []);
         if(sync_url.vals.numerics)
-            d3.select('#numerics').selectAll('select').each(function() { this.value = 'select'});
+            select('#numerics').selectAll('select').each(function() { this.value = 'select'});
     });
 
     if(sync_url.vals.start)
@@ -549,4 +557,4 @@ function on_load(filename, error, data) {
 if(!sync_url.vals.file)
     display_error('Need <code>?file=</code> in URL</br><small>or browse local file above right</small>');
 
-loadGraph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+loadGraph(sync_url.vals.file).then(data => on_load(sync_url.vals.file, null, data));

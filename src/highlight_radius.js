@@ -33,7 +33,7 @@ export function highlightRadius(options) {
         });
         if(!Object.keys(nodeset).length && !Object.keys(edgeset).length)
             nodeset = edgeset = null;
-        highlight_things_group.highlight(nodeset, edgeset);
+        highlight_things_group.call('highlight', null, nodeset, edgeset);
     }
 
     function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
