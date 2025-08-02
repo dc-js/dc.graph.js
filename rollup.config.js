@@ -1,6 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import copy from 'rollup-plugin-copy';
 
 export default {
   input: 'src/index.js',
@@ -26,6 +27,13 @@ export default {
     resolve({
       preferBuiltins: false
     }),
-    commonjs()
+    commonjs(),
+    copy({
+      targets: [
+        { src: 'dist/dc-graph.js', dest: 'web/js' },
+        { src: 'dist/dc-graph.js.map', dest: 'web/js' }
+      ],
+      hook: 'writeBundle'
+    })
   ]
 };
