@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": false,
+    "baseUrl": ".",
+    "paths": {
+      "./dc-graph.js": ["./dist/dc-graph.js"],
+      "./js/dc-graph.js": ["./dist/dc-graph.js"]
+    },
+    "lib": ["ES2020", "DOM"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "src/**/*.js",
+    "web/js/**/*.js",
+    "dist/dc-graph.js",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "web/docs",
+    "**/*.worker.js"
+  ]
+}
