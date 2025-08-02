@@ -9,6 +9,7 @@ dist/
 *.worker.js.map
 web/js/dc-graph.js
 web/js/dc-graph.js.map
+web/css/dc-graph.css
 d3v4-force.js
 lysenko-interval-tree.js
 

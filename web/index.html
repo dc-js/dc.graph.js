@@ -6,7 +6,13 @@
   <link rel="icon" href="img/favicon.png" type="image/x-icon" />
   <link rel="stylesheet" type="text/css" href="css/index.css"/>
 
-  <script type="text/javascript" src="js/d3.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm"
+    }
+  }
+  </script>
 </head>
 <body>
   <h1>dc.graph</h1>
@@ -31,5 +37,5 @@
     </a>
   </div>
 
-  <script type="text/javascript" src="js/index.js"></script>
+  <script type="module" src="js/index.js"></script>
 </body>

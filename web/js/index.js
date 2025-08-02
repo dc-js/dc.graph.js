@@ -1,8 +1,7 @@
-d3.select('img.animate').on({
-    mouseenter: function(d) {
-        this.src = "img/screenshots/" + this.id + ".gif";
-    },
-    mouseleave: function(d) {
-        this.src = "img/screenshots/" + this.id + ".png";
-    }
+import { select } from 'd3-selection';
+
+select('img.animate').on('mouseenter', function() {
+    this.src = "img/screenshots/" + this.id + ".gif";
+}).on('mouseleave', function() {
+    this.src = "img/screenshots/" + this.id + ".png";
 });
