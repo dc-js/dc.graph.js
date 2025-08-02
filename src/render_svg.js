@@ -874,10 +874,7 @@ export function renderSvg() {
             if(!keyboard)
                 _renderer.parent().child('keyboard', keyboard = keyboardMode());
 
-            _zoom.filter(function(event) {
-                const ret =  keyboard.modKeysMatch(_renderer.parent().modKeyZoom());
-                return ret;
-            });
+            _zoom.filter(() => keyboard.modKeysMatch(_renderer.parent().modKeyZoom()));
 
             _svg.call(_zoom);
             _svg.on('dblclick.zoom', null);

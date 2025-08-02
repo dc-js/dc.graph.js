@@ -164,7 +164,6 @@ selectionDiagram
     .margins({top: 5, left: 5, right: 5, bottom: 5})
     .autoZoom('once-noanim')
     .zoomDuration(sync_url.vals.transition_duration)
-    .altKeyZoom(true)
     .width('auto')
     .height('auto')
     .nodeFixed(function(n) { return n.value.fixed; })

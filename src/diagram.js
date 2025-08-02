@@ -228,15 +228,15 @@ export function diagram(parent, chartGroup) {
     _diagram.zoomExtent = property([.1, 2]);
 
     /**
-     * Whether zooming should only be enabled when the alt key is pressed.
-     * @method altKeyZoom
+     * What key or keys should be pressed to enabled zoom.
+     * @method modKeyZoom
      * @memberof dc_graph.diagram
      * @instance
-     * @param {Boolean} [altKeyZoom=true]
-     * @return {Boolean}
+     * @param {String|String[]} [modKeyZoom=true]
+     * @return {String|String[]}
      * @return {dc_graph.diagram}
      **/
-    _diagram.modKeyZoom = _diagram.altKeyZoom = property(false);
+    _diagram.modKeyZoom = property('Alt');
 
     /**
      * Set or get the fitting strategy for the canvas, which affects how the translate

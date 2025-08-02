@@ -44,6 +44,7 @@ const options = {
 };
 
 // Note: These are still global functions from the legacy scripts
+
 // In a full ES6 conversion, these would also be converted to modules
 const sync_url = sync_url_options(options, dcgraph_domain(growingDiagram), growingDiagram);
 
