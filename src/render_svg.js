@@ -1,5 +1,5 @@
-import { select, selectAll } from 'd3-selection';
 import { zoom, zoomIdentity, zoomTransform } from 'd3-zoom';
+import { select, selectAll } from 'd3-selection';
 import { compose, generatePath } from './utils.js'
 import { property, identity } from './core.js';
 import { keyboard as keyboardMode } from './keyboard.js';
@@ -868,9 +868,24 @@ export function renderSvg() {
             .on('zoom.diagram', _renderer.parent().doZoom)
             .scaleExtent(_renderer.parent().zoomExtent());
         
-        // TEMP: Disable zoom entirely to test if it's blocking mouseup events
-        _zoom.filter(function() { return false; });
-        _svg.call(_zoom);
+        if(_renderer.parent().mouseZoomable()) {
+
+            var brush = _renderer.parent().child('brush');
+            var keyboard = _renderer.parent().child('keyboard');
+            if(!keyboard)
+                _renderer.parent().child('keyboard', keyboard = keyboardMode());
+
+            _zoom.filter(function(event) {
+                const ret =  keyboard.modKeysMatch(_renderer.parent().modKeyZoom());
+                return ret;
+            });
+
+            _svg.call(_zoom);
+            _svg.on('dblclick.zoom', null);
+        } else {
+            _zoom.filter(function() { return false; });
+            _svg.call(_zoom);
+        }
 
         return _svg;
     }

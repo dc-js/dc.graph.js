@@ -36,6 +36,7 @@ drawDiagram
     .layoutEngine(engine)
     .transitionDuration(500)
     .stageTransitions('insmod')
+    .modKeyZoom('Alt')
     .showLayoutSteps(false)
     .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
