@@ -1,6 +1,11 @@
 import { engines, spawnEngine, diagram, mungeGraph, loadGraph, flatGroup, drawClusters, selectNodes, moveNodes, fixNodes, tip, tipHtmlOrJsonTable, highlightNeighbors } from './dc-graph.js';
+import { set } from 'd3-collection';
+import { select } from 'd3-selection';
+import sync_url_options from './sync-url-options.js';
+import { dcgraph_multi_domain } from './dc.graph.tracker.domain.js';
+import { renderAll } from 'dc';
 
-var excluded_layouts = d3.set(['manual', 'layered', 'd3force', 'flexbox']);
+var excluded_layouts = set(['manual', 'layered', 'd3force', 'flexbox']);
 var good_layouts = engines.available().filter(function(a) {
     return !excluded_layouts.has(a);
 });
@@ -61,7 +66,7 @@ function apply_engine_parameters(engine) {
 }
 
 function display_error(heading, message) {
-    d3.select('#message')
+    select('#message')
         .style('display', null)
         .html('<div><h1>' + heading + '</h1>' +
               (message ? '<code>' + message + '</code></div>' : ''));
@@ -69,7 +74,7 @@ function display_error(heading, message) {
 }
 
 function hide_error() {
-    d3.select('#message')
+    select('#message')
         .style('display', 'none');
 }
 
@@ -116,7 +121,7 @@ function on_load(filename, error, data) {
             .nodeTitle(null); // deactivate basic tooltips
 
         if(sync_url.vals.cutoff) {
-            d3.select('#cutoff-stuff').style('display', 'inline-block');
+            select('#cutoff-stuff').style('display', 'inline-block');
             var dim = edge_flat.crossfilter.dimension(function(d) {
                 return +d[sync_url.vals.cutoff];
             });
@@ -170,12 +175,12 @@ function on_load(filename, error, data) {
     init_diagram(sync_url.vals.llayout, ldiagram, 'left');
     init_diagram(sync_url.vals.rlayout, rdiagram, 'right');
 
-    dc.renderAll();
+    renderAll();
 }
 
-loadGraph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+loadGraph(sync_url.vals.file).then(data => on_load(sync_url.vals.file, null, data));
 
-d3.select('#randomize').on('click', function() {
+select('#randomize').on('click', function() {
     sync_url.update('llayout', rnd_item(good_layouts), true);
     sync_url.update('rlayout', rnd_item(good_layouts), true);
 });

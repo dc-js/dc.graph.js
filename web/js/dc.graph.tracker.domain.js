@@ -31,3 +31,4 @@ function dcgraph_multi_domain(diagrams, chartgroup) {
 
 
 export default dcgraph_domain;
+export { dcgraph_multi_domain };
