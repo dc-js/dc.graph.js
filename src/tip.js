@@ -34,7 +34,6 @@ export function tip(options) {
         const instance = tippy(element, {
             content: '',
             placement: directionMap[_mode.direction()] || 'top',
-            delay: [_mode.showDelay(), _mode.hideDelay()],
             interactive: _mode.clickable(),
             appendTo: () => document.body,
             allowHTML: true,
@@ -42,17 +41,28 @@ export function tip(options) {
             animation: 'scale-subtle',
             maxWidth: 350,
             arrow: true,
-            trigger: 'mouseenter',
-            onShow(instance) {
-                // Stop propagation to prevent parent tips from showing
-                if (d3Event) {
-                    d3Event.stopPropagation();
-                }
-                
-                if (_mode.disabled() || (_mode.selection().exclude && _mode.selection().exclude(element))) {
-                    return false;
-                }
-                
+            trigger: 'manual', // We'll handle showing/hiding manually
+            onHidden() {}
+        });
+
+        let showTimeout;
+        let hideTimeout;
+
+        // Handle mouse enter - check content before showing
+        element.addEventListener('mouseenter', (event) => {
+            // Stop propagation to prevent parent tips from showing
+            event.stopPropagation();
+            
+            if (_mode.disabled() || (_mode.selection().exclude && _mode.selection().exclude(element))) {
+                return;
+            }
+            
+            // Clear any pending hide timeout
+            clearTimeout(hideTimeout);
+            
+            // Set up show timeout
+            clearTimeout(showTimeout);
+            showTimeout = setTimeout(async () => {
                 // Hide all other instances first
                 _instances.forEach(otherInstance => {
                     if (otherInstance !== instance) {
@@ -61,20 +71,27 @@ export function tip(options) {
                 });
                 
                 const d = element._dcgraph_datum || datum;
-                _mode.content()(d, content => {
-                    // Don't show if content is empty
-                    if (!content || content.trim() === '') {
-                        return false;
+                try {
+                    const content = await _mode.content()(d);
+                    // Only show tooltip if content is not empty
+                    if (content && content.trim() !== '') {
+                        instance.setContent(content);
+                        instance.show();
+                        _dispatch.call("tipped", null, d);
                     }
-                    instance.setContent(content);
-                    _dispatch.call("tipped", null, d);
-                });
-            },
-            onTrigger(instance, event) {
-                // Stop propagation at trigger time
-                event.stopPropagation();
-            },
-            onHidden() {}
+                } catch (error) {
+                    console.warn('Tooltip content error:', error);
+                }
+            }, _mode.showDelay());
+        });
+
+        // Handle mouse leave - hide after delay
+        element.addEventListener('mouseleave', () => {
+            clearTimeout(showTimeout);
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(() => {
+                instance.hide();
+            }, _mode.hideDelay());
         });
 
         _instances.set(element, instance);
@@ -125,18 +142,17 @@ export function tip(options) {
     _mode.direction = property('n');
 
     /**
-     * Specifies the function to generate content for the tooltip. This function has the
-     * signature `function(d, k)`, where `d` is the datum of the thing being hovered over,
-     * and `k` is a continuation. The function should fetch the content, asynchronously if
-     * needed, and then pass html forward to `k`.
+     * Specifies the async function to generate content for the tooltip. This function has the
+     * signature `async function(d)`, where `d` is the datum of the thing being hovered over.
+     * The function should return a promise that resolves to the HTML content string.
      * @name content
      * @memberof dc_graph.tip
      * @instance
-     * @param {Function} [content]
+     * @param {Function} [content] - Async function that returns Promise<string>
      * @return {Function}
      **/
-    _mode.content = property((n, k) => {
-        k(_mode.parent() ? _mode.parent().nodeTitle.eval(n) : '');
+    _mode.content = property(async (n) => {
+        return _mode.parent() ? _mode.parent().nodeTitle.eval(n) : '';
     });
 
     _mode.on = (event, f) => _dispatch.on(event, f);
@@ -202,10 +218,11 @@ export function tip(options) {
  * tip.content(dc_graph.tip.table());
  **/
 export function tipTable() {
-    var gen = function(d, k) {
+    var gen = async function(d) {
         d = gen.fetch()(d);
-        if(!d)
-            return; // don't display tooltip if no content
+        if(!d) {
+            return ''; // return empty string to prevent tooltip from showing
+        }
         var data, keys;
         if(Array.isArray(d))
             data = d;
@@ -229,7 +246,7 @@ export function tipTable() {
             rowsEnter.append('td').text(function(item) {
                 return JSON.stringify(d[item]);
             });
-        k(table.node().outerHTML); // optimizing for clarity over speed (?)
+        return table.node().outerHTML; // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
     gen.fetch = property(function(d) {
@@ -256,12 +273,13 @@ export function tipJsonTable() {
 
 export function tipHtmlOrJsonTable() {
     var json_table = tipJsonTable();
-    var gen = function(d, k) {
+    var gen = async function(d) {
         var html = gen.html()(d);
-        if(html)
-            k(html);
-        else
-            json_table(d, k);
+        if(html) {
+            return html;
+        } else {
+            return await json_table(d);
+        }
     };
     gen.json = json_table.json;
     gen.html = property(function(d) {

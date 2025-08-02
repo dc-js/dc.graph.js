@@ -850,8 +850,8 @@ get_catalog().then(function(catalog) {
             .delay(200)
             .clickable(true)
             .selection(selectPort())
-            .content(function(d, k) {
-                k(generate_operation(hashCode(d.node.orig.key + '-' + d.name)));
+            .content(async function(d) {
+                return generate_operation(hashCode(d.node.orig.key + '-' + d.name));
             })
             .offset(function() {
                 // I don't entirely understand how d3-tip is calculating position
@@ -866,8 +866,8 @@ get_catalog().then(function(catalog) {
 
     var node_tips = tip({namespace: 'node-tips'})
             .selection(selectNode())
-            .content(function(d, k) {
-                k(d.orig.value && d.orig.value.type);
+            .content(async function(d) {
+                return d.orig.value && d.orig.value.type;
             });
 
     _compositionDiagram.child('node-tips', node_tips);
