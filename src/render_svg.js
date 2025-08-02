@@ -869,7 +869,6 @@ export function renderSvg() {
             .scaleExtent(_renderer.parent().zoomExtent());
         
         if(_renderer.parent().mouseZoomable()) {
-
             var brush = _renderer.parent().child('brush');
             var keyboard = _renderer.parent().child('keyboard');
             if(!keyboard)
