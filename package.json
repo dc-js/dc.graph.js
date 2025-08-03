@@ -27,6 +27,7 @@
     "url": "https://github.com/dc-js/dc.graph.js.git"
   },
   "dependencies": {
+    "@rollup/plugin-replace": "^6.0.2",
     "crossfilter2": "^1.5.4",
     "d3": "^5.8.0",
     "dagre": "^0.8.5",
@@ -76,11 +77,11 @@
   },
   "scripts": {
     "vendor": "cp sync-url-options.js web/js/ && cp querystring.js web/js/ && cp dc.graph.css web/css/",
-    "build": "rollup -c",
-    "build:workers": "rollup -c worker.rollup.config.js && cp *.worker.js web/js/ && cp *.worker.js.map web/js/",
-    "build:all": "npm run vendor && npm run build && npm run build:workers",
-    "build:watch": "rollup -c -w",
-    "dev": "rollup -c -w",
+    "build": "rollup -c && rollup -c worker.rollup.config.js",
+    "build:workers": "rollup -c worker.rollup.config.js",
+    "build:all": "npm run vendor && npm run build",
+    "build:watch": "rollup -c -w & rollup -c worker.rollup.config.js -w",
+    "dev": "rollup -c -w & rollup -c worker.rollup.config.js -w",
     "serve": "cd web && python3 -m http.server 8888",
     "start": "(npm run dev &) && npm run serve",
     "legacy:test": "grunt test",

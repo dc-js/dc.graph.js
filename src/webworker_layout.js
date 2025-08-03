@@ -11,7 +11,7 @@ var NUMBER_RESULTS = 3;
 function createWorker(workerName) {
     if(!_workers[workerName]) {
         var worker = _workers[workerName] = {
-            worker: new Worker(scriptPath() + 'dc.graph.' + workerName + '.worker.js'),
+            worker: new Worker(scriptPath() + 'dc.graph.' + workerName + '.worker.js', { type: 'module' }),
             layouts: {}
         };
         worker.worker.onmessage = function(e) {
@@ -25,6 +25,13 @@ function createWorker(workerName) {
         };
         worker.worker.onerror = function(e) {
             console.error('Worker error:', e);
+            console.error('Error details:', {
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno,
+                error: e.error
+            });
         };
     }
     return _workers[workerName];
