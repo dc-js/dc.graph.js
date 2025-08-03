@@ -174,6 +174,26 @@ export function renderSvg() {
         // create edge SVG elements
         var edge = _edgeLayer.selectAll('.edge')
                 .data(wedges, _renderer.parent().edgeKey.eval);
+        
+        const edgeExit = edge.exit();
+        edgeExit.each(function(e) {
+            e.deleted = true;
+        });
+        const duration = _renderer.parent().stagedDuration();
+        if(duration === 0) {
+            edgeExit.remove();
+        } else {
+            edgeExit.transition()
+                .duration(duration)
+                .delay(_renderer.parent().deleteDelay())
+                .attr('opacity', 0)
+                .on('end', function() { 
+                    console.log('render_svg: transition end, removing edge element');
+                    select(this).remove(); 
+                });
+        }
+
+        // Handle enter selection
         var edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
                 .attr('id', _renderer.parent().edgeId)
@@ -181,14 +201,8 @@ export function renderSvg() {
             .each(function(e) {
                 e.deleted = false;
             });
+        
         edge = edge.merge(edgeEnter);
-        edge.exit().each(function(e) {
-            e.deleted = true;
-        }).transition()
-            .duration(_renderer.parent().stagedDuration())
-            .delay(_renderer.parent().deleteDelay())
-            .attr('opacity', 0)
-            .remove();
 
         var edgeArrows = _edgeLayer.selectAll('.edge-arrows')
                 .data(wedges, _renderer.parent().edgeKey.eval);
@@ -199,16 +213,20 @@ export function renderSvg() {
                 })
                 .attr('fill', 'none')
                 .attr('opacity', 0);
-        edgeArrows = edgeArrows.merge(edgeArrowsEnter);
-        edgeArrows.exit().transition()
+        const edgeArrowsExit = edgeArrows.exit();
+        edgeArrowsExit.transition()
             .duration(_renderer.parent().stagedDuration())
             .delay(_renderer.parent().deleteDelay())
             .attr('opacity', 0)
-            .remove()
-            .on('end.delarrow', function(e) {
+            .on('end', function(e) {
                 edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'head', null);
                 edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'tail', null);
+                select(this).remove();
             });
+        if(_renderer.parent().stagedDuration() === 0) {
+            edgeArrowsExit.remove();
+        }
+        edgeArrows = edgeArrows.merge(edgeArrowsEnter);
 
         if(_renderer.parent().edgeSort()) {
             edge.sort(function(a, b) {
@@ -234,8 +252,8 @@ export function renderSvg() {
                 _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
                     .attr('visibility', 'hidden');
             });
-        edgeHover = edgeHover.merge(edgeHoverEnter);
         edgeHover.exit().remove();
+        edgeHover = edgeHover.merge(edgeHoverEnter);
 
         var edgeLabels = _edgeLayer.selectAll('g.edge-label-wrapper')
             .data(wedges, _renderer.parent().edgeKey.eval);
@@ -246,18 +264,25 @@ export function renderSvg() {
               .attr('id', function(e) {
                   return _renderer.parent().edgeId(e) + '-label';
               });
+        const edgeLabelsExit = edgeLabels.exit();
+        edgeLabelsExit.transition()
+            .duration(_renderer.parent().stagedDuration())
+            .delay(_renderer.parent().deleteDelay())
+            .attr('opacity', 0)
+            .on('end', function() { select(this).remove(); });
+        if(_renderer.parent().stagedDuration() === 0) {
+            edgeLabelsExit.remove();
+        }
         edgeLabels = edgeLabels.merge(edgeLabelsEnter);
+        
         var textPaths = _defs.selectAll('path.edge-label-path')
                 .data(wedges, _renderer.parent().textpathId);
         var textPathsEnter = textPaths.enter()
                 .append('svg:path')
                 .attr('class', 'edge-label-path')
                 .attr('id', _renderer.parent().textpathId);
+        textPaths.exit().remove();
         textPaths = textPaths.merge(textPathsEnter);
-        edgeLabels.exit().transition()
-            .duration(_renderer.parent().stagedDuration())
-            .delay(_renderer.parent().deleteDelay())
-            .attr('opacity', 0).remove();
 
         // create node SVG elements
         var node = _nodeLayer.selectAll('.node')
@@ -268,18 +293,21 @@ export function renderSvg() {
             .each(function(n) {
                 n.deleted = false;
             });
+        const nodeExit = node.exit().each(function(n) {
+            n.deleted = true;
+        });
+        nodeExit.transition()
+            .duration(_renderer.parent().stagedDuration())
+            .delay(_renderer.parent().deleteDelay())
+            .attr('opacity', 0)
+            .on('end', function() { select(this).remove(); });
+        if(_renderer.parent().stagedDuration() === 0) {
+            nodeExit.remove();
+        }
         node = node.merge(nodeEnter);
         // .call(_d3cola.drag);
 
         _renderer.renderNode(nodeEnter);
-
-        node.exit().each(function(n) {
-            n.deleted = true;
-        }).transition()
-            .duration(_renderer.parent().stagedDuration())
-            .delay(_renderer.parent().deleteDelay())
-            .attr('opacity', 0)
-            .remove();
 
         dispatch.call("drawn", null, node, edge, edgeHover);
 

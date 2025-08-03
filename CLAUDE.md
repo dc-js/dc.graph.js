@@ -39,7 +39,7 @@ npm start
 - `dist/dc-graph.js` - main library file (ES6 modules bundled with Rollup)
 - `dist/dc-graph.js.map` - source map
 - `dc.graph.*.worker.js` - web worker files for different layout engines
-- Files are copied to `web/js/` for examples
+- **Files automatically copied to `web/js/` via rollup copy plugin**
 
 ## Source Architecture 
 
@@ -108,7 +108,7 @@ Layout computation can be offloaded to web workers for performance. Worker files
 ## Claude Memories
 
 - please remove trailing whitespace from your edits
-- not necessary to build, we have a server with live reload running
+- **Testing workflow**: Gordon runs a dev server with auto-build/reload, so usually no need to manually build. But `npm run build` is safe if needed (rollup copy plugin updates web/js/ automatically)
 - be terse and avoid purple prose in commit messages
 - do not check artifacts into the repo
 - yes but please stop adding useless comments
@@ -116,4 +116,3 @@ Layout computation can be offloaded to web workers for performance. Worker files
 - remember to user jsdelivr for d3 imports
 - use conditional chaining
 - always use let and const not var
-- i'm running the server, you just need to build for me

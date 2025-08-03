@@ -13,6 +13,9 @@ import {
     matchOpposites, 
     selectPorts 
 } from './dc-graph.js';
+import { range } from 'd3-array';
+import { renderAll, redrawAll } from 'dc';
+import querystring from './querystring.js';
 
 var qs = querystring.parse();
 var options = Object.assign({
@@ -59,13 +62,13 @@ function phrase() {
     return rndsel(adjectives) + ' ' + rndsel(nouns);
 }
 
-var data = d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
+var data = range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'a' + i,
         label: [String.fromCharCode(97+i) + '.', phrase()],
         flex: 1
     };
-}).concat(d3.range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
+}).concat(range(Math.round(+options.min + Math.random()*(options.max-options.min))).map(function(i) {
     return {
         id: 'b' + i,
         label: [String.fromCharCode(48+i) + '.', phrase()],
@@ -218,7 +221,7 @@ if(qs.selports) {
 }
 
 
-dc.renderAll();
+renderAll();
 
 $('#resize').resizable({
     resize: function(event, ui) {
