@@ -1,4 +1,9 @@
 import { diagram, engines, spawnEngine, flatGroup, randomGraph, symbolPortStyle, fixNodes, validate } from './dc-graph.js';
+import { rgb } from 'd3-color';
+import { scaleOrdinal } from 'd3-scale';
+import sync_url_options from './sync-url-options.js';
+import dcgraph_domain from './dc.graph.tracker.domain.js';
+import querystring from './querystring.js';
 
 var resizeDiagram = diagram('#canvas');
 var options = {
@@ -111,21 +116,21 @@ resizeDiagram
     .fitStrategy(sync_url.vals.fit || 'default')
     .autoZoom('always')
     .zoomExtent([0.1, 1.5])
-    .nodeShape({shape: sync_url.vals.shape})
+    .nodeShape({shape: sync_url.vals.shape || 'ellipse'})
     .nodeContent('text')
     .nodeIcon(sync_url.vals.icon)
     .nodeStrokeWidth(0) // turn off outlines
     .nodeLabel(function(kv) { return kv.key; })
     .nodeLabelFill(sync_url.vals.shape === 'plain' ? 'black' : function(n) {
-        var rgb = d3.rgb(resizeDiagram.nodeFillScale()(resizeDiagram.nodeFill()(n))),
+        var color = rgb(resizeDiagram.nodeFillScale()(resizeDiagram.nodeFill()(n))),
             // https://www.w3.org/TR/AERT#color-contrast
-            brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+            brightness = (color.r * 299 + color.g * 587 + color.b * 114) / 1000;
         return brightness > 127 ? 'black' : 'ghostwhite';
     })
     .nodeFill(function(kv) {
         return kv.value.color;
     })
-    .nodeFillScale(d3.scale.ordinal().range(
+    .nodeFillScale(scaleOrdinal().range(
         ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
          '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
     .nodeOpacity(sync_url.vals.opacity)

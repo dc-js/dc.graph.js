@@ -16,13 +16,13 @@ Examples already converted to D3 v5 with importmaps:
 - simple-viewer.html
 - network-building.html
 - arrow-designer.html
-- **match-game.html** (just completed)
+- **match-game.html** (completed - fixed D3 v5 exit-before-merge pattern bug)
 
 ### 🔄 Remaining Examples (3)
 Examples still using D3 v3 script tags that need conversion:
-1. **flexbox.html** (Least complex - minimal dependencies)
+1. **resizing.html** (High complexity - multiple layout engines, dynamic resizing, URL sync)
 2. **shapes-and-text.html** (Medium complexity - multiple layout engines)  
-3. **resizing.html** (High complexity - multiple layout engines, dynamic resizing, URL sync)
+3. **flexbox.html** (Least complex - minimal dependencies)
 
 ### 🗑️ Removed Examples (2)
 - collapse-equivalent-subgraphs.html (deleted - no test data)
@@ -153,14 +153,15 @@ For each converted example:
 
 ## Notes
 
-- **Always rebuild library** after making source changes: `npm run build && cp dist/dc-graph.* web/js/`
-- **Order matters**: Convert examples from least to most complex to build confidence
+- **Rollup automatically copies** build artifacts to web/js/ - no need to manually copy
+- **Order matters**: Converting from most to least complex helps identify all edge cases early
 - **Module conflicts**: ES6 modules and script tags don't mix - pick one approach per dependency
 - **D3 v5 compatibility**: Use specific sub-package imports, not the full D3 bundle where possible
+- **Exit-before-merge pattern**: In D3 v5, must call .exit() before .merge() or exit selection is lost
 
 ## Next Steps
 
-1. Convert flexbox.html (simple case)
+1. Convert resizing.html (most complex - tackle hardest first)
 2. Convert shapes-and-text.html (medium complexity)  
-3. Convert resizing.html (most complex)
+3. Convert flexbox.html (simple case)
 4. Update this document with any new patterns discovered
