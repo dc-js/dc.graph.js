@@ -199,35 +199,38 @@ export function symbolPortStyle() {
     };
     _style.drawPorts = function(ports, nodePorts, node) {
         _nodePorts = nodePorts; _node = node;
-        var port = ports.data(function(n) {
+        const port = ports.data(function(n) {
             return nodePorts[_style.parent().nodeKey.eval(n)] || [];
-        }, name_or_edge);
-        port.exit().remove();
-        const portEnter = port.enter().append('g')
-            .attr('class', 'port')
-            .attr('transform', port_transform);
-        port = port.merge(portEnter);
+        }, name_or_edge)
+        .join('g')
+        .attr('class', 'port')
+        .attr('transform', port_transform);
         port.transition('port-position')
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .attr('transform', port_transform);
 
-        var outline = port.selectAll('.port-outline').data(function(p) {
+        const outline = port.selectAll('.port-outline').data(function(p) {
             return outline_fill(p) !== 'none' ? [p] : [];
-        });
-        outline.exit().remove();
-        const outlineEnter = outline.enter().append(_style.outline().tag())
-            .attr('class', 'port-outline')
-            .attr('fill', outline_fill)
-            .attr('stroke-width', outline_stroke_width)
-            .attr('stroke', outline_stroke);
-        outline = outline.merge(outlineEnter);
-        if(_style.outline().init)
-            outlineEnter.call(_style.outline().init);
-        outlineEnter
-            .call(_style.outline().draw(function(p) {
-                return _style.smallRadius.eval(p) + _style.portPadding.eval(p);
-            }));
+        })
+        .join(
+            enter => {
+                const outlineEnter = enter.append(_style.outline().tag())
+                    .attr('class', 'port-outline')
+                    .attr('fill', outline_fill)
+                    .attr('stroke-width', outline_stroke_width)
+                    .attr('stroke', outline_stroke);
+                if(_style.outline().init)
+                    outlineEnter.call(_style.outline().init);
+                outlineEnter
+                    .call(_style.outline().draw(function(p) {
+                        return _style.smallRadius.eval(p) + _style.portPadding.eval(p);
+                    }));
+                return outlineEnter;
+            },
+            update => update,
+            exit => exit.remove()
+        );
         // only position and size are animated (?) - anyway these are not on the node
         // and they are typically used to indicate selection which should be fast
         outline
@@ -241,32 +244,38 @@ export function symbolPortStyle() {
                 return _style.smallRadius.eval(p) + _style.portPadding.eval(p);
             }));
 
-        var symbolEnter = portEnter.append(_style.content().tag())
+        const symbol = port.selectAll('.port-symbol')
+            .data(d => [d])
+            .join(_style.content().tag())
             .attr('class', 'port-symbol')
             .call(_style.content().draw(port_symbol, _style.smallRadius.eval));
-
-        var symbol = port.select('.port-symbol');
         symbol.attr('fill', symbol_fill);
         symbol.transition()
             .duration(_style.parent().stagedDuration())
             .delay(_style.parent().stagedDelay(false)) // need to account for enters as well
             .call(_style.content().draw(port_symbol, _style.smallRadius.eval));
 
-        var label = port.selectAll('text.port-label').data(function(p) {
+        const labelGroup = port.selectAll('g.port-label-group').data(function(p) {
             return _style.portLabel.eval(p) ? [p] : [];
-        });
-        label.exit().remove();
-        var labelEnter = label.enter();
-        labelEnter.append('rect')
-            .attr('class', 'port-label-background')
-            .attr('pointer-events', 'none');
-        labelEnter.append('text')
-            .attr('class', 'port-label')
-            .attr('dominant-baseline', 'middle')
-            .attr('pointer-events', 'none')
-            .attr('cursor', 'default')
-            .attr('opacity', 0);
-        label
+        })
+        .join(
+            enter => {
+                const group = enter.append('g')
+                    .attr('class', 'port-label-group');
+                group.append('rect')
+                    .attr('class', 'port-label-background')
+                    .attr('pointer-events', 'none');
+                group.append('text')
+                    .attr('class', 'port-label')
+                    .attr('dominant-baseline', 'middle')
+                    .attr('pointer-events', 'none')
+                    .attr('cursor', 'default')
+                    .attr('opacity', 0);
+                return group;
+            }
+        );
+        
+        labelGroup.select('text.port-label')
             .each(function(p) {
                 p.offset = (is_left(p) ? -1 : 1) * (_style.largeRadius.eval(p) + _style.portPadding.eval(p));
             })
@@ -276,7 +285,7 @@ export function symbolPortStyle() {
             .each(function(p) {
                 p.bbox = getBBoxNoThrow(this);
             });
-        port.selectAll('rect.port-label-background')
+        labelGroup.select('rect.port-label-background')
             .attr('x', p => (p.offset < 0 ? p.offset - p.bbox.width : p.offset) - _style.portLabelPadding.eval(p).x)
             .attr('y', p => -p.bbox.height/2 - _style.portLabelPadding.eval(p).y)
             .attr('width', p => p.bbox.width + 2*_style.portLabelPadding.eval(p).x)
