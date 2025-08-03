@@ -26,14 +26,7 @@ function createWorker(workerName) {
             dispatch.call(e.data.response, null, ...e.data.args);
         };
         worker.worker.onerror = function(e) {
-            console.error('Worker error:', e);
-            console.error('Error details:', {
-                message: e.message,
-                filename: e.filename,
-                lineno: e.lineno,
-                colno: e.colno,
-                error: e.error
-            });
+            console.error('[WORKER] Worker error for layout ' + workerName + ':', e);
         };
     }
     return _workers[workerName];

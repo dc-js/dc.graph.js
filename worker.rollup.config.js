@@ -156,6 +156,14 @@ globalThis.cola = webcolaModule;`
         input: 'src/workers/dynagraph-worker.js',
         plugins: [
             json(),
+            replace({
+                delimiters: ['', ''],
+                'import { dispatch } from \'d3-dispatch\';': '// import { dispatch } from \'d3-dispatch\'; // replaced for worker',
+                'import { dispatch } from "d3-dispatch";': '// import { dispatch } from "d3-dispatch"; // replaced for worker',
+                '    var _dispatch = dispatch(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
+                '    var _dispatch = (globalThis.d3?.dispatch || dispatch)(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
+                preventAssignment: true
+            }),
             copy({
                 targets: [
                     { src: 'dc.graph.dynagraph.worker.js', dest: 'web/js' },
@@ -166,7 +174,7 @@ globalThis.cola = webcolaModule;`
         ],
         output: {
             file: 'dc.graph.dynagraph.worker.js',
-            format: 'iife',
+            format: 'es',
             sourcemap: true,
             banner: `/*!
  *  dc.graph ${process.env.npm_package_version || '0.9.94'}
@@ -187,7 +195,15 @@ globalThis.cola = webcolaModule;`
  *  limitations under the License.
  *
  */
-importScripts('d3.js', 'dynagraph-wasm.js', 'incrface-umd.js');`
+import * as d3Dispatch from 'https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm';
+import { parse as parseIncrface } from './incrface.mjs';
+import createDynagraphModule from './dynagraph.mjs';
+
+globalThis.d3 = { 
+    dispatch: d3Dispatch.dispatch
+};
+globalThis.parseIncrface = parseIncrface;
+globalThis.createDynagraphModule = createDynagraphModule;`
         }
     }
 ];

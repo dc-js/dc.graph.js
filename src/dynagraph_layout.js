@@ -9,7 +9,7 @@ import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
 
 /**
- * `dynagraphLayout` connects to dynagraph-wasm and does dynamic directed graph layout.
+ * `dynagraphLayout` connects to dynagraph WebAssembly module and does dynamic directed graph layout.
  * @param {String} [id=uuid()] - Unique identifier
  * @param {String} [layout] - Layout algorithm name
  * @return {Object} dynagraph layout engine
@@ -18,7 +18,7 @@ export function dynagraphLayout(id, layout) {
     var _layoutId = id || uuid();
     const _Gname = _layoutId;
     var _layout;
-    var _dispatch = dispatch('tick', 'start', 'end');
+    var _dispatch = (globalThis.d3?.dispatch || dispatch)('tick', 'start', 'end');
     var _tick, _done;
     var _nodes = {}, _edges = {};
     var _linesOut = [], _incrIn = [], _opened = false, _open_graph;
@@ -203,25 +203,26 @@ export function dynagraphLayout(id, layout) {
         }
         let cmds = null;
         try {
-            const parseIncrface = self.parseIncrface || (self.incrface && self.incrface.parse);
+            const parseIncrface = globalThis.parseIncrface || self.parseIncrface || (self.incrface && self.incrface.parse);
             if(!parseIncrface) {
-                console.log('parseIncrface not available, skipping');
+                console.log('[DYNAGRAPH] parseIncrface not available, skipping');
                 return;
             }
             cmds = parseIncrface(text);
         } catch(xep) {
-            console.log('incrface parse failed', xep)
+            console.log('[DYNAGRAPH] incrface parse failed', xep);
         }
-        if (!cmds)
+        if (!cmds) {
             return;
+        }
         for(const cmd of cmds) {
             const {action, kind, graph} = cmd;
             if(action === 'message') {
-                console.warn('dynagraph message', cmd.message);
+                console.warn('[DYNAGRAPH] dynagraph message', cmd.message);
                 continue;
             }
             if(graph !== _Gname) {
-                console.warn('graph name mismatch', _Gname, graph);
+                console.warn('[DYNAGRAPH] graph name mismatch', _Gname, 'vs', graph);
                 continue;
             }
             switch(`${action}_${kind}`) {
@@ -236,10 +237,11 @@ export function dynagraphLayout(id, layout) {
                     }
                     break;
                 default:
-                    if(_lock > 0)
+                    if(_lock > 0) {
                         _incrIn.push(cmd);
-                    else
+                    } else {
                         runCommands([cmd]);
+                    }
             }
         }
         _done();
@@ -299,7 +301,17 @@ export function dynagraphLayout(id, layout) {
         };
     }
 
-    function start() {
+    async function start() {
+        // Ensure dynagraph is initialized for main thread (no-op in worker)
+        if (globalThis.ensureDynagraphInitialized && typeof importScripts === 'undefined') {
+            try {
+                await globalThis.ensureDynagraphInitialized();
+            } catch (error) {
+                console.error('[DYNAGRAPH] Failed to initialize dynagraph:', error);
+                return;
+            }
+        }
+        
         if(_linesOut.length) {
             const open = _opened ? [] : [_open_graph];
             _opened = true;
@@ -315,7 +327,9 @@ export function dynagraphLayout(id, layout) {
             self.incrface_input = input;
             _linesOut = [];
         }
-        else _done();
+        else {
+            _done();
+        }
     }
 
     function stop() {
@@ -352,8 +366,8 @@ export function dynagraphLayout(id, layout) {
         data: function(graph, nodes, edges) {
             data(nodes, edges);
         },
-        start: function() {
-            start();
+        start: async function() {
+            await start();
         },
         stop: function() {
             stop();
@@ -367,5 +381,3 @@ export function dynagraphLayout(id, layout) {
     return _layout;
 };
 
-// Scripts needed for web worker
-dynagraphLayout.scripts = ['d3.js', 'dynagraph-wasm.js', 'incrface-umd.js'];

@@ -76,13 +76,13 @@
     "x-editable": "1.5.x"
   },
   "scripts": {
-    "vendor": "cp sync-url-options.js web/js/ && cp querystring.js web/js/ && cp dc.graph.css web/css/",
+    "vendor": "cp sync-url-options.js web/js/ && cp querystring.js web/js/ && cp dc.graph.css web/css/ && cp incrface.mjs web/js/",
     "build": "rollup -c && rollup -c worker.rollup.config.js",
     "build:workers": "rollup -c worker.rollup.config.js",
     "build:all": "npm run vendor && npm run build",
     "build:watch": "rollup -c -w & rollup -c worker.rollup.config.js -w",
     "dev": "rollup -c -w & rollup -c worker.rollup.config.js -w",
-    "serve": "cd web && python3 -m http.server 8888",
+    "serve": "python3 server.py 8888",
     "start": "(npm run dev &) && npm run serve",
     "legacy:test": "grunt test",
     "legacy:d3v4-force": "rollup -c d3v4-force.rollup.config.js",
