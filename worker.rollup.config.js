@@ -50,7 +50,7 @@ export default [
     },
     {
         input: 'src/workers/dagre-worker.js',
-        external: ['https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm', 'd3-dispatch'],
+        external: ['https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm', 'https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm', 'd3-dispatch'],
         plugins: [
             json(),
             replace({

@@ -158,5 +158,3 @@ export function dagreLayout(id) {
     });
 };
 
-// Scripts needed for web worker
-dagreLayout.scripts = ['d3.js', 'dagre.js'];
