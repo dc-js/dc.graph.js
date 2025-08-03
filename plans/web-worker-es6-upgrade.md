@@ -43,9 +43,20 @@ As of 2024, all modern browsers support module workers:
   - **Solution**: Rollup-plugin-replace to transform dispatch usage at build time
   - Comments out ES6 import: `import { dispatch } from 'd3-dispatch';`
   - Replaces usage with: `globalThis.d3.dispatch`
-- ✅ **Step 3.3**: Test cola worker functionality
+- ✅ **Step 3.3**: Fix d3-timer and initialization order issues
+  - Added d3-timer import to banner for cola.d3adaptor().timer() functionality
+  - Moved global assignments to banner to ensure proper initialization order
+  - Fixed "Cannot read properties of undefined (reading 'd3adaptor')" error
+- ✅ **Step 3.4**: Fix D3 v5 dispatch API in webworker_layout.js
+  - **Problem**: webworker_layout.js was using D3 v3 style dispatch calls
+  - **Solution**: Updated to use `dispatch.call(event, null, ...args)` instead of `dispatch[event]()`
+  - Fixed "Worker dispatch error - missing handler" errors
+- ✅ **Step 3.5**: Fix cola_layout.js dispatch creation
+  - **Problem**: cola_layout.js was using imported dispatch in worker context
+  - **Solution**: Use `(globalThis.d3?.dispatch || dispatch)` to fallback to global in worker
+- ✅ **Step 3.6**: Test cola worker functionality
   - Worker loads successfully without errors
-  - Compatible with simple-viewer.html
+  - Compatible with random.html and other examples
 
 ### Phase 4: ✅ Dagre Worker ES6 Conversion (COMPLETED)
 - ✅ **Step 4.1**: Convert dagre worker to ES6 modules
@@ -61,11 +72,19 @@ As of 2024, all modern browsers support module workers:
   - Same clean rollup-replace architecture as cola worker
   - Compatible with all existing functionality
 
-### Phase 5: Convert Remaining Workers (NEXT)
-- ⏸️ **PENDING**: Convert d3v4-force worker
+### Phase 5: ✅ D3v4-Force Worker ES6 Conversion (COMPLETED)
+- ✅ **Step 5.1**: Convert d3v4-force worker to ES6 modules
+  - Uses CDN imports for d3-dispatch, d3-collection, d3-force, d3-force-straighten-paths
+  - Replaced all `d3v4.*` references with direct ES6 imports
+  - Clean implementation without global scope pollution
+- ✅ **Step 5.2**: Test d3v4-force worker functionality
+  - Worker loads successfully without errors
+  - Compatible with all force layout examples
+
+### Phase 6: Convert Remaining Workers (NEXT)
 - ⏸️ **PENDING**: Convert dynagraph worker
 
-### Phase 6: Final Testing (BLOCKED - requires Phase 5 completion)
+### Phase 7: Final Testing (BLOCKED - requires Phase 6 completion)
 - Test all workers with various example files
 - Ensure performance is maintained
 
