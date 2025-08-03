@@ -138,9 +138,7 @@ const fixNodesMode = fixNodes()
     .strategy(fixNodes.strategy.lastNPerComponent(1));
 growingDiagram.child('fix-nodes', fixNodesMode);
 
-growingDiagram
-    .render()
-    .autoZoom('once-noanim');
+(await growingDiagram.render()).autoZoom('once-noanim');
 
 let randomDemoInterval = null;
 

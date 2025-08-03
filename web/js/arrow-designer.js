@@ -130,5 +130,5 @@ var syntax = "concatenate up to four: optional 'o' then optional 'l' or 'r' then
 
 selectAll('label[for*="arrow"]').attr('title', syntax);
 
-arrowDiagram.render();
+await arrowDiagram.render();
 sync_url.exert();

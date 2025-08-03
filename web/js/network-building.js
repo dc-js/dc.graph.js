@@ -184,4 +184,4 @@ const outedges = new DataTable('#output-edges-table')
 renderAll();
 
 // Trigger initial diagram render
-drawDiagram.render();
+await drawDiagram.render();

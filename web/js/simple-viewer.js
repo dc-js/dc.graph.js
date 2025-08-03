@@ -100,7 +100,7 @@ sync_url.output(params => {
         more_output(params);
 });
 
-function on_load(filename, error, data) {
+async function on_load(filename, error, data) {
     if(error) {
         let heading = '';
         if(error.status)
@@ -193,7 +193,7 @@ function on_load(filename, error, data) {
             .child('highlight-neighbors', highlightNeighborsMode);
     }
 
-    simpleDiagram.render();
+    await simpleDiagram.render();
 }
 
 loadGraph(sync_url.vals.file)

@@ -42,22 +42,65 @@ export function webworkerLayout(layoutEngine, workerName) {
         if(layoutEngine.parent)
             layoutEngine.parent(parent);
     };
-    engine.init = function(options) {
+    // Helper function to clone options while filtering out functions
+    function serializeOptions(obj) {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (typeof obj === 'function') {
+            console.warn('[WORKER] Filtering out function from options:', obj.toString().slice(0, 100) + '...');
+            return null; // Remove functions
+        }
+        if (Array.isArray(obj)) return obj.map(serializeOptions);
+        
+        const result = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const value = serializeOptions(obj[key]);
+                if (value !== null) { // Only include non-null values
+                    result[key] = value;
+                }
+            }
+        }
+        return result;
+    }
+    
+    engine.init = async function(options) {
         options = layoutEngine.optionNames().reduce(
             function(options, option) {
-                options[option] = layoutEngine[option]();
+                const value = layoutEngine[option]();
+                // Serialize each option value as we collect it
+                options[option] = serializeOptions(value);
                 return options;
             }, options);
         if(layoutEngine.propagateOptions)
             layoutEngine.propagateOptions(options);
-        _worker.worker.postMessage({
-            command: 'init',
-            args: {
-                layoutId: layoutEngine.layoutId(),
-                options: options
-            }
+        
+        return new Promise((resolve, reject) => {
+            // Set up one-time listener for init completion
+            const originalOnMessage = _worker.worker.onmessage;
+            const initTimeout = setTimeout(() => {
+                _worker.worker.onmessage = originalOnMessage;
+                reject(new Error('Worker init timeout'));
+            }, 10000); // 10 second timeout
+            
+            _worker.worker.onmessage = function(e) {
+                if (e.data.response === 'init' && e.data.layoutId === layoutEngine.layoutId()) {
+                    clearTimeout(initTimeout);
+                    _worker.worker.onmessage = originalOnMessage;
+                    resolve();
+                } else {
+                    // Pass other messages to original handler
+                    originalOnMessage.call(this, e);
+                }
+            };
+            
+            _worker.worker.postMessage({
+                command: 'init',
+                args: {
+                    layoutId: layoutEngine.layoutId(),
+                    options: serializeOptions(options)
+                }
+            });
         });
-        return this;
     };
     engine.data = function(graph, nodes, edges, clusters, constraints) {
         _worker.worker.postMessage({

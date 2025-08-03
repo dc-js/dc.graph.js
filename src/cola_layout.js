@@ -248,7 +248,8 @@ export function colaLayout(id) {
         },
         optionNames: function() {
             return ['handleDisconnected', 'lengthStrategy', 'baseLength', 'flowLayout',
-                    'tickSize', 'groupConnected', 'setcolaSpec', 'setcolaNodes']
+                    'tickSize', 'groupConnected', 'setcolaSpec', 'setcolaNodes',
+                    'unconstrainedIterations', 'userConstraintIterations', 'allConstraintsIterations', 'gridSnapIterations']
                 .concat(graphviz_keys);
         },
         passThru: function() {

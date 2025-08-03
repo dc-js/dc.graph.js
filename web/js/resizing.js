@@ -151,7 +151,7 @@ if(sync_url.vals.validate)
     resizeDiagram.child('troubleshoot', validate());
 
 populate(sync_url.vals.n);
-resizeDiagram
+await resizeDiagram
     .autoZoom('always-skipanimonce')
     .render();
 

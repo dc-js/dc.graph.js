@@ -1,7 +1,5 @@
 // Shared worker message handling code
 var _layouts = {};
-var _initPromises = {};
-var _messageQueue = {};
 
 function postResponse(event, layoutId) {
     return function() {
@@ -21,53 +19,28 @@ export function createWorkerHandler(layoutFactory) {
         
         switch(e.data.command) {
         case 'init':
-            _initPromises[layoutId] = (async () => {
-                const layout = layoutFactory()
-                    .on('tick', postResponse('tick', layoutId))
-                    .on('start', postResponse('start', layoutId))
-                    .on('end', postResponse('end', layoutId));
-                
-                const initResult = layout.init(args.options);
-                
-                // Handle both sync and async init methods
-                if (initResult && typeof initResult.then === 'function') {
-                    await initResult;
-                    _layouts[layoutId] = layout;
-                } else {
-                    _layouts[layoutId] = initResult || layout;
-                }
-                
-                // Process any queued messages for this layout
-                if (_messageQueue[layoutId]) {
-                    for (const queuedMessage of _messageQueue[layoutId]) {
-                        await processCommand(queuedMessage);
-                    }
-                    delete _messageQueue[layoutId];
-                }
-            })();
+            const layout = layoutFactory()
+                .on('tick', postResponse('tick', layoutId))
+                .on('start', postResponse('start', layoutId))
+                .on('end', postResponse('end', layoutId));
             
-            await _initPromises[layoutId];
-            break;
-        default:
-            // Queue other commands until init is complete
-            if (_initPromises[layoutId] && !_layouts[layoutId]) {
-                if (!_messageQueue[layoutId]) {
-                    _messageQueue[layoutId] = [];
-                }
-                _messageQueue[layoutId].push(e.data);
-                return;
+            const initResult = layout.init(args.options);
+            
+            // Handle both sync and async init methods
+            if (initResult && typeof initResult.then === 'function') {
+                await initResult;
+                _layouts[layoutId] = layout;
+            } else {
+                _layouts[layoutId] = initResult || layout;
             }
             
-            await processCommand(e.data);
+            // Send init completion response
+            postMessage({
+                response: 'init',
+                layoutId: layoutId,
+                args: []
+            });
             break;
-        }
-    };
-    
-    async function processCommand(data) {
-        const args = data.args;
-        const layoutId = args.layoutId;
-        
-        switch(data.command) {
         case 'data':
             if(_layouts[layoutId])
                 _layouts[layoutId].data(args.graph, args.nodes, args.edges, args.clusters, args.constraints);
@@ -81,5 +54,5 @@ export function createWorkerHandler(layoutFactory) {
                 _layouts[layoutId].stop();
             break;
         }
-    }
+    };
 }

@@ -157,7 +157,7 @@ function update_ports() {
         .portDimension(port_flat.dimension).portGroup(port_flat.group);
 }
 var _fakeDB = {};
-function display_solution(catalog, solution) {
+async function display_solution(catalog, solution) {
     _compositionDiagram.child('fix-nodes')
         .clearFixes();
     _description.editable('setValue', solution.description || null);
@@ -166,7 +166,7 @@ function display_solution(catalog, solution) {
     })).values();
     Promise.all(types.map(function (t) {
         return _components.get(t).url;
-    }).map(json)).then(function (defns) {
+    }).map(json)).then(async function (defns) {
         var defn = {};
         types.forEach(function (t, i) {
             return defn[t] = defns[i];
@@ -189,7 +189,7 @@ function display_solution(catalog, solution) {
             .nodeCrossfilter(node_flat.crossfilter)
             .edgeCrossfilter(edge_flat.crossfilter);
         if(!_rendered) {
-            _compositionDiagram.render();
+            await _compositionDiagram.render();
             _rendered = true;
         } else _compositionDiagram.redraw();
     });

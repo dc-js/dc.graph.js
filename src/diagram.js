@@ -1318,7 +1318,7 @@ export function diagram(parent, chartGroup) {
      * import { webworkerLayout, dagreLayout } from 'dc-graph';
      * diagram.layoutEngine(webworkerLayout(dagreLayout()));
      **/
-    _diagram.layoutEngine = property(null).react(function(val) {
+    _diagram.layoutEngine = property(null).react(async function(val) {
         if(val && val.parent)
             val.parent(_diagram);
         if(_diagram.renderer().isRendered()) {
@@ -1327,7 +1327,7 @@ export function diagram(parent, chartGroup) {
                 _edges[k].cola.points = null;
             });
             // initialize engine
-            initLayout(val);
+            await initLayout(val);
         }
     });
 
@@ -1403,10 +1403,10 @@ export function diagram(parent, chartGroup) {
      **/
     _diagram.handleDisconnected = deprecate_layout_algo_parameter('handleDisconnected');
 
-    function initLayout(engine) {
+    async function initLayout(engine) {
         if(!_diagram.layoutEngine())
             _diagram.layoutAlgorithm('cola', true);
-        (engine || _diagram.layoutEngine()).init({
+        await (engine || _diagram.layoutEngine()).init({
             width: _diagram.width(),
             height: _diagram.height()
         });
@@ -1505,7 +1505,7 @@ export function diagram(parent, chartGroup) {
      * @return {dc_graph.diagram}
      **/
     var _needsRedraw = false;
-    _diagram.redraw = function () {
+    _diagram.redraw = async function () {
         // since dc.js can receive UI events and trigger redraws whenever it wants,
         // and cola absolutely will not tolerate being poked while it's doing layout,
         // we need to guard the startLayout call.
@@ -1513,7 +1513,7 @@ export function diagram(parent, chartGroup) {
             _needsRedraw = true;
             return this;
         }
-        else return _diagram.startLayout();
+        else return await _diagram.startLayout();
     };
 
     /**
@@ -1526,11 +1526,11 @@ export function diagram(parent, chartGroup) {
      * @instance
      * @return {dc_graph.diagram}
      **/
-    _diagram.render = function() {
+    _diagram.render = async function() {
         if(_diagram.renderer().isRendered())
             _dispatch.call("reset");
         if(!_diagram.initLayoutOnRedraw())
-            initLayout();
+            await initLayout();
 
         _nodes = {};
         _edges = {};
@@ -1599,7 +1599,7 @@ export function diagram(parent, chartGroup) {
         return {orig: getOriginal(e)};
     }
 
-    _diagram.startLayout = function () {
+    _diagram.startLayout = async function () {
         var nodes = _diagram.nodeGroup().all();
         var edges = _diagram.edgeGroup().all();
         var ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
@@ -1615,7 +1615,7 @@ export function diagram(parent, chartGroup) {
             _diagram.renderer().resize();
 
         if(_diagram.initLayoutOnRedraw())
-            initLayout();
+            await initLayout();
         _diagram.layoutEngine().stop();
         _dispatch.call("preDraw");
 
