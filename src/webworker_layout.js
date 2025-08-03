@@ -19,9 +19,24 @@ function createWorker(workerName) {
             if(!worker.layouts[layoutId])
                 throw new Error('layoutId "' + layoutId + '" unknown!');
             var engine = worker.layouts[layoutId].getEngine();
+            var layoutName = engine.layoutAlgorithm?.() || 'unknown';
             if(e.data.args.length > NUMBER_RESULTS && engine.processExtraWorkerResults)
                 engine.processExtraWorkerResults.apply(engine, e.data.args.slice(NUMBER_RESULTS));
-            worker.layouts[layoutId].dispatch()[e.data.response].apply(null, e.data.args);
+            var dispatch = worker.layouts[layoutId].dispatch();
+            var handler = dispatch[e.data.response];
+            if(!handler) {
+                console.error(`Worker dispatch error - missing handler for ${layoutName} layout:`, {
+                    layoutId: layoutId,
+                    layoutName: layoutName,
+                    response: e.data.response,
+                    availableEvents: Object.keys(dispatch),
+                    dispatchObject: dispatch,
+                    args: e.data.args,
+                    fullMessage: e.data
+                });
+                throw new Error(`No dispatch handler for event "${e.data.response}" on layout "${layoutName}" (${layoutId})`);
+            }
+            handler.apply(null, e.data.args);
         };
         worker.worker.onerror = function(e) {
             console.error('Worker error:', e);
