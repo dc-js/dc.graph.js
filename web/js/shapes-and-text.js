@@ -1,4 +1,6 @@
 import { availableShapes, flatGroup, diagram, spawnEngine } from './dc-graph.js';
+import { renderAll } from 'dc';
+import querystring from './querystring.js';
 
 var qs = querystring.parse();
 
@@ -50,7 +52,7 @@ shapeDiagram
 
 shapeDiagram.timeLimit(1000);
 
-dc.renderAll();
+renderAll();
 
 
 function lorem_ipsum() {

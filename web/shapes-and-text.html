@@ -7,17 +7,32 @@
   <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
   <link rel="stylesheet" type="text/css" href="css/dc.css"/>
 
-  <script type="text/javascript" src="js/d3.js"></script>
-  <script type="text/javascript" src="js/crossfilter.js"></script>
-  <script type="text/javascript" src="js/dc.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
+      "d3-array": "https://cdn.jsdelivr.net/npm/d3-array@1.2.4/+esm",
+      "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
+      "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
+      "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
+      "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
+      "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
+      "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
+      "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm",
+      "querystring": "./js/querystring.js"
+    }
+  }
+  </script>
 
-  <script type="text/javascript" src="js/lodash.js"></script>
-
+  <!-- Make d3 available globally for webcola -->
+  <script type="module">
+  import * as d3 from 'd3';
+  window.d3 = d3;
+  </script>
+  
   <script type="text/javascript" src="js/cola.js"></script>
   <script type="text/javascript" src="js/dagre.js"></script>
   <script type="text/javascript" src="js/chart.registry.js"></script>
-
-  <script type="text/javascript" src="js/querystring.js"></script>
 
   <style>
     #graph {
