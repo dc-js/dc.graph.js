@@ -1,4 +1,4 @@
-import { select, event as d3Event } from 'd3-selection';
+import { select, event as d3Event } from 'd3';
 import { mode } from './mode.js';
 import { property } from './core.js';
 import { is_a_mac } from './utils.js';

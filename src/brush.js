@@ -1,7 +1,7 @@
 import { mode } from './mode.js';
 import { dispatch } from 'd3-dispatch';
-import { brush as d3Brush, brushSelection } from 'd3-brush';
-import { event } from 'd3-selection';
+import { brush as d3Brush, brushSelection } from 'd3';
+import { event } from 'd3';
 
 /**
  * `brush` is a {@link mode mode} providing a simple wrapper over
@@ -20,6 +20,7 @@ export function brush() {
     }
     function brushmove() {
         if(!_clearing) {
+            console.assert(event, 'brushmove: event is null!', {event, _clearing});
             var ext = event.selection;
             _dispatch.call("brushmove", null, ext);
         }

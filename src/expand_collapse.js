@@ -5,7 +5,7 @@ import { keyboard } from './keyboard.js';
 import { functorWrap, deprecatedProperty, property } from './core.js';
 import { engines } from './engine.js';
 import { range } from 'd3-array';
-import { event as d3Event } from 'd3-selection';
+import { event as d3Event } from 'd3';
 
 export function expandCollapse(options) {
     if(typeof options === 'function') {

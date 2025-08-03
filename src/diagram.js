@@ -1242,10 +1242,9 @@ export function diagram(parent, chartGroup) {
      * // Display tooltips on node hover, via the d3-tip library
      * import { tip } from 'dc-graph';
      * var myTip = tip()
-     * tip.content(function(n, k) {
-     *   // you can do an asynchronous call here, e.g. d3.json, if you need
-     *   // to fetch data to show the tooltip - just call k() with the content
-     *   k("This is <em>" + n.orig.value.name + "</em>");
+     * tip.content(function(n) {
+     *   // you can return a promise for asynchronous content, e.g. d3.json
+     *   return "This is <em>" + n.orig.value.name + "</em>";
      * });
      * diagram.child('tip', tip);
      * @return {dc_graph.diagram}

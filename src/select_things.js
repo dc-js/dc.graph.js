@@ -4,7 +4,7 @@ import { brush } from './brush.js';
 import { keyboard } from './keyboard.js';
 import { is_a_mac } from './utils.js';
 import { dispatch } from 'd3-dispatch';
-import { event } from 'd3-selection';
+import { event } from 'd3';
 
 export function selectThings(things_group, things_name, thinginess) {
     var _selected = [], _oldSelected;

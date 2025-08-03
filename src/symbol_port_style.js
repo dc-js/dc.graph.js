@@ -1,4 +1,4 @@
-import { select, event as d3Event } from 'd3-selection';
+import { select, event as d3Event } from 'd3';
 import { scaleOrdinal } from 'd3-scale';
 import { shuffle, range } from 'd3-array';
 import { set } from 'd3-collection';
