@@ -6,7 +6,7 @@ import replace from '@rollup/plugin-replace';
 export default [
     {
         input: 'src/workers/cola-worker.js',
-        external: ['https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm', 'https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm', 'https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm', 'd3-dispatch'],
+        external: ['https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm', 'https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm', 'https://cdn.jsdelivr.net/npm/d3-timer@1.0.10/+esm', 'https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm', 'd3-dispatch'],
         plugins: [
             json(),
             replace({
@@ -45,7 +45,19 @@ export default [
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */`
+ */
+import * as d3Dispatch from 'https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm';
+import * as d3Selection from 'https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm';
+import * as d3Timer from 'https://cdn.jsdelivr.net/npm/d3-timer@1.0.10/+esm';
+import * as webcolaModule from 'https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm';
+
+globalThis.d3 = { 
+    dispatch: d3Dispatch.dispatch,
+    select: d3Selection.select,
+    selectAll: d3Selection.selectAll,
+    timer: d3Timer.timer
+};
+globalThis.cola = webcolaModule;`
         }
     },
     {
@@ -137,8 +149,7 @@ export default [
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */
-importScripts('d3.js', 'd3v4-force.js');`
+ */`
         }
     },
     {

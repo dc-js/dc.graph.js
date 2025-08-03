@@ -19,7 +19,7 @@ export function colaLayout(id) {
     var _layoutId = id || uuid();
     var _d3cola = null;
     var _setcola_nodes;
-    var _dispatch = dispatch('tick', 'start', 'end');
+    var _dispatch = (globalThis.d3?.dispatch || dispatch)('tick', 'start', 'end');
     var _flowLayout;
     // node and edge objects shared with cola.js, preserved from one iteration
     // to the next (as long as the object is still in the layout)
