@@ -95,8 +95,18 @@ export default [
     },
     {
         input: 'src/workers/d3v4-force-worker.js',
+        external: ['https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm', 'https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm', 'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm', 'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm', 'd3-dispatch', 'd3-collection', 'd3-force', 'd3-force-straighten-paths'],
         plugins: [
             json(),
+            replace({
+                delimiters: ['', ''],
+                'import { dispatch } from \'d3-dispatch\';': '// import { dispatch } from \'d3-dispatch\'; // replaced for worker',
+                'import { set } from \'d3-collection\';': 'import { set } from \'https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm\';',
+                'import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from \'d3-force\';': 'import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from \'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm\';',
+                'import { forceStraightenPaths } from \'d3-force-straighten-paths\';': 'import { forceStraightenPaths } from \'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm\';',
+                '    var _dispatch = dispatch(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
+                preventAssignment: true
+            }),
             copy({
                 targets: [
                     { src: 'dc.graph.d3v4-force.worker.js', dest: 'web/js' },
@@ -107,7 +117,7 @@ export default [
         ],
         output: {
             file: 'dc.graph.d3v4-force.worker.js',
-            format: 'iife',
+            format: 'es',
             sourcemap: true,
             banner: `/*!
  *  dc.graph ${process.env.npm_package_version || '0.9.94'}

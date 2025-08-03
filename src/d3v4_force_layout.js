@@ -6,6 +6,8 @@
 // External dependencies
 import { dispatch } from 'd3-dispatch';
 import { set } from 'd3-collection';
+import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from 'd3-force';
+import { forceStraightenPaths } from 'd3-force-straighten-paths';
 import { uuid, property } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
@@ -29,13 +31,13 @@ export function d3v4ForceLayout(id) {
     function init(options) {
         _options = options;
 
-        _simulation = d3v4.forceSimulation()
-            .force('link', d3v4.forceLink())
-            .force('center', d3v4.forceCenter(options.width / 2, options.height / 2))
-            .force('gravityX', d3v4.forceX(options.width / 2).strength(_options.gravityStrength))
-            .force('gravityY', d3v4.forceY(options.height / 2).strength(_options.gravityStrength))
-            .force('collision', d3v4.forceCollide(_options.collisionRadius))
-            .force('charge', d3v4.forceManyBody())
+        _simulation = forceSimulation()
+            .force('link', forceLink())
+            .force('center', forceCenter(options.width / 2, options.height / 2))
+            .force('gravityX', forceX(options.width / 2).strength(_options.gravityStrength))
+            .force('gravityY', forceY(options.height / 2).strength(_options.gravityStrength))
+            .force('collision', forceCollide(_options.collisionRadius))
+            .force('charge', forceManyBody())
             .stop();
     }
 
@@ -136,7 +138,7 @@ export function d3v4ForceLayout(id) {
             });
 
             _simulation.force('charge').strength(_options.chargeForce);
-            _simulation.force('straighten', d3v4.forceStraightenPaths()
+            _simulation.force('straighten', forceStraightenPaths()
                               .id(function(n) { return n.dcg_nodeKey; })
                               .angleForce(_options.angleForce)
                               .pathNodes(function(p) { return p.nodes; })
