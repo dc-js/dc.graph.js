@@ -153,7 +153,7 @@ export function drawGraphs(options) {
                         msg = _mode.conduct().invalidSourceMessage(_sourceDown);
                         if(options.negativeTip) {
                             options.negativeTip
-                                .content(function(_, k) { k(msg); })
+                                .content(() => msg)
                                 .displayTip(_mode.usePorts() ? _sourceDown.port : _sourceDown.node);
                         }
                     }
@@ -244,7 +244,7 @@ export function drawGraphs(options) {
                                     'matches';
                                 if(options.positiveTip) {
                                     options.positiveTip
-                                        .content(function(_, k) { k(msg); })
+                                        .content(() => msg)
                                         .displayTip(_mode.usePorts() ? _targetMove.port : _targetMove.node);
                                 }
                                 _targetValid = true;
@@ -258,7 +258,7 @@ export function drawGraphs(options) {
                                     msg = _mode.conduct().invalidTargetMessage(_sourceDown, _targetMove);
                                                 if(options.negativeTip) {
                                         options.negativeTip
-                                            .content(function(_, k) { k(msg); })
+                                            .content(() => msg)
                                             .displayTip(_mode.usePorts() ? _targetMove.port : _targetMove.node);
                                     }
                                 }
