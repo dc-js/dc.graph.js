@@ -5,7 +5,7 @@ import { selectThingsGroup } from './select_things.js';
 
 // External dependency loaded as global
 import { dispatch } from 'd3-dispatch';
-import { event } from 'd3';
+import { event } from 'd3-selection';
 
 export function labelThings(options) {
     options = options || {};

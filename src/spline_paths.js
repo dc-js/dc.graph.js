@@ -2,7 +2,7 @@ import { mode } from './mode.js';
 import { deprecateFunction } from './core.js';
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
 import { uniq } from './utils.js';
-import { event } from 'd3';
+import { event } from 'd3-selection';
 
 export function splinePaths(pathreader, pathprops, hoverprops, selectprops, pathsgroup) {
     var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');

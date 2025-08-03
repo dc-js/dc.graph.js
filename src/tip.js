@@ -11,7 +11,7 @@ import { property, functorWrap } from './core.js';
 import { mode } from './mode.js';
 import { ancestorHasClass } from './utils.js';
 import { dispatch } from 'd3-dispatch';
-import { event as d3Event, select } from 'd3';
+import { event as d3Event, select } from 'd3-selection';
 import tippy from 'tippy.js';
 
 export function tip(options) {

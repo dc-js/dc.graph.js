@@ -1,5 +1,5 @@
 import { zoom, zoomIdentity, zoomTransform } from 'd3-zoom';
-import { select, selectAll } from 'd3';
+import { select, selectAll } from 'd3-selection';
 import { compose, generatePath } from './utils.js'
 import { property, identity } from './core.js';
 import { keyboard as keyboardMode } from './keyboard.js';

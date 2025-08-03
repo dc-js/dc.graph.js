@@ -4,7 +4,7 @@ import { eventCoords, promiseIdentity } from './utils.js';
 import { selectThingsGroup } from './select_things.js';
 import { labelThingsGroup } from './label_things.js';
 import { fixNodesGroup } from './fix_nodes.js';
-import { event as d3Event, select } from 'd3';
+import { event as d3Event, select } from 'd3-selection';
 
 export function drawGraphs(options) {
     var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes'),
