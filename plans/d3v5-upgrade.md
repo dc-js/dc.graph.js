@@ -5,7 +5,7 @@ This document outlines the process for upgrading HTML examples from D3 v3 script
 
 ## Current Status
 
-### ✅ Completed Examples (10)
+### ✅ Completed Examples (13)
 Examples already converted to D3 v5 with importmaps:
 - explore.html
 - drag-drop-composition.html  
@@ -17,12 +17,12 @@ Examples already converted to D3 v5 with importmaps:
 - network-building.html
 - arrow-designer.html
 - **match-game.html** (completed - fixed D3 v5 exit-before-merge pattern bug)
+- **resizing.html** (completed - fixed undefined shape warning)
+- **shapes-and-text.html** (completed)
+- **flexbox.html** (completed)
 
-### 🔄 Remaining Examples (3)
-Examples still using D3 v3 script tags that need conversion:
-1. **resizing.html** (High complexity - multiple layout engines, dynamic resizing, URL sync)
-2. **shapes-and-text.html** (Medium complexity - multiple layout engines)  
-3. **flexbox.html** (Least complex - minimal dependencies)
+### 🔄 Remaining Examples (0)
+All examples have been successfully converted to D3 v5 with ES6 modules!
 
 ### 🗑️ Removed Examples (2)
 - collapse-equivalent-subgraphs.html (deleted - no test data)

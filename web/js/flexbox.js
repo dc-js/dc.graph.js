@@ -1,4 +1,6 @@
 import { diagram, flatGroup, flexboxLayout } from './dc-graph.js';
+import { range } from 'd3-array';
+import { renderAll } from 'dc';
 
 var params = new URLSearchParams(window.location.search);
 
@@ -23,14 +25,14 @@ var parentNodes = [
     }
 ];
 
-var data = d3.range(7).map(function(i) {
+var data = range(7).map(function(i) {
     return {
         id: 'flex+a,' + i,
         label: 'node a' + i,
         alignSelf: 'stretch',
         flex: 0
     };
-}).concat(d3.range(9).map(function(i) {
+}).concat(range(9).map(function(i) {
     return {
         id: 'flex+b,' + i,
         label: 'node b' + i,
@@ -59,5 +61,5 @@ var flexboxDiagram = diagram('#graph')
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group);
 
-dc.renderAll();
+renderAll();
 
