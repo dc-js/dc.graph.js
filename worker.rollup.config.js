@@ -56,6 +56,7 @@ export default [
             replace({
                 delimiters: ['', ''],
                 'import { dispatch } from \'d3-dispatch\';': '// import { dispatch } from \'d3-dispatch\'; // replaced for worker',
+                'import * as dagre from \'@dagrejs/dagre\';': 'import * as dagre from \'https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm\';',
                 '    var _dispatch = dispatch(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
                 preventAssignment: true
             }),

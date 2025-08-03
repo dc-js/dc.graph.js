@@ -5,7 +5,7 @@
 
 // External dependencies
 import { dispatch } from 'd3-dispatch';
-const dagre = globalThis.dagre;
+import * as dagre from '@dagrejs/dagre';
 import { uuid, property } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
