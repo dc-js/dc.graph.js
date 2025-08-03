@@ -2,7 +2,7 @@ import { engines, spawnEngine, diagram, mungeGraph, loadGraph, loadGraphText, fl
 import { select } from 'd3-selection';
 import { scaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { range, min, max, descending, shuffle } from 'd3';
+import { range, min, max, descending, shuffle } from 'd3-array';
 import sync_url_options from './sync-url-options.js';
 import dcgraph_domain from './dc.graph.tracker.domain.js';
 import { renderAll, redrawAll } from 'dc';

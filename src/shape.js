@@ -696,7 +696,7 @@ export function noShape() {
         calc_radii: function(n, ry, bbox) {
             return {rx: 0, ry: 0};
         },
-        create: function(nodeEnter) {
+        create: function(node, nodeIsNew) {
         },
         replace: function(nodeChanged) {
         },
@@ -706,7 +706,8 @@ export function noShape() {
     return _shape;
 };
 
-function createMaybeClipped(diagram, nodeEnter, element) {
+function createMaybeClipped(diagram, node, nodeIsNew, element) {
+    const nodeEnter = node.filter(n => nodeIsNew.has(diagram.nodeKey.eval(n)));
     const clipped = nodeEnter.filter(n => diagram.nodeOutlineClip.eval(n));
     const unclipped = nodeEnter.filter(n => !diagram.nodeOutlineClip.eval(n));
     clipped.insert(element, ':first-child')
@@ -741,8 +742,8 @@ export function ellipseShape() {
 
             return {rx: rx, ry: ry};
         },
-        create: function(nodeEnter) {
-            createMaybeClipped(_shape.parent(), nodeEnter, 'ellipse');
+        create: function(node, nodeIsNew) {
+            createMaybeClipped(_shape.parent(), node, nodeIsNew, 'ellipse');
         },
         update: function(node) {
             node.selectAll('ellipse.node-fill,ellipse.node-outline')
@@ -774,8 +775,8 @@ export function polygonShape() {
 
             return {rx: rx, ry: ry};
         },
-        create: function(nodeEnter) {
-            createMaybeClipped(_shape.parent(), nodeEnter, 'path');
+        create: function(node, nodeIsNew) {
+            createMaybeClipped(_shape.parent(), node, nodeIsNew, 'path');
         },
         update: function(node) {
             node.selectAll('path.node-fill,path.node-outline')
@@ -814,10 +815,14 @@ export function roundedRectangleShape() {
                 ry: Math.max(ry, fity)
             };
         },
-        create: function(nodeEnter) {
-            createMaybeClipped(_shape.parent(), nodeEnter.filter(function(n) {
-                return !n.dcg_shape.noshape;
-            }), 'rect');
+        create: function(node, nodeIsNew) {
+            const filteredNodeIsNew = new Set(
+                node.filter(n => 
+                    nodeIsNew.has(_shape.parent().nodeKey.eval(n)) && 
+                    !n.dcg_shape.noshape
+                ).data().map(n => _shape.parent().nodeKey.eval(n))
+            );
+            createMaybeClipped(_shape.parent(), node, filteredNodeIsNew, 'rect');
         },
         update: function(node) {
             node.selectAll('rect.node-fill,rect.node-outline')
@@ -849,8 +854,8 @@ export function elaboratedRectangleShape() {
             ry: ret.ry
         };
     };
-    _shape.create = function(nodeEnter) {
-        createMaybeClipped(_shape.parent(), nodeEnter, 'path');
+    _shape.create = function(node, nodeIsNew) {
+        createMaybeClipped(_shape.parent(), node, nodeIsNew, 'path');
     };
     _shape.update = function(node) {
         node.selectAll('path.node-fill,path.node-outline')

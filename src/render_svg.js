@@ -1,5 +1,5 @@
 import { zoom, zoomIdentity, zoomTransform } from 'd3-zoom';
-import { select, selectAll } from 'd3-selection';
+import { select, selectAll } from 'd3';
 import { compose, generatePath } from './utils.js'
 import { property, identity } from './core.js';
 import { keyboard as keyboardMode } from './keyboard.js';
@@ -18,12 +18,13 @@ export function renderSvg() {
 
     _renderer.parent = property(null);
 
-    _renderer.renderNode = _renderer._enterNode = function(nodeEnter) {
+    _renderer.renderNode = _renderer._enterNode = function(node, nodeIsNew) {
+        const nodeEnter = node.filter(n => nodeIsNew.has(_renderer.parent().nodeKey.eval(n)));
         if(_renderer.parent().nodeTitle())
             nodeEnter.append('title');
         nodeEnter.each(inferShape(_renderer.parent()));
-        _renderer.parent().forEachShape(nodeEnter, function(shape, node) {
-            node.call(shape.create);
+        _renderer.parent().forEachShape(node, (shape, nodeSelection) => {
+            shape.create(nodeSelection, nodeIsNew);
         });
         return _renderer;
     };
@@ -171,131 +172,164 @@ export function renderSvg() {
     };
 
     _renderer.startRedraw = function(dispatch, wnodes, wedges) {
-        // create edge SVG elements
-        var edge = _edgeLayer.selectAll('.edge')
-                .data(wedges, _renderer.parent().edgeKey.eval);
-        var edgeEnter = edge.enter().append('svg:path')
-                .attr('class', 'edge')
-                .attr('id', _renderer.parent().edgeId)
-                .attr('opacity', 0)
-            .each(function(e) {
-                e.deleted = false;
-            });
-        edge = edge.merge(edgeEnter);
-        edge.exit().each(function(e) {
-            e.deleted = true;
-        }).transition()
-            .duration(_renderer.parent().stagedDuration())
-            .delay(_renderer.parent().deleteDelay())
-            .attr('opacity', 0)
-            .remove();
+        // Track which items are newly entered
+        const edgeIsNew = new Set();
+        const edgeArrowIsNew = new Set();
+        const edgeHoverIsNew = new Set();
+        const edgeLabelIsNew = new Set();
+        const textPathIsNew = new Set();
+        const nodeIsNew = new Set();
 
-        var edgeArrows = _edgeLayer.selectAll('.edge-arrows')
-                .data(wedges, _renderer.parent().edgeKey.eval);
-        var edgeArrowsEnter = edgeArrows.enter().append('svg:path')
-                .attr('class', 'edge-arrows')
-                .attr('id', function(d) {
-                    return _renderer.parent().edgeId(d) + '-arrows';
-                })
-                .attr('fill', 'none')
-                .attr('opacity', 0);
-        edgeArrows = edgeArrows.merge(edgeArrowsEnter);
-        edgeArrows.exit().transition()
-            .duration(_renderer.parent().stagedDuration())
-            .delay(_renderer.parent().deleteDelay())
-            .attr('opacity', 0)
-            .remove()
-            .on('end.delarrow', function(e) {
-                edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'head', null);
-                edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'tail', null);
-            });
+        // create edge SVG elements
+        const edge = _edgeLayer.selectAll('.edge')
+            .data(wedges, _renderer.parent().edgeKey.eval)
+            .join(
+                enter => enter.append('svg:path')
+                    .attr('class', 'edge')
+                    .attr('id', _renderer.parent().edgeId)
+                    .attr('opacity', 0)
+                    .each(e => {
+                        e.deleted = false;
+                        edgeIsNew.add(_renderer.parent().edgeKey.eval(e));
+                    }),
+                update => update,
+                exit => exit
+                    .each(e => { e.deleted = true; })
+                    .transition()
+                    .duration(_renderer.parent().stagedDuration())
+                    .delay(_renderer.parent().deleteDelay())
+                    .attr('opacity', 0)
+                    .remove()
+            );
+
+        const edgeArrow = _edgeLayer.selectAll('.edge-arrows')
+            .data(wedges, _renderer.parent().edgeKey.eval)
+            .join(
+                enter => enter.append('svg:path')
+                    .attr('class', 'edge-arrows')
+                    .attr('id', d => _renderer.parent().edgeId(d) + '-arrows')
+                    .attr('fill', 'none')
+                    .attr('opacity', 0)
+                    .each(e => {
+                        edgeArrowIsNew.add(_renderer.parent().edgeKey.eval(e));
+                    }),
+                update => update,
+                exit => exit
+                    .transition()
+                    .duration(_renderer.parent().stagedDuration())
+                    .delay(_renderer.parent().deleteDelay())
+                    .attr('opacity', 0)
+                    .on('end.delarrow', e => {
+                        edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'head', null);
+                        edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'tail', null);
+                    })
+                    .remove()
+            );
 
         if(_renderer.parent().edgeSort()) {
-            edge.sort(function(a, b) {
-                var as = _renderer.parent().edgeSort.eval(a), bs = _renderer.parent().edgeSort.eval(b);
+            edge.sort((a, b) => {
+                const as = _renderer.parent().edgeSort.eval(a), bs = _renderer.parent().edgeSort.eval(b);
                 return as < bs ? -1 : bs < as ? 1 : 0;
             });
         }
 
         // another wider copy of the edge just for hover events
-        var edgeHover = _edgeLayer.selectAll('.edge-hover')
-                .data(wedges, _renderer.parent().edgeKey.eval);
-        var edgeHoverEnter = edgeHover.enter().append('svg:path')
-            .attr('class', 'edge-hover')
-            .attr('opacity', 0)
-            .attr('fill', 'none')
-            .attr('stroke', 'green')
-            .attr('stroke-width', 10)
-            .on('mouseover.diagram', function(e) {
-                _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
-                    .attr('visibility', 'visible');
-            })
-            .on('mouseout.diagram', function(e) {
-                _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
-                    .attr('visibility', 'hidden');
-            });
-        edgeHover = edgeHover.merge(edgeHoverEnter);
-        edgeHover.exit().remove();
+        const edgeHover = _edgeLayer.selectAll('.edge-hover')
+            .data(wedges, _renderer.parent().edgeKey.eval)
+            .join(
+                enter => enter.append('svg:path')
+                    .attr('class', 'edge-hover')
+                    .attr('opacity', 0)
+                    .attr('fill', 'none')
+                    .attr('stroke', 'green')
+                    .attr('stroke-width', 10)
+                    .on('mouseover.diagram', e => {
+                        _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
+                            .attr('visibility', 'visible');
+                    })
+                    .on('mouseout.diagram', e => {
+                        _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
+                            .attr('visibility', 'hidden');
+                    })
+                    .each(e => {
+                        edgeHoverIsNew.add(_renderer.parent().edgeKey.eval(e));
+                    }),
+                update => update,
+                exit => exit.remove()
+            );
 
-        var edgeLabels = _edgeLayer.selectAll('g.edge-label-wrapper')
-            .data(wedges, _renderer.parent().edgeKey.eval);
-        var edgeLabelsEnter = edgeLabels.enter()
-            .append('g')
-              .attr('class', 'edge-label-wrapper')
-              .attr('visibility', 'hidden')
-              .attr('id', function(e) {
-                  return _renderer.parent().edgeId(e) + '-label';
-              });
-        edgeLabels = edgeLabels.merge(edgeLabelsEnter);
-        var textPaths = _defs.selectAll('path.edge-label-path')
-                .data(wedges, _renderer.parent().textpathId);
-        var textPathsEnter = textPaths.enter()
-                .append('svg:path')
-                .attr('class', 'edge-label-path')
-                .attr('id', _renderer.parent().textpathId);
-        textPaths = textPaths.merge(textPathsEnter);
-        edgeLabels.exit().transition()
-            .duration(_renderer.parent().stagedDuration())
-            .delay(_renderer.parent().deleteDelay())
-            .attr('opacity', 0).remove();
+        const edgeLabel = _edgeLayer.selectAll('g.edge-label-wrapper')
+            .data(wedges, _renderer.parent().edgeKey.eval)
+            .join(
+                enter => enter.append('g')
+                    .attr('class', 'edge-label-wrapper')
+                    .attr('visibility', 'hidden')
+                    .attr('id', e => _renderer.parent().edgeId(e) + '-label')
+                    .each(e => {
+                        edgeLabelIsNew.add(_renderer.parent().edgeKey.eval(e));
+                    }),
+                update => update,
+                exit => exit
+                    .transition()
+                    .duration(_renderer.parent().stagedDuration())
+                    .delay(_renderer.parent().deleteDelay())
+                    .attr('opacity', 0)
+                    .remove()
+            );
+
+        const textPath = _defs.selectAll('path.edge-label-path')
+            .data(wedges, _renderer.parent().textpathId)
+            .join(
+                enter => enter.append('svg:path')
+                    .attr('class', 'edge-label-path')
+                    .attr('id', _renderer.parent().textpathId)
+                    .each(e => {
+                        textPathIsNew.add(_renderer.parent().textpathId(e));
+                    }),
+                update => update,
+                exit => exit.remove()
+            );
 
         // create node SVG elements
-        var node = _nodeLayer.selectAll('.node')
-                .data(wnodes, _renderer.parent().nodeKey.eval);
-        var nodeEnter = node.enter().append('g')
-                .attr('class', 'node')
-                .attr('opacity', '0') // don't show until has layout
-            .each(function(n) {
-                n.deleted = false;
-            });
-        node = node.merge(nodeEnter);
-        // .call(_d3cola.drag);
+        const node = _nodeLayer.selectAll('.node')
+            .data(wnodes, _renderer.parent().nodeKey.eval)
+            .join(
+                enter => enter.append('g')
+                    .attr('class', 'node')
+                    .attr('opacity', '0') // don't show until has layout
+                    .each(n => {
+                        n.deleted = false;
+                        nodeIsNew.add(_renderer.parent().nodeKey.eval(n));
+                    }),
+                update => update,
+                exit => exit
+                    .each(n => { n.deleted = true; })
+                    .transition()
+                    .duration(_renderer.parent().stagedDuration())
+                    .delay(_renderer.parent().deleteDelay())
+                    .attr('opacity', 0)
+                    .remove()
+            );
 
-        _renderer.renderNode(nodeEnter);
-
-        node.exit().each(function(n) {
-            n.deleted = true;
-        }).transition()
-            .duration(_renderer.parent().stagedDuration())
-            .delay(_renderer.parent().deleteDelay())
-            .attr('opacity', 0)
-            .remove();
+        _renderer.renderNode(node, nodeIsNew);
 
         dispatch.call("drawn", null, node, edge, edgeHover);
 
-        var drawState = {
-            node: node,
-            nodeEnter: nodeEnter,
-            edge: edge,
-            edgeEnter: edgeEnter,
-            edgeHover: edgeHover,
-            edgeHoverEnter: edgeHoverEnter,
-            edgeLabels: edgeLabels,
-            edgeLabelsEnter: edgeLabelsEnter,
-            edgeArrows: edgeArrows,
-            edgeArrowsEnter: edgeArrowsEnter,
-            textPaths: textPaths,
-            textPathsEnter: textPathsEnter
+        const drawState = {
+            node,
+            nodeIsNew,
+            edge,
+            edgeIsNew,
+            edgeArrow,
+            edgeArrowIsNew,
+            edgeHover,
+            edgeHoverIsNew,
+            edgeLabel,
+            edgeLabelIsNew,
+            textPath,
+            textPathIsNew,
+            wedges,
+            wnodes
         };
 
         _refresh(drawState);
@@ -304,24 +338,31 @@ export function renderSvg() {
     };
 
     function _refresh(drawState) {
-        _renderer.redrawEdge(drawState.edge, drawState.edgeArrows);
+        _renderer.redrawEdge(drawState.edge, drawState.edgeArrow);
         _renderer.redrawNode(drawState.node);
         _renderer.drawPorts(drawState);
     }
 
-    _renderer.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
+    _renderer.refresh = function(node, edge, edgeHover, edgeLabel, textPath) {
         if(_animating)
             return this; // but what about changed attributes?
         node = node || _renderer.selectAllNodes();
         edge = edge || _renderer.selectAllEdges();
-        var edgeArrows = _renderer.selectAllEdges('.edge-arrows');
-        _refresh({node: node, edge: edge, edgeArrows: edgeArrows});
+        const edgeArrow = _renderer.selectAllEdges('.edge-arrows');
+        _refresh({node, edge, edgeArrow});
 
         edgeHover = edgeHover || _renderer.selectAllEdges('.edge-hover');
-        edgeLabels = edgeLabels || _renderer.selectAllEdges('.edge-label-wrapper');
-        textPaths = textPaths || _renderer.selectAllDefs('path.edge-label-path');
-        var nullSel = select(null); // no enters
-        draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, edgeArrows, nullSel, textPaths, nullSel, false);
+        edgeLabel = edgeLabel || _renderer.selectAllEdges('.edge-label-wrapper');
+        textPath = textPath || _renderer.selectAllDefs('path.edge-label-path');
+        const emptySets = { // no new items for refresh
+            nodeIsNew: new Set(),
+            edgeIsNew: new Set(),
+            edgeArrowIsNew: new Set(),
+            edgeHoverIsNew: new Set(),
+            edgeLabelIsNew: new Set(),
+            textPathIsNew: new Set()
+        };
+        draw({node, edge, edgeHover, edgeLabel, edgeArrow, textPath, ...emptySets}, false);
         return this;
     };
 
@@ -387,52 +428,48 @@ export function renderSvg() {
         return !!e.source && !!e.target;
     }
 
-    _renderer.draw = function(drawState, animatePositions) {
-        draw(drawState.node, drawState.nodeEnter,
-             drawState.edge, drawState.edgeEnter,
-             drawState.edgeHover, drawState.edgeHoverEnter,
-             drawState.edgeLabels, drawState.edgeLabelsEnter,
-             drawState.edgeArrows, drawState.edgeArrowsEnter,
-             drawState.textPaths, drawState.textPathsEnter,
-             animatePositions);
-    };
+    _renderer.draw = draw;
 
-    function draw(node, nodeEnter, edge, edgeEnter, edgeHover, edgeHoverEnter,
-                  edgeLabels, edgeLabelsEnter, edgeArrows, edgeArrowsEnter,
-                  textPaths, textPathsEnter, animatePositions) {
+    function draw(drawState, animatePositions) {
+        const {
+            node,
+            nodeIsNew,
+            edge,
+            edgeIsNew,
+            edgeArrow,
+            edgeArrowIsNew,
+            edgeHover,
+            edgeHoverIsNew,
+            edgeLabel,
+            edgeLabelIsNew,
+            textPath,
+            textPathIsNew
+        } = drawState;
+
         console.assert(edge.data().every(has_source_and_target));
 
-        var nodeEntered = {};
-        nodeEnter
-            .each(function(n) {
-                nodeEntered[_renderer.parent().nodeKey.eval(n)] = true;
-            })
-            .attr('transform', function (n) {
-                // start new nodes at their final position
-                return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
-            });
-        var ntrans = node
+        // Set positions of entering nodes
+        node
+            .filter(n => nodeIsNew.has(_renderer.parent().nodeKey.eval(n)))
+            .attr('transform', n => `translate(${n.cola.x},${n.cola.y})`);
+        const ntrans = node
                 .transition()
                 .duration(_renderer.parent().stagedDuration())
-                .delay(function(n) {
-                    return _renderer.parent().stagedDelay(nodeEntered[_renderer.parent().nodeKey.eval(n)]);
-                })
+                .delay(n => _renderer.parent().stagedDelay(nodeIsNew.has(_renderer.parent().nodeKey.eval(n))))
                 .attr('opacity', _renderer.parent().nodeOpacity.eval);
         if(animatePositions)
             ntrans
-                .attr('transform', function (n) {
-                    return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
-                })
-                .on('end.record', function(n) {
+                .attr('transform', n => `translate(${n.cola.x},${n.cola.y})`)
+                .on('end.record', n => {
                     n.prevX = n.cola.x;
                     n.prevY = n.cola.y;
                 });
 
         // recalculate edge positions
-        edge.each(function(e) {
+        edge.each(e => {
             e.pos.new = null;
         });
-        edge.each(function(e) {
+        edge.each(e => {
             if(e.cola.points) {
                 e.pos.new = placeArrowsOnSpline(_renderer.parent(), e, e.cola.points);
             }
@@ -466,118 +503,104 @@ export function renderSvg() {
                 e.pos.old = e.pos.new;
         });
 
-        var edgeEntered = {};
-        edgeEnter
-            .each(function(e) {
-                edgeEntered[_renderer.parent().edgeKey.eval(e)] = true;
-            })
+        // Handle entering edges
+        edge
+            .filter(e => edgeIsNew.has(_renderer.parent().edgeKey.eval(e)))
             .attr('d', generate_edge_path(_renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old'));
 
-        edgeArrowsEnter
-            .each(function(e) {
+        edgeArrow
+            .filter(e => edgeArrowIsNew.has(_renderer.parent().edgeKey.eval(e)))
+            .each(e => {
                 // if staging transitions, just fade new edges in at new position
                 // else start new edges at old positions of nodes, if any, else new positions
-                var age = _renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old';
+                const age = _renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old';
                 if(_renderer.parent().edgeArrowhead.eval(e))
                     _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
-                    .attr('orient', function() {
-                        return e.pos[age].orienthead;
-                    });
+                        .attr('orient', e.pos[age].orienthead);
                 if(_renderer.parent().edgeArrowtail.eval(e))
                     _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
-                    .attr('orient', function() {
-                        return e.pos[age].orienttail;
-                    });
+                        .attr('orient', e.pos[age].orienttail);
             })
             .attr('d', generate_edge_path(_renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old', true));
 
-        edgeArrows
-            .each(function(e) {
+        edgeArrow
+            .each(e => {
                 if(_renderer.parent().edgeArrowhead.eval(e))
                     _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
                     .attr('orient', unsurprising_orient_rad(e.pos.old.orienthead, e.pos.new.orienthead))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
-                    .attr('orient', function() {
-                        return e.pos.new.orienthead;
-                    });
+                    .attr('orient', e.pos.new.orienthead);
                 if(_renderer.parent().edgeArrowtail.eval(e))
                     _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
                     .attr('orient', unsurprising_orient_rad(e.pos.old.orienttail, e.pos.new.orienttail))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
-                    .attr('orient', function() {
-                        return e.pos.new.orienttail;
-                    });
+                    .attr('orient', e.pos.new.orienttail);
             });
 
-        var etrans = edge
+        let etrans = edge
               .transition()
                 .duration(_renderer.parent().stagedDuration())
-                .delay(function(e) {
-                    return _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]);
-                })
+                .delay(e => _renderer.parent().stagedDelay(edgeIsNew.has(_renderer.parent().edgeKey.eval(e))))
                 .attr('opacity', _renderer.parent().edgeOpacity.eval);
-        var arrowtrans = edgeArrows
+        const arrowtrans = edgeArrow
               .transition()
                 .duration(_renderer.parent().stagedDuration())
-                .delay(function(e) {
-                    return _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]);
-                })
+                .delay(e => _renderer.parent().stagedDelay(edgeIsNew.has(_renderer.parent().edgeKey.eval(e))))
                 .attr('opacity', _renderer.parent().edgeOpacity.eval);
         (animatePositions ? etrans : edge)
-            .attr('d', function(e) {
-                var when = _renderer.parent().stageTransitions() === 'insmod' &&
-                        edgeEntered[_renderer.parent().edgeKey.eval(e)] ? 'old' : 'new';
+            .attr('d', e => {
+                const when = _renderer.parent().stageTransitions() === 'insmod' &&
+                        edgeIsNew.has(_renderer.parent().edgeKey.eval(e)) ? 'old' : 'new';
                 return generate_edge_path(when)(e);
             });
-        (animatePositions ? arrowtrans : edgeArrows)
-            .attr('d', function(e) {
-                var when = _renderer.parent().stageTransitions() === 'insmod' &&
-                        edgeEntered[_renderer.parent().edgeKey.eval(e)] ? 'old' : 'new';
+        (animatePositions ? arrowtrans : edgeArrow)
+            .attr('d', e => {
+                const when = _renderer.parent().stageTransitions() === 'insmod' &&
+                        edgeIsNew.has(_renderer.parent().edgeKey.eval(e)) ? 'old' : 'new';
                 return generate_edge_path(when, true)(e);
             });
-        var elabels = edgeLabels
-            .selectAll('text').data(function(e) {
-                var labels = _renderer.parent().edgeLabel.eval(e);
+        const elabels = edgeLabel
+            .selectAll('text').data(e => {
+                const labels = _renderer.parent().edgeLabel.eval(e);
                 if(!labels)
                     return [];
                 else if(typeof labels === 'string')
                     return [labels];
                 else return labels;
             });
-        elabels.enter()
-          .append('text')
+        elabels.join('text')
             .attr('class', 'edge-label')
             .attr('text-anchor', 'middle')
             .attr('dy', function(_, i) {
                 return i * _renderer.parent().edgeLabelSpacing.eval(this.parentNode) -2;
             })
-          .append('textPath')
+            .selectAll('textPath').data([0])
+            .join('textPath')
             .attr('startOffset', '50%');
         elabels
           .select('textPath')
-            .html(function(t) { return t; })
+            .html(t => t)
             .attr('opacity', function() {
                 return _renderer.parent().edgeOpacity.eval(select(this.parentNode.parentNode).datum());
             })
             .attr('xlink:href', function(e) {
-                var id = _renderer.parent().textpathId(select(this.parentNode.parentNode).datum());
+                const id = _renderer.parent().textpathId(select(this.parentNode.parentNode).datum());
                 // angular on firefox needs absolute paths for fragments
                 return window.location.href.split('#')[0] + '#' + id;
             });
-        textPathsEnter
+        textPath
+            .filter(e => textPathIsNew.has(_renderer.parent().textpathId(e)))
             .attr('d', generate_edge_label_path(_renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old'));
-        var textTrans = textPaths.transition()
+        let textTrans = textPath.transition()
             .duration(_renderer.parent().stagedDuration())
-            .delay(function(e) {
-                return _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]);
-            });
+            .delay(e => _renderer.parent().stagedDelay(edgeIsNew.has(_renderer.parent().edgeKey.eval(e))));
         if(animatePositions)
             textTrans
-            .attr('d', function(e) {
-                var when = _renderer.parent().stageTransitions() === 'insmod' &&
-                        edgeEntered[_renderer.parent().edgeKey.eval(e)] ? 'old' : 'new';
+            .attr('d', e => {
+                const when = _renderer.parent().stageTransitions() === 'insmod' &&
+                        edgeIsNew.has(_renderer.parent().edgeKey.eval(e)) ? 'old' : 'new';
                 return generate_edge_label_path(when)(e);
             });
         if(_renderer.parent().stageTransitions() === 'insmod' && animatePositions) {
@@ -645,15 +668,15 @@ export function renderSvg() {
         _renderer.resetSvg();
         _g = _svg.selectAll('g.draw')
             .data([1])
-            .enter().append('g')
+            .join('g')
             .attr('class', 'draw');
 
-        var layers = ['edge-layer', 'node-layer'];
+        const layers = ['edge-layer', 'node-layer'];
         if(_renderer.parent().edgesInFront())
             layers.reverse();
         _g.selectAll('g').data(layers)
-          .enter().append('g')
-            .attr('class', function(l) { return l; });
+          .join('g')
+            .attr('class', l => l);
         _edgeLayer = _g.selectAll('g.edge-layer');
         _nodeLayer = _g.selectAll('g.node-layer');
         return this;
@@ -798,66 +821,71 @@ export function renderSvg() {
     };
 
     _renderer.addOrRemoveDef = function(id, whether, tag, onEnter) {
-        var data = whether ? [0] : [];
-        var sel = _defs.selectAll('#' + id).data(data);
-
-        var selEnter = sel
-            .enter().append(tag)
-              .attr('id', id);
-        if(selEnter.size() && onEnter)
-            selEnter.call(onEnter);
-        sel.exit().remove();
-        return sel.merge(selEnter);
+        const data = whether ? [0] : [];
+        const sel = _defs.selectAll('#' + id).data(data)
+            .join(
+                enter => {
+                    const entered = enter.append(tag).attr('id', id);
+                    if(entered.size() && onEnter)
+                        entered.call(onEnter);
+                    return entered;
+                },
+                update => update,
+                exit => exit.remove()
+            );
+        return sel;
     };
 
 
     function generateSvg() {
-        var root = _renderer.parent().root();
-        _svg = root.selectAll('svg')
+        const root = _renderer.parent().root();
+        // Re-select using modern d3-selection to ensure .join() is available
+        const modernRoot = select(root.node());
+        _svg = modernRoot.selectAll('svg')
             .data([1])
-            .enter().append('svg');
+            .join('svg');
         _renderer.resize();
 
         _defs = _svg.selectAll('defs')
             .data([1])
-            .enter().append('svg:defs');
+            .join('svg:defs');
 
         // for lack of a better place
-        _renderer.addOrRemoveDef('node-clip-top', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-top', true, 'clipPath', clipPath => {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect')
+                .join('rect')
                 .attr('x', -1000)
                 .attr('y', -1000)
                 .attr('width', 2000)
                 .attr('height', 1000);
         });
-        _renderer.addOrRemoveDef('node-clip-bottom', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-bottom', true, 'clipPath', clipPath => {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect')
+                .join('rect')
                 .attr('x', -1000)
                 .attr('y', 0)
                 .attr('width', 2000)
                 .attr('height', 1000);
         });
-        _renderer.addOrRemoveDef('node-clip-left', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-left', true, 'clipPath', clipPath => {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect')
+                .join('rect')
                 .attr('x', -1000)
                 .attr('y', -1000)
                 .attr('width', 1000)
                 .attr('height', 2000);
         });
-        _renderer.addOrRemoveDef('node-clip-right', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-right', true, 'clipPath', clipPath => {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect')
+                .join('rect')
                 .attr('x', 0)
                 .attr('y', -1000)
                 .attr('width', 1000)
                 .attr('height', 2000);
         });
-        _renderer.addOrRemoveDef('node-clip-none', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-none', true, 'clipPath', clipPath => {
             clipPath.selectAll('rect').data([0])
-                .enter().append('rect')
+                .join('rect')
                 .attr('x', 0)
                 .attr('y', 0)
                 .attr('width', 0)
