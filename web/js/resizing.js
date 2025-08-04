@@ -1,9 +1,18 @@
-import { diagram, engines, spawnEngine, flatGroup, randomGraph, symbolPortStyle, fixNodes, validate } from './dc-graph.js';
 import { rgb } from 'd3-color';
 import { scaleOrdinal } from 'd3-scale';
-import sync_url_options from './sync-url-options.js';
+import {
+    diagram,
+    engines,
+    fixNodes,
+    flatGroup,
+    randomGraph,
+    spawnEngine,
+    symbolPortStyle,
+    validate,
+} from './dc-graph.js';
 import dcgraph_domain from './dc.graph.tracker.domain.js';
 import querystring from './querystring.js';
+import sync_url_options from './sync-url-options.js';
 
 var resizeDiagram = diagram('#canvas');
 var options = {
@@ -17,7 +26,7 @@ var options = {
             apply_engine_parameters(engine);
             resizeDiagram
                 .layoutEngine(engine);
-        }
+        },
     },
     n: {
         default: 50,
@@ -27,16 +36,16 @@ var options = {
         exert: function(val, diagram) {
             populate(val);
             resizeDiagram.autoZoom('once');
-        }
+        },
     },
     validate: false,
     minWidth: {
         default: 200,
-        query: 'minw'
+        query: 'minw',
     },
     minHeight: {
         default: 200,
-        query: 'minh'
+        query: 'minh',
     },
     fit: {
         default: 'default',
@@ -49,28 +58,28 @@ var options = {
             'align_tr',
             'align_bl',
             'align_br',
-            'zoom'
+            'zoom',
         ],
         needs_redraw: true,
         exert: function(val, diagram) {
             resizeDiagram.fitStrategy(val);
-        }
-    }
+        },
+    },
 };
 var sync_url = sync_url_options(options, dcgraph_domain(resizeDiagram), resizeDiagram);
 
 function apply_engine_parameters(engine) {
-    switch(engine.layoutAlgorithm()) {
-    case 'd3v4-force':
-        engine
-            .collisionRadius(25)
-            .gravityStrength(0.05)
-            .initialCharge(-500);
-        break
-    case 'd3-force':
-        engine
-            .gravityStrength(0.1)
-            .initialCharge(-1000);
+    switch (engine.layoutAlgorithm()) {
+        case 'd3v4-force':
+            engine
+                .collisionRadius(25)
+                .gravityStrength(0.05)
+                .initialCharge(-500);
+            break;
+        case 'd3-force':
+            engine
+                .gravityStrength(0.1)
+                .initialCharge(-1000);
     }
     return engine;
 }
@@ -83,14 +92,15 @@ function build_data(nodes, edges) {
         }),
         nodef: flatGroup.make(nodes, function(d) {
             return d.id;
-        })
+        }),
     };
 }
 var populate = function(n) {
     var random = randomGraph({
-        nodeKey: 'id', edgeKey: 'id',
+        nodeKey: 'id',
+        edgeKey: 'id',
         ncolors: 12,
-        log: sync_url.vals.log && sync_url.vals.log !== 'false'
+        log: sync_url.vals.log && sync_url.vals.log !== 'false',
     });
     random.generate(n);
     var data = build_data(random.nodes(), random.edges());
@@ -99,14 +109,14 @@ var populate = function(n) {
         .edgeDimension(data.edgef.dimension).edgeGroup(data.edgef.group);
 };
 
-
 var engine = spawnEngine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
 apply_engine_parameters(engine);
 // don't do multiple components for cola unless user specified
 // layout is that unstable
-if(engine.layoutAlgorithm()==='cola')
-    if(typeof sync_url.vals.newcomp !== 'string')
+if (engine.layoutAlgorithm() === 'cola') {
+    if (typeof sync_url.vals.newcomp !== 'string')
         sync_url.vals.newcomp = 0;
+}
 
 resizeDiagram
     .layoutEngine(engine)
@@ -120,25 +130,44 @@ resizeDiagram
     .nodeContent('text')
     .nodeIcon(sync_url.vals.icon)
     .nodeStrokeWidth(0) // turn off outlines
-    .nodeLabel(function(kv) { return kv.key; })
-    .nodeLabelFill(sync_url.vals.shape === 'plain' ? 'black' : function(n) {
-        var color = rgb(resizeDiagram.nodeFillScale()(resizeDiagram.nodeFill()(n))),
-            // https://www.w3.org/TR/AERT#color-contrast
-            brightness = (color.r * 299 + color.g * 587 + color.b * 114) / 1000;
-        return brightness > 127 ? 'black' : 'ghostwhite';
+    .nodeLabel(function(kv) {
+        return kv.key;
     })
+    .nodeLabelFill(
+        sync_url.vals.shape === 'plain' ? 'black' : function(n) {
+            var color = rgb(resizeDiagram.nodeFillScale()(resizeDiagram.nodeFill()(n))),
+                // https://www.w3.org/TR/AERT#color-contrast
+                brightness = (color.r*299+color.g*587+color.b*114)/1000;
+            return brightness > 127 ? 'black' : 'ghostwhite';
+        },
+    )
     .nodeFill(function(kv) {
         return kv.value.color;
     })
-    .nodeFillScale(scaleOrdinal().range(
-        ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
-         '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
+    .nodeFillScale(
+        scaleOrdinal().range(
+            [
+                '#a6cee3',
+                '#1f78b4',
+                '#b2df8a',
+                '#33a02c',
+                '#fb9a99',
+                '#e31a1c',
+                '#fdbf6f',
+                '#ff7f00',
+                '#cab2d6',
+                '#6a3d9a',
+                '#ffff99',
+                '#b15928',
+            ],
+        ),
+    )
     .nodeOpacity(sync_url.vals.opacity)
     .nodeTitle(null) // deactivate basic tooltips
     .edgeArrowhead(sync_url.vals.arrows ? 'vee' : null)
-    .timeLimit(sync_url.vals.interval - 100);
+    .timeLimit(sync_url.vals.interval-100);
 
-if(sync_url.vals.ports) {
+if (sync_url.vals.ports) {
     resizeDiagram
         .portStyle('symbols', symbolPortStyle())
         .portStyleName('symbols');
@@ -147,7 +176,7 @@ var fixNodesMode = fixNodes()
     .strategy(fixNodes.strategy.lastNPerComponent(1));
 resizeDiagram.child('fix-nodes', fixNodesMode);
 
-if(sync_url.vals.validate)
+if (sync_url.vals.validate)
     resizeDiagram.child('troubleshoot', validate());
 
 populate(sync_url.vals.n);
@@ -160,5 +189,5 @@ $('#resize').resizable({
         resizeDiagram.redraw();
     },
     minWidth: sync_url.vals.minWidth,
-    minHeight: sync_url.vals.minHeight
+    minHeight: sync_url.vals.minHeight,
 });

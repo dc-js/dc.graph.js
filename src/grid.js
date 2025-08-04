@@ -9,11 +9,11 @@ export function grid() {
     let _translate, _scale, _xDomain, _yDomain;
 
     function drawMode(_diagram, _node, _edge, _ehover) {
-        //infer_and_draw(diagram);
+        // infer_and_draw(diagram);
     }
 
     function remove(_diagram, _node, _edge, _ehover) {
-        if(_gridLayer)
+        if (_gridLayer)
             _gridLayer.remove();
     }
 
@@ -21,26 +21,30 @@ export function grid() {
         _gridLayer = diagram.g().selectAll('g.grid-layer').data([0]);
         _gridLayer.enter().append('g').attr('class', 'grid-layer');
         const ofs = _mode.wholeOnLines() ? 0 : 0.5;
-        const vline_data = _scale >= _mode.threshold() ? range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1]) + 1) : [];
+        const vline_data = _scale >= _mode.threshold()
+            ? range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1])+1)
+            : [];
         let vlines = _gridLayer.selectAll('line.grid-line.vertical')
-            .data(vline_data, (d) => d - ofs);
+            .data(vline_data, d => d-ofs);
         vlines.exit().remove();
         const vlinesEnter = vlines.enter().append('line')
             .attr('class', 'grid-line vertical')
-            .attr('x1', d => d - ofs)
-            .attr('x2', d => d - ofs);
+            .attr('x1', d => d-ofs)
+            .attr('x2', d => d-ofs);
         vlines = vlines.merge(vlinesEnter);
         vlines.attr('stroke-width', 1/_scale)
             .attr('y1', _yDomain[0])
             .attr('y2', _yDomain[1]);
-        const hline_data = _scale >= _mode.threshold() ? range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1]) + 1) : [];
+        const hline_data = _scale >= _mode.threshold()
+            ? range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1])+1)
+            : [];
         let hlines = _gridLayer.selectAll('line.grid-line.horizontal')
-            .data(hline_data, (d) => d - ofs);
+            .data(hline_data, d => d-ofs);
         hlines.exit().remove();
         const hlinesEnter = hlines.enter().append('line')
             .attr('class', 'grid-line horizontal')
-            .attr('y1', d => d - ofs)
-            .attr('y2', d => d - ofs);
+            .attr('y1', d => d-ofs)
+            .attr('y2', d => d-ofs);
         hlines = hlines.merge(hlinesEnter);
         hlines.attr('stroke-width', 1/_scale)
             .attr('x1', _xDomain[0])
@@ -50,8 +54,7 @@ export function grid() {
     function on_zoom(translate, scale, xDomain, yDomain) {
         _translate = translate;
         _scale = scale;
-        _xDomain = xDomain,
-        _yDomain = yDomain;
+        _xDomain = xDomain, _yDomain = yDomain;
         draw(_mode.parent());
     }
 
@@ -67,17 +70,15 @@ export function grid() {
         draw: drawMode,
         remove,
         parent(p) {
-            if(p) {
+            if (p) {
                 p.on('zoomed.grid', on_zoom);
                 infer_and_draw(p);
             }
-        }
+        },
     });
 
     _mode.threshold = property(4);
     _mode.wholeOnLines = property(true);
 
     return _mode;
-};
-
-
+}

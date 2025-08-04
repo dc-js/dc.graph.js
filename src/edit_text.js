@@ -3,7 +3,6 @@
 
 import { event as d3Event } from 'd3-selection';
 
-
 export function editText(parent, options) {
     const foreign = parent.append('foreignObject')
         .attr('height', '100%')
@@ -11,30 +10,30 @@ export function editText(parent, options) {
     const padding = options.padding !== undefined ? options.padding : 2;
     function reposition() {
         let pos;
-        switch(options.align) {
-        case 'left':
-            pos = [options.box.x-padding, options.box.y-padding];
-            break;
-        default:
-        case 'center':
-            pos = [
-                options.box.x + (options.box.width - textdiv.node().offsetWidth)/2,
-                options.box.y + (options.box.height - textdiv.node().offsetHeight)/2
-            ];
-            break;
+        switch (options.align) {
+            case 'left':
+                pos = [options.box.x-padding, options.box.y-padding];
+                break;
+            default:
+            case 'center':
+                pos = [
+                    options.box.x+(options.box.width-textdiv.node().offsetWidth)/2,
+                    options.box.y+(options.box.height-textdiv.node().offsetHeight)/2,
+                ];
+                break;
         }
-        foreign.attr('transform', `translate(${  pos.join(' ')  })`);
+        foreign.attr('transform', `translate(${pos.join(' ')})`);
     }
     const textdiv = foreign.append('xhtml:div');
-    const text = options.text || "type on me";
+    const text = options.text || 'type on me';
     textdiv.text(text)
         .attr('contenteditable', true)
         .attr('width', 'auto')
         .attr('class', options.class || null).style({
-        display: 'inline-block',
-        'background-color': 'white',
-        padding: `${padding  }px`
-    });
+            display: 'inline-block',
+            'background-color': 'white',
+            padding: `${padding}px`,
+        });
 
     function stopProp() {
         d3Event.stopPropagation();
@@ -61,14 +60,14 @@ export function editText(parent, options) {
     textdiv.on('keydown.edit-text', () => {
         // prevent keyboard mode from seeing this (especially delete key!)
         d3Event.stopPropagation();
-        if(d3Event.keyCode===13) {
+        if (d3Event.keyCode === 13) {
             d3Event.preventDefault();
         }
     }).on('keyup.edit-text', () => {
         d3Event.stopPropagation();
-        if(d3Event.keyCode===13) {
+        if (d3Event.keyCode === 13) {
             accept();
-        } else if(d3Event.keyCode===27) {
+        } else if (d3Event.keyCode === 27) {
             cancel();
         }
         reposition();
@@ -77,7 +76,7 @@ export function editText(parent, options) {
     textdiv.node().focus();
 
     const range = document.createRange();
-    if(options.selectText) {
+    if (options.selectText) {
         range.selectNodeContents(textdiv.node());
     } else {
         range.setStart(textdiv.node(), 1);
@@ -86,4 +85,4 @@ export function editText(parent, options) {
     const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
-};
+}

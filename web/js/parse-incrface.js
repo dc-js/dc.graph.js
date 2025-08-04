@@ -1,3 +1,3 @@
-import {parse} from "./incrface.mjs"
+import { parse } from './incrface.mjs';
 
-self.parseIncrface = parse
+self.parseIncrface = parse;

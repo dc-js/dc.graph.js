@@ -4,11 +4,19 @@
  */
 
 // External dependencies
-import { dispatch } from 'd3-dispatch';
 import { set } from 'd3-collection';
-import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from 'd3-force';
+import { dispatch } from 'd3-dispatch';
+import {
+    forceCenter,
+    forceCollide,
+    forceLink,
+    forceManyBody,
+    forceSimulation,
+    forceX,
+    forceY,
+} from 'd3-force';
 import { forceStraightenPaths } from 'd3-force-straighten-paths';
-import { uuid, property } from './core.js';
+import { property, uuid } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
 
@@ -16,7 +24,7 @@ import { graphvizAttrs } from './graphviz_attrs.js';
  * `d3v4ForceLayout` is an adaptor for d3-force version 4 layouts in dc.graph.js
  * @param {String} [id=uuid()] - Unique identifier
  * @return {Object} d3v4 force layout engine
- **/
+ */
 export function d3v4ForceLayout(id) {
     const _layoutId = id || uuid();
     let _simulation = null; // d3-force simulation
@@ -33,18 +41,20 @@ export function d3v4ForceLayout(id) {
 
         _simulation = forceSimulation()
             .force('link', forceLink())
-            .force('center', forceCenter(options.width / 2, options.height / 2))
-            .force('gravityX', forceX(options.width / 2).strength(_options.gravityStrength))
-            .force('gravityY', forceY(options.height / 2).strength(_options.gravityStrength))
+            .force('center', forceCenter(options.width/2, options.height/2))
+            .force('gravityX', forceX(options.width/2).strength(_options.gravityStrength))
+            .force('gravityY', forceY(options.height/2).strength(_options.gravityStrength))
             .force('collision', forceCollide(_options.collisionRadius))
             .force('charge', forceManyBody())
             .stop();
     }
 
     function dispatchState(event) {
-        _dispatch.call(event, null,
+        _dispatch.call(
+            event,
+            null,
             _wnodes,
-            (_wedges || []).map((e) => ({dcg_edgeKey: e.dcg_edgeKey}))
+            (_wedges || []).map(e => ({dcg_edgeKey: e.dcg_edgeKey})),
         );
     }
 
@@ -54,18 +64,18 @@ export function d3v4ForceLayout(id) {
             nodeIDs[d.dcg_nodeKey] = i;
         });
 
-        _wnodes = regenerateObjects(_nodes, nodes, null, (v) => v.dcg_nodeKey, (v1, v) => {
+        _wnodes = regenerateObjects(_nodes, nodes, null, v => v.dcg_nodeKey, (v1, v) => {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
             v1.id = v.dcg_nodeKey;
-            if(v.dcg_nodeFixed) {
+            if (v.dcg_nodeFixed) {
                 v1.fx = v.dcg_nodeFixed.x;
                 v1.fy = v.dcg_nodeFixed.y;
             } else v1.fx = v1.fy = null;
         });
 
-        _wedges = regenerateObjects(_edges, edges, null, (e) => e.dcg_edgeKey, (e1, e) => {
+        _wedges = regenerateObjects(_edges, edges, null, e => e.dcg_edgeKey, (e1, e) => {
             e1.dcg_edgeKey = e.dcg_edgeKey;
             e1.source = nodeIDs[_nodes[e.dcg_edgeSource].dcg_nodeKey];
             e1.target = nodeIDs[_nodes[e.dcg_edgeTarget].dcg_nodeKey];
@@ -78,7 +88,7 @@ export function d3v4ForceLayout(id) {
     }
 
     function start() {
-        _dispatch.call("start");
+        _dispatch.call('start');
         installForces(_paths);
         runSimulation(_options.iterations);
     }
@@ -89,38 +99,38 @@ export function d3v4ForceLayout(id) {
 
     function savePositions() {
         const data = {};
-        Object.keys(_nodes).forEach((key) => {
+        Object.keys(_nodes).forEach(key => {
             data[key] = {x: _nodes[key].x, y: _nodes[key].y};
         });
         return data;
     }
     function restorePositions(data) {
-        Object.keys(data).forEach((key) => {
-            if(_nodes[key]) {
+        Object.keys(data).forEach(key => {
+            if (_nodes[key]) {
                 _nodes[key].fx = data[key].x;
                 _nodes[key].fy = data[key].y;
             }
         });
     }
     function installForces(paths) {
-        if(paths)
-            paths = paths.filter((path) => path.nodes.every((nk) => _nodes[nk]));
-        if(paths === null || !paths.length) {
+        if (paths)
+            paths = paths.filter(path => path.nodes.every(nk => _nodes[nk]));
+        if (paths === null || !paths.length) {
             _simulation.force('charge').strength(_options.initialCharge);
         } else {
             let nodesOnPath;
-            if(_options.fixOffPathNodes) {
+            if (_options.fixOffPathNodes) {
                 nodesOnPath = set();
-                paths.forEach((path) => {
-                    path.nodes.forEach((nid) => {
+                paths.forEach(path => {
+                    path.nodes.forEach(nid => {
                         nodesOnPath.add(nid);
                     });
                 });
             }
 
             // fix nodes not on paths
-            Object.keys(_nodes).forEach((key) => {
-                if(_options.fixOffPathNodes && !nodesOnPath.has(key)) {
+            Object.keys(_nodes).forEach(key => {
+                if (_options.fixOffPathNodes && !nodesOnPath.has(key)) {
                     _nodes[key].fx = _nodes[key].x;
                     _nodes[key].fy = _nodes[key].y;
                 } else {
@@ -130,14 +140,17 @@ export function d3v4ForceLayout(id) {
             });
 
             _simulation.force('charge').strength(_options.chargeForce);
-            _simulation.force('straighten', forceStraightenPaths()
-                              .id((n) => n.dcg_nodeKey)
-                              .angleForce(_options.angleForce)
-                              .pathNodes((p) => p.nodes)
-                              .pathStrength((p) => p.strength)
-                              .paths(paths));
+            _simulation.force(
+                'straighten',
+                forceStraightenPaths()
+                    .id(n => n.dcg_nodeKey)
+                    .angleForce(_options.angleForce)
+                    .pathNodes(p => p.nodes)
+                    .pathStrength(p => p.strength)
+                    .paths(paths),
+            );
         }
-    };
+    }
 
     function runSimulation(iterations) {
         _simulation.alpha(1);
@@ -165,13 +178,13 @@ export function d3v4ForceLayout(id) {
         },
         parent: property(null),
         on(event, f) {
-            if(arguments.length === 1)
+            if (arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
         init(options) {
-            this.optionNames().forEach((option) => {
+            this.optionNames().forEach(option => {
                 options[option] = options[option] || this[option]();
             });
             init(options);
@@ -192,8 +205,15 @@ export function d3v4ForceLayout(id) {
         savePositions,
         restorePositions,
         optionNames() {
-            return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength', 'collisionRadius',
-                    'initialCharge', 'fixOffPathNodes']
+            return [
+                'iterations',
+                'angleForce',
+                'chargeForce',
+                'gravityStrength',
+                'collisionRadius',
+                'initialCharge',
+                'fixOffPathNodes',
+            ]
                 .concat(graphviz_keys);
         },
         iterations: property(300),
@@ -204,11 +224,11 @@ export function d3v4ForceLayout(id) {
         initialCharge: property(-100),
         fixOffPathNodes: property(false),
         populateLayoutNode() {},
-        populateLayoutEdge() {}
+        populateLayoutEdge() {},
     });
     engine.pathStraightenForce = engine.angleForce;
     return engine;
-};
+}
 
 // Scripts needed for web worker
 d3v4ForceLayout.scripts = ['d3.js', 'd3v4-force.js'];

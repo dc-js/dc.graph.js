@@ -1,15 +1,18 @@
-import { select, event as d3Event } from 'd3-selection';
-import { mode } from './mode.js';
+import { event as d3Event, select } from 'd3-selection';
 import { property } from './core.js';
-import { is_a_mac } from './utils.js';
-import { keyboard } from './keyboard.js';
-import { eventCoords } from './utils.js';
-import { selectThingsGroup } from './select_things.js';
 import { fixNodesGroup } from './fix_nodes.js';
+import { keyboard } from './keyboard.js';
+import { mode } from './mode.js';
+import { selectThingsGroup } from './select_things.js';
+import { is_a_mac } from './utils.js';
+import { eventCoords } from './utils.js';
 
 export function moveNodes(options) {
     options = options || {};
-    const select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    const select_nodes_group = selectThingsGroup(
+        options.select_nodes_group || 'select-nodes-group',
+        'select-nodes',
+    );
     const fix_nodes_group = fixNodesGroup(options.fix_nodes_group || 'fix-nodes-group');
     let _selected = [], _startPos = null, _downNode, _moveStarted;
     let _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick, _keyboard;
@@ -24,14 +27,14 @@ export function moveNodes(options) {
 
     function selection_changed(_diagram) {
         return function(selection, refresh) {
-            if(refresh === undefined)
+            if (refresh === undefined)
                 refresh = true;
             _selected = selection;
         };
     }
     function for_each_selected(f, selected) {
         selected = selected || _selected;
-        selected.forEach((key) => {
+        selected.forEach(key => {
             const n = _mode.parent().getWholeNode(key);
             f(n, key);
         });
@@ -39,9 +42,9 @@ export function moveNodes(options) {
     function draw(diagram, node, edge) {
         node.on('mousedown.move-nodes', function(n) {
             // Need a more general way for modes to say "I got this"
-            if(_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort(d3Event))
+            if (_drawGraphs && _drawGraphs.usePorts() && _drawGraphs.usePorts().eventPort(d3Event))
                 return;
-            if(!_keyboard.modKeysMatch(_mode.modKeys()))
+            if (!_keyboard.modKeysMatch(_mode.modKeys()))
                 return;
             _startPos = eventCoords(diagram, d3Event);
             _downNode = select(this);
@@ -49,51 +52,52 @@ export function moveNodes(options) {
             // make that node selected
             const key = diagram.nodeKey.eval(n);
             let selected = _selected;
-            if(_selected.indexOf(key)<0) {
+            if (_selected.indexOf(key) < 0) {
                 selected = [key];
                 _maybeSelect = key;
-            }
-            else _maybeSelect = null;
-            for_each_selected((n) => {
+            } else _maybeSelect = null;
+            for_each_selected(n => {
                 n.original_position = [n.cola.x, n.cola.y];
             }, selected);
-            if(_brush)
+            if (_brush)
                 _brush.deactivate();
         });
         function mouse_move(event) {
-            if(_startPos) {
-                if(!(event.buttons & 1)) {
+            if (_startPos) {
+                if (!(event.buttons&1)) {
                     mouse_up();
                     return;
                 }
-                if(_maybeSelect)
+                if (_maybeSelect)
                     select_nodes_group.call('set_changed', null, [_maybeSelect]);
                 const pos = eventCoords(diagram, event);
-                const dx = pos[0] - _startPos[0],
-                    dy = pos[1] - _startPos[1];
-                if(!_moveStarted && Math.hypot(dx, dy) > _mode.dragSize()) {
+                const dx = pos[0]-_startPos[0],
+                    dy = pos[1]-_startPos[1];
+                if (!_moveStarted && Math.hypot(dx, dy) > _mode.dragSize()) {
                     _moveStarted = true;
                     // prevent click event for this node setting selection just to this
-                    if(_downNode)
+                    if (_downNode)
                         _downNode.style('pointer-events', 'none');
                 }
-                if(_moveStarted) {
-                    for_each_selected((n) => {
-                        n.cola.x = n.original_position[0] + dx;
-                        n.cola.y = n.original_position[1] + dy;
+                if (_moveStarted) {
+                    for_each_selected(n => {
+                        n.cola.x = n.original_position[0]+dx;
+                        n.cola.y = n.original_position[1]+dy;
                     });
-                    const node2 = node.filter((n) => _selected.includes(n.orig.key)),
-                        edge2 = edge.filter((e) => _selected.includes(e.source.orig.key) ||
-                                _selected.includes(e.target.orig.key));
+                    const node2 = node.filter(n => _selected.includes(n.orig.key)),
+                        edge2 = edge.filter(e =>
+                            _selected.includes(e.source.orig.key)
+                            || _selected.includes(e.target.orig.key)
+                        );
                     diagram.reposition(node2, edge2);
                 }
             }
         }
         function mouse_up() {
-            if(_startPos) {
-                if(_moveStarted) {
+            if (_startPos) {
+                if (_moveStarted) {
                     _moveStarted = false;
-                    if(_downNode) {
+                    if (_downNode) {
                         _downNode.style('pointer-events', null);
                         _downNode = null;
                     }
@@ -101,12 +105,12 @@ export function moveNodes(options) {
                     for_each_selected((n, id) => {
                         fixes.push({
                             id,
-                            pos: {x: n.cola.x, y: n.cola.y}
+                            pos: {x: n.cola.x, y: n.cola.y},
                         });
                     });
                     fix_nodes_group.call('request_fixes', null, fixes);
                 }
-                if(_brush)
+                if (_brush)
                     _brush.activate();
                 _startPos = null;
             }
@@ -130,16 +134,15 @@ export function moveNodes(options) {
         remove,
         parent(p) {
             select_nodes_group.on('set_changed.move-nodes', p ? selection_changed(p) : null);
-            if(p) {
+            if (p) {
                 _brush = p.child('brush');
                 _drawGraphs = p.child('draw-graphs');
                 _selectNodes = p.child('select-nodes');
                 _keyboard = p.child('keyboard');
-                if(!_keyboard)
+                if (!_keyboard)
                     p.child('keyboard', _keyboard = keyboard());
-            }
-            else _brush = _drawGraphs = _selectNodes = null;
-        }
+            } else _brush = _drawGraphs = _selectNodes = null;
+        },
     });
 
     // minimum distance that is considered a drag, not a click
@@ -147,4 +150,4 @@ export function moveNodes(options) {
     _mode.modKeys = property(null);
 
     return _mode;
-};
+}

@@ -33,7 +33,7 @@ export function colaLayout(id) {
             .size([options.width, options.height])
             .handleDisconnected(options.handleDisconnected);
 
-        if(_d3cola.tickSize) // non-standard
+        if (_d3cola.tickSize) // non-standard
             _d3cola.tickSize(options.tickSize);
 
         switch (options.lengthStrategy) {
@@ -44,46 +44,46 @@ export function colaLayout(id) {
                 _d3cola.jaccardLinkLengths(options.baseLength);
                 break;
             case 'individual':
-                _d3cola.linkDistance((e) => e.dcg_edgeLength || options.baseLength);
+                _d3cola.linkDistance(e => e.dcg_edgeLength || options.baseLength);
                 break;
             case 'none':
             default:
         }
-        if(options.flowLayout) {
+        if (options.flowLayout) {
             _d3cola.flowLayout(options.flowLayout.axis, options.flowLayout.minSeparation);
         }
     }
 
     function data(nodes, edges, clusters, constraints) {
-        let wnodes = regenerateObjects(_nodes, nodes, null, (v) => v.dcg_nodeKey, (v1, v) => {
+        let wnodes = regenerateObjects(_nodes, nodes, null, v => v.dcg_nodeKey, (v1, v) => {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.dcg_nodeParentCluster = v.dcg_nodeParentCluster;
             v1.width = v.width;
             v1.height = v.height;
             v1.fixed = !!v.dcg_nodeFixed;
-            _options.nodeAttrs.forEach((key) => {
+            _options.nodeAttrs.forEach(key => {
                 v1[key] = v[key];
             });
 
-            if(v1.fixed && typeof v.dcg_nodeFixed === 'object') {
+            if (v1.fixed && typeof v.dcg_nodeFixed === 'object') {
                 v1.x = v.dcg_nodeFixed.x;
                 v1.y = v.dcg_nodeFixed.y;
             } else {
                 // should we support e.g. null to unset x,y?
-                if(v.x !== undefined)
+                if (v.x !== undefined)
                     v1.x = v.x;
-                if(v.y !== undefined)
+                if (v.y !== undefined)
                     v1.y = v.y;
             }
         });
-        const wedges = regenerateObjects(_edges, edges, null, (e) => e.dcg_edgeKey, (e1, e) => {
+        const wedges = regenerateObjects(_edges, edges, null, e => e.dcg_edgeKey, (e1, e) => {
             e1.dcg_edgeKey = e.dcg_edgeKey;
             // cola edges can work with indices or with object references
             // but it will replace indices with object references
             e1.source = _nodes[e.dcg_edgeSource];
             e1.target = _nodes[e.dcg_edgeTarget];
             e1.dcg_edgeLength = e.dcg_edgeLength;
-            _options.edgeAttrs.forEach((key) => {
+            _options.edgeAttrs.forEach(key => {
                 e1[key] = e[key];
             });
         });
@@ -94,37 +94,39 @@ export function colaLayout(id) {
         });
 
         let groups = null;
-        if(engine.groupConnected()) {
+        if (engine.groupConnected()) {
             const components = cola.separateGraphs(wnodes, wedges);
-            groups = components.map((g) => ({
-                    dcg_autoGroup: true,
-                    leaves: g.array.map((n) => n.index),
-                }));
-        } else if(clusters) {
+            groups = components.map(g => ({
+                dcg_autoGroup: true,
+                leaves: g.array.map(n => n.index),
+            }));
+        } else if (clusters) {
             const G = {};
-            groups = clusters.filter((c) => /^cluster/.test(c.dcg_clusterKey)).map((c, i) => G[c.dcg_clusterKey] = {
+            groups = clusters.filter(c => /^cluster/.test(c.dcg_clusterKey)).map((c, i) =>
+                G[c.dcg_clusterKey] = {
                     dcg_clusterKey: c.dcg_clusterKey,
                     index: i,
                     groups: [],
                     leaves: [],
-                });
-            clusters.forEach((c) => {
-                if(c.dcg_clusterParent && G[c.dcg_clusterParent])
+                }
+            );
+            clusters.forEach(c => {
+                if (c.dcg_clusterParent && G[c.dcg_clusterParent])
                     G[c.dcg_clusterParent].groups.push(G[c.dcg_clusterKey].index);
             });
             wnodes.forEach((n, i) => {
-                if(n.dcg_nodeParentCluster && G[n.dcg_nodeParentCluster])
+                if (n.dcg_nodeParentCluster && G[n.dcg_nodeParentCluster])
                     G[n.dcg_nodeParentCluster].leaves.push(i);
             });
         }
 
         function dispatchState(event) {
             // Get the actual nodes that WebCola is working with and make copies
-            const currentNodes = _d3cola.nodes().map((n) => {
+            const currentNodes = _d3cola.nodes().map(n => {
                 const copy = Object.assign({}, n);
                 // clean up extra setcola annotations from the copy
-                Object.keys(copy).forEach((key) => {
-                    if(/^get/.test(key) && typeof copy[key] === 'function')
+                Object.keys(copy).forEach(key => {
+                    if (/^get/.test(key) && typeof copy[key] === 'function')
                         delete copy[key];
                 });
                 return copy;
@@ -133,8 +135,8 @@ export function colaLayout(id) {
                 event,
                 null,
                 currentNodes,
-                wedges.map((e) => ({dcg_edgeKey: e.dcg_edgeKey})),
-                groups.filter((g) => !g.dcg_autoGroup).map((g) => {
+                wedges.map(e => ({dcg_edgeKey: e.dcg_edgeKey})),
+                groups.filter(g => !g.dcg_autoGroup).map(g => {
                     g = Object.assign({}, g);
                     g.bounds = {
                         left: g.bounds.x,
@@ -155,7 +157,7 @@ export function colaLayout(id) {
             dispatchState('end');
         });
 
-        if(_options.setcolaSpec && typeof setcola !== 'undefined') {
+        if (_options.setcolaSpec && typeof setcola !== 'undefined') {
             console.log('generating setcola constrains');
             const setcola_result = setcola
                 .nodes(wnodes)
@@ -164,7 +166,7 @@ export function colaLayout(id) {
                 .gap(10) // default value is 10, can be customized in setcolaSpec
                 .layout();
 
-            _setcola_nodes = setcola_result.nodes.filter((n) => n._cid);
+            _setcola_nodes = setcola_result.nodes.filter(n => n._cid);
             wnodes = setcola_result.nodes;
             _d3cola.nodes(setcola_result.nodes)
                 .links(setcola_result.links)
@@ -188,7 +190,7 @@ export function colaLayout(id) {
     }
 
     function stop() {
-        if(_d3cola)
+        if (_d3cola)
             _d3cola.stop();
     }
 
@@ -210,13 +212,13 @@ export function colaLayout(id) {
         },
         parent: property(null),
         on(event, f) {
-            if(arguments.length === 1)
+            if (arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
         init(options) {
-            this.optionNames().forEach((option) => {
+            this.optionNames().forEach(option => {
                 options[option] = options[option] || this[option]();
             });
             this.propagateOptions(options);
@@ -253,9 +255,9 @@ export function colaLayout(id) {
             return ['extractNodeAttrs', 'extractEdgeAttrs'];
         },
         propagateOptions(options) {
-            if(!options.nodeAttrs)
+            if (!options.nodeAttrs)
                 options.nodeAttrs = Object.keys(engine.extractNodeAttrs());
-            if(!options.edgeAttrs)
+            if (!options.edgeAttrs)
                 options.edgeAttrs = Object.keys(engine.extractEdgeAttrs());
         },
         populateLayoutNode() {},
@@ -316,8 +318,8 @@ export function colaLayout(id) {
          * diagram.flowLayout({axis: 'x', minSeparation: 200})
          */
         flowLayout(flow) {
-            if(!arguments.length) {
-                if(_flowLayout)
+            if (!arguments.length) {
+                if (_flowLayout)
                     return _flowLayout;
                 const dir = engine.rankdir();
                 switch (dir) {

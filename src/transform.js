@@ -6,26 +6,26 @@ export function deparallelize(group, sourceTag, targetTag, options) {
     return {
         all() {
             const ST = {};
-            group.all().forEach((kv) => {
+            group.all().forEach(kv => {
                 const source = kv.value[sourceTag],
                     target = kv.value[targetTag];
                 const dir = both ? true : source < target;
                 const min = dir ? source : target, max = dir ? target : source;
                 ST[min] = ST[min] || {};
                 let entry;
-                if(ST[min][max]) {
+                if (ST[min][max]) {
                     entry = ST[min][max];
-                    if(reduce)
+                    if (reduce)
                         entry.original = reduce(entry.original, kv);
                 } else ST[min][max] = entry = {in: 0, out: 0, original: Object.assign({}, kv)};
-                if(dir)
+                if (dir)
                     ++entry.in;
                 else
                     ++entry.out;
             });
             const ret = [];
-            Object.keys(ST).forEach((source) => {
-                Object.keys(ST[source]).forEach((target) => {
+            Object.keys(ST).forEach(source => {
+                Object.keys(ST[source]).forEach(target => {
                     const entry = ST[source][target];
                     entry[sourceTag] = source;
                     entry[targetTag] = target;
@@ -33,6 +33,6 @@ export function deparallelize(group, sourceTag, targetTag, options) {
                 });
             });
             return ret;
-        }
+        },
     };
-};
+}

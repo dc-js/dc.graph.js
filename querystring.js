@@ -8,7 +8,7 @@ var listsep_ = '|';
 
 const querystring = {
     listsep: function(s) {
-        if(!arguments.length)
+        if (!arguments.length)
             return listsep_;
         listsep_ = s;
         return this;
@@ -16,31 +16,31 @@ const querystring = {
     parse: function(opts) {
         opts = opts || {};
         return (function(a) {
-            if (a == "") return {};
+            if (a == '') return {};
             var b = {};
             for (var i = 0; i < a.length; ++i)
             {
-                var p=a[i].split('=', 2);
+                var p = a[i].split('=', 2);
                 if (p.length == 1)
-                    b[p[0]] = opts.boolean ? true : "";
+                    b[p[0]] = opts.boolean ? true : '';
                 else
-                    b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+                    b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, ' '));
             }
             return b;
         })(window.location.search.substr(1).split('&'));
     },
     generate: function(m, encode) {
-        if(encode===undefined) encode = true;
+        if (encode === undefined) encode = true;
         var parts = [];
-        for(var k in m)
-            parts.push(k + '=' + (encode ? encodeURIComponent(m[k]) : m[k]));
+        for (var k in m)
+            parts.push(k+'='+(encode ? encodeURIComponent(m[k]) : m[k]));
         return parts.length ? parts.join('&') : '';
     },
     get_url: function(m, encode) {
-        var url = window.location.protocol + '//' + window.location.host + window.location.pathname;
+        var url = window.location.protocol+'//'+window.location.host+window.location.pathname;
         var params = this.generate(m, encode);
-        if(params)
-            url += '?' + params;
+        if (params)
+            url += '?'+params;
         return url;
     },
     update: function(m, encode) {
@@ -49,7 +49,7 @@ const querystring = {
     },
     option_tracker: function() {
         throw new Error('use independent url_options library');
-    }
+    },
 };
 
 export default querystring;

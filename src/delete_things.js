@@ -1,8 +1,8 @@
-import { mode } from './mode.js';
+import { event as d3Event } from 'd3-selection';
 import { property } from './core.js';
 import { keyboard } from './keyboard.js';
+import { mode } from './mode.js';
 import { is_a_mac } from './utils.js';
-import { event as d3Event } from 'd3-selection';
 
 export function deleteThings(things_group, mode_name, id_tag) {
     id_tag = id_tag || 'id';
@@ -15,27 +15,31 @@ export function deleteThings(things_group, mode_name, id_tag) {
         return r[id_tag];
     }
     function delete_selection(selection) {
-        if(!_mode.crossfilterAccessor())
+        if (!_mode.crossfilterAccessor())
             throw new Error('need crossfilterAccessor');
-        if(!_mode.dimensionAccessor())
+        if (!_mode.dimensionAccessor())
             throw new Error('need dimensionAccessor');
         selection = selection || _selected;
-        if(selection.length === 0)
+        if (selection.length === 0)
             return Promise.resolve([]);
         let promise = _mode.preDelete() ? _mode.preDelete()(selection) : Promise.resolve(selection);
-        if(_mode.onDelete())
+        if (_mode.onDelete())
             promise = promise.then(_mode.onDelete());
-        return promise.then((selection) => {
-            if(selection && selection.length) {
+        return promise.then(selection => {
+            if (selection && selection.length) {
                 const crossfilter = _mode.crossfilterAccessor()(_mode.parent()),
                     dimension = _mode.dimensionAccessor()(_mode.parent());
                 const all = crossfilter.all().slice(), _n = all.length;
                 dimension.filter(null);
                 crossfilter.remove();
-                const filtered = all.filter((r) => selection.indexOf(row_id(r)) === -1);
-                if(all.length !== filtered.length + selection.length)
-                    console.warn('size after deletion is not previous size minus selection size',
-                                 filtered.map(row_id), all.map(row_id), selection);
+                const filtered = all.filter(r => selection.indexOf(row_id(r)) === -1);
+                if (all.length !== filtered.length+selection.length)
+                    console.warn(
+                        'size after deletion is not previous size minus selection size',
+                        filtered.map(row_id),
+                        all.map(row_id),
+                        selection,
+                    );
                 crossfilter.add(filtered);
 
                 _mode.parent().redrawGroup();
@@ -44,8 +48,8 @@ export function deleteThings(things_group, mode_name, id_tag) {
         });
     }
     function draw(_diagram) {
-        _keyboard.on(`keyup.${  mode_name}`, () => {
-            if(d3Event.code === _deleteKey)
+        _keyboard.on(`keyup.${mode_name}`, () => {
+            if (d3Event.code === _deleteKey)
                 delete_selection();
         });
     }
@@ -55,13 +59,13 @@ export function deleteThings(things_group, mode_name, id_tag) {
         draw,
         remove,
         parent(p) {
-            things_group.on(`set_changed.${  mode_name}`, selection_changed);
-            if(p) {
+            things_group.on(`set_changed.${mode_name}`, selection_changed);
+            if (p) {
                 _keyboard = p.child('keyboard');
-                if(!_keyboard)
+                if (!_keyboard)
                     p.child('keyboard', _keyboard = keyboard());
             }
-        }
+        },
     });
     _mode.preDelete = property(null);
     _mode.onDelete = property(null);
@@ -69,4 +73,4 @@ export function deleteThings(things_group, mode_name, id_tag) {
     _mode.dimensionAccessor = property(null);
     _mode.deleteSelection = delete_selection;
     return _mode;
-};
+}

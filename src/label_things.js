@@ -1,6 +1,6 @@
-import { mode } from './mode.js';
-import { keyboard } from './keyboard.js';
 import { editText } from './edit_text.js';
+import { keyboard } from './keyboard.js';
+import { mode } from './mode.js';
 import { selectThingsGroup } from './select_things.js';
 
 // External dependency loaded as global
@@ -37,8 +37,9 @@ export function labelThings(options) {
                     },
                     finally() {
                         options.hide_thing_label(thing, false);
-                    }
-                });
+                    },
+                },
+            );
         };
     }
 
@@ -46,29 +47,32 @@ export function labelThings(options) {
         // less than ideal interface.
         // what if there are other things? can i blame the missing metagraph?
         const thing = options.find_thing(_selected[0], node, edge);
-        if(thing.empty()) {
-            console.error(`couldn't find thing '${  _selected[0]  }'!`);
+        if (thing.empty()) {
+            console.error(`couldn't find thing '${_selected[0]}'!`);
             return;
         }
-        if(thing.size()>1) {
-            console.error(`found too many things for '${  _selected[0]  }' (${  thing.size()  })!`);
+        if (thing.size() > 1) {
+            console.error(`found too many things for '${_selected[0]}' (${thing.size()})!`);
             return;
         }
         label_things_group.call('edit_label', null, thing, eventOptions);
     }
     function draw(diagram, node, edge) {
-        _keyboard.on(`keyup.${  options.label_type}`, () => {
-            if(_selected.length) {
+        _keyboard.on(`keyup.${options.label_type}`, () => {
+            if (_selected.length) {
                 // printable characters should start edit
-                if(event.key.length !== 1)
+                if (event.key.length !== 1)
                     return;
                 edit_selection(node, edge, {text: event.key, selectText: false});
             }
         });
-        if(_selectThings)
-            _selectThings.thinginess().clickables(diagram, node, edge).on(`dblclick.${  options.label_type}`, () => {
-                edit_selection(node, edge, {selectText: true});
-            });
+        if (_selectThings)
+            _selectThings.thinginess().clickables(diagram, node, edge).on(
+                `dblclick.${options.label_type}`,
+                () => {
+                    edit_selection(node, edge, {selectText: true});
+                },
+            );
     }
 
     function remove(_diagram, _node, _edge) {
@@ -78,21 +82,31 @@ export function labelThings(options) {
         draw,
         remove,
         parent(p) {
-            select_things_group.on(`set_changed.${  options.label_type}`, p ? selection_changed_listener(p) : null);
-            label_things_group.on(`edit_label.${  options.label_type}`, p ? edit_label_listener(p) : null);
-            if(p) {
+            select_things_group.on(
+                `set_changed.${options.label_type}`,
+                p ? selection_changed_listener(p) : null,
+            );
+            label_things_group.on(
+                `edit_label.${options.label_type}`,
+                p ? edit_label_listener(p) : null,
+            );
+            if (p) {
                 _keyboard = p.child('keyboard');
-                if(!_keyboard)
+                if (!_keyboard)
                     p.child('keyboard', _keyboard = keyboard());
                 _selectThings = p.child(options.select_type);
             }
-        }
+        },
     });
     _mode.editSelection = function(eventOptions) {
-        edit_selection(_mode.parent().selectAllNodes(), _mode.parent().selectAllEdges(), eventOptions);
+        edit_selection(
+            _mode.parent().selectAllNodes(),
+            _mode.parent().selectAllEdges(),
+            eventOptions,
+        );
     };
     return _mode;
-};
+}
 
 export function labelThingsGroup(brushgroup, type) {
     window.chart_registry.create_type(type, () => dispatch('edit_label'));

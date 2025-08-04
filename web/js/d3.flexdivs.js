@@ -4,7 +4,7 @@ function flex_div_helper_mapper(map) {
 
         me.style({
             flex: function(d) {
-                if(d.flex)
+                if (d.flex)
                     return d.flex;
                 var pdat = d3.select(this.parentNode).datum();
                 return pdat && pdat.deflex || null;
@@ -14,7 +14,7 @@ function flex_div_helper_mapper(map) {
             },
             'flex-direction': function(d) {
                 return d.direction || null;
-            }
+            },
         });
 
         var divs = me.selectAll(function() {
@@ -27,11 +27,13 @@ function flex_div_helper_mapper(map) {
                 return d.class || null;
             },
             id: function(d) {
-                return d.bring ? 'wrap-' + d.id : d.id;
-            }
+                return d.bring ? 'wrap-'+d.id : d.id;
+            },
         });
         divs.each(flex_div_helper);
-        divs.filter(function(d) { return d.bring && !map[d.id]; })
+        divs.filter(function(d) {
+            return d.bring && !map[d.id];
+        })
             .append('div')
             .attr('id', function(d) {
                 return d.id;
@@ -39,12 +41,12 @@ function flex_div_helper_mapper(map) {
     };
 }
 function bringover(data, map) {
-    if(data.id && data.bring) {
+    if (data.id && data.bring) {
         var e = document.getElementById(data.id);
-        if(e)
+        if (e)
             map[data.id] = e.parentNode.removeChild(e);
     }
-    if(data.divs)
+    if (data.divs)
         data.divs.forEach(function(d) {
             bringover(d, map);
         });
@@ -57,8 +59,8 @@ function flex_divs(root, data, place) {
     d3.select(root).data([data])
         .each(flex_div_helper);
     Object.keys(map).forEach(function(k) {
-        document.getElementById('wrap-' + k).appendChild(map[k]);
-        if(place)
+        document.getElementById('wrap-'+k).appendChild(map[k]);
+        if (place)
             place(k);
     });
 }

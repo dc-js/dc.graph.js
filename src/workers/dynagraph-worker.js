@@ -21,13 +21,13 @@ async function initializeWASM() {
 function dynagraphLayoutWithWASM(id, layout) {
     const baseLayout = dynagraphLayout(id, layout);
     const originalInit = baseLayout.init;
-    
+
     // Override init to ensure WASM is initialized first
     baseLayout.init = async function(options) {
         await initializeWASM();
         return originalInit.call(this, options);
     };
-    
+
     return baseLayout;
 }
 

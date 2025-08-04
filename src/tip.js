@@ -6,13 +6,13 @@
  * @class tip
  * @memberof dc_graph
  * @return {Object}
- **/
-import { property, functorWrap } from './core.js';
-import { mode } from './mode.js';
-import { ancestorHasClass } from './utils.js';
+ */
 import { dispatch } from 'd3-dispatch';
 import { select } from 'd3-selection';
 import tippy from 'tippy.js';
+import { functorWrap, property } from './core.js';
+import { mode } from './mode.js';
+import { ancestorHasClass } from './utils.js';
 
 export function tip(options) {
     options = options || {};
@@ -22,8 +22,14 @@ export function tip(options) {
 
     // Map d3.tip directions to tippy placements
     const directionMap = {
-        'n': 'top', 'ne': 'top-end', 'e': 'right', 'se': 'bottom-end',
-        's': 'bottom', 'sw': 'bottom-start', 'w': 'left', 'nw': 'top-start'
+        'n': 'top',
+        'ne': 'top-end',
+        'e': 'right',
+        'se': 'bottom-end',
+        's': 'bottom',
+        'sw': 'bottom-start',
+        'w': 'left',
+        'nw': 'top-start',
     };
 
     function createTippyInstance(element, datum) {
@@ -42,24 +48,27 @@ export function tip(options) {
             maxWidth: 350,
             arrow: true,
             trigger: 'manual', // We'll handle showing/hiding manually
-            onHidden() {}
+            onHidden() {},
         });
 
         let showTimeout;
         let hideTimeout;
 
         // Handle mouse enter - check content before showing
-        element.addEventListener('mouseenter', (event) => {
+        element.addEventListener('mouseenter', event => {
             // Stop propagation to prevent parent tips from showing
             event.stopPropagation();
-            
-            if (_mode.disabled() || (_mode.selection().exclude && _mode.selection().exclude(element))) {
+
+            if (
+                _mode.disabled()
+                || (_mode.selection().exclude && _mode.selection().exclude(element))
+            ) {
                 return;
             }
-            
+
             // Clear any pending hide timeout
             clearTimeout(hideTimeout);
-            
+
             // Set up show timeout
             clearTimeout(showTimeout);
             showTimeout = setTimeout(async () => {
@@ -69,7 +78,7 @@ export function tip(options) {
                         otherInstance.hide();
                     }
                 });
-                
+
                 const d = element._dcgraph_datum || datum;
                 try {
                     const content = await _mode.content()(d);
@@ -77,7 +86,7 @@ export function tip(options) {
                     if (content && content.trim() !== '') {
                         instance.setContent(content);
                         instance.show();
-                        _dispatch.call("tipped", null, d);
+                        _dispatch.call('tipped', null, d);
                     }
                 } catch (error) {
                     console.warn('Tooltip content error:', error);
@@ -117,7 +126,7 @@ export function tip(options) {
 
     function remove(diagram, node, edge, ehover) {
         const selection = _mode.selection().select(diagram, node, edge, ehover);
-        
+
         selection.each(function() {
             destroyTippyInstance(this);
         });
@@ -126,7 +135,7 @@ export function tip(options) {
     const _mode = mode(_namespace, {
         draw,
         remove,
-        laterDraw: true
+        laterDraw: true,
     });
 
     /**
@@ -138,7 +147,7 @@ export function tip(options) {
      * @param {String} [direction='n']
      * @return {String}
      * @return {dc_graph.tip}
-     **/
+     */
     _mode.direction = property('n');
 
     /**
@@ -150,8 +159,8 @@ export function tip(options) {
      * @instance
      * @param {Function} [content] - Async function that returns Promise<string>
      * @return {Function}
-     **/
-    _mode.content = property(async (n) => _mode.parent() ? _mode.parent().nodeTitle.eval(n) : '');
+     */
+    _mode.content = property(async n => _mode.parent() ? _mode.parent().nodeTitle.eval(n) : '');
 
     _mode.on = (event, f) => _dispatch.on(event, f);
 
@@ -163,18 +172,23 @@ export function tip(options) {
             const d = filter;
             filter = d2 => d2 === d;
         }
-        
-        const found = _mode.selection().select(_mode.parent(), _mode.parent().selectAllNodes(), _mode.parent().selectAllEdges(), null);
+
+        const found = _mode.selection().select(
+            _mode.parent(),
+            _mode.parent().selectAllNodes(),
+            _mode.parent().selectAllEdges(),
+            null,
+        );
         const elements = [];
-        
+
         found.each(function(d) {
             if (filter(d)) {
                 elements.push(this);
             }
         });
-        
+
         if (elements.length > 0) {
-            const which = (n || 0) % elements.length;
+            const which = (n || 0)%elements.length;
             const element = elements[which];
             const instance = _instances.get(element);
             if (instance) {
@@ -185,7 +199,7 @@ export function tip(options) {
         return _mode;
     };
 
-    _mode.hideTip = (_delay) => {
+    _mode.hideTip = _delay => {
         _instances.forEach(instance => {
             instance.hide();
         });
@@ -214,50 +228,50 @@ export function tip(options) {
  * // show all the attributes and values in the node and edge objects
  * var tip = dc_graph.tip();
  * tip.content(dc_graph.tip.table());
- **/
+ */
 export function tipTable() {
     const gen = async function(d) {
         d = gen.fetch()(d);
-        if(!d) {
+        if (!d) {
             return ''; // return empty string to prevent tooltip from showing
         }
         let data, keys;
-        if(Array.isArray(d))
+        if (Array.isArray(d))
             data = d;
-        else if(typeof d === 'number' || typeof d === 'string')
+        else if (typeof d === 'number' || typeof d === 'string')
             data = [d];
         else { // object
             data = keys = Object.keys(d).filter(functorWrap(gen.filter()))
-                .filter((k) => d[k] !== undefined);
+                .filter(k => d[k] !== undefined);
         }
         const table = select(document.createElement('table'));
         const rows = table.selectAll('tr').data(data);
         const rowsEnter = rows.enter().append('tr');
-        rowsEnter.append('td').text((item) => {
-            if(keys && typeof item === 'string')
+        rowsEnter.append('td').text(item => {
+            if (keys && typeof item === 'string')
                 return item;
             return JSON.stringify(item);
         });
-        if(keys)
-            rowsEnter.append('td').text((item) => JSON.stringify(d[item]));
+        if (keys)
+            rowsEnter.append('td').text(item => JSON.stringify(d[item]));
         return table.node().outerHTML; // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
-    gen.fetch = property((d) => d.orig.value);
+    gen.fetch = property(d => d.orig.value);
     return gen;
 }
 
 export function tipJsonTable() {
-    const table = tipTable().fetch((d) => {
+    const table = tipTable().fetch(d => {
         const jsontip = table.json()(d);
-        if(!jsontip) return null;
+        if (!jsontip) return null;
         try {
             return JSON.parse(jsontip);
-        } catch(_xep) {
+        } catch (_xep) {
             return [jsontip];
         }
     });
-    table.json = property((d) => (d.orig.value.value || d.orig.value).jsontip);
+    table.json = property(d => (d.orig.value.value || d.orig.value).jsontip);
     return table;
 }
 
@@ -265,14 +279,14 @@ export function tipHtmlOrJsonTable() {
     const json_table = tipJsonTable();
     const gen = async function(d) {
         const html = gen.html()(d);
-        if(html) {
+        if (html) {
             return html;
         } else {
             return await json_table(d);
         }
     };
     gen.json = json_table.json;
-    gen.html = property((d) => (d.orig.value.value || d.orig.value).htmltip);
+    gen.html = property(d => (d.orig.value.value || d.orig.value).htmltip);
     return gen;
 }
 
@@ -283,7 +297,7 @@ export function selectNodeAndEdge() {
         },
         exclude(element) {
             return ancestorHasClass(element, 'port');
-        }
+        },
     };
 }
 
@@ -294,7 +308,7 @@ export function selectNode() {
         },
         exclude(element) {
             return ancestorHasClass(element, 'port');
-        }
+        },
     };
 }
 
@@ -302,7 +316,7 @@ export function selectEdge() {
     return {
         select(diagram, node, edge, _ehover) {
             return edge;
-        }
+        },
     };
 }
 
@@ -310,6 +324,6 @@ export function selectPort() {
     return {
         select(diagram, node, _edge, _ehover) {
             return node.selectAll('g.port');
-        }
+        },
     };
 }

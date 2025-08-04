@@ -1,4 +1,4 @@
-import { property, deprecateFunction } from './core.js';
+import { deprecateFunction, property } from './core.js';
 
 export function mode(event_namespace, options) {
     const _mode = {};
@@ -6,11 +6,11 @@ export function mode(event_namespace, options) {
     let draw = options.draw, remove = options.remove;
     const supported_renderers = options.renderers || ['svg'];
 
-    if(!draw) {
+    if (!draw) {
         console.warn('behavior.add_behavior has been replaced by mode.draw');
         draw = options.add_behavior;
     }
-    if(!remove) {
+    if (!remove) {
         console.warn('behavior.remove_behavior has been replaced by mode.remove');
         remove = options.remove_behavior;
     }
@@ -20,34 +20,32 @@ export function mode(event_namespace, options) {
      Assigns this mode to a diagram.
      **/
     _mode.parent = property(null)
-        .react((p) => {
+        .react(p => {
             let diagram;
-            if(p) {
+            if (p) {
                 let first = true;
                 diagram = p;
-                p.on(`${_eventName  }.${  event_namespace}`, function() {
+                p.on(`${_eventName}.${event_namespace}`, function() {
                     const args2 = [diagram].concat(Array.prototype.slice.call(arguments));
                     draw.apply(null, args2);
-                    if(first && options.first) {
+                    if (first && options.first) {
                         options.first.apply(null, args2);
                         first = false;
-                    }
-                    else if(options.rest)
+                    } else if (options.rest)
                         options.rest.apply(null, args2);
                 });
-                p.on(`reset.${  event_namespace}`, () => {
+                p.on(`reset.${event_namespace}`, () => {
                     const rend = diagram.renderer(),
                         node = rend.selectAllNodes ? rend.selectAllNodes() : null,
                         edge = rend.selectAllEdges ? rend.selectAllEdges() : null,
                         edgeHover = rend.selectAllEdges ? rend.selectAllEdges('.edge-hover') : null;
                     remove(diagram, node, edge, edgeHover);
                 });
-            }
-            else if(_mode.parent()) {
+            } else if (_mode.parent()) {
                 diagram = _mode.parent();
-                diagram.on(`${_eventName  }.${  event_namespace}`, (node, edge, ehover) => {
+                diagram.on(`${_eventName}.${event_namespace}`, (node, edge, ehover) => {
                     remove(diagram, node, edge, ehover);
-                    diagram.on(`${_eventName  }.${  event_namespace}`, null);
+                    diagram.on(`${_eventName}.${event_namespace}`, null);
                 });
             }
             options.parent && options.parent(p);
@@ -58,6 +56,6 @@ export function mode(event_namespace, options) {
     };
 
     return _mode;
-};
+}
 
 export const behavior = deprecateFunction('behavior has been renamed mode', mode);

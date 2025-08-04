@@ -36,17 +36,17 @@ export default [
                 dc_graph: 'readonly',
                 importScripts: 'readonly',
                 onmessage: 'writable',
-                postMessage: 'readonly'
-            }
+                postMessage: 'readonly',
+            },
         },
         rules: {
             // Arrow function conversion rules
             'prefer-arrow-callback': ['error', {
                 allowNamedFunctions: false,
-                allowUnboundThis: true
+                allowUnboundThis: true,
             }],
             'arrow-body-style': ['error', 'as-needed'],
-            
+
             // Modernization rules (auto-fixable)
             'prefer-const': 'error',
             'no-var': 'error',
@@ -55,18 +55,18 @@ export default [
             'prefer-numeric-literals': 'error',
             'prefer-template': 'error',
             'object-shorthand': ['error', 'always'],
-            
+
             // Unused variables - allow underscore prefix
             'no-unused-vars': ['warn', {
                 argsIgnorePattern: '^_',
                 varsIgnorePattern: '^_',
-                caughtErrorsIgnorePattern: '^_'
+                caughtErrorsIgnorePattern: '^_',
             }],
-            
+
             // Relaxed rules for legacy code
             'no-undef': 'warn',
-            'no-prototype-builtins': 'off'
-        }
+            'no-prototype-builtins': 'off',
+        },
     },
     {
         files: ['web/**/*.js', 'examples/**/*.js'],
@@ -79,9 +79,9 @@ export default [
                 cola: 'readonly',
                 window: 'readonly',
                 document: 'readonly',
-                navigator: 'readonly'
-            }
-        }
+                navigator: 'readonly',
+            },
+        },
     },
     {
         files: ['**/*.worker.js', 'src/workers/**/*.js'],
@@ -91,8 +91,8 @@ export default [
                 postMessage: 'readonly',
                 onmessage: 'writable',
                 importScripts: 'readonly',
-                self: 'readonly'
-            }
-        }
-    }
+                self: 'readonly',
+            },
+        },
+    },
 ];

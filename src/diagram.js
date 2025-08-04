@@ -4,28 +4,55 @@
  */
 
 // External dependencies as ES6 modules
-import { dispatch } from 'd3-dispatch';
-import { scaleLinear } from 'd3-scale';
 import { ascending, sum } from 'd3-array';
 import { set } from 'd3-collection';
+import { dispatch } from 'd3-dispatch';
+import { scaleLinear } from 'd3-scale';
 import { select } from 'd3-selection';
 // import { json } from 'd3-fetch'; // unused
 import { zoomTransform } from 'd3-zoom';
-import { MarginMixin, utils, BadArgumentException, pluck, redrawAll, registerChart, renderAll } from 'dc';
+import {
+    BadArgumentException,
+    MarginMixin,
+    pluck,
+    redrawAll,
+    registerChart,
+    renderAll,
+    utils,
+} from 'dc';
 // import * as crossfilter from 'crossfilter2'; // unused
-import { getOriginal, property, identity, deprecatedProperty, namedChildren, constants, deprecateFunction, onetimeTrace, traceFunction } from './core.js';
-import { angleBetweenPoints, defaultShape, drawEdgeToShapes, noShape, ellipseShape, polygonShape, roundedRectangleShape, elaboratedRectangleShape } from './shape.js';
-import { textContents } from './node_contents.js';
+import {
+    constants,
+    deprecatedProperty,
+    deprecateFunction,
+    getOriginal,
+    identity,
+    namedChildren,
+    onetimeTrace,
+    property,
+    traceFunction,
+} from './core.js';
 import { regenerateObjects } from './generate_objects.js';
-import { portName, projectPort, splitPortName } from './place_ports.js'
+import { textContents } from './node_contents.js';
+import { portName, projectPort, splitPortName } from './place_ports.js';
+import {
+    angleBetweenPoints,
+    defaultShape,
+    drawEdgeToShapes,
+    elaboratedRectangleShape,
+    ellipseShape,
+    noShape,
+    polygonShape,
+    roundedRectangleShape,
+} from './shape.js';
 // import { spawnEngine } from './engine.js'; // unused
+import { builtinArrows, clipPathToArrows, scaledArrowLengths } from './arrows.js';
 import { colaLayout } from './cola_layout.js';
 import { dagreLayout } from './dagre_layout.js';
-import { webworkerLayout } from './webworker_layout.js';
 import { wheelEdges } from './generate.js';
 import { renderSvg } from './render_svg.js';
 import { cascade, param } from './utils.js';
-import { builtinArrows, clipPathToArrows, scaledArrowLengths } from './arrows.js';
+import { webworkerLayout } from './webworker_layout.js';
 
 /**
  * `diagram` is a dc.js-compatible network visualization component. It registers in
@@ -41,14 +68,25 @@ import { builtinArrows, clipPathToArrows, scaledArrowLengths } from './arrows.js
  * should be placed in. Filter interaction with a diagram will only trigger events and redraws
  * within the diagram's group.
  * @return {Object} diagram instance
- **/
+ */
 export function diagram(parent, chartGroup) {
     // different enough from regular dc charts that we don't use dc.baseMixin
     // but attempt to implement most of that interface, copying some of the most basic stuff
     const _diagram = new MarginMixin({});
     _diagram.__dcFlag__ = utils.uniqueId();
     _diagram.margins({left: 10, top: 10, right: 10, bottom: 10});
-    const _dispatch = dispatch('preDraw', 'data', 'end', 'start', 'render', 'drawn', 'receivedLayout', 'transitionsStarted', 'zoomed', 'reset');
+    const _dispatch = dispatch(
+        'preDraw',
+        'data',
+        'end',
+        'start',
+        'render',
+        'drawn',
+        'receivedLayout',
+        'transitionsStarted',
+        'zoomed',
+        'reset',
+    );
     let _nodes = {}, _edges = {}; // hold state between runs
     let _ports = {}; // id = node|edge/id/name
     let _clusters = {};
@@ -61,15 +99,17 @@ export function diagram(parent, chartGroup) {
     let _animateZoom;
 
     let _minWidth = 200;
-    const _defaultWidthCalc = function (element) {
-        const width = element && element.getBoundingClientRect && element.getBoundingClientRect().width;
+    const _defaultWidthCalc = function(element) {
+        const width = element && element.getBoundingClientRect
+            && element.getBoundingClientRect().width;
         return (width && width > _minWidth) ? width : _minWidth;
     };
     let _widthCalc = _defaultWidthCalc;
 
     let _minHeight = 200;
-    const _defaultHeightCalc = function (element) {
-        const height = element && element.getBoundingClientRect && element.getBoundingClientRect().height;
+    const _defaultHeightCalc = function(element) {
+        const height = element && element.getBoundingClientRect
+            && element.getBoundingClientRect().height;
         return (height && height > _minHeight) ? height : _minHeight;
     };
     let _heightCalc = _defaultHeightCalc;
@@ -77,20 +117,24 @@ export function diagram(parent, chartGroup) {
 
     function deprecate_layout_algo_parameter(name) {
         return function(value) {
-            if(!_diagram.layoutEngine())
+            if (!_diagram.layoutEngine())
                 _diagram.layoutAlgorithm('cola', true);
             let engine = _diagram.layoutEngine();
-            if(engine.getEngine)
+            if (engine.getEngine)
                 engine = engine.getEngine();
-            if(engine[name]) {
-                console.warn(`property is deprecated, call on layout engine instead: dc_graph.diagram.%c${  name}`,
-                             'font-weight: bold');
-                if(!arguments.length)
+            if (engine[name]) {
+                console.warn(
+                    `property is deprecated, call on layout engine instead: dc_graph.diagram.%c${name}`,
+                    'font-weight: bold',
+                );
+                if (!arguments.length)
                     return engine[name]();
                 engine[name](value);
             } else {
-                console.warn(`property is deprecated, and is not supported for Warning: dc_graph.diagram.<b>${  name  }</b> is deprecated, and it is not supported for the "${  engine.layoutAlgorithm()  }" layout algorithm: ignored.`);
-                if(!arguments.length)
+                console.warn(
+                    `property is deprecated, and is not supported for Warning: dc_graph.diagram.<b>${name}</b> is deprecated, and it is not supported for the "${engine.layoutAlgorithm()}" layout algorithm: ignored.`,
+                );
+                if (!arguments.length)
                     return null;
             }
             return this;
@@ -120,29 +164,30 @@ export function diagram(parent, chartGroup) {
      * @param {Number} [height=200]
      * @return {Number}
      * @return {dc_graph.diagram}
-      **/
-    _diagram.height = function (height) {
+     */
+    _diagram.height = function(height) {
         if (!arguments.length) {
             if (!utils.isNumber(_height)) {
                 _lastHeight = _heightCalc(_diagram.root().node());
-                if(_height === 'auto') // 'auto' => calculate every time
+                if (_height === 'auto') // 'auto' => calculate every time
                     return _lastHeight;
                 // null/undefined => calculate once only
                 _height = _lastHeight;
             }
             return _height;
         }
-        if(utils.isNumber(height) || !height || height === 'auto')
+        if (utils.isNumber(height) || !height || height === 'auto')
             _height = height;
-        else if(typeof height === 'function') {
+        else if (typeof height === 'function') {
             _heightCalc = height;
             _height = undefined;
-        }
-        else throw new Error(`don't know what to do with height type ${  typeof height  } value ${  height}`);
+        } else throw new Error(
+                `don't know what to do with height type ${typeof height} value ${height}`,
+            );
         return _diagram;
     };
     _diagram.minHeight = function(height) {
-        if(!arguments.length)
+        if (!arguments.length)
             return _minHeight;
         _minHeight = height;
         return _diagram;
@@ -170,29 +215,30 @@ export function diagram(parent, chartGroup) {
      * @param {Number} [width=200]
      * @return {Number}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.width = function (width) {
+     */
+    _diagram.width = function(width) {
         if (!arguments.length) {
             if (!utils.isNumber(_width)) {
                 _lastWidth = _widthCalc(_diagram.root().node());
-                if(_width === 'auto') // 'auto' => calculate every time
+                if (_width === 'auto') // 'auto' => calculate every time
                     return _lastWidth;
                 // null/undefined => calculate once only
                 _width = _lastWidth;
             }
             return _width;
         }
-        if(utils.isNumber(width) || !width || width === 'auto')
+        if (utils.isNumber(width) || !width || width === 'auto')
             _width = width;
-        else if(typeof width === 'function') {
+        else if (typeof width === 'function') {
             _widthCalc = width;
             _width = undefined;
-        }
-        else throw new Error(`don't know what to do with width type ${  typeof width  } value ${  width}`);
+        } else throw new Error(
+                `don't know what to do with width type ${typeof width} value ${width}`,
+            );
         return _diagram;
     };
     _diagram.minWidth = function(width) {
-        if(!arguments.length)
+        if (!arguments.length)
             return _minWidth;
         _minWidth = width;
         return _diagram;
@@ -207,10 +253,10 @@ export function diagram(parent, chartGroup) {
      * @param {node} [root=null]
      * @return {node}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.root = property(null).react((e) => {
-        if(e.empty())
-            console.log(`Warning: parent selector ${  parent  } doesn't seem to exist`);
+     */
+    _diagram.root = property(null).react(e => {
+        if (e.empty())
+            console.log(`Warning: parent selector ${parent} doesn't seem to exist`);
     });
 
     /**
@@ -222,7 +268,7 @@ export function diagram(parent, chartGroup) {
      * @param {Boolean} [mouseZoomable=true]
      * @return {Boolean}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.mouseZoomable = property(true);
 
     _diagram.zoomExtent = property([.1, 2]);
@@ -235,7 +281,7 @@ export function diagram(parent, chartGroup) {
      * @param {String|String[]} [modKeyZoom=true]
      * @return {String|String[]}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.modKeyZoom = property('Alt');
 
     /**
@@ -265,7 +311,7 @@ export function diagram(parent, chartGroup) {
      * @param {String} [fitStrategy='default']
      * @return {String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.fitStrategy = property('default');
 
     /**
@@ -284,7 +330,7 @@ export function diagram(parent, chartGroup) {
      * @param {String} [autoZoom=null]
      * @return {String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.autoZoom = property(null);
     _diagram.zoomToFit = function(animate) {
         // if(!(_nodeLayer && _edgeLayer))
@@ -306,7 +352,7 @@ export function diagram(parent, chartGroup) {
      * @param {crossfilter.dimension} [nodeDimension]
      * @return {crossfilter.dimension}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeDimension = property();
 
     /**
@@ -326,7 +372,7 @@ export function diagram(parent, chartGroup) {
      * @param {crossfilter.group} [nodeGroup]
      * @return {crossfilter.group}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeGroup = property();
 
     /**
@@ -342,7 +388,7 @@ export function diagram(parent, chartGroup) {
      * @param {crossfilter.dimension} [edgeDimension]
      * @return {crossfilter.dimension}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeDimension = property();
 
     /**
@@ -360,7 +406,7 @@ export function diagram(parent, chartGroup) {
      * @param {crossfilter.group} [edgeGroup]
      * @return {crossfilter.group}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeGroup = property();
 
     _diagram.edgesInFront = property(false);
@@ -377,8 +423,8 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [nodeKey=function(kv) { return kv.key }]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.nodeKey = _diagram.nodeKeyAccessor = property((kv) => kv.key);
+     */
+    _diagram.nodeKey = _diagram.nodeKeyAccessor = property(kv => kv.key);
 
     /**
      * Set or get the function which will be used to retrieve the unique key for each edge. By
@@ -390,8 +436,8 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [edgeKey=function(kv) { return kv.key }]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.edgeKey = _diagram.edgeKeyAccessor = property((kv) => kv.key);
+     */
+    _diagram.edgeKey = _diagram.edgeKeyAccessor = property(kv => kv.key);
 
     /**
      * Set or get the function which will be used to retrieve the source (origin/tail) key of
@@ -405,8 +451,8 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [edgeSource=function(kv) { return kv.value.sourcename; }]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.edgeSource = _diagram.sourceAccessor = property((kv) => kv.value.sourcename);
+     */
+    _diagram.edgeSource = _diagram.sourceAccessor = property(kv => kv.value.sourcename);
 
     /**
      * Set or get the function which will be used to retrieve the target (destination/head) key
@@ -420,8 +466,8 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [edgeTarget=function(kv) { return kv.value.targetname; }]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.edgeTarget = _diagram.targetAccessor = property((kv) => kv.value.targetname);
+     */
+    _diagram.edgeTarget = _diagram.targetAccessor = property(kv => kv.value.targetname);
 
     _diagram.portDimension = property(null);
     _diagram.portGroup = property(null);
@@ -451,7 +497,7 @@ export function diagram(parent, chartGroup) {
      * @param {crossfilter.dimension} [clusterDimension]
      * @return {crossfilter.dimension}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.clusterDimension = property(null);
 
     /**
@@ -468,7 +514,7 @@ export function diagram(parent, chartGroup) {
      * @param {crossfilter.group} [clusterGroup]
      * @return {crossfilter.group}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.clusterGroup = property(null);
 
     // cluster accessors
@@ -482,7 +528,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [clusterKey=function(kv) { return kv.key }]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.clusterKey = property(pluck('key'));
 
     /**
@@ -495,7 +541,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [clusterParent=function(kv) { return kv.key }]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.clusterParent = property(null);
 
     /**
@@ -510,7 +556,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [clusterPadding=function(kv) { return kv.key }]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.clusterPadding = property(8);
 
     // node accessor
@@ -524,7 +570,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [nodeParentCluster=function(kv) { return kv.key }]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeParentCluster = property(null);
 
     /**
@@ -536,7 +582,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [nodeRadius=25]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeRadius = _diagram.nodeRadiusAccessor = property(25);
 
     /**
@@ -549,7 +595,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [nodeStrokeWidth=1]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeStrokeWidth = _diagram.nodeStrokeWidthAccessor = property(1);
 
     /**
@@ -561,7 +607,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|String} [nodeStroke='black']
      * @return {Function|String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeStroke = _diagram.nodeStrokeAccessor = property('black');
 
     _diagram.nodeStrokeDashArray = property(null);
@@ -576,7 +622,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|d3.scale} [nodeFillScale]
      * @return {Function|d3.scale}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeFillScale = property(null);
 
     /**
@@ -588,7 +634,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|String} [nodeFill='white']
      * @return {Function|String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeFill = _diagram.nodeFillAccessor = property('white');
 
     /**
@@ -599,7 +645,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [nodeOpacity=1]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeOpacity = property(1);
 
     /**
@@ -611,9 +657,8 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [nodePadding=6]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodePadding = property(6);
-
 
     /**
      * Set or get the padding, in pixels, for a node's label. If an object, should contain fields
@@ -624,7 +669,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number|Object} [nodeLabelPadding=0]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeLabelPadding = property(0);
 
     /**
@@ -635,7 +680,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [nodeLineHeight=1]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeLineHeight = property(1);
 
     /**
@@ -652,8 +697,10 @@ export function diagram(parent, chartGroup) {
      *   return kv.value.label || kv.value.name;
      * });
      * @return {dc_graph.diagram}
-     **/
-    _diagram.nodeLabel = _diagram.nodeLabelAccessor = property((kv) => kv.value.label || kv.value.name);
+     */
+    _diagram.nodeLabel = _diagram.nodeLabelAccessor = property(kv =>
+        kv.value.label || kv.value.name
+    );
 
     _diagram.nodeLabelAlignment = property('center');
     _diagram.nodeLabelDecoration = property(null);
@@ -666,7 +713,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|String} [nodeLabelFill=null]
      * @return {Function|String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeLabelFill = _diagram.nodeLabelFillAccessor = property(null);
 
     /**
@@ -677,7 +724,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Boolean} [nodeFitLabel=true]
      * @return {Function|Boolean}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeFitLabel = _diagram.nodeFitLabelAccessor = property(true);
 
     /**
@@ -700,7 +747,7 @@ export function diagram(parent, chartGroup) {
      * diagram.nodeShape(function(kv) {
      *   return {shape: kv.value.flag ? 'diamond' : 'parallelogram'};
      * });
-     **/
+     */
     _diagram.nodeShape = property(defaultShape);
 
     // for defining custom (and standard) shapes
@@ -736,8 +783,8 @@ export function diagram(parent, chartGroup) {
      *   return _diagram.nodeKey()(kv);
      * });
      * @return {dc_graph.diagram}
-     **/
-    _diagram.nodeTitle = _diagram.nodeTitleAccessor = property((kv) => _diagram.nodeKey()(kv));
+     */
+    _diagram.nodeTitle = _diagram.nodeTitleAccessor = property(kv => _diagram.nodeKey()(kv));
 
     /**
      * By default, nodes are added to the layout in the order that `.nodeGroup().all()` returns
@@ -750,7 +797,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [nodeOrdering=null]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeOrdering = property(null);
 
     /**
@@ -763,9 +810,8 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Object} [nodeFixed=null]
      * @return {Function|Object}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.nodeFixed = _diagram.nodeFixedAccessor = property(null);
-
 
     /**
      * Set or get the function which will be used to retrieve the stroke color for the edges.
@@ -775,7 +821,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|String} [edgeStroke='black']
      * @return {Function|String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeStroke = _diagram.edgeStrokeAccessor = property('black');
 
     /**
@@ -786,7 +832,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [edgeStrokeWidth=1]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeStrokeWidth = _diagram.edgeStrokeWidthAccessor = property(1);
 
     _diagram.edgeStrokeDashArray = property(null);
@@ -800,7 +846,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [edgeOpacity=1]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeOpacity = _diagram.edgeOpacityAccessor = property(1);
 
     /**
@@ -817,8 +863,8 @@ export function diagram(parent, chartGroup) {
      * });
      * @return {Function|String}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.edgeLabel = _diagram.edgeLabelAccessor = property((e) => _diagram.edgeKey()(e));
+     */
+    _diagram.edgeLabel = _diagram.edgeLabelAccessor = property(e => _diagram.edgeKey()(e));
     // vertical spacing when there are multiple lines of edge label
     _diagram.edgeLabelSpacing = property(12);
 
@@ -832,7 +878,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|String} [edgeArrowhead='vee']
      * @return {Function|String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeArrowhead = _diagram.edgeArrowheadAccessor = property('vee');
 
     /**
@@ -845,7 +891,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|String} [edgeArrowtail=null]
      * @return {Function|String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeArrowtail = _diagram.edgeArrowtailAccessor = property(null);
 
     /**
@@ -856,7 +902,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [edgeArrowSize=1]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeArrowSize = property(1);
 
     /**
@@ -874,8 +920,8 @@ export function diagram(parent, chartGroup) {
      * });
      * @return {Function|Boolean}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.edgeIsLayout = _diagram.edgeIsLayoutAccessor = property((kv) => !kv.value.notLayout);
+     */
+    _diagram.edgeIsLayout = _diagram.edgeIsLayoutAccessor = property(kv => !kv.value.notLayout);
 
     // if false, don't draw or layout the edge. this is not documented because it seems like
     // the interface could be better and this combined with edgeIsLayout. (currently there is
@@ -899,7 +945,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|String} [lengthStrategy='symmetric']
      * @return {Function|String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.lengthStrategy = deprecate_layout_algo_parameter('lengthStrategy');
 
     /**
@@ -917,8 +963,8 @@ export function diagram(parent, chartGroup) {
      * });
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.edgeLength = _diagram.edgeDistanceAccessor = property((kv) => kv.value.distance);
+     */
+    _diagram.edgeLength = _diagram.edgeDistanceAccessor = property(kv => kv.value.distance);
 
     /**
      * This should be equivalent to rankdir and ranksep in the dagre/graphviz nomenclature, but for
@@ -934,7 +980,7 @@ export function diagram(parent, chartGroup) {
      * diagram.flowLayout(null)
      * // flow in x with min separation 200
      * diagram.flowLayout({axis: 'x', minSeparation: 200})
-     **/
+     */
     _diagram.flowLayout = deprecate_layout_algo_parameter('flowLayout');
 
     /**
@@ -946,7 +992,7 @@ export function diagram(parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @param {String} [rankdir]
-     **/
+     */
     _diagram.rankdir = deprecate_layout_algo_parameter('rankdir');
 
     /**
@@ -961,7 +1007,7 @@ export function diagram(parent, chartGroup) {
      * @param {Number} [baseLength]
      * @return {Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.baseLength = deprecate_layout_algo_parameter('baseLength');
 
     /**
@@ -973,7 +1019,7 @@ export function diagram(parent, chartGroup) {
      * @param {Number} [transitionDuration=500]
      * @return {Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.transitionDuration = property(500);
 
     /**
@@ -990,7 +1036,7 @@ export function diagram(parent, chartGroup) {
      * @param {String} [stageTransitions='none']
      * @return {String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.stageTransitions = property('none');
 
     /**
@@ -1003,7 +1049,7 @@ export function diagram(parent, chartGroup) {
      * @param {Number} [deleteDelay=0]
      * @return {Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.deleteDelay = property(0);
 
     /**
@@ -1014,7 +1060,7 @@ export function diagram(parent, chartGroup) {
      * @param {String} [groupConnected=false]
      * @return {String}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.groupConnected = deprecate_layout_algo_parameter('groupConnected');
 
     /**
@@ -1026,7 +1072,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function|Number} [timeLimit=0]
      * @return {Function|Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.timeLimit = property(0);
 
     /**
@@ -1061,7 +1107,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [constrain]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.constrain = property((_nodes, _edges) => []);
 
     /**
@@ -1073,7 +1119,7 @@ export function diagram(parent, chartGroup) {
      * @param {Number} [parallelEdgeOffset=10]
      * @return {Number}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.parallelEdgeOffset = property(10);
 
     /**
@@ -1090,7 +1136,7 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [edgeOrdering=null]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.edgeOrdering = property(null);
 
     _diagram.edgeSort = property(null);
@@ -1110,7 +1156,7 @@ export function diagram(parent, chartGroup) {
      * @param {Boolean} [initLayoutOnRedraw=false]
      * @return {Boolean}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.initLayoutOnRedraw = property(false);
 
     /**
@@ -1121,16 +1167,16 @@ export function diagram(parent, chartGroup) {
      * @param {Boolean} [layoutUnchanged=false]
      * @return {Boolean}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.layoutUnchanged = property(false);
     _diagram.nodeChangeSelect = property(() => {
-        if(_diagram.layoutEngine().supportsMoving && _diagram.layoutEngine().supportsMoving())
+        if (_diagram.layoutEngine().supportsMoving && _diagram.layoutEngine().supportsMoving())
             return topology_node;
         else
             return basic_node;
     });
     _diagram.edgeChangeSelect = property(() => {
-        if(_diagram.layoutEngine().supportsMoving && _diagram.layoutEngine().supportsMoving())
+        if (_diagram.layoutEngine().supportsMoving && _diagram.layoutEngine().supportsMoving())
             return topology_edge;
         else
             return basic_edge;
@@ -1144,7 +1190,7 @@ export function diagram(parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.relayout = function() {
         _nodes_snapshot = _edges_snapshot = null;
         return this;
@@ -1165,10 +1211,16 @@ export function diagram(parent, chartGroup) {
      * @param {Function} [initialLayout=null]
      * @return {Function}
      * @return {dc_graph.diagram}
-     **/
-    _diagram.initialLayout = deprecatedProperty('initialLayout is deprecated - use layout algorithms instead', null);
+     */
+    _diagram.initialLayout = deprecatedProperty(
+        'initialLayout is deprecated - use layout algorithms instead',
+        null,
+    );
 
-    _diagram.initialOnly = deprecatedProperty('initialOnly is deprecated - see the initialLayout deprecation notice in the documentation', false);
+    _diagram.initialOnly = deprecatedProperty(
+        'initialOnly is deprecated - see the initialLayout deprecation notice in the documentation',
+        false,
+    );
 
     /**
      * By default, all nodes are included, and edges are only included if both end-nodes are
@@ -1180,7 +1232,7 @@ export function diagram(parent, chartGroup) {
      * @param {Boolean} [induceNodes=false]
      * @return {Boolean}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.induceNodes = property(false);
 
     /**
@@ -1193,7 +1245,7 @@ export function diagram(parent, chartGroup) {
      * @param {Boolean} [showLayoutSteps=false]
      * @return {Boolean}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.showLayoutSteps = property(false);
 
     /**
@@ -1205,7 +1257,7 @@ export function diagram(parent, chartGroup) {
      * @param {Object} [legend=null]
      * @return {Object}
      * @return {dc_graph.diagram}
-     **/
+     */
     // (pre-deprecated; see below)
 
     /**
@@ -1234,21 +1286,24 @@ export function diagram(parent, chartGroup) {
 
     _diagram.mode.reject = function(id, object) {
         const rtype = _diagram.renderer().rendererType();
-        if(!object)
+        if (!object)
             return false; // null is always a valid mode for any renderer
-        if(!object.supportsRenderer)
-            onetimeTrace('trace', `could not check if "${  id  }" is compatible with ${  rtype}`);
-        else if(!object.supportsRenderer(rtype))
-            return `not installing "${  id  }" because it is not compatible with renderer ${  rtype}`;
+        if (!object.supportsRenderer)
+            onetimeTrace('trace', `could not check if "${id}" is compatible with ${rtype}`);
+        else if (!object.supportsRenderer(rtype))
+            return `not installing "${id}" because it is not compatible with renderer ${rtype}`;
         return false;
     };
 
-    _diagram.legend = deprecateFunction(".legend() is deprecated; use .child() for more control & multiple legends", function(_) {
-        if(!arguments.length)
-            return _diagram.child('node-legend');
-        _diagram.child('node-legend', _);
-        return _diagram;
-    });
+    _diagram.legend = deprecateFunction(
+        '.legend() is deprecated; use .child() for more control & multiple legends',
+        function(_) {
+            if (!arguments.length)
+                return _diagram.child('node-legend');
+            _diagram.child('node-legend', _);
+            return _diagram;
+        },
+    );
 
     /**
      * Specify 'cola' (the default) or 'dagre' as the Layout Algorithm and it will replace the
@@ -1264,20 +1319,22 @@ export function diagram(parent, chartGroup) {
      * // use dagre for layout
      * diagram.layoutAlgorithm('dagre');
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.layoutAlgorithm = function(value, skipWarning) {
-        if(!arguments.length)
+        if (!arguments.length)
             return _diagram.layoutEngine() ? _diagram.layoutEngine().layoutAlgorithm() : 'cola';
-        if(!skipWarning)
-            console.warn('dc.graph.diagram.layoutAlgorithm is deprecated - pass the layout engine object to dc_graph.diagram.layoutEngine instead');
+        if (!skipWarning)
+            console.warn(
+                'dc.graph.diagram.layoutAlgorithm is deprecated - pass the layout engine object to dc_graph.diagram.layoutEngine instead',
+            );
 
         let engine;
-        switch(value) {
-        case 'cola':
-            engine = colaLayout();
-            break;
-        case 'dagre':
-            engine = dagreLayout();
+        switch (value) {
+            case 'cola':
+                engine = colaLayout();
+                break;
+            case 'dagre':
+                engine = dagreLayout();
         }
         engine = webworkerLayout(engine);
         _diagram.layoutEngine(engine);
@@ -1297,13 +1354,13 @@ export function diagram(parent, chartGroup) {
      * // use dagre with a webworker
      * import { webworkerLayout, dagreLayout } from 'dc-graph';
      * diagram.layoutEngine(webworkerLayout(dagreLayout()));
-     **/
-    _diagram.layoutEngine = property(null).react(async (val) => {
-        if(val && val.parent)
+     */
+    _diagram.layoutEngine = property(null).react(async val => {
+        if (val && val.parent)
             val.parent(_diagram);
-        if(_diagram.renderer().isRendered()) {
+        if (_diagram.renderer().isRendered()) {
             // remove any calculated points, if engine did that
-            Object.keys(_edges).forEach((k) => {
+            Object.keys(_edges).forEach(k => {
                 _edges[k].cola.points = null;
             });
             // initialize engine
@@ -1311,8 +1368,8 @@ export function diagram(parent, chartGroup) {
         }
     });
 
-    _diagram.renderer = property(renderSvg().parent(_diagram)).react((r) => {
-        if(_diagram.renderer())
+    _diagram.renderer = property(renderSvg().parent(_diagram)).react(r => {
+        if (_diagram.renderer())
             _diagram.renderer().parent(null);
         r.parent(_diagram);
     });
@@ -1322,20 +1379,19 @@ export function diagram(parent, chartGroup) {
 
     _diagram.tickSize = deprecate_layout_algo_parameter('tickSize');
 
-
     _diagram.uniqueId = function() {
         return _diagram.anchorName().replace(/[ .#=[\]"]/g, '-');
     };
 
     _diagram.edgeId = function(e) {
-        return `edge-${  _diagram.edgeKey.eval(e).replace(/[^\w-_]/g, '-')}`;
+        return `edge-${_diagram.edgeKey.eval(e).replace(/[^\w-_]/g, '-')}`;
     };
 
     _diagram.arrowId = function(e, kind) {
-        return `arrow-${  kind  }-${  _diagram.uniqueId()  }-${   _diagram.edgeId(e)}`;
+        return `arrow-${kind}-${_diagram.uniqueId()}-${_diagram.edgeId(e)}`;
     };
     _diagram.textpathId = function(e) {
-        return `textpath-${  _diagram.uniqueId()  }-${  _diagram.edgeId(e)}`;
+        return `textpath-${_diagram.uniqueId()}-${_diagram.edgeId(e)}`;
     };
 
     // this kind of begs a (meta)graph ADT
@@ -1380,26 +1436,25 @@ export function diagram(parent, chartGroup) {
      * @param {Boolean} [handleDisconnected=true]
      * @return {Boolean}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.handleDisconnected = deprecate_layout_algo_parameter('handleDisconnected');
 
     async function initLayout(engine) {
-        if(!_diagram.layoutEngine())
+        if (!_diagram.layoutEngine())
             _diagram.layoutAlgorithm('cola', true);
         await (engine || _diagram.layoutEngine()).init({
             width: _diagram.width(),
-            height: _diagram.height()
+            height: _diagram.height(),
         });
     }
 
     _diagram.forEachChild = function(node, children, idf, f) {
-        children.enum().forEach((key) => {
-            f(children(key),
-              node.filter((n) => idf(n) === key));
+        children.enum().forEach(key => {
+            f(children(key), node.filter(n => idf(n) === key));
         });
     };
     _diagram.forEachShape = function(node, f) {
-        _diagram.forEachChild(node, _diagram.shape, (n) => n.dcg_shape.shape, f);
+        _diagram.forEachChild(node, _diagram.shape, n => n.dcg_shape.shape, f);
     };
     _diagram.forEachContent = function(node, f) {
         _diagram.forEachChild(node, _diagram.content, _diagram.nodeContent.eval, f);
@@ -1411,16 +1466,16 @@ export function diagram(parent, chartGroup) {
 
     // three stages: delete before layout, and modify & insert split the transitionDuration
     _diagram.stagedDuration = function() {
-        return (_diagram.stageTransitions() !== 'none') ?
-            _diagram.transitionDuration() / 2 :
-            _diagram.transitionDuration();
+        return (_diagram.stageTransitions() !== 'none')
+            ? _diagram.transitionDuration()/2
+            : _diagram.transitionDuration();
     };
 
     _diagram.stagedDelay = function(is_enter) {
-        return _diagram.stageTransitions() === 'none' ||
-            _diagram.stageTransitions() === 'modins' === !is_enter ?
-            0 :
-            _diagram.transitionDuration() / 2;
+        return _diagram.stageTransitions() === 'none'
+                || _diagram.stageTransitions() === 'modins' === !is_enter
+            ? 0
+            : _diagram.transitionDuration()/2;
     };
 
     _diagram.isRunning = function() {
@@ -1428,13 +1483,13 @@ export function diagram(parent, chartGroup) {
     };
 
     function svg_specific(name) {
-        return traceFunction('trace', `${name  }() is specific to the SVG renderer`, function() {
+        return traceFunction('trace', `${name}() is specific to the SVG renderer`, function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
 
     function call_on_renderer(name) {
-        return traceFunction('trace', `calling ${  name  }() on renderer`, function() {
+        return traceFunction('trace', `calling ${name}() on renderer`, function() {
             return _diagram.renderer()[name].apply(this, arguments);
         });
     }
@@ -1452,16 +1507,19 @@ export function diagram(parent, chartGroup) {
     _diagram.scale = svg_specific('scale');
 
     function _renderer_specific(name) {
-        return traceFunction('trace', `${name  }() will have renderer-specific arguments`, function() {
-            return _diagram.renderer()[name].apply(this, arguments);
-        });
+        return traceFunction(
+            'trace',
+            `${name}() will have renderer-specific arguments`,
+            function() {
+                return _diagram.renderer()[name].apply(this, arguments);
+            },
+        );
     }
     _diagram.renderNode = svg_specific('renderNode');
     _diagram.renderEdge = svg_specific('renderEdge');
     _diagram.redrawNode = svg_specific('redrawNode');
     _diagram.redrawEdge = svg_specific('redrawEdge');
     _diagram.reposition = call_on_renderer('reposition');
-
 
     /**
      * Standard dc.js
@@ -1483,17 +1541,16 @@ export function diagram(parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
-     **/
+     */
     let _needsRedraw = false;
-    _diagram.redraw = async function () {
+    _diagram.redraw = async function() {
         // since dc.js can receive UI events and trigger redraws whenever it wants,
         // and cola absolutely will not tolerate being poked while it's doing layout,
         // we need to guard the startLayout call.
-        if(_running) {
+        if (_running) {
             _needsRedraw = true;
             return this;
-        }
-        else return await _diagram.startLayout();
+        } else return await _diagram.startLayout();
     };
 
     /**
@@ -1505,11 +1562,11 @@ export function diagram(parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.render = async function() {
-        if(_diagram.renderer().isRendered())
-            _dispatch.call("reset");
-        if(!_diagram.initLayoutOnRedraw())
+        if (_diagram.renderer().isRendered())
+            _dispatch.call('reset');
+        if (!_diagram.initLayoutOnRedraw())
             await initLayout();
 
         _nodes = {};
@@ -1518,14 +1575,18 @@ export function diagram(parent, chartGroup) {
         _clusters = {};
 
         // start out with 1:1 zoom
-        _diagram.x(scaleLinear()
-                   .domain([0, _diagram.width()])
-                   .range([0, _diagram.width()]));
-        _diagram.y(scaleLinear()
-                   .domain([0, _diagram.height()])
-                   .range([0, _diagram.height()]));
+        _diagram.x(
+            scaleLinear()
+                .domain([0, _diagram.width()])
+                .range([0, _diagram.width()]),
+        );
+        _diagram.y(
+            scaleLinear()
+                .domain([0, _diagram.height()])
+                .range([0, _diagram.height()]),
+        );
         _diagram.renderer().initializeDrawing();
-        _dispatch.call("render");
+        _dispatch.call('render');
         _diagram.redraw();
         return this;
     };
@@ -1543,7 +1604,7 @@ export function diagram(parent, chartGroup) {
     function detect_size_change() {
         const oldWidth = _lastWidth, oldHeight = _lastHeight;
         const newWidth = _diagram.width(), newHeight = _diagram.height();
-        if(oldWidth !== newWidth || oldHeight !== newHeight)
+        if (oldWidth !== newWidth || oldHeight !== newHeight)
             _diagram.renderer().rezoom(oldWidth, oldHeight, newWidth, newHeight);
     }
 
@@ -1552,7 +1613,7 @@ export function diagram(parent, chartGroup) {
     // data as well as all cola fields starting with dcg_ are related to topology
     function dcg_fields(cola) {
         const entries = Object.entries(cola)
-            .filter((entry) => /^dcg_/.test(entry[0]));
+            .filter(entry => /^dcg_/.test(entry[0]));
         return entries.reduce((p, entry) => {
             p[entry[0]] = entry[1];
             return p;
@@ -1571,50 +1632,55 @@ export function diagram(parent, chartGroup) {
                 key: n0.key,
                 value: Object.fromEntries(
                     Object.entries(n0.value)
-                        .filter((kv) => kv[0] !== 'fixedPos'))
-            }
+                        .filter(kv => kv[0] !== 'fixedPos'),
+                ),
+            },
         };
     }
     function basic_edge(e) {
         return {orig: getOriginal(e)};
     }
 
-    _diagram.startLayout = async function () {
+    _diagram.startLayout = async function() {
         let nodes = _diagram.nodeGroup().all();
         let edges = _diagram.edgeGroup().all();
         let ports = _diagram.portGroup() ? _diagram.portGroup().all() : [];
         const clusters = _diagram.clusterGroup() ? _diagram.clusterGroup().all() : [];
-        if(_running) {
+        if (_running) {
             throw new Error('diagram.redraw already running!');
         }
         _running = true;
 
-        if(_diagram.width_is_automatic() || _diagram.height_is_automatic())
+        if (_diagram.width_is_automatic() || _diagram.height_is_automatic())
             detect_size_change();
         else
             _diagram.renderer().resize();
 
-        if(_diagram.initLayoutOnRedraw())
+        if (_diagram.initLayoutOnRedraw())
             await initLayout();
         _diagram.layoutEngine().stop();
-        _dispatch.call("preDraw");
+        _dispatch.call('preDraw');
 
         // ordering shouldn't matter, but we support ordering in case it does
-        if(_diagram.nodeOrdering()) {
-            nodes = nodes.slice(0).sort((a, b) => ascending(_diagram.nodeOrdering()(a), _diagram.nodeOrdering()(b)));
+        if (_diagram.nodeOrdering()) {
+            nodes = nodes.slice(0).sort((a, b) =>
+                ascending(_diagram.nodeOrdering()(a), _diagram.nodeOrdering()(b))
+            );
         }
-        if(_diagram.edgeOrdering()) {
-            edges = edges.slice(0).sort((a, b) => ascending(_diagram.edgeOrdering()(a), _diagram.edgeOrdering()(b)));
+        if (_diagram.edgeOrdering()) {
+            edges = edges.slice(0).sort((a, b) =>
+                ascending(_diagram.edgeOrdering()(a), _diagram.edgeOrdering()(b))
+            );
         }
 
-        let wnodes = regenerateObjects(_nodes, nodes, null, (v) => _diagram.nodeKey()(v), (v1, v) => {
+        let wnodes = regenerateObjects(_nodes, nodes, null, v => _diagram.nodeKey()(v), (v1, v) => {
             v1.orig = v;
             v1.cola = v1.cola || {};
             v1.cola.dcg_nodeKey = _diagram.nodeKey.eval(v1);
             v1.cola.dcg_nodeParentCluster = _diagram.nodeParentCluster.eval(v1);
             _diagram.layoutEngine().populateLayoutNode(v1.cola, v1);
         });
-        let wedges = regenerateObjects(_edges, edges, null, (e) => _diagram.edgeKey()(e), (e1, e) => {
+        let wedges = regenerateObjects(_edges, edges, null, e => _diagram.edgeKey()(e), (e1, e) => {
             e1.orig = e;
             e1.cola = e1.cola || {};
             e1.cola.dcg_edgeKey = _diagram.edgeKey.eval(e1);
@@ -1631,111 +1697,142 @@ export function diagram(parent, chartGroup) {
         wedges = wedges.filter(has_source_and_target);
 
         // remove self-edges (since we can't draw them - will be option later)
-        wedges = wedges.filter((e) => e.source !== e.target);
+        wedges = wedges.filter(e => e.source !== e.target);
 
         wedges = wedges.filter(_diagram.edgeIsShown.eval);
 
         // now we know which ports should exist
-        let needports = wedges.map((e) => {
-            if(_diagram.edgeSourcePortName.eval(e))
-                return portName(_diagram.edgeSource.eval(e), null, _diagram.edgeSourcePortName.eval(e));
+        let needports = wedges.map(e => {
+            if (_diagram.edgeSourcePortName.eval(e))
+                return portName(
+                    _diagram.edgeSource.eval(e),
+                    null,
+                    _diagram.edgeSourcePortName.eval(e),
+                );
             else return portName(null, _diagram.edgeKey.eval(e), 'source');
         });
-        needports = needports.concat(wedges.map((e) => {
-            if(_diagram.edgeTargetPortName.eval(e))
-                return portName(_diagram.edgeTarget.eval(e), null, _diagram.edgeTargetPortName.eval(e));
+        needports = needports.concat(wedges.map(e => {
+            if (_diagram.edgeTargetPortName.eval(e))
+                return portName(
+                    _diagram.edgeTarget.eval(e),
+                    null,
+                    _diagram.edgeTargetPortName.eval(e),
+                );
             else return portName(null, _diagram.edgeKey.eval(e), 'target');
         }));
         // remove any invalid ports so they don't crash in confusing ways later
-        ports = ports.filter((p) => _diagram.portNodeKey() && _diagram.portNodeKey()(p) ||
-                _diagram.portEdgeKey() && _diagram.portEdgeKey()(p));
-        let wports = regenerateObjects(_ports, ports, needports, (p) => portName(_diagram.portNodeKey() && _diagram.portNodeKey()(p),
-                             _diagram.portEdgeKey() && _diagram.portEdgeKey()(p),
-                             _diagram.portName()(p)), (p1, p) => {
-            p1.orig = p;
-            if(p1.named)
-                p1.edges = [];
-        }, (k, p) => {
-            console.assert(k, 'should have screened out invalid ports');
-            // it's dumb to parse the id we just created. as usual, i blame the lack of metagraphs
-            const parse = splitPortName(k);
-            if(parse.nodeKey) {
-                p.node = _nodes[parse.nodeKey];
-                p.named = true;
-            }
-            else {
-                const e = _edges[parse.edgeKey];
-                p.node = e[parse.name];
-                p.edges = [e];
-                p.named = false;
-            }
-            p.name = parse.name;
-        });
+        ports = ports.filter(p =>
+            _diagram.portNodeKey() && _diagram.portNodeKey()(p)
+            || _diagram.portEdgeKey() && _diagram.portEdgeKey()(p)
+        );
+        let wports = regenerateObjects(
+            _ports,
+            ports,
+            needports,
+            p => portName(
+                _diagram.portNodeKey() && _diagram.portNodeKey()(p),
+                _diagram.portEdgeKey() && _diagram.portEdgeKey()(p),
+                _diagram.portName()(p),
+            ),
+            (p1, p) => {
+                p1.orig = p;
+                if (p1.named)
+                    p1.edges = [];
+            },
+            (k, p) => {
+                console.assert(k, 'should have screened out invalid ports');
+                // it's dumb to parse the id we just created. as usual, i blame the lack of metagraphs
+                const parse = splitPortName(k);
+                if (parse.nodeKey) {
+                    p.node = _nodes[parse.nodeKey];
+                    p.named = true;
+                } else {
+                    const e = _edges[parse.edgeKey];
+                    p.node = e[parse.name];
+                    p.edges = [e];
+                    p.named = false;
+                }
+                p.name = parse.name;
+            },
+        );
         // remove any ports where the end-node was not found, to avoid crashing elsewhere
-        wports = wports.filter((p) => p.node);
+        wports = wports.filter(p => p.node);
 
         // find all edges for named ports
-        wedges.forEach((e) => {
+        wedges.forEach(e => {
             let name = _diagram.edgeSourcePortName.eval(e);
-            if(name)
+            if (name)
                 _ports[portName(_diagram.nodeKey.eval(e.source), null, name)].edges.push(e);
             name = _diagram.edgeTargetPortName.eval(e);
-            if(name)
+            if (name)
                 _ports[portName(_diagram.nodeKey.eval(e.target), null, name)].edges.push(e);
         });
 
         // optionally, delete nodes that have no edges
-        if(_diagram.induceNodes()) {
+        if (_diagram.induceNodes()) {
             const keeps = {};
-            wedges.forEach((e) => {
+            wedges.forEach(e => {
                 keeps[e.cola.dcg_edgeSource] = true;
                 keeps[e.cola.dcg_edgeTarget] = true;
             });
-            wnodes = wnodes.filter((n) => keeps[n.cola.dcg_nodeKey]);
-            for(const k in _nodes)
-                if(!keeps[k])
+            wnodes = wnodes.filter(n => keeps[n.cola.dcg_nodeKey]);
+            for (const k in _nodes)
+                if (!keeps[k])
                     delete _nodes[k];
         }
 
-        const needclusters = set(wnodes.map((n) => _diagram.nodeParentCluster.eval(n)).filter(identity)).values();
+        const needclusters = set(
+            wnodes.map(n => _diagram.nodeParentCluster.eval(n)).filter(identity),
+        ).values();
 
-        const wclusters = regenerateObjects(_clusters, clusters, needclusters, (c) => _diagram.clusterKey()(c), (c1, c) => { // assign
-            c1.orig = c;
-            c1.cola = c1.cola || {
-                dcg_clusterKey: _diagram.clusterKey.eval(c1),
-                dcg_clusterParent: _diagram.clusterParent.eval(c1)
-            };
-        }, (_k, _c) => { // create
-        });
+        const wclusters = regenerateObjects(
+            _clusters,
+            clusters,
+            needclusters,
+            c => _diagram.clusterKey()(c),
+            (c1, c) => { // assign
+                c1.orig = c;
+                c1.cola = c1.cola || {
+                    dcg_clusterKey: _diagram.clusterKey.eval(c1),
+                    dcg_clusterParent: _diagram.clusterParent.eval(c1),
+                };
+            },
+            (_k, _c) => { // create
+            },
+        );
 
         wnodes.forEach((v, i) => {
             v.index = i;
         });
 
         // announce new data
-        _dispatch.call("data", null, _diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
+        _dispatch.call('data', null, _diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
         _stats = {nnodes: wnodes.length, nedges: wedges.length};
 
         // fixed nodes may have been affected by .data() so calculate now
-        wnodes.forEach((v) => {
-            if(_diagram.nodeFixed())
+        wnodes.forEach(v => {
+            if (_diagram.nodeFixed())
                 v.cola.dcg_nodeFixed = _diagram.nodeFixed.eval(v);
         });
 
         // annotate parallel edges so we can draw them specially
-        if(_diagram.parallelEdgeOffset()) {
+        if (_diagram.parallelEdgeOffset()) {
             const em = new Array(wnodes.length);
-            for(let i = 0; i < wnodes.length; ++i)
+            for (let i = 0; i < wnodes.length; ++i)
                 em[i] = new Array(i);
-            wedges.forEach((e) => {
+            wedges.forEach(e => {
                 e.pos = e.pos || {};
                 let min, max, minattr, maxattr;
-                if(e.source.index < e.target.index) {
-                    min = e.source.index; max = e.target.index;
-                    minattr = 'edgeSourcePortName'; maxattr = 'edgeTargetPortName';
+                if (e.source.index < e.target.index) {
+                    min = e.source.index;
+                    max = e.target.index;
+                    minattr = 'edgeSourcePortName';
+                    maxattr = 'edgeTargetPortName';
                 } else {
-                    max = e.source.index; min = e.target.index;
-                    maxattr = 'edgeSourcePortName'; minattr = 'edgeTargetPortName';
+                    max = e.source.index;
+                    min = e.target.index;
+                    maxattr = 'edgeSourcePortName';
+                    minattr = 'edgeTargetPortName';
                 }
                 const minport = _diagram[minattr].eval(e) || 'no port',
                     maxport = _diagram[maxattr].eval(e) || 'no port';
@@ -1743,7 +1840,7 @@ export function diagram(parent, chartGroup) {
                 em[max][min][maxport] = em[max][min][maxport] || {};
                 e.parallel = em[max][min][maxport][minport] = em[max][min][maxport][minport] || {
                     rev: [],
-                    edges: []
+                    edges: [],
                 };
                 e.parallel.edges.push(e);
                 e.parallel.rev.push(min !== e.source.index);
@@ -1754,24 +1851,24 @@ export function diagram(parent, chartGroup) {
 
         // really we should have layout chaining like in the good old Dynagraph days
         // the ordering of this and the previous 4 statements is somewhat questionable
-        if(_diagram.initialLayout())
+        if (_diagram.initialLayout())
             _diagram.initialLayout()(_diagram, wnodes, wedges);
 
         // no layout if the topology and layout parameters haven't changed
         let skip_layout = false;
-        if(!_diagram.layoutUnchanged()) {
+        if (!_diagram.layoutUnchanged()) {
             const node_fields = _diagram.nodeChangeSelect()(),
                 edge_fields = _diagram.edgeChangeSelect()();
             const nodes_snapshot = JSON.stringify(wnodes.map(node_fields));
             const edges_snapshot = JSON.stringify(wedges.map(edge_fields));
-            if(nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
+            if (nodes_snapshot === _nodes_snapshot && edges_snapshot === _edges_snapshot)
                 skip_layout = true;
             _nodes_snapshot = nodes_snapshot;
             _edges_snapshot = edges_snapshot;
         }
 
         // edge lengths may be affected by node sizes
-        wedges.forEach((e) => {
+        wedges.forEach(e => {
             e.cola.dcg_edgeLength = _diagram.edgeLength.eval(e);
         });
 
@@ -1788,18 +1885,18 @@ export function diagram(parent, chartGroup) {
         // but by that time it has lost the names of things,
         // so the output would be difficult to use
         const constraints_by_left = constraints.reduce((p, c) => {
-            if(c.type) {
-                switch(c.type) {
-                case 'alignment': {
-                    const left = c.offsets[0].node;
-                    p[left] = p[left] || [];
-                    c.offsets.slice(1).forEach((o) => {
-                        p[left].push({node: o.node, in_constraint: c});
-                    });
-                    break;
+            if (c.type) {
+                switch (c.type) {
+                    case 'alignment': {
+                        const left = c.offsets[0].node;
+                        p[left] = p[left] || [];
+                        c.offsets.slice(1).forEach(o => {
+                            p[left].push({node: o.node, in_constraint: c});
+                        });
+                        break;
+                    }
                 }
-                }
-            } else if(c.axis) {
+            } else if (c.axis) {
                 p[c.left] = p[c.left] || [];
                 p[c.left].push({node: c.right, in_constraint: c});
             }
@@ -1809,99 +1906,98 @@ export function diagram(parent, chartGroup) {
         function find_constraint_loops(con, stack) {
             const left = con.node;
             stack = stack || [];
-            const loop = stack.find((con) => con.node === left);
+            const loop = stack.find(con => con.node === left);
             stack = stack.concat([con]);
-            if(loop)
+            if (loop)
                 console.warn('found a loop in constraints', stack);
-            if(touched[left])
+            if (touched[left])
                 return;
             touched[left] = true;
-            if(!constraints_by_left[left])
+            if (!constraints_by_left[left])
                 return;
-            constraints_by_left[left].forEach((right) => {
+            constraints_by_left[left].forEach(right => {
                 find_constraint_loops(right, stack);
             });
         }
-        Object.keys(constraints_by_left).forEach((left) => {
-            if(!touched[left])
+        Object.keys(constraints_by_left).forEach(left => {
+            if (!touched[left])
                 find_constraint_loops({node: left, in_constraint: null});
         });
 
         // translate references from names to indices (ugly)
         const invalid_constraints = [];
-        constraints.forEach((c) => {
-            if(c.type) {
-                switch(c.type) {
-                case 'alignment':
-                    c.offsets.forEach((o) => {
-                        o.node = _nodes[o.node].index;
-                    });
-                    break;
-                case 'circle':
-                    c.nodes.forEach((n) => {
-                        n.node = _nodes[n.node].index;
-                    });
-                    break;
+        constraints.forEach(c => {
+            if (c.type) {
+                switch (c.type) {
+                    case 'alignment':
+                        c.offsets.forEach(o => {
+                            o.node = _nodes[o.node].index;
+                        });
+                        break;
+                    case 'circle':
+                        c.nodes.forEach(n => {
+                            n.node = _nodes[n.node].index;
+                        });
+                        break;
                 }
-            } else if(c.axis && c.left && c.right) {
+            } else if (c.axis && c.left && c.right) {
                 c.left = _nodes[c.left].index;
                 c.right = _nodes[c.right].index;
-            }
-            else invalid_constraints.push(c);
+            } else invalid_constraints.push(c);
         });
 
-        if(invalid_constraints.length)
-            console.warn(`${invalid_constraints.length  } invalid constraints`, invalid_constraints);
+        if (invalid_constraints.length)
+            console.warn(`${invalid_constraints.length} invalid constraints`, invalid_constraints);
 
         // pseudo-cola.js features
 
         // 1. non-layout edges are drawn but not told to cola.js
         let layout_edges = wedges.filter(_diagram.edgeIsLayout.eval);
-        const _nonlayout_edges = wedges.filter((x) => !_diagram.edgeIsLayout.eval(x));
+        const _nonlayout_edges = wedges.filter(x => !_diagram.edgeIsLayout.eval(x));
 
         // 2. type=circle constraints
-        const circle_constraints = constraints.filter((c) => c.type === 'circle');
-        constraints = constraints.filter((c) => c.type !== 'circle');
-        circle_constraints.forEach((c) => {
-            const R = (c.distance || _diagram.baseLength()*4) / (2*Math.sin(Math.PI/c.nodes.length));
-            const nindices = c.nodes.map((x) => x.node);
+        const circle_constraints = constraints.filter(c => c.type === 'circle');
+        constraints = constraints.filter(c => c.type !== 'circle');
+        circle_constraints.forEach(c => {
+            const R = (c.distance || _diagram.baseLength()*4)/(2*Math.sin(Math.PI/c.nodes.length));
+            const nindices = c.nodes.map(x => x.node);
             const namef = function(i) {
                 return _diagram.nodeKey.eval(wnodes[i]);
             };
             const wheel = wheelEdges(namef, nindices, R)
-                    .map((e) => {
-                        const e1 = {internal: e};
-                        e1.source = _nodes[e.sourcename];
-                        e1.target = _nodes[e.targetname];
-                        return e1;
-                    });
+                .map(e => {
+                    const e1 = {internal: e};
+                    e1.source = _nodes[e.sourcename];
+                    e1.target = _nodes[e.targetname];
+                    return e1;
+                });
             layout_edges = layout_edges.concat(wheel);
         });
 
         // 3. ordered alignment
-        const ordered_constraints = constraints.filter((c) => c.type === 'ordering');
-        constraints = constraints.filter((c) => c.type !== 'ordering');
-        ordered_constraints.forEach((c) => {
-            let sorted = c.nodes.map((n) => _nodes[n]);
-            if(c.ordering) {
+        const ordered_constraints = constraints.filter(c => c.type === 'ordering');
+        constraints = constraints.filter(c => c.type !== 'ordering');
+        ordered_constraints.forEach(c => {
+            let sorted = c.nodes.map(n => _nodes[n]);
+            if (c.ordering) {
                 const orderingFn = param(c.ordering);
                 sorted = sorted.sort((a, b) => ascending(orderingFn(a), orderingFn(b)));
             }
             let left;
             sorted.forEach((n, i) => {
-                if(i===0)
+                if (i === 0)
                     left = n;
                 else {
                     constraints.push({
                         left: left.index,
                         right: (left = n).index,
                         axis: c.axis,
-                        gap: c.gap
+                        gap: c.gap,
                     });
                 }
             });
         });
-        if(skip_layout) {
+        if (skip_layout) {
             _running = false;
             // init_node_ports?
             _diagram.renderer().draw(drawState, true);
@@ -1913,106 +2009,127 @@ export function diagram(parent, chartGroup) {
         const startTime = Date.now();
 
         function populate_cola(rnodes, redges, rclusters) {
-            rnodes.forEach((rn) => {
+            rnodes.forEach(rn => {
                 const n = _nodes[rn.dcg_nodeKey];
-                if(!n) {
-                    console.warn(`received node "${  rn.dcg_nodeKey  }" that we did not send, ignored`);
+                if (!n) {
+                    console.warn(`received node "${rn.dcg_nodeKey}" that we did not send, ignored`);
                     return;
                 }
                 n.cola.x = rn.x;
                 n.cola.y = rn.y;
                 n.cola.z = rn.z;
             });
-            (redges || []).forEach((re) => {
+            (redges || []).forEach(re => {
                 const e = _edges[re.dcg_edgeKey];
-                if(!e) {
-                    console.warn(`received edge "${  re.dcg_edgeKey  }" that we did not send, ignored`);
+                if (!e) {
+                    console.warn(`received edge "${re.dcg_edgeKey}" that we did not send, ignored`);
                     return;
                 }
-                if(re.points)
+                if (re.points)
                     e.cola.points = re.points;
             });
-            (wclusters || []).forEach((c) => {
+            (wclusters || []).forEach(c => {
                 c.cola.bounds = null;
             });
-            if(rclusters)
-                rclusters.forEach((rc) => {
+            if (rclusters)
+                rclusters.forEach(rc => {
                     const c = _clusters[rc.dcg_clusterKey];
-                    if(!c) {
-                        console.warn(`received cluster "${  rc.dcg_clusterKey  }" that we did not send, ignored`);
+                    if (!c) {
+                        console.warn(
+                            `received cluster "${rc.dcg_clusterKey}" that we did not send, ignored`,
+                        );
                         return;
                     }
-                    if(rc.bounds)
+                    if (rc.bounds)
                         c.cola.bounds = rc.bounds;
                 });
         }
         _diagram.layoutEngine()
             .on('tick.diagram', (nodes, edges, clusters) => {
-                const elapsed = Date.now() - startTime;
-                if(!_diagram.initialOnly())
+                const elapsed = Date.now()-startTime;
+                if (!_diagram.initialOnly())
                     populate_cola(nodes, edges, clusters);
-                if(_diagram.showLayoutSteps()) {
+                if (_diagram.showLayoutSteps()) {
                     init_node_ports(_nodes, wports);
-                    _dispatch.call("receivedLayout", null, _diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
+                    _dispatch.call(
+                        'receivedLayout',
+                        null,
+                        _diagram,
+                        _nodes,
+                        wnodes,
+                        _edges,
+                        wedges,
+                        _ports,
+                        wports,
+                    );
                     propagate_port_positions(_nodes, wedges, _ports);
                     _diagram.renderer().draw(drawState, true);
                     _diagram.renderer().drawPorts(drawState);
                     // should do this only once
                     _diagram.renderer().fireTSEvent(_dispatch, drawState);
                 }
-                if(_needsRedraw || _diagram.timeLimit() && elapsed > _diagram.timeLimit()) {
+                if (_needsRedraw || _diagram.timeLimit() && elapsed > _diagram.timeLimit()) {
                     console.log('cancelled');
                     _diagram.layoutEngine().stop();
                 }
             })
             .on('end.diagram', (nodes, edges, clusters) => {
-                if(!_diagram.showLayoutSteps()) {
-                    if(!_diagram.initialOnly())
+                if (!_diagram.showLayoutSteps()) {
+                    if (!_diagram.initialOnly())
                         populate_cola(nodes, edges, clusters);
                     init_node_ports(_nodes, wports);
-                    _dispatch.call("receivedLayout", null, _diagram, _nodes, wnodes, _edges, wedges, _ports, wports);
+                    _dispatch.call(
+                        'receivedLayout',
+                        null,
+                        _diagram,
+                        _nodes,
+                        wnodes,
+                        _edges,
+                        wedges,
+                        _ports,
+                        wports,
+                    );
                     propagate_port_positions(_nodes, wedges, _ports);
                     _diagram.renderer().draw(drawState, true);
                     _diagram.renderer().drawPorts(drawState);
                     _diagram.renderer().fireTSEvent(_dispatch, drawState);
-                }
-                else _diagram.layoutDone(true);
+                } else _diagram.layoutDone(true);
                 check_zoom(drawState);
             })
             .on('start.diagram', () => {
-                console.log(`algo ${  _diagram.layoutEngine().layoutAlgorithm()  } started.`);
-                _dispatch.call("start");
+                console.log(`algo ${_diagram.layoutEngine().layoutAlgorithm()} started.`);
+                _dispatch.call('start');
             });
 
-        if(_diagram.initialOnly())
+        if (_diagram.initialOnly())
             _diagram.layoutEngine().dispatch().end(wnodes, wedges);
         else {
-            _dispatch.call("start"); // cola doesn't seem to fire this itself?
+            _dispatch.call('start'); // cola doesn't seem to fire this itself?
             const engine = _diagram.layoutEngine();
             engine.data(
-                { width: _diagram.width(), height: _diagram.height() },
-                wnodes.map((v) => {
+                {width: _diagram.width(), height: _diagram.height()},
+                wnodes.map(v => {
                     const lv = Object.assign({}, v.dcg_shape, v.cola);
-                    if(engine.annotateNode)
+                    if (engine.annotateNode)
                         engine.annotateNode(lv, v);
-                    else if(engine.extractNodeAttrs)
-                        Object.keys(engine.extractNodeAttrs()).forEach((key) => {
+                    else if (engine.extractNodeAttrs)
+                        Object.keys(engine.extractNodeAttrs()).forEach(key => {
                             lv[key] = engine.extractNodeAttrs()[key](v.orig);
                         });
                     return lv;
                 }),
-                layout_edges.map((e) => {
+                layout_edges.map(e => {
                     const le = e.cola;
-                    if(engine.annotateEdge)
+                    if (engine.annotateEdge)
                         engine.annotateEdge(le, e);
-                    else if(engine.extractEdgeAttrs)
-                        Object.keys(engine.extractEdgeAttrs()).forEach((key) => {
+                    else if (engine.extractEdgeAttrs)
+                        Object.keys(engine.extractEdgeAttrs()).forEach(key => {
                             le[key] = engine.extractEdgeAttrs()[key](e.orig);
                         });
                     return le;
                 }),
-                wclusters.map((c) => c.cola),
-                constraints
+                wclusters.map(c => c.cola),
+                constraints,
             );
             engine.start();
         }
@@ -2021,28 +2138,28 @@ export function diagram(parent, chartGroup) {
 
     function check_zoom(drawState) {
         let do_zoom, animate = true;
-        if(_diagram.width_is_automatic() || _diagram.height_is_automatic())
+        if (_diagram.width_is_automatic() || _diagram.height_is_automatic())
             detect_size_change();
-        switch(_diagram.autoZoom()) {
-        case 'always-skipanimonce':
-            animate = false;
-            _diagram.autoZoom('always');
-            // falls through
-        case 'always':
-            do_zoom = true;
-            break;
-        case 'once-noanim':
-            animate = false;
-            // falls through
-        case 'once':
-            do_zoom = true;
-            _diagram.autoZoom(null);
-            break;
-        default:
-            do_zoom = false;
+        switch (_diagram.autoZoom()) {
+            case 'always-skipanimonce':
+                animate = false;
+                _diagram.autoZoom('always');
+                // falls through
+            case 'always':
+                do_zoom = true;
+                break;
+            case 'once-noanim':
+                animate = false;
+                // falls through
+            case 'once':
+                do_zoom = true;
+                _diagram.autoZoom(null);
+                break;
+            default:
+                do_zoom = false;
         }
         calc_bounds(drawState);
-        if(do_zoom)
+        if (do_zoom)
             auto_zoom(animate);
     }
 
@@ -2051,34 +2168,34 @@ export function diagram(parent, chartGroup) {
         return [v[0]/len, v[1]/len];
     }
     function edge_vec(n, e) {
-        let dy = e.target.cola.y - e.source.cola.y,
-            dx = e.target.cola.x - e.source.cola.x;
-        if(dy === 0 && dx === 0)
+        let dy = e.target.cola.y-e.source.cola.y,
+            dx = e.target.cola.x-e.source.cola.x;
+        if (dy === 0 && dx === 0)
             return [1, 0];
-        if(e.source !== n)
+        if (e.source !== n)
             dy = -dy, dx = -dx;
-        if(e.parallel && e.parallel.edges.length > 1 && e.source.index > e.target.index)
+        if (e.parallel && e.parallel.edges.length > 1 && e.source.index > e.target.index)
             dy = -dy, dx = -dx;
         return norm([dx, dy]);
     }
     function init_node_ports(nodes, wports) {
         _nodePorts = {};
         // assemble port-lists for nodes, again because we don't have a metagraph.
-        wports.forEach((p) => {
+        wports.forEach(p => {
             const nid = _diagram.nodeKey.eval(p.node);
             const np = _nodePorts[nid] = _nodePorts[nid] || [];
             np.push(p);
         });
-        for(const nid in _nodePorts) {
+        for (const nid in _nodePorts) {
             const n = nodes[nid],
-                  nports = _nodePorts[nid];
+                nports = _nodePorts[nid];
             // initial positions: use average of edge vectors, if any, or existing position
-            nports.forEach((p) => {
-                if(_diagram.portElastic.eval(p) && p.edges.length) {
+            nports.forEach(p => {
+                if (_diagram.portElastic.eval(p) && p.edges.length) {
                     const vecs = p.edges.map(edge_vec.bind(null, n));
                     p.vec = [
-                        sum(vecs, (v) => v[0])/vecs.length,
-                        sum(vecs, (v) => v[1])/vecs.length
+                        sum(vecs, v => v[0])/vecs.length,
+                        sum(vecs, v => v[1])/vecs.length,
                     ];
                 } else p.vec = p.vec || undefined;
                 p.pos = null;
@@ -2087,22 +2204,24 @@ export function diagram(parent, chartGroup) {
     }
     function propagate_port_positions(nodes, wedges, ports) {
         // make sure we have projected vectors to positions
-        for(const nid in _nodePorts) {
+        for (const nid in _nodePorts) {
             const n = nodes[nid];
-            _nodePorts[nid].forEach((p) => {
-                if(!p.pos)
+            _nodePorts[nid].forEach(p => {
+                if (!p.pos)
                     projectPort(_diagram, n, p);
             });
         }
 
         // propagate port positions to edge endpoints
-        wedges.forEach((e) => {
+        wedges.forEach(e => {
             let name = _diagram.edgeSourcePortName.eval(e);
-            e.sourcePort.pos = name ? ports[portName(_diagram.nodeKey.eval(e.source), null, name)].pos :
-                ports[portName(null, _diagram.edgeKey.eval(e), 'source')].pos;
+            e.sourcePort.pos = name
+                ? ports[portName(_diagram.nodeKey.eval(e.source), null, name)].pos
+                : ports[portName(null, _diagram.edgeKey.eval(e), 'source')].pos;
             name = _diagram.edgeTargetPortName.eval(e);
-            e.targetPort.pos = name ? ports[portName(_diagram.nodeKey.eval(e.target), null, name)].pos :
-                ports[portName(null, _diagram.edgeKey.eval(e), 'target')].pos;
+            e.targetPort.pos = name
+                ? ports[portName(_diagram.nodeKey.eval(e.target), null, name)].pos
+                : ports[portName(null, _diagram.edgeKey.eval(e), 'target')].pos;
             console.assert(e.sourcePort.pos && e.targetPort.pos);
         });
     }
@@ -2110,23 +2229,23 @@ export function diagram(parent, chartGroup) {
     _diagram.requestRefresh = function(durationOverride) {
         window.requestAnimationFrame(() => {
             let transdur;
-            if(durationOverride !== undefined) {
+            if (durationOverride !== undefined) {
                 transdur = _diagram.transitionDuration();
                 _diagram.transitionDuration(durationOverride);
             }
             _diagram.renderer().refresh();
-            if(durationOverride !== undefined)
+            if (durationOverride !== undefined)
                 _diagram.transitionDuration(transdur);
         });
     };
 
     _diagram.layoutDone = function(happens) {
-        _dispatch.call("end", null, happens);
+        _dispatch.call('end', null, happens);
         _running = false;
-        if(_needsRedraw) {
+        if (_needsRedraw) {
             _needsRedraw = false;
             window.setTimeout(() => {
-                if(!_diagram.isRunning()) // someone else may already have started
+                if (!_diagram.isRunning()) // someone else may already have started
                     _diagram.redraw();
             }, 0);
         }
@@ -2134,71 +2253,86 @@ export function diagram(parent, chartGroup) {
 
     function enforce_path_direction(path, spos, tpos) {
         const points = path.points, first = points[0], last = points[points.length-1];
-        switch(_diagram.enforceEdgeDirection()) {
-        case 'LR':
-            if(spos.x >= tpos.x) {
-                const dx = first.x - last.x;
-                return {
-                    points: [
-                        first,
-                        {x: first.x + dx, y: first.y - dx/2},
-                        {x: last.x - dx, y: last.y - dx/2},
-                        last
-                    ],
-                    bezDegree: 3,
-                    sourcePort: path.sourcePort,
-                    targetPort: path.targetPort
-                };
-            }
-            break;
-        case 'TB':
-            if(spos.y >= tpos.y) {
-                const dy = first.y - last.y;
-                return {
-                    points: [
-                        first,
-                        {x: first.x + dy/2, y: first.y + dy},
-                        {x: last.x + dy/2, y: last.y - dy},
-                        last
-                    ],
-                    bezDegree: 3,
-                    sourcePort: path.sourcePort,
-                    targetPort: path.targetPort
-                };
-            }
-            break;
+        switch (_diagram.enforceEdgeDirection()) {
+            case 'LR':
+                if (spos.x >= tpos.x) {
+                    const dx = first.x-last.x;
+                    return {
+                        points: [
+                            first,
+                            {x: first.x+dx, y: first.y-dx/2},
+                            {x: last.x-dx, y: last.y-dx/2},
+                            last,
+                        ],
+                        bezDegree: 3,
+                        sourcePort: path.sourcePort,
+                        targetPort: path.targetPort,
+                    };
+                }
+                break;
+            case 'TB':
+                if (spos.y >= tpos.y) {
+                    const dy = first.y-last.y;
+                    return {
+                        points: [
+                            first,
+                            {x: first.x+dy/2, y: first.y+dy},
+                            {x: last.x+dy/2, y: last.y-dy},
+                            last,
+                        ],
+                        bezDegree: 3,
+                        sourcePort: path.sourcePort,
+                        targetPort: path.targetPort,
+                    };
+                }
+                break;
         }
         return path;
     }
     _diagram.calcEdgePath = function(e, age, sx, sy, tx, ty) {
         const parallel = e.parallel;
         let source = e.source, target = e.target;
-        if(parallel.edges.length > 1 && e.source.index > e.target.index) {
+        if (parallel.edges.length > 1 && e.source.index > e.target.index) {
             let t;
-            t = target; target = source; source = t;
-            t = tx; tx = sx; sx = t;
-            t = ty; ty = sy; sy = t;
+            t = target;
+            target = source;
+            source = t;
+            t = tx;
+            tx = sx;
+            sx = t;
+            t = ty;
+            ty = sy;
+            sy = t;
         }
-        const source_padding = source.dcg_ry +
-            _diagram.nodeStrokeWidth.eval(source) / 2,
-            target_padding = target.dcg_ry +
-            _diagram.nodeStrokeWidth.eval(target) / 2;
-        for(let p = 0; p < parallel.edges.length; ++p) {
+        const source_padding = source.dcg_ry
+                +_diagram.nodeStrokeWidth.eval(source)/2,
+            target_padding = target.dcg_ry
+                +_diagram.nodeStrokeWidth.eval(target)/2;
+        for (let p = 0; p < parallel.edges.length; ++p) {
             // alternate parallel edges over, then under
             const dir = (!!(p%2) === (sx < tx)) ? -1 : 1,
                 port = Math.floor((p+1)/2),
-                last = port > 0 ? parallel.edges[p > 2 ? p - 2 : 0].pos[age].path : null;
-            let path = drawEdgeToShapes(_diagram, e, sx, sy, tx, ty,
-                                           last, dir, _diagram.parallelEdgeOffset(),
-                                           source_padding, target_padding
-                                          );
-            if(parallel.edges.length > 1 && parallel.rev[p])
+                last = port > 0 ? parallel.edges[p > 2 ? p-2 : 0].pos[age].path : null;
+            let path = drawEdgeToShapes(
+                _diagram,
+                e,
+                sx,
+                sy,
+                tx,
+                ty,
+                last,
+                dir,
+                _diagram.parallelEdgeOffset(),
+                source_padding,
+                target_padding,
+            );
+            if (parallel.edges.length > 1 && parallel.rev[p])
                 path.points.reverse();
-            if(_diagram.enforceEdgeDirection())
+            if (_diagram.enforceEdgeDirection())
                 path = enforce_path_direction(path, source.cola, target.cola);
             const path0 = {
                 points: path.points,
-                bezDegree: path.bezDegree
+                bezDegree: path.bezDegree,
             };
             const alengths = scaledArrowLengths(_diagram, parallel.edges[p]);
             path = clipPathToArrows(alengths.headLength, alengths.tailLength, path);
@@ -2206,25 +2340,33 @@ export function diagram(parent, chartGroup) {
             parallel.edges[p].pos[age] = {
                 path,
                 full: path0,
-                orienthead: `${angleBetweenPoints(points[points.length-1], points0[points0.length-1])  }rad`,
-                orienttail: `${angleBetweenPoints(points[0], points0[0])  }rad`
+                orienthead: `${
+                    angleBetweenPoints(points[points.length-1], points0[points0.length-1])
+                }rad`,
+                orienttail: `${angleBetweenPoints(points[0], points0[0])}rad`,
             };
         }
     };
 
     function node_bounds(n) {
-        let bounds = {left: n.cola.x - n.dcg_rx, top: n.cola.y - n.dcg_ry,
-                      right: n.cola.x + n.dcg_rx, bottom: n.cola.y + n.dcg_ry};
-        if(_diagram.portStyle.enum().length) {
+        let bounds = {
+            left: n.cola.x-n.dcg_rx,
+            top: n.cola.y-n.dcg_ry,
+            right: n.cola.x+n.dcg_rx,
+            bottom: n.cola.y+n.dcg_ry,
+        };
+        if (_diagram.portStyle.enum().length) {
             const ports = _nodePorts[_diagram.nodeKey.eval(n)];
-            if(ports)
-                ports.forEach((p) => {
-                    const portStyle =_diagram.portStyleName.eval(p);
-                    if(!portStyle || !_diagram.portStyle(portStyle))
+            if (ports)
+                ports.forEach(p => {
+                    const portStyle = _diagram.portStyleName.eval(p);
+                    if (!portStyle || !_diagram.portStyle(portStyle))
                         return;
                     const pb = _diagram.portStyle(portStyle).portBounds(p);
-                    pb.left += n.cola.x; pb.top += n.cola.y;
-                    pb.right += n.cola.x; pb.bottom += n.cola.y;
+                    pb.left += n.cola.x;
+                    pb.top += n.cola.y;
+                    pb.right += n.cola.x;
+                    pb.bottom += n.cola.y;
                     bounds = union_bounds(bounds, pb);
                 });
         }
@@ -2236,7 +2378,7 @@ export function diagram(parent, chartGroup) {
             left: Math.min(b1.left, b2.left),
             top: Math.min(b1.top, b2.top),
             right: Math.max(b1.right, b2.right),
-            bottom: Math.max(b1.bottom, b2.bottom)
+            bottom: Math.max(b1.bottom, b2.bottom),
         };
     }
 
@@ -2245,7 +2387,7 @@ export function diagram(parent, chartGroup) {
             left: p.x,
             top: p.y,
             right: p.x,
-            bottom: p.y
+            bottom: p.y,
         };
     }
 
@@ -2262,81 +2404,85 @@ export function diagram(parent, chartGroup) {
     };
     let _bounds;
     function calc_bounds(drawState) {
-        if((_diagram.fitStrategy() || _diagram.restrictPan())) {
+        if ((_diagram.fitStrategy() || _diagram.restrictPan())) {
             _bounds = _diagram.renderer().calculateBounds(drawState);
         }
     }
 
     _diagram.animateZoom = function(_) {
-        if(!arguments.length)
+        if (!arguments.length)
             return _animateZoom;
         _animateZoom = _;
         return _diagram;
     };
 
     function auto_zoom(animate) {
-        if(_diagram.fitStrategy()) {
-            if(!_bounds)
+        if (_diagram.fitStrategy()) {
+            if (!_bounds)
                 return;
-            const vwidth = _bounds.right - _bounds.left, vheight = _bounds.bottom - _bounds.top,
-                swidth =  _diagram.width() - _diagram.margins().left - _diagram.margins().right,
-                sheight = _diagram.height() - _diagram.margins().top - _diagram.margins().bottom;
+            const vwidth = _bounds.right-_bounds.left,
+                vheight = _bounds.bottom-_bounds.top,
+                swidth = _diagram.width()-_diagram.margins().left-_diagram.margins().right,
+                sheight = _diagram.height()-_diagram.margins().top-_diagram.margins().bottom;
             const fitS = _diagram.fitStrategy();
-            let translate = [0,0], scale = 1;
-            if(['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
-                const sAR = sheight / swidth, vAR = vheight / vwidth,
-                    vrl = vAR<sAR, // view aspect ratio is less (wider)
+            let translate = [0, 0], scale = 1;
+            if (['default', 'vertical', 'horizontal'].indexOf(fitS) >= 0) {
+                const sAR = sheight/swidth,
+                    vAR = vheight/vwidth,
+                    vrl = vAR < sAR, // view aspect ratio is less (wider)
                     amv = (fitS === 'default') ? !vrl : (fitS === 'vertical'); // align margins vertically
-                scale = amv ? sheight / vheight : swidth / vwidth;
-                scale = Math.max(_diagram.zoomExtent()[0], Math.min(_diagram.zoomExtent()[1], scale));
-                translate = [_diagram.margins().left - _bounds.left*scale + (swidth - vwidth*scale) / 2,
-                             _diagram.margins().top - _bounds.top*scale + (sheight - vheight*scale) / 2];
-            }
-            else if(typeof fitS === 'string' && fitS.match(/^align_/)) {
+                scale = amv ? sheight/vheight : swidth/vwidth;
+                scale = Math.max(
+                    _diagram.zoomExtent()[0],
+                    Math.min(_diagram.zoomExtent()[1], scale),
+                );
+                translate = [
+                    _diagram.margins().left-_bounds.left*scale+(swidth-vwidth*scale)/2,
+                    _diagram.margins().top-_bounds.top*scale+(sheight-vheight*scale)/2,
+                ];
+            } else if (typeof fitS === 'string' && fitS.match(/^align_/)) {
                 const sides = fitS.split('_')[1].toLowerCase().split('');
-                if(sides.length > 2)
-                    throw new Error(`align_ expecting 0-2 sides, not ${  sides.length}`);
+                if (sides.length > 2)
+                    throw new Error(`align_ expecting 0-2 sides, not ${sides.length}`);
                 const bounds = margined_bounds();
                 translate = _diagram.renderer().translate();
                 scale = _diagram.renderer().scale();
                 let vertalign = false, horzalign = false;
-                sides.forEach((s) => {
-                    switch(s) {
-                    case 'l':
-                        translate[0] = align_left(translate, bounds.left);
-                        horzalign = true;
-                        break;
-                    case 't':
-                        translate[1] = align_top(translate, bounds.top);
-                        vertalign = true;
-                        break;
-                    case 'r':
-                        translate[0] = align_right(translate, bounds.right);
-                        horzalign = true;
-                        break;
-                    case 'b':
-                        translate[1] = align_bottom(translate, bounds.bottom);
-                        vertalign = true;
-                        break;
-                    case 'c': // handled below
-                        break;
-                    default:
-                        throw new Error(`align_ expecting l t r b or c, not '${  s  }'`);
+                sides.forEach(s => {
+                    switch (s) {
+                        case 'l':
+                            translate[0] = align_left(translate, bounds.left);
+                            horzalign = true;
+                            break;
+                        case 't':
+                            translate[1] = align_top(translate, bounds.top);
+                            vertalign = true;
+                            break;
+                        case 'r':
+                            translate[0] = align_right(translate, bounds.right);
+                            horzalign = true;
+                            break;
+                        case 'b':
+                            translate[1] = align_bottom(translate, bounds.bottom);
+                            vertalign = true;
+                            break;
+                        case 'c': // handled below
+                            break;
+                        default:
+                            throw new Error(`align_ expecting l t r b or c, not '${s}'`);
                     }
                 });
-                if(sides.includes('c')) {
-                    if(!horzalign)
+                if (sides.includes('c')) {
+                    if (!horzalign)
                         translate[0] = center_horizontally(translate, bounds);
-                    if(!vertalign)
+                    if (!vertalign)
                         translate[1] = center_vertically(translate, bounds);
                 }
-            }
-            else if(fitS === 'zoom') {
+            } else if (fitS === 'zoom') {
                 scale = _diagram.renderer().scale();
                 translate = bring_in_bounds(_diagram.renderer().translate());
-            }
-            else
-                throw new Error(`unknown fitStrategy type ${  typeof fitS}`);
+            } else
+                throw new Error(`unknown fitStrategy type ${typeof fitS}`);
 
             _animateZoom = animate;
             _diagram.renderer().translate(translate).scale(scale).commitTranslateScale();
@@ -2353,9 +2499,19 @@ export function diagram(parent, chartGroup) {
         };
     }
     const renderer_specific_events = ['drawn', 'transitionsStarted', 'zoomed']
-            .reduce(namespace_event_reducer((ns, ev) => `subscribing "${  ns  }" to event "${  ev  }" which takes renderer-specific parameters`), {});
+        .reduce(
+            namespace_event_reducer((ns, ev) =>
+                `subscribing "${ns}" to event "${ev}" which takes renderer-specific parameters`
+            ),
+            {},
+        );
     const inconsistent_arguments = ['end']
-            .reduce(namespace_event_reducer((ns, ev) => `subscribing "${  ns  }" to event "${  ev  }" which may receive inconsistent arguments`), {});
+        .reduce(
+            namespace_event_reducer((ns, ev) =>
+                `subscribing "${ns}" to event "${ev}" which may receive inconsistent arguments`
+            ),
+            {},
+        );
 
     /**
      * Standard dc.js
@@ -2371,13 +2527,13 @@ export function diagram(parent, chartGroup) {
      * @param {String} [event] - the event to subscribe to
      * @param {Function} [f] - the event handler
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.on = function(event, f) {
-        if(arguments.length === 1)
+        if (arguments.length === 1)
             return _dispatch.on(event);
         const evns = event.split('.'),
             warning = renderer_specific_events[evns[0]] || inconsistent_arguments[evns[0]];
-        if(warning)
+        if (warning)
             warning(evns[1] || '')();
         _dispatch.on(event, f);
         return this;
@@ -2392,7 +2548,7 @@ export function diagram(parent, chartGroup) {
      * @instance
      * @return {}
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.getStats = function() {
         return _stats;
     };
@@ -2433,8 +2589,8 @@ export function diagram(parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
-     **/
-    _diagram.redrawGroup = function () {
+     */
+    _diagram.redrawGroup = function() {
         redrawAll(_chartGroup);
     };
 
@@ -2446,8 +2602,8 @@ export function diagram(parent, chartGroup) {
      * @memberof dc_graph.diagram
      * @instance
      * @return {dc_graph.diagram}
-     **/
-    _diagram.renderGroup = function () {
+     */
+    _diagram.renderGroup = function() {
         renderAll(_chartGroup);
     };
 
@@ -2458,10 +2614,12 @@ export function diagram(parent, chartGroup) {
      * [arrows.js](https://github.com/dc-js/dc.graph.js/blob/develop/src/arrows.js)
      * for examples
      * @return {dc_graph.diagram}
-     **/
+     */
     _diagram.defineArrow = function(name, defn) {
-        if(typeof defn !== 'function')
-            throw new Error('sorry, defineArrow no longer takes specific shape parameters, and the parameters have changed too much to convert them. it takes a name and a function returning a definition - please look at arrows.js for new format');
+        if (typeof defn !== 'function')
+            throw new Error(
+                'sorry, defineArrow no longer takes specific shape parameters, and the parameters have changed too much to convert them. it takes a name and a function returning a definition - please look at arrows.js for new format',
+            );
         _arrows[name] = defn;
         return _diagram;
     };
@@ -2471,7 +2629,7 @@ export function diagram(parent, chartGroup) {
         return _arrows;
     };
 
-    Object.keys(builtinArrows).forEach((aname) => {
+    Object.keys(builtinArrows).forEach(aname => {
         const defn = builtinArrows[aname];
         _diagram.defineArrow(aname, defn);
     });
@@ -2480,108 +2638,111 @@ export function diagram(parent, chartGroup) {
         const bounds = _bounds || {left: 0, top: 0, right: 0, bottom: 0};
         const scale = _diagram.renderer().scale();
         return {
-            left: bounds.left - _diagram.margins().left/scale,
-            top: bounds.top - _diagram.margins().top/scale,
-            right: bounds.right + _diagram.margins().right/scale,
-            bottom: bounds.bottom + _diagram.margins().bottom/scale
+            left: bounds.left-_diagram.margins().left/scale,
+            top: bounds.top-_diagram.margins().top/scale,
+            right: bounds.right+_diagram.margins().right/scale,
+            bottom: bounds.bottom+_diagram.margins().bottom/scale,
         };
     }
 
     // with thanks to comments in https://github.com/d3/d3/issues/1084
     function align_left(translate, x) {
-        return translate[0] - _diagram.x()(x) + _diagram.x().range()[0];
+        return translate[0]-_diagram.x()(x)+_diagram.x().range()[0];
     }
     function align_top(translate, y) {
-        return translate[1] - _diagram.y()(y) + _diagram.y().range()[0];
+        return translate[1]-_diagram.y()(y)+_diagram.y().range()[0];
     }
     function align_right(translate, x) {
-        return translate[0] - _diagram.x()(x) + _diagram.x().range()[1];
+        return translate[0]-_diagram.x()(x)+_diagram.x().range()[1];
     }
     function align_bottom(translate, y) {
-        return translate[1] - _diagram.y()(y) + _diagram.y().range()[1];;
+        return translate[1]-_diagram.y()(y)+_diagram.y().range()[1];
     }
     function center_horizontally(translate, bounds) {
-        return (align_left(translate, bounds.left) + align_right(translate, bounds.right))/2;
+        return (align_left(translate, bounds.left)+align_right(translate, bounds.right))/2;
     }
     function center_vertically(translate, bounds) {
-        return (align_top(translate, bounds.top) + align_bottom(translate, bounds.bottom))/2;
+        return (align_top(translate, bounds.top)+align_bottom(translate, bounds.bottom))/2;
     }
 
     function bring_in_bounds(translate) {
         const xDomain = _diagram.x().domain(), yDomain = _diagram.y().domain();
         const bounds = margined_bounds();
-        let less1 = bounds.left < xDomain[0], less2 = bounds.right < xDomain[1],
-            lessExt = (bounds.right - bounds.left) < (xDomain[1] - xDomain[0]);
+        let less1 = bounds.left < xDomain[0],
+            less2 = bounds.right < xDomain[1],
+            lessExt = (bounds.right-bounds.left) < (xDomain[1]-xDomain[0]);
         let align, _nothing = 0;
-        if(less1 && less2)
-            if(lessExt)
+        if (less1 && less2) {
+            if (lessExt)
                 align = 'left';
-        else
-            align = 'right';
-        else if(!less1 && !less2)
-            if(lessExt)
+            else
                 align = 'right';
-        else
-            align = 'left';
-        switch(align) {
-        case 'left':
-            translate[0] = align_left(translate, bounds.left);
-            break;
-        case 'right':
-            translate[0] = align_right(translate, bounds.right);
-            break;
-        default:
-            ++_nothing;
+        } else if (!less1 && !less2) {
+            if (lessExt)
+                align = 'right';
+            else
+                align = 'left';
         }
-        less1 = bounds.top < yDomain[0]; less2 = bounds.bottom < yDomain[1];
-        lessExt = (bounds.bottom - bounds.top) < (yDomain[1] - yDomain[0]);
-        if(less1 && less2)
-            if(lessExt)
+        switch (align) {
+            case 'left':
+                translate[0] = align_left(translate, bounds.left);
+                break;
+            case 'right':
+                translate[0] = align_right(translate, bounds.right);
+                break;
+            default:
+                ++_nothing;
+        }
+        less1 = bounds.top < yDomain[0];
+        less2 = bounds.bottom < yDomain[1];
+        lessExt = (bounds.bottom-bounds.top) < (yDomain[1]-yDomain[0]);
+        if (less1 && less2) {
+            if (lessExt)
                 align = 'top';
-        else
-            align = 'bottom';
-        else if(!less1 && !less2)
-            if(lessExt)
+            else
                 align = 'bottom';
-        else
-            align = 'top';
-        switch(align) {
-        case 'top':
-            translate[1] = align_top(translate, bounds.top);
-            break;
-        case 'bottom':
-            translate[1] = align_bottom(translate, bounds.bottom);
-            break;
-        default:
-            ++_nothing;
+        } else if (!less1 && !less2) {
+            if (lessExt)
+                align = 'bottom';
+            else
+                align = 'top';
+        }
+        switch (align) {
+            case 'top':
+                translate[1] = align_top(translate, bounds.top);
+                break;
+            case 'bottom':
+                translate[1] = align_bottom(translate, bounds.bottom);
+                break;
+            default:
+                ++_nothing;
         }
         return translate;
-
     }
 
     _diagram.doZoom = function() {
-        if(_diagram.width_is_automatic() || _diagram.height_is_automatic())
+        if (_diagram.width_is_automatic() || _diagram.height_is_automatic())
             detect_size_change();
-        
+
         const transform = zoomTransform(_diagram.renderer().svg().node());
         const scale = transform.k;
         let translate;
-        if(_diagram.restrictPan())
+        if (_diagram.restrictPan())
             translate = bring_in_bounds([transform.x, transform.y]);
         else translate = [transform.x, transform.y];
-        
+
         // Manually rescale x and y scales for D3 v5
         const newX = transform.rescaleX(_diagram.x());
         const newY = transform.rescaleY(_diagram.y());
-        
+
         _diagram.renderer().globalTransform(translate, scale, _animateZoom);
-        _dispatch.call("zoomed", null, translate, scale, newX.domain(), newY.domain());
+        _dispatch.call('zoomed', null, translate, scale, newX.domain(), newY.domain());
     };
 
     _diagram.invertCoord = function(clientCoord) {
         return [
             _diagram.x().invert(clientCoord[0]),
-            _diagram.y().invert(clientCoord[1])
+            _diagram.y().invert(clientCoord[1]),
         ];
     };
 
@@ -2626,7 +2787,7 @@ export function diagram(parent, chartGroup) {
      * @instance
      * @returns {String}
      */
-    _diagram.chartID = function () {
+    _diagram.chartID = function() {
         return _diagram.__dcFlag__;
     };
 
@@ -2637,7 +2798,7 @@ export function diagram(parent, chartGroup) {
      * @instance
      * @return {String}
      */
-    _diagram.anchorName = function () {
+    _diagram.anchorName = function() {
         const a = _diagram.anchor();
         if (a && a.id) {
             return a.id;
@@ -2645,8 +2806,8 @@ export function diagram(parent, chartGroup) {
         if (a && a.replace) {
             return a.replace('#', '');
         }
-        return `dc-graph${  _diagram.chartID()}`;
+        return `dc-graph${_diagram.chartID()}`;
     };
 
     return _diagram.anchor(parent, chartGroup);
-};
+}

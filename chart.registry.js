@@ -12,16 +12,16 @@
     var types = {};
 
     chart_registry.create_type = function(type, constructor) {
-        if(!types[type])
+        if (!types[type])
             types[type] = {constructor: constructor, groups: {}};
 
         return types[type];
     };
 
     chart_registry.create_group = function(type, groupname) {
-        if(!types[type])
-            throw new Error('chart registry type "' + type + '" not known');
-        if(!types[type][groupname])
+        if (!types[type])
+            throw new Error('chart registry type "'+type+'" not known');
+        if (!types[type][groupname])
             types[type][groupname] = types[type].constructor();
         return types[type][groupname];
     };

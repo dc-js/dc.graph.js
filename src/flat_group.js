@@ -12,16 +12,22 @@ import crossfilter from 'crossfilter2';
 
 export const flatGroup = (function() {
     const reduce_01 = {
-        add(p, v) { return v; },
-        remove() { return null; },
-        init() { return null; }
+        add(p, v) {
+            return v;
+        },
+        remove() {
+            return null;
+        },
+        init() {
+            return null;
+        },
     };
     // now we only really want to see the non-null values, so make a fake group
     function non_null(group) {
         return {
             all() {
-                return group.all().filter((kv) => kv.value !== null);
-            }
+                return group.all().filter(kv => kv.value !== null);
+            },
         };
     }
 
@@ -30,9 +36,9 @@ export const flatGroup = (function() {
         return {
             crossfilter: ndx,
             dimension,
-            group: non_null(dimension.group().reduce(reduce_01.add,
-                                                     reduce_01.remove,
-                                                     reduce_01.init))
+            group: non_null(
+                dimension.group().reduce(reduce_01.add, reduce_01.remove, reduce_01.init),
+            ),
         };
     }
 
@@ -55,10 +61,10 @@ export const flatGroup = (function() {
          * @param {Function} id_accessor - accessor function taking a row object and returning its
          * unique identifier
          * @return {Object} `{crossfilter, dimension, group}`
-         **/
+         */
         make(source, id_accessor) {
             let cf;
-            if(Array.isArray(source))
+            if (Array.isArray(source))
                 cf = crossfilter(source);
             else cf = source;
             return dim_group(cf, id_accessor);
@@ -73,12 +79,10 @@ export const flatGroup = (function() {
          * @param {Function} id_accessor - accessor function taking a row object and returning its
          * unique identifier
          * @return {Object} `{crossfilter, dimension, group}`
-         **/
+         */
         another(cf, id_accessor) {
             console.warn('flat_group.another() is deprecated, use .make() instead');
             return this.make(cf, id_accessor);
-        }
+        },
     };
 })();
-
-

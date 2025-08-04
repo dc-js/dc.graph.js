@@ -1,6 +1,6 @@
 // Dynagraph module setup for main thread (non-worker mode)
-import { parse as parseIncrface } from './incrface.mjs';
 import createDynagraphModule from './dynagraph.mjs';
+import { parse as parseIncrface } from './incrface.mjs';
 
 // Setup global functions for dynagraph layout
 globalThis.parseIncrface = parseIncrface;
@@ -15,7 +15,7 @@ globalThis.ensureDynagraphInitialized = async function() {
     if (dynagraphInitialized) {
         return; // Already initialized
     }
-    
+
     if (dynagraphInitializing) {
         // Already initializing, wait for it to complete
         while (dynagraphInitializing) {
@@ -23,7 +23,7 @@ globalThis.ensureDynagraphInitialized = async function() {
         }
         return;
     }
-    
+
     dynagraphInitializing = true;
     try {
         console.log('Initializing dynagraph module for main thread...');

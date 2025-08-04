@@ -1,27 +1,35 @@
 import json from '@rollup/plugin-json';
-import copy from 'rollup-plugin-copy';
 import replace from '@rollup/plugin-replace';
+import copy from 'rollup-plugin-copy';
 
 // Rollup configuration for web workers
 export default [
     {
         input: 'src/workers/cola-worker.js',
-        external: ['https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm', 'https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm', 'https://cdn.jsdelivr.net/npm/d3-timer@1.0.10/+esm', 'https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm', 'd3-dispatch'],
+        external: [
+            'https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm',
+            'https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm',
+            'https://cdn.jsdelivr.net/npm/d3-timer@1.0.10/+esm',
+            'https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm',
+            'd3-dispatch',
+        ],
         plugins: [
             json(),
             replace({
                 delimiters: ['', ''],
-                'import { dispatch } from \'d3-dispatch\';': '// import { dispatch } from \'d3-dispatch\'; // replaced for worker',
-                '    var _dispatch = dispatch(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
-                preventAssignment: true
+                "import { dispatch } from 'd3-dispatch';":
+                    "// import { dispatch } from 'd3-dispatch'; // replaced for worker",
+                "    var _dispatch = dispatch('tick', 'start', 'end');":
+                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                preventAssignment: true,
             }),
             copy({
                 targets: [
-                    { src: 'dc.graph.cola.worker.js', dest: 'web/js' },
-                    { src: 'dc.graph.cola.worker.js.map', dest: 'web/js' }
+                    {src: 'dc.graph.cola.worker.js', dest: 'web/js'},
+                    {src: 'dc.graph.cola.worker.js.map', dest: 'web/js'},
                 ],
-                hook: 'writeBundle'
-            })
+                hook: 'writeBundle',
+            }),
         ],
         output: {
             file: 'dc.graph.cola.worker.js',
@@ -57,28 +65,35 @@ globalThis.d3 = {
     selectAll: d3Selection.selectAll,
     timer: d3Timer.timer
 };
-globalThis.cola = webcolaModule;`
-        }
+globalThis.cola = webcolaModule;`,
+        },
     },
     {
         input: 'src/workers/dagre-worker.js',
-        external: ['https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm', 'https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm', 'd3-dispatch'],
+        external: [
+            'https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm',
+            'https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm',
+            'd3-dispatch',
+        ],
         plugins: [
             json(),
             replace({
                 delimiters: ['', ''],
-                'import { dispatch } from \'d3-dispatch\';': '// import { dispatch } from \'d3-dispatch\'; // replaced for worker',
-                'import * as dagre from \'@dagrejs/dagre\';': 'import * as dagre from \'https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm\';',
-                '    var _dispatch = dispatch(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
-                preventAssignment: true
+                "import { dispatch } from 'd3-dispatch';":
+                    "// import { dispatch } from 'd3-dispatch'; // replaced for worker",
+                "import * as dagre from '@dagrejs/dagre';":
+                    "import * as dagre from 'https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm';",
+                "    var _dispatch = dispatch('tick', 'start', 'end');":
+                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                preventAssignment: true,
             }),
             copy({
                 targets: [
-                    { src: 'dc.graph.dagre.worker.js', dest: 'web/js' },
-                    { src: 'dc.graph.dagre.worker.js.map', dest: 'web/js' }
+                    {src: 'dc.graph.dagre.worker.js', dest: 'web/js'},
+                    {src: 'dc.graph.dagre.worker.js.map', dest: 'web/js'},
                 ],
-                hook: 'writeBundle'
-            })
+                hook: 'writeBundle',
+            }),
         ],
         output: {
             file: 'dc.graph.dagre.worker.js',
@@ -102,30 +117,44 @@ globalThis.cola = webcolaModule;`
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */`
-        }
+ */`,
+        },
     },
     {
         input: 'src/workers/d3v4-force-worker.js',
-        external: ['https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm', 'https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm', 'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm', 'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm', 'd3-dispatch', 'd3-collection', 'd3-force', 'd3-force-straighten-paths'],
+        external: [
+            'https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm',
+            'https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm',
+            'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm',
+            'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm',
+            'd3-dispatch',
+            'd3-collection',
+            'd3-force',
+            'd3-force-straighten-paths',
+        ],
         plugins: [
             json(),
             replace({
                 delimiters: ['', ''],
-                'import { dispatch } from \'d3-dispatch\';': '// import { dispatch } from \'d3-dispatch\'; // replaced for worker',
-                'import { set } from \'d3-collection\';': 'import { set } from \'https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm\';',
-                'import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from \'d3-force\';': 'import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from \'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm\';',
-                'import { forceStraightenPaths } from \'d3-force-straighten-paths\';': 'import { forceStraightenPaths } from \'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm\';',
-                '    var _dispatch = dispatch(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
-                preventAssignment: true
+                "import { dispatch } from 'd3-dispatch';":
+                    "// import { dispatch } from 'd3-dispatch'; // replaced for worker",
+                "import { set } from 'd3-collection';":
+                    "import { set } from 'https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm';",
+                "import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from 'd3-force';":
+                    "import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from 'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm';",
+                "import { forceStraightenPaths } from 'd3-force-straighten-paths';":
+                    "import { forceStraightenPaths } from 'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm';",
+                "    var _dispatch = dispatch('tick', 'start', 'end');":
+                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                preventAssignment: true,
             }),
             copy({
                 targets: [
-                    { src: 'dc.graph.d3v4-force.worker.js', dest: 'web/js' },
-                    { src: 'dc.graph.d3v4-force.worker.js.map', dest: 'web/js' }
+                    {src: 'dc.graph.d3v4-force.worker.js', dest: 'web/js'},
+                    {src: 'dc.graph.d3v4-force.worker.js.map', dest: 'web/js'},
                 ],
-                hook: 'writeBundle'
-            })
+                hook: 'writeBundle',
+            }),
         ],
         output: {
             file: 'dc.graph.d3v4-force.worker.js',
@@ -149,8 +178,8 @@ globalThis.cola = webcolaModule;`
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */`
-        }
+ */`,
+        },
     },
     {
         input: 'src/workers/dynagraph-worker.js',
@@ -158,19 +187,23 @@ globalThis.cola = webcolaModule;`
             json(),
             replace({
                 delimiters: ['', ''],
-                'import { dispatch } from \'d3-dispatch\';': '// import { dispatch } from \'d3-dispatch\'; // replaced for worker',
-                'import { dispatch } from "d3-dispatch";': '// import { dispatch } from "d3-dispatch"; // replaced for worker',
-                '    var _dispatch = dispatch(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
-                '    var _dispatch = (globalThis.d3?.dispatch || dispatch)(\'tick\', \'start\', \'end\');': '    var _dispatch = globalThis.d3.dispatch(\'tick\', \'start\', \'end\');',
-                preventAssignment: true
+                "import { dispatch } from 'd3-dispatch';":
+                    "// import { dispatch } from 'd3-dispatch'; // replaced for worker",
+                'import { dispatch } from "d3-dispatch";':
+                    '// import { dispatch } from "d3-dispatch"; // replaced for worker',
+                "    var _dispatch = dispatch('tick', 'start', 'end');":
+                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                "    var _dispatch = (globalThis.d3?.dispatch || dispatch)('tick', 'start', 'end');":
+                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                preventAssignment: true,
             }),
             copy({
                 targets: [
-                    { src: 'dc.graph.dynagraph.worker.js', dest: 'web/js' },
-                    { src: 'dc.graph.dynagraph.worker.js.map', dest: 'web/js' }
+                    {src: 'dc.graph.dynagraph.worker.js', dest: 'web/js'},
+                    {src: 'dc.graph.dynagraph.worker.js.map', dest: 'web/js'},
                 ],
-                hook: 'writeBundle'
-            })
+                hook: 'writeBundle',
+            }),
         ],
         output: {
             file: 'dc.graph.dynagraph.worker.js',
@@ -203,7 +236,7 @@ globalThis.d3 = {
     dispatch: d3Dispatch.dispatch
 };
 globalThis.parseIncrface = parseIncrface;
-globalThis.createDynagraphModule = createDynagraphModule;`
-        }
-    }
+globalThis.createDynagraphModule = createDynagraphModule;`,
+        },
+    },
 ];

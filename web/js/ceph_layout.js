@@ -10,7 +10,7 @@ app_layouts.ceph = function() {
         },
         volume: function(c) {
             return c === 'TOR-CHOST' || c === 'CHOST-Backend' || c === 'Backend-Vol';
-        }
+        },
     };
     function apply_view() {
         edgetypes_.filterFunction(filters[view_]);
@@ -18,12 +18,16 @@ app_layouts.ceph = function() {
 
     return {
         init: function() {
-            $('#app-options').append(['<div id="select-domain">',
-                                      '<input type=radio name="ceph-domain" value="ceph" checked="true">ceph',
-                                      '<input type=radio name="ceph-domain" value="infrastructure">infrastructure',
-                                      '<input type=radio name="ceph-domain" value="tenant">tenant',
-                                      '<input type=radio name="ceph-domain" value="volume">volume',
-                                      '</div>'].join(''));
+            $('#app-options').append(
+                [
+                    '<div id="select-domain">',
+                    '<input type=radio name="ceph-domain" value="ceph" checked="true">ceph',
+                    '<input type=radio name="ceph-domain" value="infrastructure">infrastructure',
+                    '<input type=radio name="ceph-domain" value="tenant">tenant',
+                    '<input type=radio name="ceph-domain" value="volume">volume',
+                    '</div>',
+                ].join(''),
+            );
             $('#app-options input').click(function() {
                 view_ = this.value;
                 apply_view();
@@ -41,6 +45,6 @@ app_layouts.ceph = function() {
             diagram.induceNodes(true)
                 .showLayoutSteps(false)
                 .transitionDuration(500);
-        }
+        },
     };
 }();

@@ -5,7 +5,7 @@
 
 // External dependencies
 import { dispatch } from 'd3-dispatch';
-import { uuid, property } from './core.js';
+import { property, uuid } from './core.js';
 
 export function manualLayout(id) {
     const _layoutId = id || uuid();
@@ -19,10 +19,7 @@ export function manualLayout(id) {
         _wnodes = nodes;
     }
     function dispatchState(wnodes, wedges, event) {
-        _dispatch.call(event, null,
-            wnodes,
-            wedges.map((e) => ({dcg_edgeKey: e.dcg_edgeKey}))
-        );
+        _dispatch.call(event, null, wnodes, wedges.map(e => ({dcg_edgeKey: e.dcg_edgeKey})));
     }
     function start() {
         dispatchState(_wnodes, [], 'end');
@@ -42,13 +39,13 @@ export function manualLayout(id) {
         },
         parent: property(null),
         on(event, f) {
-            if(arguments.length === 1)
+            if (arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
         init(options) {
-            this.optionNames().forEach((option) => {
+            this.optionNames().forEach(option => {
                 options[option] = options[option] || this[option]();
             });
             init(options);
@@ -67,17 +64,17 @@ export function manualLayout(id) {
             return [];
         },
         populateLayoutNode(n1, n) {
-            ['x', 'y'].forEach((attr) => {
-                if(n.orig.value[attr] !== undefined)
+            ['x', 'y'].forEach(attr => {
+                if (n.orig.value[attr] !== undefined)
                     n1[attr] = n.orig.value[attr];
             });
         },
         populateLayoutEdge() {},
-        addressToKey: property((ad) => ad.join(',')),
-        keyToAddress: property((nid) => nid.split(','))
+        addressToKey: property(ad => ad.join(',')),
+        keyToAddress: property(nid => nid.split(',')),
     };
     return _engine;
-};
+}
 
 // Scripts needed for web worker
 manualLayout.scripts = ['css-layout.js'];

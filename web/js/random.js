@@ -1,19 +1,19 @@
 // ES6 Module version of random.js
-import { 
-  diagram, 
-  spawnEngine, 
-  engines,
-  randomGraph,
-  flatGroup,
-  symbolPortStyle,
-  fixNodes
-} from './dc-graph.js';
-import sync_url_options from './sync-url-options.js';
-import dcgraph_domain from './dc.graph.tracker.domain.js';
-import querystring from './querystring.js';
-import { select } from 'd3-selection';
 import { rgb } from 'd3-color';
 import { scaleOrdinal } from 'd3-scale';
+import { select } from 'd3-selection';
+import {
+    diagram,
+    engines,
+    fixNodes,
+    flatGroup,
+    randomGraph,
+    spawnEngine,
+    symbolPortStyle,
+} from './dc-graph.js';
+import dcgraph_domain from './dc.graph.tracker.domain.js';
+import querystring from './querystring.js';
+import sync_url_options from './sync-url-options.js';
 
 const growingDiagram = diagram('#graph');
 const options = {
@@ -26,7 +26,7 @@ const options = {
             const engine = spawnEngine(val);
             applyEngineParameters(engine);
             diagram.layoutEngine(engine);
-        }
+        },
     },
     worker: false,
     batch: 1,
@@ -40,7 +40,7 @@ const options = {
     ports: false,
     shape: 'ellipse',
     content: 'text',
-    icon: null
+    icon: null,
 };
 
 // Note: These are still global functions from the legacy scripts
@@ -49,17 +49,17 @@ const options = {
 const sync_url = sync_url_options(options, dcgraph_domain(growingDiagram), growingDiagram);
 
 function applyEngineParameters(engine) {
-    switch(engine.layoutAlgorithm()) {
-    case 'd3v4-force':
-        engine
-            .collisionRadius(25)
-            .gravityStrength(0.05)
-            .initialCharge(-500);
-        break;
-    case 'd3-force':
-        engine
-            .gravityStrength(0.1)
-            .initialCharge(-1000);
+    switch (engine.layoutAlgorithm()) {
+        case 'd3v4-force':
+            engine
+                .collisionRadius(25)
+                .gravityStrength(0.05)
+                .initialCharge(-500);
+            break;
+        case 'd3-force':
+            engine
+                .gravityStrength(0.1)
+                .initialCharge(-1000);
     }
     return engine;
 }
@@ -72,7 +72,7 @@ function buildData(nodes, edges) {
         }),
         nodef: flatGroup.make(nodes, function(d) {
             return d.id;
-        })
+        }),
     };
 }
 
@@ -81,18 +81,19 @@ applyEngineParameters(engine);
 
 // don't do multiple components for cola unless user specified
 // layout is that unstable
-if(engine.layoutAlgorithm() === 'cola')
-    if(typeof sync_url.vals.newcomp !== 'string')
+if (engine.layoutAlgorithm() === 'cola') {
+    if (typeof sync_url.vals.newcomp !== 'string')
         sync_url.vals.newcomp = 0;
+}
 
 const random = randomGraph({
-    nodeKey: 'id', 
+    nodeKey: 'id',
     edgeKey: 'id',
     ncolors: 12,
     newNodeProb: sync_url.vals.newnode,
     newComponentProb: sync_url.vals.newcomp,
     removeEdgeProb: sync_url.vals.remedge,
-    log: sync_url.vals.log && sync_url.vals.log !== 'false'
+    log: sync_url.vals.log && sync_url.vals.log !== 'false',
 });
 
 let data = buildData(random.nodes(), random.edges());
@@ -110,25 +111,44 @@ growingDiagram
     .nodeContent(sync_url.vals.content)
     .nodeIcon(sync_url.vals.icon)
     .nodeStrokeWidth(0) // turn off outlines
-    .nodeLabel(function(kv) { return kv.key; })
-    .nodeLabelFill(sync_url.vals.shape === 'plain' ? 'black' : function(n) {
-        const color = rgb(growingDiagram.nodeFillScale()(growingDiagram.nodeFill()(n)));
-        // https://www.w3.org/TR/AERT#color-contrast
-        const brightness = (color.r * 299 + color.g * 587 + color.b * 114) / 1000;
-        return brightness > 127 ? 'black' : 'ghostwhite';
+    .nodeLabel(function(kv) {
+        return kv.key;
     })
+    .nodeLabelFill(
+        sync_url.vals.shape === 'plain' ? 'black' : function(n) {
+            const color = rgb(growingDiagram.nodeFillScale()(growingDiagram.nodeFill()(n)));
+            // https://www.w3.org/TR/AERT#color-contrast
+            const brightness = (color.r*299+color.g*587+color.b*114)/1000;
+            return brightness > 127 ? 'black' : 'ghostwhite';
+        },
+    )
     .nodeFill(function(kv) {
         return kv.value.color;
     })
-    .nodeFillScale(scaleOrdinal().range(
-        ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
-         '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928']))
+    .nodeFillScale(
+        scaleOrdinal().range(
+            [
+                '#a6cee3',
+                '#1f78b4',
+                '#b2df8a',
+                '#33a02c',
+                '#fb9a99',
+                '#e31a1c',
+                '#fdbf6f',
+                '#ff7f00',
+                '#cab2d6',
+                '#6a3d9a',
+                '#ffff99',
+                '#b15928',
+            ],
+        ),
+    )
     .nodeOpacity(sync_url.vals.opacity)
     .nodeTitle(null) // deactivate basic tooltips
     .edgeArrowhead(sync_url.vals.arrows ? 'vee' : null)
-    .timeLimit(sync_url.vals.interval - 100);
+    .timeLimit(sync_url.vals.interval-100);
 
-if(sync_url.vals.ports) {
+if (sync_url.vals.ports) {
     growingDiagram
         .portStyle('symbols', symbolPortStyle())
         .portStyleName('symbols');
@@ -143,12 +163,12 @@ growingDiagram.child('fix-nodes', fixNodesMode);
 let randomDemoInterval = null;
 
 function runRandomDemo() {
-    if(randomDemoInterval) {
+    if (randomDemoInterval) {
         window.clearInterval(randomDemoInterval);
     }
     randomDemoInterval = window.setInterval(function() {
-        for(let i = 0; i < sync_url.vals.batch; ++i) {
-            if(Math.random() < sync_url.vals.remove)
+        for (let i = 0; i < sync_url.vals.batch; ++i) {
+            if (Math.random() < sync_url.vals.remove)
                 random.remove(1);
             else
                 random.generate(1);
@@ -164,7 +184,7 @@ function runRandomDemo() {
 runRandomDemo();
 
 select('#play-stop').on('click', function() {
-    if(randomDemoInterval) {
+    if (randomDemoInterval) {
         select('#play-stop').attr('class', 'fas fa-play');
         window.clearInterval(randomDemoInterval);
         randomDemoInterval = null;

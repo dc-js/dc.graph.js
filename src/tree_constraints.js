@@ -2,7 +2,9 @@
 import { depthFirstTraversal } from './depth_first_traversal.js';
 
 export function treeConstraints(rootf, treef, xgap, _ygap) {
-    console.warn('treeConstraints is deprecated - it never worked right and may not be a good idea');
+    console.warn(
+        'treeConstraints is deprecated - it never worked right and may not be a good idea',
+    );
     return function(diagram, nodes, edges) {
         const constraints = [];
         let x = 0;
@@ -10,14 +12,14 @@ export function treeConstraints(rootf, treef, xgap, _ygap) {
             root: rootf,
             tree: treef,
             place(n, r, row) {
-                if(row.length) {
+                if (row.length) {
                     const last = row[row.length-1];
                     constraints.push({
                         left: diagram.nodeKey.eval(last),
                         right: diagram.nodeKey.eval(n),
                         axis: 'x',
                         gap: x-last.foo_x,
-                        equality: true
+                        equality: true,
                     });
                 }
                 n.foo_x = x;
@@ -26,9 +28,9 @@ export function treeConstraints(rootf, treef, xgap, _ygap) {
             },
             sib() {
                 x += xgap;
-            }
+            },
         });
         dfs(diagram, nodes, edges);
         return constraints;
     };
-};
+}

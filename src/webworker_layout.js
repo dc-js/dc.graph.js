@@ -9,24 +9,24 @@ import { scriptPath } from './utils.js';
 const _workers = {};
 const NUMBER_RESULTS = 3;
 function createWorker(workerName) {
-    if(!_workers[workerName]) {
+    if (!_workers[workerName]) {
         const worker = _workers[workerName] = {
-            worker: new Worker(`${scriptPath()  }dc.graph.${  workerName  }.worker.js`, { type: 'module' }),
-            layouts: {}
+            worker: new Worker(`${scriptPath()}dc.graph.${workerName}.worker.js`, {type: 'module'}),
+            layouts: {},
         };
         worker.worker.onmessage = function(e) {
             const layoutId = e.data.layoutId;
-            if(!worker.layouts[layoutId])
-                throw new Error(`layoutId "${  layoutId  }" unknown!`);
+            if (!worker.layouts[layoutId])
+                throw new Error(`layoutId "${layoutId}" unknown!`);
             const engine = worker.layouts[layoutId].getEngine();
             const _layoutName = engine.layoutAlgorithm?.() || 'unknown';
-            if(e.data.args.length > NUMBER_RESULTS && engine.processExtraWorkerResults)
+            if (e.data.args.length > NUMBER_RESULTS && engine.processExtraWorkerResults)
                 engine.processExtraWorkerResults.apply(engine, e.data.args.slice(NUMBER_RESULTS));
             const dispatch = worker.layouts[layoutId].dispatch();
             dispatch.call(e.data.response, null, ...e.data.args);
         };
         worker.worker.onerror = function(e) {
-            console.error(`[WORKER] Worker error for layout ${  workerName  }:`, e);
+            console.error(`[WORKER] Worker error for layout ${workerName}:`, e);
         };
     }
     return _workers[workerName];
@@ -40,18 +40,21 @@ export function webworkerLayout(layoutEngine, workerName) {
     _worker.layouts[layoutEngine.layoutId()] = engine;
 
     engine.parent = function(parent) {
-        if(layoutEngine.parent)
+        if (layoutEngine.parent)
             layoutEngine.parent(parent);
     };
     // Helper function to clone options while filtering out functions
     function serializeOptions(obj) {
         if (obj === null || typeof obj !== 'object') return obj;
         if (typeof obj === 'function') {
-            console.warn('[WORKER] Filtering out function from options:', `${obj.toString().slice(0, 100)  }...`);
+            console.warn(
+                '[WORKER] Filtering out function from options:',
+                `${obj.toString().slice(0, 100)}...`,
+            );
             return null; // Remove functions
         }
         if (Array.isArray(obj)) return obj.map(serializeOptions);
-        
+
         const result = {};
         for (const key in obj) {
             if (obj.hasOwnProperty(key)) {
@@ -63,7 +66,7 @@ export function webworkerLayout(layoutEngine, workerName) {
         }
         return result;
     }
-    
+
     engine.init = async function(options) {
         options = layoutEngine.optionNames().reduce(
             (options, option) => {
@@ -71,10 +74,12 @@ export function webworkerLayout(layoutEngine, workerName) {
                 // Serialize each option value as we collect it
                 options[option] = serializeOptions(value);
                 return options;
-            }, options);
-        if(layoutEngine.propagateOptions)
+            },
+            options,
+        );
+        if (layoutEngine.propagateOptions)
             layoutEngine.propagateOptions(options);
-        
+
         return new Promise((resolve, reject) => {
             // Set up one-time listener for init completion
             const originalOnMessage = _worker.worker.onmessage;
@@ -82,7 +87,7 @@ export function webworkerLayout(layoutEngine, workerName) {
                 _worker.worker.onmessage = originalOnMessage;
                 reject(new Error('Worker init timeout'));
             }, 10000); // 10 second timeout
-            
+
             _worker.worker.onmessage = function(e) {
                 if (e.data.response === 'init' && e.data.layoutId === layoutEngine.layoutId()) {
                     clearTimeout(initTimeout);
@@ -93,13 +98,13 @@ export function webworkerLayout(layoutEngine, workerName) {
                     originalOnMessage.call(this, e);
                 }
             };
-            
+
             _worker.worker.postMessage({
                 command: 'init',
                 args: {
                     layoutId: layoutEngine.layoutId(),
-                    options: serializeOptions(options)
-                }
+                    options: serializeOptions(options),
+                },
             });
         });
     };
@@ -112,24 +117,24 @@ export function webworkerLayout(layoutEngine, workerName) {
                 nodes,
                 edges,
                 clusters,
-                constraints
-            }
+                constraints,
+            },
         });
     };
     engine.start = function() {
         _worker.worker.postMessage({
             command: 'start',
             args: {
-                layoutId: layoutEngine.layoutId()
-            }
+                layoutId: layoutEngine.layoutId(),
+            },
         });
     };
     engine.stop = function() {
         _worker.worker.postMessage({
             command: 'stop',
             args: {
-                layoutId: layoutEngine.layoutId()
-            }
+                layoutId: layoutEngine.layoutId(),
+            },
         });
         return this;
     };
@@ -138,17 +143,24 @@ export function webworkerLayout(layoutEngine, workerName) {
         return layoutEngine;
     };
     // somewhat sketchy - do we want this object to be transparent or not?
-    const passthroughs = ['layoutAlgorithm', 'populateLayoutNode', 'populateLayoutEdge',
-                        'rankdir', 'ranksep'];
-    passthroughs.concat(layoutEngine.optionNames(),
-                        layoutEngine.passThru ? layoutEngine.passThru() : []).forEach((name) => {
+    const passthroughs = [
+        'layoutAlgorithm',
+        'populateLayoutNode',
+        'populateLayoutEdge',
+        'rankdir',
+        'ranksep',
+    ];
+    passthroughs.concat(
+        layoutEngine.optionNames(),
+        layoutEngine.passThru ? layoutEngine.passThru() : [],
+    ).forEach(name => {
         engine[name] = function() {
             const ret = layoutEngine[name].apply(layoutEngine, arguments);
             return arguments.length ? this : ret;
         };
     });
     engine.on = function(event, f) {
-        if(arguments.length === 1)
+        if (arguments.length === 1)
             return _dispatch.on(event);
         _dispatch.on(event, f);
         return this;
@@ -157,4 +169,4 @@ export function webworkerLayout(layoutEngine, workerName) {
         return _dispatch;
     };
     return engine;
-};
+}

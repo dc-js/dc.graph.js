@@ -1,62 +1,65 @@
-import { mode } from './mode.js';
-import { dispatch } from 'd3-dispatch';
 import { brush as d3Brush } from 'd3-brush';
+import { dispatch } from 'd3-dispatch';
 import { event } from 'd3-selection';
+import { mode } from './mode.js';
 
 /**
  * `brush` is a {@link mode mode} providing a simple wrapper over
  * [d3.svg.brush](https://github.com/d3/d3-3.x-api-reference/blob/master/SVG-Controls.md#brush)
  * @class brush
  * @return {brush}
- **/
+ */
 export function brush() {
     let _brush = null, _gBrush;
     const _dispatch = dispatch('brushstart', 'brushmove', 'brushend');
     let _clearing = false;
 
     function brushstart() {
-        if(!_clearing) {
-            _dispatch.call("brushstart");
+        if (!_clearing) {
+            _dispatch.call('brushstart');
         }
     }
     function brushmove() {
-        if(!_clearing) {
+        if (!_clearing) {
             const ext = event.selection;
-            _dispatch.call("brushmove", null, ext);
+            _dispatch.call('brushmove', null, ext);
         }
     }
     function brushend() {
-        if(!_clearing) {
-            _dispatch.call("brushend");
+        if (!_clearing) {
+            _dispatch.call('brushend');
             _clearing = true;
             _gBrush.call(_brush.move, null);
             _clearing = false;
         }
     }
     function install_brush(diagram) {
-        if(!_brush) {
-            const extent = [[diagram.x().range()[0], diagram.y().range()[0]], [diagram.x().range()[1], diagram.y().range()[1]]];
+        if (!_brush) {
+            const extent = [[diagram.x().range()[0], diagram.y().range()[0]], [
+                diagram.x().range()[1],
+                diagram.y().range()[1],
+            ]];
             _brush = d3Brush()
                 .extent(extent)
                 .on('start.brush-mode', brushstart)
                 .on('brush.brush-mode', brushmove)
                 .on('end.brush-mode', brushend);
         }
-        if(!_gBrush) {
+        if (!_gBrush) {
             _gBrush = diagram.svg().insert('g', ':first-child')
                 .attr('class', 'brush')
                 .call(_brush);
         }
     }
     function remove_brush() {
-        if(_gBrush) {
+        if (_gBrush) {
             _gBrush.remove();
             _gBrush = null;
         }
     }
     const _mode = mode('brush', {
         draw() {},
-        remove: remove_brush
+        remove: remove_brush,
     });
 
     /**
@@ -68,9 +71,9 @@ export function brush() {
      * @param {Function} [f] the handler function; if omitted, returns the current handler
      * @return {dc_graph.brush}
      * @return {Function}
-     **/
+     */
     _mode.on = function(event, f) {
-        if(arguments.length === 1)
+        if (arguments.length === 1)
             return _dispatch.on(event);
         _dispatch.on(event, f);
         return this;
@@ -81,7 +84,7 @@ export function brush() {
      * @memberof dc_graph.brush
      * @instance
      * @return {dc_graph.brush}
-     **/
+     */
     _mode.activate = function() {
         install_brush(_mode.parent());
         return this;
@@ -92,7 +95,7 @@ export function brush() {
      * @memberof dc_graph.brush
      * @instance
      * @return {dc_graph.brush}
-     **/
+     */
     _mode.deactivate = function() {
         remove_brush();
         return this;
@@ -103,10 +106,10 @@ export function brush() {
      * @memberof dc_graph.brush
      * @instance
      * @return {Boolean}
-     **/
-    _mode.isActive = function () {
+     */
+    _mode.isActive = function() {
         return !!_gBrush;
     };
 
     return _mode;
-};
+}

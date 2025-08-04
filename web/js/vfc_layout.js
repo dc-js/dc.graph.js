@@ -1,5 +1,5 @@
-import { gapY, alignY } from './dc-graph.js';
 import { app_layouts } from './app_layout.js';
+import { alignY, gapY } from './dc-graph.js';
 
 app_layouts.vfc = function() {
     function rank(label) {
@@ -7,8 +7,8 @@ app_layouts.vfc = function() {
     }
 
     function is_tree_edge(diagram, e) {
-        return rank(diagram.getNode(diagram.edgeSource()(e)).value.label_) !==
-            rank(diagram.getNode(diagram.edgeTarget()(e)).value.label_);
+        return rank(diagram.getNode(diagram.edgeSource()(e)).value.label_)
+            !== rank(diagram.getNode(diagram.edgeTarget()(e)).value.label_);
     }
 
     function is_root_node(n) {
@@ -19,7 +19,7 @@ app_layouts.vfc = function() {
         VNF: 0,
         VFC: 1,
         VM: 2,
-        Host: 3
+        Host: 3,
     };
     function node_row(n) {
         return _rowmap[rank(n.value.label_)];
@@ -28,8 +28,16 @@ app_layouts.vfc = function() {
     return {
         rules: {
             nodes: [
-                {id: 'layer', partition: 'label_', extract: function(v) { return rank(v); },
-                 typename: function(id, value) { return value; }}
+                {
+                    id: 'layer',
+                    partition: 'label_',
+                    extract: function(v) {
+                        return rank(v);
+                    },
+                    typename: function(id, value) {
+                        return value;
+                    },
+                },
             ],
             edges: [
                 {source: 'VNF', target: 'VFC', produce: gapY(100, true)},
@@ -41,12 +49,15 @@ app_layouts.vfc = function() {
                  {source: 'VFC', target: 'VFC', produce: dc_graph.align_y()},
                  {source: 'VM', target: 'VM', produce: dc_graph.align_y()},
                  {source: 'Host', target: 'Host', produce: dc_graph.align_y()}*/
-            ]
+            ],
         },
         constraints: function(diagram, nodes, edges) {
-            return dc_graph.tree_constraints(is_root_node,
-                                             is_tree_edge.bind(null, diagram), 10, 100)
-            (diagram, nodes, edges);
+            return dc_graph.tree_constraints(
+                is_root_node,
+                is_tree_edge.bind(null, diagram),
+                10,
+                100,
+            )(diagram, nodes, edges);
         },
         initDiagram: function(diagram) {
             diagram
@@ -62,14 +73,24 @@ app_layouts.vfc = function() {
                 .nodeFixed(function(n) {
                     return is_root_node(n) ? true : null;
                 })
-                .nodeTitle(function(n) { return n.value.name; })
-            ;
-            if(treeOnly) {
+                .nodeTitle(function(n) {
+                    return n.value.name;
+                });
+            if (treeOnly) {
                 diagram
-                    .initialLayout(dc_graph.tree_positions(null, node_row, is_tree_edge.bind(null, diagram), 50, 50, 10, 100))
-                    .initialOnly(true)
-                ;
+                    .initialLayout(
+                        dc_graph.tree_positions(
+                            null,
+                            node_row,
+                            is_tree_edge.bind(null, diagram),
+                            50,
+                            50,
+                            10,
+                            100,
+                        ),
+                    )
+                    .initialOnly(true);
             }
-        }
+        },
     };
 }();

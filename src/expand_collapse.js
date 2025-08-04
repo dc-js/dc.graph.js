@@ -1,43 +1,51 @@
-import { registerHighlightThingsGroup } from './highlight_things_group.js';
-import { mode } from './mode.js';
-import { is_a_mac, conditionalProperties } from './utils.js';
-import { keyboard } from './keyboard.js';
-import { functorWrap, deprecatedProperty, property } from './core.js';
-import { engines } from './engine.js';
 import { range } from 'd3-array';
 import { event as d3Event } from 'd3-selection';
+import { deprecatedProperty, functorWrap, property } from './core.js';
+import { engines } from './engine.js';
+import { registerHighlightThingsGroup } from './highlight_things_group.js';
+import { keyboard } from './keyboard.js';
+import { mode } from './mode.js';
+import { conditionalProperties, is_a_mac } from './utils.js';
 
 export function expandCollapse(options) {
-    if(typeof options === 'function') {
+    if (typeof options === 'function') {
         options = {
             get_degree: arguments[0],
             expand: arguments[1],
             collapse: arguments[2],
-            dirs: arguments[3]
+            dirs: arguments[3],
         };
     }
     let _keyboard, _overNode, _overDir, _overEdge, _changing, _ignore = null;
     const _expanded = {};
-    const changing_highlight_group = registerHighlightThingsGroup(options.changing_highlight_group || 'changing-highlight-group');
-    const expanded_highlight_group = registerHighlightThingsGroup(options.expanded_highlight_group || 'expanded-highlight-group');
-    const collapse_highlight_group = registerHighlightThingsGroup(options.collapse_highlight_group || 'collapse-highlight-group');
-    const hide_highlight_group = registerHighlightThingsGroup(options.hide_highlight_group || 'hide-highlight-group');
+    const changing_highlight_group = registerHighlightThingsGroup(
+        options.changing_highlight_group || 'changing-highlight-group',
+    );
+    const expanded_highlight_group = registerHighlightThingsGroup(
+        options.expanded_highlight_group || 'expanded-highlight-group',
+    );
+    const collapse_highlight_group = registerHighlightThingsGroup(
+        options.collapse_highlight_group || 'collapse-highlight-group',
+    );
+    const hide_highlight_group = registerHighlightThingsGroup(
+        options.hide_highlight_group || 'hide-highlight-group',
+    );
     options.dirs = options.dirs || ['both'];
-    options.dirs.forEach((dir) => {
+    options.dirs.forEach(dir => {
         _expanded[dir] = new Set();
     });
     options.hideKey = options.hideKey || 'Alt';
     options.recurseKey = options.recurseKey || 'Shift';
     options.linkKey = options.linkKey || (is_a_mac ? 'Meta' : 'Control');
-    if(options.dirs.length > 2)
+    if (options.dirs.length > 2)
         throw new Error('there are only two directions to expand in');
 
     const _gradients_added = {};
     function add_gradient_def(color, diagram) {
-        if(_gradients_added[color])
+        if (_gradients_added[color])
             return;
         _gradients_added[color] = true;
-        diagram.addOrRemoveDef(`spike-gradient-${  color}`, true, 'linearGradient', (gradient) => {
+        diagram.addOrRemoveDef(`spike-gradient-${color}`, true, 'linearGradient', gradient => {
             gradient.attr('x1', '0%')
                 .attr('y1', '0%')
                 .attr('x2', '100%')
@@ -45,86 +53,108 @@ export function expandCollapse(options) {
                 .attr('spreadMethod', 'pad');
             gradient.selectAll('stop').data([[0, color, 1], [100, color, '0']])
                 .enter().append('stop')
-                    .attr('offset', d => `${d[0]  }%`)
-                    .attr('stop-color', d => d[1])
-                    .attr('stop-opacity', d => d[2]);
+                .attr('offset', d => `${d[0]}%`)
+                .attr('stop-color', d => d[1])
+                .attr('stop-opacity', d => d[2]);
         });
     }
 
     function visible_edges(diagram, edge, dir, key) {
         let fil;
-        switch(dir) {
-        case 'out':
-            fil = function(e) {
-                return diagram.edgeSource.eval(e) === key;
-            };
-            break;
-        case 'in':
-            fil = function(e) {
-                return diagram.edgeTarget.eval(e) === key;
-            };
-            break;
-        case 'both':
-            fil = function(e) {
-                return diagram.edgeSource.eval(e) === key || diagram.edgeTarget.eval(e) === key;
-            };
-            break;
+        switch (dir) {
+            case 'out':
+                fil = function(e) {
+                    return diagram.edgeSource.eval(e) === key;
+                };
+                break;
+            case 'in':
+                fil = function(e) {
+                    return diagram.edgeTarget.eval(e) === key;
+                };
+                break;
+            case 'both':
+                fil = function(e) {
+                    return diagram.edgeSource.eval(e) === key || diagram.edgeTarget.eval(e) === key;
+                };
+                break;
         }
         return edge.filter(fil).data();
     }
 
-    const sweep_angle = (N, ofs, span = Math.PI) =>
-          i => ofs + ((N-1)*span/N) * (-.5 + (N > 1 ? i / (N-1) : 0)); // avoid 0/0
+    const sweep_angle = (N, ofs, span = Math.PI) => i =>
+        ofs+((N-1)*span/N)*(-.5+(N > 1 ? i/(N-1) : 0)); // avoid 0/0
 
     function spike_directioner(rankdir, dir, N) {
-        if(dir==='both')
+        if (dir === 'both')
             return function(i) {
-                return Math.PI * (2 * i / N - 0.5);
+                return Math.PI*(2*i/N-0.5);
             };
         else {
             let ofs;
-            switch(rankdir) {
-            case 'LR':
-                ofs = 0;
-                break;
-            case 'TB':
-                ofs = Math.PI/2;
-                break;
-            case 'RL':
-                ofs = Math.PI;
-                break;
-            case 'BT':
-                ofs = -Math.PI/2;
-                break;
+            switch (rankdir) {
+                case 'LR':
+                    ofs = 0;
+                    break;
+                case 'TB':
+                    ofs = Math.PI/2;
+                    break;
+                case 'RL':
+                    ofs = Math.PI;
+                    break;
+                case 'BT':
+                    ofs = -Math.PI/2;
+                    break;
             }
-            if(dir === 'in')
+            if (dir === 'in')
                 ofs += Math.PI;
             return sweep_angle(N, ofs);
         }
     }
 
     function produce_spikes_helper(cx, cy, rx, ry, a, spike, span, ret) {
-        const dx = Math.cos(a) * rx,
-              dy = Math.sin(a) * ry;
+        const dx = Math.cos(a)*rx,
+            dy = Math.sin(a)*ry;
         const dash = {
-            a: a * 180 / Math.PI,
-            x: cx + dx,
-            y: cy + dy,
-            edge: spike.pe
+            a: a*180/Math.PI,
+            x: cx+dx,
+            y: cy+dy,
+            edge: spike.pe,
         };
         ret.push(dash);
         span *= 0.75;
         const sweep = sweep_angle(spike.children.length, a, span);
-        for(const i of range(spike.children.length))
-            produce_spikes_helper(cx + 1.5*dx, cy + 1.5*dy, rx, ry, sweep(i), spike.children[i], span, ret);
+        for (const i of range(spike.children.length))
+            produce_spikes_helper(
+                cx+1.5*dx,
+                cy+1.5*dy,
+                rx,
+                ry,
+                sweep(i),
+                spike.children[i],
+                span,
+                ret,
+            );
     }
 
     function produce_spikes(diagram, n, spikeses) {
         const ret = [];
         Object.keys(spikeses).forEach(dir => {
-            const sweep = spike_directioner(diagram.layoutEngine().rankdir(), dir, spikeses[dir].length);
-            for(const i of range(spikeses[dir].length))
-                produce_spikes_helper(0, 0, n.dcg_rx * 0.9, n.dcg_ry * 0.9, sweep(i), spikeses[dir][i], Math.PI, ret);
+            const sweep = spike_directioner(
+                diagram.layoutEngine().rankdir(),
+                dir,
+                spikeses[dir].length,
+            );
+            for (const i of range(spikeses[dir].length))
+                produce_spikes_helper(
+                    0,
+                    0,
+                    n.dcg_rx*0.9,
+                    n.dcg_ry*0.9,
+                    sweep(i),
+                    spikeses[dir][i],
+                    Math.PI,
+                    ret,
+                );
         });
         return ret;
     }
@@ -132,20 +162,23 @@ export function expandCollapse(options) {
     function draw_stubs(diagram, node, edge, n, spikeseses) {
         const spike = node
             .selectAll('g.spikes')
-            .data((n2) => spikeseses[diagram.nodeKey.eval(n2)] ?
-                    [n2] : []);
+            .data(n2 =>
+                spikeseses[diagram.nodeKey.eval(n2)]
+                    ? [n2]
+                    : []
+            );
         spike.exit().remove();
         spike
-          .enter().insert('g', ':first-child')
+            .enter().insert('g', ':first-child')
             .classed('spikes', true);
         const rect = spike
-          .selectAll('rect.spike')
-            .data((n) => {
+            .selectAll('rect.spike')
+            .data(n => {
                 const key = diagram.nodeKey.eval(n);
                 return produce_spikes(diagram, n, spikeseses[key]);
             });
         rect
-          .enter().append('rect')
+            .enter().append('rect')
             .classed('spike', true)
             .attr('width', 25)
             .attr('height', 3)
@@ -154,11 +187,11 @@ export function expandCollapse(options) {
             .attr('x', 0)
             .attr('y', 0);
         rect.attr('fill', s => {
-                const color = s.edge ? functorWrap(diagram.edgeStroke())(s.edge) : 'black';
-                add_gradient_def(color, diagram);
-                return `url(#spike-gradient-${  color  })`;
-            })
-            .attr('transform', d => `translate(${  d.x  },${  d.y  }) rotate(${  d.a  })`);
+            const color = s.edge ? functorWrap(diagram.edgeStroke())(s.edge) : 'black';
+            add_gradient_def(color, diagram);
+            return `url(#spike-gradient-${color})`;
+        })
+            .attr('transform', d => `translate(${d.x},${d.y}) rotate(${d.a})`);
         rect.exit().remove();
     }
 
@@ -167,35 +200,35 @@ export function expandCollapse(options) {
     }
 
     function zonedir(diagram, event, dirs, n) {
-        if(dirs.length === 1) // we assume it's ['out', 'in']
+        if (dirs.length === 1) // we assume it's ['out', 'in']
             return dirs[0];
         const bound = diagram.root().node().getBoundingClientRect();
-        const invert = diagram.invertCoord([event.clientX - bound.left,event.clientY - bound.top]),
+        const invert = diagram.invertCoord([event.clientX-bound.left, event.clientY-bound.top]),
             x = invert[0],
             y = invert[1];
-        switch(diagram.layoutEngine().rankdir()) {
-        case 'TB':
-            return y > n.cola.y ? 'out' : 'in';
-        case 'BT':
-            return y < n.cola.y ? 'out' : 'in';
-        case 'LR':
-            return x > n.cola.x ? 'out' : 'in';
-        case 'RL':
-            return x < n.cola.x ? 'out' : 'in';
+        switch (diagram.layoutEngine().rankdir()) {
+            case 'TB':
+                return y > n.cola.y ? 'out' : 'in';
+            case 'BT':
+                return y < n.cola.y ? 'out' : 'in';
+            case 'LR':
+                return x > n.cola.x ? 'out' : 'in';
+            case 'RL':
+                return x < n.cola.x ? 'out' : 'in';
         }
-        throw new Error(`unknown rankdir ${  diagram.layoutEngine().rankdir()}`);
+        throw new Error(`unknown rankdir ${diagram.layoutEngine().rankdir()}`);
     }
 
     function detect_key(key, event) {
-        switch(key) {
-        case 'Alt':
-            return event.altKey;
-        case 'Meta':
-            return event.metaKey;
-        case 'Shift':
-            return event.shiftKey;
-        case 'Control':
-            return event.ctrlKey;
+        switch (key) {
+            case 'Alt':
+                return event.altKey;
+            case 'Meta':
+                return event.metaKey;
+            case 'Shift':
+                return event.shiftKey;
+            case 'Control':
+                return event.ctrlKey;
         }
         return false;
     }
@@ -204,8 +237,8 @@ export function expandCollapse(options) {
         const nk = diagram.nodeKey.eval(n);
         const hide_nodes_set = {}, hide_edges_set = {};
         hide_nodes_set[nk] = true;
-        edge.each((e) => {
-            if(diagram.edgeSource.eval(e) === nk || diagram.edgeTarget.eval(e) === nk)
+        edge.each(e => {
+            if (diagram.edgeSource.eval(e) === nk || diagram.edgeTarget.eval(e) === nk)
                 hide_edges_set[diagram.edgeKey.eval(e)] = true;
         });
         hide_highlight_group.call('highlight', null, hide_nodes_set, hide_edges_set);
@@ -217,14 +250,23 @@ export function expandCollapse(options) {
     }
 
     function partition_among_visible(tree_edges, visible, parts, nk, pe = null, seen = new Set()) {
-        if(seen.has(nk))
+        if (seen.has(nk))
             return [];
         seen.add(nk);
         let children = tree_edges[nk].nks
             .filter(nk => !seen.has(nk))
-            .flatMap((nk2, i) => partition_among_visible(tree_edges, visible, parts, nk2, tree_edges[nk].edges[i], seen))
+            .flatMap((nk2, i) =>
+                partition_among_visible(
+                    tree_edges,
+                    visible,
+                    parts,
+                    nk2,
+                    tree_edges[nk].edges[i],
+                    seen,
+                )
+            )
             .filter(({nk}) => !visible.has(nk));
-        if(visible.has(nk)) {
+        if (visible.has(nk)) {
             parts[nk] = children;
             children = [];
         }
@@ -234,60 +276,81 @@ export function expandCollapse(options) {
     function highlight_expand_collapse(diagram, n, node, edge, dir, recurse) {
         const nk = diagram.nodeKey.eval(n);
         const tree_edges = options.get_tree_edges(nk, dir, !recurse);
-        const visible_nodes = new Set(node.data().map(n => diagram.nodeKey.eval(n)).filter(nk => tree_edges[nk]));
+        const visible_nodes = new Set(
+            node.data().map(n => diagram.nodeKey.eval(n)).filter(nk => tree_edges[nk]),
+        );
         const parts = {};
-        if(recurse)
+        if (recurse)
             partition_among_visible(tree_edges, visible_nodes, parts, nk);
         const spikeseses = {};
-        if(!_expanded[dir].has(nk))
+        if (!_expanded[dir].has(nk))
             Object.keys(tree_edges).forEach(nk => {
                 let spikes;
-                if(recurse) {
+                if (recurse) {
                     spikes = parts[nk] || [];
-                }
-                else {
+                } else {
                     const edges = tree_edges[nk].edges;
                     const degree = edges.length;
                     const visible_e = visible_edges(diagram, edge, dir, nk);
                     const shown = new Set(visible_e.map(e => diagram.edgeKey.eval(e)));
-                    const invis = edges.filter((e) => !shown.has(diagram.edgeKey()(e)));
+                    const invis = edges.filter(e => !shown.has(diagram.edgeKey()(e)));
                     spikes = invis.map(e => ({pe: e, children: []}));
-                    if(degree - visible_e.length !== spikes.length) {
-                        console.log('number of stubs', spikes.length, 'does not equal degree - visible edges', degree - visible_e.length);
+                    if (degree-visible_e.length !== spikes.length) {
+                        console.log(
+                            'number of stubs',
+                            spikes.length,
+                            'does not equal degree - visible edges',
+                            degree-visible_e.length,
+                        );
                         // debugger;
                     }
                 }
                 const spikeses = {};
-                if(dir == 'both' && engines.is_directed(diagram.layoutEngine().layoutAlgorithm())) {
+                if (
+                    dir == 'both' && engines.is_directed(diagram.layoutEngine().layoutAlgorithm())
+                ) {
                     spikeses.in = [];
                     spikeses.out = [];
                     spikes.forEach(spk => {
-                        if(diagram.edgeSource()(spk.pe) === nk)
+                        if (diagram.edgeSource()(spk.pe) === nk)
                             spikeses.out.push(spk);
                         else {
                             console.assert(diagram.edgeTarget()(spk.pe) === nk);
                             spikeses.in.push(spk);
                         }
                     });
-                }
-                else spikeses[dir] = spikes;
+                } else spikeses[dir] = spikes;
                 spikeseses[nk] = spikeses;
             });
         draw_stubs(diagram, node, edge, n, spikeseses);
         let collapse_nodes_set = {}, collapse_edges_set = {};
-        if(_expanded[dir].has(nk)) {
+        if (_expanded[dir].has(nk)) {
             // collapse
-            const will_change = Object.keys(tree_edges).flatMap(nk => _expanded[dir].has(nk) ? [nk] : []);
+            const will_change = Object.keys(tree_edges).flatMap(nk =>
+                _expanded[dir].has(nk) ? [nk] : []
+            );
             _changing = Object.fromEntries(will_change.map(nk => [nk, {dir, whether: false}]));
-            if(options.collapsibles) {
+            if (options.collapsibles) {
                 const clps = options.collapsibles(will_change, dir);
                 collapse_nodes_set = clps.nodes;
                 collapse_edges_set = clps.edges;
             }
-            changing_highlight_group.call('highlight', null, Object.fromEntries(will_change.map(nk => [nk, true])), {});
+            changing_highlight_group.call(
+                'highlight',
+                null,
+                Object.fromEntries(will_change.map(nk => [nk, true])),
+                {},
+            );
         } else {
-            _changing = Object.fromEntries(Object.keys(tree_edges).map(nk => [nk, {dir, whether: true}]));
-            changing_highlight_group.call('highlight', null, Object.fromEntries(Object.keys(tree_edges).map(nk => [nk, true])), {});
+            _changing = Object.fromEntries(
+                Object.keys(tree_edges).map(nk => [nk, {dir, whether: true}]),
+            );
+            changing_highlight_group.call(
+                'highlight',
+                null,
+                Object.fromEntries(Object.keys(tree_edges).map(nk => [nk, true])),
+                {},
+            );
         }
         collapse_highlight_group.call('highlight', null, collapse_nodes_set, collapse_edges_set);
     }
@@ -297,23 +360,29 @@ export function expandCollapse(options) {
             const dir = zonedir(diagram, d3Event, options.dirs, n);
             _overNode = n;
             _overDir = dir;
-            if(_ignore && _ignore !== n)
+            if (_ignore && _ignore !== n)
                 _ignore = null;
-            if(_ignore)
+            if (_ignore)
                 return;
-            if(options.hideNode && detect_key(options.hideKey, d3Event))
+            if (options.hideNode && detect_key(options.hideKey, d3Event))
                 highlight_hiding_node(diagram, n, edge);
-            else if(_mode.nodeURL.eval(_overNode) && detect_key(options.linkKey, d3Event)) {
+            else if (_mode.nodeURL.eval(_overNode) && detect_key(options.linkKey, d3Event)) {
                 diagram.selectAllNodes()
-                    .filter((n) => n === _overNode).attr('cursor', 'pointer');
+                    .filter(n => n === _overNode).attr('cursor', 'pointer');
                 diagram.requestRefresh(0);
-            }
-            else
-                highlight_expand_collapse(diagram, n, node, edge, dir, detect_key(options.recurseKey, d3Event));
+            } else
+                highlight_expand_collapse(
+                    diagram,
+                    n,
+                    node,
+                    edge,
+                    dir,
+                    detect_key(options.recurseKey, d3Event),
+                );
         }
-        function leave_node(_n)  {
+        function leave_node(_n) {
             diagram.selectAllNodes()
-                .filter((n) => n === _overNode).attr('cursor', null);
+                .filter(n => n === _overNode).attr('cursor', null);
             _overNode = null;
             _ignore = null;
             clear_stubs(diagram, node, edge);
@@ -324,10 +393,10 @@ export function expandCollapse(options) {
         }
         function click_node(n) {
             const nk = diagram.nodeKey.eval(n);
-            if(options.hideNode && detect_key(options.hideKey, d3Event))
+            if (options.hideNode && detect_key(options.hideKey, d3Event))
                 options.hideNode(nk);
-            else if(detect_key(options.linkKey, d3Event)) {
-                if(_mode.nodeURL.eval(n) && _mode.urlOpener)
+            else if (detect_key(options.linkKey, d3Event)) {
+                if (_mode.nodeURL.eval(n) && _mode.urlOpener)
                     _mode.urlOpener()(_mode, n, _mode.nodeURL.eval(n));
             } else {
                 clear_stubs(diagram, node, edge);
@@ -336,7 +405,7 @@ export function expandCollapse(options) {
                 changing_highlight_group.call('highlight', null, {}, {});
                 const dir = zonedir(diagram, d3Event, options.dirs, n);
                 let tree_nodes = [nk];
-                if(detect_key(options.recurseKey, d3Event) && options.get_tree_edges)
+                if (detect_key(options.recurseKey, d3Event) && options.get_tree_edges)
                     tree_nodes = Object.keys(options.get_tree_edges(nk, dir));
                 expand(dir, tree_nodes, !_expanded[dir].has(nk));
             }
@@ -344,7 +413,7 @@ export function expandCollapse(options) {
 
         function enter_edge(e) {
             _overEdge = e;
-            if(options.hideEdge && detect_key(options.hideKey, d3Event))
+            if (options.hideEdge && detect_key(options.hideKey, d3Event))
                 highlight_hiding_edge(diagram, e);
         }
         function leave_edge(_e) {
@@ -352,7 +421,7 @@ export function expandCollapse(options) {
             hide_highlight_group.call('highlight', null, {}, {});
         }
         function click_edge(e) {
-            if(options.hideEdge && detect_key(options.hideKey, d3Event))
+            if (options.hideEdge && detect_key(options.hideKey, d3Event))
                 options.hideEdge(diagram.edgeKey.eval(e));
         }
 
@@ -370,47 +439,62 @@ export function expandCollapse(options) {
 
         _keyboard
             .on('keydown.expand-collapse', () => {
-                if(d3Event.key === options.hideKey && (_overNode && options.hideNode || _overEdge && options.hideEdge)) {
-                    if(_overNode)
+                if (
+                    d3Event.key === options.hideKey
+                    && (_overNode && options.hideNode || _overEdge && options.hideEdge)
+                ) {
+                    if (_overNode)
                         highlight_hiding_node(diagram, _overNode, edge);
-                    if(_overEdge)
+                    if (_overEdge)
                         highlight_hiding_edge(diagram, _overEdge);
                     clear_stubs(diagram, node, edge);
                     _changing = null;
                     changing_highlight_group.call('highlight', null, {}, {});
                     collapse_highlight_group.call('highlight', null, {}, {});
-                }
-                else if(d3Event.key === options.linkKey && _overNode) {
-                    if(_overNode && _mode.nodeURL.eval(_overNode)) {
+                } else if (d3Event.key === options.linkKey && _overNode) {
+                    if (_overNode && _mode.nodeURL.eval(_overNode)) {
                         diagram.selectAllNodes()
-                            .filter((n) => n === _overNode).attr('cursor', 'pointer');
+                            .filter(n => n === _overNode).attr('cursor', 'pointer');
                     }
                     hide_highlight_group.call('highlight', null, {}, {});
                     clear_stubs(diagram, node, edge);
                     collapse_highlight_group.call('highlight', null, {}, {});
-                }
-                else if(d3Event.key === options.recurseKey && _overNode) {
+                } else if (d3Event.key === options.recurseKey && _overNode) {
                     highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, true);
                 }
             })
             .on('keyup.expand_collapse', () => {
-                if((d3Event.key === options.hideKey || d3Event.key === options.linkKey || d3Event.key === options.recurseKey) && (_overNode || _overEdge)) {
+                if (
+                    (d3Event.key === options.hideKey || d3Event.key === options.linkKey
+                        || d3Event.key === options.recurseKey) && (_overNode || _overEdge)
+                ) {
                     hide_highlight_group.call('highlight', null, {}, {});
-                    if(_overNode) {
-                        highlight_expand_collapse(diagram, _overNode, node, edge, _overDir, detect_key(options.recurseKey, d3Event));
-                        if(_mode.nodeURL.eval(_overNode)) {
+                    if (_overNode) {
+                        highlight_expand_collapse(
+                            diagram,
+                            _overNode,
+                            node,
+                            edge,
+                            _overDir,
+                            detect_key(options.recurseKey, d3Event),
+                        );
+                        if (_mode.nodeURL.eval(_overNode)) {
                             diagram.selectAllNodes()
-                                .filter((n) => n === _overNode).attr('cursor', null);
+                                .filter(n => n === _overNode).attr('cursor', null);
                         }
                     }
                 }
             });
-        diagram.cascade(97, true, conditionalProperties(
-            (n) => n === _overNode && n.orig.value.value && n.orig.value.value.URL,
-            {
-                nodeLabelDecoration: 'underline'
-            }
-        ));
+        diagram.cascade(
+            97,
+            true,
+            conditionalProperties(
+                n => n === _overNode && n.orig.value.value && n.orig.value.value.URL,
+                {
+                    nodeLabelDecoration: 'underline',
+                },
+            ),
+        );
     }
 
     function remove(diagram, node, edge, ehover) {
@@ -429,33 +513,35 @@ export function expandCollapse(options) {
 
     function expand(dir, nks, whether) {
         nks.forEach(nk => {
-            if(dir === 'both' && !_expanded.both)
-                options.dirs.forEach((dir2) => {
-                    if(whether)
+            if (dir === 'both' && !_expanded.both)
+                options.dirs.forEach(dir2 => {
+                    if (whether)
                         _expanded[dir2].add(nk);
                     else
                         _expanded[dir2].delete(nk);
                 });
-            else if(whether)
+            else if (whether)
                 _expanded[dir].add(nk);
             else
                 _expanded[dir].delete(nk);
         });
         let bothmap;
-        if(_expanded.both)
+        if (_expanded.both)
             bothmap = Object.fromEntries(
-                Array.from(_expanded.both, nk => [nk, true]));
+                Array.from(_expanded.both, nk => [nk, true]),
+            );
         else {
             bothmap = Object.fromEntries(
                 [..._expanded.in, ..._expanded.out]
-                    .map(nk => [nk, true]));
+                    .map(nk => [nk, true]),
+            );
         }
         expanded_highlight_group.call('highlight', null, bothmap, {});
         options.refresh();
     }
 
     function expandNodes(nks, dir) {
-        if(!Array.isArray(nks)) {
+        if (!Array.isArray(nks)) {
             Object.keys(nks).forEach(dir => {
                 _expanded[dir] = new Set(nks[dir]);
             });
@@ -467,31 +553,33 @@ export function expandCollapse(options) {
             });
         }
         const mm = Object.fromEntries(
-            Array.prototype.concat.apply([], Object.keys(_expanded).map(dir => Array.from(_expanded[dir])))
-                .map(nk => [nk, true]));
-        expanded_highlight_group.call('highlight', null,
-            mm,
-            {});
+            Array.prototype.concat.apply(
+                [],
+                Object.keys(_expanded).map(dir => Array.from(_expanded[dir])),
+            )
+                .map(nk => [nk, true]),
+        );
+        expanded_highlight_group.call('highlight', null, mm, {});
         options.refresh();
     }
 
     function nodeOutlineClip(n) {
         const dirs = _mode.expandedDirs(n.key);
-        if(dirs.length == 0) // changing from expanded to not
+        if (dirs.length == 0) // changing from expanded to not
             return 'none';
-        if(dirs.length == 2 || dirs[0] == 'both')
+        if (dirs.length == 2 || dirs[0] == 'both')
             return null;
-        switch(_mode.parent().layoutEngine().rankdir()) {
-        case 'TB':
-            return dirs[0] == 'in' ? 'top' : 'bottom';
-        case 'BT':
-            return dirs[0] == 'in' ? 'bottom' : 'top';
-        case 'LR':
-            return dirs[0] == 'in' ? 'left' : 'right';
-        case 'RL':
-            return dirs[0] == 'in' ? 'right' : 'left';
-        default:
-            throw new Error(`unknown rankdir ${  mode.parent().layoutEngine().rankdir()}`);
+        switch (_mode.parent().layoutEngine().rankdir()) {
+            case 'TB':
+                return dirs[0] == 'in' ? 'top' : 'bottom';
+            case 'BT':
+                return dirs[0] == 'in' ? 'bottom' : 'top';
+            case 'LR':
+                return dirs[0] == 'in' ? 'left' : 'right';
+            case 'RL':
+                return dirs[0] == 'in' ? 'right' : 'left';
+            default:
+                throw new Error(`unknown rankdir ${mode.parent().layoutEngine().rankdir()}`);
         }
     }
 
@@ -499,34 +587,38 @@ export function expandCollapse(options) {
         draw,
         remove,
         parent(p) {
-            if(p) {
+            if (p) {
                 _keyboard = p.child('keyboard');
-                if(!_keyboard)
+                if (!_keyboard)
                     p.child('keyboard', _keyboard = keyboard());
-                const highlight_changing = p.child(options.highlight_changing || 'highlight-changing');
+                const highlight_changing = p.child(
+                    options.highlight_changing || 'highlight-changing',
+                );
                 highlight_changing.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
-                const highlight_expanded = p.child(options.highlight_expanded || 'highlight-expanded');
+                const highlight_expanded = p.child(
+                    options.highlight_expanded || 'highlight-expanded',
+                );
                 highlight_expanded.includeProps()['nodeOutlineClip'] = nodeOutlineClip;
             }
-        }
+        },
     });
     _mode.getExpanded = function() {
         return _expanded;
     };
     _mode.expandedDirs = function(nk) {
-        if(_expanded.both)
+        if (_expanded.both)
             return _expanded.both.has(nk) || _changing && _changing[nk] ? ['both'] : [];
         else {
             const dirs = [];
             let has_in = _expanded.in.has(nk);
-            if(_changing && _changing[nk] && _changing[nk].dir === 'in')
+            if (_changing && _changing[nk] && _changing[nk].dir === 'in')
                 has_in = _changing[nk].whether;
-            if(has_in)
+            if (has_in)
                 dirs.push('in');
             let has_out = _expanded.out.has(nk);
-            if(_changing && _changing[nk] && _changing[nk].dir === 'out')
+            if (_changing && _changing[nk] && _changing[nk].dir === 'out')
                 has_out = _changing[nk].whether;
-            if(has_out)
+            if (has_out)
                 dirs.push('out');
             return dirs;
         }
@@ -534,14 +626,17 @@ export function expandCollapse(options) {
 
     _mode.expand = expand;
     _mode.expandNodes = expandNodes;
-    _mode.clickableLinks = deprecatedProperty("warning - clickableLinks doesn't belong in collapse_expand and will be moved", false);
-    _mode.nodeURL = property((n) => n.value && n.value.value && n.value.value.URL);
+    _mode.clickableLinks = deprecatedProperty(
+        "warning - clickableLinks doesn't belong in collapse_expand and will be moved",
+        false,
+    );
+    _mode.nodeURL = property(n => n.value && n.value.value && n.value.value.URL);
     _mode.urlTargetWindow = property('dcgraphlink');
     _mode.urlOpener = property(defaultUrlOpener);
-    if(options.expandCollapse)
+    if (options.expandCollapse)
         options.expandCollapse(_mode);
     return _mode;
-};
+}
 
 export function defaultUrlOpener(mode, node, _url) {
     window.open(mode.nodeURL.eval(node), mode.urlTargetWindow());

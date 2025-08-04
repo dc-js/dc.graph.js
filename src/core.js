@@ -18,29 +18,29 @@ export function identity(x) {
 }
 
 export const property = function(defaultValue, unwrap) {
-    if(unwrap === undefined)
+    if (unwrap === undefined)
         unwrap = getOriginal;
-    else if(unwrap === false)
+    else if (unwrap === false)
         unwrap = identity;
     let value = defaultValue, react = null;
     const cascade = [];
     const ret = function(_) {
-        if(!arguments.length) {
+        if (!arguments.length) {
             return value;
         }
-        if(react)
+        if (react)
             react(_);
         value = _;
         return this;
     };
     ret.cascade = function(n, f) {
-        for(let i = 0; i < cascade.length; ++i) {
-            if(cascade[i].n === n) {
-                if(f)
+        for (let i = 0; i < cascade.length; ++i) {
+            if (cascade[i].n === n) {
+                if (f)
                     cascade[i].f = f;
                 else cascade.splice(i, 1);
                 return ret;
-            } else if(cascade[i].n > n) {
+            } else if (cascade[i].n > n) {
                 cascade.splice(i, 0, {n, f});
                 return ret;
             }
@@ -49,7 +49,7 @@ export const property = function(defaultValue, unwrap) {
         return ret;
     };
     ret._eval = function(o, n) {
-        if(n === 0 || !cascade.length)
+        if (n === 0 || !cascade.length)
             return functorWrap(ret(), unwrap)(o);
         else {
             const last = cascade[n-1];
@@ -60,7 +60,7 @@ export const property = function(defaultValue, unwrap) {
         return ret._eval(o, cascade.length);
     };
     ret.react = function(_) {
-        if(!arguments.length) {
+        if (!arguments.length) {
             return react;
         }
         react = _;
@@ -72,11 +72,11 @@ export const property = function(defaultValue, unwrap) {
 export function namedChildren() {
     const _children = {};
     const f = function(id, object) {
-        if(arguments.length === 1)
+        if (arguments.length === 1)
             return _children[id];
-        if(f.reject) {
+        if (f.reject) {
             const reject = f.reject(id, object);
-            if(reject) {
+            if (reject) {
                 console.groupCollapsed(reject);
                 console.trace();
                 console.groupEnd();
@@ -84,12 +84,12 @@ export function namedChildren() {
             }
         }
         // do not notify unnecessarily
-        if(_children[id] === object)
+        if (_children[id] === object)
             return this;
-        if(_children[id])
+        if (_children[id])
             _children[id].parent(null);
         _children[id] = object;
-        if(object)
+        if (object)
             object.parent(this);
         return this;
     };
@@ -97,7 +97,7 @@ export function namedChildren() {
         return Object.keys(_children);
     };
     f.nameOf = function(o) {
-        const found = Object.entries(_children).find((kv) => kv[1] == o);
+        const found = Object.entries(_children).find(kv => kv[1] == o);
         return found ? found[0] : null;
     };
     return f;
@@ -106,14 +106,14 @@ export function namedChildren() {
 export function deprecatedProperty(message, defaultValue) {
     const prop = property(defaultValue);
     const ret = function() {
-        if(arguments.length) {
+        if (arguments.length) {
             console.warn(message);
             prop.apply(property, arguments);
             return this;
         }
         return prop();
     };
-    ['cascade', '_eval', 'eval', 'react'].forEach((method) => {
+    ['cascade', '_eval', 'eval', 'react'].forEach(method => {
         ret[method] = prop[method];
     });
     return ret;
@@ -122,9 +122,9 @@ export function deprecatedProperty(message, defaultValue) {
 export function onetimeTrace(level, message) {
     let said = false;
     return function() {
-        if(said)
+        if (said)
             return;
-        if(level === 'trace') {
+        if (level === 'trace') {
             // todo: implement levels?
             // console.groupCollapsed(message);
             // console.trace();
@@ -153,7 +153,7 @@ export function deprecateFunction(message, f) {
 
 // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
 export function uuid() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
         const r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
         return v.toString(16);
     });
@@ -173,24 +173,24 @@ export function isSafari() {
 
 // polyfill Object.assign for IE
 // it's just too useful to do without
-if(typeof Object.assign != 'function') {
+if (typeof Object.assign != 'function') {
     // Must be writable: true, enumerable: false, configurable: true
     Object.defineProperty(Object, 'assign', {
         value: function assign(target, _varArgs) { // .length of function is 2
             'use strict';
-            if(target == null) { // TypeError if undefined or null
+            if (target == null) { // TypeError if undefined or null
                 throw new TypeError('Cannot convert undefined or null to object');
             }
 
             const to = Object(target);
 
-            for(let index = 1; index < arguments.length; index++) {
+            for (let index = 1; index < arguments.length; index++) {
                 const nextSource = arguments[index];
 
-                if(nextSource != null) { // Skip over if undefined or null
+                if (nextSource != null) { // Skip over if undefined or null
                     for (const nextKey in nextSource) {
                         // Avoid bugs when hasOwnProperty is shadowed
-                        if(Object.hasOwn(nextSource, nextKey)) {
+                        if (Object.hasOwn(nextSource, nextKey)) {
                             to[nextKey] = nextSource[nextKey];
                         }
                     }
@@ -204,10 +204,10 @@ if(typeof Object.assign != 'function') {
 }
 
 // https://tc39.github.io/ecma262/#sec-array.prototype.includes
-if(!Array.prototype.includes) {
+if (!Array.prototype.includes) {
     Object.defineProperty(Array.prototype, 'includes', {
         value(valueToFind, fromIndex) {
-            if(this == null) {
+            if (this == null) {
                 throw new TypeError('"this" is null or not defined');
             }
 
@@ -218,7 +218,7 @@ if(!Array.prototype.includes) {
             const len = o.length>>>0;
 
             // 3. If len is 0, return false.
-            if(len === 0) {
+            if (len === 0) {
                 return false;
             }
 
@@ -239,10 +239,10 @@ if(!Array.prototype.includes) {
             }
 
             // 7. Repeat, while k < len
-            while(k < len) {
+            while (k < len) {
                 // a. Let elementK be the result of ? Get(O, ! ToString(k)).
                 // b. If SameValueZero(valueToFind, elementK) is true, return true.
-                if(sameValueZero(o[k], valueToFind)) {
+                if (sameValueZero(o[k], valueToFind)) {
                     return true;
                 }
                 // c. Increase k by 1.
@@ -255,12 +255,12 @@ if(!Array.prototype.includes) {
     });
 }
 
-if(!Object.entries) {
+if (!Object.entries) {
     Object.entries = function(obj) {
         const ownProps = Object.keys(obj);
         let i = ownProps.length;
         const resArray = new Array(i); // preallocate the Array
-        while(i--)
+        while (i--)
             resArray[i] = [ownProps[i], obj[ownProps[i]]];
         return resArray;
     };
@@ -276,19 +276,19 @@ Object.values = Object.values ? Object.values : function(obj) {
     ];
     const objType = Object.prototype.toString.call(obj);
 
-    if(obj === null || typeof obj === 'undefined') {
+    if (obj === null || typeof obj === 'undefined') {
         throw new TypeError('Cannot convert undefined or null to object');
-    } else if(!~allowedTypes.indexOf(objType)) {
+    } else if (!~allowedTypes.indexOf(objType)) {
         return [];
     } else {
         // if ES6 is supported
-        if(Object.keys) {
-            return Object.keys(obj).map((key) => obj[key]);
+        if (Object.keys) {
+            return Object.keys(obj).map(key => obj[key]);
         }
 
         const result = [];
         for (const prop in obj) {
-            if(obj.hasOwnProperty(prop)) {
+            if (obj.hasOwnProperty(prop)) {
                 result.push(obj[prop]);
             }
         }
@@ -310,7 +310,7 @@ export function getBBoxNoThrow(elem) {
 // version of d3.functor that optionally wraps the function with another
 // one, if the parameter is a function
 export function functorWrap(v, wrap) {
-    if(typeof v === 'function') {
+    if (typeof v === 'function') {
         return wrap
             ? function(x) {
                 return v(wrap(x));
