@@ -19,8 +19,8 @@ export default [
                 delimiters: ['', ''],
                 "import { dispatch } from 'd3-dispatch';":
                     "// import { dispatch } from 'd3-dispatch'; // replaced for worker",
-                "    var _dispatch = dispatch('tick', 'start', 'end');":
-                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                "    const _dispatch = dispatch('tick', 'start', 'end');":
+                    "    const _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
                 preventAssignment: true,
             }),
             copy({
@@ -83,8 +83,8 @@ globalThis.cola = webcolaModule;`,
                     "// import { dispatch } from 'd3-dispatch'; // replaced for worker",
                 "import * as dagre from '@dagrejs/dagre';":
                     "import * as dagre from 'https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm';",
-                "    var _dispatch = dispatch('tick', 'start', 'end');":
-                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                "    const _dispatch = dispatch('tick', 'start', 'end');":
+                    "    const _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
                 preventAssignment: true,
             }),
             copy({
@@ -144,8 +144,8 @@ globalThis.cola = webcolaModule;`,
                     "import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from 'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm';",
                 "import { forceStraightenPaths } from 'd3-force-straighten-paths';":
                     "import { forceStraightenPaths } from 'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm';",
-                "    var _dispatch = dispatch('tick', 'start', 'end');":
-                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                "    const _dispatch = dispatch('tick', 'start', 'end');":
+                    "    const _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
                 preventAssignment: true,
             }),
             copy({
@@ -191,8 +191,8 @@ globalThis.cola = webcolaModule;`,
                     "// import { dispatch } from 'd3-dispatch'; // replaced for worker",
                 'import { dispatch } from "d3-dispatch";':
                     '// import { dispatch } from "d3-dispatch"; // replaced for worker',
-                "    var _dispatch = dispatch('tick', 'start', 'end');":
-                    "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
+                "    const _dispatch = dispatch('tick', 'start', 'end');":
+                    "    const _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
                 "    var _dispatch = (globalThis.d3?.dispatch || dispatch)('tick', 'start', 'end');":
                     "    var _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
                 preventAssignment: true,

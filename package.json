@@ -115,6 +115,14 @@
     "src/**/*.js": [
       "eslint --fix",
       "dprint fmt"
+    ],
+    "*.config.js": [
+      "eslint --fix",
+      "dprint fmt"
+    ],
+    "scripts/**/*.js": [
+      "eslint --fix",
+      "dprint fmt"
     ]
   }
 }
