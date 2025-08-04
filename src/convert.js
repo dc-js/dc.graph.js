@@ -1,15 +1,16 @@
 import { uuid } from './core.js';
+import { pluck } from 'dc';
 
-var convert_tree_helper = function(data, attrs, options, parent, level, inherit) {
+const convert_tree_helper = function(data, attrs, options, parent, level, inherit) {
     level = level || 0;
     if(attrs.length > (options.valuesByAttr ? 1 : 0)) {
-        var attr = attrs.shift();
-        var nodes = [], edges = [];
-        var children = data.map(function(v) {
-            var key = v[options.nestKey];
-            var childKey = options.nestKeysUnique ? key : uuid();
+        const attr = attrs.shift();
+        const nodes = [], edges = [];
+        const children = data.map((v) => {
+            const key = v[options.nestKey];
+            const childKey = options.nestKeysUnique ? key : uuid();
             if(childKey) {
-                var node;
+                let node;
                 if(options.ancestorKeys) {
                     inherit = inherit || {};
                     if(attr)
@@ -23,27 +24,27 @@ var convert_tree_helper = function(data, attrs, options, parent, level, inherit)
                     node[options.level] = level+1;
                 nodes.push(node);
                 if(parent) {
-                    var edge = {};
+                    const edge = {};
                     edge[options.edgeSource] = parent;
                     edge[options.edgeTarget] = childKey;
                     edges.push(edge);
                 }
             }
-            var children = options.valuesByAttr ? v[attrs[0]] : v.values;
-            var recurse = convert_tree_helper(children, attrs.slice(0), options,
+            const children = options.valuesByAttr ? v[attrs[0]] : v.values;
+            const recurse = convert_tree_helper(children, attrs.slice(0), options,
                                               childKey, level+1, Object.assign({}, inherit));
             return recurse;
         });
-        return {nodes: Array.prototype.concat.apply(nodes, children.map(dc.pluck('nodes'))),
-                edges: Array.prototype.concat.apply(edges, children.map(dc.pluck('edges')))};
+        return {nodes: Array.prototype.concat.apply(nodes, children.map(pluck('nodes'))),
+                edges: Array.prototype.concat.apply(edges, children.map(pluck('edges')))};
     }
-    else return {nodes: data.map(function(v) {
+    else return {nodes: data.map((v) => {
         v = Object.assign({}, v);
         if(options.level)
             v[options.level] = level+1;
         return v;
-    }), edges: data.map(function(v) {
-        var edge = {};
+    }), edges: data.map((v) => {
+        const edge = {};
         edge[options.edgeSource] = parent;
         edge[options.edgeTarget] = v[options.nodeKey];
         return edge;
@@ -72,30 +73,29 @@ export function convertNest(nest, attrs, nodeKeyAttr, edgeSourceAttr, edgeTarget
         edgeSource: edgeSourceAttr,
         edgeTarget: edgeTargetAttr,
         root: parent,
-        inherit: inherit,
+        inherit,
         ancestorKeys: true,
         label: 'name',
-        labelFun: function(key, attr, v) { return attr + ':' + key; },
+        labelFun(key, attr, _v) { return `${attr  }:${  key}`; },
         level: '_level'
     });
 };
 
 // https://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
-var type_of = obj => ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
-var object_to_keyed_array = obj => Object.entries(obj).map(([key,value]) => ({key, ...value}));
+const type_of = obj => ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+const object_to_keyed_array = obj => Object.entries(obj).map(([key,value]) => ({key, ...value}));
 
 export function convertAdjacencyList(nodes, namesIn, namesOut) {
     if(type_of(nodes) === 'object') {
-        var graph = namesIn.multipleGraphs ? Object.values(nodes)[0] : nodes;
+        const graph = namesIn.multipleGraphs ? Object.values(nodes)[0] : nodes;
         nodes = object_to_keyed_array(graph);
     }
     const adjkey = namesIn.adjacencies || namesIn.revAdjacencies,
           revadj = !namesIn.adjacencies;
     if(!adjkey)
         throw new Error('must specify namesIn.adjacencies or namesIn.revAdjacencies');
-    var edges = Array.prototype.concat.apply([], nodes.map(function(n) {
-        return n[adjkey].map(function(adj) {
-            var e = {};
+    const edges = Array.prototype.concat.apply([], nodes.map((n) => n[adjkey].map((adj) => {
+            const e = {};
             if(namesOut.edgeKey)
                 e[namesOut.edgeKey] = uuid();
             e[namesOut.edgeSource] = n[namesIn.nodeKey];
@@ -105,8 +105,7 @@ export function convertAdjacencyList(nodes, namesIn, namesOut) {
             if(namesOut.adjacency)
                 e[namesOut.adjacency] = adj;
             return e;
-        });
-    }));
+        })));
     return {
         nodes,
         edges,

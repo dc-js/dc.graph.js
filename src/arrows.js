@@ -1,11 +1,7 @@
 import { angleBetweenPoints, asBezier3, chopBezier } from "./shape.js";
 import { generatePath } from "./utils.js";
 
-const offsetx = (ofsx) => {
-    return (p) => {
-        return {x: p.x + ofsx, y: p.y};
-    };
-}
+const offsetx = (ofsx) => (p) => ({x: p.x + ofsx, y: p.y})
 
 export const builtinArrows = {
     box: (open, side) => {
@@ -38,13 +34,12 @@ export const builtinArrows = {
             }
         };
     },
-    curve: (open, side) => {
-        return {
+    curve: (open, side) => ({
             stems: [true,false],
             kernstems: [0, 0.25],
             frontRef: [8,0],
             drawFunction: (marker, ofs, stemWidth) => {
-                var instrs = [];
+                const instrs = [];
                 instrs.push('M', (side==='left' ? 7.5 : 4) + ofs[0], side==='left' ? stemWidth/2 : 3.5);
                 if(side==='left')
                     instrs.push('v', -stemWidth/2);
@@ -62,15 +57,13 @@ export const builtinArrows = {
                     .attr('stroke-width', stemWidth)
                     .attr('fill', 'none');
             }
-        };
-    },
-    icurve: (open, side) => {
-        return {
+        }),
+    icurve: (open, side) => ({
             stems: [false,true],
             kernstems: [0.25,0],
             frontRef: [8,0],
             drawFunction: (marker, ofs, stemWidth) => {
-                var instrs = [];
+                const instrs = [];
                 instrs.push('M', (side==='left' ? 0.5 : 4) + ofs[0], side==='left' ? stemWidth/2 : 3.5);
                 if(side==='left')
                     instrs.push('v', -stemWidth/2);
@@ -88,19 +81,16 @@ export const builtinArrows = {
                     .attr('stroke-width', stemWidth)
                     .attr('fill', 'none');
             }
-        };
-    },
+        }),
     diamond: (open, side) => {
         if(!open) return {
             frontRef: [side ? 11.25 : 12, 0],
             backRef: [side ? 0.75 : 0, 0],
             viewBox: [0, -4, 12, 8],
             stems: [!!side, !!side],
-            kernstems: (stemWidth) => {
-                return [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth];
-            },
+            kernstems: (stemWidth) => [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth],
             drawFunction: (marker, ofs, stemWidth) => {
-                var upoints = [{x: 0, y: 0}];
+                const upoints = [{x: 0, y: 0}];
                 if(side !== 'left')
                     upoints.push({x: 6, y: 4});
                 else
@@ -108,7 +98,7 @@ export const builtinArrows = {
                 upoints.push({x: 12, y: 0});
                 if(!side)
                     upoints.push({x: 6, y: -4});
-                var points = upoints.map(offsetx(ofs[0]));
+                const points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', 0);
@@ -126,11 +116,9 @@ export const builtinArrows = {
             backRef: [side ? 0.75 : 0, 0],
             viewBox: [0, -4, 12, 8],
             stems: [!!side, !!side],
-            kernstems: (stemWidth) => {
-                return [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth];
-            },
+            kernstems: (stemWidth) => [side ? 0 : .75*stemWidth, side ? 0 : .75*stemWidth],
             drawFunction: (marker, ofs, stemWidth) => {
-                var upoints = [{x: 0.9, y: 0}];
+                const upoints = [{x: 0.9, y: 0}];
                 if(side !== 'left')
                     upoints.push({x: 6, y: 3.4});
                 else
@@ -138,7 +126,7 @@ export const builtinArrows = {
                 upoints.push({x: 11.1, y: 0});
                 if(!side)
                     upoints.push({x: 6, y: -3.4});
-                var points = upoints.map(offsetx(ofs[0]));
+                const points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generatePath(points, 1, !side))
                     .attr('stroke-width', 1)
@@ -153,7 +141,7 @@ export const builtinArrows = {
             }
         };
     },
-    dot: function(open, side) {
+    dot(open, side) {
         if(!open) return {
             frontRef: [8,0],
             stems: [!!side, !!side],
@@ -204,15 +192,15 @@ export const builtinArrows = {
             }
         };
     },
-    normal: function(open, side) {
+    normal(open, side) {
         if(!open) return {
             frontRef: [side ? 8-4/3 : 8, 0],
             viewBox: [0, -3, 8, 6],
-            kernstems: function(stemWidth) {
+            kernstems(stemWidth) {
                 return [0,stemWidth*4/3];
             },
             drawFunction: (marker, ofs, stemWidth) => {
-                var upoints = [];
+                const upoints = [];
                 if(side === 'left')
                     upoints.push({x: 0, y: 0});
                 else
@@ -231,7 +219,7 @@ export const builtinArrows = {
                     upoints.push({x: 0, y: 0});
                 else
                     upoints.push({x: 0, y: -3});
-                var points = upoints.map(offsetx(ofs[0]));
+                const points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
@@ -247,11 +235,11 @@ export const builtinArrows = {
         else return {
             frontRef: [side ? 8-4/3 : 8, 0],
             viewBox: [0, -3, 8, 6],
-            kernstems: function(stemWidth) {
+            kernstems(stemWidth) {
                 return [0,stemWidth*4/3];
             },
             drawFunction: (marker, ofs, stemWidth) => {
-                var upoints = [];
+                let upoints = [];
                 if(!side) {
                     upoints = [
                         {x: 0.5, y: 2.28},
@@ -265,7 +253,7 @@ export const builtinArrows = {
                         {x: 8-4/3, y: 0}
                     ];
                 }
-                var points = upoints.map(offsetx(ofs[0]));
+                const points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generatePath(points, 1, !side))
                     .attr('stroke-width', 1)
@@ -280,16 +268,16 @@ export const builtinArrows = {
             }
         };
     },
-    inv: function(open, side) {
+    inv(open, side) {
         if(!open) return {
             frontRef: [8,0],
             backRef: [side ? 4/3 : 0, 0],
             viewBox: [0, -3, 8, 6],
-            kernstems: function(stemWidth) {
+            kernstems(stemWidth) {
                 return [stemWidth*4/3,0];
             },
             drawFunction: (marker, ofs, stemWidth) => {
-                var upoints = [];
+                const upoints = [];
                 if(side === 'left')
                     upoints.push({x: 8, y: 0});
                 else
@@ -308,7 +296,7 @@ export const builtinArrows = {
                     upoints.push({x: 8, y: 0});
                 else
                     upoints.push({x: 8, y: -3});
-                var points = upoints.map(offsetx(ofs[0]));
+                const points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
@@ -325,11 +313,11 @@ export const builtinArrows = {
             frontRef: [8,0],
             backRef: [side ? 4/3 : 0, 0],
             viewBox: [0, -3, 8, 6],
-            kernstems: function(stemWidth) {
+            kernstems(stemWidth) {
                 return [stemWidth*4/3,0];
             },
             drawFunction: (marker, ofs, stemWidth) => {
-                var upoints = [];
+                let upoints = [];
                 if(!side) {
                     upoints = [
                         {x: 7.5, y: 2.28},
@@ -343,7 +331,7 @@ export const builtinArrows = {
                         {x: 1.43, y: 0}
                     ];
                 }
-                var points = upoints.map(offsetx(ofs[0]));
+                const points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generatePath(points, 1, !side))
                     .attr('stroke-width', 1)
@@ -358,15 +346,15 @@ export const builtinArrows = {
             }
         };
     },
-    tee: function(open, side) {
+    tee(open, side) {
         return {
             frontRef: [5,0],
             viewBox: [0, -5, 5, 10],
             stems: [true,false],
             drawFunction: (marker, ofs, stemWidth) => {
-                var b = side === 'right' ? 0 : -5,
+                const b = side === 'right' ? 0 : -5,
                     t = side === 'left' ? 0 : 5;
-                var points = [
+                const points = [
                     {x: 2, y: t},
                     {x: 5, y: t},
                     {x: 5, y: b},
@@ -382,14 +370,14 @@ export const builtinArrows = {
             }
         };
     },
-    vee: function(open, side) {
+    vee(open, side) {
         return {
             stems: [true,false],
-            kernstems: function(stemWidth) {
+            kernstems(stemWidth) {
                 return [0,stemWidth];
             },
             drawFunction: (marker, ofs, stemWidth) => {
-                var upoints = [
+                const upoints = [
                     {x: 0, y: -5},
                     {x: 10, y: 0},
                     {x: 0, y: 5},
@@ -403,7 +391,7 @@ export const builtinArrows = {
                     upoints.splice(2, 1,
                                   {x: 10, y: stemWidth/2},
                                   {x: 5, y: stemWidth/2});
-                var points = upoints.map(offsetx(ofs[0]));
+                const points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
@@ -413,14 +401,14 @@ export const builtinArrows = {
             }
         };
     },
-    crow: function(open, side) {
+    crow(open, side) {
         return {
             stems: [false,true],
-            kernstems: function(stemWidth) {
+            kernstems(stemWidth) {
                 return [stemWidth,0];
             },
             drawFunction: (marker, ofs, stemWidth) => {
-                var upoints = [
+                const upoints = [
                     {x: 10, y: -5},
                     {x: 0, y: 0},
                     {x: 10, y: 5},
@@ -434,7 +422,7 @@ export const builtinArrows = {
                     upoints.splice(2, 1,
                                   {x: 0, y: stemWidth/2},
                                   {x: 5, y: stemWidth/2});
-                var points = upoints.map(offsetx(ofs[0]));
+                const points = upoints.map(offsetx(ofs[0]));
                 marker.append('svg:path')
                     .attr('d', generatePath(points, 1, true))
                     .attr('stroke-width', '0px');
@@ -452,10 +440,10 @@ function arrowDef(arrdefs, shape, open, side) {
 
 export function arrowParts(arrdefs, desc) {
     // graphviz appears to use a real parser for this
-    var parts = [];
+    const parts = [];
     while(desc && desc.length) {
-        var mods = /^o?(?:l|r)?/.exec(desc);
-        var open = false, side = null;
+        let mods = /^o?(?:l|r)?/.exec(desc);
+        let open = false, side = null;
         if(mods[0]) {
             mods = mods[0];
             desc = desc.slice(mods.length);
@@ -468,8 +456,8 @@ export function arrowParts(arrdefs, desc) {
                 side='right';
             }
         }
-        var ok = false;
-        for(var aname in arrdefs)
+        let ok = false;
+        for(const aname in arrdefs)
             if(desc.substring(0, aname.length) === aname) {
                 ok = true;
                 parts.push(arrowDef(arrdefs, aname, open, side));
@@ -477,7 +465,7 @@ export function arrowParts(arrdefs, desc) {
                 break;
             }
         if(!ok) {
-            console.warn("couldn't find arrow name in " + desc);
+            console.warn(`couldn't find arrow name in ${  desc}`);
             break;
         }
     }
@@ -485,7 +473,7 @@ export function arrowParts(arrdefs, desc) {
 }
 
 function unionViewbox(vb1, vb2) {
-    var left = Math.min(vb1[0], vb2[0]),
+    const left = Math.min(vb1[0], vb2[0]),
         bottom = Math.min(vb1[1], vb2[1]),
         right = Math.max(vb1[0] + vb1[2], vb2[0] + vb2[2]),
         top = Math.max(vb1[1] + vb1[3], vb2[1] + vb2[3]);
@@ -501,7 +489,7 @@ export function addPoints(p1, p2) {
 }
 
 export function multPoint(p, s) {
-    return p.map(function(x) { return x*s; });
+    return p.map((x) => x*s);
 }
 
 function defaulted(def) {
@@ -510,30 +498,29 @@ function defaulted(def) {
     };
 }
 
-var view_box = defaulted([0, -5, 10, 10]),
+const view_box = defaulted([0, -5, 10, 10]),
     front_ref = defaulted([10, 0]),
     back_ref = defaulted([0, 0]);
 
 export function arrowOffsets(parts, stemWidth) {
-    var frontRef = null, backRef = null;
-    return parts.map(function(p, i) {
-        var fr = front_ref(p.frontRef).slice(),
+    return parts.map((p, i) => {
+        const fr = front_ref(p.frontRef).slice(),
             br = back_ref(p.backRef).slice();
         if(p.kernstems) {
-            var kernstems = p.kernstems;
+            let kernstems = p.kernstems;
             if(typeof kernstems === 'function')
                 kernstems = kernstems(stemWidth);
             if(i !== 0 && kernstems[1]) {
-                var last = parts[i-1];
+                const last = parts[i-1];
                 if(last.stems && last.stems[0])
                     fr[0] -= kernstems[1];
             }
             if(kernstems[0]) {
-                var kern = false;
+                let kern = false;
                 if(i === parts.length-1)
                     kern = true;
                 else {
-                    var next = parts[i+1];
+                    const next = parts[i+1];
                     if(next.stems && next.stems[1])
                         kern = true;
                 }
@@ -542,52 +529,53 @@ export function arrowOffsets(parts, stemWidth) {
             }
         }
         if(i === 0) {
-            frontRef = fr;
-            backRef = br;
-            return {backRef: backRef, offset: [0, 0]};
+            const backRef = br;
+            return {backRef, offset: [0, 0]};
         } else {
-            var ofs = subtractPoints(backRef, fr);
+            let backRef = br;
+            const ofs = subtractPoints(backRef, fr);
             backRef = addPoints(br, ofs);
-            return {backRef: backRef, offset: ofs};
+            return {backRef, offset: ofs};
         }
     });
 }
 
 function arrowBounds(parts, stemWidth) {
-    var viewBox = null, offsets = arrowOffsets(parts, stemWidth);
-    parts.forEach(function(p, i) {
-        var vb = view_box(p.viewBox);
-        var ofs = offsets[i].offset;
+    let viewBox = null;
+    const offsets = arrowOffsets(parts, stemWidth);
+    parts.forEach((p, i) => {
+        const vb = view_box(p.viewBox);
+        const ofs = offsets[i].offset;
         if(!viewBox)
             viewBox = vb.slice();
         else
             viewBox = unionViewbox(viewBox, [vb[0] + ofs[0], vb[1] + ofs[1], vb[2], vb[3]]);
     });
-    return {offsets: offsets, viewBox: viewBox};
+    return {offsets, viewBox};
 }
 
 function arrowLength(parts, stemWidth) {
     if(!parts.length)
         return 0;
-    var offsets = arrowOffsets(parts, stemWidth);
+    const offsets = arrowOffsets(parts, stemWidth);
     return front_ref(parts[0].frontRef)[0] - offsets[parts.length-1].backRef[0];
 }
 
 
 export function scaledArrowLengths(diagram, e) {
-    var arrowSize = diagram.edgeArrowSize.eval(e),
+    const arrowSize = diagram.edgeArrowSize.eval(e),
         stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize;
-    var headLength = arrowSize *
+    const headLength = arrowSize *
         (arrowLength(arrowParts(diagram.arrows(), diagram.edgeArrowhead.eval(e)), stemWidth) +
          diagram.nodeStrokeWidth.eval(e.target) / 2),
         tailLength = arrowSize *
         (arrowLength(arrowParts(diagram.arrows(), diagram.edgeArrowtail.eval(e)), stemWidth) +
          diagram.nodeStrokeWidth.eval(e.source) / 2);
-    return {headLength: headLength, tailLength: tailLength};
+    return {headLength, tailLength};
 }
 
 export function clipPathToArrows(headLength, tailLength, path) {
-    var points0 = asBezier3(path),
+    const points0 = asBezier3(path),
         points = chopBezier(points0, 'head', headLength);
     return {
         bezDegree: 3,
@@ -598,25 +586,25 @@ export function clipPathToArrows(headLength, tailLength, path) {
 }
 
 export function placeArrowsOnSpline(diagram, e, points) {
-    var alengths = scaledArrowLengths(diagram, e);
-    var path0 = {
-        points: points,
+    const alengths = scaledArrowLengths(diagram, e);
+    const path0 = {
+        points,
         bezDegree: 3
     };
-    var path = clipPathToArrows(alengths.headLength, alengths.tailLength, path0);
+    const path = clipPathToArrows(alengths.headLength, alengths.tailLength, path0);
     return {
-        path: path,
+        path,
         full: path0,
-        orienthead: angleBetweenPoints(path.points[path.points.length-1], path0.points[path0.points.length-1]) + 'rad', //calculate_arrowhead_orientation(e.cola.points, 'head'),
-        orienttail: angleBetweenPoints(path.points[0], path0.points[0]) + 'rad' //calculate_arrowhead_orientation(e.cola.points, 'tail')
+        orienthead: `${angleBetweenPoints(path.points[path.points.length-1], path0.points[path0.points.length-1])  }rad`, //calculate_arrowhead_orientation(e.cola.points, 'head'),
+        orienttail: `${angleBetweenPoints(path.points[0], path0.points[0])  }rad` //calculate_arrowhead_orientation(e.cola.points, 'tail')
     };
 }
 
 
 // determine pre-transition orientation that won't spin a lot going to new orientation
 export function unsurprisingOrient(oldorient, neworient) {
-    var oldang = +oldorient.slice(0, -3),
-        newang = +neworient.slice(0, -3);
+    let oldang = +oldorient.slice(0, -3);
+    const newang = +neworient.slice(0, -3);
     if(Math.abs(oldang - newang) > Math.PI) {
         if(newang > oldang)
             oldang += 2*Math.PI;
@@ -627,22 +615,22 @@ export function unsurprisingOrient(oldorient, neworient) {
 
 
 export function edgeArrow(diagram, arrdefs, e, kind, desc) {
-    var id = diagram.arrowId(e, kind);
-    var strokeOfs, edgeStroke;
+    const id = diagram.arrowId(e, kind);
+    let strokeOfs, edgeStroke;
     function arrow_sig() {
-        return desc + '-' + strokeOfs + '-' + edgeStroke;
+        return `${desc  }-${  strokeOfs  }-${  edgeStroke}`;
     }
     if(desc) {
         strokeOfs = diagram.nodeStrokeWidth.eval(kind==='tail' ? e.source : e.target)/2;
         edgeStroke = diagram.edgeStroke.eval(e);
-        if(e[kind + 'ArrowLast'] === arrow_sig())
+        if(e[`${kind  }ArrowLast`] === arrow_sig())
             return id;
     }
-    var parts = arrowParts(arrdefs, desc),
+    const parts = arrowParts(arrdefs, desc),
         marker = diagram.addOrRemoveDef(id, !!parts.length, 'svg:marker');
 
     if(parts.length) {
-        var arrowSize = diagram.edgeArrowSize.eval(e),
+        const arrowSize = diagram.edgeArrowSize.eval(e),
             stemWidth = diagram.edgeStrokeWidth.eval(e) / arrowSize,
             bounds = arrowBounds(parts, stemWidth),
             frontRef = front_ref(parts[0].frontRef);
@@ -658,13 +646,13 @@ export function edgeArrow(diagram, arrdefs, e, kind, desc) {
             .attr('stroke', edgeStroke)
             .attr('fill', edgeStroke);
         marker.html(null);
-        parts.forEach(function(p, i) {
+        parts.forEach((p, i) => {
             marker
                 .call(p.drawFunction,
                       addPoints([-strokeOfs/arrowSize,0], bounds.offsets[i].offset),
                       stemWidth);
         });
     }
-    e[kind + 'ArrowLast'] = arrow_sig();
+    e[`${kind  }ArrowLast`] = arrow_sig();
     return desc ? id : null;
 }

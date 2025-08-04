@@ -6,10 +6,10 @@ import { set } from 'd3-collection';
 import { select, event } from 'd3-selection';
 
 export function keyboard() {
-    var _dispatch = dispatch('keydown', 'keyup', 'modkeyschanged');
-    var _unique_id = 'keyboard' + Math.floor(Math.random() * 100000);
-    var _mod_keys = set(['Shift', 'Control', 'Alt', 'Meta']),
-        _pressed = set();
+    const _dispatch = dispatch('keydown', 'keyup', 'modkeyschanged');
+    const _unique_id = `keyboard${  Math.floor(Math.random() * 100000)}`;
+    const _mod_keys = set(['Shift', 'Control', 'Alt', 'Meta']);
+    let _pressed = set();
 
     function pressed() {
         return _pressed.values().sort();
@@ -34,21 +34,21 @@ export function keyboard() {
             _dispatch.call("modkeyschanged", null, pressed());
         }
     }
-    function draw(diagram) {
+    function draw(_diagram) {
         select(window)
-            .on('keydown.' + _unique_id, keydown)
-            .on('keyup.' + _unique_id, keyup)
-            .on('blur.' + _unique_id, clear);
+            .on(`keydown.${  _unique_id}`, keydown)
+            .on(`keyup.${  _unique_id}`, keyup)
+            .on(`blur.${  _unique_id}`, clear);
     }
-    function remove(diagram) {
+    function remove(_diagram) {
         select(window)
-            .on('keydown.' + _unique_id, null)
-            .on('keyup.' + _unique_id, null)
-            .on('blur.' + _unique_id, null);
+            .on(`keydown.${  _unique_id}`, null)
+            .on(`keyup.${  _unique_id}`, null)
+            .on(`blur.${  _unique_id}`, null);
     }
-    var _mode = mode('brush', {
-        draw: draw,
-        remove: remove
+    const _mode = mode('brush', {
+        draw,
+        remove
     });
 
     _mode.on = function(event, f) {
@@ -66,16 +66,16 @@ export function keyboard() {
         if(ignoreKeys) {
             if(!Array.isArray(ignoreKeys))
                 ignoreKeys = [ignoreKeys];
-            ignoreKeys.forEach(key => pressed.remove(key))
+            ignoreKeys.forEach(_key => pressed.remove(_key))
         }
-        if(!keys || keys === [])
+        if(!keys || keys.length === 0)
             return pressed.empty();
         if(!Array.isArray(keys))
             keys = [keys];
         const pv = pressed.values();
         if(pv.length !== keys.length)
             return false;
-        return keys.slice().sort().every(function(k, i) { return k === pv[i]; });
+        return keys.slice().sort().every((k, i) => k === pv[i]);
     };
 
     return _mode;

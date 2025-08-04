@@ -17,9 +17,9 @@ import { webworkerLayout } from './webworker_layout.js';
 export function spawnEngine(layout, args, worker) {
     args = args || {};
     worker = worker && !!window.Worker;
-    var engine = engines.instantiate(layout, args, worker);
+    let engine = engines.instantiate(layout, args, worker);
     if(!engine) {
-        console.warn('layout engine ' + layout + ' not found; using default ' + _defaultEngine);
+        console.warn(`layout engine ${  layout  } not found; using default ${  _defaultEngine}`);
         engine = engines.instantiate(_defaultEngine, args, worker);
     }
     return engine;
@@ -29,57 +29,57 @@ const _engines = [
     {
         name: 'dagre',
         params: ['rankdir'],
-        instantiate: function() {
+        instantiate() {
             return dagreLayout();
         }
     },
     {
         name: 'd3v4force',
-        instantiate: function() {
+        instantiate() {
             return d3v4ForceLayout();
         }
     },
     {
         name: 'tree',
-        instantiate: function() {
+        instantiate() {
             return treeLayout();
         }
     },
     {
         names: ['circo', 'dot', 'neato', 'osage', 'twopi', 'fdp'],
-        instantiate: function(layout, args) {
+        instantiate(layout, args) {
             return graphvizLayout(null, layout, args.server);
         }
     },
     {
         name: 'cola',
         params: ['lengthStrategy'],
-        instantiate: function() {
+        instantiate() {
             return colaLayout();
         }
     },
     {
         names: ['dynadag'],
         workerName: 'dynagraph',
-        instantiate: function(layout, args) {
+        instantiate(layout, args) {
             return dynagraphLayout(null, layout, args.server);
         }
     },
     {
         name: 'manual',
-        instantiate: function() {
+        instantiate() {
             return manualLayout();
         }
     },
     {
         name: 'flexbox',
-        instantiate: function() {
+        instantiate() {
             return flexboxLayout();
         }
     },
     {
         name: 'layered',
-        instantiate: function() {
+        instantiate() {
             return layeredLayout();
         }
     }
@@ -87,25 +87,25 @@ const _engines = [
 const _defaultEngine = 'cola';
 
 export const engines = {
-    entry_pred: function(layoutName) {
+    entry_pred(layoutName) {
         return function(e) {
             return e.name && e.name === layoutName || e.names && e.names.includes(layoutName);
         };
     },
-    get: function(layoutName) {
+    get(layoutName) {
         return _engines.find(this.entry_pred(layoutName));
     },
-    is_directed: function(layoutName) {
+    is_directed(layoutName) {
         // to a first approximation. cola is sometimes directed
         return ['dagre', 'dot'].includes(layoutName);
     },
-    instantiate: function(layout, args, worker) {
-        var entry = this.get(layout);
+    instantiate(layout, args, worker) {
+        const entry = this.get(layout);
         if(!entry)
             return null;
-        var engine = entry.instantiate(layout, args),
-            params = entry.params || [];
-        params.forEach(function(p) {
+        let engine = entry.instantiate(layout, args);
+        const params = entry.params || [];
+        params.forEach((p) => {
             if(args[p])
                 engine[p](args[p]);
         });
@@ -113,22 +113,20 @@ export const engines = {
             engine = webworkerLayout(engine, entry.workerName);
         return engine;
     },
-    available: function() {
-        return _engines.reduce(function(avail, entry) {
-            return avail.concat(entry.name ? [entry.name] : entry.names);
-        }, []);
+    available() {
+        return _engines.reduce((avail, entry) => avail.concat(entry.name ? [entry.name] : entry.names), []);
     },
-    unregister: function(layoutName) {
+    unregister(layoutName) {
         // meh. this is a bit much. there is such a thing as making the api too "easy".
-        var i = _engines.findIndex(this.entry_pred(layoutName));
-        var remove = false;
+        const i = _engines.findIndex(this.entry_pred(layoutName));
+        let remove = false;
         if(i < 0)
             return false;
-        var entry = _engines[i];
+        const entry = _engines[i];
         if(entry.name === layoutName)
             remove = true;
         else {
-            var j = entry.names.indexOf(layoutName);
+            const j = entry.names.indexOf(layoutName);
             if(j >= 0)
                 entry.names.splice(j, 1);
             else
@@ -140,8 +138,8 @@ export const engines = {
             _engines.splice(i, 1);
         return true;
     },
-    register: function(entry) {
-        var that = this;
+    register(entry) {
+        const that = this;
         if(!entry.instantiate) {
             console.error('engine definition needs instantiate: function(layout, args) { ... }');
             return this;
@@ -149,7 +147,7 @@ export const engines = {
         if(entry.name)
             this.unregister(entry.name);
         else if(entry.names)
-            entry.names.forEach(function(layoutName) {
+            entry.names.forEach((layoutName) => {
                 that.unregister(layoutName);
             });
         else {

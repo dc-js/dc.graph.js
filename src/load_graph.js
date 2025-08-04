@@ -2,23 +2,24 @@ import { set } from 'd3-collection';
 import { json, text, dsv, csv } from 'd3-fetch';
 
 function processDot(text) {
-    return new Promise((resolve, reject) => {
-    var nodes, edges, node_cluster = {}, clusters = [];
+    return new Promise((resolve, _reject) => {
+    let nodes, edges;
+    const node_cluster = {}, clusters = [];
     if(graphlibDot.parse) { // graphlib-dot 1.1.0 (where did i get it from?)
-        var digraph = graphlibDot.parse(text);
+        const digraph = graphlibDot.parse(text);
 
-        var nodeNames = digraph.nodes();
+        const nodeNames = digraph.nodes();
         nodes = new Array(nodeNames.length);
-        nodeNames.forEach(function (name, i) {
-            var node = nodes[i] = digraph._nodes[nodeNames[i]];
+        nodeNames.forEach((name, i) => {
+            const node = nodes[i] = digraph._nodes[nodeNames[i]];
             node.id = i;
             node.name = name;
         });
 
-        var edgeNames = digraph.edges();
+        const edgeNames = digraph.edges();
         edges = [];
-        edgeNames.forEach(function(e) {
-            var edge = digraph._edges[e];
+        edgeNames.forEach((e) => {
+            const edge = digraph._edges[e];
             edges.push(Object.assign({}, edge.value, {
                 source: digraph._nodes[edge.u].id,
                 target: digraph._nodes[edge.v].id,
@@ -28,18 +29,18 @@ function processDot(text) {
         });
         // TODO: if this version exists in the wild, look at how it does subgraphs/clusters
     } else { // graphlib-dot 0.6
-        digraph = graphlibDot.read(text);
+        const digraph = graphlibDot.read(text);
 
-        nodeNames = digraph.nodes();
+        const nodeNames = digraph.nodes();
         nodes = new Array(nodeNames.length);
-        nodeNames.forEach(function (name, i) {
-            var node = nodes[i] = digraph._nodes[nodeNames[i]];
+        nodeNames.forEach((name, i) => {
+            const node = nodes[i] = digraph._nodes[nodeNames[i]];
             node.id = i;
             node.name = name;
         });
 
         edges = [];
-        digraph.edges().forEach(function(e) {
+        digraph.edges().forEach((e) => {
             edges.push(Object.assign({}, digraph.edge(e.v, e.w), {
                 source: digraph._nodes[e.v].id,
                 target: digraph._nodes[e.w].id,
@@ -49,47 +50,43 @@ function processDot(text) {
         });
 
         // iterative bfs for variety (recursion would work just as well)
-        var cluster_names = {};
-        var queue = digraph.children().map(function(c) { return Object.assign({parent: null, key: c}, digraph.node(c)); });
+        const cluster_names = {};
+        let queue = digraph.children().map((c) => Object.assign({parent: null, key: c}, digraph.node(c)));
         while(queue.length) {
-            var item = queue.shift(),
-                children = digraph.children(item.key);
+            const item = queue.shift(),
+                  children = digraph.children(item.key);
             if(children.length) {
                 clusters.push(item);
                 cluster_names[item.key] = true;
             }
             else
                 node_cluster[item.key] = item.parent;
-            queue = queue.concat(children.map(function(c) { return {parent: item.key, key: c}; }));
+            queue = queue.concat(children.map((c) => ({parent: item.key, key: c})));
         }
         // clusters as nodes not currently supported
-        nodes = nodes.filter(function(n) {
-            return !cluster_names[n.name];
-        });
+        nodes = nodes.filter((n) => !cluster_names[n.name]);
     }
-    var graph = {nodes: nodes, links: edges, node_cluster: node_cluster, clusters: clusters};
+    const graph = {nodes, links: edges, node_cluster, clusters};
     resolve(graph);
     });
 }
 
 function processDsv(data) {
-    return new Promise((resolve, reject) => {
-    var keys = Object.keys(data[0]);
-    var source = keys[0], target = keys[1];
-    var nodes = set(data.map(function(r) { return r[source]; }));
-    data.forEach(function(r) {
+    return new Promise((resolve, _reject) => {
+    const keys = Object.keys(data[0]);
+    const source = keys[0], target = keys[1];
+    let nodes = set(data.map((r) => r[source]));
+    data.forEach((r) => {
         nodes.add(r[target]);
     });
-    nodes = nodes.values().map(function(k) { return {name: k}; });
+    nodes = nodes.values().map((k) => ({name: k}));
     resolve({
-        nodes: nodes,
-        links: data.map(function(r, i) {
-            return {
+        nodes,
+        links: data.map((r, i) => ({
                 key: i,
                 sourcename: r[source],
                 targetname: r[target]
-            };
-        })
+            }))
     });
     });
 }
@@ -122,19 +119,17 @@ export const fileFormats = [
 ];
 
 export function matchFileFormat(filename) {
-    return fileFormats.find(function(format) {
-        var exts = format.exts;
+    return fileFormats.find((format) => {
+        let exts = format.exts;
         if(!Array.isArray(exts))
             exts = [exts];
-        return exts.find(function(ext) {
-                return new RegExp('\.' + ext + '$').test(filename);
-        });
+        return exts.find((ext) => new RegExp(`\\.${  ext  }$`).test(filename));
     });
 };
 
 export function matchMimeType(mime) {
-    return fileFormats.find(function(format) {
-        var mimes = format.mimes;
+    return fileFormats.find((format) => {
+        let mimes = format.mimes;
         if(!Array.isArray(mimes))
             mimes = [mimes];
         return mimes.includes(mime);
@@ -142,15 +137,15 @@ export function matchMimeType(mime) {
 };
 
 function unknownFormatError(filename) {
-    var spl = filename.split('.');
+    const spl = filename.split('.');
     if(spl.length)
-        return new Error('do not know how to process graph file extension ' + spl[spl.length-1]);
+        return new Error(`do not know how to process graph file extension ${  spl[spl.length-1]}`);
     else
-        return new Error('need file extension to process graph file automatically, filename ' + filename);
+        return new Error(`need file extension to process graph file automatically, filename ${  filename}`);
 }
 
 function unknownMimeError(mime) {
-    return new Error('do not know how to process mime type ' + mime);
+    return new Error(`do not know how to process mime type ${  mime}`);
 }
 
 // load a graph from various formats and return the data in consistent {nodes, links} format
@@ -191,5 +186,5 @@ export function loadGraphText(text, filename) {
 };
 
 export function dataUrl(data) {
-    return 'data:application/json,' + JSON.stringify(data);
+    return `data:application/json,${  JSON.stringify(data)}`;
 };

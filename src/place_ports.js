@@ -6,14 +6,12 @@ export function portName(nodeId, edgeId, portName) {
         return null; // must have one key or the other
     if(nodeId) nodeId = nodeId.replace(/\//g, '%2F');
     if(edgeId) edgeId = edgeId.replace(/\//g, '%2F');
-    return (nodeId ? 'node/' + nodeId : 'edge/' + edgeId) + '/' + portName;
+    return `${nodeId ? `node/${  nodeId}` : `edge/${  edgeId}`  }/${  portName}`;
 };
 export function splitPortName(portname) {
-    var parts = portname.split('/');
+    let parts = portname.split('/');
     console.assert(parts.length === 3);
-    parts = parts.map(function(p) {
-        return p.replace(/%2F/g, '/');
-    });
+    parts = parts.map((p) => p.replace(/%2F/g, '/'));
     if(parts[0] === 'node')
         return {
             nodeKey: parts[1],
@@ -27,14 +25,14 @@ export function splitPortName(portname) {
 export function projectPort(diagram, n, p) {
     if(!p.vec) {
         console.assert(!p.edges.length);
-        throw new Error("port has not been placed, maybe install place_ports? " + p.name);
+        throw new Error(`port has not been placed, maybe install place_ports? ${  p.name}`);
     }
     p.pos = diagram.shape(n.dcg_shape.shape).intersect_vec(n, p.vec[0]*1000, p.vec[1]*1000);
 }
 
 export function placePorts() {
-    function received_layout(diagram, nodes, wnodes, edges, wedges, ports, wports) {
-        var node_ports = diagram.nodePorts();
+    function received_layout(diagram, nodes, _wnodes, _edges, _wedges, _ports, _wports) {
+        const node_ports = diagram.nodePorts();
 
         function is_ccw(u, v) {
             return u[0]*v[1] - u[1]*v[0] > 0;
@@ -60,21 +58,21 @@ export function placePorts() {
             return Math.hypot(p2.pos.x - p.pos.x, p2.pos.y - p.pos.y);
         }
         function misses(p, p2) {
-            var dist = distance(p, p2);
-            var misses = dist > _mode.minDistance();
+            const dist = distance(p, p2);
+            const misses = dist > _mode.minDistance();
             return misses;
         }
         function rand_within(a, b) {
             return a + Math.random()*(b-a);
         }
         // calculate port positions
-        for(var nid in node_ports) {
-            var n = nodes[nid],
+        for(const nid in node_ports) {
+            const n = nodes[nid],
                 nports = node_ports[nid];
 
             // make sure that we have vector and angle bounds for any ports with specification
-            nports.forEach(function(p) {
-                var bounds = p.orig && diagram.portBounds.eval(p) || [0, 2*Math.PI];
+            nports.forEach((p) => {
+                const bounds = p.orig && diagram.portBounds.eval(p) || [0, 2*Math.PI];
                 if(Array.isArray(bounds[0])) {
                     p.vbounds = bounds;
                     p.abounds = bounds.map(v_to_a);
@@ -89,8 +87,9 @@ export function placePorts() {
             });
 
             // determine which ports satisfy bounds or are unplaced
-            var inside = [], outside = [], unplaced = [];
-            nports.forEach(function(p) {
+            let inside = [], unplaced = [];
+            const outside = [];
+            nports.forEach((p) => {
                 if(!p.vec)
                     unplaced.push(p);
                 else if(p.vbounds && !in_bounds(p.vec, p.vbounds))
@@ -100,27 +99,27 @@ export function placePorts() {
             });
 
             // shunt outside ports into their bounds
-            outside.forEach(function(p) {
+            outside.forEach((p) => {
                 p.vec = clip(p.vec, p.vbounds);
                 inside.push(p);
             });
 
             // for all unplaced ports that share a bounds, evenly distribute them within those bounds.
             // assume that bounds are disjoint.
-            var boundses = {}, boundports = {};
-            unplaced.forEach(function(p) {
-                var boundskey = p.abounds.map(function(x) { return x.toFixed(3); }).join(',');
+            const boundses = {}, boundports = {};
+            unplaced.forEach((p) => {
+                const boundskey = p.abounds.map((x) => x.toFixed(3)).join(',');
                 boundses[boundskey] = p.abounds;
                 boundports[boundskey] = boundports[boundskey] || [];
                 boundports[boundskey].push(p);
             });
-            for(var b in boundports) {
-                var bounds = boundses[b], bports = boundports[b];
+            for(const b in boundports) {
+                const bounds = boundses[b], bports = boundports[b];
                 if(bports.length === 1)
                     bports[0].vec = a_to_v((bounds[0] + bounds[1])/2);
                 else {
-                    var slice = (bounds[1] - bounds[0]) / (boundports[b].length - 1);
-                    boundports[b].forEach(function(p, i) {
+                    const slice = (bounds[1] - bounds[0]) / (boundports[b].length - 1);
+                    boundports[b].forEach((p, i) => {
                         p.vec = a_to_v(bounds[0] + i*slice);
                     });
                 }
@@ -129,17 +128,17 @@ export function placePorts() {
             unplaced = [];
 
             // determine positions of all satisfied
-            inside.forEach(function(p) {
+            inside.forEach((p) => {
                 projectPort(diagram, n, p);
             });
 
             // detect any existing collisions, unplace the one without edges or second one
-            for(var i = 0; i < inside.length; ++i) {
-                var x = inside[i];
+            for(let i = 0; i < inside.length; ++i) {
+                const x = inside[i];
                 if(unplaced.includes(x))
                     continue;
-                for(var j = i+1; j < inside.length; ++j) {
-                    var y = inside[j];
+                for(let j = i+1; j < inside.length; ++j) {
+                    const y = inside[j];
                     if(unplaced.includes(y))
                         continue;
                     if(!misses(x, y)) {
@@ -152,15 +151,15 @@ export function placePorts() {
                     }
                 }
             }
-            inside = inside.filter(function(p) { return !unplaced.includes(p); });
+            inside = inside.filter((p) => !unplaced.includes(p));
 
             // place any remaining by trying random spots within the range until it misses all or we give up
-            var patience = _mode.patience(), maxdist = 0, maxvec;
+            let patience = _mode.patience(), maxdist = 0, maxvec;
             while(unplaced.length) {
-                var p = unplaced[0];
+                const p = unplaced[0];
                 p.vec = a_to_v(rand_within(p.abounds[0], p.abounds[1]));
                 projectPort(diagram, n, p);
-                var mindist = min(inside, function(p2) { return distance(p, p2); });
+                const mindist = min(inside, (p2) => distance(p, p2));
                 if(mindist > maxdist) {
                     maxdist = mindist;
                     maxvec = p.vec;
@@ -179,8 +178,8 @@ export function placePorts() {
             }
         }
     };
-    var _mode = {
-        parent: property(null).react(function(p) {
+    const _mode = {
+        parent: property(null).react((p) => {
             if(p) {
                 p.on('receivedLayout.place-ports', received_layout);
             } else if(_mode.parent())

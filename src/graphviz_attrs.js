@@ -52,84 +52,71 @@ function nvalue(n) {
 // this is a work in progress
 export function applyGraphvizAccessors(diagram) {
     diagram
-        .nodeLabel(function(n) {
-            var label = nvalue(n).label;
+        .nodeLabel((n) => {
+            let label = nvalue(n).label;
             if(label === undefined)
                 label = n.key;
             return label && label.split(/\n|\\n/);
         })
-        .nodeRadius(function(n) {
+        .nodeRadius((n) => 
             // should do width & height instead, #25
-            return nvalue(n).radius || 25;
-        })
-        .nodeShape(function(n) { return nvalue(n).shape; })
-        .nodeFill(function(n) { return nvalue(n).fillcolor || 'white'; })
-        .nodeOpacity(function(n) {
+             nvalue(n).radius || 25
+        )
+        .nodeShape((n) => nvalue(n).shape)
+        .nodeFill((n) => nvalue(n).fillcolor || 'white')
+        .nodeOpacity((n) => 
             // not standard gv
-            return nvalue(n).opacity || 1;
-        })
-        .nodeLabelFill(function(n) { return nvalue(n).fontcolor || 'black'; })
-        .nodeTitle(function(n) {
-            return (nvalue(n).htmltip || nvalue(n).jsontip) ? null :
+             nvalue(n).opacity || 1
+        )
+        .nodeLabelFill((n) => nvalue(n).fontcolor || 'black')
+        .nodeTitle((n) => (nvalue(n).htmltip || nvalue(n).jsontip) ? null :
                 nvalue(n).tooltip !== undefined ?
                 nvalue(n).tooltip :
-                diagram.nodeLabel()(n);
-        })
-        .nodeStrokeWidth(function(n) {
+                diagram.nodeLabel()(n))
+        .nodeStrokeWidth((n) => {
             // it is debatable whether a point === a pixel but they are close
             // https://graphicdesign.stackexchange.com/questions/199/point-vs-pixel-what-is-the-difference
-            var penwidth = nvalue(n).penwidth;
+            const penwidth = nvalue(n).penwidth;
             return penwidth !== undefined ? +penwidth : 1;
         })
-        .edgeLabel(function(e) { return e.value.label ? e.value.label.split(/\n|\\n/) : ''; })
-        .edgeStroke(function(e) { return e.value.color || 'black'; })
-        .edgeOpacity(function(e) {
+        .edgeLabel((e) => e.value.label ? e.value.label.split(/\n|\\n/) : '')
+        .edgeStroke((e) => e.value.color || 'black')
+        .edgeOpacity((e) => 
             // not standard gv
-            return e.value.opacity || 1;
-        })
-        .edgeArrowSize(function(e) {
-            return e.value.arrowsize || 1;
-        })
+             e.value.opacity || 1
+        )
+        .edgeArrowSize((e) => e.value.arrowsize || 1)
         // need directedness to default these correctly, see #106
-        .edgeArrowhead(function(e) {
-            var head = e.value.arrowhead;
+        .edgeArrowhead((e) => {
+            const head = e.value.arrowhead;
             return head !== undefined ? head : 'vee';
         })
-        .edgeArrowtail(function(e) {
-            var tail = e.value.arrowtail;
+        .edgeArrowtail((e) => {
+            const tail = e.value.arrowtail;
             return tail !== undefined ? tail : null;
         })
-        .edgeStrokeDashArray(function(e) {
+        .edgeStrokeDashArray((e) => {
             switch(e.value.style) {
             case 'dotted':
                 return [1,5];
             }
             return null;
         });
-    var draw_clusters = diagram.child('draw-clusters');
+    const draw_clusters = diagram.child('draw-clusters');
     if(draw_clusters) {
         draw_clusters
-            .clusterStroke(function(c) {
-                return c.value.color || 'black';
-            })
-            .clusterFill(function(c) {
-                return c.value.style === 'filled' ? c.value.fillcolor || c.value.color || c.value.bgcolor : null;
-            })
-            .clusterLabel(function(c) {
-                return c.value.label;
-            });
+            .clusterStroke((c) => c.value.color || 'black')
+            .clusterFill((c) => c.value.style === 'filled' ? c.value.fillcolor || c.value.color || c.value.bgcolor : null)
+            .clusterLabel((c) => c.value.label);
     }
 };
 
 export function snapshotGraphviz(diagram) {
-    var xDomain = diagram.x().domain(), yDomain = diagram.y().domain();
+    const xDomain = diagram.x().domain(), yDomain = diagram.y().domain();
     return {
-        nodes: diagram.nodeGroup().all().map(function(n) {
-            return diagram.getWholeNode(n.key);
-        })
-            .filter(function(x) { return x; })
-            .map(function(n) {
-                return {
+        nodes: diagram.nodeGroup().all().map((n) => diagram.getWholeNode(n.key))
+            .filter((x) => x)
+            .map((n) => ({
                     key: diagram.nodeKey.eval(n),
                     label: diagram.nodeLabel.eval(n),
                     fillcolor: diagram.nodeFillScale()(diagram.nodeFill.eval(n)),
@@ -146,12 +133,8 @@ export function snapshotGraphviz(diagram) {
                     // should be pos
                     x: n.cola.x,
                     y: n.cola.y
-                };
-            }),
-        edges: diagram.edgeGroup().all().map(function(e) {
-            return diagram.getWholeEdge(e.key);
-        }).map(function(e) {
-            return {
+                })),
+        edges: diagram.edgeGroup().all().map((e) => diagram.getWholeEdge(e.key)).map((e) => ({
                 key: diagram.edgeKey.eval(e),
                 source: diagram.edgeSource.eval(e),
                 target: diagram.edgeTarget.eval(e),
@@ -161,8 +144,7 @@ export function snapshotGraphviz(diagram) {
                 // should support dir, see dc.graph.js#106
                 arrowhead: diagram.edgeArrowhead.eval(e),
                 arrowtail: diagram.edgeArrowtail.eval(e)
-            };
-        }),
+            })),
         bounds: {
             left: xDomain[0],
             top: yDomain[0],

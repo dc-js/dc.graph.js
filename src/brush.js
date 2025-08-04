@@ -1,6 +1,6 @@
 import { mode } from './mode.js';
 import { dispatch } from 'd3-dispatch';
-import { brush as d3Brush, brushSelection } from 'd3-brush';
+import { brush as d3Brush } from 'd3-brush';
 import { event } from 'd3-selection';
 
 /**
@@ -10,8 +10,9 @@ import { event } from 'd3-selection';
  * @return {brush}
  **/
 export function brush() {
-    var _brush = null, _gBrush, _dispatch = dispatch('brushstart', 'brushmove', 'brushend');
-    var _clearing = false;
+    let _brush = null, _gBrush;
+    const _dispatch = dispatch('brushstart', 'brushmove', 'brushend');
+    let _clearing = false;
 
     function brushstart() {
         if(!_clearing) {
@@ -20,7 +21,7 @@ export function brush() {
     }
     function brushmove() {
         if(!_clearing) {
-            var ext = event.selection;
+            const ext = event.selection;
             _dispatch.call("brushmove", null, ext);
         }
     }
@@ -53,8 +54,8 @@ export function brush() {
             _gBrush = null;
         }
     }
-    var _mode = mode('brush', {
-        draw: function() {},
+    const _mode = mode('brush', {
+        draw() {},
         remove: remove_brush
     });
 

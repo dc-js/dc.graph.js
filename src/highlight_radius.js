@@ -1,24 +1,21 @@
 import { selectThingsGroup } from './select_things.js';
 import { registerHighlightThingsGroup } from './highlight_things_group.js';
+import { property } from './core.js';
 
 export function highlightRadius(options) {
     options = options || {};
-    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
-    var highlight_things_group = registerHighlightThingsGroup(options.highlight_things_group || 'highlight-things-group');
-    var _graph, _selection = [];
+    const select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    const highlight_things_group = registerHighlightThingsGroup(options.highlight_things_group || 'highlight-things-group');
+    let _graph, _selection = [];
 
     function recurse(n, r, nodeset, edgeset) {
         nodeset[n.key()] = true;
         if(r) {
-            n.outs().filter(function(e) {
-                return !edgeset[e.key()];
-            }).forEach(function(e) {
+            n.outs().filter((e) => !edgeset[e.key()]).forEach((e) => {
                 edgeset[e.key()] = true;
                 recurse(e.target(), r-1, nodeset, edgeset);
             });
-            n.ins().filter(function(e) {
-                return !edgeset[e.key()];
-            }).forEach(function(e) {
+            n.ins().filter((e) => !edgeset[e.key()]).forEach((e) => {
                 edgeset[e.key()] = true;
                 recurse(e.source(), r-1, nodeset, edgeset);
             });
@@ -27,8 +24,8 @@ export function highlightRadius(options) {
     function selection_changed(nodes) {
         _selection = nodes;
         console.assert(_graph);
-        var nodeset = {}, edgeset = {};
-        nodes.forEach(function(nkey) {
+        let nodeset = {}, edgeset = {};
+        nodes.forEach((nkey) => {
             recurse(_graph.node(nkey), _mode.radius(), nodeset, edgeset);
         });
         if(!Object.keys(nodeset).length && !Object.keys(edgeset).length)
@@ -36,23 +33,21 @@ export function highlightRadius(options) {
         highlight_things_group.call('highlight', null, nodeset, edgeset);
     }
 
-    function on_data(diagram, nodes, wnodes, edges, wedges, ports, wports) {
+    function on_data(diagram, nodes, wnodes, edges, wedges, _ports, _wports) {
         _graph = metagraph.graph(wnodes, wedges, {
             nodeKey: diagram.nodeKey.eval,
             edgeKey: diagram.edgeKey.eval,
             edgeSource: diagram.edgeSource.eval,
             edgeTarget: diagram.edgeTarget.eval
         });
-        var sel2 = _selection.filter(function(nk) {
-            return !!_graph.node(nk);
-        });
+        const sel2 = _selection.filter((nk) => !!_graph.node(nk));
         if(sel2.length < _selection.length)
-            window.setTimeout(function() {
+            window.setTimeout(() => {
                 select_nodes_group.call('set_changed', null, sel2);
             }, 0);
     }
-    var _mode = {
-        parent: function(p) {
+    const _mode = {
+        parent(p) {
             if(p) {
                 p.on('data.highlight-radius', on_data);
             } else if(_mode.parent())

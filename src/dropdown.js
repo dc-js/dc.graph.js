@@ -2,44 +2,44 @@ import { property } from './core.js';
 
 export function dropdown() {
     dropdown.unique_id = (dropdown.unique_id || 16) + 1;
-    var _dropdown = {
-        id: 'id' + dropdown.unique_id,
+    const _dropdown = {
+        id: `id${  dropdown.unique_id}`,
         parent: property(null),
-        show: function(key, x, y) {
-            var dropdown = _dropdown.parent().root()
-                .selectAll('div.dropdown.' + _dropdown.id).data([0]);
-            var dropdownEnter = dropdown
+        show(key, x, y) {
+            const dropdown = _dropdown.parent().root()
+                .selectAll(`div.dropdown.${  _dropdown.id}`).data([0]);
+            const dropdownEnter = dropdown
                 .enter().append('div')
-                .attr('class', 'dropdown ' + _dropdown.id);
+                .attr('class', `dropdown ${  _dropdown.id}`);
             dropdown
                 .style('visibility', 'visible')
-                .style('left', x + 'px')
-                .style('top', y + 'px');
-            var capture;
-            var hides = _dropdown.hideOn().split('|');
-            var selects = _dropdown.selectOn().split('|');
+                .style('left', `${x  }px`)
+                .style('top', `${y  }px`);
+            let capture;
+            const hides = _dropdown.hideOn().split('|');
+            const selects = _dropdown.selectOn().split('|');
             if(hides.includes('leave'))
-                dropdown.on('mouseleave', function() {
+                dropdown.on('mouseleave', () => {
                     dropdown.style('visibility', 'hidden');
                 });
             else if(hides.includes('clickout')) {
-                var diagram = _dropdown.parent();
+                const diagram = _dropdown.parent();
                 capture = diagram.svg().append('rect')
                     .attr('x', 0)
                     .attr('y', 0)
                     .attr('width', diagram.width())
                     .attr('height', diagram.height())
                     .attr('opacity', 0)
-                    .on('click', function() {
+                    .on('click', () => {
                         capture.remove();
                         dropdown.style('visibility', 'hidden');
                     });
             }
-            var container = dropdown;
+            let container = dropdown;
             if(_dropdown.scrollHeight()) {
-                var height = _dropdown.scrollHeight();
+                let height = _dropdown.scrollHeight();
                 if(typeof height === 'number')
-                    height = height + 'px';
+                    height = `${height  }px`;
                 dropdown
                     .style('max-height', height)
                     .property('scrollTop', 0);
@@ -49,29 +49,29 @@ export function dropdown() {
                     .attr('class', 'scroller');
                 container = dropdown.selectAll('div.scroller');
             }
-            var values = _dropdown.fetchValues()(key, function(values) {
-                var items = container
+            const _values = _dropdown.fetchValues()(key, (values) => {
+                const items = container
                     .selectAll('div.dropdown-item').data(values);
                 items
                     .enter().append('div')
                     .attr('class', 'dropdown-item');
                 items.exit().remove();
-                var select_event = null;
+                let select_event = null;
                 if(selects.includes('click'))
                     select_event = 'click';
                 else if(selects.includes('hover'))
                     select_event = 'mouseenter';
                 items
-                    .text(function(item) { return _dropdown.itemText()(item); });
+                    .text((item) => _dropdown.itemText()(item));
                 if(select_event) {
                     items
-                        .on(select_event + '.select', function(d) {
+                        .on(`${select_event  }.select`, (d) => {
                             _dropdown.itemSelected()(d);
                         });
                 }
                 if(hides.includes('clickitem')) {
                     items
-                        .on('click.hide', function(d) {
+                        .on('click.hide', (_d) => {
                             capture.remove();
                             dropdown.style('visibility', 'hidden');
                         });
@@ -81,9 +81,9 @@ export function dropdown() {
         hideOn: property('clickout|clickitem'),
         selectOn: property('click'),
         height: property(10),
-        itemText: property(function(x) { return x; }),
-        itemSelected: property(function() {}),
-        fetchValues: property(function(key, k) { k([]); }),
+        itemText: property((x) => x),
+        itemSelected: property(() => {}),
+        fetchValues: property((key, k) => { k([]); }),
         scrollHeight: property('12em')
     };
     return _dropdown;

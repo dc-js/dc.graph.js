@@ -3,12 +3,12 @@ import { nodeEdgeConditions } from './utils.js';
 
 export function selectEdges(props, options) {
     options = options || {};
-    var select_edges_group = selectThingsGroup(options.select_edges_group || 'select-edges-group', 'select-edges');
-    var thinginess = {
-        intersectRect: function(ext) {
-            return this.clickables().data().filter(function(e) {
+    const select_edges_group = selectThingsGroup(options.select_edges_group || 'select-edges-group', 'select-edges');
+    const thinginess = {
+        intersectRect(ext) {
+            return this.clickables().data().filter((e) => {
                 // this nonsense because another select_things may have invalidated the edge positions (!!)
-                var sp = {
+                const sp = {
                     x: e.source.cola.x + e.sourcePort.pos.x,
                     y: e.source.cola.y + e.sourcePort.pos.y
                 },
@@ -16,25 +16,23 @@ export function selectEdges(props, options) {
                         x: e.target.cola.x + e.targetPort.pos.x,
                         y: e.target.cola.y + e.targetPort.pos.y
                     };
-                return [sp, tp].some(function(p) {
-                    return ext[0][0] < p.x && p.x < ext[1][0] &&
-                        ext[0][1] < p.y && p.y < ext[1][1];
-                });
+                return [sp, tp].some((p) => ext[0][0] < p.x && p.x < ext[1][0] &&
+                        ext[0][1] < p.y && p.y < ext[1][1]);
             }).map(this.key);
         },
-        clickables: function() {
+        clickables() {
             return _mode.parent().selectAllEdges('.edge-hover');
         },
-        key: function(e) {
+        key(e) {
             return _mode.parent().edgeKey.eval(e);
         },
-        applyStyles: function(pred) {
+        applyStyles(pred) {
             _mode.parent().cascade(50, true, nodeEdgeConditions(null, pred, props));
         },
-        removeStyles: function() {
+        removeStyles() {
             _mode.parent().cascade(50, false, props);
         }
     };
-    var _mode = selectThings(select_edges_group, 'select-edges', thinginess);
+    const _mode = selectThings(select_edges_group, 'select-edges', thinginess);
     return _mode;
 };

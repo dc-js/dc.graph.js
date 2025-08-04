@@ -1,10 +1,10 @@
 import { property, deprecateFunction } from './core.js';
 
 export function mode(event_namespace, options) {
-    var _mode = {};
-    var _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
-    var draw = options.draw, remove = options.remove;
-    var supported_renderers = options.renderers || ['svg'];
+    const _mode = {};
+    const _eventName = options.laterDraw ? 'transitionsStarted' : 'drawn';
+    let draw = options.draw, remove = options.remove;
+    const supported_renderers = options.renderers || ['svg'];
 
     if(!draw) {
         console.warn('behavior.add_behavior has been replaced by mode.draw');
@@ -20,13 +20,13 @@ export function mode(event_namespace, options) {
      Assigns this mode to a diagram.
      **/
     _mode.parent = property(null)
-        .react(function(p) {
-            var diagram;
+        .react((p) => {
+            let diagram;
             if(p) {
-                var first = true;
+                let first = true;
                 diagram = p;
-                p.on(_eventName + '.' + event_namespace, function() {
-                    var args2 = [diagram].concat(Array.prototype.slice.call(arguments));
+                p.on(`${_eventName  }.${  event_namespace}`, function() {
+                    const args2 = [diagram].concat(Array.prototype.slice.call(arguments));
                     draw.apply(null, args2);
                     if(first && options.first) {
                         options.first.apply(null, args2);
@@ -35,8 +35,8 @@ export function mode(event_namespace, options) {
                     else if(options.rest)
                         options.rest.apply(null, args2);
                 });
-                p.on('reset.' + event_namespace, function() {
-                    var rend = diagram.renderer(),
+                p.on(`reset.${  event_namespace}`, () => {
+                    const rend = diagram.renderer(),
                         node = rend.selectAllNodes ? rend.selectAllNodes() : null,
                         edge = rend.selectAllEdges ? rend.selectAllEdges() : null,
                         edgeHover = rend.selectAllEdges ? rend.selectAllEdges('.edge-hover') : null;
@@ -45,9 +45,9 @@ export function mode(event_namespace, options) {
             }
             else if(_mode.parent()) {
                 diagram = _mode.parent();
-                diagram.on(_eventName + '.' + event_namespace, function(node, edge, ehover) {
+                diagram.on(`${_eventName  }.${  event_namespace}`, (node, edge, ehover) => {
                     remove(diagram, node, edge, ehover);
-                    diagram.on(_eventName + '.' + event_namespace, null);
+                    diagram.on(`${_eventName  }.${  event_namespace}`, null);
                 });
             }
             options.parent && options.parent(p);

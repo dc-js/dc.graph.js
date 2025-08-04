@@ -13,26 +13,26 @@ export function depthFirstTraversal(callbacks) { // {[init, root, row, tree, pla
     return function(nodes, edges) {
         callbacks.init && callbacks.init();
         if(callbacks.tree)
-            edges = edges.filter(function(e) { return callbacks.tree(e); });
-        var indegree = {};
-        var outmap = edges.reduce(function(m, e) {
-            var tail = callbacks.sourceid(e),
+            edges = edges.filter((e) => callbacks.tree(e));
+        const indegree = {};
+        const outmap = edges.reduce((m, e) => {
+            const tail = callbacks.sourceid(e),
                 head = callbacks.targetid(e);
             if(!m[tail]) m[tail] = [];
             m[tail].push(e);
             indegree[head] = (indegree[head] || 0) + 1;
             return m;
         }, {});
-        var nmap = nodes.reduce(function(m, n) {
-            var key = callbacks.nodeid(n);
+        const nmap = nodes.reduce((m, n) => {
+            const key = callbacks.nodeid(n);
             m[key] = n;
             return m;
         }, {});
 
-        var rows = [];
-        var placed = {};
+        const rows = [];
+        const placed = {};
         function place_tree(n, r) {
-            var key = callbacks.nodeid(n);
+            const key = callbacks.nodeid(n);
             if(placed[key]) {
                 callbacks.skip && callbacks.skip(n, indegree[key]);
                 return;
@@ -43,8 +43,8 @@ export function depthFirstTraversal(callbacks) { // {[init, root, row, tree, pla
             rows[r].push(n);
             placed[key] = true;
             if(outmap[key])
-                outmap[key].forEach(function(e, ei) {
-                    var target = nmap[callbacks.targetid(e)];
+                outmap[key].forEach((e, ei) => {
+                    const target = nmap[callbacks.targetid(e)];
                     if(ei && callbacks.sib)
                         callbacks.sib(false, nmap[callbacks.targetid(outmap[key][ei-1])], target);
                     callbacks.push && callbacks.push();
@@ -53,15 +53,15 @@ export function depthFirstTraversal(callbacks) { // {[init, root, row, tree, pla
             callbacks.pop && callbacks.pop(n);
         }
 
-        var roots;
+        let roots;
         if(callbacks.root)
-            roots = nodes.filter(function(n) { return callbacks.root(n); });
+            roots = nodes.filter((n) => callbacks.root(n));
         else {
-            roots = nodes.filter(function(n) { return !indegree[callbacks.nodeid(n)]; });
+            roots = nodes.filter((n) => !indegree[callbacks.nodeid(n)]);
             if(nodes.length && !roots.length) // all nodes are in a cycle
                 roots = [nodes[0]];
         }
-        roots.forEach(function(n, ni) {
+        roots.forEach((n, ni) => {
             if(ni && callbacks.sib)
                 callbacks.sib(true, roots[ni-1], n);
             callbacks.push && callbacks.push();
@@ -76,8 +76,8 @@ export function depthFirstTraversal(callbacks) { // {[init, root, row, tree, pla
 // same caveats as above
 export function undirectedDfs(callbacks) { // {[comp, node], nodeid, sourceid, targetid}
     return function(nodes, edges) {
-        var adjacencies = edges.reduce(function(m, e) {
-            var tail = callbacks.sourceid(e),
+        const adjacencies = edges.reduce((m, e) => {
+            const tail = callbacks.sourceid(e),
                 head = callbacks.targetid(e);
             if(!m[tail]) m[tail] = [];
             if(!m[head]) m[head] = [];
@@ -85,24 +85,24 @@ export function undirectedDfs(callbacks) { // {[comp, node], nodeid, sourceid, t
             m[head].push(tail);
             return m;
         }, {});
-        var nmap = nodes.reduce(function(m, n) {
-            var key = callbacks.nodeid(n);
+        const nmap = nodes.reduce((m, n) => {
+            const key = callbacks.nodeid(n);
             m[key] = n;
             return m;
         }, {});
-        var found = {};
+        const found = {};
         function recurse(n) {
-            var nid = callbacks.nodeid(n);
+            const nid = callbacks.nodeid(n);
             callbacks.node(compid, n);
             found[nid] = true;
             if(adjacencies[nid])
-                adjacencies[nid].forEach(function(adj) {
+                adjacencies[nid].forEach((adj) => {
                     if(!found[adj])
                         recurse(nmap[adj]);
                 });
         }
-        var compid = 0;
-        nodes.forEach(function(n) {
+        let compid = 0;
+        nodes.forEach((n) => {
             if(!found[callbacks.nodeid(n)]) {
                 callbacks.comp && callbacks.comp(compid);
                 recurse(n);

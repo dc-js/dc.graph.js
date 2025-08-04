@@ -1,53 +1,50 @@
 import { mode } from './mode.js';
-import { arrowParts, addPoints, multPoint, arrowOffsets } from './arrows.js';
+import { arrowParts, addPoints, multPoint, arrowOffsets, front_ref, back_ref, add_points } from './arrows.js';
+import { property } from './core.js';
 
 export function troubleshoot() {
-    var _debugLayer = null;
-    var _translate, _scale = 1, _xDomain, _yDomain;
+    let _debugLayer = null;
+    let _translate, _scale = 1, _xDomain, _yDomain;
 
-    function draw(diagram, node, edge, ehover) {
+    function draw(diagram, node, edge, _ehover) {
         if(!_debugLayer)
             _debugLayer = diagram.g().append('g')
                 .attr('class', 'troubleshoot')
                 .attr('pointer-events', 'none');
-        var centers = node.data().map(function(n) {
-            return {
+        const centers = node.data().map((n) => ({
                 x: n.cola.x,
                 y: n.cola.y
-            };
-        });
+            }));
         let crosshairs = _debugLayer.selectAll('path.nodecenter').data(centers);
         crosshairs.exit().remove();
         const crosshairsEnter = crosshairs.enter().append('path').attr('class', 'nodecenter');
         crosshairs = crosshairs.merge(crosshairsEnter);
-        crosshairs.attr('d', c => 'M' + (c.x - _mode.xhairWidth()/2) + ',' + c.y + ' h' + _mode.xhairWidth() +
-                    ' M' + c.x + ',' + (c.y - _mode.xhairHeight()/2) + ' v' + _mode.xhairHeight())
+        crosshairs.attr('d', c => `M${  c.x - _mode.xhairWidth()/2  },${  c.y  } h${  _mode.xhairWidth() 
+                    } M${  c.x  },${  c.y - _mode.xhairHeight()/2  } v${  _mode.xhairHeight()}`)
             .attr('opacity', _mode.xhairOpacity() !== null ? _mode.xhairOpacity() : _mode.opacity())
             .attr('stroke', _mode.xhairColor())
             .attr('stroke-width', 1/_scale);
         function cola_point(n) {
             return {x: n.cola.x, y: n.cola.y};
         }
-        var colabounds = node.data().map(function(n) {
-            return boundary(cola_point(n), n.cola.width, n.cola.height);
-        });
-        var colaboundary = _debugLayer.selectAll('path.colaboundary').data(colabounds);
+        const colabounds = node.data().map((n) => boundary(cola_point(n), n.cola.width, n.cola.height));
+        const colaboundary = _debugLayer.selectAll('path.colaboundary').data(colabounds);
         draw_corners(colaboundary, 'colaboundary', _mode.boundsColor());
 
-        var textbounds = node.data().map(function(n) {
+        const textbounds = node.data().map((n) => {
             if(!n.bbox || (!n.bbox.width && !n.bbox.height))
                 return null;
             return boundary(cola_point(n), n.bbox.width, n.bbox.height);
-        }).filter(function(n) { return !!n; });
-        var textboundary = _debugLayer.selectAll('path.textboundary').data(textbounds);
+        }).filter((n) => !!n);
+        const textboundary = _debugLayer.selectAll('path.textboundary').data(textbounds);
         draw_corners(textboundary, 'textboundary', _mode.boundsColor());
 
-        var radiibounds = node.data().map(function(n) {
+        const radiibounds = node.data().map((n) => {
             if(typeof n.dcg_rx !== 'number')
                 return null;
             return boundary(cola_point(n), n.dcg_rx*2, n.dcg_ry*2);
-        }).filter(function(n) { return !!n; });
-        var radiiboundary = _debugLayer.selectAll('path.radiiboundary').data(radiibounds);
+        }).filter((n) => !!n);
+        const radiiboundary = _debugLayer.selectAll('path.radiiboundary').data(radiibounds);
         draw_corners(radiiboundary, 'radiiboundary', _mode.boundsColor());
 
         diagram.addOrRemoveDef('debug-orient-marker-head',
@@ -58,20 +55,16 @@ export function troubleshoot() {
                                true,
                                'svg:marker',
                                orient_marker.bind(null, _mode.arrowTailColor()));
-        var heads = _mode.arrowLength() ? edge.data().map(function(e) {
-            return {pos: e.pos.new.path.points[e.pos.new.path.points.length-1], orient: e.pos.new.orienthead};
-        }) : [];
-        var headOrients = _debugLayer.selectAll('line.heads').data(heads);
+        const heads = _mode.arrowLength() ? edge.data().map((e) => ({pos: e.pos.new.path.points[e.pos.new.path.points.length-1], orient: e.pos.new.orienthead})) : [];
+        const headOrients = _debugLayer.selectAll('line.heads').data(heads);
         draw_arrow_orient(headOrients, 'heads', _mode.arrowHeadColor(), '#debug-orient-marker-head');
 
-        var tails = _mode.arrowLength() ? edge.data().map(function(e) {
-            return {pos: e.pos.new.path.points[0], orient: e.pos.new.orienttail};
-        }) : [];
-        var tailOrients = _debugLayer.selectAll('line.tails').data(tails);
+        const tails = _mode.arrowLength() ? edge.data().map((e) => ({pos: e.pos.new.path.points[0], orient: e.pos.new.orienttail})) : [];
+        const tailOrients = _debugLayer.selectAll('line.tails').data(tails);
         draw_arrow_orient(tailOrients, 'tails', _mode.arrowTailColor(), '#debug-orient-marker-tail');
 
-        var headpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
-            var arrowSize = diagram.edgeArrowSize.eval(e);
+        const headpts = Array.prototype.concat.apply([], edge.data().map((e) => {
+            const arrowSize = diagram.edgeArrowSize.eval(e);
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowhead.eval(e),
@@ -82,11 +75,11 @@ export function troubleshoot() {
                 diagram.nodeStrokeWidth.eval(e.target)
             );
         }));
-        var hp = _debugLayer.selectAll('path.head-point').data(headpts);
+        const hp = _debugLayer.selectAll('path.head-point').data(headpts);
         draw_x(hp, 'head-point', _mode.arrowHeadColor());
 
-        var tailpts = Array.prototype.concat.apply([], edge.data().map(function(e) {
-            var arrowSize = diagram.edgeArrowSize.eval(e);
+        const tailpts = Array.prototype.concat.apply([], edge.data().map((e) => {
+            const arrowSize = diagram.edgeArrowSize.eval(e);
             return edge_arrow_points(
                 diagram.arrows(),
                 diagram.edgeArrowtail.eval(e),
@@ -97,13 +90,13 @@ export function troubleshoot() {
                 diagram.nodeStrokeWidth.eval(e.source)
             );
         }));
-        var tp = _debugLayer.selectAll('path.tail-point').data(tailpts);
+        const tp = _debugLayer.selectAll('path.tail-point').data(tailpts);
         draw_x(tp, 'tail-point', _mode.arrowTailColor());
 
         let domain = _debugLayer.selectAll('rect.domain').data([0]);
         const domainEnter = domain.enter().append('rect');
         domain = domain.merge(domainEnter);
-        var xd = _mode.parent().x().domain(), yd = _mode.parent().y().domain();
+        const xd = _mode.parent().x().domain(), yd = _mode.parent().y().domain();
         domain.attr('class', 'domain')
             .attr('fill', 'none')
             .attr('opacity', _mode.domainOpacity())
@@ -131,7 +124,7 @@ export function troubleshoot() {
         };
     };
     function bound_tick(x, y, dx, dy) {
-        return 'M' + x + ',' + (y + dy) + ' v' + -dy + ' h' + dx;
+        return `M${  x  },${  y + dy  } v${  -dy  } h${  dx}`;
     }
     function corners(bounds) {
         return [
@@ -163,7 +156,7 @@ export function troubleshoot() {
             .attr('stroke', color)
             .attr('stroke-width', _mode.arrowStrokeWidth()/_scale)
             .attr('opacity', _mode.arrowOpacity() !== null ? _mode.arrowOpacity() : _mode.opacity())
-            .attr('marker-end', 'url(' + markerUrl + ')');
+            .attr('marker-end', `url(${  markerUrl  })`);
     }
     function orient_marker(color, markerEnter) {
         markerEnter
@@ -177,57 +170,53 @@ export function troubleshoot() {
             .attr('d', 'M0,3 L3,0 L0,-3');
     }
     function edge_arrow_points(arrows, defn, arrowSize, stemWidth, orient, endp, strokeWidth) {
-        var parts = arrowParts(arrows, defn),
+        const parts = arrowParts(arrows, defn),
             offsets = arrowOffsets(parts, stemWidth),
             xunit = [Math.cos(orient), Math.sin(orient)];
         endp = [endp.x, endp.y];
         if(!parts.length)
             return [[endp[0] - xunit[0]*strokeWidth/2,
                      endp[1] - xunit[1]*strokeWidth/2]];
-        var globofs = addPoints(
+        const globofs = addPoints(
             [-strokeWidth/arrowSize/2,0],
             multPoint(front_ref(parts[0].frontRef), -1));
-        var pts = offsets.map(function(ofs, i) {
-            return multPoint([
+        const pts = offsets.map((ofs, i) => multPoint([
                 globofs,
                 front_ref(parts[i].frontRef),
                 ofs.offset
-            ].reduce(add_points), arrowSize);
-        });
+            ].reduce(add_points), arrowSize));
         pts.push(multPoint([
             globofs,
             back_ref(parts[parts.length-1].backRef),
             offsets[parts.length-1].offset
         ].reduce(add_points), arrowSize));
-        return pts.map(function(p) {
-            return addPoints(
+        return pts.map((p) => addPoints(
                 endp,
                 [p[0]*xunit[0] - p[1]*xunit[1], p[0]*xunit[1] + p[1]*xunit[0]]
-            );
-        });
+            ));
     }
 
 
     function draw_x(binding, classname, color) {
-        var xw = _mode.xWidth()/2, xh = _mode.xHeight()/2;
+        const xw = _mode.xWidth()/2, xh = _mode.xHeight()/2;
         binding.exit().remove();
         binding.enter().append('path').attr('class', classname);
         binding.attr('d', pos => [[[-xw,-xh],[xw,xh]], [[xw,-xh], [-xw,xh]]].map(seg => 
-                    'M' + seg.map(p => (pos[0] + p[0]) + ',' + (pos[1] + p[1])).join(' L')).join(' '))
+                    `M${  seg.map(p => `${pos[0] + p[0]  },${  pos[1] + p[1]}`).join(' L')}`).join(' '))
             .attr('stroke-width', 2/_scale)
             .attr('stroke', color)
             .attr('opacity', _mode.xOpacity());
     }
-    function remove(diagram, node, edge, ehover) {
+    function remove(_diagram, _node, _edge, _ehover) {
         if(_debugLayer)
             _debugLayer.remove();
     }
 
-    var _mode = mode('highlight-paths', {
+    const _mode = mode('highlight-paths', {
         laterDraw: true,
-        draw: draw,
-        remove: remove,
-        parent: function(p) {
+        draw,
+        remove,
+        parent(p) {
             if(p) {
                 _translate = p.translate();
                 _scale = p.scale();

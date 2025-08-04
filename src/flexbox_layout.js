@@ -41,13 +41,14 @@ import { uuid, property } from './core.js';
 import yoga from 'yoga-layout';
 
 export function flexboxLayout(id, options) {
-    var _layoutId = id || uuid();
+    const _layoutId = id || uuid();
     options = options || {algo: 'yoga-layout'};
-    var _dispatch = dispatch('tick', 'start', 'end');
+    const _dispatch = dispatch('tick', 'start', 'end');
 
-    var _graph, _tree, _nodes = {}, _wnodes;
+    let _graph, _tree, _wnodes;
+    const _nodes = {};
 
-    function init(options) {
+    function init(_options) {
     }
     // like d3.nest but address can be of arbitrary (and different) length
     // probably less efficient too
@@ -58,24 +59,22 @@ export function flexboxLayout(id, options) {
             tree.node = n;
             return;
         }
-        var t = tree.children[adtail[0]] = tree.children[adtail[0]] || {};
+        const t = tree.children[adtail[0]] = tree.children[adtail[0]] || {};
         adhead.push(adtail.shift());
         add_node(adhead, adtail, n, t);
     }
     function all_keys(tree) {
-        var key = _engine.addressToKey()(tree.address);
-        return Array.prototype.concat.apply([key], Object.keys(tree.children || {}).map(function(k) {
-            return all_keys(tree.children[k]);
-        }));
+        const key = _engine.addressToKey()(tree.address);
+        return Array.prototype.concat.apply([key], Object.keys(tree.children || {}).map((k) => all_keys(tree.children[k])));
     }
     function data(graph, nodes) {
         _graph = graph;
         _tree = {address: [], children: {}};
-        nodes.forEach(function(n) {
-            var ad = _engine.keyToAddress()(n.dcg_nodeKey);
+        nodes.forEach((n) => {
+            const ad = _engine.keyToAddress()(n.dcg_nodeKey);
             add_node([], ad, n, _tree);
         });
-        var need = all_keys(_tree);
+        const _need = all_keys(_tree);
         _wnodes = nodes;
     }
     function ensure_inner_nodes(tree) {
@@ -84,12 +83,12 @@ export function flexboxLayout(id, options) {
         Object.values(tree.children).forEach(ensure_inner_nodes);
     }
     function set_yoga_attr(flexnode, attr, value) {
-        var fname = 'set' + attr.charAt(0).toUpperCase() + attr.slice(1);
+        const fname = `set${  attr.charAt(0).toUpperCase()  }${attr.slice(1)}`;
         if(typeof flexnode[fname] !== 'function')
-            throw new Error('Could not set yoga attr "' + attr + '" (' + fname + ')');
+            throw new Error(`Could not set yoga attr "${  attr  }" (${  fname  })`);
         
         // Map string values to yoga constants
-        var constantMaps = {
+        const constantMaps = {
             alignItems: {
                 stretch: yoga.ALIGN_STRETCH,
                 'flex-start': yoga.ALIGN_FLEX_START,
@@ -144,15 +143,15 @@ export function flexboxLayout(id, options) {
         }
     }
     function get_yoga_attr(flexnode, attr) {
-        var fname = 'getComputed' + attr.charAt(0).toUpperCase() + attr.slice(1);
+        const fname = `getComputed${  attr.charAt(0).toUpperCase()  }${attr.slice(1)}`;
         if(typeof flexnode[fname] !== 'function')
-            throw new Error('Could not get yoga attr "' + attr + '" (' + fname + ')');
+            throw new Error(`Could not get yoga attr "${  attr  }" (${  fname  })`);
         return flexnode[fname]();
     }
-    var internal_attrs = ['sort', 'order', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z', 'nodeOutlineClip'],
+    const internal_attrs = ['sort', 'order', 'dcg_nodeKey', 'dcg_nodeParentCluster', 'shape', 'abstract', 'rx', 'ry', 'x', 'y', 'z', 'nodeOutlineClip'],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
-        var flexnode;
+        let flexnode;
         switch(options.algo) {
         case 'css-layout':
             flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
@@ -161,16 +160,16 @@ export function flexboxLayout(id, options) {
             flexnode = new yoga.Node();
             break;
         }
-        var attrs2 = Object.assign({}, attrs);
-        var isParent = Object.keys(tree.children).length;
+        const attrs2 = Object.assign({}, attrs);
+        const isParent = Object.keys(tree.children).length;
         if(tree.node)
             Object.assign(attrs, tree.node);
-        for(var attr in attrs) {
+        for(const attr in attrs) {
             if(internal_attrs.includes(attr))
                 continue;
             if(isParent && skip_on_parents.includes(attr))
                 continue;
-            var value = attrs[attr];
+            let value = attrs[attr];
             if(typeof value === 'function')
                 value = value(tree.node);
             switch(options.algo) {
@@ -183,18 +182,16 @@ export function flexboxLayout(id, options) {
             }
         }
         if(isParent) {
-            var children = Object.values(tree.children)
+            const children = Object.values(tree.children)
                 .sort(attrs.sort)
-                .map(function(c) { return c.address[c.address.length-1]; })
-                .map(function(key) {
-                    return create_flextree(Object.assign({}, attrs2), tree.children[key]);
-                });
+                .map((c) => c.address[c.address.length-1])
+                .map((key) => create_flextree(Object.assign({}, attrs2), tree.children[key]));
             switch(options.algo) {
             case 'css-layout':
                 flexnode.children = children;
                 break;
             case 'yoga-layout':
-                children.forEach(function(child, i) {
+                children.forEach((child, i) => {
                     flexnode.insertChild(child, i);
                 });
                 break;
@@ -204,11 +201,11 @@ export function flexboxLayout(id, options) {
         return flexnode;
     }
     function apply_layout(offset, tree) {
-        var left, top, width, height;
+        let left, top, width, height;
         switch(options.algo) {
         case 'css-layout':
             if(_engine.logStuff())
-                console.log(tree.node.dcg_nodeKey + ': '+ JSON.stringify(tree.flexnode.layout));
+                console.log(`${tree.node.dcg_nodeKey  }: ${ JSON.stringify(tree.flexnode.layout)}`);
             left = tree.flexnode.layout.left; width = tree.flexnode.layout.width;
             top = tree.flexnode.layout.top; height = tree.flexnode.layout.height;
             break;
@@ -220,27 +217,25 @@ export function flexboxLayout(id, options) {
         tree.node.x = offset.x + left + width/2;
         tree.node.y = offset.y + top + height/2;
         Object.keys(tree.children)
-            .map(function(key) { return tree.children[key]; })
-            .forEach(function(child) {
+            .map((key) => tree.children[key])
+            .forEach((child) => {
                 apply_layout({x: offset.x + left, y: offset.y + top}, child);
             });
     }
     function dispatchState(wnodes, wedges, event) {
         _dispatch.call(event, null,
             wnodes,
-            wedges.map(function(e) {
-                return {dcg_edgeKey: e.dcg_edgeKey};
-            })
+            wedges.map((e) => ({dcg_edgeKey: e.dcg_edgeKey}))
         );
     }
     function start() {
-        var defaults = {
-            sort: function(a, b) {
+        const defaults = {
+            sort(a, b) {
                 return ascending(a.node.dcg_nodeKey, b.node.dcg_nodeKey);
             }
         };
         ensure_inner_nodes(_tree);
-        var flexTree = create_flextree(defaults, _tree);
+        const flexTree = create_flextree(defaults, _tree);
         switch(options.algo) {
         case 'css-layout':
             flexTree.style.width = _graph.width;
@@ -271,7 +266,7 @@ export function flexboxLayout(id, options) {
     // needed for layout and does not pass in the original data. flexbox has a huge number of attributes
     // and it might be more appropriate for it to look at the original data.
     // (Especially because it also computes some attributes based on data.)
-    var supportedAttributes = [
+    const supportedAttributes = [
         'width', 'height', // positive number
         'minWidth', 'minHeight', // positive number
         'maxWidth', 'maxHeight', // positive number
@@ -287,49 +282,49 @@ export function flexboxLayout(id, options) {
         'position' // 'relative', 'absolute'
     ];
 
-    var _engine = {
-        layoutAlgorithm: function() {
+    const _engine = {
+        layoutAlgorithm() {
             return 'cola';
         },
-        layoutId: function() {
+        layoutId() {
             return _layoutId;
         },
-        supportsWebworker: function() {
+        supportsWebworker() {
             return true;
         },
         parent: property(null),
-        on: function(event, f) {
+        on(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
-        init: function(options) {
-            this.optionNames().forEach(function(option) {
+        init(options) {
+            this.optionNames().forEach((option) => {
                 options[option] = options[option] || this[option]();
-            }.bind(this));
+            });
             init(options);
             return this;
         },
-        data: function(graph, nodes) {
+        data(graph, nodes) {
             data(graph, nodes);
         },
-        start: function() {
+        start() {
             start();
         },
-        stop: function() {
+        stop() {
             stop();
         },
-        optionNames: function() {
+        optionNames() {
             return [];
         },
-        populateLayoutNode: function(n1, n) {
-            ['sort', 'order'].concat(supportedAttributes).forEach(function(attr) {
+        populateLayoutNode(n1, n) {
+            ['sort', 'order'].concat(supportedAttributes).forEach((attr) => {
                 if(n.orig.value[attr])
                     n1[attr] = n.orig.value[attr];
             });
         },
-        populateLayoutEdge: function() {},
+        populateLayoutEdge() {},
         /**
          * This function constructs a node key string from an "address". An address is an array of
          * strings identifying the path from the root to the node.
@@ -342,7 +337,7 @@ export function flexboxLayout(id, options) {
          * @return {Function}
          * @return {dc_graph.flexbox_layout}
          **/
-        addressToKey: property(function(ad) { return ad.join(','); }),
+        addressToKey: property((ad) => ad.join(',')),
         /**
          * This function constructs an "address" from a node key string. An address is an array of
          * strings identifying the path from the root to the node.
@@ -355,8 +350,8 @@ export function flexboxLayout(id, options) {
          * @return {Function}
          * @return {dc_graph.flexbox_layout}
          **/
-        keyToAddress: property(function(nid) { return nid.split(','); }),
-        yogaConstants: function() {
+        keyToAddress: property((nid) => nid.split(',')),
+        yogaConstants() {
             // Direct access to yoga constants
             return yoga;
         },

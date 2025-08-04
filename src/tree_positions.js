@@ -6,60 +6,60 @@ export function treePositions(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
     if(rootf || treef) {
         console.warn('treePositions: rootf and treef are ignored');
     }
-    var x;
+    let x;
     nwidth = typeof nwidth === 'function' ? nwidth : () => nwidth;
     function best_dist(left, right) {
         return (nwidth(left) + nwidth(right)) / 2;
     }
-    var dfs = depthFirstTraversal({
-        nodeid: function(n) {
+    const dfs = depthFirstTraversal({
+        nodeid(n) {
             return n.cola.dcg_nodeKey;
         },
-        sourceid: function(n) {
+        sourceid(n) {
             return n.cola.dcg_edgeSource;
         },
-        targetid: function(n) {
+        targetid(n) {
             return n.cola.dcg_edgeTarget;
         },
-        init: function() {
+        init() {
             x = ofsx;
         },
-        row: function(n) {
+        row(n) {
             return rowf(n.orig);
         },
-        place: function(n, r, row) {
+        place(n, r, row) {
             if(row.length) {
-                var left = row[row.length-1];
-                var g = (nwidth(left) + nwidth(n)) / 2;
+                const left = row[row.length-1];
+                const g = (nwidth(left) + nwidth(n)) / 2;
                 x = Math.max(x, left.left_x + g);
             }
             n.left_x = x;
             n.hit_ins = 1;
             n.cola.y = r*ygap + ofsy;
         },
-        sib: function(isroot, left, right) {
-            var g = best_dist(left, right);
+        sib(isroot, left, right) {
+            let g = best_dist(left, right);
             if(isroot) g = g*1.5;
             x += g;
         },
-        pop: function(n) {
+        pop(n) {
             n.cola.x = (n.left_x + x)/2;
         },
-        skip: function(n, indegree) {
+        skip(n, indegree) {
             // rolling average of in-neighbor x positions
             n.cola.x = (n.hit_ins*n.cola.x + x)/++n.hit_ins;
             if(n.hit_ins === indegree)
                 delete n.hit_ins;
         },
-        finish: function(rows) {
+        finish(rows) {
             // this is disgusting. patch up any places where nodes overlap by scanning
             // right far enough to find the space, then fill from left to right at the
             // minimum gap
-            rows.forEach(function(row) {
-                var sort = row.sort(function(a, b) { return a.cola.x - b.cola.x; });
-                var badi = null, badl = null, want;
-                for(var i=0; i<sort.length-1; ++i) {
-                    var left = sort[i], right = sort[i+1];
+            rows.forEach((row) => {
+                const sort = row.sort((a, b) => a.cola.x - b.cola.x);
+                let badi = null, badl = null, want;
+                for(let i=0; i<sort.length-1; ++i) {
+                    const left = sort[i], right = sort[i+1];
                     if(!badi) {
                         if(right.cola.x - left.cola.x < best_dist(left, right)) {
                             badi = i;
@@ -73,16 +73,16 @@ export function treePositions(rootf, rowf, treef, ofsx, ofsy, nwidth, ygap) {
                         else {
                             if(badi>0)
                                 --badi; // might want to use more left
-                            var l, limit;
+                            let l, limit;
                             if(i < sort.length - 2) { // found space before right
-                                var extra = right.cola.x - (badl + want);
+                                const extra = right.cola.x - (badl + want);
                                 l = sort[badi].cola.x + extra/2;
                                 limit = i+1;
                             } else {
                                 l = Math.max(sort[badi].cola.x, badl - best_dist(sort[badi], sort[badi+1]) - (want - right.cola.x + badl)/2);
                                 limit = sort.length;
                             }
-                            for(var j = badi+1; j<limit; ++j) {
+                            for(let j = badi+1; j<limit; ++j) {
                                 l += best_dist(sort[j-1], sort[j]);
                                 sort[j].cola.x = l;
                             }

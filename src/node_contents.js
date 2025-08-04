@@ -3,46 +3,42 @@ import { select } from 'd3-selection';
 import { nodeLabelPadding } from './shape.js';
 
 export function textContents() {
-    var _contents = {
+    const _contents = {
         parent: property(null),
-        update: function(container) {
+        update(container) {
             let text = container.selectAll('text.node-label')
-                    .data(function(n) { return [n]; });
+                    .data((n) => [n]);
             const textEnter = text.enter().append('text')
                 .attr('class', 'node-label');
             text = text.merge(textEnter);
-            let tspan = text.selectAll('tspan').data(function(n) {
-                var lines = _contents.parent().nodeLabel.eval(n);
+            let tspan = text.selectAll('tspan').data((n) => {
+                let lines = _contents.parent().nodeLabel.eval(n);
                 if(!lines)
                     return [];
                 else if(typeof lines === 'string')
                     lines = [lines];
-                var lineHeight = _contents.parent().nodeLineHeight();
-                var first = 0.5 - ((lines.length - 1) * lineHeight + 1)/2;
+                const lineHeight = _contents.parent().nodeLineHeight();
+                let first = 0.5 - ((lines.length - 1) * lineHeight + 1)/2;
                 // IE, Edge, and Safari do not seem to support
                 // dominant-baseline: central although they say they do
                 if(isIe() || isSafari())
                     first += 0.3;
-                return lines.map(function(line, i) { return {node: n, line: line, yofs: (i==0 ? first : lineHeight) + 'em'}; });
+                return lines.map((line, i) => ({node: n, line, yofs: `${i==0 ? first : lineHeight  }em`}));
             });
             const tspanEnter = tspan.enter().append('tspan');
             tspan = tspan.merge(tspanEnter);
             tspan
                 .attr('text-anchor', 'start')
-                .attr('text-decoration', function(line) {
-                    return _contents.parent().nodeLabelDecoration.eval(line.node);
-                })
+                .attr('text-decoration', (line) => _contents.parent().nodeLabelDecoration.eval(line.node))
                 .attr('x', 0)
-                .html(function(s) { return s.line; });
+                .html((s) => s.line);
             text
-                .each(function(n) {
+                .each((n) => {
                     n.xofs = 0;
                 })
-                .filter(function(n) {
-                    return _contents.parent().nodeLabelAlignment.eval(n) !== 'center';
-                })
+                .filter((n) => _contents.parent().nodeLabelAlignment.eval(n) !== 'center')
                 .each(function(n) {
-                    var bbox = getBBoxNoThrow(this);
+                    const bbox = getBBoxNoThrow(this);
                     n.bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
                     switch(_contents.parent().nodeLabelAlignment.eval(n)) {
                     case 'left': n.xofs = -n.bbox.width/2;
@@ -53,7 +49,7 @@ export function textContents() {
                 })
                 .selectAll('tspan');
             tspan
-                .attr('text-anchor', function(s) {
+                .attr('text-anchor', (s) => {
                     switch(_contents.parent().nodeLabelAlignment.eval(s.node)) {
                     case 'left': return 'start';
                     case 'center': return 'middle';
@@ -61,23 +57,21 @@ export function textContents() {
                     }
                     return null;
                 })
-                .attr('x', function(s) {
-                    return s.node.xofs;
-                })
-                .attr('dy', function(d) { return d.yofs; });
+                .attr('x', (s) => s.node.xofs)
+                .attr('dy', (d) => d.yofs);
 
             tspan.exit().remove();
             text
                 .attr('fill', _contents.parent().nodeLabelFill.eval);
         },
-        textbox: function(container) {
-            var bbox = getBBoxNoThrow(this.selectContent(container).node());
+        textbox(container) {
+            const bbox = getBBoxNoThrow(this.selectContent(container).node());
             return {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
         },
-        selectContent: function(container) {
+        selectContent(container) {
             return container.select('text.node-label');
         },
-        selectText: function(container) {
+        selectText(container) {
             return this.selectContent(container);
         }
     };
@@ -85,48 +79,48 @@ export function textContents() {
 };
 
 export function withIconContents(contents, width, height) {
-    var _contents = {
-        parent: property(null).react(function(parent) {
+    const _contents = {
+        parent: property(null).react((parent) => {
             contents.parent(parent);
         }),
-        padding: function(n) {
-            var padding = nodeLabelPadding(_contents.parent(), n);
+        padding(n) {
+            const padding = nodeLabelPadding(_contents.parent(), n);
             return {
                 x: padding.x * 3,
                 y: padding.y * 3
             };
         },
-        update: function(container) {
+        update(container) {
             let g = container.selectAll('g.with-icon')
-                    .data(function(n) { return [n]; });
+                    .data((n) => [n]);
             const gEnter = g.enter();
             gEnter.append('g')
                 .attr('class', 'with-icon')
               .append('image')
                 .attr('class', 'icon')
-                .attr('width', width + 'px')
-                .attr('height', height + 'px');
+                .attr('width', `${width  }px`)
+                .attr('height', `${height  }px`);
             g = g.merge(gEnter.select('g.with-icon'));
             g.call(contents.update);
             contents.selectContent(g)
-                .attr('transform',  'translate(' + width/2 + ')');
+                .attr('transform',  `translate(${  width/2  })`);
             g.selectAll('image.icon')
                 .attr('href', _contents.parent().nodeIcon.eval)
                 .attr('x', function(n) {
-                    var totwid = width + contents.textbox(select(this.parentNode)).width;
+                    const totwid = width + contents.textbox(select(this.parentNode)).width;
                     return -totwid/2 - nodeLabelPadding(_contents.parent(), n).x;
                 })
                 .attr('y', -height/2);
         },
-        textbox: function(container) {
-            var box = contents.textbox(container);
+        textbox(container) {
+            const box = contents.textbox(container);
             box.x += width/2;
             return box;
         },
-        selectContent: function(container) {
+        selectContent(container) {
             return container.select('g.with-icon');
         },
-        selectText: function(container) {
+        selectText(container) {
             return this.selectContent(container).select('text.node-label');
         }
     };

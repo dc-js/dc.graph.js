@@ -1,5 +1,5 @@
 export function wildcardPorts(options) {
-    var diagram = options.diagram,
+    const diagram = options.diagram,
         get_type = options.get_type || function(p) { return p.orig.value.type; },
         set_type = options.set_type || function(p, src) { p.orig.value.type = src.orig.value.type; },
         get_name = options.get_name || function(p) { return p.orig.value.name; },
@@ -9,37 +9,31 @@ export function wildcardPorts(options) {
     function linked_ports(n, port) {
         if(!diagram)
             return [];
-        var nid = diagram.nodeKey.eval(n);
-        var name = get_name(port);
-        var links = get_linked(n) || [];
-        var found = links.find(function(set) {
-            return set.includes(name);
-        });
+        const nid = diagram.nodeKey.eval(n);
+        const name = get_name(port);
+        const links = get_linked(n) || [];
+        const found = links.find((set) => set.includes(name));
         if(!found) return [];
-        return found.filter(function(link) { return link !== name; }).map(function(link) {
-            return diagram.getPort(nid, null, link);
-        });
+        return found.filter((link) => link !== name).map((link) => diagram.getPort(nid, null, link));
     }
     function no_edges(ports) {
-        return ports.every(function(lp) {
-            return lp.edges.length === 0;
-        });
+        return ports.every((lp) => lp.edges.length === 0);
     }
     return {
-        isValid: function(p1, p2) {
+        isValid(p1, p2) {
             return get_type(p1) === null ^ get_type(p2) === null ||
                 get_type(p1) !== null && get_type(p1) === get_type(p2);
         },
-        whyInvalid: function(p1, p2) {
+        whyInvalid(p1, p2) {
             return get_type(p1) === null && get_type(p2) === null && "can't connect wildcard to wildcard" ||
                 get_type(p1) !== get_type(p2) && "the types of ports must match";
         },
-        copyLinked: function(n, port) {
-            linked_ports(n, port).forEach(function(lp) {
+        copyLinked(n, port) {
+            linked_ports(n, port).forEach((lp) => {
                 set_type(lp, port);
             });
         },
-        copyType: function(e, sport, tport) {
+        copyType(e, sport, tport) {
             if(get_type(sport) === null) {
                 set_type(sport, tport);
                 this.copyLinked(sport.node, sport);
@@ -51,24 +45,24 @@ export function wildcardPorts(options) {
             }
             return Promise.resolve(e);
         },
-        resetTypes: function(edges)  {
+        resetTypes(edges)  {
             // backward compatibility: this used to take diagram as
             // first arg, which was wrong
-            var dia = diagram;
+            let dia = diagram;
             if(arguments.length === 2) {
                 dia = arguments[0];
                 edges = arguments[1];
             }
-            edges.forEach(function(eid) {
-                var e = dia.getWholeEdge(eid),
+            edges.forEach((eid) => {
+                const e = dia.getWholeEdge(eid),
                     spname = dia.edgeSourcePortName.eval(e),
                     tpname = dia.edgeTargetPortName.eval(e);
-                var update = false;
-                var p = dia.getPort(dia.nodeKey.eval(e.source), null, spname);
-                var linked = linked_ports(e.source, p);
+                let update = false;
+                let p = dia.getPort(dia.nodeKey.eval(e.source), null, spname);
+                let linked = linked_ports(e.source, p);
                 if(is_wild(p) && p.edges.length === 1 && no_edges(linked)) {
                     set_type(p, null);
-                    linked.forEach(function(lp) {
+                    linked.forEach((lp) => {
                         set_type(lp, null);
                         update = true;
                     });
@@ -77,7 +71,7 @@ export function wildcardPorts(options) {
                 linked = linked_ports(e.target, p);
                 if(is_wild(p) && p.edges.length === 1 && no_edges(linked)) {
                     set_type(p, null);
-                    linked.forEach(function(lp) {
+                    linked.forEach((lp) => {
                         set_type(lp, null);
                         update = true;
                     });

@@ -27,13 +27,13 @@ export function edgeObject(namef, i, j, attrs) {
 };
 
 export function generate(type, args, env, callback) {
-    var nodes, edges, i, j;
-    var nodePrefix = env.nodePrefix || '';
-    var namef = function(i) {
+    let nodes, edges, i, j;
+    const nodePrefix = env.nodePrefix || '';
+    const namef = function(i) {
         return nodes[i].name;
     };
-    var N = args[0];
-    var linkLength = env.linkLength || 30;
+    const N = args[0];
+    const linkLength = env.linkLength || 30;
     switch(type) {
     case 'clique':
     case 'cliquestf':
@@ -52,15 +52,15 @@ export function generate(type, args, env, callback) {
                 edges.push(edgeObject(namef, i, i+2*N, {undirected: true}));
             }
         break;
-    case 'wheel':
+    case 'wheel': {
         nodes = new Array(N);
         for(i = 0; i < N; ++i)
             nodes[i] = nodeObject(i, {name: nodePrefix+nodeName(i)});
         edges = wheelEdges(namef, _.range(N), N*linkLength/2);
-        var rimLength = edges[0].distance;
+        const rimLength = edges[0].distance;
         for(i = 0; i < args[1]; ++i)
             for(j = 0; j < N; ++j) {
-                var a = j, b = (j+1)%N, t;
+                let a = j, b = (j+1)%N, t;
                 if(i%2 === 1) {
                     t = a;
                     a = b;
@@ -69,20 +69,22 @@ export function generate(type, args, env, callback) {
                 edges.push(edgeObject(namef, a, b, {distance: rimLength, par: i+2}));
             }
         break;
-    default:
-        throw new Error("unknown generation type "+type);
     }
-    var graph = {nodes: nodes, links: edges};
+    default:
+        throw new Error(`unknown generation type ${type}`);
+    }
+    const graph = {nodes, links: edges};
     callback(null, graph);
 };
 
 export function wheelEdges(namef, nindices, R) {
-    var N = nindices.length;
-    var edges = [];
-    var strutSkip = Math.floor(N/2),
+    const N = nindices.length;
+    const edges = [];
+    const strutSkip = Math.floor(N/2),
         rimLength = 2 * R * Math.sin(Math.PI / N),
         strutLength = 2 * R * Math.sin(strutSkip * Math.PI / N);
-    for(var i = 0; i < N; ++i)
+    let i;
+    for(i = 0; i < N; ++i)
         edges.push(edgeObject(namef, nindices[i], nindices[(i+1)%N], {distance: rimLength}));
     for(i = 0; i < N/2; ++i) {
         edges.push(edgeObject(namef, nindices[i], nindices[(i+strutSkip)%N], {distance: strutLength}));
@@ -102,8 +104,8 @@ export function randomGraph(options) {
         targetKey: 'targetname',
         colorTag: 'color',
         dashTag: 'dash',
-        nodeKeyGen: function(i) { return 'n' + i; },
-        edgeKeyGen: function(i) { return 'e' + i; },
+        nodeKeyGen(i) { return `n${  i}`; },
+        edgeKeyGen(i) { return `e${  i}`; },
         newComponentProb: 0.1,
         newNodeProb: 0.9,
         removeEdgeProb: 0.75,
@@ -114,9 +116,9 @@ export function randomGraph(options) {
         options.newNodeProb = 0.9;
     if(options.newNodProb <= 0)
         options.newNodeProb = 0.1;
-    var _nodes = [], _edges = [];
+    const _nodes = [], _edges = [];
     function new_node() {
-        var n = {};
+        const n = {};
         n[options.nodeKey] = options.nodeKeyGen(_nodes.length);
         n[options.colorTag] = Math.floor(Math.random()*options.ncolors);
         _nodes.push(n);
@@ -126,17 +128,17 @@ export function randomGraph(options) {
         return _nodes[Math.floor(Math.random()*_nodes.length)];
     }
     return {
-        nodes: function() {
+        nodes() {
             return _nodes;
         },
-        edges: function() {
+        edges() {
             return _edges;
         },
-        generate: function(N) {
+        generate(N) {
             const edgeInserted = {};
             while(N > 0) {
-                var choice = Math.random();
-                var n1, n2;
+                const choice = Math.random();
+                let n1, n2;
                 if(!_nodes.length || choice < options.newComponentProb) {
                     n1 = new_node();
                     N--;
@@ -148,7 +150,7 @@ export function randomGraph(options) {
                 } else
                     n2 = random_node();
                 if(n1 && n2) {
-                    var edge = {};
+                    const edge = {};
                     edge[options.edgeKey] = options.edgeKeyGen(_edges.length);
                     const sourceKey = n1[options.nodeKey], targetKey = n2[options.nodeKey];
                     if(!options.allowParallelEdges) {
@@ -161,25 +163,25 @@ export function randomGraph(options) {
                     edge[options.targetKey] = targetKey;
                     edge[options.dashTag] = Math.floor(Math.random()*options.ndashes);
                     if(options.log)
-                        console.log(n1[options.nodeKey] + ' -> ' + n2[options.nodeKey]);
+                        console.log(`${n1[options.nodeKey]  } -> ${  n2[options.nodeKey]}`);
                     _edges.push(edge);
                 }
             }
         },
-        remove: function(N) {
+        remove(N) {
             while(N-- > 0) {
-                var choice = Math.random();
+                const choice = Math.random();
                 if(choice < options.removeEdgeProb)
                     _edges.splice(Math.floor(Math.random()*_edges.length), 1);
                 else {
-                    var n = _nodes[Math.floor(Math.random()*_nodes.length)];
-                    var eis = [];
-                    _edges.forEach(function(e, ei) {
+                    const n = _nodes[Math.floor(Math.random()*_nodes.length)];
+                    const eis = [];
+                    _edges.forEach((e, ei) => {
                         if(e[options.sourceKey] === n[options.nodeKey] ||
                            e[options.targetKey] === n[options.nodeKey])
                             eis.push(ei);
                     });
-                    eis.reverse().forEach(function(ei) {
+                    eis.reverse().forEach((ei) => {
                         _edges.splice(ei, 1);
                     });
                 }

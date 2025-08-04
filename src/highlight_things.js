@@ -4,9 +4,9 @@ import { registerHighlightThingsGroup } from './highlight_things_group.js';
 import { nodeEdgeConditions } from './utils.js';
 
 export function highlightThings(includeprops, excludeprops, modename, groupname, cascbase) {
-    var highlight_things_group = registerHighlightThingsGroup(groupname || 'highlight-things-group');
-    var _includeprops = {...includeprops}, _excludeprops = {...excludeprops};
-    var _active, _nodeset = {}, _edgeset = {};
+    const highlight_things_group = registerHighlightThingsGroup(groupname || 'highlight-things-group');
+    const _includeprops = {...includeprops}, _excludeprops = {...excludeprops};
+    let _active, _nodeset = {}, _edgeset = {};
     cascbase = cascbase || 150;
 
     function highlight(nodeset, edgeset) {
@@ -17,27 +17,19 @@ export function highlightThings(includeprops, excludeprops, modename, groupname,
     }
     function draw(diagram) {
         diagram.cascade(cascbase, true, nodeEdgeConditions(
-            function(n) {
-                return _nodeset[_mode.parent().nodeKey.eval(n)];
-            }, function(e) {
-                return _edgeset[_mode.parent().edgeKey.eval(e)];
-            }, _includeprops));
+            (n) => _nodeset[_mode.parent().nodeKey.eval(n)], (e) => _edgeset[_mode.parent().edgeKey.eval(e)], _includeprops));
         diagram.cascade(cascbase+10, true, nodeEdgeConditions(
-            function(n) {
-                return _active && !_nodeset[_mode.parent().nodeKey.eval(n)];
-            }, function(e) {
-                return _active && !_edgeset[_mode.parent().edgeKey.eval(e)];
-            }, _excludeprops));
+            (n) => _active && !_nodeset[_mode.parent().nodeKey.eval(n)], (e) => _active && !_edgeset[_mode.parent().edgeKey.eval(e)], _excludeprops));
     }
     function remove(diagram) {
         diagram.cascade(cascbase, false, _includeprops);
         diagram.cascade(cascbase + 10, false, _excludeprops);
     }
-    var _mode = mode(modename, {
-        draw: draw,
-        remove: remove,
-        parent: function(p) {
-            highlight_things_group.on('highlight.' + modename, p ? highlight : null);
+    const _mode = mode(modename, {
+        draw,
+        remove,
+        parent(p) {
+            highlight_things_group.on(`highlight.${  modename}`, p ? highlight : null);
         }
     });
     _mode.includeProps = () => _includeprops;

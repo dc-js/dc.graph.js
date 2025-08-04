@@ -4,40 +4,40 @@ import { undirectedDfs } from './depth_first_traversal.js';
 
 export function fixNodes(options) {
     options = options || {};
-    var fix_nodes_group = fixNodesGroup(options.fix_nodes_group || 'fix-nodes-group');
-    var _fixedPosTag = options.fixedPosTag || 'fixedPos';
-    var _fixes = [], _nodes, _wnodes, _edges, _wedges;
+    const fix_nodes_group = fixNodesGroup(options.fix_nodes_group || 'fix-nodes-group');
+    const _fixedPosTag = options.fixedPosTag || 'fixedPos';
+    let _fixes = [], _nodes, _wnodes, _edges, _wedges;
 
-    var _execute = {
-        nodeid: function(n) {
+    const _execute = {
+        nodeid(n) {
             return _mode.parent().nodeKey.eval(n);
         },
-        sourceid: function(e) {
+        sourceid(e) {
             return _mode.parent().edgeSource.eval(e);
         },
-        targetid: function(e) {
+        targetid(e) {
             return _mode.parent().edgeTarget.eval(e);
         },
-        get_fix: function(n) {
+        get_fix(n) {
             return _mode.parent().nodeFixed.eval(n);
         },
-        fix_node: function(n, pos) {
+        fix_node(n, pos) {
             n[_fixedPosTag] = pos;
         },
-        unfix_node: function(n) {
+        unfix_node(n) {
             n[_fixedPosTag] = null;
         },
-        clear_fixes: function() {
+        clear_fixes() {
             _fixes = {};
         },
-        register_fix: function(id, pos) {
+        register_fix(id, pos) {
             _fixes[id] = pos;
         }
     };
 
     function request_fixes(fixes) {
         _mode.strategy().request_fixes(_execute, fixes);
-        tell_then_set(find_changes()).then(function() {
+        tell_then_set(find_changes()).then(() => {
             _mode.parent().redraw();
         });
     }
@@ -45,23 +45,23 @@ export function fixNodes(options) {
         _mode.strategy().new_node(_execute, nid, n, pos);
     }
     function new_edge(eid, sourceid, targetid) {
-        var source = _nodes[sourceid], target = _nodes[targetid];
+        const source = _nodes[sourceid], target = _nodes[targetid];
         _mode.strategy().new_edge(_execute, eid, source, target);
     }
     function find_changes() {
-        var changes = [];
-        _wnodes.forEach(function(n) {
-            var key = _mode.parent().nodeKey.eval(n),
-                fixPos = _fixes[key],
-                oldFixed = n.orig.value[_fixedPosTag],
-                changed = false;
+        const changes = [];
+        _wnodes.forEach((n) => {
+            const key = _mode.parent().nodeKey.eval(n),
+                fixPos = _fixes[key];
+            const oldFixed = n.orig.value[_fixedPosTag];
+            let changed = false;
             if(oldFixed) {
                 if(!fixPos || fixPos.x !== oldFixed.x || fixPos.y !== oldFixed.y)
                     changed = true;
             }
             else changed = fixPos;
             if(changed)
-                changes.push({n: n, fixed: fixPos ? {x: fixPos.x, y: fixPos.y} : null});
+                changes.push({n, fixed: fixPos ? {x: fixPos.x, y: fixPos.y} : null});
         });
         return changes;
     }
@@ -72,25 +72,25 @@ export function fixNodes(options) {
             _execute.unfix_node(n.orig.value);
     }
     function tell_then_set(changes) {
-        var callback = _mode.fixNode() || function(n, pos) { return Promise.resolve(pos); };
-        var promises = changes.map(function(change) {
-            var key = _mode.parent().nodeKey.eval(change.n);
+        const callback = _mode.fixNode() || function(n, pos) { return Promise.resolve(pos); };
+        const promises = changes.map((change) => {
+            const key = _mode.parent().nodeKey.eval(change.n);
             return callback(key, change.fixed)
-                .then(function(fixed) {
+                .then((fixed) => {
                     execute_change(change.n, fixed);
                 });
         });
         return Promise.all(promises);
     }
     function set_changes(changes) {
-        changes.forEach(function(change) {
+        changes.forEach((change) => {
             execute_change(change.n, change.fixed);
         });
     }
     function tell_changes(changes) {
-        var callback = _mode.fixNode() || function(n, pos) { return Promise.resolve(pos); };
-        var promises = changes.map(function(change) {
-            var key = _mode.parent().nodeKey.eval(change.n);
+        const callback = _mode.fixNode() || function(n, pos) { return Promise.resolve(pos); };
+        const promises = changes.map((change) => {
+            const key = _mode.parent().nodeKey.eval(change.n);
             return callback(key, change.fixed);
         });
         return Promise.all(promises);
@@ -98,9 +98,7 @@ export function fixNodes(options) {
     function fix_all_nodes(tell) {
         if(tell === undefined)
            tell = true;
-        var changes = _wnodes.map(function(n) {
-            return {n: n, fixed: {x: n.cola.x, y: n.cola.y}};
-        });
+        const changes = _wnodes.map((n) => ({n, fixed: {x: n.cola.x, y: n.cola.y}}));
         if(tell)
             return tell_then_set(changes);
         else {
@@ -120,7 +118,7 @@ export function fixNodes(options) {
         _wedges = wedges;
         if(_mode.strategy().on_data) {
             _mode.strategy().on_data(_execute, nodes, wnodes, edges, wedges, ports, wports); // ghastly
-            var changes = find_changes();
+            const changes = find_changes();
             set_changes(changes);
             // can't wait for backend to acknowledge/approve so just set then blast
             if(_mode.reportOverridesAsynchronously())
@@ -128,8 +126,8 @@ export function fixNodes(options) {
         }
     }
 
-    var _mode = {
-        parent: property(null).react(function(p) {
+    const _mode = {
+        parent: property(null).react((p) => {
             fix_nodes_group
                 .on('request_fixes.fix-nodes', p ? request_fixes : null)
                 .on('new_node.fix_nodes', p ? new_node : null)
@@ -155,16 +153,16 @@ export function fixNodes(options) {
 fixNodes.strategy = {};
 fixNodes.strategy.fixLast = function() {
     return {
-        request_fixes: function(exec, fixes) {
+        request_fixes(exec, fixes) {
             exec.clear_fixes();
-            fixes.forEach(function(fix) {
+            fixes.forEach((fix) => {
                 exec.register_fix(fix.id, fix.pos);
             });
         },
-        new_node: function(exec, nid, n, pos) {
+        new_node(exec, nid, n, pos) {
             exec.fix_node(n, pos);
         },
-        new_edge: function(exec, eid, source, target) {
+        new_edge(exec, eid, source, target) {
             exec.unfix_node(source.orig.value);
             exec.unfix_node(target.orig.value);
         }
@@ -172,43 +170,43 @@ fixNodes.strategy.fixLast = function() {
 };
 fixNodes.strategy.lastNPerComponent = function(maxf) {
     maxf = maxf || 1;
-    var _age = 0;
-    var _allFixes = {};
+    let _age = 0;
+    let _allFixes = {};
     return {
-        clear_all_fixes: function() {
+        clear_all_fixes() {
             _allFixes = {};
         },
-        request_fixes: function(exec, fixes) {
+        request_fixes(exec, fixes) {
             ++_age;
-            fixes.forEach(function(fix) {
+            fixes.forEach((fix) => {
                 _allFixes[fix.id] = {id: fix.id, age: _age, pos: fix.pos};
             });
         },
-        new_node: function(exec, nid, n, pos) {
+        new_node(exec, nid, n, pos) {
             ++_age;
-            _allFixes[nid] = {id: nid, age: _age, pos: pos};
+            _allFixes[nid] = {id: nid, age: _age, pos};
             exec.fix_node(n, pos);
         },
-        new_edge: function() {},
-        on_data: function(exec, nodes, wnodes, edges, wedges, ports, wports) {
+        new_edge() {},
+        on_data(exec, nodes, wnodes, edges, wedges, _ports, _wports) {
             ++_age;
             // add any existing fixes as requests
             console.assert(Array.isArray(wnodes), 'fix_nodes strategy.on_data: wnodes should be an array, got:', wnodes);
-            wnodes.forEach(function(n) {
-                var nid = exec.nodeid(n), pos = exec.get_fix(n);
+            wnodes.forEach((n) => {
+                const nid = exec.nodeid(n), pos = exec.get_fix(n);
                 if(pos && !_allFixes[nid])
-                    _allFixes[nid] = {id: nid, age: _age, pos: pos};
+                    _allFixes[nid] = {id: nid, age: _age, pos};
             });
             // determine components
-            var components = [];
-            var dfs = undirectedDfs({
+            const components = [];
+            const dfs = undirectedDfs({
                 nodeid: exec.nodeid,
                 sourceid: exec.sourceid,
                 targetid: exec.targetid,
-                comp: function() {
+                comp() {
                     components.push([]);
                 },
-                node: function(compid, n) {
+                node(compid, n) {
                     components[compid].push(n);
                 }
             });
@@ -216,10 +214,10 @@ fixNodes.strategy.lastNPerComponent = function(maxf) {
             // start from scratch
             exec.clear_fixes();
             // keep or produce enough fixed nodes per component
-            components.forEach(function(comp, i) {
-                var oldcomps = comp.reduce(function(cc, n) {
+            components.forEach((comp, i) => {
+                const oldcomps = comp.reduce((cc, n) => {
                     if(n.last_component) {
-                        var counts = cc[n.last_component] = cc[n.last_component] || {
+                        const counts = cc[n.last_component] = cc[n.last_component] || {
                             total: 0,
                             fixed: 0
                         };
@@ -229,36 +227,26 @@ fixNodes.strategy.lastNPerComponent = function(maxf) {
                     }
                     return cc;
                 }, {});
-                var fixed_by_size = Object.keys(oldcomps).reduce(function(ff, compid) {
+                const fixed_by_size = Object.keys(oldcomps).reduce((ff, compid) => {
                     if(oldcomps[compid].fixed)
                         ff.push({compid: +compid, total: oldcomps[compid].total, fixed: oldcomps[compid].fixed});
                     return ff;
-                }, []).sort(function(coa, cob) {
-                    return cob.total - coa.total;
-                });
-                var largest_fixed = fixed_by_size.length && fixed_by_size[0].compid;
-                var fixes = comp.filter(function(n) {
-                    return !n.last_component || n.last_component === largest_fixed;
-                }).map(function(n) {
-                    return _allFixes[exec.nodeid(n)];
-                }).filter(function(fix) {
-                    return fix;
-                });
+                }, []).sort((coa, cob) => cob.total - coa.total);
+                const largest_fixed = fixed_by_size.length && fixed_by_size[0].compid;
+                let fixes = comp.filter((n) => !n.last_component || n.last_component === largest_fixed).map((n) => _allFixes[exec.nodeid(n)]).filter((fix) => fix);
                 if(fixes.length > maxf) {
-                    fixes.sort(function(f1, f2) {
-                        return f2.age - f1.age;
-                    });
+                    fixes.sort((f1, f2) => f2.age - f1.age);
                     fixes = fixes.slice(0, maxf);
                 }
-                fixes.forEach(function(fix) {
+                fixes.forEach((fix) => {
                     exec.register_fix(fix.id, fix.pos);
                 });
-                var kept = fixes.reduce(function(m, fix) {
+                const kept = fixes.reduce((m, fix) => {
                     m[fix.id] = true;
                     return m;
                 }, {});
-                comp.forEach(function(n) {
-                    var nid = exec.nodeid(n);
+                comp.forEach((n) => {
+                    const nid = exec.nodeid(n);
                     if(!kept[nid])
                         _allFixes[nid] = null;
                     n.last_component = i+1;
@@ -269,9 +257,7 @@ fixNodes.strategy.lastNPerComponent = function(maxf) {
 };
 
 export function fixNodesGroup(brushgroup) {
-    window.chart_registry.create_type('fix-nodes', function() {
-        return dispatch('request_fixes', 'new_node', 'new_edge');
-    });
+    window.chart_registry.create_type('fix-nodes', () => dispatch('request_fixes', 'new_node', 'new_edge'));
 
     return window.chart_registry.create_group('fix-nodes', brushgroup);
 };

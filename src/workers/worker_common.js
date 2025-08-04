@@ -1,11 +1,11 @@
 // Shared worker message handling code
-var _layouts = {};
+const _layouts = {};
 
 function postResponse(event, layoutId) {
     return function() {
-        var message = {
+        const message = {
             response: event,
-            layoutId: layoutId
+            layoutId
         };
         message.args = Array.prototype.slice.call(arguments);
         postMessage(message);
@@ -14,11 +14,11 @@ function postResponse(event, layoutId) {
 
 export function createWorkerHandler(layoutFactory) {
     return async function(e) {
-        var args = e.data.args;
+        const args = e.data.args;
         const layoutId = args.layoutId;
         
         switch(e.data.command) {
-        case 'init':
+        case 'init': {
             const layout = layoutFactory()
                 .on('tick', postResponse('tick', layoutId))
                 .on('start', postResponse('start', layoutId))
@@ -37,10 +37,11 @@ export function createWorkerHandler(layoutFactory) {
             // Send init completion response
             postMessage({
                 response: 'init',
-                layoutId: layoutId,
+                layoutId,
                 args: []
             });
             break;
+        }
         case 'data':
             if(_layouts[layoutId])
                 _layouts[layoutId].data(args.graph, args.nodes, args.edges, args.clusters, args.constraints);

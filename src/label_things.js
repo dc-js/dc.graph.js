@@ -9,12 +9,12 @@ import { event } from 'd3-selection';
 
 export function labelThings(options) {
     options = options || {};
-    var select_things_group = selectThingsGroup(options.select_group, options.select_type),
+    const select_things_group = selectThingsGroup(options.select_group, options.select_type),
         label_things_group = labelThingsGroup(options.label_group, options.label_type);
-    var _selected = [];
-    var _keyboard, _selectThings;
+    let _selected = [];
+    let _keyboard, _selectThings;
 
-    function selection_changed_listener(diagram) {
+    function selection_changed_listener(_diagram) {
         return function(selection) {
             _selected = selection;
         };
@@ -22,7 +22,7 @@ export function labelThings(options) {
 
     function edit_label_listener(diagram) {
         return function(thing, eventOptions) {
-            var box = options.thing_box(thing);
+            const box = options.thing_box(thing);
             options.hide_thing_label(thing, true);
             editText(
                 diagram.g(),
@@ -30,12 +30,12 @@ export function labelThings(options) {
                     text: eventOptions.text || options.thing_label(thing) || options.default_label,
                     align: options.align,
                     class: options.class,
-                    box: box,
+                    box,
                     selectText: eventOptions.selectText,
-                    accept: function(text) {
+                    accept(text) {
                         return options.accept(thing, text);
                     },
-                    finally: function() {
+                    finally() {
                         options.hide_thing_label(thing, false);
                     }
                 });
@@ -45,19 +45,19 @@ export function labelThings(options) {
     function edit_selection(node, edge, eventOptions) {
         // less than ideal interface.
         // what if there are other things? can i blame the missing metagraph?
-        var thing = options.find_thing(_selected[0], node, edge);
+        const thing = options.find_thing(_selected[0], node, edge);
         if(thing.empty()) {
-            console.error("couldn't find thing '" + _selected[0] + "'!");
+            console.error(`couldn't find thing '${  _selected[0]  }'!`);
             return;
         }
         if(thing.size()>1) {
-            console.error("found too many things for '" + _selected[0] + "' (" + thing.size() + ")!");
+            console.error(`found too many things for '${  _selected[0]  }' (${  thing.size()  })!`);
             return;
         }
         label_things_group.call('edit_label', null, thing, eventOptions);
     }
     function draw(diagram, node, edge) {
-        _keyboard.on('keyup.' + options.label_type, function() {
+        _keyboard.on(`keyup.${  options.label_type}`, () => {
             if(_selected.length) {
                 // printable characters should start edit
                 if(event.key.length !== 1)
@@ -66,20 +66,20 @@ export function labelThings(options) {
             }
         });
         if(_selectThings)
-            _selectThings.thinginess().clickables(diagram, node, edge).on('dblclick.' + options.label_type, function() {
+            _selectThings.thinginess().clickables(diagram, node, edge).on(`dblclick.${  options.label_type}`, () => {
                 edit_selection(node, edge, {selectText: true});
             });
     }
 
-    function remove(diagram, node, edge) {
+    function remove(_diagram, _node, _edge) {
     }
 
-    var _mode = mode(options.label_type, {
-        draw: draw,
-        remove: remove,
-        parent: function(p) {
-            select_things_group.on('set_changed.' + options.label_type, p ? selection_changed_listener(p) : null);
-            label_things_group.on('edit_label.' + options.label_type, p ? edit_label_listener(p) : null);
+    const _mode = mode(options.label_type, {
+        draw,
+        remove,
+        parent(p) {
+            select_things_group.on(`set_changed.${  options.label_type}`, p ? selection_changed_listener(p) : null);
+            label_things_group.on(`edit_label.${  options.label_type}`, p ? edit_label_listener(p) : null);
             if(p) {
                 _keyboard = p.child('keyboard');
                 if(!_keyboard)
@@ -95,9 +95,7 @@ export function labelThings(options) {
 };
 
 export function labelThingsGroup(brushgroup, type) {
-    window.chart_registry.create_type(type, function() {
-        return dispatch('edit_label');
-    });
+    window.chart_registry.create_type(type, () => dispatch('edit_label'));
 
     return window.chart_registry.create_group(type, brushgroup);
 }

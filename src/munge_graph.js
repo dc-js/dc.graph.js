@@ -7,12 +7,12 @@ function canGetGraphFromThis(data) {
 // this could be generalized a lot
 export function mungeGraph(data, nodekeyattr, sourceattr, targetattr) {
     // we want data = {nodes, edges} and the field names for keys; find those in common json formats
-    var nodes, edges, nka = nodekeyattr || "name",
+    let nodes, edges, nka = nodekeyattr || "name",
         sa = sourceattr || "sourcename", ta = targetattr || "targetname";
 
     if(!canGetGraphFromThis(data)) {
-        var wrappers = ['database', 'response'];
-        var wi = wrappers.findIndex(function(f) { return data[f] && canGetGraphFromThis(data[f]); });
+        const wrappers = ['database', 'response'];
+        const wi = wrappers.findIndex((f) => data[f] && canGetGraphFromThis(data[f]));
         if(wi<0)
             throw new Error("couldn't find the data!");
         data = data[wrappers[wi]];
@@ -21,33 +21,31 @@ export function mungeGraph(data, nodekeyattr, sourceattr, targetattr) {
     nodes = data.nodes || data.vertices;
 
     function find_attr(o, attrs) {
-        return attrs.filter(function(a) { return !!o[a]; });
+        return attrs.filter((a) => !!o[a]);
     }
 
     //var edgekeyattr = "id";
-    var edge0 = edges[0];
+    let edge0 = edges[0];
     if(edge0[sa] === undefined) {
-        var sourceattrs = sourceattr ? [sourceattr] : ['source_ecomp_uid', "node1", "source", "tail"],
+        const sourceattrs = sourceattr ? [sourceattr] : ['source_ecomp_uid', "node1", "source", "tail"],
             targetattrs = targetattr ? [targetattr] : ['target_ecomp_uid', "node2", "target", "head"];
         //var edgekeyattrs = ['id', '_id', 'ecomp_uid'];
-        var edgewrappers = ['edge'];
+        const edgewrappers = ['edge'];
         if(edge0.node0 && edge0.node1) { // specific conflict here
             sa = 'node0';
             ta = 'node1';
         }
         else {
-            var candidates = find_attr(edge0, sourceattrs);
+            let candidates = find_attr(edge0, sourceattrs);
             if(!candidates.length) {
-                wi = edgewrappers.findIndex(function(w) {
-                    return edge0[w] && find_attr(edge0[w], sourceattrs).length;
-                });
+                const wi = edgewrappers.findIndex((w) => edge0[w] && find_attr(edge0[w], sourceattrs).length);
                 if(wi<0) {
                     if(sourceattr)
-                        throw new Error('sourceattr ' + sa + " didn't work");
+                        throw new Error(`sourceattr ${  sa  } didn't work`);
                     else
                         throw new Error("didn't find any source attr");
                 }
-                edges = edges.map(function(e) { return e[edgewrappers[wi]]; });
+                edges = edges.map((e) => e[edgewrappers[wi]]);
                 edge0 = edges[0];
                 candidates = find_attr(edge0, sourceattrs);
             }
@@ -58,7 +56,7 @@ export function mungeGraph(data, nodekeyattr, sourceattr, targetattr) {
             candidates = find_attr(edge0, targetattrs);
             if(!candidates.length) {
                 if(targetattr && !edge0[targetattr])
-                    throw new Error('targetattr ' + ta + " didn't work");
+                    throw new Error(`targetattr ${  ta  } didn't work`);
                 else
                     throw new Error("didn't find any target attr");
             }
@@ -77,22 +75,20 @@ export function mungeGraph(data, nodekeyattr, sourceattr, targetattr) {
              */
         }
     }
-    var node0 = nodes[0];
+    let node0 = nodes[0];
     if(node0[nka] === undefined) {
-        var nodekeyattrs = nodekeyattr ? [nodekeyattr] : ['ecomp_uid', 'id', '_id', 'key'];
-        var nodewrappers = ['vertex'];
-        candidates = find_attr(node0, nodekeyattrs);
+        const nodekeyattrs = nodekeyattr ? [nodekeyattr] : ['ecomp_uid', 'id', '_id', 'key'];
+        const nodewrappers = ['vertex'];
+        let candidates = find_attr(node0, nodekeyattrs);
         if(!candidates.length) {
-            wi = nodewrappers.findIndex(function(w) {
-                return node0[w] && find_attr(node0[w], nodekeyattrs).length;
-            });
+            const wi = nodewrappers.findIndex((w) => node0[w] && find_attr(node0[w], nodekeyattrs).length);
             if(wi<0) {
                 if(nodekeyattr)
-                    throw new Error('nodekeyattr ' + nka + " didn't work");
+                    throw new Error(`nodekeyattr ${  nka  } didn't work`);
                 else
                     throw new Error("couldn't find the node data");
             }
-            nodes = nodes.map(function(n) { return n[nodewrappers[wi]]; });
+            nodes = nodes.map((n) => n[nodewrappers[wi]]);
             node0 = nodes[0];
             candidates = find_attr(node0, nodekeyattrs);
         }
@@ -102,8 +98,8 @@ export function mungeGraph(data, nodekeyattr, sourceattr, targetattr) {
     }
 
     return {
-        nodes: nodes,
-        edges: edges,
+        nodes,
+        edges,
         nodekeyattr: nka,
         sourceattr: sa,
         targetattr: ta

@@ -1,10 +1,10 @@
-var _layouts;
+let _layouts;
 
 function postResponse(event, layoutId) {
     return function() {
-        var message = {
+        const message = {
             response: event,
-            layoutId: layoutId
+            layoutId
         };
         message.args = Array.prototype.slice.call(arguments);
         postMessage(message);
@@ -12,12 +12,12 @@ function postResponse(event, layoutId) {
 }
 
 onmessage = function(e) {
-    var args = e.data.args;
+    const args = e.data.args;
     switch(e.data.command) {
-    case 'init':
+    case 'init': {
         // find a function under dc_graph that has `scripts`
-        var layout_name;
-        for(var name in dc_graph) {
+        let layout_name;
+        for(const name in dc_graph) {
             if(typeof dc_graph[name] === 'function' && dc_graph[name].scripts)
                 layout_name = name;
         }
@@ -40,6 +40,7 @@ onmessage = function(e) {
             .on('end', postResponse('end', args.layoutId))
             .init(args.options);
         break;
+    }
     case 'data':
         if(_layouts)
             _layouts[args.layoutId].data(args.graph, args.nodes, args.edges, args.clusters, args.constraints);

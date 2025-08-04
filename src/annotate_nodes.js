@@ -13,7 +13,7 @@ export const annotateNodes = () => {
             .attr('font-weight', 750)
             .attr('font-size', '50px')
             .attr('alignment-baseline', 'central')
-            .attr('dx', d => Math.round(d.dcg_rx + 10) + 'px');
+            .attr('dx', d => `${Math.round(d.dcg_rx + 10)  }px`);
         annots.exit().remove();
         annots
             .text(d => d.orig.value.ceq);

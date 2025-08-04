@@ -1,14 +1,15 @@
 import { mode } from './mode.js';
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
 import { nodeEdgeConditions } from './utils.js';
+import { property } from './core.js';
 
 export function highlightPaths(pathprops, hoverprops, selectprops, pathsgroup) {
-    var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
+    const highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
     pathprops = pathprops || {};
     hoverprops = hoverprops || {};
     selectprops = selectprops || {};
-    var node_on_paths = {}, edge_on_paths = {}, selected = null, hoverpaths = null;
-    var _anchor;
+    let node_on_paths = {}, edge_on_paths = {}, selected = null, hoverpaths = null;
+    let _anchor;
 
     function refresh() {
         if(_mode.doRedraw())
@@ -55,7 +56,7 @@ export function highlightPaths(pathprops, hoverprops, selectprops, pathsgroup) {
 
     // sigh
     function doesnt_contain_path(paths) {
-        var cp = contains_path(paths);
+        const cp = contains_path(paths);
         return function(path) {
             return !cp(path);
         };
@@ -79,42 +80,30 @@ export function highlightPaths(pathprops, hoverprops, selectprops, pathsgroup) {
 
     function draw(diagram, node, edge, ehover) {
         diagram
-            .cascade(200, true, nodeEdgeConditions(function(n) {
-                return !!node_on_paths[diagram.nodeKey.eval(n)];
-            }, function(e) {
-                return !!edge_on_paths[diagram.edgeKey.eval(e)];
-            }, pathprops))
-            .cascade(300, true, nodeEdgeConditions(function(n) {
-                return intersect_paths(node_on_paths[diagram.nodeKey.eval(n)], selected);
-            }, function(e) {
-                return intersect_paths(edge_on_paths[diagram.edgeKey.eval(e)], selected);
-            }, selectprops))
-            .cascade(400, true, nodeEdgeConditions(function(n) {
-                return intersect_paths(node_on_paths[diagram.nodeKey.eval(n)], hoverpaths);
-            }, function(e) {
-                return intersect_paths(edge_on_paths[diagram.edgeKey.eval(e)], hoverpaths);
-            }, hoverprops));
+            .cascade(200, true, nodeEdgeConditions((n) => !!node_on_paths[diagram.nodeKey.eval(n)], (e) => !!edge_on_paths[diagram.edgeKey.eval(e)], pathprops))
+            .cascade(300, true, nodeEdgeConditions((n) => intersect_paths(node_on_paths[diagram.nodeKey.eval(n)], selected), (e) => intersect_paths(edge_on_paths[diagram.edgeKey.eval(e)], selected), selectprops))
+            .cascade(400, true, nodeEdgeConditions((n) => intersect_paths(node_on_paths[diagram.nodeKey.eval(n)], hoverpaths), (e) => intersect_paths(edge_on_paths[diagram.edgeKey.eval(e)], hoverpaths), hoverprops));
 
         node
-            .on('mouseover.highlight-paths', function(n) {
+            .on('mouseover.highlight-paths', (n) => {
                 highlight_paths_group.hover_changed(node_on_paths[diagram.nodeKey.eval(n)] || null);
             })
-            .on('mouseout.highlight-paths', function(n) {
+            .on('mouseout.highlight-paths', (_n) => {
                 highlight_paths_group.hover_changed(null);
             })
-            .on('click.highlight-paths', function(n) {
+            .on('click.highlight-paths', (n) => {
                 highlight_paths_group.select_changed(toggle_paths(selected, node_on_paths[diagram.nodeKey.eval(n)]));
             });
 
 
         ehover
-            .on('mouseover.highlight-paths', function(e) {
+            .on('mouseover.highlight-paths', (e) => {
                 highlight_paths_group.hover_changed(edge_on_paths[diagram.edgeKey.eval(e)] || null);
             })
-            .on('mouseout.highlight-paths', function(e) {
+            .on('mouseout.highlight-paths', (_e) => {
                 highlight_paths_group.hover_changed(null);
             })
-            .on('click.highlight-paths', function(n) {
+            .on('click.highlight-paths', (n) => {
                 highlight_paths_group.select_changed(toggle_paths(selected, edge_on_paths[diagram.nodeKey.eval(n)]));
             });
     }
@@ -135,19 +124,19 @@ export function highlightPaths(pathprops, hoverprops, selectprops, pathsgroup) {
             .cascade(400, false, hoverprops);
     }
 
-    var _mode = mode('highlight-paths', {
-        draw: draw,
-        remove: function(diagram, node, edge, ehover) {
+    const _mode = mode('highlight-paths', {
+        draw,
+        remove(diagram, node, edge, ehover) {
             remove(diagram, node, edge, ehover);
             return this;
         },
-        parent: function(p) {
+        parent(p) {
             if(p)
                 _anchor = p.anchorName();
             // else we should have received anchor earlier
-            highlight_paths_group.on('paths_changed.highlight-paths-' + _anchor, p ? paths_changed : null);
-            highlight_paths_group.on('hover_changed.highlight-paths-' + _anchor, p ? hover_changed : null);
-            highlight_paths_group.on('select_changed.highlight-paths-' + _anchor, p ? select_changed : null);
+            highlight_paths_group.on(`paths_changed.highlight-paths-${  _anchor}`, p ? paths_changed : null);
+            highlight_paths_group.on(`hover_changed.highlight-paths-${  _anchor}`, p ? hover_changed : null);
+            highlight_paths_group.on(`select_changed.highlight-paths-${  _anchor}`, p ? select_changed : null);
         }
     });
 

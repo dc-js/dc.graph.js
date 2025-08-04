@@ -9,20 +9,20 @@ import { fixNodesGroup } from './fix_nodes.js';
 
 export function moveNodes(options) {
     options = options || {};
-    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
-    var fix_nodes_group = fixNodesGroup(options.fix_nodes_group || 'fix-nodes-group');
-    var _selected = [], _startPos = null, _downNode, _moveStarted;
-    var _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick, _keyboard;
-    var _maybeSelect = null;
+    const select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    const fix_nodes_group = fixNodesGroup(options.fix_nodes_group || 'fix-nodes-group');
+    let _selected = [], _startPos = null, _downNode, _moveStarted;
+    let _brush, _drawGraphs, _selectNodes, _restoreBackgroundClick, _keyboard;
+    let _maybeSelect = null;
 
-    function isUnion(event) {
+    function _isUnion(event) {
         return event.shiftKey;
     }
-    function isToggle(event) {
+    function _isToggle(event) {
         return is_a_mac ? event.metaKey : event.ctrlKey;
     }
 
-    function selection_changed(diagram) {
+    function selection_changed(_diagram) {
         return function(selection, refresh) {
             if(refresh === undefined)
                 refresh = true;
@@ -31,8 +31,8 @@ export function moveNodes(options) {
     }
     function for_each_selected(f, selected) {
         selected = selected || _selected;
-        selected.forEach(function(key) {
-            var n = _mode.parent().getWholeNode(key);
+        selected.forEach((key) => {
+            const n = _mode.parent().getWholeNode(key);
             f(n, key);
         });
     }
@@ -47,14 +47,14 @@ export function moveNodes(options) {
             _downNode = select(this);
             // if the node under the mouse is not in the selection, need to
             // make that node selected
-            var key = diagram.nodeKey.eval(n);
-            var selected = _selected;
+            const key = diagram.nodeKey.eval(n);
+            let selected = _selected;
             if(_selected.indexOf(key)<0) {
                 selected = [key];
                 _maybeSelect = key;
             }
             else _maybeSelect = null;
-            for_each_selected(function(n) {
+            for_each_selected((n) => {
                 n.original_position = [n.cola.x, n.cola.y];
             }, selected);
             if(_brush)
@@ -68,8 +68,8 @@ export function moveNodes(options) {
                 }
                 if(_maybeSelect)
                     select_nodes_group.call('set_changed', null, [_maybeSelect]);
-                var pos = eventCoords(diagram, event);
-                var dx = pos[0] - _startPos[0],
+                const pos = eventCoords(diagram, event);
+                const dx = pos[0] - _startPos[0],
                     dy = pos[1] - _startPos[1];
                 if(!_moveStarted && Math.hypot(dx, dy) > _mode.dragSize()) {
                     _moveStarted = true;
@@ -78,15 +78,13 @@ export function moveNodes(options) {
                         _downNode.style('pointer-events', 'none');
                 }
                 if(_moveStarted) {
-                    for_each_selected(function(n) {
+                    for_each_selected((n) => {
                         n.cola.x = n.original_position[0] + dx;
                         n.cola.y = n.original_position[1] + dy;
                     });
-                    var node2 = node.filter(function(n) { return _selected.includes(n.orig.key); }),
-                        edge2 = edge.filter(function(e) {
-                            return _selected.includes(e.source.orig.key) ||
-                                _selected.includes(e.target.orig.key);
-                        });
+                    const node2 = node.filter((n) => _selected.includes(n.orig.key)),
+                        edge2 = edge.filter((e) => _selected.includes(e.source.orig.key) ||
+                                _selected.includes(e.target.orig.key));
                     diagram.reposition(node2, edge2);
                 }
             }
@@ -99,10 +97,10 @@ export function moveNodes(options) {
                         _downNode.style('pointer-events', null);
                         _downNode = null;
                     }
-                    var fixes = [];
-                    for_each_selected(function(n, id) {
+                    const fixes = [];
+                    for_each_selected((n, id) => {
                         fixes.push({
-                            id: id,
+                            id,
                             pos: {x: n.cola.x, y: n.cola.y}
                         });
                     });
@@ -121,16 +119,16 @@ export function moveNodes(options) {
             .on('mouseup.move-nodes', mouse_up);
     }
 
-    function remove(diagram, node, edge) {
+    function remove(diagram, node, _edge) {
         node.on('mousedown.move-nodes', null);
         node.on('mousemove.move-nodes', null);
         node.on('mouseup.move-nodes', null);
     }
 
-    var _mode = mode('move-nodes', {
-        draw: draw,
-        remove: remove,
-        parent: function(p) {
+    const _mode = mode('move-nodes', {
+        draw,
+        remove,
+        parent(p) {
             select_nodes_group.on('set_changed.move-nodes', p ? selection_changed(p) : null);
             if(p) {
                 _brush = p.child('brush');

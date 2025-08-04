@@ -6,7 +6,7 @@
 // External dependencies
 import { dispatch } from 'd3-dispatch';
 import { json } from 'd3-fetch';
-import { uuid, property } from './core.js';
+import { uuid } from './core.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
 
 /**
@@ -20,11 +20,11 @@ import { graphvizAttrs } from './graphviz_attrs.js';
  * @return {Object} graphviz layout engine
  **/
 export function graphvizLayout(id, layout, server) {
-    var _layoutId = id || uuid();
-    var _dispatch = dispatch('tick', 'start', 'end');
-    var _dotInput, _dotString;
+    const _layoutId = id || uuid();
+    const _dispatch = dispatch('tick', 'start', 'end');
+    let _dotInput, _dotString;
 
-    function init(options) {
+    function init(_options) {
     }
 
     function encode_name(name) {
@@ -34,35 +34,35 @@ export function graphvizLayout(id, layout, server) {
         return name.replace(/^&#37;/, '%');
     }
     function stringize_property(prop, value) {
-        return [prop, '"' + value + '"'].join('=');
+        return [prop, `"${  value  }"`].join('=');
     }
     function stringize_properties(props) {
-        return '[' + props.join(', ') + ']';
+        return `[${  props.join(', ')  }]`;
     }
     function data(nodes, edges, clusters) {
         if(_dotInput) {
             _dotString = _dotInput;
             return;
         }
-        var lines = [];
-        var directed = layout !== 'neato';
-        lines.push((directed ? 'digraph' : 'graph') + ' g {');
-        lines.push('graph ' + stringize_properties([
+        let lines = [];
+        const directed = layout !== 'neato';
+        lines.push(`${directed ? 'digraph' : 'graph'  } g {`);
+        lines.push(`graph ${  stringize_properties([
             stringize_property('nodesep', graphviz.nodesep()/72),
             stringize_property('ranksep', graphviz.ranksep()/72),
             stringize_property('rankdir', graphviz.rankdir())
-        ]));
-        var cluster_nodes = {};
-        nodes.forEach(function(n) {
-            var cl = n.dcg_nodeParentCluster;
+        ])}`);
+        const cluster_nodes = {};
+        nodes.forEach((n) => {
+            const cl = n.dcg_nodeParentCluster;
             if(cl) {
                 cluster_nodes[cl] = cluster_nodes[cl] || [];
                 cluster_nodes[cl].push(n.dcg_nodeKey);
             }
         });
-        var cluster_children = {}, tops = [];
-        clusters.forEach(function(c) {
-            var p = c.dcg_clusterParent;
+        const cluster_children = {}, tops = [];
+        clusters.forEach((c) => {
+            const p = c.dcg_clusterParent;
             if(p) {
                 cluster_children[p] = cluster_children[p] || [];
                 cluster_children[p].push(c.dcg_clusterKey);
@@ -70,18 +70,18 @@ export function graphvizLayout(id, layout, server) {
         });
 
         function print_subgraph(i, c) {
-            var indent = ' '.repeat(i*2);
-            lines.push(indent + 'subgraph "' + c + '" {');
+            const indent = ' '.repeat(i*2);
+            lines.push(`${indent  }subgraph "${  c  }" {`);
             if(cluster_children[c])
                 cluster_children[c].forEach(print_subgraph.bind(null, i+1));
             if(cluster_nodes[c])
-                lines.push(indent + '  ' + cluster_nodes[c].map(function (s) { return JSON.stringify(s) }).join(' '));
-            lines.push(indent + '}');
+                lines.push(`${indent  }  ${  cluster_nodes[c].map((s) => JSON.stringify(s)).join(' ')}`);
+            lines.push(`${indent  }}`);
         }
         tops.forEach(print_subgraph.bind(null, 1));
 
-        lines = lines.concat(nodes.map(function(v) {
-            var props = [
+        lines = lines.concat(nodes.map((v) => {
+            const props = [
                 stringize_property('width', v.width/72),
                 stringize_property('height', v.height/72),
                 stringize_property('fixedsize', 'shape'),
@@ -92,16 +92,14 @@ export function graphvizLayout(id, layout, server) {
                     v.dcg_nodeFixed.x,
                     1000-v.dcg_nodeFixed.y
                 ].join(',')));
-            return '  "' + encode_name(v.dcg_nodeKey) + '" ' + stringize_properties(props);
+            return `  "${  encode_name(v.dcg_nodeKey)  }" ${  stringize_properties(props)}`;
         }));
-        lines = lines.concat(edges.map(function(e) {
-            return '  "' + encode_name(e.dcg_edgeSource) + (directed ? '" -> "' : '" -- "') +
-                encode_name(e.dcg_edgeTarget) + '" ' + stringize_properties([
+        lines = lines.concat(edges.map((e) => `  "${  encode_name(e.dcg_edgeSource)  }${directed ? '" -> "' : '" -- "' 
+                }${encode_name(e.dcg_edgeTarget)  }" ${  stringize_properties([
                     stringize_property('id', encode_name(e.dcg_edgeKey)),
                 stringize_property('arrowhead', 'none'),
                 stringize_property('arrowtail', 'none')
-                ]);
-        }));
+                ])}`));
         lines.push('}');
         lines.push('');
         _dotString = lines.join('\n');
@@ -113,11 +111,11 @@ export function graphvizLayout(id, layout, server) {
             return;
         }
         _dispatch.call("start");
-        var bb = result.bb.split(',').map(function(x) { return +x; });
-        var nodes = (result.objects || []).filter(function(n) {
-            return n.pos; // remove non-nodes like clusters
-        }).map(function(n) {
-            var pos = n.pos.split(',');
+        const bb = result.bb.split(',').map((x) => +x);
+        const nodes = (result.objects || []).filter((n) => 
+             n.pos // remove non-nodes like clusters
+        ).map((n) => {
+            const pos = n.pos.split(',');
             if(isNaN(pos[0]) || isNaN(pos[1])) {
                 console.warn('got a NaN position from graphviz');
                 pos[0] = pos[1] = 0;
@@ -128,24 +126,22 @@ export function graphvizLayout(id, layout, server) {
                 y: bb[3] - pos[1]
             };
         });
-        var clusters = (result.objects || []).filter(function(n) {
-            return /^cluster/.test(n.name) && n.bb;
-        });
-        clusters.forEach(function(c) {
+        const clusters = (result.objects || []).filter((n) => /^cluster/.test(n.name) && n.bb);
+        clusters.forEach((c) => {
             c.dcg_clusterKey = c.name;
 
             // gv: llx, lly, urx, ury, up-positive
-            var cbb = c.bb.split(',').map(function(s) { return +s; });
+            const cbb = c.bb.split(',').map((s) => +s);
             c.bounds = {left: cbb[0], top: bb[3] - cbb[3],
                         right: cbb[2], bottom: bb[3] - cbb[1]};
         });
-        var edges = (result.edges || []).map(function(e) {
-            var e2 = {
-                dcg_edgeKey: decode_name(e.id || 'n' + e._gvid)
+        const edges = (result.edges || []).map((e) => {
+            const e2 = {
+                dcg_edgeKey: decode_name(e.id || `n${  e._gvid}`)
             };
             if(e._draw_) {
-                var directive = e._draw_.find(function(d) { return d.op && d.points; });
-                e2.points = directive.points.map(function(p) { return {x: p[0], y: bb[3] - p[1]}; });
+                const directive = e._draw_.find((d) => d.op && d.points);
+                e2.points = directive.points.map((p) => ({x: p[0], y: bb[3] - p[1]}));
             }
             return e2;
         });
@@ -156,10 +152,10 @@ export function graphvizLayout(id, layout, server) {
         if(server) {
             json(server)
                 .header("Content-type", "application/x-www-form-urlencoded")
-                .post('layouttool=' + layout + '&' + encodeURIComponent(_dotString), process_response);
+                .post(`layouttool=${  layout  }&${  encodeURIComponent(_dotString)}`, process_response);
         }
         else {
-            var result = Viz(_dotString, {format: 'json', engine: layout, totalMemory: 1 << 25});
+            let result = Viz(_dotString, {format: 'json', engine: layout, totalMemory: 1 << 25});
             result = JSON.parse(result);
             process_response(null, result);
         }
@@ -168,48 +164,48 @@ export function graphvizLayout(id, layout, server) {
     function stop() {
     }
 
-    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
+    const graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
     return Object.assign(graphviz, {
-        layoutAlgorithm: function() {
+        layoutAlgorithm() {
             return layout;
         },
-        layoutId: function() {
+        layoutId() {
             return _layoutId;
         },
-        supportsWebworker: function() {
+        supportsWebworker() {
             return false;
         },
-        on: function(event, f) {
+        on(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
-        init: function(options) {
-            this.optionNames().forEach(function(option) {
+        init(options) {
+            this.optionNames().forEach((option) => {
                 options[option] = options[option] || this[option]();
-            }.bind(this));
+            });
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges, clusters) {
+        data(graph, nodes, edges, clusters) {
             data(nodes, edges, clusters);
         },
-        dotInput: function(text) {
+        dotInput(text) {
             _dotInput = text;
             return this;
         },
-        start: function() {
+        start() {
             start();
         },
-        stop: function() {
+        stop() {
             stop();
         },
-        optionNames: function() {
+        optionNames() {
             return graphviz_keys;
         },
-        populateLayoutNode: function() {},
-        populateLayoutEdge: function() {}
+        populateLayoutNode() {},
+        populateLayoutEdge() {}
     });
 }
 

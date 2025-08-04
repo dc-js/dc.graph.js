@@ -41,50 +41,50 @@ import { clone } from './utils.js';
  * @return {Function}
  */
 export function constraintPattern(pattern) {
-    var types = {}, rules = [];
+    const types = {}, rules = [];
 
-    pattern.nodes.forEach(function(n) {
-        var id = n.id;
-        var type = types[id] || (types[id] = {});
+    pattern.nodes.forEach((n) => {
+        const id = n.id;
+        const type = types[id] || (types[id] = {});
         // partitions could be done more efficiently; this is POC
         if(n.partition) {
-            var partition = n.partition;
-            var value = n.value || n.id;
+            const partition = n.partition;
+            const value = n.value || n.id;
             if(n.all || n.typename) {
                 type.match = n.extract ?
                     function(n2) { return n.extract(n2.value[partition]); } :
                     function(n2) { return n2.value[partition]; };
-                type.typename = n.typename || function(n2) { return partition + '=' + n2.value[partition]; };
+                type.typename = n.typename || function(n2) { return `${partition  }=${  n2.value[partition]}`; };
             }
             else
                 type.match = function(n2) { return n2.value[partition] === value; };
         }
         else if(n.match)
             type.match = n.match;
-        else throw new Error("couldn't determine matcher for type " + JSON.stringify(n));
+        else throw new Error(`couldn't determine matcher for type ${  JSON.stringify(n)}`);
     });
-    pattern.edges.forEach(function(e) {
+    pattern.edges.forEach((e) => {
         if(e.disable)
             return;
-        var rule = {source: e.source, target: e.target};
+        const rule = {source: e.source, target: e.target};
         rule.produce = typeof e.produce === 'function' ? e.produce : function() {
             return clone(e.produce);
         };
-        ['listname', 'wrap', 'reverse'].forEach(function(k) {
+        ['listname', 'wrap', 'reverse'].forEach((k) => {
             if(e[k] !== undefined) rule[k] = e[k];
         });
         rules.push(rule);
     });
 
     return function(diagram, nodes, edges) {
-        var constraints = [];
-        var members = {};
-        nodes.forEach(function(n) {
-            var key = diagram.nodeKey.eval(n);
-            for(var t in types) {
-                var type = types[t], value = type.match(n.orig);
+        const constraints = [];
+        const members = {};
+        nodes.forEach((n) => {
+            const key = diagram.nodeKey.eval(n);
+            for(const t in types) {
+                const type = types[t], value = type.match(n.orig);
                 if(value) {
-                    var tname = type.typename ? type.typename(t, value) : t;
+                    const tname = type.typename ? type.typename(t, value) : t;
                     if(!members[tname])
                         members[tname] = {
                             nodes: [], // original ordering
@@ -96,19 +96,15 @@ export function constraintPattern(pattern) {
             }
         });
         // traversal of rules could be more efficient, again POC
-        var edge_rules = rules.filter(function(r) {
-            return r.source !== r.target;
-        });
-        var type_rules = rules.filter(function(r) {
-            return r.source === r.target;
-        });
-        edges.forEach(function(e) {
-            var source = diagram.edgeSource.eval(e),
+        const edge_rules = rules.filter((r) => r.source !== r.target);
+        const type_rules = rules.filter((r) => r.source === r.target);
+        edges.forEach((e) => {
+            const source = diagram.edgeSource.eval(e),
                 target = diagram.edgeTarget.eval(e);
-            edge_rules.forEach(function(r) {
+            edge_rules.forEach((r) => {
                 if(members[r.source] && members[r.source].whether[source] &&
                    members[r.target] && members[r.target].whether[target]) {
-                    var constraint = r.produce(members, nodes, edges);
+                    const constraint = r.produce(members, nodes, edges);
                     if(r.reverse) {
                         constraint.left = target;
                         constraint.right = source;
@@ -121,10 +117,10 @@ export function constraintPattern(pattern) {
                 }
             });
         });
-        type_rules.forEach(function(r) {
+        type_rules.forEach((r) => {
             if(!members[r.source])
                 return;
-            var constraint = r.produce(),
+            const constraint = r.produce(),
                 listname = r.listname || r.produce.listname || 'nodes',
                 wrap = r.wrap || r.produce.wrap || function(x) { return x; };
             constraint[listname] = members[r.source].nodes.map(wrap);
@@ -138,23 +134,23 @@ export function constraintPattern(pattern) {
 export function gapY(gap, equality) {
     return {
         axis: 'y',
-        gap: gap,
+        gap,
         equality: !!equality
     };
 }
 export function gapX(gap, equality) {
     return {
         axis: 'x',
-        gap: gap,
+        gap,
         equality: !!equality
     };
 }
 
 function alignF(axis) {
-    var ret = function() {
+    const ret = function() {
         return {
             type: 'alignment',
-            axis: axis
+            axis
         };
     };
     ret.listname = 'offsets';
@@ -174,7 +170,7 @@ export function orderX(gap, ordering) {
         type: 'ordering',
         axis: 'x',
         gap: 60,
-        ordering: ordering
+        ordering
     };
 }
 export function orderY(gap, ordering) {
@@ -182,6 +178,6 @@ export function orderY(gap, ordering) {
         type: 'ordering',
         axis: 'y',
         gap: 60,
-        ordering: ordering
+        ordering
     };
 }

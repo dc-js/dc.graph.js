@@ -1,18 +1,18 @@
 // collapse edges between same source and target
 export function deparallelize(group, sourceTag, targetTag, options) {
     options = options || {};
-    var both = options.both || false,
+    const both = options.both || false,
         reduce = options.reduce || null;
     return {
-        all: function() {
-            var ST = {};
-            group.all().forEach(function(kv) {
-                var source = kv.value[sourceTag],
+        all() {
+            const ST = {};
+            group.all().forEach((kv) => {
+                const source = kv.value[sourceTag],
                     target = kv.value[targetTag];
-                var dir = both ? true : source < target;
-                var min = dir ? source : target, max = dir ? target : source;
+                const dir = both ? true : source < target;
+                const min = dir ? source : target, max = dir ? target : source;
                 ST[min] = ST[min] || {};
-                var entry;
+                let entry;
                 if(ST[min][max]) {
                     entry = ST[min][max];
                     if(reduce)
@@ -23,10 +23,10 @@ export function deparallelize(group, sourceTag, targetTag, options) {
                 else
                     ++entry.out;
             });
-            var ret = [];
-            Object.keys(ST).forEach(function(source) {
-                Object.keys(ST[source]).forEach(function(target) {
-                    var entry = ST[source][target];
+            const ret = [];
+            Object.keys(ST).forEach((source) => {
+                Object.keys(ST[source]).forEach((target) => {
+                    const entry = ST[source][target];
                     entry[sourceTag] = source;
                     entry[targetTag] = target;
                     ret.push({key: entry.original.key, value: entry});

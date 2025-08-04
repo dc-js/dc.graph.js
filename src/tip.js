@@ -11,7 +11,7 @@ import { property, functorWrap } from './core.js';
 import { mode } from './mode.js';
 import { ancestorHasClass } from './utils.js';
 import { dispatch } from 'd3-dispatch';
-import { event as d3Event, select } from 'd3-selection';
+import { select } from 'd3-selection';
 import tippy from 'tippy.js';
 
 export function tip(options) {
@@ -124,8 +124,8 @@ export function tip(options) {
     }
 
     const _mode = mode(_namespace, {
-        draw: draw,
-        remove: remove,
+        draw,
+        remove,
         laterDraw: true
     });
 
@@ -151,9 +151,7 @@ export function tip(options) {
      * @param {Function} [content] - Async function that returns Promise<string>
      * @return {Function}
      **/
-    _mode.content = property(async (n) => {
-        return _mode.parent() ? _mode.parent().nodeTitle.eval(n) : '';
-    });
+    _mode.content = property(async (n) => _mode.parent() ? _mode.parent().nodeTitle.eval(n) : '');
 
     _mode.on = (event, f) => _dispatch.on(event, f);
 
@@ -187,7 +185,7 @@ export function tip(options) {
         return _mode;
     };
 
-    _mode.hideTip = (delay) => {
+    _mode.hideTip = (_delay) => {
         _instances.forEach(instance => {
             instance.hide();
         });
@@ -218,63 +216,55 @@ export function tip(options) {
  * tip.content(dc_graph.tip.table());
  **/
 export function tipTable() {
-    var gen = async function(d) {
+    const gen = async function(d) {
         d = gen.fetch()(d);
         if(!d) {
             return ''; // return empty string to prevent tooltip from showing
         }
-        var data, keys;
+        let data, keys;
         if(Array.isArray(d))
             data = d;
         else if(typeof d === 'number' || typeof d === 'string')
             data = [d];
         else { // object
             data = keys = Object.keys(d).filter(functorWrap(gen.filter()))
-                .filter(function(k) {
-                    return d[k] !== undefined;
-                });
+                .filter((k) => d[k] !== undefined);
         }
-        var table = select(document.createElement('table'));
-        var rows = table.selectAll('tr').data(data);
-        var rowsEnter = rows.enter().append('tr');
-        rowsEnter.append('td').text(function(item) {
+        const table = select(document.createElement('table'));
+        const rows = table.selectAll('tr').data(data);
+        const rowsEnter = rows.enter().append('tr');
+        rowsEnter.append('td').text((item) => {
             if(keys && typeof item === 'string')
                 return item;
             return JSON.stringify(item);
         });
         if(keys)
-            rowsEnter.append('td').text(function(item) {
-                return JSON.stringify(d[item]);
-            });
+            rowsEnter.append('td').text((item) => JSON.stringify(d[item]));
         return table.node().outerHTML; // optimizing for clarity over speed (?)
     };
     gen.filter = property(true);
-    gen.fetch = property(function(d) {
-        return d.orig.value;
-    });
+    gen.fetch = property((d) => d.orig.value);
     return gen;
 }
 
 export function tipJsonTable() {
-    var table = tipTable().fetch(function(d) {
-        var jsontip = table.json()(d);
+    const table = tipTable().fetch((d) => {
+        const jsontip = table.json()(d);
         if(!jsontip) return null;
         try {
             return JSON.parse(jsontip);
-        } catch(xep) {
+        } catch(_xep) {
             return [jsontip];
         }
     });
-    table.json = property(function(d) {
-        return (d.orig.value.value || d.orig.value).jsontip;
-    });
+    table.json = property((d) => (d.orig.value.value || d.orig.value).jsontip);
     return table;
 }
 
 export function tipHtmlOrJsonTable() {
-    var json_table = tipJsonTable();
-    var gen = async function(d) {
-        var html = gen.html()(d);
+    const json_table = tipJsonTable();
+    const gen = async function(d) {
+        const html = gen.html()(d);
         if(html) {
             return html;
         } else {
@@ -282,18 +272,16 @@ export function tipHtmlOrJsonTable() {
         }
     };
     gen.json = json_table.json;
-    gen.html = property(function(d) {
-        return (d.orig.value.value || d.orig.value).htmltip;
-    });
+    gen.html = property((d) => (d.orig.value.value || d.orig.value).htmltip);
     return gen;
 }
 
 export function selectNodeAndEdge() {
     return {
-        select: function(diagram, node, edge, ehover) {
+        select(diagram, node, edge, ehover) {
             return ehover ? node.merge(ehover) : node;
         },
-        exclude: function(element) {
+        exclude(element) {
             return ancestorHasClass(element, 'port');
         }
     };
@@ -301,10 +289,10 @@ export function selectNodeAndEdge() {
 
 export function selectNode() {
     return {
-        select: function(diagram, node, edge, ehover) {
+        select(diagram, node, _edge, _ehover) {
             return node;
         },
-        exclude: function(element) {
+        exclude(element) {
             return ancestorHasClass(element, 'port');
         }
     };
@@ -312,7 +300,7 @@ export function selectNode() {
 
 export function selectEdge() {
     return {
-        select: function(diagram, node, edge, ehover) {
+        select(diagram, node, edge, _ehover) {
             return edge;
         }
     };
@@ -320,7 +308,7 @@ export function selectEdge() {
 
 export function selectPort() {
     return {
-        select: function(diagram, node, edge, ehover) {
+        select(diagram, node, _edge, _ehover) {
             return node.selectAll('g.port');
         }
     };

@@ -18,15 +18,15 @@ import { graphvizAttrs } from './graphviz_attrs.js';
  * @return {Object} d3v4 force layout engine
  **/
 export function d3v4ForceLayout(id) {
-    var _layoutId = id || uuid();
-    var _simulation = null; // d3-force simulation
-    var _dispatch = dispatch('tick', 'start', 'end');
+    const _layoutId = id || uuid();
+    let _simulation = null; // d3-force simulation
+    const _dispatch = dispatch('tick', 'start', 'end');
     // node and edge objects shared with d3-force, preserved from one iteration
     // to the next (as long as the object is still in the layout)
-    var _nodes = {}, _edges = {};
-    var _wnodes = [], _wedges = [];
-    var _options = null;
-    var _paths = null;
+    const _nodes = {}, _edges = {};
+    let _wnodes = [], _wedges = [];
+    let _options = null;
+    let _paths = null;
 
     function init(options) {
         _options = options;
@@ -44,21 +44,17 @@ export function d3v4ForceLayout(id) {
     function dispatchState(event) {
         _dispatch.call(event, null,
             _wnodes,
-            (_wedges || []).map(function(e) {
-                return {dcg_edgeKey: e.dcg_edgeKey};
-            })
+            (_wedges || []).map((e) => ({dcg_edgeKey: e.dcg_edgeKey}))
         );
     }
 
     function data(nodes, edges) {
-        var nodeIDs = {};
-        nodes.forEach(function(d, i) {
+        const nodeIDs = {};
+        nodes.forEach((d, i) => {
             nodeIDs[d.dcg_nodeKey] = i;
         });
 
-        _wnodes = regenerateObjects(_nodes, nodes, null, function(v) {
-            return v.dcg_nodeKey;
-        }, function(v1, v) {
+        _wnodes = regenerateObjects(_nodes, nodes, null, (v) => v.dcg_nodeKey, (v1, v) => {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
@@ -69,9 +65,7 @@ export function d3v4ForceLayout(id) {
             } else v1.fx = v1.fy = null;
         });
 
-        _wedges = regenerateObjects(_edges, edges, null, function(e) {
-            return e.dcg_edgeKey;
-        }, function(e1, e) {
+        _wedges = regenerateObjects(_edges, edges, null, (e) => e.dcg_edgeKey, (e1, e) => {
             e1.dcg_edgeKey = e.dcg_edgeKey;
             e1.source = nodeIDs[_nodes[e.dcg_edgeSource].dcg_nodeKey];
             e1.target = nodeIDs[_nodes[e.dcg_edgeTarget].dcg_nodeKey];
@@ -94,14 +88,14 @@ export function d3v4ForceLayout(id) {
     }
 
     function savePositions() {
-        var data = {};
-        Object.keys(_nodes).forEach(function(key) {
+        const data = {};
+        Object.keys(_nodes).forEach((key) => {
             data[key] = {x: _nodes[key].x, y: _nodes[key].y};
         });
         return data;
     }
     function restorePositions(data) {
-        Object.keys(data).forEach(function(key) {
+        Object.keys(data).forEach((key) => {
             if(_nodes[key]) {
                 _nodes[key].fx = data[key].x;
                 _nodes[key].fy = data[key].y;
@@ -110,24 +104,22 @@ export function d3v4ForceLayout(id) {
     }
     function installForces(paths) {
         if(paths)
-            paths = paths.filter(function(path) {
-                return path.nodes.every(function(nk) { return _nodes[nk]; });
-            });
+            paths = paths.filter((path) => path.nodes.every((nk) => _nodes[nk]));
         if(paths === null || !paths.length) {
             _simulation.force('charge').strength(_options.initialCharge);
         } else {
-            var nodesOnPath;
+            let nodesOnPath;
             if(_options.fixOffPathNodes) {
                 nodesOnPath = set();
-                paths.forEach(function(path) {
-                    path.nodes.forEach(function(nid) {
+                paths.forEach((path) => {
+                    path.nodes.forEach((nid) => {
                         nodesOnPath.add(nid);
                     });
                 });
             }
 
             // fix nodes not on paths
-            Object.keys(_nodes).forEach(function(key) {
+            Object.keys(_nodes).forEach((key) => {
                 if(_options.fixOffPathNodes && !nodesOnPath.has(key)) {
                     _nodes[key].fx = _nodes[key].x;
                     _nodes[key].fy = _nodes[key].y;
@@ -139,67 +131,67 @@ export function d3v4ForceLayout(id) {
 
             _simulation.force('charge').strength(_options.chargeForce);
             _simulation.force('straighten', forceStraightenPaths()
-                              .id(function(n) { return n.dcg_nodeKey; })
+                              .id((n) => n.dcg_nodeKey)
                               .angleForce(_options.angleForce)
-                              .pathNodes(function(p) { return p.nodes; })
-                              .pathStrength(function(p) { return p.strength; })
+                              .pathNodes((p) => p.nodes)
+                              .pathStrength((p) => p.strength)
                               .paths(paths));
         }
     };
 
     function runSimulation(iterations) {
         _simulation.alpha(1);
-        for (var i = 0; i < iterations; ++i) {
+        for (let i = 0; i < iterations; ++i) {
             _simulation.tick();
             dispatchState('tick');
         }
         dispatchState('end');
     }
 
-    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
+    const graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
 
-    var engine = Object.assign(graphviz, {
-        layoutAlgorithm: function() {
+    const engine = Object.assign(graphviz, {
+        layoutAlgorithm() {
             return 'd3v4-force';
         },
-        layoutId: function() {
+        layoutId() {
             return _layoutId;
         },
-        supportsWebworker: function() {
+        supportsWebworker() {
             return true;
         },
-        supportsMoving: function() {
+        supportsMoving() {
             return true;
         },
         parent: property(null),
-        on: function(event, f) {
+        on(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
-        init: function(options) {
-            this.optionNames().forEach(function(option) {
+        init(options) {
+            this.optionNames().forEach((option) => {
                 options[option] = options[option] || this[option]();
-            }.bind(this));
+            });
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges, constraints) {
+        data(graph, nodes, edges, constraints) {
             data(nodes, edges, constraints);
         },
-        start: function() {
+        start() {
             start();
         },
-        stop: function() {
+        stop() {
             stop();
         },
-        paths: function(paths) {
+        paths(paths) {
             _paths = paths;
         },
-        savePositions: savePositions,
-        restorePositions: restorePositions,
-        optionNames: function() {
+        savePositions,
+        restorePositions,
+        optionNames() {
             return ['iterations', 'angleForce', 'chargeForce', 'gravityStrength', 'collisionRadius',
                     'initialCharge', 'fixOffPathNodes']
                 .concat(graphviz_keys);
@@ -211,8 +203,8 @@ export function d3v4ForceLayout(id) {
         collisionRadius: property(8),
         initialCharge: property(-100),
         fixOffPathNodes: property(false),
-        populateLayoutNode: function() {},
-        populateLayoutEdge: function() {}
+        populateLayoutNode() {},
+        populateLayoutEdge() {}
     });
     engine.pathStraightenForce = engine.angleForce;
     return engine;

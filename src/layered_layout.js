@@ -15,43 +15,43 @@ import { supergraph } from './supergraph.js';
  * @return {Object} layered layout engine
  **/
 export function layeredLayout(id) {
-    var _layoutId = id || uuid();
-    var _dispatch = dispatch('tick', 'start', 'end');
-    var _supergraph, _subgraphs;
-    var _layers;
-    var _options = null;
+    const _layoutId = id || uuid();
+    const _dispatch = dispatch('tick', 'start', 'end');
+    let _supergraph, _subgraphs;
+    let _layers;
+    let _options = null;
 
     function init(options) {
         _options = options;
 
     }
 
-    function data(nodes, edges, constraints) {
-        _supergraph = supergraph({nodes: nodes, edges: edges}, {
-            nodeKey: function(n) { return n.dcg_nodeKey; },
-            edgeKey: function(n) { return n.dcg_edgeKey; },
-            nodeValue: function(n) { return n; },
-            edgeValue: function(e) { return e; },
-            edgeSource: function(e) { return e.dcg_edgeSource; },
-            edgeTarget: function(e) { return e.dcg_edgeTarget; }
+    function data(nodes, edges, _constraints) {
+        _supergraph = supergraph({nodes, edges}, {
+            nodeKey(n) { return n.dcg_nodeKey; },
+            edgeKey(n) { return n.dcg_edgeKey; },
+            nodeValue(n) { return n; },
+            edgeValue(e) { return e; },
+            edgeSource(e) { return e.dcg_edgeSource; },
+            edgeTarget(e) { return e.dcg_edgeTarget; }
         });
 
         // every node belongs natively in one rank
-        var nranks = _supergraph.nodes().reduce(function(p, n) {
-            var rank = engine.layerAccessor()(n.value());
+        const nranks = _supergraph.nodes().reduce((p, n) => {
+            const rank = engine.layerAccessor()(n.value());
             p[rank] = p[rank] || [];
             p[rank].push(n);
             return p;
         }, {});
-        var eranks = Object.keys(nranks).reduce(function(p, r) {
+        const eranks = Object.keys(nranks).reduce((p, r) => {
             p[r] = [];
             return p;
         }, {});
 
         // nodes are shadowed into any layers to which they are adjacent
         // edges are induced from the native&shadow nodes in each layer
-        _supergraph.edges().forEach(function(e) {
-            var srank = engine.layerAccessor()(e.source().value()),
+        _supergraph.edges().forEach((e) => {
+            const srank = engine.layerAccessor()(e.source().value()),
                 trank = engine.layerAccessor()(e.target().value());
             if(srank == trank) {
                 eranks[srank].push(e);
@@ -64,39 +64,37 @@ export function layeredLayout(id) {
         });
 
         // produce a subgraph for each layer
-        _subgraphs = Object.keys(nranks).reduce(function(p, r) {
+        _subgraphs = Object.keys(nranks).reduce((p, r) => {
             p[r] = _supergraph.subgraph(
-                nranks[r].map(function(n) { return n.key(); }),
-                eranks[r].map(function(e) { return e.key(); }));
+                nranks[r].map((n) => n.key()),
+                eranks[r].map((e) => e.key()));
             return p;
         }, {});
 
         // start from the most populous layer
-        var max = null;
-        Object.keys(nranks).forEach(function(r) {
+        let max = null;
+        Object.keys(nranks).forEach((r) => {
             if(max === null ||
                _subgraphs[r].nodes().length > _subgraphs[max].nodes().length)
                 max = +r;
         });
 
         // travel up and down from there, each time fixing the nodes from the last layer
-        var ranks = Object.keys(nranks).map(function(r) { return +r; }).sort();
-        _layers = ranks.map(function(r) {
-            return {
+        const ranks = Object.keys(nranks).map((r) => +r).sort();
+        _layers = ranks.map((r) => ({
                 rank: r,
                 z: -r * engine.layerSeparationZ()
-            };
-        });
-        var mi = ranks.indexOf(max);
-        var ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
-        layout_layer(max, -1).then(function(layout) {
+            }));
+        const mi = ranks.indexOf(max);
+        const ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
+        layout_layer(max, -1).then((layout) => {
             Promise.all([
                 layout_layers(layout, max, ups),
                 layout_layers(layout, max, downs)
-            ]).then(function() {
+            ]).then(() => {
                 _dispatch.call("end", null,
-                    _supergraph.nodes().map(function(n) { return n.value(); }),
-                    _supergraph.edges().map(function(e) { return e.value(); }));
+                    _supergraph.nodes().map((n) => n.value()),
+                    _supergraph.edges().map((e) => e.value()));
             });
         });
     }
@@ -104,14 +102,12 @@ export function layeredLayout(id) {
     function layout_layers(layout, last, layers) {
         if(layers.length === 0)
             return Promise.resolve(layout);
-        var curr = layers.shift();
-        return layout_layer(curr, last).then(function(layout) {
-            return layout_layers(layout, curr, layers);
-        });
+        const curr = layers.shift();
+        return layout_layer(curr, last).then((layout) => layout_layers(layout, curr, layers));
     }
 
-    function layout_layer(r, last) {
-        _subgraphs[r].nodes().forEach(function(n) {
+    function layout_layer(r, _last) {
+        _subgraphs[r].nodes().forEach((n) => {
             if(engine.layerAccessor()(n.value()) !== r &&
                n.value().x !== undefined &&
                n.value().y !== undefined)
@@ -121,30 +117,26 @@ export function layeredLayout(id) {
                 };
             else n.value().dcg_nodeFixed = null;
         });
-        var subengine = engine.engineFactory()();
+        const subengine = engine.engineFactory()();
         subengine.init(_options);
         subengine.data(
             {},
-            _subgraphs[r].nodes().map(function(n) {
-                return n.value();
-            }),
-            _subgraphs[r].edges().map(function(e) {
-                return e.value();
-            }));
+            _subgraphs[r].nodes().map((n) => n.value()),
+            _subgraphs[r].edges().map((e) => e.value()));
         return promise_layout(r, subengine);
     }
 
     function promise_layout(r, subengine) {
         // stopgap - engine.start() should return a promise
-        return new Promise(function(resolve, reject) {
-            subengine.on('end', function(nodes, edges) {
-                resolve({nodes: nodes, edges: edges});
+        return new Promise((resolve, _reject) => {
+            subengine.on('end', (nodes, edges) => {
+                resolve({nodes, edges});
             });
             subengine.start();
-        }).then(function(layout) {
+        }).then((layout) => {
             // copy positions back into the subgraph (and hence supergraph)
-            layout.nodes.forEach(function(ln) {
-                var n = _subgraphs[r].node(ln.dcg_nodeKey);
+            layout.nodes.forEach((ln) => {
+                const n = _subgraphs[r].node(ln.dcg_nodeKey);
                 // do not copy positions for shadow nodes
                 if(engine.layerAccessor()(n.value()) !== r)
                     return;
@@ -163,53 +155,53 @@ export function layeredLayout(id) {
     function stop() {
     }
 
-    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
+    const graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
 
-    var engine = Object.assign(graphviz, {
-        layoutAlgorithm: function() {
+    const engine = Object.assign(graphviz, {
+        layoutAlgorithm() {
             return 'layered';
         },
-        layoutId: function() {
+        layoutId() {
             return _layoutId;
         },
-        supportsWebworker: function() {
+        supportsWebworker() {
             return false;
         },
         parent: property(null),
-        on: function(event, f) {
+        on(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
-        init: function(options) {
-            this.optionNames().forEach(function(option) {
+        init(options) {
+            this.optionNames().forEach((option) => {
                 options[option] = options[option] || this[option]();
-            }.bind(this));
+            });
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges, constraints) {
+        data(graph, nodes, edges, constraints) {
             data(nodes, edges, constraints);
         },
-        start: function() {
+        start() {
             start();
         },
-        stop: function() {
+        stop() {
             stop();
         },
-        optionNames: function() {
+        optionNames() {
             return []
                 .concat(graphviz_keys);
         },
         engineFactory: property(null),
         layerAccessor: property(null),
         layerSeparationZ: property(50),
-        layers: function() {
+        layers() {
             return _layers;
         },
-        populateLayoutNode: function() {},
-        populateLayoutEdge: function() {},
+        populateLayoutNode() {},
+        populateLayoutEdge() {},
         extractNodeAttrs: property({}), // {attr: function(node)}
         extractEdgeAttrs: property({})
     });

@@ -1,14 +1,16 @@
 // adapted from
 // http://stackoverflow.com/questions/9308938/inline-text-editing-in-svg/#26644652
 
+import { event as d3Event } from 'd3-selection';
+
 
 export function editText(parent, options) {
-    var foreign = parent.append('foreignObject')
+    const foreign = parent.append('foreignObject')
         .attr('height', '100%')
         .attr('width', '100%'); // don't wrap
-    var padding = options.padding !== undefined ? options.padding : 2;
+    const padding = options.padding !== undefined ? options.padding : 2;
     function reposition() {
-        var pos;
+        let pos;
         switch(options.align) {
         case 'left':
             pos = [options.box.x-padding, options.box.y-padding];
@@ -21,21 +23,21 @@ export function editText(parent, options) {
             ];
             break;
         }
-        foreign.attr('transform', 'translate(' + pos.join(' ') + ')');
+        foreign.attr('transform', `translate(${  pos.join(' ')  })`);
     }
-    var textdiv = foreign.append('xhtml:div');
-    var text = options.text || "type on me";
+    const textdiv = foreign.append('xhtml:div');
+    const text = options.text || "type on me";
     textdiv.text(text)
         .attr('contenteditable', true)
         .attr('width', 'auto')
         .attr('class', options.class || null).style({
         display: 'inline-block',
         'background-color': 'white',
-        padding: padding + 'px'
+        padding: `${padding  }px`
     });
 
     function stopProp() {
-        event.stopPropagation();
+        d3Event.stopPropagation();
     }
     foreign
         .on('mousedown.edit-text', stopProp)
@@ -56,17 +58,17 @@ export function editText(parent, options) {
         options.finally && options.finally();
     }
 
-    textdiv.on('keydown.edit-text', function() {
+    textdiv.on('keydown.edit-text', () => {
         // prevent keyboard mode from seeing this (especially delete key!)
-        event.stopPropagation();
-        if(event.keyCode===13) {
-            event.preventDefault();
+        d3Event.stopPropagation();
+        if(d3Event.keyCode===13) {
+            d3Event.preventDefault();
         }
-    }).on('keyup.edit-text', function() {
-        event.stopPropagation();
-        if(event.keyCode===13) {
+    }).on('keyup.edit-text', () => {
+        d3Event.stopPropagation();
+        if(d3Event.keyCode===13) {
             accept();
-        } else if(event.keyCode===27) {
+        } else if(d3Event.keyCode===27) {
             cancel();
         }
         reposition();
@@ -74,14 +76,14 @@ export function editText(parent, options) {
     reposition();
     textdiv.node().focus();
 
-    var range = document.createRange();
+    const range = document.createRange();
     if(options.selectText) {
         range.selectNodeContents(textdiv.node());
     } else {
         range.setStart(textdiv.node(), 1);
         range.setEnd(textdiv.node(), 1);
     }
-    var sel = window.getSelection();
+    const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
 };

@@ -3,35 +3,29 @@ import { set } from 'd3-collection';
 
 export function validate(title) {
     function falsy(objects, accessor, what, who) {
-        var f = objects.filter(function(o) {
-            return !accessor(o);
-        });
+        const f = objects.filter((o) => !accessor(o));
         return f.length ?
-            [what + ' is empty for ' + f.length + ' of ' + objects.length + ' ' + who, f] :
+            [`${what  } is empty for ${  f.length  } of ${  objects.length  } ${  who}`, f] :
             null;
     }
     function build_index(objects, accessor) {
-        return objects.reduce(function(m, o) {
+        return objects.reduce((m, o) => {
             m[accessor(o)] = o;
             return m;
         }, {});
     }
     function not_found(index, objects, accessor, what, where, who) {
-        var nf = objects.filter(function(o) {
-            return !index[accessor(o)];
-        }).map(function(o) {
-            return {key: accessor(o), value: o};
-        });
+        const nf = objects.filter((o) => !index[accessor(o)]).map((o) => ({key: accessor(o), value: o}));
         return nf.length ?
-            [what + ' was not found in ' + where, Object.keys(index), 'for ' + nf.length + ' of ' + objects.length + ' ' + who, nf] :
+            [`${what  } was not found in ${  where}`, Object.keys(index), `for ${  nf.length  } of ${  objects.length  } ${  who}`, nf] :
             null;
     }
     function validate() {
-        var diagram = _mode.parent();
-        var nodes = diagram.nodeGroup().all(),
+        const diagram = _mode.parent();
+        const nodes = diagram.nodeGroup().all(),
             edges = diagram.edgeGroup().all(),
             ports = diagram.portGroup() ? diagram.portGroup().all() : [];
-        var errors = [];
+        const errors = [];
 
         function check(error) {
             if(error)
@@ -42,61 +36,47 @@ export function validate(title) {
         check(falsy(edges, diagram.edgeSource(), 'edgeSource', 'edges'));
         check(falsy(edges, diagram.edgeTarget(), 'edgeTarget', 'edges'));
 
-        var contentTypes = set(diagram.content.enum());
-        var ct = functorWrap(diagram.nodeContent());
-        var noContentNodes = nodes.filter(function(kv) {
-            return !contentTypes.has(ct(kv));
-        });
+        const contentTypes = set(diagram.content.enum());
+        const ct = functorWrap(diagram.nodeContent());
+        const noContentNodes = nodes.filter((kv) => !contentTypes.has(ct(kv)));
         if(noContentNodes.length)
-            errors.push(['there are ' + noContentNodes.length + ' nodes with nodeContent not matching any content', noContentNodes]);
+            errors.push([`there are ${  noContentNodes.length  } nodes with nodeContent not matching any content`, noContentNodes]);
 
-        var nindex = build_index(nodes, diagram.nodeKey()),
+        const nindex = build_index(nodes, diagram.nodeKey()),
             eindex = build_index(edges, diagram.edgeKey());
         check(not_found(nindex, edges, diagram.edgeSource(), 'edgeSource', 'nodes', 'edges'));
         check(not_found(nindex, edges, diagram.edgeTarget(), 'edgeTarget', 'nodes', 'edges'));
 
-        check(falsy(ports, function(p) {
-            return diagram.portNodeKey() && diagram.portNodeKey()(p) ||
-                diagram.portEdgeKey() && diagram.portEdgeKey()(p);
-        }, 'portNodeKey||portEdgeKey', 'ports'));
+        check(falsy(ports, (p) => diagram.portNodeKey() && diagram.portNodeKey()(p) ||
+                diagram.portEdgeKey() && diagram.portEdgeKey()(p), 'portNodeKey||portEdgeKey', 'ports'));
 
-        var named_ports = !diagram.portNodeKey() && [] || ports.filter(function(p) {
-            return diagram.portNodeKey()(p);
-        });
-        var anonymous_ports = !diagram.portEdgeKey() && [] || ports.filter(function(p) {
-            return diagram.portEdgeKey()(p);
-        });
+        const named_ports = !diagram.portNodeKey() && [] || ports.filter((p) => diagram.portNodeKey()(p));
+        const anonymous_ports = !diagram.portEdgeKey() && [] || ports.filter((p) => diagram.portEdgeKey()(p));
         check(not_found(nindex, named_ports, diagram.portNodeKey(), 'portNodeKey', 'nodes', 'ports'));
         check(not_found(eindex, anonymous_ports, diagram.portEdgeKey(), 'portEdgeKey', 'edges', 'ports'));
 
         if(diagram.portName()) {
-            var pindex = build_index(named_ports, function(p) {
-                return diagram.portNodeKey()(p) + ' - ' + diagram.portName()(p);
-            });
+            const pindex = build_index(named_ports, (p) => `${diagram.portNodeKey()(p)  } - ${  diagram.portName()(p)}`);
             if(diagram.edgeSourcePortName())
-                check(not_found(pindex, edges, function(e) {
-                    return diagram.edgeSource()(e) + ' - ' + functorWrap(diagram.edgeSourcePortName())(e);
-                }, 'edgeSourcePortName', 'ports', 'edges'));
+                check(not_found(pindex, edges, (e) => `${diagram.edgeSource()(e)  } - ${  functorWrap(diagram.edgeSourcePortName())(e)}`, 'edgeSourcePortName', 'ports', 'edges'));
             if(diagram.edgeTargetPortName())
-                check(not_found(pindex, edges,  function(e) {
-                    return diagram.edgeTarget()(e) + ' - ' + functorWrap(diagram.edgeTargetPortName())(e);
-                }, 'edgeTargetPortName', 'ports', 'edges'));
+                check(not_found(pindex, edges,  (e) => `${diagram.edgeTarget()(e)  } - ${  functorWrap(diagram.edgeTargetPortName())(e)}`, 'edgeTargetPortName', 'ports', 'edges'));
         }
 
         function count_text() {
-            return nodes.length + ' nodes, ' + edges.length + ' edges, ' + ports.length + ' ports';
+            return `${nodes.length  } nodes, ${  edges.length  } edges, ${  ports.length  } ports`;
         }
         if(errors.length) {
-            console.warn('validation of ' + title + ' failed with ' + count_text() + ':');
-            errors.forEach(function(err) {
+            console.warn(`validation of ${  title  } failed with ${  count_text()  }:`);
+            errors.forEach((err) => {
                 console.warn.apply(console, err);
             });
         }
         else
-            console.log('validation of ' + title + ' succeeded with ' + count_text() + '.');
+            console.log(`validation of ${  title  } succeeded with ${  count_text()  }.`);
     }
-    var _mode = {
-        parent: property(null).react(function(p) {
+    const _mode = {
+        parent: property(null).react((p) => {
             if(p)
                 p.on('data.validate', validate);
             else

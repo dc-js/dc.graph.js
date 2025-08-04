@@ -8,12 +8,12 @@ import { dispatch } from 'd3-dispatch';
 import { uuid, property } from './core.js';
 
 export function manualLayout(id) {
-    var _layoutId = id || uuid();
-    var _dispatch = dispatch('tick', 'start', 'end');
+    const _layoutId = id || uuid();
+    const _dispatch = dispatch('tick', 'start', 'end');
 
-    var _wnodes;
+    let _wnodes;
 
-    function init(options) {
+    function init(_options) {
     }
     function data(nodes) {
         _wnodes = nodes;
@@ -21,9 +21,7 @@ export function manualLayout(id) {
     function dispatchState(wnodes, wedges, event) {
         _dispatch.call(event, null,
             wnodes,
-            wedges.map(function(e) {
-                return {dcg_edgeKey: e.dcg_edgeKey};
-            })
+            wedges.map((e) => ({dcg_edgeKey: e.dcg_edgeKey}))
         );
     }
     function start() {
@@ -32,51 +30,51 @@ export function manualLayout(id) {
     function stop() {
     }
 
-    var _engine = {
-        layoutAlgorithm: function() {
+    const _engine = {
+        layoutAlgorithm() {
             return 'manual';
         },
-        layoutId: function() {
+        layoutId() {
             return _layoutId;
         },
-        supportsWebworker: function() {
+        supportsWebworker() {
             return false;
         },
         parent: property(null),
-        on: function(event, f) {
+        on(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
-        init: function(options) {
-            this.optionNames().forEach(function(option) {
+        init(options) {
+            this.optionNames().forEach((option) => {
                 options[option] = options[option] || this[option]();
-            }.bind(this));
+            });
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges) {
+        data(graph, nodes, _edges) {
             data(nodes);
         },
-        start: function() {
+        start() {
             start();
         },
-        stop: function() {
+        stop() {
             stop();
         },
-        optionNames: function() {
+        optionNames() {
             return [];
         },
-        populateLayoutNode: function(n1, n) {
-            ['x', 'y'].forEach(function(attr) {
+        populateLayoutNode(n1, n) {
+            ['x', 'y'].forEach((attr) => {
                 if(n.orig.value[attr] !== undefined)
                     n1[attr] = n.orig.value[attr];
             });
         },
-        populateLayoutEdge: function() {},
-        addressToKey: property(function(ad) { return ad.join(','); }),
-        keyToAddress: property(function(nid) { return nid.split(','); })
+        populateLayoutEdge() {},
+        addressToKey: property((ad) => ad.join(',')),
+        keyToAddress: property((nid) => nid.split(','))
     };
     return _engine;
 };

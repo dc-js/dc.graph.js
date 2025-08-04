@@ -15,14 +15,14 @@ import { graphvizAttrs } from './graphviz_attrs.js';
  * @return {Object} dynagraph layout engine
  **/
 export function dynagraphLayout(id, layout) {
-    var _layoutId = id || uuid();
+    const _layoutId = id || uuid();
     const _Gname = _layoutId;
-    var _layout;
-    var _dispatch = (globalThis.d3?.dispatch || dispatch)('tick', 'start', 'end');
-    var _tick, _done;
-    var _nodes = {}, _edges = {};
-    var _linesOut = [], _incrIn = [], _opened = false, _open_graph;
-    var _lock = 0;
+    let _layout = null;
+    const _dispatch = (globalThis.d3?.dispatch || dispatch)('tick', 'start', 'end');
+    let _tick, _done;
+    const _nodes = {}, _edges = {};
+    let _linesOut = [], _incrIn = [], _opened = false, _open_graph;
+    let _lock = 0;
 
 
 
@@ -57,7 +57,7 @@ export function dynagraphLayout(id, layout) {
         return attr_pairs;
     }
 
-    function dg2incr_edge_attrs(e) {
+    function dg2incr_edge_attrs(_e) {
         return [];
     }
 
@@ -66,11 +66,11 @@ export function dynagraphLayout(id, layout) {
             return x;
         else if(/^[A-Za-z_][A-Za-z0-9_]*$/.test(x))
             return x;
-        else return '"' + x + '"';
+        else return `"${  x  }"`;
     }
 
     function print_incr_attrs(attr_pairs) {
-        return '[' + attr_pairs.map(([a,b]) => `${mq(a)}=${mq(b)}`).join(', ') + ']';
+        return `[${  attr_pairs.map(([a,b]) => `${mq(a)}=${mq(b)}`).join(', ')  }]`;
     }
 
     // incr2dg
@@ -247,18 +247,16 @@ export function dynagraphLayout(id, layout) {
         _done();
     }
 
-    function init(options) {
+    function init(_options) {
         self.receiveIncr = receiveIncr;
         _opened = false;
         _open_graph = `open graph ${mq(_Gname)} ${print_incr_attrs(dg2incr_graph_attrs())}`
     }
 
-    function data(nodes, edges, clusters) {
+    function data(nodes, edges, _clusters) {
         const linesOutDeleteNode = [];
-        var wnodes = regenerateObjects(_nodes, nodes, null,
-        function key(v) {
-            return v.dcg_nodeKey;
-        }, function assign(v1, v) {
+        const wnodes = regenerateObjects(_nodes, nodes, null,
+        (v) => v.dcg_nodeKey, (v1, v) => {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
@@ -269,20 +267,18 @@ export function dynagraphLayout(id, layout) {
             const na = dg2incr_node_attrs_changed(v1, v);
             if(na.length)
                 _linesOut.push(`modify node ${mq(_Gname)} ${mq(v1.dcg_nodeKey)} ${print_incr_attrs(na)}`);
-        }, function create(k, o) {
+        }, (k, o) => {
             _linesOut.push(`insert node ${mq(_Gname)} ${mq(k)} ${print_incr_attrs(dg2incr_node_attrs(o))}`);
-        }, function destroy(k) {
+        }, (k) => {
             linesOutDeleteNode.push(`delete node ${mq(_Gname)} ${mq(k)}`);
         });
-        var wedges = regenerateObjects(_edges, edges, null, function key(e) {
-            return e.dcg_edgeKey;
-        }, function assign(e1, e) {
+        const wedges = regenerateObjects(_edges, edges, null, (e) => e.dcg_edgeKey, (e1, e) => {
             e1.dcg_edgeKey = e.dcg_edgeKey;
             e1.dcg_edgeSource = e.dcg_edgeSource;
             e1.dcg_edgeTarget = e.dcg_edgeTarget;
-        }, function create(k, o, e) {
+        }, (k, o, e) => {
             _linesOut.push(`insert edge ${mq(_Gname)} ${mq(k)} ${mq(e.dcg_edgeSource)} ${mq(e.dcg_edgeTarget)} ${print_incr_attrs(dg2incr_edge_attrs(e))}`);
-        }, function destroy(k, e) {
+        }, (k, _e) => {
             _linesOut.push(`delete edge ${mq(_Gname)} ${k}`);
         });
         _linesOut.push(...linesOutDeleteNode);
@@ -337,46 +333,46 @@ export function dynagraphLayout(id, layout) {
 
     _layout = {
         ...graphvizAttrs(),
-        layoutAlgorithm: function() {
+        layoutAlgorithm() {
             return layout;
         },
-        layoutId: function() {
+        layoutId() {
             return _layoutId;
         },
-        supportsWebworker: function() {
+        supportsWebworker() {
             return true;
         },
         resolution: property({x: 5, y: 5}),
         defaultsize: property({width: 50, height: 50}),
         separation: property({x: 20, y: 20}),
         verbose: property(false),
-        on: function(event, f) {
+        on(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
-        init: function(options) {
-            this.optionNames().forEach(function(option) {
+        init(options) {
+            this.optionNames().forEach((option) => {
                 options[option] = options[option] || this[option]();
-            }.bind(this));
+            });
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges) {
+        data(graph, nodes, edges) {
             data(nodes, edges);
         },
-        start: async function() {
+        async start() {
             await start();
         },
-        stop: function() {
+        stop() {
             stop();
         },
-        optionNames: function() {
+        optionNames() {
             return ['resolution', 'defaultsize', 'separation', 'verbose'];
         },
-        populateLayoutNode: function(layout, node) {},
-        populateLayoutEdge: function() {}
+        populateLayoutNode(_layout, _node) {},
+        populateLayoutEdge() {}
     };
     return _layout;
 };

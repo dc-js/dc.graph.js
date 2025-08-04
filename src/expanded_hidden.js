@@ -2,21 +2,20 @@ import { property } from './core.js';
 import { redrawAll } from 'dc';
 
 export function expandedHidden(opts) {
-    var options = Object.assign({
-        nodeKey: function(n) { return n.key; },
-        edgeKey: function(e) { return e.key; },
-        edgeSource: function(e) { return e.value.source; },
-        edgeTarget: function(e) { return e.value.target; }
+    const options = Object.assign({
+        nodeKey(n) { return n.key; },
+        edgeKey(e) { return e.key; },
+        edgeSource(e) { return e.value.source; },
+        edgeTarget(e) { return e.value.target; }
     }, opts);
-    var _nodeHidden = {}, _edgeHidden = {};
+    const _nodeHidden = {}, _edgeHidden = {};
 
     // independent dimension on keys so that the diagram dimension will observe it
-    var _nodeDim = options.nodeCrossfilter.dimension(options.nodeKey),
+    const _nodeDim = options.nodeCrossfilter.dimension(options.nodeKey),
         _edgeDim = options.edgeCrossfilter && options.edgeCrossfilter.dimension(options.edgeRawKey);
 
     function get_shown(expanded) {
-        return Object.keys(expanded).reduce(function(p, dir) {
-            return Array.from(expanded[dir]).reduce(function(p, nk) {
+        return Object.keys(expanded).reduce((p, dir) => Array.from(expanded[dir]).reduce((p, nk) => {
                 p[nk] = true;
                 let list;
                 switch(dir) {
@@ -30,37 +29,26 @@ export function expandedHidden(opts) {
                     list = adjacent_nodes(nk);
                     break;
                 }
-                list.forEach(function(nk2) {
+                list.forEach((nk2) => {
                     if(!_nodeHidden[nk2])
                         p[nk2] = true;
                 });
                 return p;
-            }, p);
-        }, {});
+            }, p), {});
     }
     function apply_filter(ec) {
-        var _shown = get_shown(ec.getExpanded());
-        _nodeDim.filterFunction(function(nk) {
-            return _shown[nk];
-        });
-        _edgeDim && _edgeDim.filterFunction(function(ek) {
-            return !_edgeHidden[ek];
-        });
+        const _shown = get_shown(ec.getExpanded());
+        _nodeDim.filterFunction((nk) => _shown[nk]);
+        _edgeDim && _edgeDim.filterFunction((ek) => !_edgeHidden[ek]);
     }
     function adjacent_edges(nk) {
-        return options.edgeGroup.all().filter(function(e) {
-            return options.edgeSource(e) === nk || options.edgeTarget(e) === nk;
-        });
+        return options.edgeGroup.all().filter((e) => options.edgeSource(e) === nk || options.edgeTarget(e) === nk);
     }
     function out_edges(nk) {
-        return options.edgeGroup.all().filter(function(e) {
-            return options.edgeSource(e) === nk;
-        });
+        return options.edgeGroup.all().filter((e) => options.edgeSource(e) === nk);
     }
     function in_edges(nk) {
-        return options.edgeGroup.all().filter(function(e) {
-            return options.edgeTarget(e) === nk;
-        });
+        return options.edgeGroup.all().filter((e) => options.edgeTarget(e) === nk);
     }
     const other_node = (e, nk) =>
           options.edgeSource(e) === nk ? options.edgeTarget(e) : options.edgeSource(e);
@@ -78,8 +66,8 @@ export function expandedHidden(opts) {
             dfs_pre_order(other(e, nk), seen, traverse, other, fall, funseen, e, nres);
     };
 
-    var _strategy = {
-        get_edges: function(nk, dir) {
+    const _strategy = {
+        get_edges(nk, dir) {
             switch(dir) {
             case 'in':
                 return in_edges(nk);
@@ -109,53 +97,49 @@ export function expandedHidden(opts) {
                     pres.edges.push(pe);
                     pres.nks.push(nk);
                 }
-            }, (pe, pres, nk) => {
-                return nodes[nk] = {edges: [], nks: []};
-            });
+            }, (pe, pres, nk) => nodes[nk] = {edges: [], nks: []});
             return nodes;
         },
-        partition_among_visible: (tree_edges, visible_nodes) => {
+        partition_among_visible: (_tree_edges, _visible_nodes) => {
         },
-        refresh: function() {
+        refresh() {
             apply_filter(_strategy.expandCollapse());
             redrawAll();
             return this;
         },
-        collapsibles: function(nks, dir) {
+        collapsibles(nks, dir) {
             const expanded = _strategy.expandCollapse().getExpanded();
-            var whatif = structuredClone(expanded);
+            const whatif = structuredClone(expanded);
             nks.forEach(
                 nk => whatif[dir].delete(nk)
             );
-            var shown = get_shown(expanded), would = get_shown(whatif);
-            var going = Object.keys(shown)
-                .filter(function(nk2) { return !would[nk2]; })
-                .reduce(function(p, v) {
+            const shown = get_shown(expanded), would = get_shown(whatif);
+            const going = Object.keys(shown)
+                .filter((nk2) => !would[nk2])
+                .reduce((p, v) => {
                     p[v] = true;
                     return p;
                 }, {});
             return {
                 nodes: going,
-                edges: options.edgeGroup.all().filter(function(e) {
-                    return going[options.edgeSource(e)] || going[options.edgeTarget(e)];
-                }).reduce(function(p, e) {
+                edges: options.edgeGroup.all().filter((e) => going[options.edgeSource(e)] || going[options.edgeTarget(e)]).reduce((p, e) => {
                     p[options.edgeKey(e)] = true;
                     return p;
                 }, {})
             };
         },
-        hideNode: function(nk) {
+        hideNode(nk) {
             _nodeHidden[nk] = true;
             _strategy.expandCollapse().expand('both', [nk], false);
         },
-        hideEdge: function(ek) {
+        hideEdge(ek) {
             if(!options.edgeCrossfilter)
                 console.warn('expanded_hidden needs edgeCrossfilter to hide edges');
             _edgeHidden[ek] = true;
             apply_filter(_strategy.expandCollapse());
             redrawAll();
         },
-        expandCollapse: property(null).react(function(ec) {
+        expandCollapse: property(null).react((ec) => {
             if(ec)
                 apply_filter(ec);
 

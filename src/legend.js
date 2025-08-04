@@ -3,7 +3,7 @@
 
 The dc_graph.legend shows labeled examples of nodes & edges, within the frame of a dc_graph.diagram.
 **/
-import { property, deprecateFunction, getOriginal } from './core.js';
+import { property, deprecateFunction, getOriginal, getBBoxNoThrow } from './core.js';
 import { mode } from './mode.js';
 import { renderSvg } from './render_svg.js';
 import { dispatch } from 'd3-dispatch';
@@ -11,45 +11,39 @@ import { select } from 'd3-selection';
 
 export function legend(legend_namespace) {
     legend_namespace = legend_namespace || 'node-legend';
-    var _items, _included = [];
-    var _dispatch = dispatch('filtered');
-    var _totals, _counts;
+    let _items, _included = [];
+    const _dispatch = dispatch('filtered');
+    let _totals, _counts;
 
-    var _svg_renderer;
+    let _svg_renderer;
 
     function apply_filter() {
         if(_legend.customFilter())
             _legend.customFilter()(_included);
         else if(_legend.dimension()) {
             if(_legend.isTagDimension()) {
-                _legend.dimension().filterFunction(function(ks) {
-                    return !_included.length || ks.filter(function(k) {
-                        return _included.includes(k);
-                    }).length;
-                });
+                _legend.dimension().filterFunction((ks) => !_included.length || ks.filter((k) => _included.includes(k)).length);
             } else {
-                _legend.dimension().filterFunction(function(k) {
-                    return !_included.length || _included.includes(k);
-                });
+                _legend.dimension().filterFunction((k) => !_included.length || _included.includes(k));
             }
             _legend.parent().redraw();
         }
     }
 
-    var _legend = mode(legend_namespace, {
+    const _legend = mode(legend_namespace, {
         renderers: ['svg', 'webgl'],
         draw: redraw,
-        remove: function() {},
-        parent: function(p) {
+        remove() {},
+        parent(p) {
             if(p) {
                 p
-                    .on('render.' + legend_namespace, render)
-                    .on('data.' + legend_namespace, on_data);
+                    .on(`render.${  legend_namespace}`, render)
+                    .on(`data.${  legend_namespace}`, on_data);
             }
             else {
                 _legend.parent()
-                    .on('render.' + legend_namespace, null)
-                    .on('data.' + legend_namespace, null);
+                    .on(`render.${  legend_namespace}`, null)
+                    .on(`data.${  legend_namespace}`, null);
             }
         }
     });
@@ -135,39 +129,33 @@ export function legend(legend_namespace) {
 
     _legend.redraw = deprecateFunction("dc_graph.legend is an ordinary mode now; redraw will go away soon", redraw);
     function redraw() {
-        var legend = (_svg_renderer || _legend.parent()).svg()
-                .selectAll('g.dc-graph-legend.' + legend_namespace)
+        const legend = (_svg_renderer || _legend.parent()).svg()
+                .selectAll(`g.dc-graph-legend.${  legend_namespace}`)
                 .data([0]);
         legend.enter().append('g')
-            .attr('class', 'dc-graph-legend ' + legend_namespace)
-            .attr('transform', 'translate(' + _legend.x() + ',' + _legend.y() + ')');
+            .attr('class', `dc-graph-legend ${  legend_namespace}`)
+            .attr('transform', `translate(${  _legend.x()  },${  _legend.y()  })`);
 
-        var items = !_legend.omitEmpty() || !_counts ? _items : _items.filter(function(i) {
-            return _included.length && !_included.includes(i.orig.key) || _counts[i.orig.key];
-        });
-        var item = legend.selectAll(_legend.type().itemSelector())
-                .data(items, function(n) { return n.name; });
+        const items = !_legend.omitEmpty() || !_counts ? _items : _items.filter((i) => _included.length && !_included.includes(i.orig.key) || _counts[i.orig.key]);
+        const item = legend.selectAll(_legend.type().itemSelector())
+                .data(items, (n) => n.name);
         item.exit().remove();
-        var itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
+        const itemEnter = _legend.type().create(_legend.parent(), item.enter(), _legend.itemWidth(), _legend.itemHeight());
         itemEnter.append('text')
             .attr('dy', _legend.dyLabel())
             .attr('class', 'legend-label');
         item
-            .attr('transform', function(n, i) {
-                return 'translate(' + _legend.itemWidth()/2 + ',' + (_legend.itemHeight() + _legend.gap())*(i+0.5) + ')';
-            });
+            .attr('transform', (n, i) => `translate(${  _legend.itemWidth()/2  },${  (_legend.itemHeight() + _legend.gap())*(i+0.5)  })`);
         item.select('text.legend-label')
-            .attr('transform', 'translate(' + (_legend.itemWidth()/2+_legend.gap()) + ',0)')
+            .attr('transform', `translate(${  _legend.itemWidth()/2+_legend.gap()  },0)`)
             .attr('pointer-events', _legend.dimension() ? 'auto' : 'none')
-            .text(function(d) {
-                return d.name + (_legend.counter() && _legend.filterable()(d) && _counts ? (' (' + (_counts[d.orig.key] || 0) + (_counts[d.orig.key] !== _totals[d.orig.key] ? '/' + (_totals[d.orig.key] || 0) : '') + ')') : '');
-            });
+            .text((d) => d.name + (_legend.counter() && _legend.filterable()(d) && _counts ? (` (${  _counts[d.orig.key] || 0  }${_counts[d.orig.key] !== _totals[d.orig.key] ? `/${  _totals[d.orig.key] || 0}` : ''  })`) : ''));
         _legend.type().draw(_svg_renderer || _legend.parent(), itemEnter, item);
         if(_legend.noLabel())
             item.selectAll(_legend.type().labelSelector()).remove();
 
         if(_legend.dropdown()) {
-            var caret = item.selectAll('text.dropdown-caret').data(function(x) { return [x]; });
+            const caret = item.selectAll('text.dropdown-caret').data((x) => [x]);
             caret
               .enter().append('text')
                 .attr('dy', '0.3em')
@@ -177,23 +165,23 @@ export function legend(legend_namespace) {
                 .style('visibility', 'hidden')
                 .html('&emsp;&#x25BC;');
             caret
-                .attr('dx', function(d) {
+                .attr('dx', function(_d) {
                     return (_legend.itemWidth()/2+_legend.gap()) + getBBoxNoThrow(select(this.parentNode).select('text.legend-label').node()).width;
                 })
-                .on('mouseenter.' + legend_namespace, function(n) {
-                    var rect = this.getBoundingClientRect();
-                    var key = _legend.parent().nodeKey.eval(n);
+                .on(`mouseenter.${  legend_namespace}`, function(n) {
+                    const rect = this.getBoundingClientRect();
+                    const key = _legend.parent().nodeKey.eval(n);
                     _legend.dropdown()
                         .show(key, rect.x, rect.y);
                 });
             item
-                .on('mouseenter.' + legend_namespace, function(d) {
+                .on(`mouseenter.${  legend_namespace}`, function(d) {
                     if(_counts && _counts[d.orig.key]) {
                         select(this).selectAll('.dropdown-caret')
                             .style('visibility', 'visible');
                     }
                 })
-                .on('mouseleave.' + legend_namespace, function(d) {
+                .on(`mouseleave.${  legend_namespace}`, function(_d) {
                     select(this).selectAll('.dropdown-caret')
                         .style('visibility', 'hidden');
                 });
@@ -202,12 +190,12 @@ export function legend(legend_namespace) {
         if(_legend.dimension()) {
             item.filter(_legend.filterable())
                 .attr('cursor', 'pointer')
-                .on('click.' + legend_namespace, function(d) {
-                    var key = _legend.parent().nodeKey.eval(d);
+                .on(`click.${  legend_namespace}`, (d) => {
+                    const key = _legend.parent().nodeKey.eval(d);
                     if(!_included.length && !_legend.isInclusiveDimension())
                         _included = _items.map(_legend.parent().nodeKey.eval);
                     if(_included.includes(key))
-                        _included = _included.filter(function(x) { return x !== key; });
+                        _included = _included.filter((x) => x !== key);
                     else
                         _included.push(key);
                     apply_filter();
@@ -217,12 +205,10 @@ export function legend(legend_namespace) {
                 });
         } else {
             item.attr('cursor', 'auto')
-                .on('click.' + legend_namespace, null);
+                .on(`click.${  legend_namespace}`, null);
         }
         item.transition().duration(1000)
-            .attr('opacity', function(d) {
-                return (!_legend.filterable()(d) || !_included.length || _included.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25;
-            });
+            .attr('opacity', (d) => (!_legend.filterable()(d) || !_included.length || _included.includes(_legend.parent().nodeKey.eval(d))) ? 1 : 0.25);
     };
 
     _legend.countBaseline = function() {
@@ -250,27 +236,27 @@ export function legend(legend_namespace) {
         }
 
 
-        var exemplars = _legend.exemplars();
+        const exemplars = _legend.exemplars();
         _legend.countBaseline();
         if(exemplars instanceof Array) {
-            _items = exemplars.map(function(v) { return {name: v.name, orig: {key: v.key, value: v.value}, cola: {}}; });
+            _items = exemplars.map((v) => ({name: v.name, orig: {key: v.key, value: v.value}, cola: {}}));
         }
         else {
             _items = [];
-            for(var item in exemplars)
+            for(const item in exemplars)
                 _items.push({name: item, orig: {key: item, value: exemplars[item]}, cola: {}});
         }
         redraw();
     };
 
-    _legend.dropdown = property(null).react(function(v) {
+    _legend.dropdown = property(null).react((v) => {
         if(!!v !== !!_legend.dropdown() && _legend.parent() && (_svg_renderer || _legend.parent()).svg())
             window.setTimeout(_legend.redraw, 0);
     });
 
     /* enables filtering */
     _legend.dimension = property(null)
-        .react(function(v) {
+        .react((v) => {
             if(!v) {
                 _included = [];
                 apply_filter();
@@ -287,17 +273,17 @@ export function legend(legend_namespace) {
 
 export function nodeLegend() {
     return {
-        itemSelector: function() {
+        itemSelector() {
             return '.node';
         },
-        labelSelector: function() {
+        labelSelector() {
             return '.node-label';
         },
-        create: function(diagram, selection) {
+        create(diagram, selection) {
             return selection.append('g')
                 .attr('class', 'node');
         },
-        draw: function(renderer, itemEnter, item) {
+        draw(renderer, itemEnter, item) {
             renderer
                 .renderNode(itemEnter)
                 .redrawNode(item);
@@ -306,15 +292,15 @@ export function nodeLegend() {
 };
 
 export function edgeLegend() {
-    var _type = {
-        itemSelector: function() {
+    const _type = {
+        itemSelector() {
             return '.edge-container';
         },
-        labelSelector: function() {
+        labelSelector() {
             return '.edge-label';
         },
-        create: function(diagram, selection, w, h) {
-            var edgeEnter = selection.append('g')
+        create(diagram, selection, w, h) {
+            const edgeEnter = selection.append('g')
                 .attr('class', 'edge-container')
                 .attr('opacity', 0);
             edgeEnter
@@ -335,19 +321,19 @@ export function edgeLegend() {
                 .attr('stroke', 'black')
                 .attr('stroke-dasharray', '4,4')
                 .attr('opacity', 0.15)
-                .attr('transform', d => 'translate(' + [d * _type.length() / 2, 0].join(',') + ')');
-            var edgex = _type.length()/2 - _type.fakeNodeRadius();
+                .attr('transform', d => `translate(${  [d * _type.length() / 2, 0].join(',')  })`);
+            const edgex = _type.length()/2 - _type.fakeNodeRadius();
             edgeEnter.append('svg:path')
                 .attr('class', 'edge')
                 .attr('id', d => d.name)
-                .attr('d', 'M' + -edgex + ',0 L' + edgex + ',0')
+                .attr('d', `M${  -edgex  },0 L${  edgex  },0`)
                 .attr('opacity', diagram.edgeOpacity.eval);
 
             return edgeEnter;
         },
         fakeNodeRadius: property(10),
         length: property(50),
-        draw: function(renderer, itemEnter, item) {
+        draw(renderer, itemEnter, _item) {
             renderer.redrawEdge(itemEnter.select('path.edge'), renderer.selectAllEdges('.edge-arrows'));
         }
     };
@@ -356,22 +342,20 @@ export function edgeLegend() {
 
 export function symbolLegend(symbolScale) {
     return {
-        itemSelector: function() {
+        itemSelector() {
             return '.symbol';
         },
-        labelSelector: function() {
+        labelSelector() {
             return '.symbol-label';
         },
-        create: function(diagram, selection, w, h) {
-            var symbolEnter = selection.append('g')
+        create(diagram, selection, _w, _h) {
+            const symbolEnter = selection.append('g')
                 .attr('class', 'symbol');
             return symbolEnter;
         },
-        draw: function(renderer, symbolEnter, symbol) {
+        draw(renderer, symbolEnter, _symbol) {
             symbolEnter.append('text')
-                .html(function(d) {
-                    return symbolScale(d.orig.key);
-                });
+                .html((d) => symbolScale(d.orig.key));
             return symbolEnter;
         }
     };

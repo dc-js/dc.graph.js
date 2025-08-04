@@ -7,10 +7,10 @@ import { asBezier3, fitShape, inferShape, isOneSegment, shapeChanged, splitBezie
 import { edgeArrow, placeArrowsOnSpline, unsurprisingOrient } from './arrows.js'
 
 export function renderSvg() {
-    var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _animating = false; // do not refresh during animations
-    var _zoom;
-    var _renderer = {};
+    let _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
+    let _animating = false; // do not refresh during animations
+    let _zoom;
+    const _renderer = {};
 
     _renderer.rendererType = function() {
         return 'svg';
@@ -22,35 +22,33 @@ export function renderSvg() {
         if(_renderer.parent().nodeTitle())
             nodeEnter.append('title');
         nodeEnter.each(inferShape(_renderer.parent()));
-        _renderer.parent().forEachShape(nodeEnter, function(shape, node) {
+        _renderer.parent().forEachShape(nodeEnter, (shape, node) => {
             node.call(shape.create);
         });
         return _renderer;
     };
     _renderer.redrawNode = _renderer._updateNode = function(node) {
-        var changedShape = node.filter(shapeChanged(_renderer.parent()));
+        const changedShape = node.filter(shapeChanged(_renderer.parent()));
         changedShape.selectAll('.node-outline,.node-fill').remove();
         changedShape.each(inferShape(_renderer.parent()));
-        _renderer.parent().forEachShape(changedShape, function(shape, node) {
+        _renderer.parent().forEachShape(changedShape, (shape, node) => {
             node.call(shape.create);
         });
         node.select('title')
             .text(_renderer.parent().nodeTitle.eval);
-        _renderer.parent().forEachContent(node, function(contentType, node) {
+        _renderer.parent().forEachContent(node, (contentType, node) => {
             node.call(contentType.update);
-            _renderer.parent().forEachShape(contentType.selectContent(node), function(shape, content) {
+            _renderer.parent().forEachShape(contentType.selectContent(node), (shape, content) => {
                 content
                     .call(fitShape(shape, _renderer.parent()));
             });
         });
         // Ensure nodes without content also get their dimensions calculated
-        var nodesWithoutContent = node.filter(function(n) {
-            return !_renderer.parent().nodeContent.eval(n);
-        });
-        _renderer.parent().forEachShape(nodesWithoutContent, function(shape, node) {
+        const nodesWithoutContent = node.filter((n) => !_renderer.parent().nodeContent.eval(n));
+        _renderer.parent().forEachShape(nodesWithoutContent, (shape, node) => {
             node.call(fitShape(shape, _renderer.parent()));
         });
-        _renderer.parent().forEachShape(node, function(shape, node) {
+        _renderer.parent().forEachShape(node, (shape, node) => {
             node.call(shape.update);
         });
         node.select('.node-fill')
@@ -67,43 +65,37 @@ export function renderSvg() {
             .attr('stroke-width', _renderer.parent().edgeStrokeWidth.eval)
             .attr('stroke-dasharray', _renderer.parent().edgeStrokeDashArray.eval);
         edgeArrows
-            .attr('marker-end', function(e) {
-                var name = _renderer.parent().edgeArrowhead.eval(e),
+            .attr('marker-end', (e) => {
+                const name = _renderer.parent().edgeArrowhead.eval(e),
                     id = edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'head', name);
-                return id ? 'url(#' + id + ')' : null;
+                return id ? `url(#${  id  })` : null;
             })
-            .attr('marker-start', function(e) {
-                var name = _renderer.parent().edgeArrowtail.eval(e),
+            .attr('marker-start', (e) => {
+                const name = _renderer.parent().edgeArrowtail.eval(e),
                     arrow_id = edgeArrow(_renderer.parent(), _renderer.parent().arrows(), e, 'tail', name);
-                return name ? 'url(#' + arrow_id + ')' : null;
+                return name ? `url(#${  arrow_id  })` : null;
             })
-            .each(function(e) {
-                var fillEdgeStroke = _renderer.parent().edgeStroke.eval(e);
-                _renderer.selectAll('#' + _renderer.parent().arrowId(e, 'head'))
+            .each((e) => {
+                const _fillEdgeStroke = _renderer.parent().edgeStroke.eval(e);
+                _renderer.selectAll(`#${  _renderer.parent().arrowId(e, 'head')}`)
                     .attr('fill', _renderer.parent().edgeStroke.eval(e));
-                _renderer.selectAll('#' + _renderer.parent().arrowId(e, 'tail'))
+                _renderer.selectAll(`#${  _renderer.parent().arrowId(e, 'tail')}`)
                     .attr('fill', _renderer.parent().edgeStroke.eval(e));
             });
     };
 
     _renderer.selectAllNodes = function(selector) {
         selector = selector || '.node';
-        return _nodeLayer && _nodeLayer.selectAll(selector).filter(function(n) {
-            return !n.deleted;
-        }) || selectAll('.foo-this-does-not-exist');
+        return _nodeLayer && _nodeLayer.selectAll(selector).filter((n) => !n.deleted) || selectAll('.foo-this-does-not-exist');
     };
 
     _renderer.selectAllEdges = function(selector) {
         selector = selector || '.edge';
-        return _edgeLayer && _edgeLayer.selectAll(selector).filter(function(e) {
-            return !e.deleted;
-        }) || selectAll('.foo-this-does-not-exist');
+        return _edgeLayer && _edgeLayer.selectAll(selector).filter((e) => !e.deleted) || selectAll('.foo-this-does-not-exist');
     };
 
     _renderer.selectAllDefs = function(selector) {
-        return _defs && _defs.selectAll(selector).filter(function(def) {
-            return !def.deleted;
-        }) || selectAll('.foo-this-does-not-exist');
+        return _defs && _defs.selectAll(selector).filter((def) => !def.deleted) || selectAll('.foo-this-does-not-exist');
     };
 
     _renderer.resize = function(w, h) {
@@ -118,7 +110,7 @@ export function renderSvg() {
         const currentTransform = zoomTransform(_svg.node());
         const scale = currentTransform.k, translate = [currentTransform.x, currentTransform.y];
         _svg.call(_zoom.transform, zoomIdentity);
-        var xDomain = _renderer.parent().x().domain(), yDomain = _renderer.parent().y().domain();
+        const xDomain = _renderer.parent().x().domain(), yDomain = _renderer.parent().y().domain();
         _renderer.parent().x()
             .domain([xDomain[0], xDomain[0] + (xDomain[1] - xDomain[0])*newWidth/oldWidth])
             .range([0, newWidth]);
@@ -132,10 +124,10 @@ export function renderSvg() {
     _renderer.globalTransform = function(pos, scale, animate) {
         // _translate = pos;
         // _scale = scale;
-        var obj = _g;
+        let obj = _g;
         if(animate)
             obj = _g.transition().duration(_renderer.parent().zoomDuration());
-        obj.attr('transform', 'translate(' + pos + ')' + ' scale(' + scale + ')');
+        obj.attr('transform', `translate(${  pos  })` + ` scale(${  scale  })`);
     };
 
     _renderer.translate = function(_) {
@@ -172,11 +164,11 @@ export function renderSvg() {
 
     _renderer.startRedraw = function(dispatch, wnodes, wedges) {
         // create edge SVG elements
-        var edge = _edgeLayer.selectAll('.edge')
+        let edge = _edgeLayer.selectAll('.edge')
                 .data(wedges, _renderer.parent().edgeKey.eval);
         
         const edgeExit = edge.exit();
-        edgeExit.each(function(e) {
+        edgeExit.each((e) => {
             e.deleted = true;
         });
         const duration = _renderer.parent().stagedDuration();
@@ -194,23 +186,21 @@ export function renderSvg() {
         }
 
         // Handle enter selection
-        var edgeEnter = edge.enter().append('svg:path')
+        const edgeEnter = edge.enter().append('svg:path')
                 .attr('class', 'edge')
                 .attr('id', _renderer.parent().edgeId)
                 .attr('opacity', 0)
-            .each(function(e) {
+            .each((e) => {
                 e.deleted = false;
             });
         
         edge = edge.merge(edgeEnter);
 
-        var edgeArrows = _edgeLayer.selectAll('.edge-arrows')
+        let edgeArrows = _edgeLayer.selectAll('.edge-arrows')
                 .data(wedges, _renderer.parent().edgeKey.eval);
-        var edgeArrowsEnter = edgeArrows.enter().append('svg:path')
+        const edgeArrowsEnter = edgeArrows.enter().append('svg:path')
                 .attr('class', 'edge-arrows')
-                .attr('id', function(d) {
-                    return _renderer.parent().edgeId(d) + '-arrows';
-                })
+                .attr('id', (d) => `${_renderer.parent().edgeId(d)  }-arrows`)
                 .attr('fill', 'none')
                 .attr('opacity', 0);
         const edgeArrowsExit = edgeArrows.exit();
@@ -229,41 +219,39 @@ export function renderSvg() {
         edgeArrows = edgeArrows.merge(edgeArrowsEnter);
 
         if(_renderer.parent().edgeSort()) {
-            edge.sort(function(a, b) {
-                var as = _renderer.parent().edgeSort.eval(a), bs = _renderer.parent().edgeSort.eval(b);
+            edge.sort((a, b) => {
+                const as = _renderer.parent().edgeSort.eval(a), bs = _renderer.parent().edgeSort.eval(b);
                 return as < bs ? -1 : bs < as ? 1 : 0;
             });
         }
 
         // another wider copy of the edge just for hover events
-        var edgeHover = _edgeLayer.selectAll('.edge-hover')
+        let edgeHover = _edgeLayer.selectAll('.edge-hover')
                 .data(wedges, _renderer.parent().edgeKey.eval);
-        var edgeHoverEnter = edgeHover.enter().append('svg:path')
+        const edgeHoverEnter = edgeHover.enter().append('svg:path')
             .attr('class', 'edge-hover')
             .attr('opacity', 0)
             .attr('fill', 'none')
             .attr('stroke', 'green')
             .attr('stroke-width', 10)
-            .on('mouseover.diagram', function(e) {
-                _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
+            .on('mouseover.diagram', (e) => {
+                _renderer.select(`#${  _renderer.parent().edgeId(e)  }-label`)
                     .attr('visibility', 'visible');
             })
-            .on('mouseout.diagram', function(e) {
-                _renderer.select('#' + _renderer.parent().edgeId(e) + '-label')
+            .on('mouseout.diagram', (e) => {
+                _renderer.select(`#${  _renderer.parent().edgeId(e)  }-label`)
                     .attr('visibility', 'hidden');
             });
         edgeHover.exit().remove();
         edgeHover = edgeHover.merge(edgeHoverEnter);
 
-        var edgeLabels = _edgeLayer.selectAll('g.edge-label-wrapper')
+        let edgeLabels = _edgeLayer.selectAll('g.edge-label-wrapper')
             .data(wedges, _renderer.parent().edgeKey.eval);
-        var edgeLabelsEnter = edgeLabels.enter()
+        const edgeLabelsEnter = edgeLabels.enter()
             .append('g')
               .attr('class', 'edge-label-wrapper')
               .attr('visibility', 'hidden')
-              .attr('id', function(e) {
-                  return _renderer.parent().edgeId(e) + '-label';
-              });
+              .attr('id', (e) => `${_renderer.parent().edgeId(e)  }-label`);
         const edgeLabelsExit = edgeLabels.exit();
         edgeLabelsExit.transition()
             .duration(_renderer.parent().stagedDuration())
@@ -275,9 +263,9 @@ export function renderSvg() {
         }
         edgeLabels = edgeLabels.merge(edgeLabelsEnter);
         
-        var textPaths = _defs.selectAll('path.edge-label-path')
+        let textPaths = _defs.selectAll('path.edge-label-path')
                 .data(wedges, _renderer.parent().textpathId);
-        var textPathsEnter = textPaths.enter()
+        const textPathsEnter = textPaths.enter()
                 .append('svg:path')
                 .attr('class', 'edge-label-path')
                 .attr('id', _renderer.parent().textpathId);
@@ -285,15 +273,15 @@ export function renderSvg() {
         textPaths = textPaths.merge(textPathsEnter);
 
         // create node SVG elements
-        var node = _nodeLayer.selectAll('.node')
+        let node = _nodeLayer.selectAll('.node')
                 .data(wnodes, _renderer.parent().nodeKey.eval);
-        var nodeEnter = node.enter().append('g')
+        const nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr('opacity', '0') // don't show until has layout
-            .each(function(n) {
+            .each((n) => {
                 n.deleted = false;
             });
-        const nodeExit = node.exit().each(function(n) {
+        const nodeExit = node.exit().each((n) => {
             n.deleted = true;
         });
         nodeExit.transition()
@@ -311,19 +299,19 @@ export function renderSvg() {
 
         dispatch.call("drawn", null, node, edge, edgeHover);
 
-        var drawState = {
-            node: node,
-            nodeEnter: nodeEnter,
-            edge: edge,
-            edgeEnter: edgeEnter,
-            edgeHover: edgeHover,
-            edgeHoverEnter: edgeHoverEnter,
-            edgeLabels: edgeLabels,
-            edgeLabelsEnter: edgeLabelsEnter,
-            edgeArrows: edgeArrows,
-            edgeArrowsEnter: edgeArrowsEnter,
-            textPaths: textPaths,
-            textPathsEnter: textPathsEnter
+        const drawState = {
+            node,
+            nodeEnter,
+            edge,
+            edgeEnter,
+            edgeHover,
+            edgeHoverEnter,
+            edgeLabels,
+            edgeLabelsEnter,
+            edgeArrows,
+            edgeArrowsEnter,
+            textPaths,
+            textPathsEnter
         };
 
         _refresh(drawState);
@@ -342,39 +330,33 @@ export function renderSvg() {
             return this; // but what about changed attributes?
         node = node || _renderer.selectAllNodes();
         edge = edge || _renderer.selectAllEdges();
-        var edgeArrows = _renderer.selectAllEdges('.edge-arrows');
-        _refresh({node: node, edge: edge, edgeArrows: edgeArrows});
+        const edgeArrows = _renderer.selectAllEdges('.edge-arrows');
+        _refresh({node, edge, edgeArrows});
 
         edgeHover = edgeHover || _renderer.selectAllEdges('.edge-hover');
         edgeLabels = edgeLabels || _renderer.selectAllEdges('.edge-label-wrapper');
         textPaths = textPaths || _renderer.selectAllDefs('path.edge-label-path');
-        var nullSel = select(null); // no enters
+        const nullSel = select(null); // no enters
         draw(node, nullSel, edge, nullSel, edgeHover, nullSel, edgeLabels, nullSel, edgeArrows, nullSel, textPaths, nullSel, false);
         return this;
     };
 
     _renderer.reposition = function(node, edge) {
         node
-            .attr('transform', function (n) {
-                return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
-            });
+            .attr('transform', (n) => `translate(${  n.cola.x  },${  n.cola.y  })`);
         // reset edge ports
-        edge.each(function(e) {
+        edge.each((e) => {
             e.pos.new = null;
             e.pos.old = null;
             e.cola.points = null;
             _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
             if(_renderer.parent().edgeArrowhead.eval(e))
-                _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
-                .attr('orient', function() {
-                    return e.pos.new.orienthead;
-                });
+                _renderer.select(`#${  _renderer.parent().arrowId(e, 'head')}`)
+                .attr('orient', () => e.pos.new.orienthead);
             if(_renderer.parent().edgeArrowtail.eval(e))
-                _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
-                .attr('orient', function() {
-                    return e.pos.new.orienttail;
-                });
-            _renderer.select('#' + _renderer.parent().edgeId(e) + '-arrows')
+                _renderer.select(`#${  _renderer.parent().arrowId(e, 'tail')}`)
+                .attr('orient', () => e.pos.new.orienttail);
+            _renderer.select(`#${  _renderer.parent().edgeId(e)  }-arrows`)
                 .attr('d', generate_edge_path('new', true));
 
         })
@@ -383,9 +365,9 @@ export function renderSvg() {
     };
 
     function generate_edge_path(age, full) {
-        var field = full ? 'full' : 'path';
+        const field = full ? 'full' : 'path';
         return function(e) {
-            var path = e.pos?.[age]?.[field];
+            const path = e.pos?.[age]?.[field];
             if (!path) return '';
             return generatePath(path.points, path.bezDegree);
         };
@@ -393,9 +375,9 @@ export function renderSvg() {
 
     function generate_edge_label_path(age) {
         return function(e) {
-            var path = e.pos?.[age]?.path;
+            const path = e.pos?.[age]?.path;
             if (!path) return '';
-            var points = path.points[path.points.length-1].x < path.points[0].x ?
+            const points = path.points[path.points.length-1].x < path.points[0].x ?
                     path.points.slice(0).reverse() : path.points;
             return generatePath(points, path.bezDegree);
         };
@@ -403,7 +385,7 @@ export function renderSvg() {
 
     function with_rad(f) {
         return function() {
-            return f.apply(this, arguments) + 'rad';
+            return `${f.apply(this, arguments)  }rad`;
         };
     }
 
@@ -430,37 +412,33 @@ export function renderSvg() {
                   textPaths, textPathsEnter, animatePositions) {
         console.assert(edge.data().every(has_source_and_target));
 
-        var nodeEntered = {};
+        const nodeEntered = {};
         nodeEnter
-            .each(function(n) {
+            .each((n) => {
                 nodeEntered[_renderer.parent().nodeKey.eval(n)] = true;
             })
-            .attr('transform', function (n) {
+            .attr('transform', (n) => 
                 // start new nodes at their final position
-                return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
-            });
-        var ntrans = node
+                 `translate(${  n.cola.x  },${  n.cola.y  })`
+            );
+        const ntrans = node
                 .transition()
                 .duration(_renderer.parent().stagedDuration())
-                .delay(function(n) {
-                    return _renderer.parent().stagedDelay(nodeEntered[_renderer.parent().nodeKey.eval(n)]);
-                })
+                .delay((n) => _renderer.parent().stagedDelay(nodeEntered[_renderer.parent().nodeKey.eval(n)]))
                 .attr('opacity', _renderer.parent().nodeOpacity.eval);
         if(animatePositions)
             ntrans
-                .attr('transform', function (n) {
-                    return 'translate(' + n.cola.x + ',' + n.cola.y + ')';
-                })
-                .on('end.record', function(n) {
+                .attr('transform', (n) => `translate(${  n.cola.x  },${  n.cola.y  })`)
+                .on('end.record', (n) => {
                     n.prevX = n.cola.x;
                     n.prevY = n.cola.y;
                 });
 
         // recalculate edge positions
-        edge.each(function(e) {
+        edge.each((e) => {
             e.pos.new = null;
         });
-        edge.each(function(e) {
+        edge.each((e) => {
             if(e.cola.points) {
                 e.pos.new = placeArrowsOnSpline(_renderer.parent(), e, e.cola.points);
             }
@@ -494,80 +472,68 @@ export function renderSvg() {
                 e.pos.old = e.pos.new;
         });
 
-        var edgeEntered = {};
+        const edgeEntered = {};
         edgeEnter
-            .each(function(e) {
+            .each((e) => {
                 edgeEntered[_renderer.parent().edgeKey.eval(e)] = true;
             })
             .attr('d', generate_edge_path(_renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old'));
 
         edgeArrowsEnter
-            .each(function(e) {
+            .each((e) => {
                 // if staging transitions, just fade new edges in at new position
                 // else start new edges at old positions of nodes, if any, else new positions
-                var age = _renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old';
+                const age = _renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old';
                 if(_renderer.parent().edgeArrowhead.eval(e))
-                    _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
-                    .attr('orient', function() {
-                        return e.pos[age].orienthead;
-                    });
+                    _renderer.select(`#${  _renderer.parent().arrowId(e, 'head')}`)
+                    .attr('orient', () => e.pos[age].orienthead);
                 if(_renderer.parent().edgeArrowtail.eval(e))
-                    _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
-                    .attr('orient', function() {
-                        return e.pos[age].orienttail;
-                    });
+                    _renderer.select(`#${  _renderer.parent().arrowId(e, 'tail')}`)
+                    .attr('orient', () => e.pos[age].orienttail);
             })
             .attr('d', generate_edge_path(_renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old', true));
 
         edgeArrows
-            .each(function(e) {
+            .each((e) => {
                 if(_renderer.parent().edgeArrowhead.eval(e))
-                    _renderer.select('#' + _renderer.parent().arrowId(e, 'head'))
+                    _renderer.select(`#${  _renderer.parent().arrowId(e, 'head')}`)
                     .attr('orient', unsurprising_orient_rad(e.pos.old.orienthead, e.pos.new.orienthead))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
-                    .attr('orient', function() {
-                        return e.pos.new.orienthead;
-                    });
+                    .attr('orient', () => e.pos.new.orienthead);
                 if(_renderer.parent().edgeArrowtail.eval(e))
-                    _renderer.select('#' + _renderer.parent().arrowId(e, 'tail'))
+                    _renderer.select(`#${  _renderer.parent().arrowId(e, 'tail')}`)
                     .attr('orient', unsurprising_orient_rad(e.pos.old.orienttail, e.pos.new.orienttail))
                     .transition().duration(_renderer.parent().stagedDuration())
                     .delay(_renderer.parent().stagedDelay(false))
-                    .attr('orient', function() {
-                        return e.pos.new.orienttail;
-                    });
+                    .attr('orient', () => e.pos.new.orienttail);
             });
 
-        var etrans = edge
+        let etrans = edge
               .transition()
                 .duration(_renderer.parent().stagedDuration())
-                .delay(function(e) {
-                    return _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]);
-                })
+                .delay((e) => _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]))
                 .attr('opacity', _renderer.parent().edgeOpacity.eval);
-        var arrowtrans = edgeArrows
+        const arrowtrans = edgeArrows
               .transition()
                 .duration(_renderer.parent().stagedDuration())
-                .delay(function(e) {
-                    return _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]);
-                })
+                .delay((e) => _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]))
                 .attr('opacity', _renderer.parent().edgeOpacity.eval);
         (animatePositions ? etrans : edge)
-            .attr('d', function(e) {
-                var when = _renderer.parent().stageTransitions() === 'insmod' &&
+            .attr('d', (e) => {
+                const when = _renderer.parent().stageTransitions() === 'insmod' &&
                         edgeEntered[_renderer.parent().edgeKey.eval(e)] ? 'old' : 'new';
                 return generate_edge_path(when)(e);
             });
         (animatePositions ? arrowtrans : edgeArrows)
-            .attr('d', function(e) {
-                var when = _renderer.parent().stageTransitions() === 'insmod' &&
+            .attr('d', (e) => {
+                const when = _renderer.parent().stageTransitions() === 'insmod' &&
                         edgeEntered[_renderer.parent().edgeKey.eval(e)] ? 'old' : 'new';
                 return generate_edge_path(when, true)(e);
             });
-        var elabels = edgeLabels
-            .selectAll('text').data(function(e) {
-                var labels = _renderer.parent().edgeLabel.eval(e);
+        const elabels = edgeLabels
+            .selectAll('text').data((e) => {
+                const labels = _renderer.parent().edgeLabel.eval(e);
                 if(!labels)
                     return [];
                 else if(typeof labels === 'string')
@@ -585,26 +551,24 @@ export function renderSvg() {
             .attr('startOffset', '50%');
         elabels
           .select('textPath')
-            .html(function(t) { return t; })
+            .html((t) => t)
             .attr('opacity', function() {
                 return _renderer.parent().edgeOpacity.eval(select(this.parentNode.parentNode).datum());
             })
-            .attr('xlink:href', function(e) {
-                var id = _renderer.parent().textpathId(select(this.parentNode.parentNode).datum());
+            .attr('xlink:href', function(_e) {
+                const id = _renderer.parent().textpathId(select(this.parentNode.parentNode).datum());
                 // angular on firefox needs absolute paths for fragments
-                return window.location.href.split('#')[0] + '#' + id;
+                return `${window.location.href.split('#')[0]  }#${  id}`;
             });
         textPathsEnter
             .attr('d', generate_edge_label_path(_renderer.parent().stageTransitions() === 'modins' ? 'new' : 'old'));
-        var textTrans = textPaths.transition()
+        let textTrans = textPaths.transition()
             .duration(_renderer.parent().stagedDuration())
-            .delay(function(e) {
-                return _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]);
-            });
+            .delay((e) => _renderer.parent().stagedDelay(edgeEntered[_renderer.parent().edgeKey.eval(e)]));
         if(animatePositions)
             textTrans
-            .attr('d', function(e) {
-                var when = _renderer.parent().stageTransitions() === 'insmod' &&
+            .attr('d', (e) => {
+                const when = _renderer.parent().stageTransitions() === 'insmod' &&
                         edgeEntered[_renderer.parent().edgeKey.eval(e)] ? 'old' : 'new';
                 return generate_edge_label_path(when)(e);
             });
@@ -639,7 +603,7 @@ export function renderSvg() {
         _animating = true;
         if(!_renderer.parent().showLayoutSteps())
             endall([ntrans, etrans, textTrans],
-                   function() {
+                   () => {
                        _animating = false;
                        _renderer.parent().layoutDone(true);
                    });
@@ -647,7 +611,7 @@ export function renderSvg() {
         if(animatePositions)
             edgeHover.attr('d', generate_edge_path('new'));
 
-        edge.each(function(e) {
+        edge.each((e) => {
             e.pos.old = e.pos.new;
         });
     }
@@ -655,13 +619,13 @@ export function renderSvg() {
     // wait on multiple transitions, adapted from
     // http://stackoverflow.com/questions/10692100/invoke-a-callback-at-the-end-of-a-transition
     function endall(transitions, callback) {
-        if (transitions.every(function(transition) { return transition.size() === 0; }))
+        if (transitions.every((transition) => transition.size() === 0))
             callback();
-        var n = 0;
-        transitions.forEach(function(transition) {
+        let n = 0;
+        transitions.forEach((transition) => {
             transition
-                .each(function() { ++n; })
-                .on('end.all', function() { if (!--n) callback(); });
+                .each(() => { ++n; })
+                .on('end.all', () => { if (!--n) callback(); });
         });
     }
 
@@ -676,12 +640,12 @@ export function renderSvg() {
             .enter().append('g')
             .attr('class', 'draw');
 
-        var layers = ['edge-layer', 'node-layer'];
+        const layers = ['edge-layer', 'node-layer'];
         if(_renderer.parent().edgesInFront())
             layers.reverse();
         _g.selectAll('g').data(layers)
           .enter().append('g')
-            .attr('class', function(l) { return l; });
+            .attr('class', (l) => l);
         _edgeLayer = _g.selectAll('g.edge-layer');
         _nodeLayer = _g.selectAll('g.node-layer');
         return this;
@@ -733,22 +697,18 @@ export function renderSvg() {
     };
 
     _renderer.selectNodePortsOfStyle = function(node, style) {
-        return node.selectAll('g.port').filter(function(p) {
-            return _renderer.parent().portStyleName.eval(p) === style;
-        });
+        return node.selectAll('g.port').filter((p) => _renderer.parent().portStyleName.eval(p) === style);
     };
 
     _renderer.drawPorts = function(drawState) {
-        var nodePorts = _renderer.parent().nodePorts();
+        const nodePorts = _renderer.parent().nodePorts();
         if(!nodePorts)
             return;
-        _renderer.parent().portStyle.enum().forEach(function(style) {
-            var nodePorts2 = {};
-            for(var nid in nodePorts)
-                nodePorts2[nid] = nodePorts[nid].filter(function(p) {
-                    return _renderer.parent().portStyleName.eval(p) === style;
-                });
-            var port = _renderer.selectNodePortsOfStyle(drawState.node, style);
+        _renderer.parent().portStyle.enum().forEach((style) => {
+            const nodePorts2 = {};
+            for(const nid in nodePorts)
+                nodePorts2[nid] = nodePorts[nid].filter((p) => _renderer.parent().portStyleName.eval(p) === style);
+            const port = _renderer.selectNodePortsOfStyle(drawState.node, style);
             _renderer.parent().portStyle(style).drawPorts(port, nodePorts2, drawState.node);
         });
     };
@@ -818,7 +778,7 @@ export function renderSvg() {
     _renderer.resetSvg = function () {
         // we might be re-initialized in a div, in which case
         // we already have an <svg> element to delete
-        var svg = _svg || _renderer.select('svg');
+        const svg = _svg || _renderer.select('svg');
         svg.remove();
         _svg = null;
         //_renderer.parent().x(null).y(null);
@@ -826,10 +786,10 @@ export function renderSvg() {
     };
 
     _renderer.addOrRemoveDef = function(id, whether, tag, onEnter) {
-        var data = whether ? [0] : [];
-        var sel = _defs.selectAll('#' + id).data(data);
+        const data = whether ? [0] : [];
+        const sel = _defs.selectAll(`#${  id}`).data(data);
 
-        var selEnter = sel
+        const selEnter = sel
             .enter().append(tag)
               .attr('id', id);
         if(selEnter.size() && onEnter)
@@ -840,7 +800,7 @@ export function renderSvg() {
 
 
     function generateSvg() {
-        var root = _renderer.parent().root();
+        const root = _renderer.parent().root();
         _svg = root.selectAll('svg')
             .data([1])
             .enter().append('svg');
@@ -851,7 +811,7 @@ export function renderSvg() {
             .enter().append('svg:defs');
 
         // for lack of a better place
-        _renderer.addOrRemoveDef('node-clip-top', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-top', true, 'clipPath', (clipPath) => {
             clipPath.selectAll('rect').data([0])
                 .enter().append('rect')
                 .attr('x', -1000)
@@ -859,7 +819,7 @@ export function renderSvg() {
                 .attr('width', 2000)
                 .attr('height', 1000);
         });
-        _renderer.addOrRemoveDef('node-clip-bottom', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-bottom', true, 'clipPath', (clipPath) => {
             clipPath.selectAll('rect').data([0])
                 .enter().append('rect')
                 .attr('x', -1000)
@@ -867,7 +827,7 @@ export function renderSvg() {
                 .attr('width', 2000)
                 .attr('height', 1000);
         });
-        _renderer.addOrRemoveDef('node-clip-left', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-left', true, 'clipPath', (clipPath) => {
             clipPath.selectAll('rect').data([0])
                 .enter().append('rect')
                 .attr('x', -1000)
@@ -875,7 +835,7 @@ export function renderSvg() {
                 .attr('width', 1000)
                 .attr('height', 2000);
         });
-        _renderer.addOrRemoveDef('node-clip-right', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-right', true, 'clipPath', (clipPath) => {
             clipPath.selectAll('rect').data([0])
                 .enter().append('rect')
                 .attr('x', 0)
@@ -883,7 +843,7 @@ export function renderSvg() {
                 .attr('width', 1000)
                 .attr('height', 2000);
         });
-        _renderer.addOrRemoveDef('node-clip-none', true, 'clipPath', function(clipPath) {
+        _renderer.addOrRemoveDef('node-clip-none', true, 'clipPath', (clipPath) => {
             clipPath.selectAll('rect').data([0])
                 .enter().append('rect')
                 .attr('x', 0)
@@ -897,8 +857,8 @@ export function renderSvg() {
             .scaleExtent(_renderer.parent().zoomExtent());
         
         if(_renderer.parent().mouseZoomable()) {
-            var brush = _renderer.parent().child('brush');
-            var keyboard = _renderer.parent().child('keyboard');
+            const _brush = _renderer.parent().child('brush');
+            let keyboard = _renderer.parent().child('keyboard');
             if(!keyboard)
                 _renderer.parent().child('keyboard', keyboard = keyboardMode());
 
@@ -907,7 +867,7 @@ export function renderSvg() {
             _svg.call(_zoom);
             _svg.on('dblclick.zoom', null);
         } else {
-            _zoom.filter(function() { return false; });
+            _zoom.filter(() => false);
             _svg.call(_zoom);
         }
 

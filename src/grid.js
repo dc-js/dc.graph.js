@@ -5,14 +5,14 @@ import { mode } from './mode.js';
 import { range } from 'd3-array';
 
 export function grid() {
-    var _gridLayer = null;
-    var _translate, _scale, _xDomain, _yDomain;
+    let _gridLayer = null;
+    let _translate, _scale, _xDomain, _yDomain;
 
-    function draw(diagram, node, edge, ehover) {
+    function drawMode(_diagram, _node, _edge, _ehover) {
         //infer_and_draw(diagram);
     }
 
-    function remove(diagram, node, edge, ehover) {
+    function remove(_diagram, _node, _edge, _ehover) {
         if(_gridLayer)
             _gridLayer.remove();
     }
@@ -20,10 +20,10 @@ export function grid() {
     function draw(diagram) {
         _gridLayer = diagram.g().selectAll('g.grid-layer').data([0]);
         _gridLayer.enter().append('g').attr('class', 'grid-layer');
-        var ofs = _mode.wholeOnLines() ? 0 : 0.5;
-        var vline_data = _scale >= _mode.threshold() ? range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1]) + 1) : [];
+        const ofs = _mode.wholeOnLines() ? 0 : 0.5;
+        const vline_data = _scale >= _mode.threshold() ? range(Math.floor(_xDomain[0]), Math.ceil(_xDomain[1]) + 1) : [];
         let vlines = _gridLayer.selectAll('line.grid-line.vertical')
-            .data(vline_data, function(d) { return d - ofs; });
+            .data(vline_data, (d) => d - ofs);
         vlines.exit().remove();
         const vlinesEnter = vlines.enter().append('line')
             .attr('class', 'grid-line vertical')
@@ -33,9 +33,9 @@ export function grid() {
         vlines.attr('stroke-width', 1/_scale)
             .attr('y1', _yDomain[0])
             .attr('y2', _yDomain[1]);
-        var hline_data = _scale >= _mode.threshold() ? range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1]) + 1) : [];
+        const hline_data = _scale >= _mode.threshold() ? range(Math.floor(_yDomain[0]), Math.ceil(_yDomain[1]) + 1) : [];
         let hlines = _gridLayer.selectAll('line.grid-line.horizontal')
-            .data(hline_data, function(d) { return d - ofs; });
+            .data(hline_data, (d) => d - ofs);
         hlines.exit().remove();
         const hlinesEnter = hlines.enter().append('line')
             .attr('class', 'grid-line horizontal')
@@ -63,10 +63,10 @@ export function grid() {
         draw(diagram);
     }
 
-    var _mode = mode('highlight-paths', {
-        draw: draw,
-        remove: remove,
-        parent: function(p) {
+    const _mode = mode('highlight-paths', {
+        draw: drawMode,
+        remove,
+        parent(p) {
             if(p) {
                 p.on('zoomed.grid', on_zoom);
                 infer_and_draw(p);

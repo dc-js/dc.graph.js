@@ -1,7 +1,7 @@
 export function supergraph(data, options) {
     if(!supergraph.pattern) {
-        var mg = metagraph;
-        var graph_and_subgraph = {
+        const mg = metagraph;
+        const graph_and_subgraph = {
             nodes: {
                 graph: mg.graph_pattern(options),
                 sg: mg.subgraph_pattern(options),

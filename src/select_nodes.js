@@ -3,31 +3,29 @@ import { nodeEdgeConditions, ancestorHasClass } from './utils.js';
 
 export function selectNodes(props, options) {
     options = options || {};
-    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
+    const select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes');
 
-    var thinginess = {
-        intersectRect: function(ext) {
-            return _mode.parent().selectAllNodes().data().filter(function(n) {
-                return n && ext[0][0] < n.cola.x && n.cola.x < ext[1][0] &&
-                    ext[0][1] < n.cola.y && n.cola.y < ext[1][1];
-            }).map(this.key);
+    const thinginess = {
+        intersectRect(ext) {
+            return _mode.parent().selectAllNodes().data().filter((n) => n && ext[0][0] < n.cola.x && n.cola.x < ext[1][0] &&
+                    ext[0][1] < n.cola.y && n.cola.y < ext[1][1]).map(this.key);
         },
-        clickables: function(diagram, node, edge) {
+        clickables(diagram, node, _edge) {
             return node;
         },
-        excludeClick: function(element) {
+        excludeClick(element) {
             return ancestorHasClass(element, 'port');
         },
-        key: function(n) {
+        key(n) {
             return _mode.parent().nodeKey.eval(n);
         },
-        applyStyles: function(pred) {
+        applyStyles(pred) {
             _mode.parent().cascade(50, true, nodeEdgeConditions(pred, null, props));
         },
-        removeStyles: function() {
+        removeStyles() {
             _mode.parent().cascade(50, false, props);
         }
     };
-    var _mode = selectThings(select_nodes_group, 'select-nodes', thinginess);
+    const _mode = selectThings(select_nodes_group, 'select-nodes', thinginess);
     return _mode;
 };

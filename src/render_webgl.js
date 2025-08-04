@@ -1,15 +1,17 @@
 import {inferShape} from "./shape.js"
 import {extent} from "d3-array";
+import {property} from "./core.js";
+import {regenerateObjects} from "./generate_objects.js";
 
 export function renderWebgl() {
     //var _svg = null, _defs = null, _g = null, _nodeLayer = null, _edgeLayer = null;
-    var _camera, _scene, _webgl_renderer;
-    var _directionalLight, _ambientLight;
-    var _controls;
-    var _sphereGeometry;
-    var _nodes = {}, _edges = {};
-    var _animating = false; // do not refresh during animations
-    var _renderer = {};
+    let _camera, _scene, _webgl_renderer;
+    let _directionalLight, _ambientLight;
+    let _controls;
+    let _sphereGeometry;
+    const _nodes = {}, _edges = {};
+    let _animating = false; // do not refresh during animations
+    const _renderer = {};
 
     _renderer.rendererType = function() {
         return 'webgl';
@@ -21,15 +23,15 @@ export function renderWebgl() {
         return !!_camera;
     };
 
-    _renderer.resize = function(w, h) {
+    _renderer.resize = function(_w, _h) {
         return _renderer;
     };
 
-    _renderer.rezoom = function(oldWidth, oldHeight, newWidth, newHeight) {
+    _renderer.rezoom = function(_oldWidth, _oldHeight, _newWidth, _newHeight) {
         return _renderer;
     };
 
-    _renderer.globalTransform = function(pos, scale, animate) {
+    _renderer.globalTransform = function(_pos, _scale, _animate) {
         return _renderer;
     };
 
@@ -69,7 +71,7 @@ export function renderWebgl() {
 
         _webgl_renderer = new THREE.WebGLRenderer({ antialias: true });
         _webgl_renderer.setPixelRatio(window.devicePixelRatio);
-        var boundRect = _renderer.parent().root().node().getBoundingClientRect();
+        const boundRect = _renderer.parent().root().node().getBoundingClientRect();
         _webgl_renderer.setSize(boundRect.width, boundRect.height);
         _renderer.parent().root().node().appendChild(_webgl_renderer.domElement);
 
@@ -81,41 +83,37 @@ export function renderWebgl() {
 
     _renderer.startRedraw = function(dispatch, wnodes, wedges) {
         wnodes.forEach(inferShape(_renderer.parent()));
-        var rnodes = regenerate_objects(_nodes, wnodes, null, function(n) {
-            return _renderer.parent().nodeKey.eval(n);
-        }, function(rn, n) {
+        const rnodes = regenerateObjects(_nodes, wnodes, null, (n) => _renderer.parent().nodeKey.eval(n), (rn, n) => {
             rn.wnode = n;
-        }, null, function(wnode, rnode) {
+        }, null, (wnode, rnode) => {
             _scene.remove(rnode.mesh);
             //rnode.mesh.dispose();
             rnode.material.dispose();
         });
-        var redges = regenerate_objects(_edges, wedges, null, function(e) {
-            return _renderer.parent().edgeKey.eval(e);
-        }, function(re, e) {
+        const redges = regenerateObjects(_edges, wedges, null, (e) => _renderer.parent().edgeKey.eval(e), (re, e) => {
             re.wedge = e;
-        }, null, function(wedge, redge) {
+        }, null, (wedge, redge) => {
             _scene.remove(redge.mesh);
             //redge.mesh.dispose();
             redge.geometry.dispose();
             redge.material.dispose();
         });
         animate();
-        return {wnodes: wnodes, wedges: wedges, rnodes: rnodes, redges: redges};
+        return {wnodes, wedges, rnodes, redges};
     };
 
     function color_to_int(color) {
         // it better be 6 byte hex RGB
         if(color.length !== 7 || color[0] !== '#') {
-            console.warn("don't know how to use color " + color);
+            console.warn(`don't know how to use color ${  color}`);
             color = '#888888';
         }
         return parseInt(color.slice(1), 16);
     }
     _renderer.color_to_int = color_to_int;
 
-    _renderer.draw = function(drawState, animatePositions) {
-        drawState.wedges.forEach(function(e) {
+    _renderer.draw = function(drawState, _animatePositions) {
+        drawState.wedges.forEach((e) => {
             if(!e.pos.old)
                 _renderer.parent().calcEdgePath(e, 'old', e.source.prevX || e.source.cola.x, e.source.prevY || e.source.cola.y,
                                                 e.target.prevX || e.target.cola.x, e.target.prevY || e.target.cola.y);
@@ -123,15 +121,15 @@ export function renderWebgl() {
                 _renderer.parent().calcEdgePath(e, 'new', e.source.cola.x, e.source.cola.y, e.target.cola.x, e.target.cola.y);
         });
 
-        var MULT = _renderer.multiplier();
-        drawState.rnodes.forEach(function(rn) {
-            var color = _renderer.parent().nodeFill.eval(rn.wnode);
-            var add = false;
+        const MULT = _renderer.multiplier();
+        drawState.rnodes.forEach((rn) => {
+            let color = _renderer.parent().nodeFill.eval(rn.wnode);
+            let add = false;
             if(!rn.mesh) {
                 add = true;
                 if(_renderer.parent().nodeFillScale())
                     color = _renderer.parent().nodeFillScale()(color);
-                var cint = color_to_int(color);
+                const cint = color_to_int(color);
                 rn.material = new THREE.MeshLambertMaterial({color: cint});
                 rn.mesh = new THREE.Mesh(_sphereGeometry, rn.material);
                 rn.mesh.name = _renderer.parent().nodeKey.eval(rn.wnode);
@@ -143,10 +141,10 @@ export function renderWebgl() {
                 _scene.add(rn.mesh);
         });
 
-        var xext = extent(drawState.wnodes, function(n) { return n.cola.x * MULT; }),
-            yext = extent(drawState.wnodes, function(n) { return -n.cola.y * MULT; }),
-            zext = extent(drawState.wnodes, function(n) { return n.cola.z * MULT || 0; });
-        var cx = (xext[0] + xext[1])/2,
+        const xext = extent(drawState.wnodes, (n) => n.cola.x * MULT),
+            yext = extent(drawState.wnodes, (n) => -n.cola.y * MULT),
+            zext = extent(drawState.wnodes, (n) => n.cola.z * MULT || 0);
+        const cx = (xext[0] + xext[1])/2,
             cy = (yext[0] + yext[1])/2,
             cz = (zext[0] + zext[1])/2;
 
@@ -155,17 +153,17 @@ export function renderWebgl() {
         _controls.target.set(cx, cy, cz);
         _controls.update();
 
-        var vertices = [];
-        drawState.redges.forEach(function(re) {
+        const _vertices = [];
+        drawState.redges.forEach((re) => {
             if(!re.wedge.source || !re.wedge.target)
                 return;
-            var a = re.wedge.source.cola, b = re.wedge.target.cola;
-            var add = false;
-            var width = _renderer.parent().edgeStrokeWidth.eval(re.wedge);
+            const a = re.wedge.source.cola, b = re.wedge.target.cola;
+            let add = false;
+            const width = _renderer.parent().edgeStrokeWidth.eval(re.wedge);
             if(!re.mesh) {
                 add = true;
-                var color = _renderer.parent().edgeStroke.eval(re.wedge);
-                var cint = color_to_int(color);
+                const color = _renderer.parent().edgeStroke.eval(re.wedge);
+                const cint = color_to_int(color);
                 re.material = new THREE.MeshLambertMaterial({ color: cint });
                 re.curve = new THREE.LineCurve3(
                     new THREE.Vector3(a.x*MULT, -a.y*MULT, a.z*MULT || 0),
@@ -199,17 +197,15 @@ export function renderWebgl() {
     }
 
     _renderer.drawPorts = function(drawState) {
-        var nodePorts = _renderer.parent().nodePorts();
+        const nodePorts = _renderer.parent().nodePorts();
         if(!nodePorts)
             return;
-        _renderer.parent().portStyle.enum().forEach(function(style) {
-            var nodePorts2 = {};
-            for(var nid in nodePorts)
-                nodePorts2[nid] = nodePorts[nid].filter(function(p) {
-                    return _renderer.parent().portStyleName.eval(p) === style;
-                });
+        _renderer.parent().portStyle.enum().forEach((style) => {
+            const nodePorts2 = {};
+            for(const nid in nodePorts)
+                nodePorts2[nid] = nodePorts[nid].filter((p) => _renderer.parent().portStyleName.eval(p) === style);
             // not implemented
-            var port = _renderer.selectNodePortsOfStyle(drawState.node, style);
+            const _port = _renderer.selectNodePortsOfStyle(drawState.node, style);
             //_renderer.parent().portStyle(style).drawPorts(port, nodePorts2, drawState.node);
         });
     };
@@ -224,17 +220,17 @@ export function renderWebgl() {
         return _renderer.parent().calculateBounds(drawState.wnodes, drawState.wedges);
     };
 
-    _renderer.refresh = function(node, edge, edgeHover, edgeLabels, textPaths) {
+    _renderer.refresh = function(_node, _edge, _edgeHover, _edgeLabels, _textPaths) {
         if(_animating)
             return _renderer; // but what about changed attributes?
         return _renderer;
     };
 
-    _renderer.reposition = function(node, edge) {
+    _renderer.reposition = function(_node, _edge) {
         return _renderer;
     };
 
-    function has_source_and_target(e) {
+    function _has_source_and_target(e) {
         return !!e.source && !!e.target;
     }
 

@@ -1,16 +1,17 @@
 import { deprecationWarning } from './core.js';
 
-var dont_use_key = deprecationWarning('line_breaks now takes a string - d.key behavior is deprecated and will be removed in a later version');
+const dont_use_key = deprecationWarning('line_breaks now takes a string - d.key behavior is deprecated and will be removed in a later version');
 
 export function lineBreaks(charexp, max_line_length) {
-    var regexp = new RegExp(charexp, 'g');
+    const regexp = new RegExp(charexp, 'g');
     return function(s) {
         if(typeof s === 'object') { // backward compatibility
             dont_use_key();
             s = s.key;
         }
-        var result;
-        var line = '', lines = [], part, i = 0;
+        let result;
+        let line = '', part, i = 0;
+        const lines = [];
         do {
             result = regexp.exec(s);
             if(result)

@@ -12,16 +12,12 @@ export function drawClusters() {
     function draw(diagram) {
         if(!diagram.clusterGroup())
             return;
-        var clayer = diagram.g().selectAll('g.cluster-layer').data([0]);
+        const clayer = diagram.g().selectAll('g.cluster-layer').data([0]);
         clayer.enter().insert('g', ':first-child')
             .attr('class', 'cluster-layer');
-        var clusters = diagram.clusterGroup().all().map(function(kv) {
-            return _mode.parent().getWholeCluster(kv.key);
-        }).filter(function(c) {
-            return c && c.cola.bounds;
-        });
-        var rects = clayer.selectAll('rect.cluster')
-            .data(clusters, function(c) { return c.orig.key; });
+        const clusters = diagram.clusterGroup().all().map((kv) => _mode.parent().getWholeCluster(kv.key)).filter((c) => c && c.cola.bounds);
+        const rects = clayer.selectAll('rect.cluster')
+            .data(clusters, (c) => c.orig.key);
         rects.exit().remove();
         rects.enter().append('rect')
             .attr('class', 'cluster')
@@ -35,12 +31,12 @@ export function drawClusters() {
             .attr('opacity', _mode.clusterOpacity.eval)
             .call(apply_bounds);
     }
-    function remove(diagram, node, edge, ehover) {
+    function remove(_diagram, _node, _edge, _ehover) {
     }
-    var _mode = mode('draw-clusters', {
+    const _mode = mode('draw-clusters', {
         laterDraw: true,
-        draw: draw,
-        remove: remove
+        draw,
+        remove
     });
     _mode.clusterOpacity = property(0.25);
     _mode.clusterStroke = property('black');

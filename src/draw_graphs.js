@@ -4,27 +4,25 @@ import { eventCoords, promiseIdentity } from './utils.js';
 import { selectThingsGroup } from './select_things.js';
 import { labelThingsGroup } from './label_things.js';
 import { fixNodesGroup } from './fix_nodes.js';
-import { event as d3Event, select } from 'd3-selection';
+import { event as d3Event } from 'd3-selection';
 
 export function drawGraphs(options) {
-    var select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes'),
+    const select_nodes_group = selectThingsGroup(options.select_nodes_group || 'select-nodes-group', 'select-nodes'),
         select_edges_group = selectThingsGroup(options.select_edges_group || 'select-edges-group', 'select-edges'),
-        label_nodes_group = labelThingsGroup('label-nodes-group', 'label-nodes'),
-        label_edges_group = labelThingsGroup('label-edges-group', 'label-edges'),
+        _label_nodes_group = labelThingsGroup('label-nodes-group', 'label-nodes'),
+        _label_edges_group = labelThingsGroup('label-edges-group', 'label-edges'),
         fix_nodes_group = fixNodesGroup('fix-nodes-group');
-    var _nodeIdTag = options.idTag || 'id',
+    const _nodeIdTag = options.idTag || 'id',
         _edgeIdTag = options.edgeIdTag || _nodeIdTag,
         _sourceTag = options.sourceTag || 'source',
         _targetTag = options.targetTag || 'target',
         _nodeLabelTag = options.labelTag || 'label',
         _edgeLabelTag = options.edgeLabelTag || _nodeLabelTag;
 
-    var _sourceDown = null, _targetMove = null, _targetValid = false, _edgeLayer = null, _hintData = [], _crossout;
+    let _sourceDown = null, _targetMove = null, _targetValid = false, _edgeLayer = null, _hintData = [], _crossout;
 
     function update_hint() {
-        var data = _hintData.filter(function(h) {
-            return h.source && h.target;
-        });
+        const data = _hintData.filter((h) => h.source && h.target);
         let line = _edgeLayer.selectAll('line.hint-edge').data(data);
         line.exit().remove();
         const lineEnter = line.enter().append('line')
@@ -42,15 +40,15 @@ export function drawGraphs(options) {
     }
 
     function port_pos(p) {
-        var style = _mode.parent().portStyle(_mode.parent().portStyleName.eval(p));
-        var pos = style.portPosition(p);
+        const style = _mode.parent().portStyle(_mode.parent().portStyleName.eval(p));
+        const pos = style.portPosition(p);
         pos.x += p.node.cola.x;
         pos.y += p.node.cola.y;
         return pos;
     }
 
     function update_crossout() {
-        var data;
+        let data;
         if(_crossout) {
             if(_mode.usePorts())
                 data = [port_pos(_crossout)];
@@ -59,22 +57,22 @@ export function drawGraphs(options) {
         }
         else data = [];
 
-        var size = _mode.crossSize(), wid = _mode.crossWidth();
+        const size = _mode.crossSize(), wid = _mode.crossWidth();
         let cross = _edgeLayer.selectAll('polygon.graph-draw-crossout').data(data);
         cross.exit().remove();
         const crossEnter = cross.enter().append('polygon')
             .attr('class', 'graph-draw-crossout');
         cross = cross.merge(crossEnter);
         cross
-            .attr('points', function(d) {
-                var x = d.x, y = d.y;
+            .attr('points', (d) => {
+                const x = d.x, y = d.y;
                 return [
                     [x-size/2, y+size/2], [x-size/2+wid, y+size/2], [x, y+wid/2],
                     [x+size/2-wid, y+size/2], [x+size/2, y+size/2], [x+wid/2, y],
                     [x+size/2, y-size/2], [x+size/2-wid, y-size/2], [x, y-wid/2],
                     [x-size/2+wid, y-size/2], [x-size/2, y-size/2], [x-wid/2, y]
                 ]
-                    .map(function(p) { return p.join(','); })
+                    .map((p) => p.join(','))
                     .join(' ');
             });
     }
@@ -88,7 +86,8 @@ export function drawGraphs(options) {
     function create_node(diagram, pos, data) {
         if(!_mode.nodeCrossfilter())
             throw new Error('need nodeCrossfilter');
-        var node, callback = _mode.addNode() || promiseIdentity;
+        let node;
+        const callback = _mode.addNode() || promiseIdentity;
         if(data)
             node = data;
         else {
@@ -98,7 +97,7 @@ export function drawGraphs(options) {
         }
         if(pos)
             fix_nodes_group.call('new_node', null, node[_nodeIdTag], node, {x: pos[0], y: pos[1]});
-        callback(node).then(function(node2) {
+        callback(node).then((node2) => {
             if(!node2)
                 return;
             _mode.nodeCrossfilter().add([node2]);
@@ -110,19 +109,19 @@ export function drawGraphs(options) {
     function create_edge(diagram, source, target) {
         if(!_mode.edgeCrossfilter())
             throw new Error('need edgeCrossfilter');
-        var edge = {}, callback = _mode.addEdge() || promiseIdentity;
+        const edge = {}, callback = _mode.addEdge() || promiseIdentity;
         edge[_edgeIdTag] = uuid();
         edge[_edgeLabelTag] = '';
         if(_mode.conduct().detectReversedEdge && _mode.conduct().detectReversedEdge(edge, source.port, target.port)) {
             edge[_sourceTag] = target.node.orig.key;
             edge[_targetTag] = source.node.orig.key;
-            var t;
-            t = source; source = target; target = t;
+            const t = source;
+            source = target; target = t;
         } else {
             edge[_sourceTag] = source.node.orig.key;
             edge[_targetTag] = target.node.orig.key;
         }
-        callback(edge, source.port, target.port).then(function(edge2) {
+        callback(edge, source.port, target.port).then((edge2) => {
             if(!edge2)
                 return;
             fix_nodes_group.call('new_edge', null, edge[_edgeIdTag], edge2[_sourceTag], edge2[_targetTag]);
@@ -134,7 +133,7 @@ export function drawGraphs(options) {
     }
 
     function check_invalid_drag(coords, event) {
-        var msg;
+        let msg;
         if(!(event.buttons & 1)) {
             // mouse button was released but we missed it
             _crossout = null;
@@ -165,8 +164,8 @@ export function drawGraphs(options) {
         return false;
     }
 
-    function draw(diagram, node, edge, ehover) {
-        var select_nodes = diagram.child('select-nodes');
+    function draw(diagram, node, _edge, _ehover) {
+        const select_nodes = diagram.child('select-nodes');
         if(select_nodes) {
             if(_mode.clickCreatesNodes())
                 select_nodes.clickBackgroundClears(false);
@@ -177,13 +176,13 @@ export function drawGraphs(options) {
                 if(!_mode.dragCreatesEdges())
                     return;
                 if(options.tipsDisable)
-                    options.tipsDisable.forEach(function(tip) {
+                    options.tipsDisable.forEach((tip) => {
                         tip
                             .hideTip()
                             .disabled(true);
                     });
                 if(_mode.usePorts()) {
-                    var activePort;
+                    let activePort;
                     if(typeof _mode.usePorts() === 'object' && _mode.usePorts().eventPort)
                         activePort = _mode.usePorts().eventPort(d3Event);
                     else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'out')
@@ -198,13 +197,13 @@ export function drawGraphs(options) {
                 }
             })
             .on('mousemove.draw-graphs', (n) => {
-                var msg;
+                let msg;
                 d3Event.stopPropagation();
                 if(_sourceDown) {
-                    var coords = eventCoords(diagram, d3Event);
+                    const coords = eventCoords(diagram, d3Event);
                     if(check_invalid_drag(coords, d3Event))
                         return;
-                    var oldTarget = _targetMove;
+                    const oldTarget = _targetMove;
                     if(n === _sourceDown.node) {
                         _mode.conduct().invalidTargetMessage &&
                             console.log(_mode.conduct().invalidTargetMessage(_sourceDown, _sourceDown));
@@ -212,7 +211,7 @@ export function drawGraphs(options) {
                         _hintData[0].target = null;
                     }
                     else if(_mode.usePorts()) {
-                        var activePort;
+                        let activePort;
                         if(typeof _mode.usePorts() === 'object' && _mode.usePorts().eventPort)
                             activePort = _mode.usePorts().eventPort(d3Event);
                         else activePort = diagram.getPort(diagram.nodeKey.eval(n), null, 'in')
@@ -225,13 +224,13 @@ export function drawGraphs(options) {
                         _targetMove = {node: n};
                     }
                     if(_mode.conduct().changeDragTarget) {
-                        var change;
+                        let change;
                         if(_mode.usePorts()) {
-                            var oldPort = oldTarget && oldTarget.port,
+                            const oldPort = oldTarget && oldTarget.port,
                                 newPort = _targetMove && _targetMove.port;
                             change = oldPort !== newPort;
                         } else {
-                            var oldNode = oldTarget && oldTarget.node,
+                            const oldNode = oldTarget && oldTarget.node,
                                 newNode = _targetMove && _targetMove.node;
                              change = oldNode !== newNode;
                         }
@@ -267,7 +266,7 @@ export function drawGraphs(options) {
                     } else _targetValid = true;
                     if(_targetMove) {
                         if(_targetMove.port)
-                            _hintData[0].target = port_pos(activePort);
+                            _hintData[0].target = port_pos(_targetMove.port);
                         else
                             _hintData[0].target = {x: n.cola.x, y: n.cola.y};
                     }
@@ -278,23 +277,23 @@ export function drawGraphs(options) {
                     update_crossout();
                 }
             })
-            .on('mouseup.draw-graphs', (n) => {
+            .on('mouseup.draw-graphs', (_n) => {
                 _crossout = null;
                 if(options.negativeTip)
                     options.negativeTip.hideTip(true);
                 if(options.positiveTip)
                     options.positiveTip.hideTip(true);
                 if(options.tipsDisable)
-                    options.tipsDisable.forEach(function(tip) {
+                    options.tipsDisable.forEach((tip) => {
                         tip.disabled(false);
                     });
                 if(_sourceDown && _targetValid) {
-                    var finishPromise;
+                    let finishPromise;
                     if(_mode.conduct().finishDragEdge)
                         finishPromise = _mode.conduct().finishDragEdge(_sourceDown, _targetMove);
                     else finishPromise = Promise.resolve(true);
-                    var source = _sourceDown, target = _targetMove;
-                    finishPromise.then(function(ok) {
+                    const source = _sourceDown, target = _targetMove;
+                    finishPromise.then((ok) => {
                         if(ok)
                             create_edge(diagram, source, target);
                     });
@@ -308,13 +307,13 @@ export function drawGraphs(options) {
             });
         
         diagram.svg()
-            .on('mousedown.draw-graphs', function() {
+            .on('mousedown.draw-graphs', () => {
                 _sourceDown = null;
             })
             .on('mousemove.draw-graphs', () => {
-                var data = [];
+                const _data = [];
                 if(_sourceDown) { // drawing edge
-                    var coords = eventCoords(diagram, d3Event);
+                    const coords = eventCoords(diagram, d3Event);
                     _crossout = null;
                     if(check_invalid_drag(coords, d3Event))
                         return;
@@ -335,7 +334,7 @@ export function drawGraphs(options) {
                 if(options.positiveTip)
                     options.positiveTip.hideTip(true);
                 if(options.tipsDisable)
-                    options.tipsDisable.forEach(function(tip) {
+                    options.tipsDisable.forEach((tip) => {
                         tip.disabled(false);
                     });
                 if(_sourceDown) { // drag-edge
@@ -357,7 +356,7 @@ export function drawGraphs(options) {
             .merge(edgeLayerSelection);
     }
 
-    function remove(diagram, node, edge, ehover) {
+    function remove(diagram, node, _edge, _ehover) {
         node
             .on('mousedown.draw-graphs', null)
             .on('mousemove.draw-graphs', null)
@@ -368,9 +367,9 @@ export function drawGraphs(options) {
             .on('mouseup.draw-graphs', null);
     }
 
-    var _mode = mode('highlight-paths', {
-        draw: draw,
-        remove: remove
+    const _mode = mode('highlight-paths', {
+        draw,
+        remove
     });
 
     // update the data source/destination

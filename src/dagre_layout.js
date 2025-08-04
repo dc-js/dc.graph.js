@@ -6,7 +6,7 @@
 // External dependencies
 import { dispatch } from 'd3-dispatch';
 import * as dagre from '@dagrejs/dagre';
-import { uuid, property } from './core.js';
+import { uuid } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
 
@@ -19,12 +19,12 @@ import { graphvizAttrs } from './graphviz_attrs.js';
  * @return {Object} dagre layout engine
  **/
 export function dagreLayout(id) {
-    var _layoutId = id || uuid();
-    var _dagreGraph = null, _tick, _done;
-    var _dispatch = dispatch('tick', 'start', 'end');
+    const _layoutId = id || uuid();
+    let _dagreGraph = null, _tick, _done;
+    const _dispatch = dispatch('tick', 'start', 'end');
     // node and edge objects preserved from one iteration
     // to the next (as long as the object is still in the layout)
-    var _nodes = {}, _edges = {};
+    const _nodes = {}, _edges = {};
 
     function init(options) {
         // Create a new directed graph
@@ -34,13 +34,11 @@ export function dagreLayout(id) {
         _dagreGraph.setGraph({rankdir: options.rankdir, nodesep: options.nodesep, ranksep: options.ranksep});
 
         // Default to assigning a new object as a label for each new edge.
-        _dagreGraph.setDefaultEdgeLabel(function() { return {}; });
+        _dagreGraph.setDefaultEdgeLabel(() => ({}));
     }
 
     function data(nodes, edges, clusters) {
-        var wnodes = regenerateObjects(_nodes, nodes, null, function(v) {
-            return v.dcg_nodeKey;
-        }, function(v1, v) {
+        const wnodes = regenerateObjects(_nodes, nodes, null, (v) => v.dcg_nodeKey, (v1, v) => {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;
             v1.height = v.height;
@@ -51,33 +49,29 @@ export function dagreLayout(id) {
                 v1.y = v.dcg_nodeFixed.y;
               }
              */
-        }, function(k, o) {
+        }, (k, o) => {
             _dagreGraph.setNode(k, o);
-        }, function(k) {
+        }, (k) => {
             _dagreGraph.removeNode(k);
         });
-        var wedges = regenerateObjects(_edges, edges, null, function(e) {
-            return e.dcg_edgeKey;
-        }, function(e1, e) {
+        const wedges = regenerateObjects(_edges, edges, null, (e) => e.dcg_edgeKey, (e1, e) => {
             e1.dcg_edgeKey = e.dcg_edgeKey;
             e1.dcg_edgeSource = e.dcg_edgeSource;
             e1.dcg_edgeTarget = e.dcg_edgeTarget;
-        }, function(k, o, e) {
+        }, (k, o, e) => {
             _dagreGraph.setEdge(e.dcg_edgeSource, e.dcg_edgeTarget, o);
-        }, function(k, e) {
+        }, (k, e) => {
             _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget, e.dcg_edgeKey);
         });
-        clusters = clusters.filter(function(c) {
-            return /^cluster/.test(c.dcg_clusterKey);
-        });
-        clusters.forEach(function(c) {
+        clusters = clusters.filter((c) => /^cluster/.test(c.dcg_clusterKey));
+        clusters.forEach((c) => {
             _dagreGraph.setNode(c.dcg_clusterKey, c);
         });
-        clusters.forEach(function(c) {
+        clusters.forEach((c) => {
             if(c.dcg_clusterParent)
                 _dagreGraph.setParent(c.dcg_clusterKey, c.dcg_clusterParent);
         });
-        nodes.forEach(function(n) {
+        nodes.forEach((n) => {
             if(n.dcg_nodeParentCluster)
                 _dagreGraph.setParent(n.dcg_nodeKey, n.dcg_nodeParentCluster);
         });
@@ -85,18 +79,16 @@ export function dagreLayout(id) {
         function dispatchState(event) {
             _dispatch.call(event, null,
                 wnodes,
-                wedges.map(function(e) {
-                    return {dcg_edgeKey: e.dcg_edgeKey};
-                }),
-                clusters.map(function(c) {
-                    var c = Object.assign({}, _dagreGraph.node(c.dcg_clusterKey));
-                    c.bounds = {
-                        left: c.x - c.width/2,
-                        top: c.y - c.height/2,
-                        right: c.x + c.width/2,
-                        bottom: c.y + c.height/2
+                wedges.map((e) => ({dcg_edgeKey: e.dcg_edgeKey})),
+                clusters.map((c) => {
+                    const cluster = Object.assign({}, _dagreGraph.node(c.dcg_clusterKey));
+                    cluster.bounds = {
+                        left: cluster.x - cluster.width/2,
+                        top: cluster.y - cluster.height/2,
+                        right: cluster.x + cluster.width/2,
+                        bottom: cluster.y + cluster.height/2
                     };
-                    return c;
+                    return cluster;
                 })
             );
         }
@@ -108,7 +100,7 @@ export function dagreLayout(id) {
         };
     }
 
-    function start(options) {
+    function start(_options) {
         _dispatch.call("start");
         dagre.layout(_dagreGraph);
         _done();
@@ -117,44 +109,44 @@ export function dagreLayout(id) {
     function stop() {
     }
 
-    var graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
+    const graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
     return Object.assign(graphviz, {
-        layoutAlgorithm: function() {
+        layoutAlgorithm() {
             return 'dagre';
         },
-        layoutId: function() {
+        layoutId() {
             return _layoutId;
         },
-        supportsWebworker: function() {
+        supportsWebworker() {
             return true;
         },
-        on: function(event, f) {
+        on(event, f) {
             if(arguments.length === 1)
                 return _dispatch.on(event);
             _dispatch.on(event, f);
             return this;
         },
-        init: function(options) {
-            this.optionNames().forEach(function(option) {
+        init(options) {
+            this.optionNames().forEach((option) => {
                 options[option] = options[option] || this[option]();
-            }.bind(this));
+            });
             init(options);
             return this;
         },
-        data: function(graph, nodes, edges, clusters) {
+        data(graph, nodes, edges, clusters) {
             data(nodes, edges, clusters);
         },
-        start: function() {
+        start() {
             start();
         },
-        stop: function() {
+        stop() {
             stop();
         },
-        optionNames: function() {
+        optionNames() {
             return graphviz_keys;
         },
-        populateLayoutNode: function() {},
-        populateLayoutEdge: function() {}
+        populateLayoutNode() {},
+        populateLayoutEdge() {}
     });
 };
 

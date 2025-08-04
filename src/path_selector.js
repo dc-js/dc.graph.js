@@ -1,13 +1,15 @@
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
+import { property } from './core.js';
+import { registerChart } from 'dc';
 
 // External dependency loaded as global
 import { select } from 'd3-selection';
 
 export function pathSelector(parent, reader, pathsgroup, chartgroup) {
-    var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
-    var root = select(parent).append('svg');
-    var paths_ = [];
-    var hovered = null, selected = null;
+    const highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
+    const root = select(parent).append('svg');
+    let paths_ = [];
+    let hovered = null, selected = null;
 
     // unfortunately these functions are copied from highlightPaths
     function contains_path(paths) {
@@ -17,7 +19,7 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
     }
 
     function doesnt_contain_path(paths) {
-        var cp = contains_path(paths);
+        const cp = contains_path(paths);
         return function(path) {
             return !cp(path);
         };
@@ -39,24 +41,24 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
 
     function draw_paths(diagram, paths) {
         if(paths.length === 0) return;
-        var xpadding = 30;
-        var space = 30;
-        var radius = 8;
+        const xpadding = 30;
+        const space = 30;
+        const radius = 8;
         // set the height of SVG accordingly
         root.attr('height', 20*(paths.length+1))
           .attr('width', xpadding+(space+2*radius)*(paths.length/2+1)+20);
 
         root.selectAll('.path-selector').remove();
 
-        var pathlist = root.selectAll('g.path-selector').data(paths);
+        const pathlist = root.selectAll('g.path-selector').data(paths);
         pathlist.enter()
           .append('g')
           .attr('class', 'path-selector')
-          .attr("transform", function(path, i) { return "translate(0, " + i*20 + ")"; })
+          .attr("transform", (path, i) => `translate(0, ${  i*20  })`)
           .each(function(path_data, i) {
-            var nodes = path_data.element_list.filter(function(d) { return d.element_type === 'node'; });
+            const nodes = path_data.element_list.filter((d) => d.element_type === 'node');
             // line
-            var line = select(this).append('line');
+            const line = select(this).append('line');
             line.attr('x1', xpadding+space)
               .attr('y1', radius+1)
               .attr('x2', xpadding+space*nodes.length)
@@ -66,32 +68,32 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
               .attr('stroke', '#bdbdbd');
 
             // dots
-            var path = select(this).selectAll('circle').data(nodes);
+            const path = select(this).selectAll('circle').data(nodes);
             path.enter()
               .append('circle')
-              .attr('cx', function(d, i) { return xpadding+space*(i+1); })
+              .attr('cx', (d, i) => xpadding+space*(i+1))
               .attr('cy', radius+1)
               .attr('r', radius)
               .attr('opacity', 0.4)
-              .attr('fill', function(d) {
+              .attr('fill', (d) => {
                 // TODO path_selector shouldn't know the data structure of orignal node objects
-                var regeneratedNode = {key:d.property_map.ecomp_uid, value:d.property_map};
+                const regeneratedNode = {key:d.property_map.ecomp_uid, value:d.property_map};
                 return diagram.nodeStroke()(regeneratedNode);
               });
 
             // label
-            var text = select(this).append('text');
-            text.text('Path '+i)
+            const text = select(this).append('text');
+            text.text(`Path ${i}`)
               .attr('class', 'path_label')
               .attr('x', 0)
               .attr('y', radius*1.7)
-              .on('mouseover.path-selector', function() {
+              .on('mouseover.path-selector', () => {
                   highlight_paths_group.hover_changed([path_data]);
               })
-              .on('mouseout.path-selector', function() {
+              .on('mouseout.path-selector', () => {
                   highlight_paths_group.hover_changed(null);
               })
-              .on('click.path-selector', function() {
+              .on('click.path-selector', () => {
                   highlight_paths_group.select_changed(toggle_paths(selected, [path_data]));
               });
           });
@@ -99,12 +101,12 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
     }
 
     function draw_hovered() {
-      var is_hovered = contains_path(hovered);
+      const is_hovered = contains_path(hovered);
       root.selectAll('g.path-selector')
-        .each(function(d, i) {
-          var textColor = is_hovered(d) ? '#e41a1c' : 'black';
-          var lineColor = is_hovered(d) ? 'black' : '#bdbdbd';
-          var opacity = is_hovered(d) ? '1' : '0.4';
+        .each(function(d, _i) {
+          const textColor = is_hovered(d) ? '#e41a1c' : 'black';
+          const lineColor = is_hovered(d) ? 'black' : '#bdbdbd';
+          const opacity = is_hovered(d) ? '1' : '0.4';
           select(this).select('.path_label').attr('fill', textColor);
           select(this).selectAll('line')
             .attr('stroke', lineColor)
@@ -114,12 +116,12 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
     }
 
     function draw_selected() {
-        var is_selected = contains_path(selected);
+        const is_selected = contains_path(selected);
         root.selectAll('g.path-selector')
-          .each(function(d, i) {
-            var textWeight = is_selected(d) ? 'bold' : 'normal';
-            var lineColor = is_selected(d) ? 'black' : '#bdbdbd';
-            var opacity = is_selected(d) ? '1' : '0.4';
+          .each(function(d, _i) {
+            const textWeight = is_selected(d) ? 'bold' : 'normal';
+            const lineColor = is_selected(d) ? 'black' : '#bdbdbd';
+            const opacity = is_selected(d) ? '1' : '0.4';
             select(this).select('.path_label')
               .attr('font-weight', textWeight);
             select(this).selectAll('line')
@@ -130,34 +132,34 @@ export function pathSelector(parent, reader, pathsgroup, chartgroup) {
     }
 
     highlight_paths_group
-        .on('paths_changed.path-selector', function(nop, eop, paths) {
+        .on('paths_changed.path-selector', (nop, eop, paths) => {
             hovered = selected = null;
             paths_ = paths;
             selector.redraw();
         })
-        .on('hover_changed.path-selector', function(hpaths) {
+        .on('hover_changed.path-selector', (hpaths) => {
             hovered = hpaths;
             draw_hovered();
         })
-        .on('select_changed.path-selector', function(spaths) {
+        .on('select_changed.path-selector', (spaths) => {
             selected = spaths;
             draw_selected();
         });
-    var selector = {
+    const selector = {
         default_text: property('Nothing here'),
         zero_text: property('No paths'),
         error_text: property(null),
         queried: property(false),
-        redraw: function() {
-            draw_paths(diagram, paths_);
+        redraw() {
+            draw_paths(selector, paths_);
             draw_hovered();
             draw_selected();
         },
-        render: function() {
+        render() {
             this.redraw();
             return this;
         }
     };
-    dc.registerChart(selector, chartgroup);
+    registerChart(selector, chartgroup);
     return selector;
 };

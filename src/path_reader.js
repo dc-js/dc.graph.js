@@ -1,19 +1,20 @@
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
+import { property, identity } from './core.js';
 
 export function pathReader(pathsgroup) {
-    var highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
-    var _intervals, _intervalTree, _time;
+    const highlight_paths_group = registerHighlightPathsGroup(pathsgroup || 'highlight-paths-group');
+    let _intervals, _intervalTree, _time;
 
     function register_path_objs(path, nop, eop) {
-        reader.elementList.eval(path).forEach(function(element) {
-            var key, paths;
+        reader.elementList.eval(path).forEach((element) => {
+            let key, paths;
             switch(reader.elementType.eval(element)) {
             case 'node':
                 key = reader.nodeKey.eval(element);
                 paths = nop[key] = nop[key] || [];
                 break;
             case 'edge':
-                key = reader.edgeSource.eval(element) + '-' + reader.edgeTarget.eval(element);
+                key = `${reader.edgeSource.eval(element)  }-${  reader.edgeTarget.eval(element)}`;
                 paths = eop[key] = eop[key] || [];
                 break;
             }
@@ -21,7 +22,7 @@ export function pathReader(pathsgroup) {
         });
     }
 
-    var reader = {
+    const reader = {
         pathList: property(identity, false),
         timeRange: property(null, false),
         pathStrength: property(null, false),
@@ -30,12 +31,13 @@ export function pathReader(pathsgroup) {
         nodeKey: property(null, false),
         edgeSource: property(null, false),
         edgeTarget: property(null, false),
-        clear: function() {
+        clear() {
             highlight_paths_group.paths_changed({}, {}, []);
         },
-        data: function(data) {
-            var nop = {}, eop = {}, allpaths = [], has_ranges;
-            reader.pathList.eval(data).forEach(function(path) {
+        data(data) {
+            const nop = {}, eop = {}, allpaths = [];
+            let has_ranges;
+            reader.pathList.eval(data).forEach((path) => {
                 if((path._range = reader.timeRange.eval(path))) { // ugh modifying user data
                     if(has_ranges===false)
                         throw new Error("can't have a mix of ranged and non-ranged paths");
@@ -49,8 +51,8 @@ export function pathReader(pathsgroup) {
                 allpaths.push(path);
             });
             if(has_ranges) {
-                _intervals = allpaths.map(function(path) {
-                    var interval = [path._range[0].getTime(), path._range[1].getTime()];
+                _intervals = allpaths.map((path) => {
+                    const interval = [path._range[0].getTime(), path._range[1].getTime()];
                     interval.path = path;
                     return interval;
                 });
@@ -64,13 +66,13 @@ export function pathReader(pathsgroup) {
                 highlight_paths_group.paths_changed(nop, eop, allpaths);
             }
         },
-        getIntervals: function() {
+        getIntervals() {
             return _intervals;
         },
-        setTime: function(t) {
+        setTime(t) {
             if(t && _intervalTree) {
-                var paths = [], nop = {}, eop = {};
-                _intervalTree.queryPoint(t.getTime(), function(interval) {
+                const paths = [], nop = {}, eop = {};
+                _intervalTree.queryPoint(t.getTime(), (interval) => {
                     paths.push(interval.path);
                     register_path_objs(interval.path, nop, eop);
                 });

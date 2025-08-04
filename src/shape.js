@@ -3,9 +3,9 @@ import { extent } from 'd3-array';
 import { generatePath } from './utils.js';
 
 function pointOnEllipse(A, B, dx, dy) {
-    var tansq = Math.tan(Math.atan2(dy, dx));
+    let tansq = Math.tan(Math.atan2(dy, dx));
     tansq = tansq*tansq; // why is this not just dy*dy/dx*dx ? ?
-    var ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
+    const ret = {x: A*B/Math.sqrt(B*B + A*A*tansq), y: A*B/Math.sqrt(A*A + B*B/tansq)};
     if(dx<0)
         ret.x = -ret.x;
     if(dy<0)
@@ -13,16 +13,16 @@ function pointOnEllipse(A, B, dx, dy) {
     return ret;
 }
 
-var eps = 0.0000001;
+const eps = 0.0000001;
 function between(a, b, c) {
     return a-eps <= b && b <= c+eps;
 }
 
 // Adapted from http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect/1968345#1968345
 function segmentIntersection(x1,y1,x2,y2, x3,y3,x4,y4) {
-    var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)) /
+    const x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)) /
             ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
-    var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)) /
+    const y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)) /
             ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
     if (isNaN(x)||isNaN(y)) {
         return false;
@@ -48,14 +48,14 @@ function segmentIntersection(x1,y1,x2,y2, x3,y3,x4,y4) {
             if (!between(y3, y, y4)) {return false;}
         }
     }
-    return {x: x, y: y};
+    return {x, y};
 }
 
 
 function pointOnPolygon(points, x0, y0, x1, y1) {
-    for(var i = 0; i < points.length; ++i) {
-        var next = i===points.length-1 ? 0 : i+1;
-        var isect = segmentIntersection(points[i].x, points[i].y, points[next].x, points[next].y,
+    for(let i = 0; i < points.length; ++i) {
+        const next = i===points.length-1 ? 0 : i+1;
+        const isect = segmentIntersection(points[i].x, points[i].y, points[next].x, points[next].y,
                                          x0, y0, x1, y1);
         if(isect)
             return isect;
@@ -70,79 +70,79 @@ export const shapePresets = {
         // not really: an ovoid should be two half-ellipses stuck together
         // https://en.wikipedia.org/wiki/Oval
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 100, distortion: -0.25};
         }
     },
     triangle: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 3};
         }
     },
     rectangle: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 4};
         }
     },
     diamond: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 4, rotation: 45};
         }
     },
     trapezium: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 4, distortion: -0.5};
         }
     },
     parallelogram: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 4, skew: 0.5};
         }
     },
     pentagon: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 5};
         }
     },
     hexagon: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 6};
         }
     },
     septagon: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 7};
         }
     },
     octagon: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 8};
         }
     },
     invtriangle: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 3, rotation: 180};
         }
     },
     invtrapezium: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {sides: 4, distortion: 0.5};
         }
     },
     square: {
         generator: 'polygon',
-        preset: function() {
+        preset() {
             return {
                 sides: 4,
                 regular: true
@@ -151,7 +151,7 @@ export const shapePresets = {
     },
     plain: {
         generator: 'rounded-rect',
-        preset: function() {
+        preset() {
             return {
                 noshape: true
             };
@@ -159,9 +159,9 @@ export const shapePresets = {
     },
     house: {
         generator: 'elaborated-rect',
-        preset: function() {
+        preset() {
             return {
-                get_points: function(rx, ry) {
+                get_points(rx, ry) {
                     return [
                         {x: rx, y: ry*2/3},
                         {x: rx, y: -ry/2},
@@ -176,9 +176,9 @@ export const shapePresets = {
     },
     invhouse: {
         generator: 'elaborated-rect',
-        preset: function() {
+        preset() {
             return {
-                get_points: function(rx, ry) {
+                get_points(rx, ry) {
                     return [
                         {x: rx, y: ry/2},
                         {x: rx, y: -ry*2/3},
@@ -193,9 +193,9 @@ export const shapePresets = {
     },
     rarrow: {
         generator: 'elaborated-rect',
-        preset: function() {
+        preset() {
             return {
-                get_points: function(rx, ry) {
+                get_points(rx, ry) {
                     return [
                         {x: rx, y: ry},
                         {x: rx, y: ry*1.5},
@@ -212,9 +212,9 @@ export const shapePresets = {
     },
     larrow: {
         generator: 'elaborated-rect',
-        preset: function() {
+        preset() {
             return {
-                get_points: function(rx, ry) {
+                get_points(rx, ry) {
                     return [
                         {x: -rx, y: ry},
                         {x: -rx, y: ry*1.5},
@@ -231,9 +231,9 @@ export const shapePresets = {
     },
     rpromoter: {
         generator: 'elaborated-rect',
-        preset: function() {
+        preset() {
             return {
-                get_points: function(rx, ry) {
+                get_points(rx, ry) {
                     return [
                         {x: rx, y: ry},
                         {x: rx, y: ry*1.5},
@@ -252,9 +252,9 @@ export const shapePresets = {
     },
     lpromoter: {
         generator: 'elaborated-rect',
-        preset: function() {
+        preset() {
             return {
-                get_points: function(rx, ry) {
+                get_points(rx, ry) {
                     return [
                         {x: -rx, y: ry},
                         {x: -rx, y: ry*1.5},
@@ -273,9 +273,9 @@ export const shapePresets = {
     },
     cds: {
         generator: 'elaborated-rect',
-        preset: function() {
+        preset() {
             return {
-                get_points: function(rx, ry) {
+                get_points(rx, ry) {
                     return [
                         {x: rx, y: ry},
                         {x: rx + ry, y: 0},
@@ -293,14 +293,14 @@ export const shapePresets = {
 shapePresets.box = shapePresets.rect = shapePresets.rectangle;
 
 export function availableShapes() {
-    var shapes = Object.keys(shapePresets);
+    const shapes = Object.keys(shapePresets);
     return shapes.slice(0, shapes.length-1); // not including polygon
 }
 
 export const defaultShape = {shape: 'ellipse'};
 
 function normalizeShapeDef(diagram, n) {
-    var def = diagram.nodeShape.eval(n);
+    let def = diagram.nodeShape.eval(n);
     if(!def)
         def = {...defaultShape};
     else if(typeof def === 'string')
@@ -310,26 +310,27 @@ function normalizeShapeDef(diagram, n) {
 }
 
 function elaborateShape(diagram, def) {
-    var shape = def.shape, def2 = Object.assign({}, def);
+    let shape = def.shape;
+    const def2 = Object.assign({}, def);
     delete def2.shape;
     if(shape === 'random') {
-        var available = availableShapes(); // could include diagram.shape !== ellipse, polygon
+        const available = availableShapes(); // could include diagram.shape !== ellipse, polygon
         shape = available[Math.floor(Math.random()*available.length)];
     }
     else if(diagram.shape.enum().indexOf(shape) !== -1)
-        return diagram.shape(shape).elaborate({shape: shape}, def2);
+        return diagram.shape(shape).elaborate({shape}, def2);
     if(!shapePresets[shape]) {
         console.warn('unknown shape ', shape);
         return defaultShape;
     }
-    var preset = shapePresets[shape].preset(def2);
+    const preset = shapePresets[shape].preset(def2);
     preset.shape = shapePresets[shape].generator;
     return diagram.shape(preset.shape).elaborate(preset, def2);
 }
 
 export function inferShape(diagram) {
     return function(n) {
-        var def = normalizeShapeDef(diagram, n);
+        const def = normalizeShapeDef(diagram, n);
         n.dcg_shape = elaborateShape(diagram, def);
         n.dcg_shape.abstract = def;
     };
@@ -337,8 +338,8 @@ export function inferShape(diagram) {
 
 export function shapeChanged(diagram) {
     return function(n) {
-        var def = normalizeShapeDef(diagram, n);
-        var old = n.dcg_shape.abstract;
+        const def = normalizeShapeDef(diagram, n);
+        const old = n.dcg_shape.abstract;
         if(def.shape !== old.shape)
             return true;
         else if(def.nodeOutlineClip !== old.nodeOutlineClip)
@@ -352,7 +353,7 @@ export function shapeChanged(diagram) {
 }
 
 export function nodeLabelPadding(diagram, n) {
-    var nlp = diagram.nodeLabelPadding.eval(n);
+    const nlp = diagram.nodeLabelPadding.eval(n);
     if(typeof nlp === 'number' || typeof nlp === 'string')
         return {x: +nlp, y: +nlp};
     else return nlp;
@@ -361,16 +362,16 @@ export function nodeLabelPadding(diagram, n) {
 export function fitShape(shape, diagram) {
     return function(content) {
         content.each(function(n) {
-            var bbox = null;
+            let bbox = null;
             if((!shape.useTextSize || shape.useTextSize(n.dcg_shape)) && diagram.nodeFitLabel.eval(n)) {
                 bbox = getBBoxNoThrow(this);
                 bbox = {x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height};
-                var padding;
-                var content = diagram.nodeContent.eval(n);
+                let padding;
+                const content = diagram.nodeContent.eval(n);
                 if(content && diagram.content(content).padding)
                     padding = diagram.content(content).padding(n);
                 else {
-                    var padding2 = nodeLabelPadding(diagram, n);
+                    const padding2 = nodeLabelPadding(diagram, n);
                     padding = {
                         x: padding2.x*2,
                         y: padding2.y*2
@@ -380,7 +381,7 @@ export function fitShape(shape, diagram) {
                 bbox.height += padding.y;
                 n.bbox = bbox;
             }
-            var r = 0, radii;
+            let r = 0, radii;
             if(!shape.useRadius || shape.useRadius(n.dcg_shape))
                 r = Math.max(0, diagram.nodeRadius.eval(n) || 0);
             if(bbox && bbox.width && bbox.height || shape.useTextSize && !shape.useTextSize(n.dcg_shape))
@@ -390,14 +391,14 @@ export function fitShape(shape, diagram) {
             n.dcg_rx = Math.max(0, radii.rx || 0);
             n.dcg_ry = Math.max(0, radii.ry || 0);
 
-            var w = radii.rx*2, h = radii.ry*2;
+            let w = radii.rx*2, h = radii.ry*2;
             // fixme: this is only consistent if regular || !squeeze
             // but we'd need to calculate polygon first in order to find out
             // (not a bad idea, just no time right now)
             // if(w<h) w = h;
 
             if(!shape.usePaddingAndStroke || shape.usePaddingAndStroke(n.dcg_shape)) {
-                var pands = diagram.nodePadding.eval(n) + diagram.nodeStrokeWidth.eval(n);
+                const pands = diagram.nodePadding.eval(n) + diagram.nodeStrokeWidth.eval(n);
                 w += pands;
                 h += pands;
             }
@@ -409,20 +410,20 @@ export function fitShape(shape, diagram) {
 
 
 function polygonPath(n) {
-    var rx = n.dcg_rx, ry = n.dcg_ry,
-        def = n.dcg_shape,
+    let rx = n.dcg_rx, ry = n.dcg_ry;
+    const def = n.dcg_shape,
         sides = def.sides || 4,
         skew = def.skew || 0,
         distortion = def.distortion || 0,
-        rotation = def.rotation || 0,
         align = (sides%2 ? 0 : 0.5), // even-sided horizontal top, odd pointy top
         angles = [];
+    let rotation = def.rotation || 0;
     rotation = rotation/360 + 0.25; // start at y axis not x
-    for(var i = 0; i<sides; ++i) {
-        var theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
+    for(let i = 0; i<sides; ++i) {
+        const theta = -((i+align)/sides + rotation)*Math.PI*2; // svg is up-negative
         angles.push({x: Math.cos(theta), y: Math.sin(theta)});
     }
-    var yext = extent(angles, theta => theta.y);
+    const yext = extent(angles, theta => theta.y);
     if(def.regular)
         rx = ry = Math.max(rx, ry);
     else if(rx < ry && !def.squeeze)
@@ -430,17 +431,17 @@ function polygonPath(n) {
     else
         ry = ry / Math.min(-yext[0], yext[1]);
     n.dcg_points = angles.map(theta => {
-        var x = rx*theta.x,
-            y = ry*theta.y;
+        let x = rx*theta.x;
+        const y = ry*theta.y;
         x *= 1 + distortion*((ry-y)/ry - 1);
         x -= skew*y/2;
-        return {x: x, y: y};
+        return {x, y};
     });
     return generatePath(n.dcg_points, 1, true);
 }
 
 function binarySearch(f, a, b) {
-    var patience = 100;
+    let patience = 100;
     if(f(a).val >= 0)
         throw new Error("f(a) must be less than 0");
     if(f(b).val <= 0)
@@ -448,7 +449,7 @@ function binarySearch(f, a, b) {
     while(true) {
         if(!--patience)
             throw new Error("patience ran out");
-        var c = (a+b)/2,
+        const c = (a+b)/2,
             f_c = f(c), fv = f_c.val;
         if(Math.abs(fv) < 0.5)
             return f_c;
@@ -461,9 +462,9 @@ function binarySearch(f, a, b) {
 
 export function drawEdgeToShapes(diagram, e, sx, sy, tx, ty,
                              neighbor, dir, offset, source_padding, target_padding) {
-    var deltaX, deltaY,
+    let _deltaX, _deltaY,
         sp, tp, points, bezDegree,
-        headAng, retPath;
+        _headAng, _retPath;
     if(!neighbor) {
         sp = e.sourcePort.pos;
         tp = e.targetPort.pos;
@@ -479,53 +480,53 @@ export function drawEdgeToShapes(diagram, e, sx, sy, tx, ty,
         bezDegree = 1;
     }
     else {
-        var p_on_s = function(node, ang) {
+        const p_on_s = function(node, ang) {
             return diagram.shape(node.dcg_shape.shape).intersect_vec(node, Math.cos(ang)*1000, Math.sin(ang)*1000);
         };
-        var compare_dist = function(node, port0, goal) {
+        const compare_dist = function(node, port0, goal) {
             return function(ang) {
-                var port = p_on_s(node, ang);
+                const port = p_on_s(node, ang);
                 if(!port)
                     return {
                         port: {x: 0, y: 0},
                         val: 0,
-                        ang: ang
+                        ang
                     };
                 else
                     return {
-                        port: port,
+                        port,
                         val: Math.hypot(port.x - port0.x, port.y - port0.y) - goal,
-                        ang: ang
+                        ang
                     };
             };
         };
-        var srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
+        const srcang = Math.atan2(neighbor.sourcePort.y, neighbor.sourcePort.x),
             tarang = Math.atan2(neighbor.targetPort.y, neighbor.targetPort.x);
-        var bss, bst;
+        let bss, bst;
 
         // don't like this but throwing is unacceptable
         try {
             bss = binarySearch(compare_dist(e.source, neighbor.sourcePort, offset),
                                 srcang, srcang + 2 * dir * offset / source_padding);
         }
-        catch(x) {
+        catch(_x) {
             bss = {ang: srcang, port: neighbor.sourcePort};
         }
         try {
             bst = binarySearch(compare_dist(e.target, neighbor.targetPort, offset),
                                 tarang, tarang - 2 * dir * offset / source_padding);
         }
-        catch(x) {
+        catch(_x) {
             bst = {ang: tarang, port: neighbor.targetPort};
         }
 
         sp = bss.port;
         tp = bst.port;
-        var sdist = Math.hypot(sp.x, sp.y),
+        const sdist = Math.hypot(sp.x, sp.y),
             tdist = Math.hypot(tp.x, tp.y),
             c1dist = sdist+source_padding/2,
             c2dist = tdist+target_padding/2;
-        var c1X = sx + c1dist * Math.cos(bss.ang),
+        const c1X = sx + c1dist * Math.cos(bss.ang),
             c1Y = sy + c1dist * Math.sin(bss.ang),
             c2X = tx + c2dist * Math.cos(bst.ang),
             c2Y = ty + c2dist * Math.sin(bst.ang);
@@ -540,8 +541,8 @@ export function drawEdgeToShapes(diagram, e, sx, sy, tx, ty,
     return {
         sourcePort: sp,
         targetPort: tp,
-        points: points,
-        bezDegree: bezDegree
+        points,
+        bezDegree
     };
 }
 
@@ -551,7 +552,7 @@ export function isOneSegment(path) {
 }
 
 export function asBezier3(path) {
-    var p = path.points;
+    const p = path.points;
     if(path.bezDegree === 3) return p;
     else if(path.bezDegree === 1)
         return [
@@ -572,37 +573,37 @@ export function asBezier3(path) {
                 y: p[1].y
             }
         ];
-    else throw new Error('unknown bezDegree ' + path.bezDegree);
+    else throw new Error(`unknown bezDegree ${  path.bezDegree}`);
 }
 
 // from https://www.jasondavies.com/animated-bezier/
 export function interpolate(d, p) {
-    var r = [];
-    for (var i=1; i<d.length; i++) {
-        var d0 = d[i-1], d1 = d[i];
+    const r = [];
+    for (let i=1; i<d.length; i++) {
+        const d0 = d[i-1], d1 = d[i];
         r.push({x: d0.x + (d1.x - d0.x) * p, y: d0.y + (d1.y - d0.y) * p});
     }
     return r;
 }
 
 function getLevels(points, t_) {
-    var x = [points];
-    for (var i=1; i<points.length; i++) {
+    const x = [points];
+    for (let i=1; i<points.length; i++) {
         x.push(interpolate(x[x.length-1], t_));
     }
     return x;
 }
 
 // get a point on a bezier segment, where 0 <= t <= 1
-function bezierPoint(points, t_) {
-    var q = getLevels(points, t_);
+function _bezierPoint(points, t_) {
+    const q = getLevels(points, t_);
     return q[q.length-1][0];
 }
 
 // from https://stackoverflow.com/questions/8369488/splitting-a-bezier-curve#8405756
 // somewhat redundant with the above but different objective
 function splitBezier(p, t) {
-    var x1 = p[0].x, y1 = p[0].y,
+    const x1 = p[0].x, y1 = p[0].y,
         x2 = p[1].x, y2 = p[1].y,
         x3 = p[2].x, y3 = p[2].y,
         x4 = p[3].x, y4 = p[3].y,
@@ -631,9 +632,9 @@ function splitBezier(p, t) {
     ];
 }
 export function splitBezierN(p, n) {
-    var ret = [];
+    const ret = [];
     while(n > 1) {
-        var parts = splitBezier(p, 1/n);
+        const parts = splitBezier(p, 1/n);
         ret.push(parts[0][0], parts[0][1], parts[0][2]);
         p = parts[1];
         --n;
@@ -645,8 +646,8 @@ export function splitBezierN(p, n) {
 // binary search for a point along a bezier that is a certain distance from one of the end points
 // return the bezier cut at that point.
 export function chopBezier(points, end, dist) {
-    var EPS = 0.1, dist2 = dist*dist;
-    var ref, dir, segment;
+    const EPS = 0.1, dist2 = dist*dist;
+    let ref, dir, segment;
     if(end === 'head') {
         ref = points[points.length-1];
         segment = points.slice(points.length-4);
@@ -656,7 +657,7 @@ export function chopBezier(points, end, dist) {
         segment = points.slice(0, 4);
         dir = 1;
     }
-    var parts, d2, t = 0.5, dt = 0.5, dx, dy;
+    let parts, d2, t = 0.5, dt = 0.5, dx, dy;
     do {
         parts = splitBezier(segment, t);
         dx = ref.x - parts[1][0].x;
@@ -682,25 +683,25 @@ export function angleBetweenPoints(p0, p1) {
 }
 
 export function noShape() {
-    var _shape = {
+    const _shape = {
         parent: property(null),
-        elaborate: function(preset, def) {
+        elaborate(preset, def) {
             return Object.assign(preset, def);
         },
-        useTextSize: function() { return false; },
-        useRadius: function() { return false; },
-        usePaddingAndStroke: function() { return false; },
-        intersect_vec: function(n, deltaX, deltaY) {
+        useTextSize() { return false; },
+        useRadius() { return false; },
+        usePaddingAndStroke() { return false; },
+        intersect_vec(_n, _deltaX, _deltaY) {
             return {x: 0, y: 0};
         },
-        calc_radii: function(n, ry, bbox) {
+        calc_radii(_n, _ry, _bbox) {
             return {rx: 0, ry: 0};
         },
-        create: function(nodeEnter) {
+        create(_nodeEnter) {
         },
-        replace: function(nodeChanged) {
+        replace(_nodeChanged) {
         },
-        update: function(node) {
+        update(_node) {
         }
     };
     return _shape;
@@ -720,31 +721,31 @@ function createMaybeClipped(diagram, nodeEnter, element) {
 }
 
 export function ellipseShape() {
-    var _shape = {
+    const _shape = {
         parent: property(null),
-        elaborate: function(preset, def) {
+        elaborate(preset, def) {
             return Object.assign(preset, def);
         },
-        intersect_vec: function(n, deltaX, deltaY) {
+        intersect_vec(n, deltaX, deltaY) {
             return pointOnEllipse(n.dcg_rx, n.dcg_ry, deltaX, deltaY);
         },
-        calc_radii: function(n, ry, bbox) {
+        calc_radii(n, ry, bbox) {
             // make sure we can fit height in r
             ry = Math.max(ry, bbox.height/2 + 5);
-            var rx = bbox.width/2;
+            let rx = bbox.width/2;
 
             // solve (x/A)^2 + (y/B)^2) = 1 for A, with B=r, to fit text in ellipse
             // http://stackoverflow.com/a/433438/676195
-            var y_over_B = bbox.height/2/ry;
+            const y_over_B = bbox.height/2/ry;
             rx = rx/Math.sqrt(1 - y_over_B*y_over_B);
             rx = Math.max(rx, ry);
 
-            return {rx: rx, ry: ry};
+            return {rx, ry};
         },
-        create: function(nodeEnter) {
+        create(nodeEnter) {
             createMaybeClipped(_shape.parent(), nodeEnter, 'ellipse');
         },
-        update: function(node) {
+        update(node) {
             node.selectAll('ellipse.node-fill,ellipse.node-outline')
                 .attr('rx', n => n.dcg_rx)
                 .attr('ry', n => n.dcg_ry);
@@ -754,30 +755,30 @@ export function ellipseShape() {
 };
 
 export function polygonShape() {
-    var _shape = {
+    const _shape = {
         parent: property(null),
-        elaborate: function(preset, def) {
+        elaborate(preset, def) {
             return Object.assign(preset, def);
         },
-        intersect_vec: function(n, deltaX, deltaY) {
+        intersect_vec(n, deltaX, deltaY) {
             return pointOnPolygon(n.dcg_points, 0, 0, deltaX, deltaY);
         },
-        calc_radii: function(n, ry, bbox) {
+        calc_radii(n, ry, bbox) {
             // make sure we can fit height in r
             ry = Math.max(ry, bbox.height/2 + 5);
-            var rx = bbox.width/2;
+            let rx = bbox.width/2;
 
             // this is cribbed from graphviz but there is much i don't understand
             // and any errors are mine
             // https://github.com/ellson/graphviz/blob/6acd566eab716c899ef3c4ddc87eceb9b428b627/lib/common/shapes.c#L1996
             rx = rx*Math.sqrt(2)/Math.cos(Math.PI/(n.dcg_shape.sides||4));
 
-            return {rx: rx, ry: ry};
+            return {rx, ry};
         },
-        create: function(nodeEnter) {
+        create(nodeEnter) {
             createMaybeClipped(_shape.parent(), nodeEnter, 'path');
         },
-        update: function(node) {
+        update(node) {
             node.selectAll('path.node-fill,path.node-outline')
                 .attr('d', polygonPath);
         }
@@ -786,14 +787,14 @@ export function polygonShape() {
 };
 
 export function roundedRectangleShape() {
-    var _shape = {
+    const _shape = {
         parent: property(null),
-        elaborate: function(preset, def) {
+        elaborate(preset, def) {
             preset = Object.assign({rx: 10, ry: 10}, preset);
             return Object.assign(preset, def);
         },
-        intersect_vec: function(n, deltaX, deltaY) {
-            var points = [
+        intersect_vec(n, deltaX, deltaY) {
+            const points = [
                 {x:  n.dcg_rx, y:  n.dcg_ry},
                 {x:  n.dcg_rx, y: -n.dcg_ry},
                 {x: -n.dcg_rx, y: -n.dcg_ry},
@@ -801,11 +802,11 @@ export function roundedRectangleShape() {
             ];
             return pointOnPolygon(points, 0, 0, deltaX, deltaY); // not rounded
         },
-        useRadius: function(shape) {
+        useRadius(shape) {
             return !shape.noshape;
         },
-        calc_radii: function(n, ry, bbox) {
-            var fity = bbox.height/2;
+        calc_radii(n, ry, bbox) {
+            let fity = bbox.height/2;
             // fixme: fudge to make sure text is not too tall for node
             if(!n.dcg_shape.noshape)
                 fity += 5;
@@ -814,19 +815,17 @@ export function roundedRectangleShape() {
                 ry: Math.max(ry, fity)
             };
         },
-        create: function(nodeEnter) {
-            createMaybeClipped(_shape.parent(), nodeEnter.filter(function(n) {
-                return !n.dcg_shape.noshape;
-            }), 'rect');
+        create(nodeEnter) {
+            createMaybeClipped(_shape.parent(), nodeEnter.filter((n) => !n.dcg_shape.noshape), 'rect');
         },
-        update: function(node) {
+        update(node) {
             node.selectAll('rect.node-fill,rect.node-outline')
                 .attr('x', n => -n.dcg_rx)
                 .attr('y', n => -n.dcg_ry)
                 .attr('width', n => 2*n.dcg_rx)
                 .attr('height', n => 2*n.dcg_ry)
-                .attr('rx', n => n.dcg_shape.rx + 'px')
-                .attr('ry', n => n.dcg_shape.ry + 'px');
+                .attr('rx', n => `${n.dcg_shape.rx  }px`)
+                .attr('ry', n => `${n.dcg_shape.ry  }px`);
         }
     };
     return _shape;
@@ -835,15 +834,15 @@ export function roundedRectangleShape() {
 // this is not all that accurate - idea is that arrows, houses, etc, are rectangles
 // in terms of sizing, but elaborated drawing & clipping. refine until done.
 export function elaboratedRectangleShape() {
-    var _shape = roundedRectangleShape();
+    const _shape = roundedRectangleShape();
     _shape.intersect_vec = function(n, deltaX, deltaY) {
-        var points = n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry);
+        const points = n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry);
         return pointOnPolygon(points, 0, 0, deltaX, deltaY);
     };
     delete _shape.useRadius;
-    var orig_radii = _shape.calc_radii;
+    const orig_radii = _shape.calc_radii;
     _shape.calc_radii = function(n, ry, bbox) {
-        var ret = orig_radii(n, ry, bbox);
+        const ret = orig_radii(n, ry, bbox);
         return {
             rx: Math.max(ret.rx, n.dcg_shape.minrx),
             ry: ret.ry
@@ -854,9 +853,7 @@ export function elaboratedRectangleShape() {
     };
     _shape.update = function(node) {
         node.selectAll('path.node-fill,path.node-outline')
-            .attr('d', function(n) {
-                return generatePath(n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry), 1, true);
-            });
+            .attr('d', (n) => generatePath(n.dcg_shape.get_points(n.dcg_rx, n.dcg_ry), 1, true));
     };
     return _shape;
 };

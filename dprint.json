@@ -13,7 +13,7 @@
     "singleBodyPosition": "maintain",
     "preferHanging": false,
     "preferSingleLine": false,
-    "arrowFunction.useParentheses": "avoid",
+    "arrowFunction.useParentheses": "preferNone",
     "binaryExpression.spaceSurroundingBitwiseAndArithmeticOperator": false,
     "conditionalExpression.preferSingleLine": false,
     "constructorType.spaceAfterNewKeyword": false,
