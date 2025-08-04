@@ -7,11 +7,9 @@ export default [
             ecmaVersion: 2022,
             sourceType: 'module',
             globals: {
+                // Standard browser/Node.js globals
                 globalThis: 'readonly',
                 self: 'readonly',
-                postMessage: 'readonly',
-                onmessage: 'writable',
-                importScripts: 'readonly',
                 console: 'readonly',
                 setTimeout: 'readonly',
                 clearTimeout: 'readonly',
@@ -20,6 +18,18 @@ export default [
                 window: 'readonly',
                 navigator: 'readonly',
                 document: 'readonly',
+                structuredClone: 'readonly',
+                Worker: 'readonly',
+                URL: 'readonly',
+                SVGElement: 'readonly',
+                HTMLDivElement: 'readonly',
+
+                // Web Worker globals
+                postMessage: 'readonly',
+                onmessage: 'writable',
+                importScripts: 'readonly',
+
+                // Library-specific globals (consider migrating to imports)
                 THREE: 'readonly',
                 setcola: 'readonly',
                 Viz: 'readonly',
@@ -27,16 +37,8 @@ export default [
                 '_': 'readonly',
                 lysenkoIntervalTree: 'readonly',
                 metagraph: 'readonly',
-                structuredClone: 'readonly',
                 computeLayout: 'readonly',
-                Worker: 'readonly',
-                URL: 'readonly',
-                SVGElement: 'readonly',
-                HTMLDivElement: 'readonly',
                 dc_graph: 'readonly',
-                importScripts: 'readonly',
-                onmessage: 'writable',
-                postMessage: 'readonly',
             },
         },
         rules: {
@@ -92,6 +94,22 @@ export default [
                 onmessage: 'writable',
                 importScripts: 'readonly',
                 self: 'readonly',
+            },
+        },
+    },
+    {
+        files: ['*.config.js', 'scripts/**/*.js'],
+        languageOptions: {
+            globals: {
+                // Node.js globals
+                process: 'readonly',
+                Buffer: 'readonly',
+                __dirname: 'readonly',
+                __filename: 'readonly',
+                global: 'readonly',
+                module: 'readonly',
+                exports: 'readonly',
+                require: 'readonly',
             },
         },
     },
