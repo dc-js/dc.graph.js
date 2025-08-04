@@ -1,0 +1,57 @@
+{
+  "incremental": true,
+  "typescript": {
+    "lineWidth": 100,
+    "indentWidth": 4,
+    "useTabs": false,
+    "semiColons": "always",
+    "quoteStyle": "preferSingle",
+    "quoteProps": "preserve",
+    "newLineKind": "lf",
+    "useBraces": "maintain",
+    "bracePosition": "maintain",
+    "singleBodyPosition": "maintain",
+    "preferHanging": false,
+    "preferSingleLine": false,
+    "arrowFunction.useParentheses": "avoid",
+    "binaryExpression.spaceSurroundingBitwiseAndArithmeticOperator": false,
+    "conditionalExpression.preferSingleLine": false,
+    "constructorType.spaceAfterNewKeyword": false,
+    "constructor.spaceBeforeParentheses": false,
+    "functionDeclaration.spaceBeforeParentheses": false,
+    "functionExpression.spaceBeforeParentheses": false,
+    "getAccessor.spaceBeforeParentheses": false,
+    "jsx.quoteStyle": "preferDouble",
+    "method.spaceBeforeParentheses": false,
+    "objectExpression.spaceSurroundingProperties": false,
+    "objectPattern.spaceSurroundingProperties": false,
+    "setAccessor.spaceBeforeParentheses": false,
+    "tupleType.preferSingleLine": false
+  },
+  "json": {
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "useTabs": false,
+    "newLineKind": "lf",
+    "preferSingleLine": false,
+    "array.preferSingleLine": false,
+    "object.preferSingleLine": false,
+    "commentLine.forceSpaceAfterSlashes": true,
+    "ignoreNodeCommentText": "dprint-ignore"
+  },
+  "excludes": [
+    "node_modules",
+    "dist",
+    "doc",
+    "web/js/viz.js",
+    "web/js/d3.js",
+    "web/js/d3.v3.js",
+    "web/js/dc.js",
+    "**/*.min.js",
+    "**/*.map"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.93.3.wasm",
+    "https://plugins.dprint.dev/json-0.19.4.wasm"
+  ]
+}
