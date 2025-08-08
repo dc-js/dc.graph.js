@@ -153,45 +153,210 @@ Please report:
 
 ##### Testing Schedule by Dependency
 
-**1. Lodash (`'_'`) Migration Test**
-- Test files: All examples that use utility functions
-- Focus: Array/object manipulation, data processing
-- Key examples: `brushing-filtering.html`, `network-building.html`
+**1. GraphLib DOT (`graphlibDot`) Migration Test**
+```
+Migration: graphlibDot (DOT file parser)
+Target Import: import { parse, read } from 'graphlib-dot'
+Current Usage: src/load_graph.js - Lines 8-9, 32
 
-**2. Interval Tree (`lysenkoIntervalTree`) Migration Test**  
-- Test files: Examples using path operations
-- Focus: Path finding, graph traversal
-- Key examples: Any with path highlighting
+Functionality Tests:
+1. DOT File Parsing (Version Detection)
+   - Test: graphlibDot.parse() method (v1.1.0 style)
+   - Test: graphlibDot.read() method (v0.6 style) 
+   - Expected: Should parse .gv/.dot files and create digraph objects
 
-**3. CSS Layout (`computeLayout`) Migration Test**
-- Test files: `flexbox.html` and related examples
-- Focus: Node positioning, layout algorithms
-- Key examples: Flexbox layout examples
+Test Files to Validate:
+- Any HTML file that loads .gv or .dot files
+- Check network examples that import graph data
+- Look for examples with Graphviz file loading
 
-**4. GraphLib DOT (`graphlibDot`) Migration Test**
-- Test files: Examples loading `.gv` or `.dot` files  
-- Focus: File parsing, graph loading
-- Key examples: Any example loading graphviz files
+Manual Testing Protocol:
+□ Load a .gv file in any graph example
+□ Verify nodes and edges are parsed correctly 
+□ Check that node clustering/subgraphs work
+□ No console errors during file parsing
+□ Graph renders correctly after parsing
+```
 
-**5. Viz.js (`Viz`) Migration Test**
-- Test files: Examples using Graphviz layout
-- Focus: Graphviz rendering, DOT processing
-- Key examples: Any with graphviz layout engine
+**2. WebCola Integration (`setcola`) Migration Test**
+```
+Migration: setcola (WebCola d3 adapter)
+Target Import: import { d3adaptor } from 'webcola'
+Current Usage: Global reference for WebCola integration
 
-**6. WebCola (`setcola`) Migration Test**
-- Test files: Examples using cola layout engine
-- Focus: Force-directed layout, constraints
-- Key examples: `compare-layouts.html`, `network-building.html`
+Functionality Tests:
+1. Cola Force-Directed Layout
+   - Test: setcola() function creates proper adaptor
+   - Test: Constraint-based layout positioning
+   - Test: Node positioning and edge routing
+   - Expected: Smooth force-directed animations
 
-**7. Metagraph (`metagraph`) Migration Test**
-- Test files: Examples with graph operations
-- Focus: Graph manipulation, supergraph features
-- Key examples: Complex graph examples
+Test Files to Validate:
+- web/compare-layouts.html - Select "cola" layout
+- web/network-building.html - Default uses cola
+- Any example with force-directed layout
+
+Manual Testing Protocol:
+□ Switch to cola layout engine in compare-layouts
+□ Verify nodes animate smoothly to positions
+□ Check edge routing avoids node overlaps
+□ Test constraint satisfaction (if applicable)
+□ Verify layout convergence (nodes settle)
+```
+
+**3. Viz.js (`Viz`) Migration Test**
+```
+Migration: Viz (Graphviz renderer)
+Target Import: import { render } from '@viz-js/viz'
+Current Usage: Graphviz layout engine integration
+
+Functionality Tests:
+1. Graphviz Layout Rendering
+   - Test: Viz rendering of DOT strings
+   - Test: Hierarchical layout algorithms
+   - Test: SVG output generation
+   - Expected: Clean hierarchical node positioning
+
+Test Files to Validate:
+- Any example with "graphviz" layout option
+- Examples loading .gv files with layout
+- Hierarchical diagram examples
+
+Manual Testing Protocol:
+□ Select graphviz layout in compare-layouts  
+□ Load hierarchical data (.gv file)
+□ Verify clean top-down layout
+□ Check edge routing quality
+□ No SVG parsing errors
+```
+
+**4. CSS Layout (`computeLayout`) Migration Test**  
+```
+Migration: computeLayout (Yoga layout engine)
+Target Import: import { computeLayout } from 'yoga-layout'
+Current Usage: src/flexbox_layout.js - CSS flexbox positioning
+
+Functionality Tests:
+1. Flexbox Node Positioning
+   - Test: computeLayout() calculations
+   - Test: Flex container/item relationships
+   - Test: Layout constraint satisfaction
+   - Expected: Proper CSS flexbox behavior
+
+Test Files to Validate:
+- web/flexbox.html - Primary flexbox example
+- Any examples using flexbox layout engine
+
+Manual Testing Protocol:
+□ Open flexbox.html example
+□ Verify nodes align in flex containers
+□ Check responsive layout behavior
+□ Test different flex properties
+□ Verify layout updates on data changes
+```
+
+**5. Interval Tree (`lysenkoIntervalTree`) Migration Test**
+```
+Migration: lysenkoIntervalTree (1D interval operations)
+Target Import: import IntervalTree from 'interval-tree-1d'
+Current Usage: Path operations and spatial queries
+
+Functionality Tests:
+1. Spatial/Temporal Queries
+   - Test: Interval tree construction
+   - Test: Range queries for overlapping intervals
+   - Test: Insert/delete operations
+   - Expected: Fast spatial lookups
+
+Test Files to Validate:
+- Examples with path highlighting
+- Temporal graph examples
+- Spatial query features
+
+Manual Testing Protocol:
+□ Test path highlighting features
+□ Verify spatial queries work correctly
+□ Check performance on large datasets
+□ Test range selection operations
+□ Verify no regression in query speed
+```
+
+**6. Metagraph (`metagraph`) Migration Test**
+```
+Migration: metagraph (Graph operations library)
+Target: Determine if local module or external package
+Current Usage: Graph manipulation, supergraph features
+
+Functionality Tests:
+1. Graph Operations
+   - Test: Graph manipulation functions
+   - Test: Supergraph/subgraph operations
+   - Test: Graph analysis algorithms
+   - Expected: Complex graph operations work
+
+Test Files to Validate:
+- Examples with graph manipulation
+- Supergraph/clustering examples
+- Complex network analysis features
+
+Manual Testing Protocol:
+□ Test graph clustering/grouping
+□ Verify supergraph operations
+□ Check graph analysis functions
+□ Test large graph performance
+□ Verify graph state consistency
+```
+
+**7. Lodash (`'_'`) Migration Test**
+```
+Migration: lodash utilities
+Target Import: import { map, filter, forEach, ... } from 'lodash'
+Current Usage: Widespread utility functions throughout
+
+Functionality Tests:
+1. Data Processing Operations
+   - Test: Array manipulation (map, filter, reduce)
+   - Test: Object operations (keys, values, merge)
+   - Test: Collection utilities (find, groupBy)
+   - Expected: All data processing works correctly
+
+Test Files to Validate:
+- web/brushing-filtering.html - Heavy data processing
+- web/network-building.html - Dynamic data updates
+- Any example with complex data manipulation
+
+Manual Testing Protocol:  
+□ Test data filtering/brushing
+□ Verify chart interactions
+□ Check dynamic data updates
+□ Test cross-filter integration
+□ Verify performance on large datasets
+```
 
 **8. DC Graph Self-Reference (`dc_graph`) Migration Test**
-- Test files: All examples (comprehensive test)
-- Focus: Core library functionality
-- Key examples: Every HTML file in web/
+```
+Migration: dc_graph (Self-referential module access)
+Target: Internal ES module imports
+Current Usage: Library referencing itself globally
+
+Functionality Tests:
+1. Core Library Functions
+   - Test: All diagram creation functions
+   - Test: Property cascade system
+   - Test: Event handling and interactions
+   - Expected: Complete library functionality
+
+Test Files to Validate:
+- ALL HTML files in web/ directory
+- Complete functionality test
+
+Manual Testing Protocol:
+□ Test every major example
+□ Verify all interaction modes
+□ Check property system works
+□ Test all layout engines
+□ Comprehensive regression testing
+```
 
 ##### Error Reporting Template
 
