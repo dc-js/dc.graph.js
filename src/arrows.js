@@ -539,7 +539,7 @@ function defaulted(def) {
     };
 }
 
-const view_box = defaulted([0, -5, 10, 10]),
+export const view_box = defaulted([0, -5, 10, 10]),
     front_ref = defaulted([10, 0]),
     back_ref = defaulted([0, 0]);
 

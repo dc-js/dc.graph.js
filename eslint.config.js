@@ -34,7 +34,6 @@ export default [
                 setcola: 'readonly',
                 Viz: 'readonly',
                 graphlibDot: 'readonly',
-                '_': 'readonly',
                 lysenkoIntervalTree: 'readonly',
                 metagraph: 'readonly',
                 computeLayout: 'readonly',

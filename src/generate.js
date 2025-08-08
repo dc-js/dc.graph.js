@@ -1,3 +1,5 @@
+import { range } from 'd3-array';
+
 export function nodeName(i) {
     // a-z, A-Z, aa-Zz, then quit
     if (i < 26)
@@ -10,20 +12,22 @@ export function nodeName(i) {
 }
 export function nodeObject(i, attrs) {
     attrs = attrs || {};
-    return _.extend({
+    return {
         id: i,
         name: nodeName(i),
-    }, attrs);
+        ...attrs,
+    };
 }
 
 export function edgeObject(namef, i, j, attrs) {
     attrs = attrs || {};
-    return _.extend({
+    return {
         source: i,
         target: j,
         sourcename: namef(i),
         targetname: namef(j),
-    }, attrs);
+        ...attrs,
+    };
 }
 
 export function generate(type, args, env, callback) {
@@ -57,7 +61,7 @@ export function generate(type, args, env, callback) {
             nodes = new Array(N);
             for (i = 0; i < N; ++i)
                 nodes[i] = nodeObject(i, {name: nodePrefix+nodeName(i)});
-            edges = wheelEdges(namef, _.range(N), N*linkLength/2);
+            edges = wheelEdges(namef, range(N), N*linkLength/2);
             const rimLength = edges[0].distance;
             for (i = 0; i < args[1]; ++i)
                 for (j = 0; j < N; ++j) {

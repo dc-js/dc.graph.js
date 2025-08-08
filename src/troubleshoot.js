@@ -1,5 +1,4 @@
 import {
-    add_points,
     addPoints,
     arrowOffsets,
     arrowParts,
@@ -230,7 +229,7 @@ export function troubleshoot() {
                     globofs,
                     front_ref(parts[i].frontRef),
                     ofs.offset,
-                ].reduce(add_points),
+                ].reduce(addPoints),
                 arrowSize,
             )
         );
@@ -239,7 +238,7 @@ export function troubleshoot() {
                 globofs,
                 back_ref(parts[parts.length-1].backRef),
                 offsets[parts.length-1].offset,
-            ].reduce(add_points),
+            ].reduce(addPoints),
             arrowSize,
         ));
         return pts.map(p =>
