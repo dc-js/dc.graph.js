@@ -29,7 +29,7 @@ const options = {
         exert: (val, _diagram) => {
             const engine = spawnEngine(val);
             apply_engine_parameters(engine);
-            diagram
+            simpleDiagram
                 .layoutEngine(engine)
                 .autoZoom('once');
         },

@@ -61,7 +61,7 @@ export default [
             }],
 
             // Relaxed rules for legacy code
-            'no-undef': 'warn',
+            'no-undef': 'error',
             'no-prototype-builtins': 'off',
         },
     },
