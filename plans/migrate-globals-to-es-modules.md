@@ -80,6 +80,66 @@ For each dependency, we need to:
 
 ### Phase 3: Migration Execution Plan
 
+#### Two-Stage Migration Strategy
+
+For each dependency, we'll complete both stages before moving to the next:
+
+**Stage 1: ES Module Migration**
+1. Replace global usage with ES module imports in source code
+2. Remove global from eslint.config.js  
+3. Test build and lint pass
+4. Test basic functionality with vendored files still present
+
+**Stage 2: CDN Migration + Cleanup**
+1. Remove vendored files from `web/js/`
+2. Remove dependency from `package.json` devDependencies  
+3. Add to import maps in all HTML files with jsdelivr CDN + pinned versions
+4. User testing with `npm run serve`
+5. Fix any issues found
+
+#### Automation Strategy
+
+Based on the successful graphlib-dot migration, we've developed a reusable script pattern:
+
+**Generic Migration Script Template (`scripts/migrate-[dependency].js`)**:
+```javascript
+#!/usr/bin/env node
+import { readFileSync, writeFileSync } from 'fs';
+import { glob } from 'glob';
+
+// Configuration per dependency
+const config = {
+    name: 'dependency-name',
+    cdnUrl: 'https://cdn.jsdelivr.net/npm/package@version/+esm',
+    scriptPatterns: [
+        /<script[^>]*src="js\/package\.js"[^>]*><\/script>\s*/g,
+        /<script[^>]*src="js\/package\.min\.js"[^>]*><\/script>\s*/g
+    ],
+    excludeFiles: ['index.html', 'arrow-designer.html'], // customize per dependency
+    insertAfterPattern: /"@dagrejs\/dagre":\s*"[^"]+",?\s*\n/ // or other landmark
+};
+
+// Reusable migration logic...
+```
+
+**Adaptation Instructions for Each Dependency**:
+
+1. **Copy and rename** the script: `cp scripts/add-graphlib-dot-to-import-maps.js scripts/migrate-[dependency].js`
+
+2. **Update configuration**:
+   - Change `cdnUrl` to correct package and version
+   - Update `scriptPatterns` to match the vendored file names
+   - Adjust `excludeFiles` based on which HTML files actually use the dependency
+   - Modify `insertAfterPattern` to find appropriate insertion point in import maps
+
+3. **Run script** and verify results
+
+4. **Examples for remaining dependencies**:
+   - **lysenkoIntervalTree**: CDN `interval-tree-1d@latest`, script pattern `js/lysenko-interval-tree.js`
+   - **computeLayout**: CDN `yoga-layout@latest`, script pattern `js/yoga-layout.js`  
+   - **Viz**: CDN `@viz-js/viz@latest`, script pattern `js/viz.js`
+   - **setcola**: CDN `webcola@latest`, script pattern `js/cola.js`
+
 #### Step 1: Research Phase
 ```bash
 # For each dependency, run analysis:
@@ -89,18 +149,12 @@ npm info packageName
 # Check if package supports ES modules
 ```
 
-#### Step 2: Create Migration Scripts
-Create helper scripts to:
-- Find all usage patterns for each global
-- Generate replacement import statements
-- Validate that imports work correctly
+#### Step 2: Migration Order (by complexity)
 
-#### Step 3: Migration Order (by complexity)
-
-1. **`'_'` (lodash)** - Start here, well-documented ES module support
-2. **`lysenkoIntervalTree`** - Single usage location, straightforward
-3. **`computeLayout`** - Single usage location  
-4. **`graphlibDot`** - Limited usage, specific functionality
+1. **`'_'` (lodash)** ✅ - Completed both stages
+2. **`graphlibDot`** ✅ - Completed both stages 
+3. **`lysenkoIntervalTree`** - Single usage location, straightforward
+4. **`computeLayout`** - Single usage location  
 5. **`Viz`** - May require version upgrade
 6. **`setcola`** - Complex integration with WebCola
 7. **`metagraph`** - Need to determine if it's local or external
@@ -153,22 +207,24 @@ Please report:
 
 ##### Testing Schedule by Dependency
 
-**1. GraphLib DOT (`graphlibDot`) Migration Test**
+**1. GraphLib DOT (`graphlibDot`) Migration Test** ✅ **COMPLETED**
 ```
-Migration: graphlibDot (DOT file parser)
-Target Import: import { parse, read } from 'graphlib-dot'
-Current Usage: src/load_graph.js - Lines 8-9, 32
+Migration: graphlibDot (DOT file parser) - SUCCESSFULLY MIGRATED
+Target Import: import * as graphlibDot from 'graphlib-dot'
+Changes Made:
+  - Added ES module import to src/load_graph.js:3
+  - Removed 'graphlibDot': 'readonly' from eslint.config.js
+  - Removed vendored files: web/js/graphlib-dot.js, web/js/graphlib-dot.min.js
+  - Removed graphlib-dot from package.json devDependencies
+  - Added to import maps in 10 HTML files with CDN: https://cdn.jsdelivr.net/npm/graphlib-dot@0.6.4/+esm
+  - Version detection preserved (v0.6.4 uses .read() method)
 
-Functionality Tests:
-1. DOT File Parsing (Version Detection)
-   - Test: graphlibDot.parse() method (v1.1.0 style)
-   - Test: graphlibDot.read() method (v0.6 style) 
-   - Expected: Should parse .gv/.dot files and create digraph objects
+Status: ✅ Stage 1 complete, ✅ Stage 2 complete, ✅ Both stages fully migrated
 
-Test Files to Validate:
-- Any HTML file that loads .gv or .dot files
-- Check network examples that import graph data
-- Look for examples with Graphviz file loading
+Script: Created scripts/add-graphlib-dot-to-import-maps.js for automated migration
+- Handles both adding to import maps and removing old script tags
+- Excludes files that don't need the dependency (index.html, arrow-designer.html)
+- Reusable pattern for remaining dependencies
 
 Manual Testing Protocol:
 □ Load a .gv file in any graph example
@@ -331,6 +387,12 @@ Manual Testing Protocol:
 □ Check dynamic data updates
 □ Test cross-filter integration
 □ Verify performance on large datasets
+
+✅ **COMPLETED** - Lodash completely removed:
+- Replaced _.extend() with spread operator
+- Replaced _.range() with d3.range()  
+- Removed from eslint.config.js and package.json
+- Build and lint passing
 ```
 
 **8. DC Graph Self-Reference (`dc_graph`) Migration Test**
