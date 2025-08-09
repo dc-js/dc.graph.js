@@ -8,12 +8,11 @@ import { select } from 'd3-selection';
 import {
     BadArgumentException,
     pluck,
-    redrawAll,
     registerChart,
-    renderAll,
     utils,
 } from 'dc';
 import { builtinArrows, clipPathToArrows, scaledArrowLengths } from '../arrows.js';
+import { redrawAllAsync, renderAllAsync } from '../async-chart-registry.js';
 import { colaLayout } from '../cola_layout.js';
 import {
     constants,
@@ -250,8 +249,9 @@ export function diagram(parent, chartGroup) {
      * @instance
      * @return {dc_graph.diagram}
      */
-    _diagram.redrawGroup = function() {
-        redrawAll(_chartGroup);
+    _diagram.redrawGroup = async function() {
+        await redrawAllAsync(_chartGroup);
+        return _diagram;
     };
 
     /**
@@ -263,8 +263,9 @@ export function diagram(parent, chartGroup) {
      * @instance
      * @return {dc_graph.diagram}
      */
-    _diagram.renderGroup = function() {
-        renderAll(_chartGroup);
+    _diagram.renderGroup = async function() {
+        await renderAllAsync(_chartGroup);
+        return _diagram;
     };
 
     /**

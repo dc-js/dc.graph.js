@@ -35,10 +35,10 @@ export function fixNodes(options) {
         },
     };
 
-    function request_fixes(fixes) {
+    async function request_fixes(fixes) {
         _mode.strategy().request_fixes(_execute, fixes);
-        tell_then_set(find_changes()).then(() => {
-            _mode.parent().redraw();
+        await tell_then_set(find_changes()).then(async () => {
+            await _mode.parent().redraw();
         });
     }
     function new_node(nid, n, pos) {
@@ -129,7 +129,7 @@ export function fixNodes(options) {
             set_changes(changes);
             // can't wait for backend to acknowledge/approve so just set then blast
             if (_mode.reportOverridesAsynchronously())
-                tell_changes(changes); // dangling promise
+                void tell_changes(changes); // explicitly ignore promise
         }
     }
 

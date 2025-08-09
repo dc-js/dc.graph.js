@@ -101,7 +101,7 @@ export function layeredLayout(id) {
         }));
         const mi = ranks.indexOf(max);
         const ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
-        layout_layer(max, -1).then(layout => {
+        void layout_layer(max, -1).then(layout =>
             Promise.all([
                 layout_layers(layout, max, ups),
                 layout_layers(layout, max, downs),
@@ -112,8 +112,8 @@ export function layeredLayout(id) {
                     _supergraph.nodes().map(n => n.value()),
                     _supergraph.edges().map(e => e.value()),
                 );
-            });
-        });
+            })
+        );
     }
 
     function layout_layers(layout, last, layers) {

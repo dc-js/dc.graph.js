@@ -1,4 +1,6 @@
 import js from '@eslint/js';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
 
 export default [
     js.configs.recommended,
@@ -117,6 +119,23 @@ export default [
                 exports: 'readonly',
                 require: 'readonly',
             },
+        },
+    },
+
+    // TypeScript parser for promise checking in source files
+    {
+        files: ['src/**/*.js'],
+        languageOptions: {
+            parser: tsparser,
+            parserOptions: {
+                project: './tsconfig.json',
+            },
+        },
+        plugins: {
+            '@typescript-eslint': tseslint,
+        },
+        rules: {
+            '@typescript-eslint/no-floating-promises': 'error',
         },
     },
 ];

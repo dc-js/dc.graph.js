@@ -1,4 +1,4 @@
-import { redrawAll } from 'dc';
+import { redrawAllAsync } from './async-chart-registry.js';
 import { property } from './core.js';
 
 export function expandedHidden(opts) {
@@ -120,9 +120,9 @@ export function expandedHidden(opts) {
         },
         partition_among_visible: (_tree_edges, _visible_nodes) => {
         },
-        refresh() {
+        async refresh() {
             apply_filter(_strategy.expandCollapse());
-            redrawAll();
+            await redrawAllAsync();
             return this;
         },
         collapsibles(nks, dir) {
@@ -152,12 +152,12 @@ export function expandedHidden(opts) {
             _nodeHidden[nk] = true;
             _strategy.expandCollapse().expand('both', [nk], false);
         },
-        hideEdge(ek) {
+        async hideEdge(ek) {
             if (!options.edgeCrossfilter)
                 console.warn('expanded_hidden needs edgeCrossfilter to hide edges');
             _edgeHidden[ek] = true;
             apply_filter(_strategy.expandCollapse());
-            redrawAll();
+            await redrawAllAsync();
         },
         expandCollapse: property(null).react(ec => {
             if (ec)

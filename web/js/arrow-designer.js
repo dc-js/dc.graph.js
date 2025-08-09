@@ -18,7 +18,7 @@ const options = {
         default: 4,
         selector: '#zoom',
         exert(val, diagram) {
-            diagram.renderer().scale(+val);
+            diagram.scale(+val);
         },
     },
     debug: {

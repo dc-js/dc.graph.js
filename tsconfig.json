@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    // Modern JavaScript target - matches your ESLint ecmaVersion: 2022
+    "target": "ES2022",
+    "module": "ESNext",
+    
+    // Enable JavaScript checking without compilation
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    
+    // Library support (DOM for browser APIs)
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    
+    // Module resolution for node_modules
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    
+    // Relaxed strictness for gradual adoption
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    
+    // Additional options
+    "forceConsistentCasingInFileNames": true
+  },
+  
+  // What to type-check
+  "include": [
+    "src/**/*.js"
+  ],
+  
+  // What to ignore
+  "exclude": [
+    "node_modules",
+    "dist", 
+    "web/js",
+    "*.config.js"
+  ]
+}

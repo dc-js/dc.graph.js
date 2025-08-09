@@ -31,10 +31,10 @@ export function labelNodes(options) {
         const callback = _mode.changeNodeLabel()
             ? _mode.changeNodeLabel()(_mode.parent().nodeKey.eval(node.datum()), text)
             : Promise.resolve(text);
-        return callback.then(text2 => {
+        return callback.then(async text2 => {
             const n = node.datum();
             n.orig.value[_labelTag] = text2;
-            _mode.parent().redrawGroup();
+            await _mode.parent().redrawGroup();
         });
     };
 

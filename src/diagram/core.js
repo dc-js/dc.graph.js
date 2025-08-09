@@ -9,9 +9,7 @@ import { scaleLinear } from 'd3-scale';
 import {
     BadArgumentException,
     pluck,
-    redrawAll,
     registerChart,
-    renderAll,
     utils,
 } from 'dc';
 import { builtinArrows, clipPathToArrows, scaledArrowLengths } from '../arrows.js';
@@ -63,7 +61,7 @@ export function applyCore(diagram, parent, chartGroup) {
     // Shared state variables
     let _nodes = {}, _edges = {}; // hold state between runs
     let _ports = {}; // id = node|edge/id/name
-    const _clusters = {};
+    let _clusters = {};
     let _nodePorts; // ports sorted by node id
     let _stats = {};
     let _nodes_snapshot, _edges_snapshot;
@@ -102,6 +100,7 @@ export function applyCore(diagram, parent, chartGroup) {
         setEdges: edges => _edges = edges,
         setPorts: ports => _ports = ports,
         getClusters: () => _clusters,
+        setClusters: clusters => _clusters = clusters,
         getNodePorts: () => _nodePorts,
         setNodePorts: ports => _nodePorts = ports,
         getStats: () => _stats,
@@ -358,32 +357,6 @@ export function applyCore(diagram, parent, chartGroup) {
 
     diagram.getStats = function() {
         return _stats;
-    };
-
-    // Expose internal access for other modules
-    diagram._internal = {
-        dispatch: _dispatch,
-        nodes: () => _nodes,
-        edges: () => _edges,
-        ports: () => _ports,
-        clusters: () => _clusters,
-        arrows: () => _arrows,
-        setNodes: nodes => _nodes = nodes,
-        setEdges: edges => _edges = edges,
-        setPorts: ports => _ports = ports,
-        getClusters: () => _clusters,
-        getNodePorts: () => _nodePorts,
-        setNodePorts: ports => _nodePorts = ports,
-        getStats: () => _stats,
-        setStats: stats => _stats = stats,
-        getNodesSnapshot: () => _nodes_snapshot,
-        setNodesSnapshot: snapshot => _nodes_snapshot = snapshot,
-        getEdgesSnapshot: () => _edges_snapshot,
-        setEdgesSnapshot: snapshot => _edges_snapshot = snapshot,
-        isRunning: () => _running,
-        setRunning: running => _running = running,
-        getAnimateZoom: () => _animateZoom,
-        setAnimateZoom: animate => _animateZoom = animate,
     };
 
     // Property cascade system for styling modes

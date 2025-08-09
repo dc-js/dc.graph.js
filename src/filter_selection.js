@@ -7,12 +7,12 @@ export function filterSelection(things_group, things_name) {
     const select_nodes_group = selectThingsGroup(things_group || 'select-nodes-group', things_name);
 
     function selection_changed(diagram) {
-        return function(selection) {
+        return async function(selection) {
             if (selection.length) {
                 const selectionSet = set(selection);
                 _mode.dimensionAccessor()(diagram).filterFunction(k => selectionSet.has(k));
             } else _mode.dimensionAccessor()(diagram).filter(null);
-            diagram.redrawGroup();
+            await diagram.redrawGroup();
         };
     }
 

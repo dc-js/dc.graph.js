@@ -115,11 +115,11 @@ export function drawGraphs(options) {
         }
         if (pos)
             fix_nodes_group.call('new_node', null, node[_nodeIdTag], node, {x: pos[0], y: pos[1]});
-        callback(node).then(node2 => {
+        callback(node).then(async node2 => {
             if (!node2)
                 return;
             _mode.nodeCrossfilter().add([node2]);
-            diagram.redrawGroup();
+            await diagram.redrawGroup();
             select_nodes_group.call('set_changed', null, [node2[_nodeIdTag]]);
         });
     }
@@ -143,7 +143,7 @@ export function drawGraphs(options) {
             edge[_sourceTag] = source.node.orig.key;
             edge[_targetTag] = target.node.orig.key;
         }
-        callback(edge, source.port, target.port).then(edge2 => {
+        callback(edge, source.port, target.port).then(async edge2 => {
             if (!edge2)
                 return;
             fix_nodes_group.call(
@@ -156,7 +156,7 @@ export function drawGraphs(options) {
             _mode.edgeCrossfilter().add([edge2]);
             select_nodes_group.call('set_changed', null, [], false);
             select_edges_group.call('set_changed', null, [edge2[_edgeIdTag]], false);
-            diagram.redrawGroup();
+            await diagram.redrawGroup();
         });
     }
 

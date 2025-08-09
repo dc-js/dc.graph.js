@@ -208,8 +208,8 @@ export function graphvizLayout(id, layout, server) {
             _dotInput = text;
             return this;
         },
-        start() {
-            start();
+        async start() {
+            await start();
         },
         stop() {
             stop();

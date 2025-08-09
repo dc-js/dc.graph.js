@@ -48,6 +48,8 @@
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
     "bootstrap": "^3.4.1",
     "classlist-polyfill": "1.2.x",
     "d3-force": "^1.2.1",
@@ -79,6 +81,7 @@
     "rollup": "^4.42.0",
     "rollup-plugin-copy": "^3.5.0",
     "time-grunt": "^1.4.0",
+    "typescript": "^5.9.2",
     "uglify-js": "^3.10.3",
     "x-editable": "1.5.x"
   },

@@ -25,7 +25,7 @@ export function deleteThings(things_group, mode_name, id_tag) {
         let promise = _mode.preDelete() ? _mode.preDelete()(selection) : Promise.resolve(selection);
         if (_mode.onDelete())
             promise = promise.then(_mode.onDelete());
-        return promise.then(selection => {
+        return promise.then(async selection => {
             if (selection && selection.length) {
                 const crossfilter = _mode.crossfilterAccessor()(_mode.parent()),
                     dimension = _mode.dimensionAccessor()(_mode.parent());
@@ -42,7 +42,7 @@ export function deleteThings(things_group, mode_name, id_tag) {
                     );
                 crossfilter.add(filtered);
 
-                _mode.parent().redrawGroup();
+                await _mode.parent().redrawGroup();
             }
             return true;
         });

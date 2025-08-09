@@ -32,10 +32,10 @@ export function labelEdges(options) {
         const callback = _mode.changeEdgeLabel()
             ? _mode.changeEdgeLabel()(_mode.parent().edgeKey.eval(edge.datum()), text)
             : Promise.resolve(text);
-        return callback.then(text2 => {
+        return callback.then(async text2 => {
             const e = edge.datum();
             e.orig.value[_labelTag] = text2;
-            _mode.parent().redrawGroup();
+            await _mode.parent().redrawGroup();
         });
     };
 
