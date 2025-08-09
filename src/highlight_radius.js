@@ -1,3 +1,4 @@
+import { graph } from 'metagraph';
 import { property } from './core.js';
 import { registerHighlightThingsGroup } from './highlight_things_group.js';
 import { selectThingsGroup } from './select_things.js';
@@ -39,7 +40,7 @@ export function highlightRadius(options) {
     }
 
     function on_data(diagram, nodes, wnodes, edges, wedges, _ports, _wports) {
-        _graph = metagraph.graph(wnodes, wedges, {
+        _graph = graph(wnodes, wedges, {
             nodeKey: diagram.nodeKey.eval,
             edgeKey: diagram.edgeKey.eval,
             edgeSource: diagram.edgeSource.eval,

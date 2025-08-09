@@ -1,11 +1,12 @@
+import { compose, graph_detect, graph_pattern, subgraph_pattern } from 'metagraph';
+
 export function supergraph(data, options) {
     if (!supergraph.pattern) {
-        const mg = metagraph;
         const graph_and_subgraph = {
             nodes: {
-                graph: mg.graph_pattern(options),
-                sg: mg.subgraph_pattern(options),
-                subgraph: mg.graph_pattern(options),
+                graph: graph_pattern(options),
+                sg: subgraph_pattern(options),
+                subgraph: graph_pattern(options),
             },
             edges: {
                 to_sg: {
@@ -20,7 +21,7 @@ export function supergraph(data, options) {
                 },
             },
         };
-        supergraph.pattern = mg.compose(mg.graph_detect(graph_and_subgraph));
+        supergraph.pattern = compose(graph_detect(graph_and_subgraph));
     }
     return supergraph.pattern.node('graph.Graph').value().create(data);
 }

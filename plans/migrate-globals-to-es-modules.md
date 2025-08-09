@@ -155,10 +155,10 @@ npm info packageName
 2. **`graphlibDot`** ✅ - Completed both stages 
 3. **`lysenkoIntervalTree`** ✅ - Completed (feature unused, cleaned up CDN imports)
 4. **`computeLayout`** ✅ - Completed (legacy css-layout removed, yoga-layout only)
-5. **`Viz`** - May require version upgrade
-6. **`setcola`** - Complex integration with WebCola
-7. **`metagraph`** - Need to determine if it's local or external
-8. **`dc_graph`** - Most complex, self-referential
+5. **`Viz`** ✅ - Completed both stages (migrated to @viz-js/viz v3.16.0)
+6. **`setcola`** - Not available as npm package; keeping as global (research project)
+7. **`metagraph`** ✅ - Completed both stages (using metagraph@0.1.0 from npm)
+8. **`dc_graph`** ✅ - Completed (removed unused legacy code, kept JSDoc namespaces)
 
 #### Step 4: Testing Strategy
 

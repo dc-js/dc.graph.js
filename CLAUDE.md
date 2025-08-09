@@ -69,9 +69,10 @@ npm start
 
 ## Web Workers
 
-Layout computation can be offloaded to web workers for performance. Worker files are built by concatenating specific source files:
+Layout computation can be offloaded to web workers for performance:
 - Each layout has a corresponding worker file (e.g., `dc.graph.cola.worker.js`)
-- Workers include: `core.js`, `generate_objects.js`, `graphviz_attrs.js`, layout file, `webworker_message.js`
+- Workers are built from source files in `src/workers/` using ES modules
+- Worker files import layout functions directly and use shared `worker_common.js` for message handling
 
 ## Examples and Testing
 

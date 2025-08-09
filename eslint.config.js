@@ -32,8 +32,6 @@ export default [
                 // Library-specific globals (consider migrating to imports)
                 THREE: 'readonly',
                 setcola: 'readonly',
-                metagraph: 'readonly',
-                dc_graph: 'readonly',
             },
         },
         rules: {
@@ -83,7 +81,6 @@ export default [
                 // DC.js ecosystem globals
                 d3: 'readonly',
                 dc: 'readonly',
-                dc_graph: 'readonly',
                 crossfilter: 'readonly',
                 cola: 'readonly',
 
