@@ -48,7 +48,7 @@ function bringover(data, map) {
         });
 }
 
-function flex_divs(root, data, place) {
+function _flex_divs(root, data, place) {
     const map = {};
     bringover(data, map);
     const flex_div_helper = flex_div_helper_mapper(map);

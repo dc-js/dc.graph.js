@@ -21,9 +21,11 @@ app_layouts.vfc = function() {
         VM: 2,
         Host: 3,
     };
-    function node_row(n) {
+    function _node_row(n) {
         return _rowmap[rank(n.value.label_)];
     }
+
+    const treeOnly = false;
 
     return {
         rules: {
@@ -75,7 +77,7 @@ app_layouts.vfc = function() {
                     .initialLayout(
                         dc_graph.tree_positions(
                             null,
-                            node_row,
+                            _node_row,
                             is_tree_edge.bind(null, diagram),
                             50,
                             50,

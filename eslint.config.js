@@ -72,11 +72,25 @@ export default [
         files: ['web/**/*.js', 'examples/**/*.js'],
         languageOptions: {
             globals: {
+                // Browser APIs
+                FileReader: 'readonly',
+                URLSearchParams: 'readonly',
+                confirm: 'readonly',
+                prompt: 'readonly',
+                alert: 'readonly',
+
+                // Library globals (to be removed in jQuery migration)
+                $: 'readonly',
+                _: 'readonly',
+
+                // DC.js ecosystem globals
                 d3: 'readonly',
                 dc: 'readonly',
                 dc_graph: 'readonly',
                 crossfilter: 'readonly',
                 cola: 'readonly',
+
+                // Standard browser globals
                 window: 'readonly',
                 document: 'readonly',
                 navigator: 'readonly',

@@ -109,15 +109,15 @@ const label_nodes = labelNodes({class: 'node-label'}),
     label_edges = labelEdges({class: 'edge-label'});
 
 const delete_nodes = deleteNodes()
-    .crossfilterAccessor(diagram => node_flat.crossfilter)
-    .dimensionAccessor(diagram => node_flat.dimension);
+    .crossfilterAccessor(_diagram => node_flat.crossfilter)
+    .dimensionAccessor(_diagram => node_flat.dimension);
 
 const delete_edges = deleteThings(
     selectThingsGroup('select-edges-group', 'select-edges'),
     'delete-edges',
 )
-    .crossfilterAccessor(diagram => edge_flat.crossfilter)
-    .dimensionAccessor(diagram => edge_flat.dimension);
+    .crossfilterAccessor(_diagram => edge_flat.crossfilter)
+    .dimensionAccessor(_diagram => edge_flat.dimension);
 
 let timestamp = 0;
 const add_object = d => {
@@ -155,7 +155,7 @@ select_edges_group.on('set_changed.show-info', edges => {
 });
 
 const nodeDim = node_flat.crossfilter.dimension(d => d.timestamp);
-const outnodes = new DataTable('#output-nodes-table')
+const _outnodes = new DataTable('#output-nodes-table')
     .dimension(nodeDim)
     .size(Infinity)
     .group(() => '')
@@ -172,7 +172,7 @@ const update_node_labels = () => {
 };
 
 const edgeDim = edge_flat.crossfilter.dimension(d => d.timestamp);
-const outedges = new DataTable('#output-edges-table')
+const _outedges = new DataTable('#output-edges-table')
     .dimension(edgeDim)
     .size(Infinity)
     .group(() => '')

@@ -42,7 +42,7 @@ const data = range(7).map(i => ({
 const node_flat = flatGroup.make(parentNodes.concat(data), n => n.id),
     edge_flat = flatGroup.make([], e => e.id);
 
-const flexboxDiagram = diagram('#graph')
+const _flexboxDiagram = diagram('#graph')
     .layoutEngine(
         flexboxLayout(null, {algo: params.get('algo') || 'yoga-layout'})
             .addressToKey(ad => `flex+${ad.join(',')}`)

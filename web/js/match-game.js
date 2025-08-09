@@ -1,5 +1,5 @@
 import { range } from 'd3-array';
-import { redrawAll, renderAll } from 'dc';
+import { renderAll } from 'dc';
 import {
     deleteThings,
     diagram,
@@ -176,7 +176,7 @@ matchDiagram.child('select-edges', select_edges);
 
 const select_edges_group = selectThingsGroup('select-edges-group', 'select-edges');
 const delete_edges = deleteThings(select_edges_group, 'delete-edges', 'id')
-    .crossfilterAccessor(matchDiagram => edge_flat.crossfilter)
+    .crossfilterAccessor(_matchDiagram => edge_flat.crossfilter)
     .dimensionAccessor(matchDiagram => matchDiagram.edgeDimension());
 matchDiagram.child('delete-edges', delete_edges);
 
@@ -210,7 +210,7 @@ if (qs.selports) {
 renderAll();
 
 $('#resize').resizable({
-    resize(event, ui) {
+    resize(_event, _ui) {
         matchDiagram
             .redraw();
     },

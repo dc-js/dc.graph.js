@@ -100,7 +100,7 @@ const catalog_readers = {
     'demo': demo_catalog_reader,
 };
 
-function show_while_promise(selector, promise) {
+function _show_while_promise(selector, promise) {
     select(selector).style('visibility', 'visible');
     promise.then(() => {
         // let it run a little longer so that it's guaranteed to show
@@ -139,8 +139,8 @@ function set_dirty(whether) {
 // CANVAS
 //
 
-function redraw_promise(diagram) {
-    return new Promise((resolve, reject) => {
+function _redraw_promise(diagram) {
+    return new Promise((resolve, _reject) => {
         diagram.on('end', () => {
             resolve();
         });
@@ -306,7 +306,7 @@ function display_properties(catalog, content) {
 // PALETTE
 //
 
-function make_palette(selector) {
+function make_palette(_selector) {
     const _dispatch = dispatch('selected');
     let _categories, _keyFunction, _nameFunction;
     function sanitize_id(key) {
@@ -777,7 +777,7 @@ get_catalog().then(catalog => {
         align: 'left',
         class: 'node-label',
     }).changeNodeLabel((nodeId, text) => {
-        const node = _compositionDiagram.getNode(nodeId);
+        const _node = _compositionDiagram.getNode(nodeId);
         // execute on server first, which could reject or change text
         return Promise.resolve(text);
     });
@@ -794,8 +794,8 @@ get_catalog().then(catalog => {
     _compositionDiagram.child('label-edges', label_edges);
 
     const delete_nodes = deleteNodes()
-        .crossfilterAccessor(diagram => _drawGraphs.nodeCrossfilter())
-        .dimensionAccessor(diagram => _compositionDiagram.nodeDimension())
+        .crossfilterAccessor(_diagram => _drawGraphs.nodeCrossfilter())
+        .dimensionAccessor(_diagram => _compositionDiagram.nodeDimension())
         .onDelete(nodes =>
             // confirm with server here
             Promise.resolve(nodes)
@@ -809,8 +809,8 @@ get_catalog().then(catalog => {
     _compositionDiagram.child('delete-nodes', delete_nodes);
 
     const delete_edges = deleteThings(select_edges_group, 'delete-edges', 'id')
-        .crossfilterAccessor(diagram => _drawGraphs.edgeCrossfilter())
-        .dimensionAccessor(diagram => _compositionDiagram.edgeDimension())
+        .crossfilterAccessor(_diagram => _drawGraphs.edgeCrossfilter())
+        .dimensionAccessor(_diagram => _compositionDiagram.edgeDimension())
         .onDelete(edges =>
             // confirm with server here, promise-then pass to wildcard
             wildcard.resetTypes(_compositionDiagram, edges)

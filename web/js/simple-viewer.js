@@ -26,7 +26,7 @@ const options = {
         values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
-        exert: (val, diagram) => {
+        exert: (val, _diagram) => {
             const engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
@@ -40,14 +40,14 @@ const options = {
         default: true,
         selector: '#graphviz-attrs',
         needs_redraw: 'refresh',
-        exert: (val, diagram) => {
+        exert: (val, _diagram) => {
             if (val)
                 applyGraphvizAccessors(simpleDiagram);
             else {
                 simpleDiagram
                     .nodeFixed(n => n.value.fixedPos)
                     .nodeStrokeWidth(0)
-                    .nodeFill(kv => '#2E54A2')
+                    .nodeFill(_kv => '#2E54A2')
                     .nodeLabelPadding({x: 2, y: 0})
                     .nodeLabelFill('white')
                     .edgeArrowhead(sync_url.vals.arrows ? 'vee' : null);

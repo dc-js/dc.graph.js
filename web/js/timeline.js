@@ -3,7 +3,7 @@
 // why is it not a grouped bar chart with a time x axis?
 // because i am not sure that would work even if i had time to merge the PR
 // ok i'm rationalizing. it's for the fun. all the more reason to regret later.
-function timeline(parent) {
+function _timeline(parent) {
     const _chart = {};
     let _x = null, _y = null;
     let _width, _height;

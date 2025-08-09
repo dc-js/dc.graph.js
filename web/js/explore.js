@@ -71,7 +71,7 @@ const options = {
             const expanded_highlight_group = registerHighlightThingsGroup(
                 options.expanded_highlight_group || 'expanded-highlight-group',
             );
-            expanded_highlight_group.on('highlight.sync-url-both', (nodeset, edgeset) => {
+            expanded_highlight_group.on('highlight.sync-url-both', (nodeset, _edgeset) => {
                 k(
                     sync_url.vals.directional
                         ? []
@@ -80,7 +80,7 @@ const options = {
             });
         },
         dont_exert_after_subscribe: true,
-        exert(val, diagram) {
+        exert(val, _diagram) {
             if (sync_url.vals.directional)
                 return;
             expand_collapse
@@ -110,7 +110,7 @@ function expanded_dir_subscribe(k) {
         const expanded_highlight_group = registerHighlightThingsGroup(
             options.expanded_highlight_group || 'expanded-highlight-group',
         );
-        expanded_highlight_group.on('highlight.sync-url-inout', (nodeset, edgeset) => {
+        expanded_highlight_group.on('highlight.sync-url-inout', (nodeset, _edgeset) => {
             if (!sync_url.vals.directional) {
                 kin([]);
                 kout([]);
@@ -126,7 +126,7 @@ function expanded_dir_subscribe(k) {
     }
 }
 let dir_exert_vals = [];
-function expanded_dir_exert(val, diagram) {
+function expanded_dir_exert(val, _diagram) {
     dir_exert_vals.push(val);
     if (dir_exert_vals.length == 2) {
         const [invals, outvals] = dir_exert_vals;
@@ -164,7 +164,8 @@ function apply_engine_parameters(engine) {
 
 // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript#47593316
 function xfnv1a(k) {
-    for (let i = 0, h = 2166136261>>>0; i < k.length; i++)
+    let h = 2166136261>>>0;
+    for (let i = 0; i < k.length; i++)
         h = Math.imul(h^k.charCodeAt(i), 16777619);
     return function() {
         h += h<<13;
@@ -218,7 +219,7 @@ sync_url.output(params => {
 
 // graphlib-dot seems to wrap nodes in an extra {value}
 // actually this is quite a common problem with generic libs
-function nvalue(n) {
+function _nvalue(n) {
     return n.value.value ? n.value.value : n.value;
 }
 
@@ -292,13 +293,13 @@ function on_load(filename, error, data) {
         const field_select = fields.append('select')
             .attr('id', ([key]) => `${key}-select`);
         field_select
-            .selectAll('option').data(([key, values]) => {
+            .selectAll('option').data(([_key, values]) => {
                 const values2 = Object.keys(values).map(x => +x);
                 values2.sort(descending);
                 return ['select', ...values2.slice(0, 3)];
             })
             .enter().append('option').text(x => x);
-        field_select.on('change', function([key, values]) {
+        field_select.on('change', function([_key, values]) {
             const level = +this.value;
             const [dir, recurse] = get_dir_recurse();
             const nks = Object.entries(values).flatMap(
@@ -353,7 +354,7 @@ function on_load(filename, error, data) {
 
         function arrowgen(rnd) {
             return range(Math.floor(rnd()*5))
-                .map(i => (rnd() > 0.5 ? 'o' : '')+anames[Math.floor(rnd()*anames.length)]).join(
+                .map(_i => (rnd() > 0.5 ? 'o' : '')+anames[Math.floor(rnd()*anames.length)]).join(
                     '',
                 );
         }
@@ -406,7 +407,7 @@ function on_load(filename, error, data) {
         const edge_dim = edge_flat.crossfilter.dimension(edge_cat),
             edge_group = edge_dim.group().reduce(
                 (p, v) => v.color,
-                (p, v) => p,
+                (_p, _v) => _p,
                 () => null,
             );
         const edge_legend = legend('edge-legend')
@@ -417,7 +418,7 @@ function on_load(filename, error, data) {
             .exemplars(
                 edge_group.all().map(kv => ({name: kv.key, key: kv.key, value: {color: kv.value}})),
             );
-        edge_legend.counter((wnodes, wedges, wports) => {
+        edge_legend.counter((_wnodes, wedges, _wports) => {
             const counts = {};
             wedges.forEach(e => {
                 counts[edge_cat(e.value)] = (counts[edge_cat(e.value)] || 0)+1;
@@ -556,7 +557,7 @@ function on_load(filename, error, data) {
     }
     exploreDiagram.on('drawn.add-nodes', refresh_add_node);
     const expand = select('#expand');
-    function get_dir_recurse(nk) {
+    function get_dir_recurse(_nk) {
         const exp = expand.node().value;
         let dir, recurse = false;
         if (exp.startsWith('all-')) {

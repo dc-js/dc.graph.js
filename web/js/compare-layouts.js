@@ -17,7 +17,7 @@ import {
     tipHtmlOrJsonTable,
 } from './dc-graph.js';
 import { dcgraph_multi_domain } from './dc.graph.tracker.domain.js';
-import { display_error, hide_error } from './graph-error.js';
+import { display_error } from './graph-error.js';
 import sync_url_options from './sync-url-options.js';
 
 const excluded_layouts = set(['manual', 'layered', 'd3force', 'flexbox']);
@@ -29,7 +29,7 @@ const options = {
         selector: '#left-layout',
         diagram: 'left',
         needs_relayout: true,
-        exert(val, ldiagram, rdiagram) {
+        exert(val, ldiagram, _rdiagram) {
             const engine = spawnEngine(val);
             apply_engine_parameters(engine);
             ldiagram
@@ -43,7 +43,7 @@ const options = {
         selector: '#right-layout',
         diagram: 'right',
         needs_relayout: true,
-        exert(val, ldiagram, rdiagram) {
+        exert(val, _ldiagram, rdiagram) {
             const engine = spawnEngine(val);
             apply_engine_parameters(engine);
             rdiagram
