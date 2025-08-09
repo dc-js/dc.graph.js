@@ -37,9 +37,8 @@ import { dispatch } from 'd3-dispatch';
 import yoga from 'yoga-layout';
 import { property, uuid } from './core.js';
 
-export function flexboxLayout(id, options) {
+export function flexboxLayout(id, _options) {
     const _layoutId = id || uuid();
-    options = options || {algo: 'yoga-layout'};
     const _dispatch = dispatch('tick', 'start', 'end');
 
     let _graph, _tree, _wnodes;
@@ -169,15 +168,8 @@ export function flexboxLayout(id, options) {
         ],
         skip_on_parents = ['width', 'height'];
     function create_flextree(attrs, tree) {
-        let flexnode;
-        switch (options.algo) {
-            case 'css-layout':
-                flexnode = {name: _engine.addressToKey()(tree.address), style: {}};
-                break;
-            case 'yoga-layout':
-                flexnode = new yoga.Node();
-                break;
-        }
+        // Create yoga layout node
+        const flexnode = new yoga.Node();
         const attrs2 = Object.assign({}, attrs);
         const isParent = Object.keys(tree.children).length;
         if (tree.node)
@@ -190,54 +182,28 @@ export function flexboxLayout(id, options) {
             let value = attrs[attr];
             if (typeof value === 'function')
                 value = value(tree.node);
-            switch (options.algo) {
-                case 'css-layout':
-                    flexnode.style[attr] = value;
-                    break;
-                case 'yoga-layout':
-                    set_yoga_attr(flexnode, attr, value);
-                    break;
-            }
+            // Set yoga layout attribute
+            set_yoga_attr(flexnode, attr, value);
         }
         if (isParent) {
             const children = Object.values(tree.children)
                 .sort(attrs.sort)
                 .map(c => c.address[c.address.length-1])
                 .map(key => create_flextree(Object.assign({}, attrs2), tree.children[key]));
-            switch (options.algo) {
-                case 'css-layout':
-                    flexnode.children = children;
-                    break;
-                case 'yoga-layout':
-                    children.forEach((child, i) => {
-                        flexnode.insertChild(child, i);
-                    });
-                    break;
-            }
+            // Insert children into yoga layout node
+            children.forEach((child, i) => {
+                flexnode.insertChild(child, i);
+            });
         }
         tree.flexnode = flexnode;
         return flexnode;
     }
     function apply_layout(offset, tree) {
-        let left, top, width, height;
-        switch (options.algo) {
-            case 'css-layout':
-                if (_engine.logStuff())
-                    console.log(
-                        `${tree.node.dcg_nodeKey}: ${JSON.stringify(tree.flexnode.layout)}`,
-                    );
-                left = tree.flexnode.layout.left;
-                width = tree.flexnode.layout.width;
-                top = tree.flexnode.layout.top;
-                height = tree.flexnode.layout.height;
-                break;
-            case 'yoga-layout':
-                left = get_yoga_attr(tree.flexnode, 'left');
-                width = get_yoga_attr(tree.flexnode, 'width');
-                top = get_yoga_attr(tree.flexnode, 'top');
-                height = get_yoga_attr(tree.flexnode, 'height');
-                break;
-        }
+        // Get layout values from yoga
+        const left = get_yoga_attr(tree.flexnode, 'left');
+        const width = get_yoga_attr(tree.flexnode, 'width');
+        const top = get_yoga_attr(tree.flexnode, 'top');
+        const height = get_yoga_attr(tree.flexnode, 'height');
         tree.node.x = offset.x+left+width/2;
         tree.node.y = offset.y+top+height/2;
         Object.keys(tree.children)
@@ -257,16 +223,9 @@ export function flexboxLayout(id, options) {
         };
         ensure_inner_nodes(_tree);
         const flexTree = create_flextree(defaults, _tree);
-        switch (options.algo) {
-            case 'css-layout':
-                flexTree.style.width = _graph.width;
-                flexTree.style.height = _graph.height;
-                break;
-            case 'yoga-layout':
-                set_yoga_attr(flexTree, 'width', _graph.width);
-                set_yoga_attr(flexTree, 'height', _graph.height);
-                break;
-        }
+        // Set root container dimensions
+        set_yoga_attr(flexTree, 'width', _graph.width);
+        set_yoga_attr(flexTree, 'height', _graph.height);
         if (_engine.logStuff())
             console.log(JSON.stringify(flexTree, null, 2));
         // Use yoga-layout for flexbox computation
