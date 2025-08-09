@@ -26,7 +26,7 @@ import dcgraph_domain from './dc.graph.tracker.domain.js';
 import { display_error, hide_error } from './graph-error.js';
 import sync_url_options from './sync-url-options.js';
 
-var options = {
+const options = {
     file: null,
     tickSize: 1,
     transition: 1000,
@@ -37,8 +37,8 @@ var options = {
         values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
-        exert: function(val, diagram) {
-            var engine = spawnEngine(val);
+        exert(val, diagram) {
+            const engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine);
@@ -67,22 +67,20 @@ var options = {
     // it would probably be better to improve sync_url but i don't want to go there
     expanded: {
         default: [],
-        subscribe: function(k) {
-            var expanded_highlight_group = registerHighlightThingsGroup(
+        subscribe(k) {
+            const expanded_highlight_group = registerHighlightThingsGroup(
                 options.expanded_highlight_group || 'expanded-highlight-group',
             );
-            expanded_highlight_group.on('highlight.sync-url-both', function(nodeset, edgeset) {
+            expanded_highlight_group.on('highlight.sync-url-both', (nodeset, edgeset) => {
                 k(
                     sync_url.vals.directional
                         ? []
-                        : Object.keys(nodeset).filter(function(nk) {
-                            return nodeset[nk];
-                        }),
+                        : Object.keys(nodeset).filter(nk => nodeset[nk]),
                 );
             });
         },
         dont_exert_after_subscribe: true,
-        exert: function(val, diagram) {
+        exert(val, diagram) {
             if (sync_url.vals.directional)
                 return;
             expand_collapse
@@ -109,24 +107,20 @@ function expanded_dir_subscribe(k) {
     if (dir_sub_ks.length == 2) {
         const [kin, kout] = dir_sub_ks;
         dir_sub_ks = [];
-        var expanded_highlight_group = registerHighlightThingsGroup(
+        const expanded_highlight_group = registerHighlightThingsGroup(
             options.expanded_highlight_group || 'expanded-highlight-group',
         );
-        expanded_highlight_group.on('highlight.sync-url-inout', function(nodeset, edgeset) {
+        expanded_highlight_group.on('highlight.sync-url-inout', (nodeset, edgeset) => {
             if (!sync_url.vals.directional) {
                 kin([]);
                 kout([]);
                 return;
             }
             kin(
-                Object.keys(nodeset).filter(function(nk) {
-                    return expand_collapse.expandedDirs(nk).includes('in');
-                }),
+                Object.keys(nodeset).filter(nk => expand_collapse.expandedDirs(nk).includes('in')),
             );
             kout(
-                Object.keys(nodeset).filter(function(nk) {
-                    return expand_collapse.expandedDirs(nk).includes('out');
-                }),
+                Object.keys(nodeset).filter(nk => expand_collapse.expandedDirs(nk).includes('out')),
             );
         });
     }
@@ -143,8 +137,8 @@ function expanded_dir_exert(val, diagram) {
         });
     }
 }
-var exploreDiagram = diagram('#graph');
-var sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
+const exploreDiagram = diagram('#graph');
+const sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
 
 function apply_engine_parameters(engine) {
     switch (engine.layoutAlgorithm()) {
@@ -170,7 +164,7 @@ function apply_engine_parameters(engine) {
 
 // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript#47593316
 function xfnv1a(k) {
-    for (var i = 0, h = 2166136261>>>0; i < k.length; i++)
+    for (let i = 0, h = 2166136261>>>0; i < k.length; i++)
         h = Math.imul(h^k.charCodeAt(i), 16777619);
     return function() {
         h += h<<13;
@@ -186,7 +180,7 @@ function sfc32(a, b, c, d) {
         b >>>= 0;
         c >>>= 0;
         d >>>= 0;
-        var t = (a+b)|0;
+        let t = (a+b)|0;
         a = b^b>>>9;
         b = c+(c<<3)|0;
         c = c<<21|c>>>11;
@@ -197,14 +191,14 @@ function sfc32(a, b, c, d) {
     };
 }
 function rand(s) {
-    var seed = xfnv1a(s);
+    const seed = xfnv1a(s);
     return sfc32(seed(), seed(), seed(), seed());
 }
 
 select('#user-file').on('change', function() {
-    var filename = this.value;
+    const filename = this.value;
     if (filename) {
-        var reader = new FileReader();
+        const reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
             loadGraphText(e.target.result, filename).then(data => on_load(filename, null, data));
@@ -214,8 +208,9 @@ select('#user-file').on('change', function() {
     }
 });
 
-var url_output = sync_url.output(), more_output;
-sync_url.output(function(params) {
+const url_output = sync_url.output();
+let more_output;
+sync_url.output(params => {
     url_output(params);
     if (more_output)
         more_output(params);
@@ -227,23 +222,22 @@ function nvalue(n) {
     return n.value.value ? n.value.value : n.value;
 }
 
-var expand_collapse;
+let expand_collapse;
 function on_load(filename, error, data) {
     if (error) {
-        var heading = '';
+        let heading = '';
         if (error.status)
-            heading = 'Error '+error.status+': ';
-        heading += 'Could not load file '+filename;
-        display_error(heading, error.message);
+            heading = `Error ${error.status}: `;
+        heading += `Could not load file ${filename}`;
+        display_error(heading, error);
     }
-    var graph_data;
+    let graph_data;
     try {
         graph_data = mungeGraph(data);
     } catch (xep) {
-        console.log(xep);
-        display_error(`Error munging ${filename}`, xep.message);
+        display_error(`Error munging ${filename}`, xep);
     }
-    var nodes = graph_data.nodes,
+    const nodes = graph_data.nodes,
         edges = graph_data.edges,
         sourceattr = graph_data.sourceattr,
         targetattr = graph_data.targetattr,
@@ -251,7 +245,7 @@ function on_load(filename, error, data) {
 
     function update_data_link() {
         select('#data-link')
-            .attr('href', sync_url.what_if_url({file: dataUrl({nodes: nodes, edges: edges})}));
+            .attr('href', sync_url.what_if_url({file: dataUrl({nodes, edges})}));
     }
     more_output = update_data_link;
     update_data_link();
@@ -317,15 +311,13 @@ function on_load(filename, error, data) {
         });
     }
 
-    var edge_key = function(d) {
-        return d[sourceattr]+'-'+d[targetattr]+(d.par ? ':'+d.par : '');
+    const edge_key = function(d) {
+        return `${d[sourceattr]}-${d[targetattr]}${d.par ? `:${d.par}` : ''}`;
     };
-    var edge_flat = flatGroup.make(edges, edge_key),
-        node_flat = flatGroup.make(nodes, function(d) {
-            return d[nodekeyattr];
-        });
+    const edge_flat = flatGroup.make(edges, edge_key),
+        node_flat = flatGroup.make(nodes, d => d[nodekeyattr]);
 
-    var engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+    const engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     apply_engine_parameters(engine);
 
     exploreDiagram
@@ -339,16 +331,12 @@ function on_load(filename, error, data) {
         .stageTransitions(sync_url.vals.stage)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
-        .edgeSource(function(e) {
-            return e.value[sourceattr];
-        })
-        .edgeTarget(function(e) {
-            return e.value[targetattr];
-        })
+        .edgeSource(e => e.value[sourceattr])
+        .edgeTarget(e => e.value[targetattr])
         .nodeLabelPadding(5)
         .edgeArrowhead('vee')
-        .edgeLength(function(e) {
-            var e2 = exploreDiagram.getWholeEdge(e.key);
+        .edgeLength(e => {
+            const e2 = exploreDiagram.getWholeEdge(e.key);
             return 40+Math.hypot(
                 e2.source.dcg_rx+e2.target.dcg_rx,
                 e2.source.dcg_ry+e2.target.dcg_ry,
@@ -360,16 +348,16 @@ function on_load(filename, error, data) {
     if (sync_url.vals.bigzoom)
         exploreDiagram.zoomExtent([0.001, 200]);
     if (sync_url.vals.rndarrow) {
-        var arrowheadscale, arrowtailscale;
-        var anames = Object.keys(builtinArrows);
+        let arrowheadscale, arrowtailscale;
+        const anames = Object.keys(builtinArrows);
 
         function arrowgen(rnd) {
             return range(Math.floor(rnd()*5))
-                .map(function(i) {
-                    return (rnd() > 0.5 ? 'o' : '')+anames[Math.floor(rnd()*anames.length)];
-                }).join('');
+                .map(i => (rnd() > 0.5 ? 'o' : '')+anames[Math.floor(rnd()*anames.length)]).join(
+                    '',
+                );
         }
-        var now = String(new Date());
+        const now = String(new Date());
         switch (sync_url.vals.rndarrow) {
             case 'one':
                 arrowheadscale = scaleOrdinal().range(shuffle(Object.keys(builtinArrows)));
@@ -380,10 +368,10 @@ function on_load(filename, error, data) {
                     return arrowgen(rand((label || '')+now));
                 };
                 break;
-            case 'changing':
-                var seed = 1;
+            case 'changing': {
+                let seed = 1;
                 // will change only when rendering not active
-                window.setInterval(function() {
+                window.setInterval(() => {
                     console.log('change arrows');
                     ++seed;
                 }, 500);
@@ -391,14 +379,13 @@ function on_load(filename, error, data) {
                     return arrowgen(rand((label || '')+now+seed));
                 };
                 break;
+            }
             default:
-                throw new Error('unknown rndarrow "'+sync_url.vals.rndarrow+'"');
+                throw new Error(`unknown rndarrow "${sync_url.vals.rndarrow}"`);
         }
-        exploreDiagram.edgeArrowhead(function(e) {
-            return arrowheadscale(e.value.label);
-        }).edgeArrowtail(function(e) {
-            return arrowtailscale(e.value.label);
-        });
+        exploreDiagram.edgeArrowhead(e => arrowheadscale(e.value.label)).edgeArrowtail(e =>
+            arrowtailscale(e.value.label)
+        );
     }
     if (engine.layoutAlgorithm() === 'cola') {
         engine
@@ -407,40 +394,32 @@ function on_load(filename, error, data) {
     }
 
     if (sync_url.vals.edgeCat) {
-        var eregex = sync_url.vals.edgeExpn ? new RegExp(sync_url.vals.edgeExpn) : null;
-        var edge_cat = eregex
+        const eregex = sync_url.vals.edgeExpn ? new RegExp(sync_url.vals.edgeExpn) : null;
+        const edge_cat = eregex
             ? function(e) {
-                var match = eregex.exec(e[sync_url.vals.edgeCat]);
+                const match = eregex.exec(e[sync_url.vals.edgeCat]);
                 return match ? match[0] : '';
             }
             : function(e) {
                 return e[sync_url.vals.edgeCat] || '';
             };
-        var edge_dim = edge_flat.crossfilter.dimension(edge_cat),
+        const edge_dim = edge_flat.crossfilter.dimension(edge_cat),
             edge_group = edge_dim.group().reduce(
-                function(p, v) {
-                    return v.color;
-                },
-                function(p, v) {
-                    return p;
-                },
-                function() {
-                    return null;
-                },
+                (p, v) => v.color,
+                (p, v) => p,
+                () => null,
             );
-        var edge_legend = legend('edge-legend')
+        const edge_legend = legend('edge-legend')
             .x(20).y(20)
             .itemWidth(75).itemHeight(20)
             .type(legend.edge_legend())
             .omitEmpty(true)
             .exemplars(
-                edge_group.all().map(function(kv) {
-                    return {name: kv.key, key: kv.key, value: {color: kv.value}};
-                }),
+                edge_group.all().map(kv => ({name: kv.key, key: kv.key, value: {color: kv.value}})),
             );
-        edge_legend.counter(function(wnodes, wedges, wports) {
-            var counts = {};
-            wedges.forEach(function(e) {
+        edge_legend.counter((wnodes, wedges, wports) => {
+            const counts = {};
+            wedges.forEach(e => {
                 counts[edge_cat(e.value)] = (counts[edge_cat(e.value)] || 0)+1;
             });
             return counts;
@@ -449,31 +428,27 @@ function on_load(filename, error, data) {
         exploreDiagram.child('edge-legend', edge_legend);
     }
 
-    var nodelist = exploreDiagram.nodeGroup().all().map(function(n) {
-        return {
-            value: n.key,
-            label: exploreDiagram.nodeLabel()(n),
-        };
-    });
-    nodelist.sort(function(a, b) {
-        return a.label < b.label ? -1 : 1;
-    });
+    const nodelist = exploreDiagram.nodeGroup().all().map(n => ({
+        value: n.key,
+        label: exploreDiagram.nodeLabel()(n),
+    }));
+    nodelist.sort((a, b) => a.label < b.label ? -1 : 1);
 
-    var expand_strategy = sync_url.vals.expand_strategy || 'expanded_hidden';
-    var ec_strategy = expandCollapse[expand_strategy]({
+    const expand_strategy = sync_url.vals.expand_strategy || 'expanded_hidden';
+    const ec_strategy = expandCollapse[expand_strategy]({
         nodeCrossfilter: node_flat.crossfilter,
         edgeCrossfilter: edge_flat.crossfilter,
         edgeGroup: edge_flat.group,
-        nodeKey: function(n) {
+        nodeKey(n) {
             return n.name;
         },
-        edgeRawKey: function(e) {
+        edgeRawKey(e) {
             return edge_key(e);
         },
-        edgeSource: function(e) {
+        edgeSource(e) {
             return e.value[sourceattr];
         },
-        edgeTarget: function(e) {
+        edgeTarget(e) {
             return e.value[targetattr];
         },
         directional: sync_url.vals.directional,
@@ -487,25 +462,21 @@ function on_load(filename, error, data) {
 
     if (sync_url.vals.start) {
         if (
-            !nodes.find(function(n) {
-                return n.name === sync_url.vals.start;
-            })
+            !nodes.find(n => n.name === sync_url.vals.start)
         ) {
-            var found = nodes.find(function(n) {
-                return n.value.label.includes(sync_url.vals.start);
-            });
+            const found = nodes.find(n => n.value.label.includes(sync_url.vals.start));
             if (found)
                 sync_url.vals.start = found.name;
             else {
-                console.log("didn't find '"+sync_url.vals.start+"' by nodeKey or nodeLabel");
+                console.log(`didn't find '${sync_url.vals.start}' by nodeKey or nodeLabel`);
                 sync_url.vals.start = null;
             }
         }
     }
 
     if (sync_url.vals.debug) {
-        var troubleshoot = troubleshoot();
-        exploreDiagram.child('troubleshoot', troubleshoot);
+        const troubleshootMode = troubleshoot();
+        exploreDiagram.child('troubleshoot', troubleshootMode);
     }
 
     exploreDiagram.child(
@@ -568,29 +539,23 @@ function on_load(filename, error, data) {
     exploreDiagram.child('expand-collapse', expand_collapse);
     renderAll();
     exploreDiagram.autoZoom('once-noanim');
-    var starter = select('#add-node');
+    const starter = select('#add-node');
     function refresh_add_node() {
         const nodes = nodelist.filter(({label: [label0]}) =>
             !sync_url.vals.expanded.includes(label0)
             && !sync_url.vals.expandedIn.includes(label0)
             && !sync_url.vals.expandedOut.includes(label0)
         );
-        var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodes));
+        const option = starter.selectAll('option').data([{label: 'select one'}].concat(nodes));
         option.exit().remove();
         option.enter().append('option')
             .merge(option)
-            .attr('value', function(d) {
-                return d.value;
-            })
-            .attr('selected', function(d) {
-                return d.value === sync_url.vals.start ? 'selected' : null;
-            })
-            .text(function(d) {
-                return d.label;
-            });
+            .attr('value', d => d.value)
+            .attr('selected', d => d.value === sync_url.vals.start ? 'selected' : null)
+            .text(d => d.label);
     }
     exploreDiagram.on('drawn.add-nodes', refresh_add_node);
-    var expand = select('#expand');
+    const expand = select('#expand');
     function get_dir_recurse(nk) {
         const exp = expand.node().value;
         let dir, recurse = false;
@@ -616,7 +581,7 @@ function on_load(filename, error, data) {
         redrawAll();
     });
 
-    select('#reset').on('click', function() {
+    select('#reset').on('click', () => {
         starter.node().value = 'select one';
         if (sync_url.vals.directional) {
             sync_url.update('expandedIn', []);

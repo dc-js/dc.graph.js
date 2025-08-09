@@ -19,18 +19,21 @@ import {
     spawnEngine,
 } from './dc-graph.js';
 import dcgraph_domain from './dc.graph.tracker.domain.js';
+import { display_error, hide_error } from './graph-error.js';
 import sync_url_options from './sync-url-options.js';
 
-var selectionDiagram = diagram('#graph'), pie, row;
+const selectionDiagram = diagram('#graph');
+// eslint-disable-next-line prefer-const
+let pie, row;
 
-var options = {
+const options = {
     layout: {
         default: 'dagre',
         values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
-        exert: function(val, diagram) {
-            var engine = spawnEngine(val);
+        exert(val, diagram) {
+            const engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine)
@@ -46,7 +49,7 @@ var options = {
         values: [1, 5, 10, 20, 50, 100, 200],
         selector: '#number',
         needs_redraw: true,
-        exert: function(val, diagram) {
+        exert(val, diagram) {
             populate(val);
             diagram.autoZoom('once');
         },
@@ -59,22 +62,7 @@ var options = {
         default: 'none',
     },
 };
-var sync_url = sync_url_options(options, dcgraph_domain(selectionDiagram), selectionDiagram);
-
-function display_error(heading, message) {
-    select('#message')
-        .style('display', null)
-        .html(
-            '<div><h1>'+heading+'</h1>'
-                +(message ? '<code>'+message+'</code></div>' : ''),
-        );
-    throw new Error(message);
-}
-
-function hide_error() {
-    select('#message')
-        .style('display', 'none');
-}
+const sync_url = sync_url_options(options, dcgraph_domain(selectionDiagram), selectionDiagram);
 
 function apply_engine_parameters(engine) {
     switch (engine.layoutAlgorithm()) {
@@ -96,24 +84,16 @@ function apply_engine_parameters(engine) {
 function build_data(nodes, edges) {
     // build crossfilters from scratch
     return {
-        edgef: flatGroup.make(edges, function(d) {
-            return d.key;
-        }),
-        nodef: flatGroup.make(nodes, function(d) {
-            return d.key;
-        }),
+        edgef: flatGroup.make(edges, d => d.key),
+        nodef: flatGroup.make(nodes, d => d.key),
     };
 }
 
-var load_graph = function(nodes, edges) {
-    var data = build_data(nodes, edges),
-        colorDimension = data.nodef.crossfilter.dimension(function(n) {
-            return n.color;
-        }),
+const load_graph = function(nodes, edges) {
+    const data = build_data(nodes, edges),
+        colorDimension = data.nodef.crossfilter.dimension(n => n.color),
         colorGroup = colorDimension.group(),
-        dashDimension = data.edgef.crossfilter.dimension(function(e) {
-            return e.dash;
-        }),
+        dashDimension = data.edgef.crossfilter.dimension(e => e.dash),
         dashGroup = dashDimension.group();
     selectionDiagram
         .nodeDimension(data.nodef.dimension).nodeGroup(data.nodef.group)
@@ -126,8 +106,8 @@ var load_graph = function(nodes, edges) {
         .group(dashGroup);
 };
 
-var populate = function(n) {
-    var random = randomGraph({
+const populate = function(n) {
+    const random = randomGraph({
         ncolors: 3,
         allowParallelEdges: false,
     });
@@ -136,24 +116,24 @@ var populate = function(n) {
     load_graph(random.nodes(), random.edges());
 };
 
-var on_load = function(filename, error, data) {
+const on_load = function(filename, error, data) {
     if (error) {
-        var heading = '';
+        let heading = '';
         if (error.status)
-            heading = 'Error '+error.status+': ';
-        heading += 'Could not load file '+filename;
-        display_error(heading, error.message);
+            heading = `Error ${error.status}: `;
+        heading += `Could not load file ${filename}`;
+        display_error(heading, error);
     }
-    var graph_data = mungeGraph(data);
+    const graph_data = mungeGraph(data);
     load_graph(graph_data.nodes, graph_data.edges);
     selectionDiagram.autoZoom('once');
     redrawAll();
 };
 
 select('#user-file').on('change', function() {
-    var filename = this.value;
+    const filename = this.value;
     if (filename) {
-        var reader = new FileReader();
+        const reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
             loadGraphText(e.target.result, filename, on_load.bind(null, filename));
@@ -162,10 +142,10 @@ select('#user-file').on('change', function() {
     }
 });
 
-var engine = spawnEngine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
+const engine = spawnEngine(sync_url.vals.layout, querystring.parse(), sync_url.vals.worker);
 apply_engine_parameters(engine);
-var colors = ['#1b9e77', '#d95f02', '#7570b3'];
-var dasheses = [
+const colors = ['#1b9e77', '#d95f02', '#7570b3'];
+const dasheses = [
     {name: 'solid', ray: null},
     {name: 'dash', ray: [5, 5]},
     {name: 'dot', ray: [1, 5]},
@@ -182,28 +162,22 @@ selectionDiagram
     .zoomDuration(sync_url.vals.transition_duration)
     .width('auto')
     .height('auto')
-    .nodeFixed(function(n) {
-        return n.value.fixed;
-    })
+    .nodeFixed(n => n.value.fixed)
     .nodeStrokeWidth(0) // turn off outlines
     .nodeLabel('')
-    .nodeLabelFill(function(n) {
-        var rgbColor = rgb(selectionDiagram.nodeFillScale()(selectionDiagram.nodeFill()(n))),
+    .nodeLabelFill(n => {
+        const rgbColor = rgb(selectionDiagram.nodeFillScale()(selectionDiagram.nodeFill()(n))),
             // https://www.w3.org/TR/AERT#color-contrast
             brightness = (rgbColor.r*299+rgbColor.g*587+rgbColor.b*114)/1000;
         return brightness > 127 ? 'black' : 'ghostwhite';
     })
-    .nodeFill(function(kv) {
-        return kv.value.color;
-    })
+    .nodeFill(kv => kv.value.color)
     .nodeOpacity(0.25)
     .edgeOpacity(0.25)
     .timeLimit(1000)
     .nodeFillScale(scaleOrdinal().domain([0, 1, 2]).range(colors))
     .nodeTitle(pluck('key'))
-    .edgeStrokeDashArray(function(e) {
-        return dasheses[e.value.dash].ray;
-    })
+    .edgeStrokeDashArray(e => dasheses[e.value.dash].ray)
     .edgeArrowhead(
         sync_url.vals.arrows === 'head' || sync_url.vals.arrows === 'both' ? 'vee' : null,
     )
@@ -247,27 +221,19 @@ selectionDiagram.child(
 selectionDiagram.child(
     'filter-selection-edges',
     filterSelection('select-edges-group', 'select-edges')
-        .dimensionAccessor(function(c) {
-            return c.edgeDimension();
-        }),
+        .dimensionAccessor(c => c.edgeDimension()),
 );
 
 pie = new PieChart('#pie')
     .width(150).height(150)
     .radius(75)
     .colors(scaleOrdinal().domain([0, 1, 2]).range(colors))
-    .label(function() {
-        return '';
-    })
-    .title(function(kv) {
-        return colors[kv.key]+' nodes ('+kv.value+')';
-    });
+    .label(() => '')
+    .title(kv => `${colors[kv.key]} nodes (${kv.value})`);
 
 row = new RowChart('#row')
     .width(300).height(150)
-    .label(function(kv) {
-        return dasheses[kv.key].name;
-    });
+    .label(kv => dasheses[kv.key].name);
 
 if (sync_url.vals.file)
     loadGraph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));

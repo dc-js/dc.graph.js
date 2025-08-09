@@ -2,43 +2,39 @@ import { renderAll } from 'dc';
 import { availableShapes, diagram, flatGroup, spawnEngine } from './dc-graph.js';
 import querystring from './querystring.js';
 
-var qs = querystring.parse();
+const qs = querystring.parse();
 
-var shapes = availableShapes();
+const shapes = availableShapes();
 
 function rand(n) {
     return Math.floor(Math.random()*n);
 }
-var nodes = [];
-var lorem = lorem_ipsum().map(function(s) {
-    return s.split(' ');
-});
-var nshapes = qs.n || rand(36)+1;
-for (var i = 0; i < nshapes; ++i) {
-    var source = lorem[rand(lorem.length)];
-    var nlines = qs.lines || rand(10)+1, j = 0, lines = [];
+const nodes = [];
+const lorem = lorem_ipsum().map(s => s.split(' '));
+const nshapes = qs.n || rand(36)+1;
+for (let i = 0; i < nshapes; ++i) {
+    const source = lorem[rand(lorem.length)];
+    let nlines = qs.lines || rand(10)+1;
+    let j = 0;
+    const lines = [];
     while (nlines--) {
-        var nword = rand(8)+1;
+        const nword = rand(8)+1;
         lines.push(source.slice(j, j+nword).join(' '));
         j += nword;
         if (j >= source.length)
             break;
     }
     nodes.push({
-        id: 'node'+nodes.length,
+        id: `node${nodes.length}`,
         label: lines,
         shape: {shape: qs.shape || shapes[rand(shapes.length)]},
     });
 }
 
-var node_flat = flatGroup.make(nodes, function(d) {
-        return d.id;
-    }),
-    edge_flat = flatGroup.make([], function(d) {
-        return d.source+'-'+d.target;
-    });
+const node_flat = flatGroup.make(nodes, d => d.id),
+    edge_flat = flatGroup.make([], d => `${d.source}-${d.target}`);
 
-var shapeDiagram = diagram('#graph');
+const shapeDiagram = diagram('#graph');
 
 shapeDiagram
     .width(window.innerWidth)
@@ -49,19 +45,11 @@ shapeDiagram
     .showLayoutSteps(false)
     .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
     .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
-    .edgeSource(function(e) {
-        return e.value.source;
-    })
-    .edgeTarget(function(e) {
-        return e.value.target;
-    })
-    .nodeLabel(function(n) {
-        return n.value.label;
-    })
+    .edgeSource(e => e.value.source)
+    .edgeTarget(e => e.value.target)
+    .nodeLabel(n => n.value.label)
     .nodeLineHeight(qs.lh || 1)
-    .nodeShape(function(n) {
-        return n.value.shape;
-    })
+    .nodeShape(n => n.value.shape)
     .edgeArrowhead('vee');
 
 shapeDiagram.timeLimit(1000);

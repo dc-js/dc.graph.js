@@ -1,84 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>Explore a large graph</title>
-  <meta charset="UTF-8">
-  <link rel="icon" href="img/favicon.png" type="image/x-icon" />
-  <link rel="stylesheet" type="text/css" href="css/explore.css"/>
-  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
-  <link rel="stylesheet" type="text/css" href="css/graph-controls.css"/>
-  <link rel="stylesheet" type="text/css" href="css/graph-error.css"/>
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
-  <script type="importmap">
-  {
-    "imports": {
-      "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
-      "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
-      "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
-      "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
-      "d3-scale-chromatic": "https://cdn.jsdelivr.net/npm/d3-scale-chromatic@1.5.0/+esm",
-      "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
-      "@dagrejs/dagre": "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm",
-      "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
-      "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm",
-      "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
-      "webcola": "https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm",
-      "dagre": "https://cdn.jsdelivr.net/npm/dagre@0.8.5/+esm",
-      "viz.js": "https://cdn.jsdelivr.net/npm/viz.js@2.1.2/+esm",
-      "@viz-js/viz": "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.7.0/+esm"
-    }
-  }
-  </script>
+  <head>
+    <title>Explore a large graph</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="img/favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="css/explore.css" />
+    <link rel="stylesheet" type="text/css" href="css/dc.graph.css" />
+    <link rel="stylesheet" type="text/css" href="css/graph-controls.css" />
+    <link rel="stylesheet" type="text/css" href="css/graph-error.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
+          "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
+          "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
+          "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
+          "d3-scale-chromatic": "https://cdn.jsdelivr.net/npm/d3-scale-chromatic@1.5.0/+esm",
+          "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
+          "@dagrejs/dagre": "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm",
+          "@dagrejs/graphlib-dot": "https://cdn.jsdelivr.net/npm/@dagrejs/graphlib-dot@1.0.2/+esm",
+          "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
+          "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm",
+          "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
+          "webcola": "https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm",
+          "dagre": "https://cdn.jsdelivr.net/npm/dagre@0.8.5/+esm",
+          "viz.js": "https://cdn.jsdelivr.net/npm/viz.js@2.1.2/+esm",
+          "@viz-js/viz": "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.7.0/+esm"
+        }
+      }
+    </script>
 
-  <!-- Set up global d3 for legacy scripts (synchronous) -->
-  <script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
+    <!-- Set up global d3 for legacy scripts (synchronous) -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
 
-  <script type="text/javascript" src="js/chart.registry.js"></script>
+    <script type="text/javascript" src="js/chart.registry.js"></script>
 
-  <script type="text/javascript" src="js/cola.js"></script>
-  <script type="text/javascript" src="js/dagre.js"></script>
-  <script type="text/javascript" src="js/viz.js"></script>
-  <script type="module" src="js/parse-incrface.js"></script>
-  <script type="module" src="js/dynagraph-main.js"></script>
+    <script type="text/javascript" src="js/cola.js"></script>
+    <script type="text/javascript" src="js/dagre.js"></script>
+    <script type="text/javascript" src="js/viz.js"></script>
+    <script type="module" src="js/parse-incrface.js"></script>
+    <script type="module" src="js/dynagraph-main.js"></script>
 
-  <script type="module" src="js/graph-error.js"></script>
-  <script type="text/javascript" src="js/graphlib-dot.min.js"></script>
+    <script type="module" src="js/graph-error.js"></script>
+    <script type="text/javascript" src="js/promise-polyfill.js"></script>
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="module" src="js/querystring.js"></script>
+    <script type="module" src="js/sync-url-options.js"></script>
+    <script type="module" src="js/dc.graph.tracker.domain.js"></script>
+  </head>
 
-  <script type="text/javascript" src="js/promise-polyfill.js"></script>
-  <script type="text/javascript" src="js/jquery.js"></script>
-  <script type="module" src="js/querystring.js"></script>
-  <script type="module" src="js/sync-url-options.js"></script>
-  <script type="module" src="js/dc.graph.tracker.domain.js"></script>
-</head>
-
-<body>
-  <div id="main">
-    <script type="module" src="js/example-header.js"></script>
-    <div id="controls">
-      <div id="left-controls">
-        <label for='#add-node'>Add node&nbsp;</label><select id="add-node"></select>&nbsp;&nbsp;
-        <label for='#expand'>Expand&nbsp;</label><select id="expand">
-          <option value='out'>out</option>
-          <option value='in'>in</option>
-          <option value='both'>both</option>
-          <option value='all-out'>all out</option>
-          <option value='all-in'>all in</option>
-        </select>&nbsp;&nbsp;
-        <button id=reset class="btn-xs btn-default">reset</button>&nbsp;&nbsp;
-        <select id="layout"></select>
+  <body>
+    <div id="main">
+      <script type="module" src="js/example-header.js"></script>
+      <div id="controls">
+        <div id="left-controls">
+          <label for="#add-node">Add node&nbsp;</label>
+          <select id="add-node"></select>
+          &nbsp;&nbsp;
+          <label for="#expand">Expand&nbsp;</label>
+          <select id="expand">
+            <option value="out">out</option>
+            <option value="in">in</option>
+            <option value="both">both</option>
+            <option value="all-out">all out</option>
+            <option value="all-in">all in</option>
+          </select>
+          &nbsp;&nbsp;
+          <button id="reset" class="btn-xs btn-default">reset</button>
+          &nbsp;&nbsp;
+          <select id="layout"></select>
+        </div>
+        <div id="middle-controls"></div>
+        <div id="right-controls">
+          <label for="#user-file" title="in-browser: nothing uploaded to server">
+            Load file&nbsp;
+          </label>
+          <input
+            type="file"
+            id="user-file"
+            style="display: inline"
+            title="in-browser: nothing uploaded to server"
+          />
+          <a id="data-link" target="dcgraph-datalink" style="font-size: 8px" href="#">DATA LINK</a>
+        </div>
       </div>
-      <div id="middle-controls"></div>
-      <div id="right-controls">
-        <label for='#user-file' title="in-browser: nothing uploaded to server">Load file&nbsp;</label><input type="file" id="user-file" style="display: inline" title="in-browser: nothing uploaded to server">
-        <a id="data-link" target="dcgraph-datalink" style="font-size: 8px" href='#'>DATA LINK</a>
+      <div id="graph">
+        <div id="numerics"></div>
       </div>
     </div>
-    <div id="graph">
-      <div id="numerics"></div>
-    </div>
-  </div>
-  <div id="message" style="display: none;"></div>
+    <div id="message" style="display: none"></div>
 
-<script type="module" src="js/explore.js"></script>
-</body>
+    <script type="module" src="js/explore.js"></script>
+  </body>
 </html>

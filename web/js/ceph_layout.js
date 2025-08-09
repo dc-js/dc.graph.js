@@ -1,14 +1,14 @@
 import { app_layouts } from './app_layout.js';
 
 app_layouts.ceph = function() {
-    var view_ = 'ceph';
-    var edgetypes_;
+    let view_ = 'ceph';
+    let edgetypes_;
 
-    var filters = {
-        ceph: function(c) {
+    const filters = {
+        ceph(c) {
             return c === 'VM-VOL' || c === 'HOST-VM';
         },
-        volume: function(c) {
+        volume(c) {
             return c === 'TOR-CHOST' || c === 'CHOST-Backend' || c === 'Backend-Vol';
         },
     };
@@ -17,7 +17,7 @@ app_layouts.ceph = function() {
     }
 
     return {
-        init: function() {
+        init() {
             $('#app-options').append(
                 [
                     '<div id="select-domain">',
@@ -34,14 +34,12 @@ app_layouts.ceph = function() {
                 dc.redrawAll();
             });
         },
-        data: function(nodes, edges) {
-            edgetypes_ = edges.crossfilter.dimension(function(e) {
-                return e.class;
-            });
+        data(nodes, edges) {
+            edgetypes_ = edges.crossfilter.dimension(e => e.class);
             apply_view();
         },
         lengthStrategy: 'symmetric',
-        initDiagram: function(diagram) {
+        initDiagram(diagram) {
             diagram.induceNodes(true)
                 .showLayoutSteps(false)
                 .transitionDuration(500);

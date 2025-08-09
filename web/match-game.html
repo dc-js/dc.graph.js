@@ -1,69 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>Match Game</title>
-  <meta charset="UTF-8">
-  <link rel="icon" href="img/favicon.png" type="image/x-icon" />
-  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
-  <link rel="stylesheet" type="text/css" href="css/jquery-ui.css"/>
+  <head>
+    <title>Match Game</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="img/favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="css/dc.graph.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.css" />
 
-  <script type="importmap">
-  {
-    "imports": {
-      "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
-      "d3-array": "https://cdn.jsdelivr.net/npm/d3-array@1.2.4/+esm",
-      "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
-      "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
-      "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
-      "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
-      "@dagrejs/dagre": "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm",
-      "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
-      "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
-      "yoga-layout": "https://cdn.jsdelivr.net/npm/yoga-layout@1.10.0/+esm",
-      "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm"
-    }
-  }
-  </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
+          "d3-array": "https://cdn.jsdelivr.net/npm/d3-array@1.2.4/+esm",
+          "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
+          "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
+          "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
+          "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
+          "@dagrejs/dagre": "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm",
+          "@dagrejs/graphlib-dot": "https://cdn.jsdelivr.net/npm/@dagrejs/graphlib-dot@1.0.2/+esm",
+          "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
+          "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
+          "yoga-layout": "https://cdn.jsdelivr.net/npm/yoga-layout@1.10.0/+esm",
+          "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm"
+        }
+      }
+    </script>
 
-  <script type="text/javascript" src="js/jquery.js"></script>
-  <script type="text/javascript" src="js/jquery-ui.js"></script>
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.js"></script>
 
-  <script type="text/javascript" src="js/chart.registry.js"></script>
-  <style>
-    #main {
+    <script type="text/javascript" src="js/chart.registry.js"></script>
+    <style>
+      #main {
         position: absolute;
-        left: 0; top: 0; right: 0; bottom: 0;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         flex-direction: column;
-    }
-    #graph {
-      position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      bottom: 0;
-    }
-    #graph.dc-graph text.node-label {
-      font: 16px sans-serif;
-    }
-    #resize {
+      }
+      #graph {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+      }
+      #graph.dc-graph text.node-label {
+        font: 16px sans-serif;
+      }
+      #resize {
         border: 1px dotted grey;
-    }
-    .node-shape {
+      }
+      .node-shape {
         pointer-events: all;
-    }
-  </style>
-</head>
+      }
+    </style>
+  </head>
 
-<body>
-  <div id="main">
-    <script type="module" src="js/example-header.js"></script>
+  <body>
+    <div id="main">
+      <script type="module" src="js/example-header.js"></script>
 
-  <div id="resize" style="width: 400px; height: 400px; position: absolute; left: 100px; top: 100px">
-    <div id="graph" class="chart"></div>
-  </div>
+      <div
+        id="resize"
+        style="width: 400px; height: 400px; position: absolute; left: 100px; top: 100px"
+      >
+        <div id="graph" class="chart"></div>
+      </div>
 
-<script type="module" src="js/match-game.js"></script>
-</body>
+      <script type="module" src="js/match-game.js"></script>
+    </div>
+  </body>
 </html>

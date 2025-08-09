@@ -3,7 +3,7 @@ import { diagram, flatGroup, grid, manualLayout, troubleshoot } from './dc-graph
 import dcgraph_domain from './dc.graph.tracker.domain.js';
 import sync_url_options from './sync-url-options.js';
 
-var options = {
+const options = {
     arrowhead: {
         default: 'vee',
         selector: '#arrowhead',
@@ -17,7 +17,7 @@ var options = {
     zoom: {
         default: 4,
         selector: '#zoom',
-        exert: function(val, diagram) {
+        exert(val, diagram) {
             diagram.renderer().scale(+val);
         },
     },
@@ -25,8 +25,8 @@ var options = {
         default: false,
         selector: '#debug',
         needs_redraw: true,
-        exert: function(val, diagram) {
-            var troubleshootMode = val
+        exert(val, diagram) {
+            const troubleshootMode = val
                 ? troubleshoot()
                     .boundsWidth(5)
                     .boundsHeight(5)
@@ -45,17 +45,17 @@ var options = {
         default: true,
         selector: '#grid',
         needs_redraw: true,
-        exert: function(val, diagram) {
-            var gridMode = val ? grid() : null;
+        exert(val, diagram) {
+            const gridMode = val ? grid() : null;
             diagram.child('grid', gridMode)
                 .redraw();
         },
     },
 };
-var arrowDiagram = diagram('#graph');
-var sync_url = sync_url_options(options, dcgraph_domain(arrowDiagram), arrowDiagram);
+const arrowDiagram = diagram('#graph');
+const sync_url = sync_url_options(options, dcgraph_domain(arrowDiagram), arrowDiagram);
 
-var nodes = [
+const nodes = [
     {
         key: 'tail',
         x: 15,
@@ -78,7 +78,7 @@ var nodes = [
     },
 ];
 
-var edges = [
+const edges = [
     {
         key: 'e',
         sourcename: 'tail',
@@ -96,14 +96,10 @@ var edges = [
     },
 ];
 
-var edge_flat = flatGroup.make(edges, function(e) {
-        return e.key;
-    }),
-    node_flat = flatGroup.make(nodes, function(n) {
-        return n.key;
-    });
+const edge_flat = flatGroup.make(edges, e => e.key),
+    node_flat = flatGroup.make(nodes, n => n.key);
 
-var engine = manualLayout();
+const engine = manualLayout();
 
 arrowDiagram
     .width('auto')
@@ -122,16 +118,13 @@ arrowDiagram
     .edgeOpacity(sync_url.vals.opacity)
     .edgeStroke(sync_url.vals.color)
     .edgeArrowSize(sync_url.vals.arrowsize)
-    .edgeArrowhead(function() {
-        return sync_url.vals.arrowhead;
-    }).edgeArrowtail(function() {
-        return sync_url.vals.arrowtail;
-    });
+    .edgeArrowhead(() => sync_url.vals.arrowhead).edgeArrowtail(() => sync_url.vals.arrowtail);
 
-var syntax =
-    "concatenate up to four: optional 'o' then optional 'l' or 'r' then one of "+Object.keys(
+const syntax = `concatenate up to four: optional 'o' then optional 'l' or 'r' then one of ${
+    Object.keys(
         arrowDiagram.arrows(),
-    ).join(' ');
+    ).join(' ')
+}`;
 
 selectAll('label[for*="arrow"]').attr('title', syntax);
 

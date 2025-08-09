@@ -1,124 +1,130 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>Compare layouts</title>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
-  <link rel="stylesheet" type="text/css" href="css/fontawesome-all.css"/>
-  <link rel="stylesheet" type="text/css" href="css/example-common.css"/>
-  <script type="importmap">
-  {
-    "imports": {
-      "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
-      "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
-      "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
-      "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
-      "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
-      "@dagrejs/dagre": "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm",
-      "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
-      "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm",
-      "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
-      "webcola": "https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm",
-      "dagre": "https://cdn.jsdelivr.net/npm/dagre@0.8.5/+esm",
-      "viz.js": "https://cdn.jsdelivr.net/npm/viz.js@2.1.2/+esm",
-      "@viz-js/viz": "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.7.0/+esm"
-    }
-  }
-  </script>
+  <head>
+    <title>Compare layouts</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="css/dc.graph.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/fontawesome-all.css" />
+    <link rel="stylesheet" type="text/css" href="css/example-common.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
+          "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
+          "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
+          "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
+          "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
+          "@dagrejs/dagre": "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm",
+          "@dagrejs/graphlib-dot": "https://cdn.jsdelivr.net/npm/@dagrejs/graphlib-dot@1.0.2/+esm",
+          "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
+          "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm",
+          "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
+          "webcola": "https://cdn.jsdelivr.net/npm/webcola@3.4.0/+esm",
+          "dagre": "https://cdn.jsdelivr.net/npm/dagre@0.8.5/+esm",
+          "viz.js": "https://cdn.jsdelivr.net/npm/viz.js@2.1.2/+esm",
+          "@viz-js/viz": "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.7.0/+esm"
+        }
+      }
+    </script>
 
-  <script type="text/javascript" src="js/jquery.js"></script>
-  <script type="text/javascript" src="js/promise-polyfill.js"></script>
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/promise-polyfill.js"></script>
 
-  <!-- Set up global d3 for legacy scripts (synchronous) -->
-  <script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
+    <!-- Set up global d3 for legacy scripts (synchronous) -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
 
-  <script type="text/javascript" src="js/cola.js"></script>
-  <script type="text/javascript" src="js/dagre.js"></script>
-  <script type="text/javascript" src="js/viz.js"></script>
-  <script type="module" src="js/parse-incrface.js"></script>
-  <script type="module" src="js/dynagraph-main.js"></script>
+    <script type="text/javascript" src="js/cola.js"></script>
+    <script type="text/javascript" src="js/dagre.js"></script>
+    <script type="text/javascript" src="js/viz.js"></script>
+    <script type="module" src="js/parse-incrface.js"></script>
+    <script type="module" src="js/dynagraph-main.js"></script>
 
-  <script type="text/javascript" src="js/chart.registry.js"></script>
+    <script type="text/javascript" src="js/chart.registry.js"></script>
 
-  <script type="text/javascript" src="js/graphlib-dot.js"></script>
+    <script type="module" src="js/querystring.js"></script>
+    <script type="module" src="js/sync-url-options.js"></script>
+    <script type="module" src="js/dc.graph.tracker.domain.js"></script>
 
-  <script type="module" src="js/querystring.js"></script>
-  <script type="module" src="js/sync-url-options.js"></script>
-  <script type="module" src="js/dc.graph.tracker.domain.js"></script>
-
-  <style type="text/css">
-    body {
+    <style type="text/css">
+      body {
         overflow: hidden;
-    }
-    #main {
+      }
+      #main {
         position: absolute;
-        left: 0; top: 0; right: 0; bottom: 0;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         flex-direction: column;
-    }
-    #compare {
+      }
+      #compare {
         flex: 1;
         margin: 1em;
         display: flex;
         flex-direction: row;
-    }
-    #left-side, #right-side {
+      }
+      #left-side,
+      #right-side {
         flex: 1;
         display: flex;
         flex-direction: column;
-    }
-    #left-controls, #right-controls {
+      }
+      #left-controls,
+      #right-controls {
         margin: auto;
-    }
-    #middle {
+      }
+      #middle {
         flex-basis: 0px;
         position: relative;
-    }
-    #randomize {
+      }
+      #randomize {
         position: absolute;
         font-size: 2em;
         left: -1em;
-    }
-    #left-graph, #right-graph {
+      }
+      #left-graph,
+      #right-graph {
         flex: 1;
-    }
-    #message {
+      }
+      #message {
         position: absolute;
-        left: 0; top: 0; right: 0; bottom: 0;
-        background-color: rgba(255,255,255, 0.7);
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-  </style>
+      }
+    </style>
+  </head>
 
-</head>
-
-
-<body>
-
-  <div id="main">
-    <script type="module" src="js/example-header.js"></script>
-    <div id="compare">
-      <div id="left-side">
-        <div id="left-controls">
-          <select id="left-layout"></select>
+  <body>
+    <div id="main">
+      <script type="module" src="js/example-header.js"></script>
+      <div id="compare">
+        <div id="left-side">
+          <div id="left-controls">
+            <select id="left-layout"></select>
+          </div>
+          <div id="left-graph"></div>
         </div>
-        <div id="left-graph"></div>
-      </div>
-      <div id="middle">
-        <i id="randomize" class="fas fa-dice"></i>
-      </div>
-      <div id="right-side">
-        <div id="right-controls">
-          <select id="right-layout"></select>
+        <div id="middle">
+          <i id="randomize" class="fas fa-dice"></i>
         </div>
-        <div id="right-graph"></div>
+        <div id="right-side">
+          <div id="right-controls">
+            <select id="right-layout"></select>
+          </div>
+          <div id="right-graph"></div>
+        </div>
       </div>
     </div>
-  </div>
-  <div id="message" style="display: none;"></div>
+    <div id="message" style="display: none"></div>
 
-  <script type="module" src="js/compare-layouts.js"></script>
-</body>
+    <script type="module" src="js/compare-layouts.js"></script>
+  </body>
+</html>

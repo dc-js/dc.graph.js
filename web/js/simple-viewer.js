@@ -120,9 +120,9 @@ async function on_load(filename, error, data) {
     if (error) {
         let heading = '';
         if (error.status)
-            heading = 'Error '+error.status+': ';
-        heading += 'Could not load file '+filename;
-        display_error(heading, error.message);
+            heading = `Error ${error.status}: `;
+        heading += `Could not load file ${filename}`;
+        display_error(heading, error);
         return;
     }
 
@@ -130,8 +130,7 @@ async function on_load(filename, error, data) {
     try {
         graph_data = mungeGraph(data);
     } catch (xep) {
-        console.log(xep);
-        display_error(`Error munging ${filename}`, xep.message);
+        display_error(`Error munging ${filename}`, xep);
     }
     const nodes = graph_data.nodes,
         edges = graph_data.edges,
@@ -142,12 +141,12 @@ async function on_load(filename, error, data) {
     const update_data_link = () => {
         select('#data-link')
             .style('visibility', sync_url.vals.datalink ? 'visible' : 'hidden')
-            .attr('href', sync_url.what_if_url({file: dataUrl({nodes: nodes, edges: edges})}));
+            .attr('href', sync_url.what_if_url({file: dataUrl({nodes, edges})}));
     };
     more_output = update_data_link;
     update_data_link();
 
-    const edge_key = d => d[sourceattr]+'-'+d[targetattr]+(d.par ? ':'+d.par : '');
+    const edge_key = d => `${d[sourceattr]}-${d[targetattr]}${d.par ? `:${d.par}` : ''}`;
     const edge_flat = flatGroup.make(edges, edge_key),
         node_flat = flatGroup.make(nodes, d => d[nodekeyattr]),
         cluster_flat = flatGroup.make(data.clusters || [], d => d.key);

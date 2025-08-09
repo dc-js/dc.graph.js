@@ -1,54 +1,54 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>Flexbox layout</title>
-  <meta charset="UTF-8">
-  <link rel="icon" href="img/favicon.png" type="image/x-icon" />
-  <link rel="stylesheet" type="text/css" href="css/dc.graph.css"/>
-  <link rel="stylesheet" type="text/css" href="css/dc.css"/>
+  <head>
+    <title>Flexbox layout</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="img/favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="css/dc.graph.css" />
+    <link rel="stylesheet" type="text/css" href="css/dc.css" />
 
-  <script type="importmap">
-  {
-    "imports": {
-      "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
-      "d3-array": "https://cdn.jsdelivr.net/npm/d3-array@1.2.4/+esm",
-      "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
-      "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
-      "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
-      "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
-      "@dagrejs/dagre": "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm",
-      "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
-      "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
-      "yoga-layout": "https://cdn.jsdelivr.net/npm/yoga-layout@1.10.0/+esm",
-      "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm",
-      "querystring": "./js/querystring.js"
-    }
-  }
-  </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "d3": "https://cdn.jsdelivr.net/npm/d3@5.16.0/+esm",
+          "d3-array": "https://cdn.jsdelivr.net/npm/d3-array@1.2.4/+esm",
+          "d3-collection": "https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm",
+          "d3-scale": "https://cdn.jsdelivr.net/npm/d3-scale@2.2.2/+esm",
+          "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@1.4.2/+esm",
+          "crossfilter2": "https://cdn.jsdelivr.net/npm/crossfilter2@1.5.4/+esm",
+          "@dagrejs/dagre": "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1.1.5/+esm",
+          "@dagrejs/graphlib-dot": "https://cdn.jsdelivr.net/npm/@dagrejs/graphlib-dot@1.0.2/+esm",
+          "dc": "https://cdn.jsdelivr.net/npm/dc@4.0.5/+esm",
+          "lodash": "https://cdn.jsdelivr.net/npm/lodash@4.17.21/+esm",
+          "yoga-layout": "https://cdn.jsdelivr.net/npm/yoga-layout@1.10.0/+esm",
+          "tippy.js": "https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/+esm",
+          "querystring": "./js/querystring.js"
+        }
+      }
+    </script>
 
-  <!-- Make d3 available globally for webcola -->
-  <script type="module">
-  import * as d3 from 'd3';
-  window.d3 = d3;
-  </script>
-  
-  <script type="text/javascript" src="js/chart.registry.js"></script>
+    <!-- Make d3 available globally for webcola -->
+    <script type="module">
+      import * as d3 from 'd3';
+      window.d3 = d3;
+    </script>
 
-  <style>
-    #graph {
-      position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      bottom: 0;
-    }
-  </style>
-</head>
+    <script type="text/javascript" src="js/chart.registry.js"></script>
 
-<body>
+    <style>
+      #graph {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+      }
+    </style>
+  </head>
 
-  <div id="graph" class="chart"></div>
+  <body>
+    <div id="graph" class="chart"></div>
 
-<script type="module" src="js/flexbox.js"></script>
-</body>
+    <script type="module" src="js/flexbox.js"></script>
+  </body>
 </html>

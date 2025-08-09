@@ -33,9 +33,9 @@ import {
     withIconContents,
 } from './dc-graph.js';
 
-var qs = querystring.parse();
+const qs = querystring.parse();
 
-var options = Object.assign({
+const options = Object.assign({
     catalog: 'catalog/get.json',
     catformat: 'demo',
     solution: '',
@@ -44,73 +44,67 @@ var options = Object.assign({
 // abstract away the data formats
 function demo_catalog_reader(catalog) {
     return {
-        models: function() {
+        models() {
             return catalog.components;
         },
-        composites: function() {
+        composites() {
             if (arguments.length) {
                 catalog.solutions = arguments[0];
                 return this;
             }
             return catalog.solutions;
         },
-        fModelId: function(model) {
+        fModelId(model) {
             return model.name;
         },
-        fModelName: function(model) {
+        fModelName(model) {
             return model.name;
         },
-        fModelCategory: function(model) {
+        fModelCategory(model) {
             return model.category;
         },
-        fModelUrl: function(model) {
+        fModelUrl(model) {
             return model.url;
         },
-        fCompositeId: function(comp) {
+        fCompositeId(comp) {
             return comp.name;
         },
-        fTypeName: function(type) {
+        fTypeName(type) {
             return type.name;
         },
         ports: function ports(nid, def) {
-            return def.requirements.map(function(r) {
-                return {
-                    nodeId: nid,
-                    portname: 'req-'+r,
-                    wild: r === 'wild',
-                    type: r === 'wild' ? null : r,
-                    bounds: inbounds,
-                };
-            }).concat(def.capabilities.map(function(r) {
-                return {
-                    nodeId: nid,
-                    portname: 'cap-'+r,
-                    wild: r === 'wild',
-                    type: r === 'wild' ? null : r,
-                    bounds: outbounds,
-                };
-            })).concat((def.extras || []).map(function(x) {
-                return {
-                    nodeId: nid,
-                    portname: 'xtra-'+x,
-                    wild: x === 'wild',
-                    type: x === 'wild' ? null : x,
-                    bounds: xtrabounds,
-                };
-            }));
+            return def.requirements.map(r => ({
+                nodeId: nid,
+                portname: `req-${r}`,
+                wild: r === 'wild',
+                type: r === 'wild' ? null : r,
+                bounds: inbounds,
+            })).concat(def.capabilities.map(r => ({
+                nodeId: nid,
+                portname: `cap-${r}`,
+                wild: r === 'wild',
+                type: r === 'wild' ? null : r,
+                bounds: outbounds,
+            }))).concat((def.extras || []).map(x => ({
+                nodeId: nid,
+                portname: `xtra-${x}`,
+                wild: x === 'wild',
+                type: x === 'wild' ? null : x,
+                bounds: xtrabounds,
+            })));
         },
     };
 }
 
-var catalog_readers = {
+const catalog_readers = {
     'demo': demo_catalog_reader,
 };
 
 function show_while_promise(selector, promise) {
     select(selector).style('visibility', 'visible');
-    promise.then(function() {
+    promise.then(() => {
         // let it run a little longer so that it's guaranteed to show
-        window.setTimeout(function() {
+        window.setTimeout(() => {
             select(selector).style('visibility', 'hidden');
         }, 100);
     });
@@ -122,11 +116,11 @@ function get_catalog() {
 }
 
 // canvas
-var _compositionDiagram, _rendered = false, _drawGraphs, _solution, _ports = [];
+let _compositionDiagram, _rendered = false, _drawGraphs, _solution, _ports = [];
 // save-area (needs version too)
-var _currentSoln = null, _solutionName, _description, _dirty = false;
+let _currentSoln = null, _solutionName, _description, _dirty = false;
 // palette
-var _catalog, _components, _palette;
+let _catalog, _components, _palette;
 
 function set_dirty(whether) {
     _dirty = whether;
@@ -146,19 +140,19 @@ function set_dirty(whether) {
 //
 
 function redraw_promise(diagram) {
-    return new Promise(function(resolve, reject) {
-        diagram.on('end', function() {
+    return new Promise((resolve, reject) => {
+        diagram.on('end', () => {
             resolve();
         });
         diagram.redraw();
     });
 }
 
-var lbounds = [Math.PI*5/6, -Math.PI*5/6],
+const lbounds = [Math.PI*5/6, -Math.PI*5/6],
     rbounds = [-Math.PI/6, Math.PI/6],
     dbounds = [Math.PI/6, Math.PI*5/6],
     ubounds = [-Math.PI*5/6, -Math.PI/6];
-var inbounds, outbounds, xtrabounds;
+let inbounds, outbounds, xtrabounds;
 if (options.rankdir === 'TB') {
     inbounds = ubounds;
     outbounds = dbounds;
@@ -169,39 +163,27 @@ if (options.rankdir === 'TB') {
     xtrabounds = [-Math.PI/2, -Math.PI/2];
 }
 function update_ports() {
-    var port_flat = flatGroup.make(_ports, function(d) {
-        return d.nodeId+'/'+d.portname;
-    });
+    const port_flat = flatGroup.make(_ports, d => `${d.nodeId}/${d.portname}`);
     _compositionDiagram
         .portDimension(port_flat.dimension).portGroup(port_flat.group);
 }
-var _fakeDB = {};
+const _fakeDB = {};
 async function display_solution(catalog, solution) {
     _compositionDiagram.child('fix-nodes')
         .clearFixes();
     _description.editable('setValue', solution.description || null);
-    var types = set(solution.nodes.map(function(n) {
-        return n.type;
-    })).values();
+    const types = set(solution.nodes.map(n => n.type)).values();
     Promise.all(
-        types.map(function(t) {
-            return _components.get(t).url;
-        }).map(json),
-    ).then(async function(defns) {
-        var defn = {};
-        types.forEach(function(t, i) {
-            return defn[t] = defns[i];
-        });
+        types.map(t => _components.get(t).url).map(json),
+    ).then(async defns => {
+        const defn = {};
+        types.forEach((t, i) => defn[t] = defns[i]);
         _ports = [];
-        solution.nodes.forEach(function(n) {
+        solution.nodes.forEach(n => {
             _ports = _ports.concat(catalog.ports(n.id, defn[n.type]));
         });
-        var node_flat = flatGroup.make(solution.nodes, function(d) {
-                return d.id;
-            }),
-            edge_flat = flatGroup.make(solution.edges, function(e) {
-                return e.id;
-            });
+        const node_flat = flatGroup.make(solution.nodes, d => d.id),
+            edge_flat = flatGroup.make(solution.edges, e => e.id);
         _compositionDiagram
             .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
             .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group);
@@ -227,7 +209,7 @@ function load_solution(name, url) {
     else return json(url);
 }
 function load_sol(name, url) {
-    load_solution(name, url).then(function(solution) {
+    load_solution(name, url).then(solution => {
         _solution = solution;
         return display_solution(_catalog, _solution);
     });
@@ -239,12 +221,10 @@ function save_solution(catalog, name) {
     _fakeDB[name] = _solution;
     set_dirty(false);
     if (
-        !_.find(catalog.composites(), function(comp) {
-            return catalog.fCompositeId(comp) === name;
-        })
+        !_.find(catalog.composites(), comp => catalog.fCompositeId(comp) === name)
     )
         catalog.composites().push({
-            name: name,
+            name,
             url: null,
         });
     return Promise.resolve(catalog);
@@ -252,7 +232,7 @@ function save_solution(catalog, name) {
 function maybe_save_solution(catalog) {
     if (!_dirty || !confirm('Current solution is unsaved - save it now?'))
         return Promise.resolve(catalog);
-    var name = _currentSoln;
+    let name = _currentSoln;
     if (!name)
         name = prompt('Enter a solution name', 'Solution');
     return save_solution(catalog, name);
@@ -260,12 +240,10 @@ function maybe_save_solution(catalog) {
 
 function rename_solution(catalog, oldname, newname) {
     if (
-        _.find(catalog.composites(), function(comp) {
-            return catalog.fCompositeId(comp) === newname;
-        })
+        _.find(catalog.composites(), comp => catalog.fCompositeId(comp) === newname)
     ) return Promise.reject('name already used');
     catalog.composites(
-        catalog.composites().map(function(soln) {
+        catalog.composites().map(soln => {
             soln = Object.assign({}, soln);
             if (catalog.fCompositeId(soln) === oldname)
                 soln.name = newname;
@@ -280,15 +258,11 @@ function rename_solution(catalog, oldname, newname) {
 }
 function delete_solution(catalog, name) {
     if (
-        !_.find(catalog.composites(), function(comp) {
-            return catalog.fCompositeId(comp) === name;
-        })
+        !_.find(catalog.composites(), comp => catalog.fCompositeId(comp) === name)
     )
         return Promise.reject('solution not in catalog');
     catalog.composites(
-        catalog.composites().filter(function(soln) {
-            return catalog.fCompositeId(soln) !== name;
-        }),
+        catalog.composites().filter(soln => catalog.fCompositeId(soln) !== name),
     );
     if (_fakeDB[name]) delete _fakeDB[name];
     return Promise.resolve(catalog);
@@ -305,30 +279,26 @@ function print_value(v) {
         return JSON.stringify(v);
 }
 function display_properties(catalog, content) {
-    var dest = select('#properties-content');
+    const dest = select('#properties-content');
     if (typeof content === 'string') { // url
-        json(content).then(function(content) {
+        json(content).then(content => {
             display_properties(catalog, content);
         });
     } else if (typeof content === 'object') { // json
         content = Object.assign({}, content);
-        var name = catalog.fTypeName(content);
+        const name = catalog.fTypeName(content);
         delete content.name;
         dest.style('visibility', 'visible');
         select('#selected-name')
             .text(name);
-        var table = select('#properties-table');
-        var keys = Object.keys(content).sort();
-        var rows = table.selectAll('tr.property').data(keys);
+        const table = select('#properties-table');
+        const keys = Object.keys(content).sort();
+        const rows = table.selectAll('tr.property').data(keys);
         rows.exit().remove();
         rows.enter().append('tr').attr('class', 'property');
-        var cols = rows.selectAll('td').data(function(x) {
-            return [x, print_value(content[x])];
-        });
+        const cols = rows.selectAll('td').data(x => [x, print_value(content[x])]);
         cols.enter().append('td');
-        cols.text(function(x) {
-            return x;
-        });
+        cols.text(x => x);
     } else dest.style('visibility', 'hidden');
 }
 
@@ -337,47 +307,42 @@ function display_properties(catalog, content) {
 //
 
 function make_palette(selector) {
-    var _dispatch = dispatch('selected');
-    var _categories, _keyFunction, _nameFunction;
+    const _dispatch = dispatch('selected');
+    let _categories, _keyFunction, _nameFunction;
     function sanitize_id(key) {
         return key.toLowerCase().replace(' ', '-').replace(/[.]/g, '');
     }
     function heading_id(kvs) {
-        return 'heading-'+sanitize_id(kvs.key);
+        return `heading-${sanitize_id(kvs.key)}`;
     }
     function collapse_id(kvs) {
-        return 'collapse-'+sanitize_id(kvs.key);
+        return `collapse-${sanitize_id(kvs.key)}`;
     }
     function select_id(comp) {
-        return 'select-'+sanitize_id(_keyFunction(comp));
+        return `select-${sanitize_id(_keyFunction(comp))}`;
     }
     function pass_through(x) {
         return [x];
     }
     function show_selection(parent, key) {
         parent.selectAll('li')
-            .classed('ui-selected', function(comp2) {
-                return _keyFunction(comp2) === key;
-            });
+            .classed('ui-selected', comp2 => _keyFunction(comp2) === key);
     }
     function data(categories) {
-        var nulls = [], i = 0;
-        categories.forEach(function(c) {
+        const nulls = [];
+        let i = 0;
+        categories.forEach(c => {
             if (!c)
                 nulls.push(i);
             else ++i;
         });
-        categories = categories.filter(function(c) {
-            return !!c;
-        });
-        var card = select('#palette')
-            .selectAll('div.card').data(categories, function(kvs) {
-                return kvs.key;
-            });
-        var cardEnter = card.enter().append('div')
+        categories = categories.filter(c => !!c);
+        let card = select('#palette')
+            .selectAll('div.card').data(categories, kvs => kvs.key);
+        const cardEnter = card.enter().append('div')
             .attr('class', 'card');
         cardEnter.each(function() {
-            var card = select(this);
+            let card = select(this);
             if (!card.datum().noheader) {
                 card = card.append('div')
                     .attr('class', 'card-header')
@@ -390,22 +355,18 @@ function make_palette(selector) {
                 .attr('data-toggle', 'collapse')
                 .attr('data-parent', '#palette')
                 .attr('aria-expanded', 'true')
-                .text(function(kvs) {
-                    return kvs.key;
-                });
+                .text(kvs => kvs.key);
         });
         card = card.merge(cardEnter);
         card.selectAll('div.card-header')
             .data(pass_through)
             .attr('id', heading_id);
-        var collapser = card.selectAll('a.collapser')
+        const collapser = card.selectAll('a.collapser')
             .data(pass_through);
         collapser
-            .attr('href', function(kvs) {
-                return '#'+collapse_id(kvs);
-            })
+            .attr('href', kvs => `#${collapse_id(kvs)}`)
             .attr('aria-controls', collapse_id);
-        var contentEnter = cardEnter.insert('div')
+        const contentEnter = cardEnter.insert('div')
             .attr('class', 'collapse')
             .attr('role', 'tabpanel')
             .append('div')
@@ -416,22 +377,20 @@ function make_palette(selector) {
             .attr('aria-labelledby', heading_id);
         card.exit().remove();
         select('#palette hr.separator').remove();
-        nulls.forEach(function(j) {
+        nulls.forEach(j => {
             select('#palette')
-                .insert('hr', 'div.card:nth-child('+(j+1)+')')
+                .insert('hr', `div.card:nth-child(${j+1})`)
                 .attr('class', 'separator');
         });
-        $('#palette').on('hide.bs.collapse', function() {
+        $('#palette').on('hide.bs.collapse', () => {
             _palette.select(null);
         });
         contentEnter.append('ul')
             .attr('class', 'component-selection');
-        var selection = card.selectAll('ul.component-selection')
+        const selection = card.selectAll('ul.component-selection')
             .data(pass_through);
         let components = selection.selectAll('li')
-            .data(function(kvs) {
-                return kvs.values;
-            });
+            .data(kvs => kvs.values);
         const componentsEnter = components.enter().append('li')
             .on('mousedown', function(comp) {
                 show_selection(select(this.parentElement), _keyFunction(comp));
@@ -440,9 +399,7 @@ function make_palette(selector) {
         components = components.merge(componentsEnter);
         components
             .attr('id', select_id)
-            .text(function(comp) {
-                return _nameFunction(comp);
-            });
+            .text(comp => _nameFunction(comp));
         $('ul.component-selection').each(function() {
             if (select(this).datum().draggable)
                 $('li', this).draggable({
@@ -452,27 +409,27 @@ function make_palette(selector) {
         });
         components.exit().remove();
     }
-    var _palette = {
-        data: function(categories) {
+    const _palette = {
+        data(categories) {
             if (!arguments.length)
                 return _categories;
             _categories = categories;
             data(categories);
             return this;
         },
-        keyFunction: function(keyFunction) {
+        keyFunction(keyFunction) {
             if (!arguments.length)
                 return _keyFunction;
             _keyFunction = keyFunction;
             return this;
         },
-        nameFunction: function(nameFunction) {
+        nameFunction(nameFunction) {
             if (!arguments.length)
                 return _keyFunction;
             _nameFunction = nameFunction;
             return this;
         },
-        select: function(id) {
+        select(id) {
             if (!id) {
                 _dispatch.call('selected', null);
                 selectAll('ul.component-selection li.ui-selected')
@@ -483,7 +440,7 @@ function make_palette(selector) {
                 // and then dispatch event
             }
         },
-        on: function(event, callback) {
+        on(event, callback) {
             switch (arguments.length) {
                 case 0:
                     throw new Error('event is not optional');
@@ -499,11 +456,11 @@ function make_palette(selector) {
 }
 function update_palette(catalog) {
     // throw out any models which don't have a category, to avoid "null drawer"
-    var models = catalog.models().filter(catalog.fModelCategory);
-    var categories = nest().key(catalog.fModelCategory)
+    const models = catalog.models().filter(catalog.fModelCategory);
+    const categories = nest().key(catalog.fModelCategory)
         .sortKeys(ascending)
         .entries(models);
-    categories.forEach(function(kvs) {
+    categories.forEach(kvs => {
         kvs.draggable = true;
     });
     categories.unshift(null);
@@ -511,19 +468,17 @@ function update_palette(catalog) {
         key: 'Saved Solutions',
         draggable: false,
         noheader: true,
-        values: catalog.composites().map(function(v) {
+        values: catalog.composites().map(v => {
             v.category = 'solution';
             return v;
-        }).sort(function(a, b) {
-            return ascending(catalog.fModelName(a), catalog.fModelName(b));
-        }),
+        }).sort((a, b) => ascending(catalog.fModelName(a), catalog.fModelName(b))),
     });
     _palette.data(categories);
 }
 
 // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
 function hashCode(s) {
-    var hash = 0, i, chr;
+    let hash = 0, i, chr;
     if (s.length === 0) return hash;
     for (i = 0; i < s.length; i++) {
         chr = s.charCodeAt(i);
@@ -532,16 +487,16 @@ function hashCode(s) {
     }
     return hash>>>0; // convert to unsigned
 }
-var _icons;
-text('iconlist.txt').then(function(list) {
+let _icons;
+text('iconlist.txt').then(list => {
     _icons = list.split(/\n/);
 });
 function hashIcon(icons, type) {
-    var h = hashCode(type);
+    const h = hashCode(type);
     return _icons[h%icons.length];
 }
 
-var _ionicons = {
+const _ionicons = {
     AlarmGenerator: 'ion-arrow-graph-up-right.png',
     Classifier: 'ion-levels.png',
     Aggregator: 'ion-pie-graph.png',
@@ -583,7 +538,7 @@ function apply_engine_parameters(engine) {
 // INITIALIZATION
 //
 
-get_catalog().then(function(catalog) {
+get_catalog().then(catalog => {
     console.log('Catalog loaded successfully:', catalog);
     _catalog = catalog = catalog_readers[options.catformat](catalog);
     _components = map(catalog.models(), catalog.fModelName);
@@ -592,7 +547,7 @@ get_catalog().then(function(catalog) {
     _palette = make_palette('#palette')
         .keyFunction(catalog.fModelId)
         .nameFunction(catalog.fModelName)
-        .on('selected', function(comp) {
+        .on('selected', comp => {
             if (!comp)
                 display_properties(catalog, null);
             else if (comp.category === 'solution') {
@@ -606,7 +561,7 @@ get_catalog().then(function(catalog) {
 
     // CANVAS
     _compositionDiagram = diagram('#canvas');
-    var engine = spawnEngine(qs.layout || 'cola', qs, qs.worker);
+    const engine = spawnEngine(qs.layout || 'cola', qs, qs.worker);
     apply_engine_parameters(engine);
 
     _compositionDiagram
@@ -622,20 +577,12 @@ get_catalog().then(function(catalog) {
         .restrictPan(true)
         .stageTransitions(qs.stage || 'insmod')
         .enforceEdgeDirection(options.rankdir || 'LR')
-        .edgeSource(function(e) {
-            return e.value.sourcename;
-        })
-        .edgeTarget(function(e) {
-            return e.value.targetname;
-        })
+        .edgeSource(e => e.value.sourcename)
+        .edgeTarget(e => e.value.targetname)
         .edgeArrowhead(null)
         .enforceEdgeDirection('LR')
-        .edgeLabel(function(e) {
-            return e.value.name || '';
-        })
-        .nodeLabel(function(n) {
-            return n.value.name || n.key;
-        })
+        .edgeLabel(e => e.value.name || '')
+        .nodeLabel(n => n.value.name || n.key)
         .nodeLabelPadding({x: 10, y: 0})
         .nodeTitle(null)
         .nodeStrokeWidth(1)
@@ -644,42 +591,24 @@ get_catalog().then(function(catalog) {
         .nodeShape({shape: 'rounded-rect'})
         .nodePadding(20)
         .nodeContent('text-with-icon')
-        .nodeIcon(function(d) {
-            return hashIcon(_icons, d.value.type);
-        })
-        .nodeFixed(function(n) {
-            return n.value.fixedPos;
-        })
-        .portNodeKey(function(p) {
-            return p.value.nodeId;
-        }).portName(function(p) {
-            return p.value.portname;
-        }).portBounds(function(p) {
-            return p.value.bounds;
-        }).edgeSourcePortName(function(e) {
-            return e.value.sourceport;
-        }).edgeTargetPortName(function(e) {
-            return e.value.targetport;
-        });
+        .nodeIcon(d => hashIcon(_icons, d.value.type))
+        .nodeFixed(n => n.value.fixedPos)
+        .portNodeKey(p => p.value.nodeId).portName(p => p.value.portname).portBounds(p =>
+            p.value.bounds
+        ).edgeSourcePortName(e => e.value.sourceport).edgeTargetPortName(e => e.value.targetport);
 
     if (qs.showFixed)
-        _compositionDiagram.nodeStrokeDashArray(function(n) {
-            return n.value.fixedPos ? null : '5,5';
-        });
+        _compositionDiagram.nodeStrokeDashArray(n => n.value.fixedPos ? null : '5,5');
 
     _compositionDiagram.content('text-with-icon', withIconContents(textContents(), 35, 35));
 
     _compositionDiagram.child('place-ports', placePorts());
 
-    var symbolPorts = symbolPortStyle()
+    const symbolPorts = symbolPortStyle()
         // .outline(symbolPortStyle.outline.square())
         .outlineStrokeWidth(1)
         //        .portLabel(p => p.value.portname)
-        .symbol(function(p) {
-            return p.orig.value.type;
-        }).color(function(p) {
-            return p.orig.value.type;
-        }).colorScale(
+        .symbol(p => p.orig.value.type).color(p => p.orig.value.type).colorScale(
             scaleOrdinal().range(
                 // colorbrewer qualitative scale
                 shuffle(
@@ -700,33 +629,27 @@ get_catalog().then(function(catalog) {
     if (qs.direcports)
         symbolPorts.outline(
             symbolPortStyle.outline.arrow()
-                .outie(function(p) {
-                    return p.value.bounds === outbounds;
-                }),
+                .outie(p => p.value.bounds === outbounds),
         );
     if (qs.lettports)
         symbolPorts
             .content(symbolPortStyle.content.letter());
-    var letterPorts = symbolPortStyle()
+    const letterPorts = symbolPortStyle()
         .content(symbolPortStyle.content.letter())
         .outlineStrokeWidth(1)
         .symbol('S')
-        .symbolScale(function(x) {
-            return x;
-        })
+        .symbolScale(x => x)
         .color('black')
         .colorScale(null);
     _compositionDiagram
         .portStyle('symbols', symbolPorts)
         .portStyle('letters', letterPorts)
-        .portStyleName(function(p) {
-            return /^xtra-/.test(p.value.portname) ? 'letters' : 'symbols';
-        });
+        .portStyleName(p => /^xtra-/.test(p.value.portname) ? 'letters' : 'symbols');
 
-    var portMatcher = matchPorts(_compositionDiagram, symbolPorts)
+    const portMatcher = matchPorts(_compositionDiagram, symbolPorts)
         .allowParallel(qs.parallel || false);
 
-    var wildcard = wildcardPorts({
+    const wildcard = wildcardPorts({
         get_type: function get_type(p) {
             return p.orig.value.type;
         },
@@ -736,26 +659,26 @@ get_catalog().then(function(catalog) {
         get_wild: function get_wild(p) {
             return p.orig.value.wild;
         },
-        update_ports: update_ports,
+        update_ports,
     });
 
-    portMatcher.isValid(function(sourcePort, targetPort) {
-        return wildcard.isValid(sourcePort, targetPort)
-            && sourcePort.orig.value.bounds !== xtrabounds
-            && targetPort.orig.value.bounds !== xtrabounds
-            && sourcePort.orig.value.bounds !== targetPort.orig.value.bounds;
-    });
+    portMatcher.isValid((sourcePort, targetPort) =>
+        wildcard.isValid(sourcePort, targetPort)
+        && sourcePort.orig.value.bounds !== xtrabounds
+        && targetPort.orig.value.bounds !== xtrabounds
+        && sourcePort.orig.value.bounds !== targetPort.orig.value.bounds
+    );
 
-    portMatcher.whyInvalid(function(sourcePort, targetPort) {
-        return sourcePort.orig.value.bounds === xtrabounds
-                && "can't connect to that type of source port"
-            || targetPort.orig.value.bounds === xtrabounds
-                && "can't connect to that type of target port"
-            || sourcePort.orig.value.bounds === targetPort.orig.value.bounds
-                && "can't connect ports facing the same direction"
-            || wildcard.whyInvalid(sourcePort, targetPort);
-    });
-    var gropts;
+    portMatcher.whyInvalid((sourcePort, targetPort) =>
+        sourcePort.orig.value.bounds === xtrabounds
+            && "can't connect to that type of source port"
+        || targetPort.orig.value.bounds === xtrabounds
+            && "can't connect to that type of target port"
+        || sourcePort.orig.value.bounds === targetPort.orig.value.bounds
+            && "can't connect ports facing the same direction"
+        || wildcard.whyInvalid(sourcePort, targetPort)
+    );
+    let gropts;
     _drawGraphs = drawGraphs(
         gropts = {
             idTag: 'id',
@@ -766,14 +689,14 @@ get_catalog().then(function(catalog) {
         .clickCreatesNodes(false)
         .usePorts(symbolPorts)
         .conduct(portMatcher)
-        .addEdge(function(e, sport, tport) {
+        .addEdge((e, sport, tport) => {
             set_dirty(true);
             // reverse edge if it's going from requirement to capability
             // again, the bounds object comparison is not good.
             // maybe it would be clearer to return a new edge object.
             if (sport.orig.value.bounds === inbounds) {
                 console.assert(tport.orig.value.bounds === outbounds);
-                var t;
+                let t;
                 t = sport;
                 sport = tport;
                 tport = t;
@@ -788,54 +711,52 @@ get_catalog().then(function(catalog) {
 
     _compositionDiagram.mode('draw-graphs', _drawGraphs);
 
-    var select_nodes = selectNodes({
+    const select_nodes = selectNodes({
         nodeStroke: 'orange',
         nodeStrokeWidth: 3,
         nodeLabelFill: 'orange',
     }).multipleSelect(false);
     _compositionDiagram.child('select-nodes', select_nodes);
 
-    var select_nodes_group = selectThingsGroup('select-nodes-group', 'select-nodes');
-    select_nodes_group.on('set_changed.show-info', function(nodes, refresh) {
+    const select_nodes_group = selectThingsGroup('select-nodes-group', 'select-nodes');
+    select_nodes_group.on('set_changed.show-info', (nodes, refresh) => {
         _palette.select(null);
         if (nodes.length > 1)
             throw new Error('not expecting multiple select');
         else if (nodes.length === 1) {
             select_edges_group.call('set_changed', null, [], refresh);
             select_ports_group.call('set_changed', null, [], refresh);
-            var type = _compositionDiagram.getNode(nodes[0]).value.type;
-            var comps = catalog.models().filter(function(comp) {
-                return catalog.fModelName(comp) === type;
-            });
+            const type = _compositionDiagram.getNode(nodes[0]).value.type;
+            const comps = catalog.models().filter(comp => catalog.fModelName(comp) === type);
             if (comps.length === 1)
                 display_properties(catalog, catalog.fModelUrl(comps[0]));
         } else display_properties(catalog, null);
     });
 
-    var select_edges = selectEdges({
+    const select_edges = selectEdges({
         edgeStroke: 'lightblue',
         edgeStrokeWidth: 3,
     }).multipleSelect(false);
     _compositionDiagram.child('select-edges', select_edges);
-    var select_edges_group = selectThingsGroup('select-edges-group', 'select-edges');
-    select_edges_group.on('set_changed.show-info', function(edges, refresh) {
+    const select_edges_group = selectThingsGroup('select-edges-group', 'select-edges');
+    select_edges_group.on('set_changed.show-info', (edges, refresh) => {
         _palette.select(null);
         if (edges.length > 0) {
             select_nodes_group.call('set_changed', null, [], refresh);
             select_ports_group.call('set_changed', null, [], refresh);
-            var edge = _compositionDiagram.getEdge(edges[0]);
+            const edge = _compositionDiagram.getEdge(edges[0]);
             display_properties(catalog, edge);
         } else display_properties(catalog, null);
     });
 
-    var select_ports = selectPorts({
+    const select_ports = selectPorts({
         portBackgroundFill: 'orange',
         // portBackgroundStroke: 'lightblue',
         // portBackgroundStrokeWidth: 2
     }).multipleSelect(false);
     _compositionDiagram.child('select-ports', select_ports);
-    var select_ports_group = selectThingsGroup('select-ports-group', 'select-ports');
-    select_ports_group.on('set_changed.show-info', function(ports, refresh) {
+    const select_ports_group = selectThingsGroup('select-ports-group', 'select-ports');
+    select_ports_group.on('set_changed.show-info', (ports, refresh) => {
         _palette.select(null);
         if (ports.length > 0) {
             select_nodes_group.call('set_changed', null, [], refresh);
@@ -844,115 +765,99 @@ get_catalog().then(function(catalog) {
         } else display_properties(catalog, null);
     });
 
-    var move_nodes = moveNodes();
+    const move_nodes = moveNodes();
     _compositionDiagram.child('move-nodes', move_nodes);
 
-    var fix_nodes = fixNodes()
+    const fix_nodes = fixNodes()
         .strategy(fixNodes.strategy.lastNPerComponent(Infinity));
     _compositionDiagram.child('fix-nodes', fix_nodes);
 
-    var label_nodes = labelNodes({
+    const label_nodes = labelNodes({
         labelTag: 'name',
         align: 'left',
         class: 'node-label',
-    }).changeNodeLabel(function(nodeId, text) {
-        var node = _compositionDiagram.getNode(nodeId);
+    }).changeNodeLabel((nodeId, text) => {
+        const node = _compositionDiagram.getNode(nodeId);
         // execute on server first, which could reject or change text
         return Promise.resolve(text);
     });
     _compositionDiagram.child('label-nodes', label_nodes);
 
-    var label_edges = labelEdges({
+    const label_edges = labelEdges({
         labelTag: 'name',
         align: 'center',
         class: 'edge-label',
-    }).changeEdgeLabel(function(edgeId, text) {
+    }).changeEdgeLabel((edgeId, text) =>
         // execute on server first, which could reject or change text
-        return Promise.resolve(text);
-    });
+        Promise.resolve(text)
+    );
     _compositionDiagram.child('label-edges', label_edges);
 
-    var delete_nodes = deleteNodes()
-        .crossfilterAccessor(function(diagram) {
-            return _drawGraphs.nodeCrossfilter();
-        })
-        .dimensionAccessor(function(diagram) {
-            return _compositionDiagram.nodeDimension();
-        })
-        .onDelete(function(nodes) {
+    const delete_nodes = deleteNodes()
+        .crossfilterAccessor(diagram => _drawGraphs.nodeCrossfilter())
+        .dimensionAccessor(diagram => _compositionDiagram.nodeDimension())
+        .onDelete(nodes =>
             // confirm with server here
-            return Promise.resolve(nodes)
-                .then(function(nodes) {
+            Promise.resolve(nodes)
+                .then(nodes => {
                     // after the back-end has accepted the deletion, we can remove unneeded ports
-                    _ports = _ports.filter(function(p) {
-                        return p.nodeId !== nodes[0];
-                    });
+                    _ports = _ports.filter(p => p.nodeId !== nodes[0]);
                     update_ports();
                     return nodes;
-                });
-        });
+                })
+        );
     _compositionDiagram.child('delete-nodes', delete_nodes);
 
-    var delete_edges = deleteThings(select_edges_group, 'delete-edges', 'id')
-        .crossfilterAccessor(function(diagram) {
-            return _drawGraphs.edgeCrossfilter();
-        })
-        .dimensionAccessor(function(diagram) {
-            return _compositionDiagram.edgeDimension();
-        })
-        .onDelete(function(edges) {
+    const delete_edges = deleteThings(select_edges_group, 'delete-edges', 'id')
+        .crossfilterAccessor(diagram => _drawGraphs.edgeCrossfilter())
+        .dimensionAccessor(diagram => _compositionDiagram.edgeDimension())
+        .onDelete(edges =>
             // confirm with server here, promise-then pass to wildcard
-            return wildcard.resetTypes(_compositionDiagram, edges);
-        });
+            wildcard.resetTypes(_compositionDiagram, edges)
+        );
     _compositionDiagram.child('delete-edges', delete_edges);
 
-    var operations = ['run', 'jump', 'talk', 'sleep'];
-    var messages = ['hill', 'storm', 'furiously', 'stile', 'mile'];
+    const operations = ['run', 'jump', 'talk', 'sleep'];
+    const messages = ['hill', 'storm', 'furiously', 'stile', 'mile'];
 
     function generate_operation(id) {
-        var op = operations[Math.floor(id%operations.length)],
-            msgs = range(Math.floor(id%3)).map(function() {
-                return messages[Math.floor(id%messages.length)];
-            });
-        return op+'('+msgs.map(function(msg) {
-            return '<a href="#" class="tip-link" id="'+op+'_'+msg+'">'+msg+'</a>';
-        }).join(', ')+')';
+        const op = operations[Math.floor(id%operations.length)],
+            msgs = range(Math.floor(id%3)).map(() => messages[Math.floor(id%messages.length)]);
+        return `${op}(${
+            msgs.map(msg => `<a href="#" class="tip-link" id="${op}_${msg}">${msg}</a>`).join(', ')
+        })`;
     }
 
-    var port_tips = tip()
+    const port_tips = tip()
         .delay(200)
         .clickable(true)
         .selection(selectPort())
-        .content(async function(d) {
-            return generate_operation(hashCode(d.node.orig.key+'-'+d.name));
-        })
+        .content(async d => generate_operation(hashCode(`${d.node.orig.key}-${d.name}`)))
         .offset(function() {
             // I don't entirely understand how d3-tip is calculating position
             // this attempts to keep position fixed even though size of g.port is changing
             return [this.getBBox().height/2-20, 0];
         })
-        .linkCallback(function(id) {
+        .linkCallback(id => {
             alert(id);
         });
 
     _compositionDiagram.child('port-tips', port_tips);
 
-    var node_tips = tip({namespace: 'node-tips'})
+    const node_tips = tip({namespace: 'node-tips'})
         .selection(selectNode())
-        .content(async function(d) {
-            return d.orig.value && d.orig.value.type;
-        });
+        .content(async d => d.orig.value && d.orig.value.type);
 
     _compositionDiagram.child('node-tips', node_tips);
 
-    var negative_tips = tip({namespace: 'hint-negative-tips', class: 'd3-tip hint-negative'})
+    const negative_tips = tip({namespace: 'hint-negative-tips', class: 'd3-tip hint-negative'})
         .selection(selectPort())
         .programmatic(true)
         .hideDelay(1000);
 
     _compositionDiagram.child('hint-negative-tips', negative_tips);
 
-    var positive_tips = tip({namespace: 'hint-positive-tips', class: 'd3-tip hint-positive'})
+    const positive_tips = tip({namespace: 'hint-positive-tips', class: 'd3-tip hint-positive'})
         .selection(selectPort())
         .direction('s')
         .programmatic(true)
@@ -965,40 +870,40 @@ get_catalog().then(function(catalog) {
     gropts.positiveTip = positive_tips;
 
     if (qs.debug) {
-        var troubleshootMode = troubleshoot();
+        const troubleshootMode = troubleshoot();
         _compositionDiagram.child('troubleshoot', troubleshootMode);
     }
 
     if (qs.validate) {
-        var validateMode = validate();
+        const validateMode = validate();
         _compositionDiagram.child('validate', validateMode);
     }
 
     $('#canvas').droppable({
-        drop: function(event, ui) {
+        drop(event, ui) {
             set_dirty(true);
-            var component = select(ui.draggable[0]).datum();
-            var type = catalog.fModelName(component);
-            var max = 0;
-            _drawGraphs.nodeCrossfilter().all().forEach(function(n) {
-                var number = n.id.match(/[0-9]+$/);
+            const component = select(ui.draggable[0]).datum();
+            const type = catalog.fModelName(component);
+            let max = 0;
+            _drawGraphs.nodeCrossfilter().all().forEach(n => {
+                let number = n.id.match(/[0-9]+$/);
                 if (!number)
                     return; // currently all ids will be type + number
                 number = number[0];
-                var type2 = n.id.slice(0, -number.length);
+                const type2 = n.id.slice(0, -number.length);
                 if (type2 === type && +number > max)
                     max = +number;
             });
-            var data = {
+            const data = {
                 id: type+(max+1),
-                type: type,
+                type,
             };
-            var bound = _compositionDiagram.root().node().getBoundingClientRect();
-            var pos = _compositionDiagram.invertCoord([
+            const bound = _compositionDiagram.root().node().getBoundingClientRect();
+            const pos = _compositionDiagram.invertCoord([
                 event.clientX-bound.left,
                 event.clientY-bound.top,
             ]);
-            json(catalog.fModelUrl(_components.get(type))).then(function(def) {
+            json(catalog.fModelUrl(_components.get(type))).then(def => {
                 _ports = _ports.concat(catalog.ports(data.id, def));
                 update_ports();
                 _drawGraphs.createNode(pos, data);
@@ -1010,16 +915,16 @@ get_catalog().then(function(catalog) {
     $.fn.editable.defaults.mode = 'inline';
     _solutionName = $('#solution-name').editable({
         emptytext: '(untitled)',
-        success: function(response, value) {
-            var promise = Promise.resolve(catalog);
+        success(response, value) {
+            let promise = Promise.resolve(catalog);
             if (_currentSoln) {
-                promise = save_solution(catalog, _currentSoln).then(function(cat2) {
-                    return rename_solution(cat2, _currentSoln, value);
-                });
+                promise = save_solution(catalog, _currentSoln).then(cat2 =>
+                    rename_solution(cat2, _currentSoln, value)
+                );
             } else {
                 promise = save_solution(catalog, value);
             }
-            promise.then(function(cat3) {
+            promise.then(cat3 => {
                 catalog = cat3;
                 update_palette(catalog);
                 _currentSoln = value;
@@ -1029,14 +934,14 @@ get_catalog().then(function(catalog) {
     });
     _description = $('#description').editable({
         emptytext: '(no description)',
-        success: function(response, value) {
+        success(response, value) {
             set_dirty(true);
             _solution.description = value;
         },
     });
 
-    $('#new-button').click(function() {
-        maybe_save_solution(catalog).then(function(cat2) {
+    $('#new-button').click(() => {
+        maybe_save_solution(catalog).then(cat2 => {
             catalog = cat2;
             update_palette(catalog);
             _currentSoln = null;
@@ -1045,40 +950,38 @@ get_catalog().then(function(catalog) {
             display_solution(catalog, _solution);
         });
     });
-    $('#save-button').click(function() {
+    $('#save-button').click(() => {
         if (_dirty) {
             if (!_currentSoln) {
                 _currentSoln = prompt('Enter a solution name', 'Solution');
                 $('#delete-button').removeClass('button-disabled');
             }
             save_solution(catalog, _currentSoln)
-                .then(function(cat2) {
+                .then(cat2 => {
                     catalog = cat2;
                     update_palette(catalog);
                 });
         }
     });
-    $('#delete-button').click(function() {
-        if (_currentSoln && confirm('Really delete solution "'+_currentSoln+'"?'))
-            delete_solution(catalog, _currentSoln).then(function(cat2) {
+    $('#delete-button').click(() => {
+        if (_currentSoln && confirm(`Really delete solution "${_currentSoln}"?`))
+            delete_solution(catalog, _currentSoln).then(cat2 => {
                 catalog = cat2;
                 update_palette(catalog);
             });
     });
 
     // load initial composite solution
-    var catsol;
+    let catsol;
     if (options.solution)
-        catsol = catalog.composites().find(function(sol) {
-            return sol.name === options.solution;
-        });
+        catsol = catalog.composites().find(sol => sol.name === options.solution);
     if (catsol)
         load_sol(catsol.name, catsol.url);
     else {
         _solution = {nodes: [], edges: []};
         display_solution(catalog, _solution);
     }
-}).catch(function(error) {
+}).catch(error => {
     console.error('Failed to load catalog:', error);
     console.error('Attempted to load:', options.catalog);
 });

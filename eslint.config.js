@@ -33,7 +33,6 @@ export default [
                 THREE: 'readonly',
                 setcola: 'readonly',
                 Viz: 'readonly',
-                graphlibDot: 'readonly',
                 lysenkoIntervalTree: 'readonly',
                 metagraph: 'readonly',
                 computeLayout: 'readonly',

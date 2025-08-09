@@ -15,7 +15,7 @@ app_layouts.vfc = function() {
         return rank(n.value.label_) === 'VNF';
     }
 
-    var _rowmap = {
+    const _rowmap = {
         VNF: 0,
         VFC: 1,
         VM: 2,
@@ -31,10 +31,10 @@ app_layouts.vfc = function() {
                 {
                     id: 'layer',
                     partition: 'label_',
-                    extract: function(v) {
+                    extract(v) {
                         return rank(v);
                     },
-                    typename: function(id, value) {
+                    typename(id, value) {
                         return value;
                     },
                 },
@@ -51,7 +51,7 @@ app_layouts.vfc = function() {
                  {source: 'Host', target: 'Host', produce: dc_graph.align_y()}*/
             ],
         },
-        constraints: function(diagram, nodes, edges) {
+        constraints(diagram, nodes, edges) {
             return dc_graph.tree_constraints(
                 is_root_node,
                 is_tree_edge.bind(null, diagram),
@@ -59,7 +59,7 @@ app_layouts.vfc = function() {
                 100,
             )(diagram, nodes, edges);
         },
-        initDiagram: function(diagram) {
+        initDiagram(diagram) {
             diagram
                 .nodeLabel(null)
                 .nodeRadius(3)
@@ -67,15 +67,9 @@ app_layouts.vfc = function() {
                 .parallelEdgeOffset(1)
                 .edgeLabel(null)
                 .edgeArrowSize(0.5)
-                .edgeIsLayout(function(e) {
-                    return is_tree_edge(diagram, e);
-                })
-                .nodeFixed(function(n) {
-                    return is_root_node(n) ? true : null;
-                })
-                .nodeTitle(function(n) {
-                    return n.value.name;
-                });
+                .edgeIsLayout(e => is_tree_edge(diagram, e))
+                .nodeFixed(n => is_root_node(n) ? true : null)
+                .nodeTitle(n => n.value.name);
             if (treeOnly) {
                 diagram
                     .initialLayout(

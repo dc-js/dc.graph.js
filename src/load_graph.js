@@ -1,55 +1,38 @@
+import * as graphlibDot from '@dagrejs/graphlib-dot';
 import { set } from 'd3-collection';
 import { csv, dsv, json, text } from 'd3-fetch';
 
 function processDot(text) {
     return new Promise((resolve, _reject) => {
-        let nodes, edges;
+        const digraph = graphlibDot.read(text);
+
+        const nodeNames = digraph.nodes();
+        const nodes = new Array(nodeNames.length);
+        const nodeIdMap = {};
+
+        nodeNames.forEach((name, i) => {
+            const nodeLabel = digraph.node(name) || {};
+            nodes[i] = Object.assign({}, nodeLabel, {
+                id: i,
+                name,
+            });
+            nodeIdMap[name] = i;
+        });
+
+        const edges = [];
+        digraph.edges().forEach(e => {
+            const edgeLabel = digraph.edge(e.v, e.w) || {};
+            edges.push(Object.assign({}, edgeLabel, {
+                source: nodeIdMap[e.v],
+                target: nodeIdMap[e.w],
+                sourcename: e.v,
+                targetname: e.w,
+            }));
+        });
+
+        // Handle clusters/subgraphs if supported
         const node_cluster = {}, clusters = [];
-        if (graphlibDot.parse) { // graphlib-dot 1.1.0 (where did i get it from?)
-            const digraph = graphlibDot.parse(text);
-
-            const nodeNames = digraph.nodes();
-            nodes = new Array(nodeNames.length);
-            nodeNames.forEach((name, i) => {
-                const node = nodes[i] = digraph._nodes[nodeNames[i]];
-                node.id = i;
-                node.name = name;
-            });
-
-            const edgeNames = digraph.edges();
-            edges = [];
-            edgeNames.forEach(e => {
-                const edge = digraph._edges[e];
-                edges.push(Object.assign({}, edge.value, {
-                    source: digraph._nodes[edge.u].id,
-                    target: digraph._nodes[edge.v].id,
-                    sourcename: edge.u,
-                    targetname: edge.v,
-                }));
-            });
-            // TODO: if this version exists in the wild, look at how it does subgraphs/clusters
-        } else { // graphlib-dot 0.6
-            const digraph = graphlibDot.read(text);
-
-            const nodeNames = digraph.nodes();
-            nodes = new Array(nodeNames.length);
-            nodeNames.forEach((name, i) => {
-                const node = nodes[i] = digraph._nodes[nodeNames[i]];
-                node.id = i;
-                node.name = name;
-            });
-
-            edges = [];
-            digraph.edges().forEach(e => {
-                edges.push(Object.assign({}, digraph.edge(e.v, e.w), {
-                    source: digraph._nodes[e.v].id,
-                    target: digraph._nodes[e.w].id,
-                    sourcename: e.v,
-                    targetname: e.w,
-                }));
-            });
-
-            // iterative bfs for variety (recursion would work just as well)
+        if (typeof digraph.children === 'function') {
             const cluster_names = {};
             let queue = digraph.children().map(c =>
                 Object.assign({parent: null, key: c}, digraph.node(c))
@@ -64,11 +47,14 @@ function processDot(text) {
                     node_cluster[item.key] = item.parent;
                 queue = queue.concat(children.map(c => ({parent: item.key, key: c})));
             }
-            // clusters as nodes not currently supported
-            nodes = nodes.filter(n => !cluster_names[n.name]);
+            // Filter out cluster nodes
+            const filteredNodes = nodes.filter(n => !cluster_names[n.name]);
+            const graph = {nodes: filteredNodes, links: edges, node_cluster, clusters};
+            resolve(graph);
+        } else {
+            const graph = {nodes, links: edges, node_cluster, clusters};
+            resolve(graph);
         }
-        const graph = {nodes, links: edges, node_cluster, clusters};
-        resolve(graph);
     });
 }
 

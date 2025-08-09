@@ -75,6 +75,7 @@
     "jsdifflib": "^1.1.0",
     "lint-staged": "^16.1.4",
     "load-grunt-tasks": "^5.1.0",
+    "prettier": "^3.6.2",
     "promise-polyfill": "^8.1.3",
     "rollup": "^4.42.0",
     "rollup-plugin-copy": "^3.5.0",
@@ -83,7 +84,7 @@
     "x-editable": "1.5.x"
   },
   "scripts": {
-    "vendor": "cp sync-url-options.js web/js/ && cp querystring.js web/js/ && cp dc.graph.css web/css/ && cp incrface.mjs web/js/",
+    "vendor": "cp sync-url-options.js querystring.js chart.registry.js d3.flexdivs.js dc.graph.tracker.domain.js timeline.js web/js/ && cp dc.graph.css web/css/ && cp incrface.mjs web/js/",
     "build": "rollup -c && rollup -c worker.rollup.config.js",
     "build:workers": "rollup -c worker.rollup.config.js",
     "build:all": "npm run vendor && npm run build",
@@ -92,7 +93,10 @@
     "serve": "python3 server.py 8888",
     "start": "(npm run dev &) && npm run serve",
     "lint": "eslint src/ --fix",
+    "lint:web": "eslint web/js/{simple-viewer,brushing-filtering,compare-layouts,explore,flexbox,match-game,network-building,random,resizing,shapes-and-text,drag-drop-composition,app_layout,arrow-designer,ceph_layout,qfs_layout,vfc_layout,dynagraph-main,graph-error,sync-url-options,querystring,example-header,dc.graph.tracker.domain,parse-incrface,index,chart.registry,d3.flexdivs,timeline}.js --fix",
     "format": "dprint fmt",
+    "format:html": "prettier --write 'web/**/*.html'",
+    "format:all": "dprint fmt && npm run format:html",
     "prepare": "husky",
     "legacy:test": "grunt test",
     "legacy:d3v4-force": "rollup -c d3v4-force.rollup.config.js",
@@ -124,6 +128,13 @@
     "scripts/**/*.js": [
       "eslint --fix",
       "dprint fmt"
+    ],
+    "web/js/{simple-viewer,brushing-filtering,compare-layouts,explore,flexbox,match-game,network-building,random,resizing,shapes-and-text,drag-drop-composition,app_layout,arrow-designer,ceph_layout,qfs_layout,vfc_layout,dynagraph-main,graph-error,sync-url-options,querystring,example-header,dc.graph.tracker.domain,parse-incrface,index,chart.registry,d3.flexdivs,timeline}.js": [
+      "eslint --fix",
+      "dprint fmt"
+    ],
+    "web/**/*.html": [
+      "prettier --write"
     ]
   }
 }

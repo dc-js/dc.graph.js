@@ -22,7 +22,7 @@ const options = {
         values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
-        exert: function(val, diagram) {
+        exert(val, diagram) {
             const engine = spawnEngine(val);
             applyEngineParameters(engine);
             diagram.layoutEngine(engine);
@@ -67,12 +67,8 @@ function applyEngineParameters(engine) {
 function buildData(nodes, edges) {
     // build crossfilters from scratch
     return {
-        edgef: flatGroup.make(edges, function(d) {
-            return d.id;
-        }),
-        nodef: flatGroup.make(nodes, function(d) {
-            return d.id;
-        }),
+        edgef: flatGroup.make(edges, d => d.id),
+        nodef: flatGroup.make(nodes, d => d.id),
     };
 }
 
@@ -111,20 +107,16 @@ growingDiagram
     .nodeContent(sync_url.vals.content)
     .nodeIcon(sync_url.vals.icon)
     .nodeStrokeWidth(0) // turn off outlines
-    .nodeLabel(function(kv) {
-        return kv.key;
-    })
+    .nodeLabel(kv => kv.key)
     .nodeLabelFill(
-        sync_url.vals.shape === 'plain' ? 'black' : function(n) {
+        sync_url.vals.shape === 'plain' ? 'black' : n => {
             const color = rgb(growingDiagram.nodeFillScale()(growingDiagram.nodeFill()(n)));
             // https://www.w3.org/TR/AERT#color-contrast
             const brightness = (color.r*299+color.g*587+color.b*114)/1000;
             return brightness > 127 ? 'black' : 'ghostwhite';
         },
     )
-    .nodeFill(function(kv) {
-        return kv.value.color;
-    })
+    .nodeFill(kv => kv.value.color)
     .nodeFillScale(
         scaleOrdinal().range(
             [
@@ -166,7 +158,7 @@ function runRandomDemo() {
     if (randomDemoInterval) {
         window.clearInterval(randomDemoInterval);
     }
-    randomDemoInterval = window.setInterval(function() {
+    randomDemoInterval = window.setInterval(() => {
         for (let i = 0; i < sync_url.vals.batch; ++i) {
             if (Math.random() < sync_url.vals.remove)
                 random.remove(1);
@@ -183,7 +175,7 @@ function runRandomDemo() {
 
 runRandomDemo();
 
-select('#play-stop').on('click', function() {
+select('#play-stop').on('click', () => {
     if (randomDemoInterval) {
         select('#play-stop').attr('class', 'fas fa-play');
         window.clearInterval(randomDemoInterval);

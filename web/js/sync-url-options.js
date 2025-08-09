@@ -20,7 +20,7 @@ function read_query(type, val) {
         case 'array':
             return val.split(querystring.listsep());
         default:
-            throw new Error('unsupported query type '+type);
+            throw new Error(`unsupported query type ${type}`);
     }
 }
 
@@ -31,9 +31,9 @@ function write_query(type, val) {
         case 'boolean':
         case 'number':
         case 'string':
-            return ''+val;
+            return `${val}`;
         default:
-            throw new Error('unsupported query type '+type);
+            throw new Error(`unsupported query type ${type}`);
     }
 }
 
@@ -43,7 +43,7 @@ function query_type(val) {
 
 // we could probably depend on _, but _.pick is the only thing we need atm
 function pick(object, fields) {
-    return fields.reduce(function(reduced, key) {
+    return fields.reduce((reduced, key) => {
         if (key in object)
             reduced[key] = object[key];
         return reduced;
@@ -51,20 +51,18 @@ function pick(object, fields) {
 }
 
 function option_synchronizer(options, domain, args) {
-    var qs = querystring.parse();
-    var settings = {};
-    var _output = function(m) {
+    const qs = querystring.parse();
+    const settings = {};
+    let _output = function(m) {
         querystring.update(m);
     };
 
     function interesting_params(qs) {
-        var interesting = Object.keys(options)
-            .filter(function(k) {
-                return qs[options[k].query]
-                    !== write_query(query_type(options[k].default), options[k].default);
-            }).map(function(k) {
-                return options[k].query || k;
-            });
+        const interesting = Object.keys(options)
+            .filter(k =>
+                qs[options[k].query]
+                    !== write_query(query_type(options[k].default), options[k].default)
+            ).map(k => options[k].query || k);
         return pick(qs, interesting);
     }
 
@@ -74,8 +72,8 @@ function option_synchronizer(options, domain, args) {
 
     function do_option(key, opt, callback) {
         settings[key] = opt.default;
-        var query = opt.query = opt.query || key;
-        var type = query_type(opt.default);
+        const query = opt.query = opt.query || key;
+        const type = query_type(opt.default);
         if (query in qs)
             settings[key] = read_query(type, qs[query]);
 
@@ -87,18 +85,12 @@ function option_synchronizer(options, domain, args) {
             }
         }
         if (opt.values) { // generate <select> options
-            var selection = select(opt.selector);
-            var opts = selection.selectAll('option').data(opt.values);
+            const selection = select(opt.selector);
+            const opts = selection.selectAll('option').data(opt.values);
             opts.enter().append('option')
-                .attr('value', function(x) {
-                    return x;
-                })
-                .attr('selected', function(x) {
-                    return x === settings[key];
-                })
-                .text(function(x) {
-                    return x;
-                });
+                .attr('value', x => x)
+                .attr('selected', x => x === settings[key])
+                .text(x => x);
             selection
                 .property('value', settings[key]);
         }
@@ -114,7 +106,7 @@ function option_synchronizer(options, domain, args) {
                         opt.subscribe = function(k) {
                             $(opt.selector)
                                 .change(function() {
-                                    var val = $(this).is(':checked');
+                                    const val = $(this).is(':checked');
                                     k(val);
                                 });
                         };
@@ -130,13 +122,13 @@ function option_synchronizer(options, domain, args) {
                         opt.subscribe = function(k) {
                             $(opt.selector)
                                 .change(function() {
-                                    var val = $(this).val();
+                                    const val = $(this).val();
                                     k(val);
                                 });
                         };
                     break;
                 default:
-                    throw new Error('unsupported selector type '+type);
+                    throw new Error(`unsupported selector type ${type}`);
             }
         }
         if (opt.set)
@@ -149,8 +141,8 @@ function option_synchronizer(options, domain, args) {
             opt.subscribe(opt.update);
     }
 
-    for (var key in options) {
-        var callback = function(opt, val, manual) {
+    for (const key in options) {
+        const callback = function(opt, val, manual) {
             args[0] = val;
             if (opt.exert && (manual || !opt.dont_exert_after_subscribe))
                 opt.exert.apply(opt, args);
@@ -166,32 +158,32 @@ function option_synchronizer(options, domain, args) {
 
     return {
         vals: settings,
-        exert: function() {
-            for (var key in options)
+        exert() {
+            for (const key in options)
                 if (options[key].exert) {
                     args[0] = settings[key];
                     options[key].exert.apply(options[key], args);
                 }
         },
-        output: function(_) {
+        output(_) {
             if (!arguments.length)
                 return _output;
             _output = _;
             return this;
         },
-        update: function(k, v, do_ui) {
+        update(k, v, do_ui) {
             if (do_ui)
                 options[k].set(v);
             options[k].update(v, true);
         },
-        what_if_url: function(overrides) {
-            var qs2 = Object.assign({}, qs, overrides);
+        what_if_url(overrides) {
+            const qs2 = Object.assign({}, qs, overrides);
             return querystring.get_url(interesting_params(qs2));
         },
     };
 }
 export default function sync_url_options(options, domain /* ... arguments for exert ... */) {
-    var args = Array.prototype.slice.call(arguments, 2);
+    const args = Array.prototype.slice.call(arguments, 2);
     args.unshift(0);
     return option_synchronizer(options, domain, args);
 }
