@@ -117,3 +117,5 @@ Layout computation can be offloaded to web workers for performance:
 - remember to user jsdelivr for d3 imports
 - use conditional chaining
 - always use let and const not var
+
+- don't run npm start, gordon will do that

@@ -33,7 +33,7 @@ export function legend(legend_namespace) {
     }
 
     const _legend = mode(legend_namespace, {
-        renderers: ['svg', 'webgl'],
+        renderers: ['svg'],
         draw: redraw,
         remove() {},
         parent(p) {

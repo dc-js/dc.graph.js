@@ -22,7 +22,7 @@ export {
 } from './core.js';
 
 // Main diagram component
-export { diagram } from './diagram.js';
+export { diagram } from './diagram/index.js';
 
 // Layout engines
 export { colaLayout } from './cola_layout.js';
@@ -102,7 +102,6 @@ export { pathReader } from './path_reader.js';
 export { pathSelector } from './path_selector.js';
 export { placePorts } from './place_ports.js';
 export { renderSvg } from './render_svg.js';
-export { renderWebgl } from './render_webgl.js';
 export { selectEdges } from './select_edges.js';
 export { selectNodes } from './select_nodes.js';
 export { selectPorts } from './select_ports.js';
