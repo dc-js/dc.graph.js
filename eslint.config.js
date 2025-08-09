@@ -32,7 +32,6 @@ export default [
                 // Library-specific globals (consider migrating to imports)
                 THREE: 'readonly',
                 setcola: 'readonly',
-                Viz: 'readonly',
                 metagraph: 'readonly',
                 dc_graph: 'readonly',
             },

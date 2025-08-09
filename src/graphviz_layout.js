@@ -4,6 +4,7 @@
  */
 
 // External dependencies
+import * as Viz from '@viz-js/viz';
 import { dispatch } from 'd3-dispatch';
 import { json } from 'd3-fetch';
 import { uuid } from './core.js';
@@ -117,11 +118,7 @@ export function graphvizLayout(id, layout, server) {
         _dotString = lines.join('\n');
     }
 
-    function process_response(error, result) {
-        if (error) {
-            console.warn('graphviz layout failed: ', error);
-            return;
-        }
+    function process_layout_result(result) {
         _dispatch.call('start');
         const bb = result.bb.split(',').map(x => +x);
         const nodes = (result.objects || []).filter(n => n.pos // remove non-nodes like clusters
@@ -156,17 +153,24 @@ export function graphvizLayout(id, layout, server) {
             return e2;
         });
         _dispatch.call('end', null, nodes, edges, clusters);
+        return {nodes, edges, clusters};
     }
 
-    function start() {
-        if (server) {
-            json(server)
-                .header('Content-type', 'application/x-www-form-urlencoded')
-                .post(`layouttool=${layout}&${encodeURIComponent(_dotString)}`, process_response);
-        } else {
-            let result = Viz(_dotString, {format: 'json', engine: layout, totalMemory: 1<<25});
-            result = JSON.parse(result);
-            process_response(null, result);
+    async function start() {
+        try {
+            let result;
+            if (server) {
+                result = await json(server)
+                    .header('Content-type', 'application/x-www-form-urlencoded')
+                    .post(`layouttool=${layout}&${encodeURIComponent(_dotString)}`);
+            } else {
+                const viz = await Viz.instance();
+                result = viz.renderJSON(_dotString, {engine: layout});
+            }
+            return process_layout_result(result);
+        } catch (error) {
+            console.warn('graphviz layout failed: ', error);
+            throw error;
         }
     }
 

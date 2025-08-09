@@ -300,17 +300,28 @@ Changes Made:
 Status: ✅ Stage 1 complete, ✅ Stage 2 complete, ✅ Both stages fully migrated
 
 Technical Details:
-- Legacy css-layout used global computeLayout() function
-- Modern yoga-layout uses import yoga from 'yoga-layout' + flexTree.calculateLayout()
-- All examples now use yoga-layout exclusively (was default anyway)
+- COMPLETELY removed legacy css-layout algorithm and all switch statements
+- Simplified to yoga-layout only: import yoga from 'yoga-layout' + flexTree.calculateLayout()  
+- Removed all css-layout branches: flexnode creation, style assignments, children handling
+- Eliminated legacy layout access patterns (flexnode.layout.left → get_yoga_attr)
+- All examples now use yoga-layout exclusively with backwards compatibility
 - CDN: https://cdn.jsdelivr.net/npm/yoga-layout@1.10.0/+esm in existing import maps
 
+Code Cleanup Details:
+- Removed 5 separate switch(options.algo) statements throughout flexbox_layout.js
+- Replaced legacy flexnode = {name, style: {}} with const flexnode = new yoga.Node()
+- Replaced flexnode.style[attr] = value with set_yoga_attr(flexnode, attr, value) 
+- Replaced flexnode.children = children with children.forEach child insertChild()
+- Simplified apply_layout to use get_yoga_attr() exclusively
+- Fixed ESLint warnings: unused options parameter, prefer-const for flexnode
+
 Manual Testing Protocol:
-□ Open flexbox.html example - should work identically
-□ Open match-game.html example - should work identically  
+□ Open flexbox.html example - should work identically ✅
+□ Open match-game.html example - should work identically ✅  
 □ Verify nodes align in flex containers as before
-□ Check that ?algo=css-layout URL parameter no longer works (expected)
-□ No console errors related to computeLayout
+□ Check that ?algo=css-layout URL parameter is ignored (expected)
+□ Examples can still pass {algo: 'yoga-layout'} for backwards compatibility
+□ No console errors, build and lint passing ✅
 ```
 
 **5. Interval Tree (`lysenkoIntervalTree`) Migration Test** ✅ **COMPLETED**
