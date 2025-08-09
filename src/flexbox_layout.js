@@ -5,15 +5,12 @@
  * are drawn from node to node.
  *
  * Since the flexbox algorithm is not ordinarily available in SVG, this class uses the
- * {@link https://npmjs.com/package/css-layout css-layout}
- * package. (It does not currently support css-layout's successor
- * {@link https://github.com/facebook/yoga yoga} but that should be straightforward to add if
- * there is interest.)
+ * {@link https://github.com/facebook/yoga yoga-layout} package.
  *
  * Unlike conventional graph layout, where positions are determined based on a few attributes and
  * the topological structure of the eedges, flexbox layout is determined based on the node hierarchy
- * and a large number of attributes on the nodes. See css-layout's
- * {@link https://npmjs.com/package/css-layout#supported-attributes Supported Attributes}
+ * and a large number of attributes on the nodes. See yoga-layout's
+ * {@link https://github.com/facebook/yoga#supported-attributes Supported Attributes}
  * for a list of those attributes, and see below to understand how the hierarchy is inferred from
  * node keys.
  *
@@ -272,14 +269,8 @@ export function flexboxLayout(id, options) {
         }
         if (_engine.logStuff())
             console.log(JSON.stringify(flexTree, null, 2));
-        switch (options.algo) {
-            case 'css-layout':
-                computeLayout(flexTree);
-                break;
-            case 'yoga-layout':
-                flexTree.calculateLayout();
-                break;
-        }
+        // Use yoga-layout for flexbox computation
+        flexTree.calculateLayout();
         apply_layout({x: 0, y: 0}, _tree);
         dispatchState(_wnodes, [], 'end');
     }

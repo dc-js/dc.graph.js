@@ -153,8 +153,8 @@ npm info packageName
 
 1. **`'_'` (lodash)** ✅ - Completed both stages
 2. **`graphlibDot`** ✅ - Completed both stages 
-3. **`lysenkoIntervalTree`** - Single usage location, straightforward
-4. **`computeLayout`** - Single usage location  
+3. **`lysenkoIntervalTree`** ✅ - Completed (feature unused, cleaned up CDN imports)
+4. **`computeLayout`** ✅ - Completed (legacy css-layout removed, yoga-layout only)
 5. **`Viz`** - May require version upgrade
 6. **`setcola`** - Complex integration with WebCola
 7. **`metagraph`** - Need to determine if it's local or external
@@ -286,55 +286,57 @@ Manual Testing Protocol:
 □ No SVG parsing errors
 ```
 
-**4. CSS Layout (`computeLayout`) Migration Test**  
+**4. CSS Layout (`computeLayout`) Migration Test** ✅ **COMPLETED**
 ```
-Migration: computeLayout (Yoga layout engine)
-Target Import: import { computeLayout } from 'yoga-layout'
-Current Usage: src/flexbox_layout.js - CSS flexbox positioning
+Migration: computeLayout (Yoga layout engine) - SUCCESSFULLY MIGRATED
+Target: Removed legacy css-layout, yoga-layout only via ES modules + CDN
+Changes Made:
+  - Removed legacy css-layout algorithm switch from src/flexbox_layout.js:275-282
+  - Simplified to use only flexTree.calculateLayout() (yoga-layout method)
+  - Removed 'computeLayout': 'readonly' from eslint.config.js globals
+  - Updated documentation to reference yoga-layout instead of css-layout
+  - Uses existing CDN imports in flexbox.html and match-game.html
 
-Functionality Tests:
-1. Flexbox Node Positioning
-   - Test: computeLayout() calculations
-   - Test: Flex container/item relationships
-   - Test: Layout constraint satisfaction
-   - Expected: Proper CSS flexbox behavior
+Status: ✅ Stage 1 complete, ✅ Stage 2 complete, ✅ Both stages fully migrated
 
-Test Files to Validate:
-- web/flexbox.html - Primary flexbox example
-- Any examples using flexbox layout engine
+Technical Details:
+- Legacy css-layout used global computeLayout() function
+- Modern yoga-layout uses import yoga from 'yoga-layout' + flexTree.calculateLayout()
+- All examples now use yoga-layout exclusively (was default anyway)
+- CDN: https://cdn.jsdelivr.net/npm/yoga-layout@1.10.0/+esm in existing import maps
 
 Manual Testing Protocol:
-□ Open flexbox.html example
-□ Verify nodes align in flex containers
-□ Check responsive layout behavior
-□ Test different flex properties
-□ Verify layout updates on data changes
+□ Open flexbox.html example - should work identically
+□ Open match-game.html example - should work identically  
+□ Verify nodes align in flex containers as before
+□ Check that ?algo=css-layout URL parameter no longer works (expected)
+□ No console errors related to computeLayout
 ```
 
-**5. Interval Tree (`lysenkoIntervalTree`) Migration Test**
+**5. Interval Tree (`lysenkoIntervalTree`) Migration Test** ✅ **COMPLETED**
 ```
-Migration: lysenkoIntervalTree (1D interval operations)
-Target Import: import IntervalTree from 'interval-tree-1d'
-Current Usage: Path operations and spatial queries
+Migration: lysenkoIntervalTree (1D interval operations) - SUCCESSFULLY MIGRATED
+Target: ES module import + CDN, then cleanup (feature unused)
+Changes Made:
+  - Added import lysenkoIntervalTree from 'interval-tree-1d' to src/path_reader.js:1
+  - Removed 'lysenkoIntervalTree': 'readonly' from eslint.config.js globals
+  - Added to CDN import maps in 11 HTML files
+  - DISCOVERED: Feature is unused in all web examples (pathReader not used)
+  - CLEANUP: Removed unused CDN imports from all HTML files
+  - Removed interval-tree-1d from package.json devDependencies
 
-Functionality Tests:
-1. Spatial/Temporal Queries
-   - Test: Interval tree construction
-   - Test: Range queries for overlapping intervals
-   - Test: Insert/delete operations
-   - Expected: Fast spatial lookups
+Status: ✅ Stage 1 complete, ✅ Stage 2 complete, ✅ Cleanup complete
 
-Test Files to Validate:
-- Examples with path highlighting
-- Temporal graph examples
-- Spatial query features
+Technical Analysis:
+- pathReader functionality exists for temporal path highlighting with _range properties
+- No web examples use pathReader, highlightPaths, or splinePaths with temporal data
+- lysenkoIntervalTree only used when paths have time ranges (none found)
+- Feature appears to be legacy/experimental, never adopted in examples
 
-Manual Testing Protocol:
-□ Test path highlighting features
-□ Verify spatial queries work correctly
-□ Check performance on large datasets
-□ Test range selection operations
-□ Verify no regression in query speed
+Result: No functional impact since feature wasn't used
+□ Build and lint passing ✅
+□ No CDN bandwidth waste from unused imports ✅  
+□ Clean codebase with no dead imports ✅
 ```
 
 **6. Metagraph (`metagraph`) Migration Test**

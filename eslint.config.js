@@ -34,7 +34,6 @@ export default [
                 setcola: 'readonly',
                 Viz: 'readonly',
                 metagraph: 'readonly',
-                computeLayout: 'readonly',
                 dc_graph: 'readonly',
             },
         },
