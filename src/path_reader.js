@@ -1,3 +1,4 @@
+import lysenkoIntervalTree from 'interval-tree-1d';
 import { identity, property } from './core.js';
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
 

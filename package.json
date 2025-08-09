@@ -68,7 +68,6 @@
     "grunt-jsdoc-to-markdown": "^6.0.0",
     "grunt-shell": "^4.0.0",
     "husky": "^9.1.7",
-    "interval-tree-1d": "^1.0.4",
     "ionicons": "^8.0.9",
     "jquery": "^3.5.1",
     "jquery-ui-dist": "^1.13.3",
