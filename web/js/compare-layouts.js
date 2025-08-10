@@ -51,7 +51,7 @@ const options = {
                 .autoZoom('once');
         },
     },
-    worker: true,
+    worker: false,
     file: 'graphs/directed/world.gv',
 };
 
@@ -139,7 +139,7 @@ function on_load(filename, error, data) {
         const drawClustersMode = drawClusters();
         diagram.child('draw-clusters', drawClustersMode);
 
-        sync_url.exert();
+        sync_url.exert().catch(error => display_error('Error applying query options', error));
 
         const fix_nodes_group = ['fix', side, 'nodes', 'group'].join('-'),
             select_nodes_group = ['select', side, 'nodes', 'group'].join('-');

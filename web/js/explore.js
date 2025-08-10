@@ -37,14 +37,18 @@ const options = {
         values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
-        exert(val, diagram) {
-            const engine = spawnEngine(val);
+        async exert(val, diagram) {
+            const engine = spawnEngine(val, sync_url.vals, sync_url.vals.worker);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine);
+            // Initialize the new engine since diagram.isRendered() is false during setup
+            if (diagram.initLayout) {
+                await diagram.initLayout(engine);
+            }
         },
     },
-    worker: true,
+    worker: false,
     timeLimit: 10000,
     start: null,
     directional: true,
@@ -202,7 +206,9 @@ select('#user-file').on('change', function() {
         const reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
-            loadGraphText(e.target.result, filename).then(data => on_load(filename, null, data));
+            loadGraphText(e.target.result, filename)
+                .then(data => on_load(filename, null, data))
+                .catch(error => display_error(`Error loading ${filename}`, error));
             sync_url.update('expanded', []);
         };
         reader.readAsText(this.files[0]);
@@ -224,7 +230,7 @@ function _nvalue(n) {
 }
 
 let expand_collapse;
-function on_load(filename, error, data) {
+async function on_load(filename, error, data) {
     if (error) {
         let heading = '';
         if (error.status)
@@ -596,7 +602,7 @@ function on_load(filename, error, data) {
 
     if (sync_url.vals.start)
         expand_collapse.expand('both', sync_url.vals.start, true);
-    else sync_url.exert();
+    else await sync_url.exert();
 }
 
 if (!sync_url.vals.file)
@@ -604,4 +610,6 @@ if (!sync_url.vals.file)
         'Need <code>?file=</code> in URL</br><small>or browse local file above right</small>',
     );
 
-loadGraph(sync_url.vals.file).then(data => on_load(sync_url.vals.file, null, data));
+loadGraph(sync_url.vals.file)
+    .then(data => on_load(sync_url.vals.file, null, data))
+    .catch(error => display_error(`Error loading ${sync_url.vals.file}`, error));

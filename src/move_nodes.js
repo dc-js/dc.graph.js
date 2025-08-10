@@ -4,8 +4,7 @@ import { fixNodesGroup } from './fix_nodes.js';
 import { keyboard } from './keyboard.js';
 import { mode } from './mode.js';
 import { selectThingsGroup } from './select_things.js';
-import { is_a_mac } from './utils.js';
-import { eventCoords } from './utils.js';
+import { eventCoords, is_a_mac } from './utils.js';
 
 export function moveNodes(options) {
     options = options || {};

@@ -1,4 +1,4 @@
-import lysenkoIntervalTree from 'interval-tree-1d';
+// import lysenkoIntervalTree from 'interval-tree-1d'; // Removed - unused in current examples
 import { identity, property } from './core.js';
 import { registerHighlightPathsGroup } from './highlight_paths_group.js';
 
@@ -60,9 +60,10 @@ export function pathReader(pathsgroup) {
                     return interval;
                 });
                 // currently must include lysenko-interval-tree separately
-                _intervalTree = lysenkoIntervalTree(_intervals);
-                if (_time)
-                    this.setTime(_time);
+                // _intervalTree = lysenkoIntervalTree(_intervals);
+                throw new Error('Time-based path functionality requires interval-tree-1d library');
+                // if (_time)
+                //     this.setTime(_time);
             } else {
                 _intervals = null;
                 _intervalTree = null;

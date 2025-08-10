@@ -29,12 +29,14 @@ const _engines = [
     {
         name: 'dagre',
         params: ['rankdir'],
+        workerName: 'dagre',
         instantiate() {
             return dagreLayout();
         },
     },
     {
         name: 'd3v4force',
+        workerName: 'd3v4-force',
         instantiate() {
             return d3v4ForceLayout();
         },
@@ -54,6 +56,7 @@ const _engines = [
     {
         name: 'cola',
         params: ['lengthStrategy'],
+        workerName: 'cola',
         instantiate() {
             return colaLayout();
         },

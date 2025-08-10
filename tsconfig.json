@@ -29,14 +29,40 @@
   
   // What to type-check
   "include": [
-    "src/**/*.js"
+    "src/**/*.js",
+    "web/js/simple-viewer.js",
+    "web/js/brushing-filtering.js", 
+    "web/js/compare-layouts.js",
+    "web/js/explore.js",
+    "web/js/flexbox.js",
+    "web/js/match-game.js",
+    "web/js/network-building.js",
+    "web/js/random.js",
+    "web/js/resizing.js",
+    "web/js/shapes-and-text.js",
+    "web/js/drag-drop-composition.js",
+    "web/js/app_layout.js",
+    "web/js/arrow-designer.js",
+    "web/js/ceph_layout.js",
+    "web/js/qfs_layout.js",
+    "web/js/vfc_layout.js",
+    "web/js/dynagraph-main.js",
+    "web/js/graph-error.js",
+    "web/js/sync-url-options.js",
+    "web/js/querystring.js",
+    "web/js/example-header.js",
+    "web/js/dc.graph.tracker.domain.js",
+    "web/js/parse-incrface.js",
+    "web/js/index.js",
+    "web/js/chart.registry.js",
+    "web/js/d3.flexdivs.js",
+    "web/js/timeline.js"
   ],
   
-  // What to ignore
+  // What to ignore (removed web/js since we now include specific files)
   "exclude": [
     "node_modules",
-    "dist", 
-    "web/js",
+    "dist",
     "*.config.js"
   ]
 }

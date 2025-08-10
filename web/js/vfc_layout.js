@@ -1,5 +1,5 @@
 import { app_layouts } from './app_layout.js';
-import { alignY, gapY } from './dc-graph.js';
+import { alignY, gapY, tree_constraints, tree_positions } from './dc-graph.js';
 
 app_layouts.vfc = function() {
     function rank(label) {
@@ -54,7 +54,7 @@ app_layouts.vfc = function() {
             ],
         },
         constraints(diagram, nodes, edges) {
-            return dc_graph.tree_constraints(
+            return tree_constraints(
                 is_root_node,
                 is_tree_edge.bind(null, diagram),
                 10,
@@ -75,7 +75,7 @@ app_layouts.vfc = function() {
             if (treeOnly) {
                 diagram
                     .initialLayout(
-                        dc_graph.tree_positions(
+                        tree_positions(
                             null,
                             _node_row,
                             is_tree_edge.bind(null, diagram),

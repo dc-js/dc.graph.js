@@ -30,7 +30,7 @@ const options = {
         },
     },
     shape: 'ellipse',
-    worker: true,
+    worker: false,
 };
 
 const drawDiagram = diagram('#graph');

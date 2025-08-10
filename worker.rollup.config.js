@@ -1,5 +1,6 @@
 import json from '@rollup/plugin-json';
 import replace from '@rollup/plugin-replace';
+import { readFileSync } from 'fs';
 import copy from 'rollup-plugin-copy';
 
 // Rollup configuration for web workers
@@ -118,6 +119,7 @@ globalThis.cola = webcolaModule;`,
  *  limitations under the License.
  *
  */`,
+            intro: readFileSync('src/workers/dagre-intro.js', 'utf8'),
         },
     },
     {
@@ -127,7 +129,6 @@ globalThis.cola = webcolaModule;`,
             'https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm',
             'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm',
             'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm',
-            'd3-dispatch',
             'd3-collection',
             'd3-force',
             'd3-force-straighten-paths',
@@ -137,15 +138,13 @@ globalThis.cola = webcolaModule;`,
             replace({
                 delimiters: ['', ''],
                 "import { dispatch } from 'd3-dispatch';":
-                    "// import { dispatch } from 'd3-dispatch'; // replaced for worker",
+                    "import { dispatch } from 'https://cdn.jsdelivr.net/npm/d3-dispatch@1.0.6/+esm';",
                 "import { set } from 'd3-collection';":
                     "import { set } from 'https://cdn.jsdelivr.net/npm/d3-collection@1.0.7/+esm';",
                 "import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from 'd3-force';":
                     "import { forceSimulation, forceLink, forceCenter, forceX, forceY, forceCollide, forceManyBody } from 'https://cdn.jsdelivr.net/npm/d3-force@3.0.0/+esm';",
                 "import { forceStraightenPaths } from 'd3-force-straighten-paths';":
                     "import { forceStraightenPaths } from 'https://cdn.jsdelivr.net/npm/d3-force-straighten-paths@1.0.2/+esm';",
-                "    const _dispatch = dispatch('tick', 'start', 'end');":
-                    "    const _dispatch = globalThis.d3.dispatch('tick', 'start', 'end');",
                 preventAssignment: true,
             }),
             copy({

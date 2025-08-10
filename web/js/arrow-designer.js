@@ -1,6 +1,7 @@
 import { selectAll } from 'd3-selection';
 import { diagram, flatGroup, grid, manualLayout, troubleshoot } from './dc-graph.js';
 import dcgraph_domain from './dc.graph.tracker.domain.js';
+import { display_error } from './graph-error.js';
 import sync_url_options from './sync-url-options.js';
 
 const options = {
@@ -129,4 +130,4 @@ const syntax = `concatenate up to four: optional 'o' then optional 'l' or 'r' th
 selectAll('label[for*="arrow"]').attr('title', syntax);
 
 await arrowDiagram.render();
-sync_url.exert();
+sync_url.exert().catch(error => display_error('Error applying query options', error));

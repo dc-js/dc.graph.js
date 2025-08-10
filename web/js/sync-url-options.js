@@ -142,10 +142,10 @@ function option_synchronizer(options, domain, args) {
     }
 
     for (const key in options) {
-        const callback = function(opt, val, manual) {
+        const callback = async function(opt, val, manual) {
             args[0] = val;
             if (opt.exert && (manual || !opt.dont_exert_after_subscribe))
-                opt.exert.apply(opt, args);
+                await opt.exert.apply(opt, args);
             if (domain && domain.on_exert)
                 domain.on_exert(opt);
         };
@@ -158,11 +158,11 @@ function option_synchronizer(options, domain, args) {
 
     return {
         vals: settings,
-        exert() {
+        async exert() {
             for (const key in options)
                 if (options[key].exert) {
                     args[0] = settings[key];
-                    options[key].exert.apply(options[key], args);
+                    await options[key].exert.apply(options[key], args);
                 }
         },
         output(_) {

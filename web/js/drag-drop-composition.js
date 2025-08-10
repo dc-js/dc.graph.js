@@ -32,6 +32,7 @@ import {
     wildcardPorts,
     withIconContents,
 } from './dc-graph.js';
+import { display_error } from './graph-error.js';
 
 const qs = querystring.parse();
 
@@ -173,7 +174,7 @@ async function display_solution(catalog, solution) {
         .clearFixes();
     _description.editable('setValue', solution.description || null);
     const types = set(solution.nodes.map(n => n.type)).values();
-    Promise.all(
+    await Promise.all(
         types.map(t => _components.get(t).url).map(json),
     ).then(async defns => {
         const defn = {};
@@ -195,7 +196,7 @@ async function display_solution(catalog, solution) {
             await _compositionDiagram.render();
             _rendered = true;
         } else _compositionDiagram.redraw();
-    });
+    }).catch(error => display_error('Error displaying solution', error));
 }
 
 //
@@ -832,7 +833,7 @@ get_catalog().then(catalog => {
         .delay(200)
         .clickable(true)
         .selection(selectPort())
-        .content(async d => generate_operation(hashCode(`${d.node.orig.key}-${d.name}`)))
+        .content(d => generate_operation(hashCode(`${d.node.orig.key}-${d.name}`)))
         .offset(function() {
             // I don't entirely understand how d3-tip is calculating position
             // this attempts to keep position fixed even though size of g.port is changing
@@ -846,7 +847,7 @@ get_catalog().then(catalog => {
 
     const node_tips = tip({namespace: 'node-tips'})
         .selection(selectNode())
-        .content(async d => d.orig.value && d.orig.value.type);
+        .content(d => d.orig.value && d.orig.value.type);
 
     _compositionDiagram.child('node-tips', node_tips);
 
@@ -929,7 +930,7 @@ get_catalog().then(catalog => {
                 update_palette(catalog);
                 _currentSoln = value;
                 $('#delete-button').removeClass('button-disabled');
-            });
+            }).catch(error => display_error('Error loading solution', error));
         },
     });
     _description = $('#description').editable({
@@ -947,8 +948,10 @@ get_catalog().then(catalog => {
             _currentSoln = null;
             $('#delete-button').addClass('button-disabled');
             _solution = {nodes: [], edges: []};
-            display_solution(catalog, _solution);
-        });
+            display_solution(catalog, _solution).catch(error =>
+                display_error('Error displaying new solution', error)
+            );
+        }).catch(error => display_error('Error creating new solution', error));
     });
     $('#save-button').click(() => {
         if (_dirty) {
@@ -960,7 +963,7 @@ get_catalog().then(catalog => {
                 .then(cat2 => {
                     catalog = cat2;
                     update_palette(catalog);
-                });
+                }).catch(error => display_error('Error saving solution', error));
         }
     });
     $('#delete-button').click(() => {
@@ -968,7 +971,7 @@ get_catalog().then(catalog => {
             delete_solution(catalog, _currentSoln).then(cat2 => {
                 catalog = cat2;
                 update_palette(catalog);
-            });
+            }).catch(error => display_error('Error deleting solution', error));
     });
 
     // load initial composite solution
@@ -979,7 +982,9 @@ get_catalog().then(catalog => {
         load_sol(catsol.name, catsol.url);
     else {
         _solution = {nodes: [], edges: []};
-        display_solution(catalog, _solution);
+        display_solution(catalog, _solution).catch(error =>
+            display_error('Error displaying initial solution', error)
+        );
     }
 }).catch(error => {
     console.error('Failed to load catalog:', error);

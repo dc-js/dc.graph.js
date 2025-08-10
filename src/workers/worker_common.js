@@ -43,7 +43,7 @@ export function createWorkerHandler(layoutFactory) {
                 break;
             }
             case 'data':
-                if (_layouts[layoutId])
+                if (_layouts[layoutId]) {
                     _layouts[layoutId].data(
                         args.graph,
                         args.nodes,
@@ -51,14 +51,28 @@ export function createWorkerHandler(layoutFactory) {
                         args.clusters,
                         args.constraints,
                     );
+                } else {
+                    console.error(
+                        `[WORKER ${layoutId}] ERROR: data() called but no layout found! Available layouts:`,
+                        Object.keys(_layouts),
+                    );
+                }
                 break;
             case 'start':
-                if (_layouts[layoutId])
+                if (_layouts[layoutId]) {
                     await _layouts[layoutId].start();
+                } else {
+                    console.error(
+                        `[WORKER ${layoutId}] ERROR: start() called but no layout found!`,
+                    );
+                }
                 break;
             case 'stop':
-                if (_layouts[layoutId])
+                if (_layouts[layoutId]) {
                     _layouts[layoutId].stop();
+                } else {
+                    console.error(`[WORKER ${layoutId}] ERROR: stop() called but no layout found!`);
+                }
                 break;
         }
     };

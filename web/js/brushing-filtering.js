@@ -136,7 +136,8 @@ select('#user-file').on('change', function() {
         const reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
-            loadGraphText(e.target.result, filename, on_load.bind(null, filename));
+            loadGraphText(e.target.result, filename, on_load.bind(null, filename))
+                .catch(error => display_error('Load graph error', error));
         };
         reader.readAsText(this.files[0]);
     }

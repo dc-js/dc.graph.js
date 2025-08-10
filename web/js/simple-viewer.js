@@ -34,7 +34,7 @@ const options = {
                 .autoZoom('once');
         },
     },
-    worker: true,
+    worker: false,
     file: 'data/process.json',
     gvattr: {
         default: true,
@@ -180,7 +180,7 @@ async function on_load(filename, error, data) {
     const drawClustersMode = drawClusters();
     simpleDiagram.child('draw-clusters', drawClustersMode);
 
-    sync_url.exert();
+    sync_url.exert().catch(error => display_error('Error applying query options', error));
 
     const moveNodesMode = moveNodes();
     simpleDiagram.child('move-nodes', moveNodesMode);

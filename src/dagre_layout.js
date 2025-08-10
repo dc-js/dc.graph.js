@@ -42,6 +42,12 @@ export function dagreLayout(id) {
     }
 
     function data(nodes, edges, clusters) {
+        if (!_dagreGraph) {
+            console.error(
+                `[DAGRE ${_layoutId}] ERROR: _dagreGraph is null in data()! init() was not called properly.`,
+            );
+            return;
+        }
         const wnodes = regenerateObjects(_nodes, nodes, null, v => v.dcg_nodeKey, (v1, v) => {
             v1.dcg_nodeKey = v.dcg_nodeKey;
             v1.width = v.width;

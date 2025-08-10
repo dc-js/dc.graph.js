@@ -68,17 +68,41 @@ export function webworkerLayout(layoutEngine, workerName) {
     }
 
     engine.init = async function(options) {
-        options = layoutEngine.optionNames().reduce(
-            (options, option) => {
+        // Start with clean options object, don't extend the passed-in options
+        // which may contain functions and other non-serializable content
+        const cleanOptions = layoutEngine.optionNames().reduce(
+            (cleanOptions, option) => {
                 const value = layoutEngine[option]();
+
+                // Check for problematic values before serialization
+                if (typeof value === 'function') {
+                    console.warn(
+                        `[WORKER] Option '${option}' is a function, skipping:`,
+                        value.toString().slice(0, 100),
+                    );
+                    return cleanOptions; // Skip functions entirely
+                }
+                if (value && typeof value === 'object') {
+                    try {
+                        JSON.stringify(value); // Test if it's JSON serializable
+                    } catch (e) {
+                        console.error(
+                            `[WORKER] Option '${option}' not JSON serializable:`,
+                            e.message,
+                            value,
+                        );
+                        return cleanOptions; // Skip non-serializable objects
+                    }
+                }
+
                 // Serialize each option value as we collect it
-                options[option] = serializeOptions(value);
-                return options;
+                cleanOptions[option] = serializeOptions(value);
+                return cleanOptions;
             },
-            options,
+            {}, // Start with empty object instead of extending options
         );
         if (layoutEngine.propagateOptions)
-            layoutEngine.propagateOptions(options);
+            layoutEngine.propagateOptions(cleanOptions);
 
         return new Promise((resolve, reject) => {
             // Set up one-time listener for init completion
@@ -99,13 +123,22 @@ export function webworkerLayout(layoutEngine, workerName) {
                 }
             };
 
-            _worker.worker.postMessage({
+            const messageData = {
                 command: 'init',
                 args: {
                     layoutId: layoutEngine.layoutId(),
-                    options: serializeOptions(options),
+                    options: serializeOptions(cleanOptions),
                 },
-            });
+            };
+
+            try {
+                _worker.worker.postMessage(messageData);
+            } catch (error) {
+                console.error('[WORKER] postMessage failed:', error);
+                clearTimeout(initTimeout);
+                _worker.worker.onmessage = originalOnMessage;
+                reject(error);
+            }
         });
     };
     engine.data = function(graph, nodes, edges, clusters, constraints) {

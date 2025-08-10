@@ -7,6 +7,9 @@ import { keyboard } from './keyboard.js';
 import { mode } from './mode.js';
 import { conditionalProperties, is_a_mac } from './utils.js';
 
+// Import strategy functions
+import { expandedHidden } from './expanded_hidden.js';
+
 export function expandCollapse(options) {
     if (typeof options === 'function') {
         options = {
@@ -641,9 +644,6 @@ export function expandCollapse(options) {
 export function defaultUrlOpener(mode, node, _url) {
     window.open(mode.nodeURL.eval(node), mode.urlTargetWindow());
 }
-
-// Import strategy functions
-import { expandedHidden } from './expanded_hidden.js';
 
 // Attach strategies to expandCollapse function for backward compatibility
 expandCollapse.expanded_hidden = expandedHidden;
