@@ -37,8 +37,8 @@ function timeline(parent) {
     _chart.events = function(events) {
         if (!arguments.length)
             return _events;
-        _events = events.map(function(e) {
-            var value;
+        _events = events.map(e => {
+            let value;
             if (e.value.adds !== undefined) {
                 value = [
                     {key: 'adds', height: e.value.adds, fill: 'green'},
@@ -49,7 +49,7 @@ function timeline(parent) {
                     {key: 'place', height: NaN, fill: 'grey'},
                 ];
             }
-            return {key: e.key, value: value};
+            return {key: e.key, value};
         });
         return _chart;
     };
@@ -118,29 +118,26 @@ function timeline(parent) {
             case 'dels':
                 return baseline();
             default:
-                throw new Error('unknown tick type '+tick.key);
+                throw new Error(`unknown tick type ${tick.key}`);
         }
     }
 
     _chart.redraw = function() {
-        var bl = baseline();
+        const bl = baseline();
         if (!_x) _x = d3.time.scale();
         if (!_y) _y = d3.scale.linear();
-        _x.domain(d3.extent(_events, function(e) {
-            return e.key;
-        }))
+        _x.domain(d3.extent(_events, e => e.key))
             .range([_timewid, _width-_tickWidth]);
-        var max = Math.max(
+        const max = Math.max(
             _minHeight,
-            d3.max(_events, function(e) {
-                return e.value[0].key === 'adds'
+            d3.max(_events, e =>
+                e.value[0].key === 'adds'
                     ? Math.max(e.value[0].height, e.value[1].height)
-                    : 0;
-            }),
+                    : 0),
         );
         _y.domain([max, -max]).range([0, _height]);
 
-        var axis = _g.selectAll('rect.timeline').data([0]);
+        const axis = _g.selectAll('rect.timeline').data([0]);
         axis.enter().append('rect').attr('class', 'timeline');
         axis.attr({
             width: _width-_timewid,
@@ -150,16 +147,16 @@ function timeline(parent) {
             fill: '#ccc',
         });
 
-        var region = _g.selectAll('rect.region')
+        const region = _g.selectAll('rect.region')
             .data(_region ? [_region] : []);
         region.enter().append('rect')
             .attr('class', 'region');
         region.attr({
-            x: function(d) {
+            x(d) {
                 return _x(d.x1);
             },
             y: 0,
-            width: function(d) {
+            width(d) {
                 return _x(d.x2)-_x(d.x1)+_tickWidth;
             },
             height: _height,
@@ -168,21 +165,13 @@ function timeline(parent) {
         });
         region.exit().remove();
 
-        var ticks = _g.selectAll('g.timetick')
-            .data(_events, function(e) {
-                return e.key;
-            });
+        const ticks = _g.selectAll('g.timetick')
+            .data(_events, e => e.key);
         ticks.enter().append('g').attr('class', 'timetick');
-        ticks.attr('transform', function(d) {
-            return 'translate('+Math.floor(_x(d.key))+',0)';
-        });
+        ticks.attr('transform', d => `translate(${Math.floor(_x(d.key))},0)`);
         ticks.exit().remove();
-        var tick = ticks.selectAll('rect')
-            .data(function(d) {
-                return d.value;
-            }, function(t) {
-                return t.key;
-            });
+        const tick = ticks.selectAll('rect')
+            .data(d => d.value, t => t.key);
         tick.enter().append('rect');
         tick.attr({
             width: _tickWidth,
