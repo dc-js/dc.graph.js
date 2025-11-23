@@ -20,7 +20,7 @@ function read_query(type, val) {
         case 'array':
             return val.split(querystring.listsep());
         default:
-            throw new Error('unsupported query type '+type);
+            throw new Error(`unsupported query type ${type}`);
     }
 }
 
@@ -31,9 +31,9 @@ function write_query(type, val) {
         case 'boolean':
         case 'number':
         case 'string':
-            return ''+val;
+            return `${val}`;
         default:
-            throw new Error('unsupported query type '+type);
+            throw new Error(`unsupported query type ${type}`);
     }
 }
 
@@ -128,7 +128,7 @@ function option_synchronizer(options, domain, args) {
                         };
                     break;
                 default:
-                    throw new Error('unsupported selector type '+type);
+                    throw new Error(`unsupported selector type ${type}`);
             }
         }
         if (opt.set)
@@ -158,26 +158,26 @@ function option_synchronizer(options, domain, args) {
 
     return {
         vals: settings,
-        exert: function() {
+        exert() {
             for (const key in options)
                 if (options[key].exert) {
                     args[0] = settings[key];
                     options[key].exert.apply(options[key], args);
                 }
         },
-        output: function(_) {
+        output(_) {
             if (!arguments.length)
                 return _output;
             _output = _;
             return this;
         },
-        update: function(k, v, do_ui) {
+        update(k, v, do_ui) {
             if (do_ui)
                 options[k].set(v);
             options[k].update(v, true);
         },
-        what_if_url: function(overrides) {
-            var qs2 = Object.assign({}, qs, overrides);
+        what_if_url(overrides) {
+            const qs2 = Object.assign({}, qs, overrides);
             return querystring.get_url(interesting_params(qs2));
         },
     };
