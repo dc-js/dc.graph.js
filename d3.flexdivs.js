@@ -27,17 +27,13 @@ function flex_div_helper_mapper(map) {
                 return d.class || null;
             },
             id(d) {
-                return d.bring ? 'wrap-'+d.id : d.id;
+                return d.bring ? `wrap-${d.id}` : d.id;
             },
         });
         divs.each(flex_div_helper);
-        divs.filter(function(d) {
-            return d.bring && !map[d.id];
-        })
+        divs.filter(d => d.bring && !map[d.id])
             .append('div')
-            .attr('id', function(d) {
-                return d.id;
-            });
+            .attr('id', d => d.id);
     };
 }
 function bringover(data, map) {
@@ -59,7 +55,7 @@ function flex_divs(root, data, place) {
     d3.select(root).data([data])
         .each(flex_div_helper);
     Object.keys(map).forEach(k => {
-        document.getElementById('wrap-'+k).appendChild(map[k]);
+        document.getElementById(`wrap-${k}`).appendChild(map[k]);
         if (place)
             place(k);
     });

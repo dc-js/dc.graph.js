@@ -43,7 +43,7 @@ function query_type(val) {
 
 // we could probably depend on _, but _.pick is the only thing we need atm
 function pick(object, fields) {
-    return fields.reduce(function(reduced, key) {
+    return fields.reduce((reduced, key) => {
         if (key in object)
             reduced[key] = object[key];
         return reduced;
@@ -59,12 +59,10 @@ function option_synchronizer(options, domain, args) {
 
     function interesting_params(qs) {
         const interesting = Object.keys(options)
-            .filter(function(k) {
-                return qs[options[k].query]
-                    !== write_query(query_type(options[k].default), options[k].default);
-            }).map(function(k) {
-                return options[k].query || k;
-            });
+            .filter(k =>
+                qs[options[k].query]
+                    !== write_query(query_type(options[k].default), options[k].default)
+            ).map(k => options[k].query || k);
         return pick(qs, interesting);
     }
 
@@ -90,15 +88,9 @@ function option_synchronizer(options, domain, args) {
             const selection = select(opt.selector);
             const opts = selection.selectAll('option').data(opt.values);
             opts.enter().append('option')
-                .attr('value', function(x) {
-                    return x;
-                })
-                .attr('selected', function(x) {
-                    return x === settings[key];
-                })
-                .text(function(x) {
-                    return x;
-                });
+                .attr('value', x => x)
+                .attr('selected', x => x === settings[key])
+                .text(x => x);
             selection
                 .property('value', settings[key]);
         }
