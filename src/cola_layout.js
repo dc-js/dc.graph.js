@@ -4,8 +4,7 @@
  */
 
 import { dispatch } from 'd3-dispatch';
-// webcola is loaded as a global script and expects global d3
-const cola = globalThis.cola;
+import * as cola from 'webcola';
 import { property, uuid } from './core.js';
 import { regenerateObjects } from './generate_objects.js';
 import { graphvizAttrs } from './graphviz_attrs.js';
