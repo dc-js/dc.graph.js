@@ -51,14 +51,14 @@ function pick(object, fields) {
 }
 
 function option_synchronizer(options, domain, args) {
-    var qs = querystring.parse();
-    var settings = {};
-    var _output = function(m) {
+    const qs = querystring.parse();
+    const settings = {};
+    let _output = function(m) {
         querystring.update(m);
     };
 
     function interesting_params(qs) {
-        var interesting = Object.keys(options)
+        const interesting = Object.keys(options)
             .filter(function(k) {
                 return qs[options[k].query]
                     !== write_query(query_type(options[k].default), options[k].default);
@@ -74,8 +74,8 @@ function option_synchronizer(options, domain, args) {
 
     function do_option(key, opt, callback) {
         settings[key] = opt.default;
-        var query = opt.query = opt.query || key;
-        var type = query_type(opt.default);
+        const query = opt.query = opt.query || key;
+        const type = query_type(opt.default);
         if (query in qs)
             settings[key] = read_query(type, qs[query]);
 
@@ -87,8 +87,8 @@ function option_synchronizer(options, domain, args) {
             }
         }
         if (opt.values) { // generate <select> options
-            var selection = select(opt.selector);
-            var opts = selection.selectAll('option').data(opt.values);
+            const selection = select(opt.selector);
+            const opts = selection.selectAll('option').data(opt.values);
             opts.enter().append('option')
                 .attr('value', function(x) {
                     return x;
@@ -114,7 +114,7 @@ function option_synchronizer(options, domain, args) {
                         opt.subscribe = function(k) {
                             $(opt.selector)
                                 .change(function() {
-                                    var val = $(this).is(':checked');
+                                    const val = $(this).is(':checked');
                                     k(val);
                                 });
                         };
@@ -130,7 +130,7 @@ function option_synchronizer(options, domain, args) {
                         opt.subscribe = function(k) {
                             $(opt.selector)
                                 .change(function() {
-                                    var val = $(this).val();
+                                    const val = $(this).val();
                                     k(val);
                                 });
                         };
@@ -149,8 +149,8 @@ function option_synchronizer(options, domain, args) {
             opt.subscribe(opt.update);
     }
 
-    for (var key in options) {
-        var callback = function(opt, val, manual) {
+    for (const key in options) {
+        const callback = function(opt, val, manual) {
             args[0] = val;
             if (opt.exert && (manual || !opt.dont_exert_after_subscribe))
                 opt.exert.apply(opt, args);
@@ -167,7 +167,7 @@ function option_synchronizer(options, domain, args) {
     return {
         vals: settings,
         exert: function() {
-            for (var key in options)
+            for (const key in options)
                 if (options[key].exert) {
                     args[0] = settings[key];
                     options[key].exert.apply(options[key], args);
@@ -191,7 +191,7 @@ function option_synchronizer(options, domain, args) {
     };
 }
 export default function sync_url_options(options, domain /* ... arguments for exert ... */) {
-    var args = Array.prototype.slice.call(arguments, 2);
+    const args = Array.prototype.slice.call(arguments, 2);
     args.unshift(0);
     return option_synchronizer(options, domain, args);
 }

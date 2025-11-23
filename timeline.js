@@ -4,20 +4,21 @@
 // because i am not sure that would work even if i had time to merge the PR
 // ok i'm rationalizing. it's for the fun. all the more reason to regret later.
 function timeline(parent) {
-    var _chart = {};
-    var _x = null, _y = null;
-    var _width, _height;
-    var _root = null, _svg = null, _g = null;
-    var _tickWidth = 1, _tickOpacity = 0.5;
-    var _region;
-    var _minHeight = 20;
-    var _dispatch = d3.dispatch('jump');
+    const _chart = {};
+    let _x = null, _y = null;
+    let _width, _height;
+    let _root = null, _svg = null, _g = null;
+    let _tickWidth = 1, _tickOpacity = 0.5;
+    let _region;
+    let _minHeight = 20;
+    const _dispatch = d3.dispatch('jump');
     // input data is just an array of {key: Date, value: {} or {adds: number, dels: number}}
-    var _events = null;
+    let _events = null;
     // play head
-    var _current = null;
+    let _current = null;
     // time display
-    var _timewid = 65, _timefmt = d3.time.format('%-m/%-d %H:%M:%S');
+    let _timewid = 65;
+    const _timefmt = d3.time.format('%-m/%-d %H:%M:%S');
 
     _chart.x = function(scale) {
         if (!arguments.length)

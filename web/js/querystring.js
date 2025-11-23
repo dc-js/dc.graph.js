@@ -13,15 +13,14 @@ const querystring = {
         listsep_ = s;
         return this;
     },
-    parse(opts) {
-        opts = opts || {};
-        return (function(a) {
-            if (a == '') return {};
+    parse(opts = {}) {
+        return (a => {
+            if (a === '')
+                return {};
             const b = {};
-            for (let i = 0; i < a.length; ++i)
-            {
+            for (let i = 0; i < a.length; ++i) {
                 const p = a[i].split('=', 2);
-                if (p.length == 1)
+                if (p.length === 1)
                     b[p[0]] = opts.boolean ? true : '';
                 else
                     b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, ' '));
@@ -29,8 +28,7 @@ const querystring = {
             return b;
         })(window.location.search.substr(1).split('&'));
     },
-    generate(m, encode) {
-        if (encode === undefined) encode = true;
+    generate(m, encode = true) {
         const parts = [];
         for (const k in m)
             parts.push(`${k}=${encode ? encodeURIComponent(m[k]) : m[k]}`);

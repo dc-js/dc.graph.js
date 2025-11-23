@@ -1,6 +1,4 @@
-import { redrawAll } from 'dc';
-
-function dcgraph_domain(diagram, chartgroup) {
+export function dcgraph_domain(diagram, chartgroup) {
     return {
         on_exert(opt) {
             if (opt.needs_relayout)
@@ -9,13 +7,13 @@ function dcgraph_domain(diagram, chartgroup) {
                 if (opt.needs_redraw === 'refresh')
                     diagram.refresh();
                 else
-                    redrawAll(chartgroup);
+                    dc.redrawAll(chartgroup);
             }
         },
     };
 }
 
-function dcgraph_multi_domain(diagrams, chartgroup) {
+export function dcgraph_multi_domain(diagrams, chartgroup) {
     return {
         on_exert(opt) {
             const diagram = diagrams[opt.diagram];
@@ -25,11 +23,10 @@ function dcgraph_multi_domain(diagrams, chartgroup) {
                 if (opt.needs_redraw === 'refresh')
                     diagram.refresh();
                 else
-                    redrawAll(chartgroup);
+                    dc.redrawAll(chartgroup);
             }
         },
     };
 }
 
 export default dcgraph_domain;
-export { dcgraph_multi_domain };
