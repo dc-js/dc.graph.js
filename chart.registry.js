@@ -5,22 +5,22 @@
 
  Will eventually be cleaned up and modularized, and dc.js will use it (while preserving its legacy interface).
 */
-(function() {
-    var chart_registry = window.chart_registry || {};
+(() => {
+    const chart_registry = window.chart_registry || {};
     window.chart_registry = chart_registry;
 
-    var types = {};
+    const types = {};
 
     chart_registry.create_type = function(type, constructor) {
         if (!types[type])
-            types[type] = {constructor: constructor, groups: {}};
+            types[type] = {constructor, groups: {}};
 
         return types[type];
     };
 
     chart_registry.create_group = function(type, groupname) {
         if (!types[type])
-            throw new Error('chart registry type "'+type+'" not known');
+            throw new Error(`chart registry type "${type}" not known`);
         if (!types[type][groupname])
             types[type][groupname] = types[type].constructor();
         return types[type][groupname];

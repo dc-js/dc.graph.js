@@ -5,7 +5,7 @@
 
  Will eventually be cleaned up and modularized, and dc.js will use it (while preserving its legacy interface).
 */
-(function() {
+(() => {
     const chart_registry = window.chart_registry || {};
     window.chart_registry = chart_registry;
 
