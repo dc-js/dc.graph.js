@@ -14,7 +14,7 @@ const querystring = {
         return this;
     },
     parse(opts = {}) {
-        return ((a) => {
+        return (a => {
             if (a === '')
                 return {};
             const b = {};
