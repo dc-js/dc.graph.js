@@ -89,6 +89,7 @@
     "build": "rollup -c && rollup -c worker.rollup.config.js",
     "build:workers": "rollup -c worker.rollup.config.js",
     "build:all": "npm run vendor && npm run build",
+    "prepublishOnly": "npm run build:all",
     "build:watch": "rollup -c -w & rollup -c worker.rollup.config.js -w",
     "dev": "rollup -c -w & rollup -c worker.rollup.config.js -w",
     "serve": "python3 server.py 8888",
