@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: constraint_pattern.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: constraint_pattern.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { clone } from './utils.js';
+
+/**
+ * In cola.js there are three factors which influence the positions of nodes:
+ * * *edge length* suggestions, controlled by the
+ * lengthStrategy, baseLength, and edgeLength parameters
+ * * *automatic constraints* based on the global edge flow direction (`cola.flowLayout`) and overlap
+ * avoidance parameters (`cola.avoidOverlaps`)
+ * * *manual constraints* such as alignment, inequality and equality constraints in a dimension/axis.
+ *
+ * Generally when the
+ * {@link https://github.com/tgdwyer/WebCola/wiki/Constraints cola.js documentation mentions constraints},
+ * it means the manual constraints.
+ *
+ * This utility creates a constraint generator function from a *pattern*, a graph where:
+ *  1. Nodes represent *types* or classes of layout nodes, annotated with a specification
+ * of how to match the nodes belonging each type.
+ *  2. Edges represent *rules* to generate constraints. There are two kinds of rules:
+ * &lt;ol type='a'>
+ *    &lt;li>To generate additional constraints on edges besides the built-in ones, create a rules
+ * between two different types. The rule will apply to any edges in the layout which match the
+ * source and target types, and generate simple "left/right" constraints. (Note that "left" and
+ * "right" in this context refer to sides of an inequality constraint `left + gap &lt;= right`)
+ *    &lt;li>To generate constraints on a set of nodes, such as alignment, ordering, or circle
+ * constraints, create a rule from a type to itself, a self edge.
+ * &lt;/ol>
+ * (It is also conceivable to want constraints between individual nodes which don't
+ * have edges between them. This is not directly supported at this time; right now the workaround
+ * is to create the edge but not draw it, e.g. by setting its edgeOpacity
+ * to zero. If you have a use-case for this, please
+ * {@link https://github.com/dc-js/dc.graph.js/issues/new file an issue}.
+ *
+ * The pattern syntax is an embedded domain specific language designed to be terse without
+ * restricting its power. As such, there are complicated rules for defaulting and inferring
+ * parameters from other parameters. Since most users will want the simplest form, this document
+ * will start from the highest level and then show how to use more complicated forms in order to
+ * gain more control.
+ *
+ * Then we'll build back up from the ground up and show how inference works.
+ * @param {Object} pattern - a graph which defines the constraints to be generated
+ * @return {Function}
+ */
+export function constraintPattern(pattern) {
+    const types = {}, rules = [];
+
+    pattern.nodes.forEach(n => {
+        const id = n.id;
+        const type = types[id] || (types[id] = {});
+        // partitions could be done more efficiently; this is POC
+        if (n.partition) {
+            const partition = n.partition;
+            const value = n.value || n.id;
+            if (n.all || n.typename) {
+                type.match = n.extract
+                    ? function(n2) {
+                        return n.extract(n2.value[partition]);
+                    }
+                    : function(n2) {
+                        return n2.value[partition];
+                    };
+                type.typename = n.typename || function(n2) {
+                    return `${partition}=${n2.value[partition]}`;
+                };
+            } else
+                type.match = function(n2) {
+                    return n2.value[partition] === value;
+                };
+        } else if (n.match)
+            type.match = n.match;
+        else throw new Error(`couldn't determine matcher for type ${JSON.stringify(n)}`);
+    });
+    pattern.edges.forEach(e => {
+        if (e.disable)
+            return;
+        const rule = {source: e.source, target: e.target};
+        rule.produce = typeof e.produce === 'function' ? e.produce : function() {
+            return clone(e.produce);
+        };
+        ['listname', 'wrap', 'reverse'].forEach(k => {
+            if (e[k] !== undefined) rule[k] = e[k];
+        });
+        rules.push(rule);
+    });
+
+    return function(diagram, nodes, edges) {
+        const constraints = [];
+        const members = {};
+        nodes.forEach(n => {
+            const key = diagram.nodeKey.eval(n);
+            for (const t in types) {
+                const type = types[t], value = type.match(n.orig);
+                if (value) {
+                    const tname = type.typename ? type.typename(t, value) : t;
+                    if (!members[tname])
+                        members[tname] = {
+                            nodes: [], // original ordering
+                            whether: {}, // boolean
+                        };
+                    members[tname].nodes.push(key);
+                    members[tname].whether[key] = true;
+                }
+            }
+        });
+        // traversal of rules could be more efficient, again POC
+        const edge_rules = rules.filter(r => r.source !== r.target);
+        const type_rules = rules.filter(r => r.source === r.target);
+        edges.forEach(e => {
+            const source = diagram.edgeSource.eval(e),
+                target = diagram.edgeTarget.eval(e);
+            edge_rules.forEach(r => {
+                if (
+                    members[r.source] &amp;&amp; members[r.source].whether[source]
+                    &amp;&amp; members[r.target] &amp;&amp; members[r.target].whether[target]
+                ) {
+                    const constraint = r.produce(members, nodes, edges);
+                    if (r.reverse) {
+                        constraint.left = target;
+                        constraint.right = source;
+                    } else {
+                        constraint.left = source;
+                        constraint.right = target;
+                    }
+                    constraints.push(constraint);
+                }
+            });
+        });
+        type_rules.forEach(r => {
+            if (!members[r.source])
+                return;
+            const constraint = r.produce(),
+                listname = r.listname || r.produce.listname || 'nodes',
+                wrap = r.wrap || r.produce.wrap || function(x) {
+                    return x;
+                };
+            constraint[listname] = members[r.source].nodes.map(wrap);
+            constraints.push(constraint);
+        });
+        return constraints;
+    };
+}
+
+// constraint generation convenience functions
+export function gapY(gap, equality) {
+    return {
+        axis: 'y',
+        gap,
+        equality: !!equality,
+    };
+}
+export function gapX(gap, equality) {
+    return {
+        axis: 'x',
+        gap,
+        equality: !!equality,
+    };
+}
+
+function alignF(axis) {
+    const ret = function() {
+        return {
+            type: 'alignment',
+            axis,
+        };
+    };
+    ret.listname = 'offsets';
+    ret.wrap = function(x) {
+        return {node: x, offset: 0};
+    };
+    return ret;
+}
+
+export function alignY() {
+    return alignF('y');
+}
+export function alignX() {
+    return alignF('x');
+}
+
+export function orderX(gap, ordering) {
+    return {
+        type: 'ordering',
+        axis: 'x',
+        gap: 60,
+        ordering,
+    };
+}
+export function orderY(gap, ordering) {
+    return {
+        type: 'ordering',
+        axis: 'y',
+        gap: 60,
+        ordering,
+    };
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-cola_layout.html">cola_layout</a></li><li><a href="module-core.html">core</a></li><li><a href="module-d3v4_force_layout.html">d3v4_force_layout</a></li><li><a href="module-dagre_layout.html">dagre_layout</a></li><li><a href="module-dc-graph.html">dc-graph</a></li><li><a href="module-depth_first_traversal.html">depth_first_traversal</a></li><li><a href="module-diagram.html">diagram</a></li><li><a href="module-dynagraph_layout.html">dynagraph_layout</a></li><li><a href="module-engine.html">engine</a></li><li><a href="module-flexbox_layout.html">flexbox_layout</a></li><li><a href="module-generate_objects.html">generate_objects</a></li><li><a href="module-graphviz_attrs.html">graphviz_attrs</a></li><li><a href="module-graphviz_layout.html">graphviz_layout</a></li><li><a href="module-layered_layout.html">layered_layout</a></li><li><a href="module-manual_layout.html">manual_layout</a></li><li><a href="module-tree_layout.html">tree_layout</a></li><li><a href="module-webworker_layout.html">webworker_layout</a></li></ul><h3>Classes</h3><ul><li><a href="brush.html">brush</a></li><li><a href="dc_graph.flexbox_layout.html">flexbox_layout</a></li><li><a href="dc_graph.tip.html">tip</a></li></ul><h3>Global</h3><ul><li><a href="global.html#constraintPattern">constraintPattern</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Nov 24 2025 01:51:28 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

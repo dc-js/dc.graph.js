@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: flat_group.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: flat_group.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * `flatGroup` implements a
+ * ["fake crossfilter group"](https://github.com/dc-js/dc.js/wiki/FAQ#fake-groups)
+ * for the case of a group which is 1:1 with the rows of the data array.
+ *
+ * Although `dc_graph` can be used with aggregated or reduced data, typically the nodes and edges
+ * are rows of two data arrays, and each row has a column which contains the unique identifier for
+ * the node or edge.
+ */
+
+import crossfilter from 'crossfilter2';
+
+export const flatGroup = (function() {
+    const reduce_01 = {
+        add(p, v) {
+            return v;
+        },
+        remove() {
+            return null;
+        },
+        init() {
+            return null;
+        },
+    };
+    // now we only really want to see the non-null values, so make a fake group
+    function non_null(group) {
+        return {
+            all() {
+                return group.all().filter(kv => kv.value !== null);
+            },
+        };
+    }
+
+    function dim_group(ndx, id_accessor) {
+        const dimension = ndx.dimension(id_accessor);
+        return {
+            crossfilter: ndx,
+            dimension,
+            group: non_null(
+                dimension.group().reduce(reduce_01.add, reduce_01.remove, reduce_01.init),
+            ),
+        };
+    }
+
+    return {
+        /**
+         * Create a crossfilter, dimension, and flat group. Returns an object containing all three.
+         *
+         *  1. If `source` is an array, create a crossfilter from it. Otherwise assume it is a
+         *  crossfilter instance.
+         *  2. Create a dimension on the crossfilter keyed by `id_accessor`
+         *  3. Create a group from the dimension, reducing to the row when it's filtered in, or
+         * `null` when it's out.
+         *  4. Wrap the group in a fake group which filters out the nulls.
+         *
+         * The resulting fake group's `.all()` method returns an array of the currently filtered-in
+         * `{key, value}` pairs where the key is `id_accessor(row)` and the value is the row.
+         * @method make
+         * @memberof dc_graph.flat_group
+         * @param {Array} source - the data array for crossfilter, or a crossfilter
+         * @param {Function} id_accessor - accessor function taking a row object and returning its
+         * unique identifier
+         * @return {Object} `{crossfilter, dimension, group}`
+         */
+        make(source, id_accessor) {
+            let cf;
+            if (Array.isArray(source))
+                cf = crossfilter(source);
+            else cf = source;
+            return dim_group(cf, id_accessor);
+        },
+        /**
+         * Create a flat dimension and group from an existing crossfilter.
+         *
+         * @method another
+         * @memberof dc_graph.flat_group
+         * @deprecated use .make() instead
+         * @param {Object} ndx - crossfilter instance
+         * @param {Function} id_accessor - accessor function taking a row object and returning its
+         * unique identifier
+         * @return {Object} `{crossfilter, dimension, group}`
+         */
+        another(cf, id_accessor) {
+            console.warn('flat_group.another() is deprecated, use .make() instead');
+            return this.make(cf, id_accessor);
+        },
+    };
+})();
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-cola_layout.html">cola_layout</a></li><li><a href="module-core.html">core</a></li><li><a href="module-d3v4_force_layout.html">d3v4_force_layout</a></li><li><a href="module-dagre_layout.html">dagre_layout</a></li><li><a href="module-dc-graph.html">dc-graph</a></li><li><a href="module-depth_first_traversal.html">depth_first_traversal</a></li><li><a href="module-diagram.html">diagram</a></li><li><a href="module-dynagraph_layout.html">dynagraph_layout</a></li><li><a href="module-engine.html">engine</a></li><li><a href="module-flexbox_layout.html">flexbox_layout</a></li><li><a href="module-generate_objects.html">generate_objects</a></li><li><a href="module-graphviz_attrs.html">graphviz_attrs</a></li><li><a href="module-graphviz_layout.html">graphviz_layout</a></li><li><a href="module-layered_layout.html">layered_layout</a></li><li><a href="module-manual_layout.html">manual_layout</a></li><li><a href="module-tree_layout.html">tree_layout</a></li><li><a href="module-webworker_layout.html">webworker_layout</a></li></ul><h3>Classes</h3><ul><li><a href="brush.html">brush</a></li><li><a href="dc_graph.flexbox_layout.html">flexbox_layout</a></li><li><a href="dc_graph.tip.html">tip</a></li></ul><h3>Global</h3><ul><li><a href="global.html#constraintPattern">constraintPattern</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Nov 24 2025 01:51:28 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

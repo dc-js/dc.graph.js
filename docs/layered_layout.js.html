@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: layered_layout.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: layered_layout.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Layered layout for dc.graph.js
+ * @module layered_layout
+ */
+
+import { dispatch } from 'd3-dispatch';
+import { property, uuid } from './core.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+import { supergraph } from './supergraph.js';
+
+/**
+ * `layeredLayout` produces 3D layered layouts, utilizing another layout
+ * that supports fixed nodes and position hints for the layers
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {Object} layered layout engine
+ */
+export function layeredLayout(id) {
+    const _layoutId = id || uuid();
+    const _dispatch = dispatch('tick', 'start', 'end');
+    let _supergraph, _subgraphs;
+    let _layers;
+    let _options = null;
+
+    function init(options) {
+        _options = options;
+    }
+
+    function data(nodes, edges, _constraints) {
+        _supergraph = supergraph({nodes, edges}, {
+            nodeKey(n) {
+                return n.dcg_nodeKey;
+            },
+            edgeKey(n) {
+                return n.dcg_edgeKey;
+            },
+            nodeValue(n) {
+                return n;
+            },
+            edgeValue(e) {
+                return e;
+            },
+            edgeSource(e) {
+                return e.dcg_edgeSource;
+            },
+            edgeTarget(e) {
+                return e.dcg_edgeTarget;
+            },
+        });
+
+        // every node belongs natively in one rank
+        const nranks = _supergraph.nodes().reduce((p, n) => {
+            const rank = engine.layerAccessor()(n.value());
+            p[rank] = p[rank] || [];
+            p[rank].push(n);
+            return p;
+        }, {});
+        const eranks = Object.keys(nranks).reduce((p, r) => {
+            p[r] = [];
+            return p;
+        }, {});
+
+        // nodes are shadowed into any layers to which they are adjacent
+        // edges are induced from the native&amp;shadow nodes in each layer
+        _supergraph.edges().forEach(e => {
+            const srank = engine.layerAccessor()(e.source().value()),
+                trank = engine.layerAccessor()(e.target().value());
+            if (srank == trank) {
+                eranks[srank].push(e);
+                return;
+            }
+            nranks[trank].push(e.source());
+            eranks[trank].push(e);
+            nranks[srank].push(e.target());
+            eranks[srank].push(e);
+        });
+
+        // produce a subgraph for each layer
+        _subgraphs = Object.keys(nranks).reduce((p, r) => {
+            p[r] = _supergraph.subgraph(
+                nranks[r].map(n => n.key()),
+                eranks[r].map(e => e.key()),
+            );
+            return p;
+        }, {});
+
+        // start from the most populous layer
+        let max = null;
+        Object.keys(nranks).forEach(r => {
+            if (
+                max === null
+                || _subgraphs[r].nodes().length > _subgraphs[max].nodes().length
+            )
+                max = +r;
+        });
+
+        // travel up and down from there, each time fixing the nodes from the last layer
+        const ranks = Object.keys(nranks).map(r => +r).sort();
+        _layers = ranks.map(r => ({
+            rank: r,
+            z: -r*engine.layerSeparationZ(),
+        }));
+        const mi = ranks.indexOf(max);
+        const ups = ranks.slice(mi+1), downs = ranks.slice(0, mi).reverse();
+        layout_layer(max, -1).then(layout => {
+            Promise.all([
+                layout_layers(layout, max, ups),
+                layout_layers(layout, max, downs),
+            ]).then(() => {
+                _dispatch.call(
+                    'end',
+                    null,
+                    _supergraph.nodes().map(n => n.value()),
+                    _supergraph.edges().map(e => e.value()),
+                );
+            });
+        });
+    }
+
+    function layout_layers(layout, last, layers) {
+        if (layers.length === 0)
+            return Promise.resolve(layout);
+        const curr = layers.shift();
+        return layout_layer(curr, last).then(layout => layout_layers(layout, curr, layers));
+    }
+
+    function layout_layer(r, _last) {
+        _subgraphs[r].nodes().forEach(n => {
+            if (
+                engine.layerAccessor()(n.value()) !== r
+                &amp;&amp; n.value().x !== undefined
+                &amp;&amp; n.value().y !== undefined
+            )
+                n.value().dcg_nodeFixed = {
+                    x: n.value().x,
+                    y: n.value().y,
+                };
+            else n.value().dcg_nodeFixed = null;
+        });
+        const subengine = engine.engineFactory()();
+        subengine.init(_options);
+        subengine.data(
+            {},
+            _subgraphs[r].nodes().map(n => n.value()),
+            _subgraphs[r].edges().map(e => e.value()),
+        );
+        return promise_layout(r, subengine);
+    }
+
+    function promise_layout(r, subengine) {
+        // stopgap - engine.start() should return a promise
+        return new Promise((resolve, _reject) => {
+            subengine.on('end', (nodes, edges) => {
+                resolve({nodes, edges});
+            });
+            subengine.start();
+        }).then(layout => {
+            // copy positions back into the subgraph (and hence supergraph)
+            layout.nodes.forEach(ln => {
+                const n = _subgraphs[r].node(ln.dcg_nodeKey);
+                // do not copy positions for shadow nodes
+                if (engine.layerAccessor()(n.value()) !== r)
+                    return;
+                n.value().x = ln.x;
+                n.value().y = ln.y;
+                n.value().z = -r*engine.layerSeparationZ(); // lowest rank at top
+            });
+            return layout;
+        });
+    }
+
+    function start() {
+        _dispatch.call('start');
+    }
+
+    function stop() {
+    }
+
+    const graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
+
+    const engine = Object.assign(graphviz, {
+        layoutAlgorithm() {
+            return 'layered';
+        },
+        layoutId() {
+            return _layoutId;
+        },
+        supportsWebworker() {
+            return false;
+        },
+        parent: property(null),
+        on(event, f) {
+            if (arguments.length === 1)
+                return _dispatch.on(event);
+            _dispatch.on(event, f);
+            return this;
+        },
+        init(options) {
+            this.optionNames().forEach(option => {
+                options[option] = options[option] || this[option]();
+            });
+            init(options);
+            return this;
+        },
+        data(graph, nodes, edges, constraints) {
+            data(nodes, edges, constraints);
+        },
+        start() {
+            start();
+        },
+        stop() {
+            stop();
+        },
+        optionNames() {
+            return []
+                .concat(graphviz_keys);
+        },
+        engineFactory: property(null),
+        layerAccessor: property(null),
+        layerSeparationZ: property(50),
+        layers() {
+            return _layers;
+        },
+        populateLayoutNode() {},
+        populateLayoutEdge() {},
+        extractNodeAttrs: property({}), // {attr: function(node)}
+        extractEdgeAttrs: property({}),
+    });
+    return engine;
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-cola_layout.html">cola_layout</a></li><li><a href="module-core.html">core</a></li><li><a href="module-d3v4_force_layout.html">d3v4_force_layout</a></li><li><a href="module-dagre_layout.html">dagre_layout</a></li><li><a href="module-dc-graph.html">dc-graph</a></li><li><a href="module-depth_first_traversal.html">depth_first_traversal</a></li><li><a href="module-diagram.html">diagram</a></li><li><a href="module-dynagraph_layout.html">dynagraph_layout</a></li><li><a href="module-engine.html">engine</a></li><li><a href="module-flexbox_layout.html">flexbox_layout</a></li><li><a href="module-generate_objects.html">generate_objects</a></li><li><a href="module-graphviz_attrs.html">graphviz_attrs</a></li><li><a href="module-graphviz_layout.html">graphviz_layout</a></li><li><a href="module-layered_layout.html">layered_layout</a></li><li><a href="module-manual_layout.html">manual_layout</a></li><li><a href="module-tree_layout.html">tree_layout</a></li><li><a href="module-webworker_layout.html">webworker_layout</a></li></ul><h3>Classes</h3><ul><li><a href="brush.html">brush</a></li><li><a href="dc_graph.flexbox_layout.html">flexbox_layout</a></li><li><a href="dc_graph.tip.html">tip</a></li></ul><h3>Global</h3><ul><li><a href="global.html#constraintPattern">constraintPattern</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Nov 24 2025 01:51:28 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,4 +1,32 @@
-var options = {
+import { descending, max, min, range, shuffle } from 'd3';
+import { scaleOrdinal } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
+import { select } from 'd3-selection';
+import { redrawAll, renderAll } from 'dc';
+import {
+    applyGraphvizAccessors,
+    builtinArrows,
+    dataUrl,
+    diagram,
+    engines,
+    expandCollapse,
+    flatGroup,
+    highlightThings,
+    legend,
+    loadGraph,
+    loadGraphText,
+    mungeGraph,
+    registerHighlightThingsGroup,
+    spawnEngine,
+    tip,
+    tipHtmlOrJsonTable,
+    troubleshoot,
+} from './dc-graph.js';
+import dcgraph_domain from './dc.graph.tracker.domain.js';
+import { display_error, hide_error } from './graph-error.js';
+import sync_url_options from './sync-url-options.js';
+
+const options = {
     file: null,
     tickSize: 1,
     transition: 1000,
@@ -6,15 +34,15 @@ var options = {
     linkLength: 30,
     layout: {
         default: 'cola',
-        values: dc_graph.engines.available(),
+        values: engines.available(),
         selector: '#layout',
         needs_relayout: true,
-        exert: function(val, diagram) {
-            var engine = dc_graph.spawn_engine(val);
+        exert(val, diagram) {
+            const engine = spawnEngine(val);
             apply_engine_parameters(engine);
             diagram
                 .layoutEngine(engine);
-        }
+        },
     },
     worker: true,
     timeLimit: 10000,
@@ -22,7 +50,7 @@ var options = {
     directional: true,
     numerics: false,
     numeric_colors: {
-        default: []
+        default: [],
     },
     bigzoom: false,
     rndarrow: null,
@@ -32,98 +60,103 @@ var options = {
         default: 'TB',
         exert: (val, diagram) => {
             diagram.layoutEngine().rankdir(val);
-        }
+        },
     },
     expand_strategy: 'expanded_hidden',
     // these three are messy because they overlap / interact
     // it would probably be better to improve sync_url but i don't want to go there
     expanded: {
         default: [],
-        subscribe: function(k) {
-            var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
-            expanded_highlight_group.on('highlight.sync-url-both', function(nodeset, edgeset) {
-                k(sync_url.vals.directional ? [] :
-                  Object.keys(nodeset).filter(function(nk) {
-                      return nodeset[nk];
-                  }));
+        subscribe(k) {
+            const expanded_highlight_group = registerHighlightThingsGroup(
+                options.expanded_highlight_group || 'expanded-highlight-group',
+            );
+            expanded_highlight_group.on('highlight.sync-url-both', (nodeset, _edgeset) => {
+                k(
+                    sync_url.vals.directional
+                        ? []
+                        : Object.keys(nodeset).filter(nk => nodeset[nk]),
+                );
             });
         },
         dont_exert_after_subscribe: true,
-        exert: function(val, diagram) {
-            if(sync_url.vals.directional)
+        exert(val, _diagram) {
+            if (sync_url.vals.directional)
                 return;
             expand_collapse
                 .expandNodes(val, 'both');
-        }
+        },
     },
     expandedIn: {
         default: [],
         subscribe: expanded_dir_subscribe,
         dont_exert_after_subscribe: true,
-        exert: expanded_dir_exert
+        exert: expanded_dir_exert,
     },
     expandedOut: {
         default: [],
         subscribe: expanded_dir_subscribe,
         dont_exert_after_subscribe: true,
-        exert: expanded_dir_exert
-    }
+        exert: expanded_dir_exert,
+    },
 };
 
 let dir_sub_ks = [];
 function expanded_dir_subscribe(k) {
     dir_sub_ks.push(k);
-    if(dir_sub_ks.length == 2) {
+    if (dir_sub_ks.length == 2) {
         const [kin, kout] = dir_sub_ks;
         dir_sub_ks = [];
-        var expanded_highlight_group = dc_graph.register_highlight_things_group(options.expanded_highlight_group || 'expanded-highlight-group');
-        expanded_highlight_group.on('highlight.sync-url-inout', function(nodeset, edgeset) {
-            if(!sync_url.vals.directional) {
+        const expanded_highlight_group = registerHighlightThingsGroup(
+            options.expanded_highlight_group || 'expanded-highlight-group',
+        );
+        expanded_highlight_group.on('highlight.sync-url-inout', (nodeset, _edgeset) => {
+            if (!sync_url.vals.directional) {
                 kin([]);
                 kout([]);
                 return;
             }
-            kin(Object.keys(nodeset).filter(function(nk) {
-                return expand_collapse.expandedDirs(nk).includes('in');
-            }));
-            kout(Object.keys(nodeset).filter(function(nk) {
-                return expand_collapse.expandedDirs(nk).includes('out');
-            }));
+            kin(
+                Object.keys(nodeset).filter(nk => expand_collapse.expandedDirs(nk).includes('in')),
+            );
+            kout(
+                Object.keys(nodeset).filter(nk => expand_collapse.expandedDirs(nk).includes('out')),
+            );
         });
     }
 }
 let dir_exert_vals = [];
-function expanded_dir_exert(val, diagram) {
+function expanded_dir_exert(val, _diagram) {
     dir_exert_vals.push(val);
-    if(dir_exert_vals.length == 2) {
+    if (dir_exert_vals.length == 2) {
         const [invals, outvals] = dir_exert_vals;
         dir_exert_vals = [];
         expand_collapse.expandNodes({
             in: invals,
-            out: outvals
+            out: outvals,
         });
     }
 }
-var exploreDiagram = dc_graph.diagram('#graph');
-var sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
+const exploreDiagram = diagram('#graph');
+const sync_url = sync_url_options(options, dcgraph_domain(exploreDiagram), exploreDiagram);
 
 function apply_engine_parameters(engine) {
-    switch(engine.layoutAlgorithm()) {
-    case 'd3v4-force':
-        engine
-            .collisionRadius(125)
-            .gravityStrength(0.05)
-            .initialCharge(-500);
-        break;
-    case 'd3-force':
-        engine
-            .gravityStrength(0.1)
-            .linkDistance('auto')
-            .initialCharge(-5000);
-        break;
-    case 'cola':
-        engine.lengthStrategy('individual');
-        break;
+    switch (engine.layoutAlgorithm()) {
+        case 'd3v4-force':
+            engine
+                .collisionRadius(125)
+                .gravityStrength(0.05)
+                .initialCharge(-500);
+            break;
+        case 'd3-force':
+            engine
+                .gravityStrength(0.1)
+                .linkDistance('auto')
+                .initialCharge(-5000);
+            break;
+        case 'cola':
+            engine.lengthStrategy('individual');
+            break;
     }
     exploreDiagram.initLayoutOnRedraw(engine.layoutAlgorithm() === 'cola');
     return engine;
@@ -131,151 +164,161 @@ function apply_engine_parameters(engine) {
 
 // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript#47593316
 function xfnv1a(k) {
-    for(var i = 0, h = 2166136261 >>> 0; i < k.length; i++)
-        h = Math.imul(h ^ k.charCodeAt(i), 16777619);
+    let h = 2166136261>>>0;
+    for (let i = 0; i < k.length; i++)
+        h = Math.imul(h^k.charCodeAt(i), 16777619);
     return function() {
-        h += h << 13; h ^= h >>> 7;
-        h += h << 3;  h ^= h >>> 17;
-        return (h += h << 5) >>> 0;
+        h += h<<13;
+        h ^= h>>>7;
+        h += h<<3;
+        h ^= h>>>17;
+        return (h += h<<5)>>>0;
     };
 }
 function sfc32(a, b, c, d) {
     return function() {
-      a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
-      var t = (a + b) | 0;
-      a = b ^ b >>> 9;
-      b = c + (c << 3) | 0;
-      c = (c << 21 | c >>> 11);
-      d = d + 1 | 0;
-      t = t + d | 0;
-      c = c + t | 0;
-      return (t >>> 0) / 4294967296;
+        a >>>= 0;
+        b >>>= 0;
+        c >>>= 0;
+        d >>>= 0;
+        let t = (a+b)|0;
+        a = b^b>>>9;
+        b = c+(c<<3)|0;
+        c = c<<21|c>>>11;
+        d = d+1|0;
+        t = t+d|0;
+        c = c+t|0;
+        return (t>>>0)/4294967296;
     };
 }
 function rand(s) {
-    var seed = xfnv1a(s);
+    const seed = xfnv1a(s);
     return sfc32(seed(), seed(), seed(), seed());
 }
 
-d3.select('#user-file').on('change', function() {
-    var filename = this.value;
-    if(filename) {
-        var reader = new FileReader();
+select('#user-file').on('change', function() {
+    const filename = this.value;
+    if (filename) {
+        const reader = new FileReader();
         reader.onload = function(e) {
             hide_error();
-            dc_graph.load_graph_text(e.target.result, filename, on_load.bind(null, filename));
+            loadGraphText(e.target.result, filename).then(data => on_load(filename, null, data));
             sync_url.update('expanded', []);
         };
         reader.readAsText(this.files[0]);
     }
 });
 
-var url_output = sync_url.output(), more_output;
-sync_url.output(function(params) {
+const url_output = sync_url.output();
+let more_output;
+sync_url.output(params => {
     url_output(params);
-    if(more_output)
+    if (more_output)
         more_output(params);
 });
 
 // graphlib-dot seems to wrap nodes in an extra {value}
 // actually this is quite a common problem with generic libs
-function nvalue(n) {
+function _nvalue(n) {
     return n.value.value ? n.value.value : n.value;
 }
 
-
-var expand_collapse;
+let expand_collapse;
 function on_load(filename, error, data) {
-    if(error) {
-        var heading = '';
-        if(error.status)
-            heading = 'Error ' + error.status + ': ';
-        heading += 'Could not load file ' + filename;
-        display_error(heading, error.message);
+    if (error) {
+        let heading = '';
+        if (error.status)
+            heading = `Error ${error.status}: `;
+        heading += `Could not load file ${filename}`;
+        display_error(heading, error);
     }
-    var graph_data;
+    let graph_data;
     try {
-        graph_data = dc_graph.munge_graph(data);
+        graph_data = mungeGraph(data);
+    } catch (xep) {
+        display_error(`Error munging ${filename}`, xep);
     }
-    catch(xep) {
-        console.log(xep);
-        display_error(`Error munging ${filename}`, xep.message);
-    }
-    var nodes = graph_data.nodes,
+    const nodes = graph_data.nodes,
         edges = graph_data.edges,
         sourceattr = graph_data.sourceattr,
         targetattr = graph_data.targetattr,
         nodekeyattr = graph_data.nodekeyattr;
 
     function update_data_link() {
-        d3.select('#data-link')
-            .attr('href', sync_url.what_if_url({file: dc_graph.data_url({nodes: nodes, edges: edges})}));
+        select('#data-link')
+            .attr('href', sync_url.what_if_url({file: dataUrl({nodes, edges})}));
     }
     more_output = update_data_link;
     update_data_link();
 
     const numeric_fields = {};
     let numeric_colors;
-    if(sync_url.vals.numerics) {
-        if(sync_url.vals.numeric_colors)
-            numeric_colors = d3.scale.ordinal().domain(d3.range(10)).range(sync_url.vals.numeric_colors);
+    if (sync_url.vals.numerics) {
+        if (sync_url.vals.numeric_colors)
+            numeric_colors = scaleOrdinal().domain(range(10)).range(sync_url.vals.numeric_colors);
         else
-            numeric_colors = d3.scale.category10().domain(d3.range(10));
+            numeric_colors = scaleOrdinal(schemeCategory10).domain(range(10));
         graph_data.nodes.forEach(n => {
-            for(const [key, value] of Object.entries(n.value)) {
-                if(key === 'label')
+            for (const [key, value] of Object.entries(n.value)) {
+                if (key === 'label')
                     continue;
                 const v = +value;
-                if(!isNaN(v)) {
-                    if(!numeric_fields[key])
+                if (!isNaN(v)) {
+                    if (!numeric_fields[key])
                         numeric_fields[key] = {};
-                    if(!numeric_fields[key][v])
-                        numeric_fields[key][v] = []
+                    if (!numeric_fields[key][v])
+                        numeric_fields[key][v] = [];
                     numeric_fields[key][v].push(n.name);
                 }
             }
         });
-        const numerics = d3.select('#numerics');
+        const numerics = select('#numerics');
         numerics.append('h4').text('Numeric fields');
-        numerics.append('p').text('Select a value to expand nodes with field at or above that value');
+        numerics.append('p').text(
+            'Select a value to expand nodes with field at or above that value',
+        );
         const fields = numerics.selectAll('div').data(Object.entries(numeric_fields))
-              .enter().append('div');
+            .enter().append('div');
         fields.append('span')
             .attr('class', 'numeric-heading')
-            .style('color', (_,i) => numeric_colors(i)).text(
-                  ([key,values]) => {
-                      const values2 = Object.keys(values).map(x => +x);
-                      return `${key}: ${d3.min(values2)} - ${d3.max(values2)}`;
-                  });
+            .style('color', (_, i) => numeric_colors(i)).text(
+                ([key, values]) => {
+                    const values2 = Object.keys(values).map(x => +x);
+                    return `${key}: ${min(values2)} - ${max(values2)}`;
+                },
+            );
         // fields.append('label')
         //     .attr('for', ([key]) => `#${key}-select`)
         //     .html('expand above&nbsp;');
         const field_select = fields.append('select')
-              .attr('id',  ([key]) => `${key}-select`);
+            .attr('id', ([key]) => `${key}-select`);
         field_select
-            .selectAll('option').data(([key, values]) => {
+            .selectAll('option').data(([_key, values]) => {
                 const values2 = Object.keys(values).map(x => +x);
-                values2.sort(d3.descending);
+                values2.sort(descending);
                 return ['select', ...values2.slice(0, 3)];
             })
             .enter().append('option').text(x => x);
-        field_select.on('change', function([key, values]) {
+        field_select.on('change', function([_key, values]) {
             const level = +this.value;
             const [dir, recurse] = get_dir_recurse();
             const nks = Object.entries(values).flatMap(
-                ([v, keys]) => +v >= level ?
-                    keys.flatMap(key => expand_dir_rec(dir, recurse, key)) : []);
+                ([v, keys]) =>
+                    +v >= level
+                        ? keys.flatMap(key => expand_dir_rec(dir, recurse, key))
+                        : [],
+            );
             expand_collapse.expand(dir, nks, true);
         });
     }
 
-    var edge_key = function(d) {
-        return d[sourceattr] + '-' + d[targetattr] + (d.par ? ':' + d.par : '');
+    const edge_key = function(d) {
+        return `${d[sourceattr]}-${d[targetattr]}${d.par ? `:${d.par}` : ''}`;
     };
-    var edge_flat = dc_graph.flat_group.make(edges, edge_key),
-        node_flat = dc_graph.flat_group.make(nodes, function(d) { return d[nodekeyattr]; });
+    const edge_flat = flatGroup.make(edges, edge_key),
+        node_flat = flatGroup.make(nodes, d => d[nodekeyattr]);
 
-    var engine = dc_graph.spawn_engine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
+    const engine = spawnEngine(sync_url.vals.layout, sync_url.vals, sync_url.vals.worker);
     apply_engine_parameters(engine);
 
     exploreDiagram
@@ -289,100 +332,96 @@ function on_load(filename, error, data) {
         .stageTransitions(sync_url.vals.stage)
         .nodeDimension(node_flat.dimension).nodeGroup(node_flat.group)
         .edgeDimension(edge_flat.dimension).edgeGroup(edge_flat.group)
-        .edgeSource(function(e) { return e.value[sourceattr]; })
-        .edgeTarget(function(e) { return e.value[targetattr]; })
+        .edgeSource(e => e.value[sourceattr])
+        .edgeTarget(e => e.value[targetattr])
         .nodeLabelPadding(5)
         .edgeArrowhead('vee')
-        .edgeLength(function(e) {
-            var e2 = exploreDiagram.getWholeEdge(e.key);
-            return 40 + Math.hypot(e2.source.dcg_rx + e2.target.dcg_rx, e2.source.dcg_ry + e2.target.dcg_ry);
+        .edgeLength(e => {
+            const e2 = exploreDiagram.getWholeEdge(e.key);
+            return 40+Math.hypot(
+                e2.source.dcg_rx+e2.target.dcg_rx,
+                e2.source.dcg_ry+e2.target.dcg_ry,
+            );
         });
-    dc_graph.apply_graphviz_accessors(exploreDiagram);
-    exploreDiagram.nodeFill('rgba(180,200,220,0.5)') // temporary override
-    exploreDiagram.child('tip', dc_graph.tip().content(dc_graph.tip.html_or_json_table()));
-    if(sync_url.vals.bigzoom)
+    applyGraphvizAccessors(exploreDiagram);
+    exploreDiagram.nodeFill('rgba(180,200,220,0.5)'); // temporary override
+    exploreDiagram.child('tip', tip().content(tipHtmlOrJsonTable()));
+    if (sync_url.vals.bigzoom)
         exploreDiagram.zoomExtent([0.001, 200]);
-    if(sync_url.vals.rndarrow) {
-        var arrowheadscale, arrowtailscale;
-        var anames = Object.keys(dc_graph.builtin_arrows);
+    if (sync_url.vals.rndarrow) {
+        let arrowheadscale, arrowtailscale;
+        const anames = Object.keys(builtinArrows);
 
         function arrowgen(rnd) {
-            return d3.range(Math.floor(rnd() * 5))
-                .map(function (i) {
-                    return (rnd() > 0.5 ? 'o' : '') + anames[Math.floor(rnd() * anames.length)];
-                }).join('');
-        };
-        var now = String(new Date());
-        switch(sync_url.vals.rndarrow) {
-        case 'one':
-            arrowheadscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
-            arrowtailscale = d3.scale.ordinal().range(d3.shuffle(Object.keys(dc_graph.builtin_arrows)));
-            break;
-        case 'lots':
-            arrowheadscale = arrowtailscale = function(label) {
-                return arrowgen(rand((label || '') + now));
-            };
-            break;
-        case 'changing':
-            var seed = 1;
-            // will change only when rendering not active
-            window.setInterval(function() {
-                console.log('change arrows');
-                ++seed;
-            }, 500);
-            arrowheadscale = arrowtailscale = function(label) {
-                return arrowgen(rand((label || '') + now + seed));
-            };
-            break;
-        default:
-            throw new Error('unknown rndarrow "' + sync_url.vals.rndarrow + '"');
+            return range(Math.floor(rnd()*5))
+                .map(_i => (rnd() > 0.5 ? 'o' : '')+anames[Math.floor(rnd()*anames.length)]).join(
+                    '',
+                );
         }
-        exploreDiagram.edgeArrowhead(function (e) {
-            return arrowheadscale(e.value.label);
-        }).edgeArrowtail(function (e) {
-            return arrowtailscale(e.value.label);
-        });
+        const now = String(new Date());
+        switch (sync_url.vals.rndarrow) {
+            case 'one':
+                arrowheadscale = scaleOrdinal().range(shuffle(Object.keys(builtinArrows)));
+                arrowtailscale = scaleOrdinal().range(shuffle(Object.keys(builtinArrows)));
+                break;
+            case 'lots':
+                arrowheadscale = arrowtailscale = function(label) {
+                    return arrowgen(rand((label || '')+now));
+                };
+                break;
+            case 'changing': {
+                let seed = 1;
+                // will change only when rendering not active
+                window.setInterval(() => {
+                    console.log('change arrows');
+                    ++seed;
+                }, 500);
+                arrowheadscale = arrowtailscale = function(label) {
+                    return arrowgen(rand((label || '')+now+seed));
+                };
+                break;
+            }
+            default:
+                throw new Error(`unknown rndarrow "${sync_url.vals.rndarrow}"`);
+        }
+        exploreDiagram.edgeArrowhead(e => arrowheadscale(e.value.label)).edgeArrowtail(e =>
+            arrowtailscale(e.value.label)
+        );
     }
-    if(engine.layoutAlgorithm() === 'cola') {
+    if (engine.layoutAlgorithm() === 'cola') {
         engine
             .tickSize(sync_url.vals.tickSize);
         engine.baseLength(sync_url.vals.linkLength);
     }
 
-    if(sync_url.vals.edgeCat) {
-        var eregex = sync_url.vals.edgeExpn ? new RegExp(sync_url.vals.edgeExpn) : null;
-        var edge_cat = eregex ?
-                function(e) {
-                    var match = eregex.exec(e[sync_url.vals.edgeCat]);
-                    return match ? match[0] : '';
-                } :
-            function(e) {
+    if (sync_url.vals.edgeCat) {
+        const eregex = sync_url.vals.edgeExpn ? new RegExp(sync_url.vals.edgeExpn) : null;
+        const edge_cat = eregex
+            ? function(e) {
+                const match = eregex.exec(e[sync_url.vals.edgeCat]);
+                return match ? match[0] : '';
+            }
+            : function(e) {
                 return e[sync_url.vals.edgeCat] || '';
             };
-        var edge_dim = edge_flat.crossfilter.dimension(edge_cat),
+        const edge_dim = edge_flat.crossfilter.dimension(edge_cat),
             edge_group = edge_dim.group().reduce(
-                function(p, v) {
-                    return v.color;
-                },
-                function(p, v) {
-                    return p;
-                },
-                function() {
-                    return null;
-                }
+                (p, v) => v.color,
+                (_p, _v) => _p,
+                () => null,
             );
-        var edge_legend = dc_graph.legend('edge-legend')
-                .x(20).y(20)
-                .itemWidth(75).itemHeight(20)
-                .type(dc_graph.legend.edge_legend())
-                .omitEmpty(true)
-                .exemplars(edge_group.all().map(function(kv) {
-                    return {name: kv.key, key: kv.key, value: {color: kv.value} };
-                }));
-        edge_legend.counter(function(wnodes, wedges, wports) {
-            var counts = {};
-            wedges.forEach(function(e) {
-                counts[edge_cat(e.value)] = (counts[edge_cat(e.value)] || 0) + 1;
+        const edge_legend = legend('edge-legend')
+            .x(20).y(20)
+            .itemWidth(75).itemHeight(20)
+            .type(legend.edge_legend())
+            .omitEmpty(true)
+            .exemplars(
+                edge_group.all().map(kv => ({name: kv.key, key: kv.key, value: {color: kv.value}})),
+            );
+        edge_legend.counter((_wnodes, wedges, _wports) => {
+            const counts = {};
+            wedges.forEach(e => {
+                counts[edge_cat(e.value)] = (counts[edge_cat(e.value)] || 0)+1;
             });
             return counts;
         });
@@ -390,123 +429,138 @@ function on_load(filename, error, data) {
         exploreDiagram.child('edge-legend', edge_legend);
     }
 
-    var nodelist = exploreDiagram.nodeGroup().all().map(function(n) {
-        return {
-            value: n.key,
-            label: exploreDiagram.nodeLabel()(n)
-        };
-    });
-    nodelist.sort(function (a, b) {
-        return a.label < b.label ? -1 : 1;
-    });
+    const nodelist = exploreDiagram.nodeGroup().all().map(n => ({
+        value: n.key,
+        label: exploreDiagram.nodeLabel()(n),
+    }));
+    nodelist.sort((a, b) => a.label < b.label ? -1 : 1);
 
-    var expand_strategy = sync_url.vals.expand_strategy || 'expanded_hidden';
-    var ec_strategy = dc_graph.expand_collapse[expand_strategy]({
+    const expand_strategy = sync_url.vals.expand_strategy || 'expanded_hidden';
+    const ec_strategy = expandCollapse[expand_strategy]({
         nodeCrossfilter: node_flat.crossfilter,
         edgeCrossfilter: edge_flat.crossfilter,
         edgeGroup: edge_flat.group,
-        nodeKey: function(n) {
+        nodeKey(n) {
             return n.name;
         },
-        edgeRawKey: function(e) {
+        edgeRawKey(e) {
             return edge_key(e);
         },
-        edgeSource: function(e) {
+        edgeSource(e) {
             return e.value[sourceattr];
         },
-        edgeTarget: function(e) {
+        edgeTarget(e) {
             return e.value[targetattr];
         },
-        directional: sync_url.vals.directional
+        directional: sync_url.vals.directional,
     });
 
-    if(!sync_url.vals.directional)
-        d3.select('#expand').selectAll('option').filter(function() {
+    if (!sync_url.vals.directional)
+        select('#expand').selectAll('option').filter(function() {
             return this.attributes.getNamedItem('value').value !== 'both';
         })
-        .remove();
+            .remove();
 
-    if(sync_url.vals.start) {
-        if(!nodes.find(function (n) {
-            return n.name === sync_url.vals.start;
-        })) {
-            var found = nodes.find(function (n) {
-                return n.value.label.includes(sync_url.vals.start);
-            });
-            if(found)
+    if (sync_url.vals.start) {
+        if (
+            !nodes.find(n => n.name === sync_url.vals.start)
+        ) {
+            const found = nodes.find(n => n.value.label.includes(sync_url.vals.start));
+            if (found)
                 sync_url.vals.start = found.name;
             else {
-                console.log("didn't find '" + sync_url.vals.start + "' by nodeKey or nodeLabel");
+                console.log(`didn't find '${sync_url.vals.start}' by nodeKey or nodeLabel`);
                 sync_url.vals.start = null;
             }
         }
     }
 
-    if(sync_url.vals.debug) {
-        var troubleshoot = dc_graph.troubleshoot();
-        exploreDiagram.child('troubleshoot', troubleshoot);
+    if (sync_url.vals.debug) {
+        const troubleshootMode = troubleshoot();
+        exploreDiagram.child('troubleshoot', troubleshootMode);
     }
 
-    exploreDiagram.child('highlight-changing', dc_graph.highlight_things(
-        {
-            nodeStrokeWidth: 3,
-            nodeStroke: 'steelblue'
-        },
-        {},
-        'changing-highlight', 'changing-highlight-group', 125
-    ).durationOverride(0));
-    exploreDiagram.child('highlight-expanded', dc_graph.highlight_things(
-        {
-            nodeStrokeWidth: 3,
-            nodeStroke: 'steelblue'
-        },
-        {},
-        'expanded-highlight', 'expanded-highlight-group', 147
-    ).durationOverride(0));
-    exploreDiagram.child('highlight-collapse', dc_graph.highlight_things(
-        {
-            nodeOpacity: 0.2,
-            nodeStroke: 'darkred',
-            edgeOpacity: 0.2,
-            edgeStroke: 'darkred'
-        },
-        {},
-        'collapse-highlight', 'collapse-highlight-group', 150
-    ).durationOverride(0));
-    exploreDiagram.child('highlight-hide', dc_graph.highlight_things(
-        {
-            nodeOpacity: 0.2,
-            nodeStroke: 'darkred',
-            edgeOpacity: 0.2,
-            edgeStroke: 'darkred'
-        },
-        {},
-        'hide-highlight', 'hide-highlight-group', 155
-    ).durationOverride(0));
-    expand_collapse = dc_graph.expand_collapse(ec_strategy);
+    exploreDiagram.child(
+        'highlight-changing',
+        highlightThings(
+            {
+                nodeStrokeWidth: 3,
+                nodeStroke: 'steelblue',
+            },
+            {},
+            'changing-highlight',
+            'changing-highlight-group',
+            125,
+        ).durationOverride(0),
+    );
+    exploreDiagram.child(
+        'highlight-expanded',
+        highlightThings(
+            {
+                nodeStrokeWidth: 3,
+                nodeStroke: 'steelblue',
+            },
+            {},
+            'expanded-highlight',
+            'expanded-highlight-group',
+            147,
+        ).durationOverride(0),
+    );
+    exploreDiagram.child(
+        'highlight-collapse',
+        highlightThings(
+            {
+                nodeOpacity: 0.2,
+                nodeStroke: 'darkred',
+                edgeOpacity: 0.2,
+                edgeStroke: 'darkred',
+            },
+            {},
+            'collapse-highlight',
+            'collapse-highlight-group',
+            150,
+        ).durationOverride(0),
+    );
+    exploreDiagram.child(
+        'highlight-hide',
+        highlightThings(
+            {
+                nodeOpacity: 0.2,
+                nodeStroke: 'darkred',
+                edgeOpacity: 0.2,
+                edgeStroke: 'darkred',
+            },
+            {},
+            'hide-highlight',
+            'hide-highlight-group',
+            155,
+        ).durationOverride(0),
+    );
+    expand_collapse = expandCollapse(ec_strategy);
     exploreDiagram.child('expand-collapse', expand_collapse);
-    dc.renderAll();
+    renderAll();
     exploreDiagram.autoZoom('once-noanim');
-    var starter = d3.select('#add-node');
+    const starter = select('#add-node');
     function refresh_add_node() {
         const nodes = nodelist.filter(({label: [label0]}) =>
-            !sync_url.vals.expanded.includes(label0) &&
-            !sync_url.vals.expandedIn.includes(label0) &&
-            !sync_url.vals.expandedOut.includes(label0));
-        var option = starter.selectAll('option').data([{label: 'select one'}].concat(nodes));
-        option.enter().append('option');
+            !sync_url.vals.expanded.includes(label0)
+            && !sync_url.vals.expandedIn.includes(label0)
+            && !sync_url.vals.expandedOut.includes(label0)
+        );
+        const option = starter.selectAll('option').data([{label: 'select one'}].concat(nodes));
         option.exit().remove();
-        option
-            .attr('value', function(d) { return d.value; })
-            .attr('selected', function(d) { return d.value === sync_url.vals.start ? 'selected' : null; })
-            .text(function(d) { return d.label; });
+        option.enter().append('option')
+            .merge(option)
+            .attr('value', d => d.value)
+            .attr('selected', d => d.value === sync_url.vals.start ? 'selected' : null)
+            .text(d => d.label);
     }
     exploreDiagram.on('drawn.add-nodes', refresh_add_node);
-    var expand = d3.select('#expand');
-    function get_dir_recurse(nk) {
+    const expand = select('#expand');
+    function get_dir_recurse(_nk) {
         const exp = expand.node().value;
         let dir, recurse = false;
-        if(exp.startsWith('all-')) {
+        if (exp.startsWith('all-')) {
             dir = exp.split('-')[1];
             recurse = true;
         } else dir = exp;
@@ -514,7 +568,7 @@ function on_load(filename, error, data) {
     }
     function expand_dir_rec(dir, recurse, nk) {
         let nks;
-        if(recurse)
+        if (recurse)
             nks = Object.keys(ec_strategy.get_tree_edges(nk, dir));
         else
             nks = [nk];
@@ -525,26 +579,29 @@ function on_load(filename, error, data) {
         const nks = expand_dir_rec(dir, recurse, this.value);
         expand_collapse.expand(dir, nks, true);
         exploreDiagram.autoZoom('once-noanim');
-        dc.redrawAll();
+        redrawAll();
     });
 
-    d3.select('#reset').on('click', function() {
+    select('#reset').on('click', () => {
         starter.node().value = 'select one';
-        if(sync_url.vals.directional) {
+        if (sync_url.vals.directional) {
             sync_url.update('expandedIn', []);
             sync_url.update('expandedOut', []);
-        }
-        else sync_url.update('expanded', []);
-        if(sync_url.vals.numerics)
-            d3.select('#numerics').selectAll('select').each(function() { this.value = 'select'});
+        } else sync_url.update('expanded', []);
+        if (sync_url.vals.numerics)
+            select('#numerics').selectAll('select').each(function() {
+                this.value = 'select';
+            });
     });
 
-    if(sync_url.vals.start)
+    if (sync_url.vals.start)
         expand_collapse.expand('both', sync_url.vals.start, true);
     else sync_url.exert();
 }
 
-if(!sync_url.vals.file)
-    display_error('Need <code>?file=</code> in URL</br><small>or browse local file above right</small>');
+if (!sync_url.vals.file)
+    display_error(
+        'Need <code>?file=</code> in URL</br><small>or browse local file above right</small>',
+    );
 
-dc_graph.load_graph(sync_url.vals.file, on_load.bind(null, sync_url.vals.file));
+loadGraph(sync_url.vals.file).then(data => on_load(sync_url.vals.file, null, data));

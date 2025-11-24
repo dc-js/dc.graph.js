@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Global</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Global</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2></h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="constraintPattern"><span class="type-signature"></span>constraintPattern<span class="signature">(pattern)</span><span class="type-signature"> &rarr; {function}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>In cola.js there are three factors which influence the positions of nodes:</p>
+<ul>
+<li><em>edge length</em> suggestions, controlled by the
+lengthStrategy, baseLength, and edgeLength parameters</li>
+<li><em>automatic constraints</em> based on the global edge flow direction (<code>cola.flowLayout</code>) and overlap
+avoidance parameters (<code>cola.avoidOverlaps</code>)</li>
+<li><em>manual constraints</em> such as alignment, inequality and equality constraints in a dimension/axis.</li>
+</ul>
+<p>Generally when the
+<a href="https://github.com/tgdwyer/WebCola/wiki/Constraints">cola.js documentation mentions constraints</a>,
+it means the manual constraints.</p>
+<p>This utility creates a constraint generator function from a <em>pattern</em>, a graph where:</p>
+<ol>
+<li>Nodes represent <em>types</em> or classes of layout nodes, annotated with a specification
+of how to match the nodes belonging each type.</li>
+<li>Edges represent <em>rules</em> to generate constraints. There are two kinds of rules:</li>
+</ol>
+<ol type='a'>
+   <li>To generate additional constraints on edges besides the built-in ones, create a rules
+between two different types. The rule will apply to any edges in the layout which match the
+source and target types, and generate simple "left/right" constraints. (Note that "left" and
+"right" in this context refer to sides of an inequality constraint `left + gap <= right`)
+   <li>To generate constraints on a set of nodes, such as alignment, ordering, or circle
+constraints, create a rule from a type to itself, a self edge.
+</ol>
+(It is also conceivable to want constraints between individual nodes which don't
+have edges between them. This is not directly supported at this time; right now the workaround
+is to create the edge but not draw it, e.g. by setting its edgeOpacity
+to zero. If you have a use-case for this, please
+file an issue.
+<p>The pattern syntax is an embedded domain specific language designed to be terse without
+restricting its power. As such, there are complicated rules for defaulting and inferring
+parameters from other parameters. Since most users will want the simplest form, this document
+will start from the highest level and then show how to use more complicated forms in order to
+gain more control.</p>
+<p>Then we'll build back up from the ground up and show how inference works.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>pattern</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>a graph which defines the constraints to be generated</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="constraint_pattern.js.html">constraint_pattern.js</a>, <a href="constraint_pattern.js.html#line43">line 43</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-cola_layout.html">cola_layout</a></li><li><a href="module-core.html">core</a></li><li><a href="module-d3v4_force_layout.html">d3v4_force_layout</a></li><li><a href="module-dagre_layout.html">dagre_layout</a></li><li><a href="module-dc-graph.html">dc-graph</a></li><li><a href="module-depth_first_traversal.html">depth_first_traversal</a></li><li><a href="module-diagram.html">diagram</a></li><li><a href="module-dynagraph_layout.html">dynagraph_layout</a></li><li><a href="module-engine.html">engine</a></li><li><a href="module-flexbox_layout.html">flexbox_layout</a></li><li><a href="module-generate_objects.html">generate_objects</a></li><li><a href="module-graphviz_attrs.html">graphviz_attrs</a></li><li><a href="module-graphviz_layout.html">graphviz_layout</a></li><li><a href="module-layered_layout.html">layered_layout</a></li><li><a href="module-manual_layout.html">manual_layout</a></li><li><a href="module-tree_layout.html">tree_layout</a></li><li><a href="module-webworker_layout.html">webworker_layout</a></li></ul><h3>Classes</h3><ul><li><a href="brush.html">brush</a></li><li><a href="dc_graph.flexbox_layout.html">flexbox_layout</a></li><li><a href="dc_graph.tip.html">tip</a></li></ul><h3>Global</h3><ul><li><a href="global.html#constraintPattern">constraintPattern</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Nov 24 2025 01:51:28 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

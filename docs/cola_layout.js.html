@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: cola_layout.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: cola_layout.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Cola.js layout adaptor for dc.graph.js
+ * @module cola_layout
+ */
+
+import { dispatch } from 'd3-dispatch';
+import * as cola from 'webcola';
+import { property, uuid } from './core.js';
+import { regenerateObjects } from './generate_objects.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `colaLayout` is an adaptor for cola.js layouts in dc.graph.js
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {Object} cola layout engine
+ */
+export function colaLayout(id) {
+    const _layoutId = id || uuid();
+    let _d3cola = null;
+    let _setcola_nodes;
+    const _dispatch = (globalThis.d3?.dispatch || dispatch)('tick', 'start', 'end');
+    let _flowLayout;
+    // node and edge objects shared with cola.js, preserved from one iteration
+    // to the next (as long as the object is still in the layout)
+    const _nodes = {}, _edges = {};
+    let _options;
+
+    function init(options) {
+        _options = options;
+        _d3cola = cola.d3adaptor(globalThis.d3)
+            .avoidOverlaps(true)
+            .size([options.width, options.height])
+            .handleDisconnected(options.handleDisconnected);
+
+        if (_d3cola.tickSize) // non-standard
+            _d3cola.tickSize(options.tickSize);
+
+        switch (options.lengthStrategy) {
+            case 'symmetric':
+                _d3cola.symmetricDiffLinkLengths(options.baseLength);
+                break;
+            case 'jaccard':
+                _d3cola.jaccardLinkLengths(options.baseLength);
+                break;
+            case 'individual':
+                _d3cola.linkDistance(e => e.dcg_edgeLength || options.baseLength);
+                break;
+            case 'none':
+            default:
+        }
+        if (options.flowLayout) {
+            _d3cola.flowLayout(options.flowLayout.axis, options.flowLayout.minSeparation);
+        }
+    }
+
+    function data(nodes, edges, clusters, constraints) {
+        let wnodes = regenerateObjects(_nodes, nodes, null, v => v.dcg_nodeKey, (v1, v) => {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.dcg_nodeParentCluster = v.dcg_nodeParentCluster;
+            v1.width = v.width;
+            v1.height = v.height;
+            v1.fixed = !!v.dcg_nodeFixed;
+            _options.nodeAttrs.forEach(key => {
+                v1[key] = v[key];
+            });
+
+            if (v1.fixed &amp;&amp; typeof v.dcg_nodeFixed === 'object') {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+            } else {
+                // should we support e.g. null to unset x,y?
+                if (v.x !== undefined)
+                    v1.x = v.x;
+                if (v.y !== undefined)
+                    v1.y = v.y;
+            }
+        });
+        const wedges = regenerateObjects(_edges, edges, null, e => e.dcg_edgeKey, (e1, e) => {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            // cola edges can work with indices or with object references
+            // but it will replace indices with object references
+            e1.source = _nodes[e.dcg_edgeSource];
+            e1.target = _nodes[e.dcg_edgeTarget];
+            e1.dcg_edgeLength = e.dcg_edgeLength;
+            _options.edgeAttrs.forEach(key => {
+                e1[key] = e[key];
+            });
+        });
+
+        // cola needs each node object to have an index property
+        wnodes.forEach((v, i) => {
+            v.index = i;
+        });
+
+        let groups = null;
+        if (engine.groupConnected()) {
+            const components = cola.separateGraphs(wnodes, wedges);
+            groups = components.map(g => ({
+                dcg_autoGroup: true,
+                leaves: g.array.map(n => n.index),
+            }));
+        } else if (clusters) {
+            const G = {};
+            groups = clusters.filter(c => /^cluster/.test(c.dcg_clusterKey)).map((c, i) =>
+                G[c.dcg_clusterKey] = {
+                    dcg_clusterKey: c.dcg_clusterKey,
+                    index: i,
+                    groups: [],
+                    leaves: [],
+                }
+            );
+            clusters.forEach(c => {
+                if (c.dcg_clusterParent &amp;&amp; G[c.dcg_clusterParent])
+                    G[c.dcg_clusterParent].groups.push(G[c.dcg_clusterKey].index);
+            });
+            wnodes.forEach((n, i) => {
+                if (n.dcg_nodeParentCluster &amp;&amp; G[n.dcg_nodeParentCluster])
+                    G[n.dcg_nodeParentCluster].leaves.push(i);
+            });
+        }
+
+        function dispatchState(event) {
+            // Get the actual nodes that WebCola is working with and make copies
+            const currentNodes = _d3cola.nodes().map(n => {
+                const copy = Object.assign({}, n);
+                // clean up extra setcola annotations from the copy
+                Object.keys(copy).forEach(key => {
+                    if (/^get/.test(key) &amp;&amp; typeof copy[key] === 'function')
+                        delete copy[key];
+                });
+                return copy;
+            });
+            _dispatch.call(
+                event,
+                null,
+                currentNodes,
+                wedges.map(e => ({dcg_edgeKey: e.dcg_edgeKey})),
+                groups.filter(g => !g.dcg_autoGroup).map(g => {
+                    g = Object.assign({}, g);
+                    g.bounds = {
+                        left: g.bounds.x,
+                        top: g.bounds.y,
+                        right: g.bounds.X,
+                        bottom: g.bounds.Y,
+                    };
+                    return g;
+                }),
+                _setcola_nodes,
+            );
+        }
+        _d3cola.on('tick', /* _tick = */ () => {
+            dispatchState('tick');
+        }).on('start', () => {
+            _dispatch.call('start');
+        }).on('end', /* _done = */ () => {
+            dispatchState('end');
+        });
+
+        if (_options.setcolaSpec &amp;&amp; typeof setcola !== 'undefined') {
+            console.log('generating setcola constrains');
+            const setcola_result = setcola
+                .nodes(wnodes)
+                .links(wedges)
+                .constraints(_options.setcolaSpec)
+                .gap(10) // default value is 10, can be customized in setcolaSpec
+                .layout();
+
+            _setcola_nodes = setcola_result.nodes.filter(n => n._cid);
+            wnodes = setcola_result.nodes;
+            _d3cola.nodes(setcola_result.nodes)
+                .links(setcola_result.links)
+                .constraints(setcola_result.constraints)
+                .groups(groups);
+        } else {
+            _d3cola.nodes(wnodes)
+                .links(wedges)
+                .constraints(constraints)
+                .groups(groups);
+        }
+    }
+
+    function start() {
+        _d3cola.start(
+            engine.unconstrainedIterations(),
+            engine.userConstraintIterations(),
+            engine.allConstraintsIterations(),
+            engine.gridSnapIterations(),
+        );
+    }
+
+    function stop() {
+        if (_d3cola)
+            _d3cola.stop();
+    }
+
+    const graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
+    graphviz.rankdir(null);
+
+    const engine = Object.assign(graphviz, {
+        layoutAlgorithm() {
+            return 'cola';
+        },
+        layoutId() {
+            return _layoutId;
+        },
+        supportsWebworker() {
+            return true;
+        },
+        supportsMoving() {
+            return true;
+        },
+        parent: property(null),
+        on(event, f) {
+            if (arguments.length === 1)
+                return _dispatch.on(event);
+            _dispatch.on(event, f);
+            return this;
+        },
+        init(options) {
+            this.optionNames().forEach(option => {
+                options[option] = options[option] || this[option]();
+            });
+            this.propagateOptions(options);
+            init(options);
+            return this;
+        },
+        data(graph, nodes, edges, clusters, constraints) {
+            data(nodes, edges, clusters, constraints);
+        },
+        start() {
+            start();
+        },
+        stop() {
+            stop();
+        },
+        optionNames() {
+            return [
+                'handleDisconnected',
+                'lengthStrategy',
+                'baseLength',
+                'flowLayout',
+                'tickSize',
+                'groupConnected',
+                'setcolaSpec',
+                'setcolaNodes',
+                'unconstrainedIterations',
+                'userConstraintIterations',
+                'allConstraintsIterations',
+                'gridSnapIterations',
+            ]
+                .concat(graphviz_keys);
+        },
+        passThru() {
+            return ['extractNodeAttrs', 'extractEdgeAttrs'];
+        },
+        propagateOptions(options) {
+            if (!options.nodeAttrs)
+                options.nodeAttrs = Object.keys(engine.extractNodeAttrs());
+            if (!options.edgeAttrs)
+                options.edgeAttrs = Object.keys(engine.extractEdgeAttrs());
+        },
+        populateLayoutNode() {},
+        populateLayoutEdge() {},
+        /**
+         * Instructs cola.js to fit the connected components.
+         * @method handleDisconnected
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Boolean} [handleDisconnected=true]
+         * @return {Boolean}
+         * @return {dc_graph.cola_layout}
+         */
+        handleDisconnected: property(true),
+        /**
+         * Currently, three strategies are supported for specifying the lengths of edges:
+         * * 'individual' - uses the `edgeLength` for each edge. If it returns falsy, uses the
+         * `baseLength`
+         * * 'symmetric', 'jaccard' - compute the edge length based on the graph structure around
+         * the edge. See
+         * {@link https://github.com/tgdwyer/WebCola/wiki/link-lengths the cola.js wiki}
+         * for more details.
+         * 'none' - no edge lengths will be specified
+         * @method lengthStrategy
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Function|String} [lengthStrategy='symmetric']
+         * @return {Function|String}
+         * @return {dc_graph.cola_layout}
+         */
+        lengthStrategy: property('symmetric'),
+        /**
+         * Gets or sets the default edge length (in pixels) when the `.lengthStrategy` is
+         * 'individual', and the base value to be multiplied for 'symmetric' and 'jaccard' edge
+         * lengths.
+         * @method baseLength
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Number} [baseLength=30]
+         * @return {Number}
+         * @return {dc_graph.cola_layout}
+         */
+        baseLength: property(30),
+        /**
+         * If `flowLayout` is set, it determines the axis and separation for
+         * {@link http://marvl.infotech.monash.edu/webcola/doc/classes/cola.layout.html#flowlayout cola flow layout}.
+         * If it is not set, `flowLayout` will be calculated from the {@link dc_graph.graphviz_attrs#rankdir rankdir}
+         * and {@link dc_graph.graphviz_attrs#ranksep ranksep}; if `rankdir` is also null (the
+         * default for cola layout), then there will be no flow.
+         * @method flowLayout
+         * @memberof dc_graph.cola_layout
+         * @instance
+         * @param {Object} [flowLayout=null]
+         * @example
+         * // No flow (default)
+         * diagram.flowLayout(null)
+         * // flow in x with min separation 200
+         * diagram.flowLayout({axis: 'x', minSeparation: 200})
+         */
+        flowLayout(flow) {
+            if (!arguments.length) {
+                if (_flowLayout)
+                    return _flowLayout;
+                const dir = engine.rankdir();
+                switch (dir) {
+                    case 'LR':
+                        return {
+                            axis: 'x',
+                            minSeparation: engine.ranksep()+engine.parent().nodeRadius()*2,
+                        };
+                    case 'TB':
+                        return {
+                            axis: 'y',
+                            minSeparation: engine.ranksep()+engine.parent().nodeRadius()*2,
+                        };
+                    default:
+                        return null; // RL, BT do not appear to be possible (negative separation) (?)
+                }
+            }
+            _flowLayout = flow;
+            return this;
+        },
+        unconstrainedIterations: property(10),
+        userConstraintIterations: property(20),
+        allConstraintsIterations: property(20),
+        gridSnapIterations: property(0),
+        tickSize: property(1),
+        groupConnected: property(false),
+        setcolaSpec: property(null),
+        setcolaNodes() {
+            return _setcola_nodes;
+        },
+        extractNodeAttrs: property({}), // {attr: function(node)}
+        extractEdgeAttrs: property({}),
+        processExtraWorkerResults(setcolaNodes) {
+            _setcola_nodes = setcolaNodes;
+        },
+    });
+    return engine;
+}
+
+// Scripts needed for web worker
+colaLayout.scripts = ['d3.js', 'cola.js'];
+colaLayout.optionalScripts = ['setcola.js'];
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-cola_layout.html">cola_layout</a></li><li><a href="module-core.html">core</a></li><li><a href="module-d3v4_force_layout.html">d3v4_force_layout</a></li><li><a href="module-dagre_layout.html">dagre_layout</a></li><li><a href="module-dc-graph.html">dc-graph</a></li><li><a href="module-depth_first_traversal.html">depth_first_traversal</a></li><li><a href="module-diagram.html">diagram</a></li><li><a href="module-dynagraph_layout.html">dynagraph_layout</a></li><li><a href="module-engine.html">engine</a></li><li><a href="module-flexbox_layout.html">flexbox_layout</a></li><li><a href="module-generate_objects.html">generate_objects</a></li><li><a href="module-graphviz_attrs.html">graphviz_attrs</a></li><li><a href="module-graphviz_layout.html">graphviz_layout</a></li><li><a href="module-layered_layout.html">layered_layout</a></li><li><a href="module-manual_layout.html">manual_layout</a></li><li><a href="module-tree_layout.html">tree_layout</a></li><li><a href="module-webworker_layout.html">webworker_layout</a></li></ul><h3>Classes</h3><ul><li><a href="brush.html">brush</a></li><li><a href="dc_graph.flexbox_layout.html">flexbox_layout</a></li><li><a href="dc_graph.tip.html">tip</a></li></ul><h3>Global</h3><ul><li><a href="global.html#constraintPattern">constraintPattern</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Nov 24 2025 01:51:28 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

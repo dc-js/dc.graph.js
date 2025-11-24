@@ -17,6 +17,44 @@
     pointer-events: none;
 }
 
+/* Tippy tooltip styling */
+.tippy-box[data-theme~='light-border'] {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.tippy-box[data-theme~='light-border'] .tippy-content {
+    padding: 8px 12px;
+    color: #333;
+}
+
+.tippy-box[data-theme~='light-border'] .tippy-content table {
+    border-collapse: collapse;
+    margin: 0;
+    font-size: 12px;
+}
+
+.tippy-box[data-theme~='light-border'] .tippy-content table td {
+    padding: 2px 6px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+.tippy-box[data-theme~='light-border'] .tippy-content table td:first-child {
+    font-weight: 500;
+    color: #666;
+    padding-right: 12px;
+}
+
+.tippy-box[data-theme~='light-border'] .tippy-arrow {
+    color: #fff;
+}
+
 .dc-graph .edge-label {
     font: 10px sans-serif;
     pointer-events: none;

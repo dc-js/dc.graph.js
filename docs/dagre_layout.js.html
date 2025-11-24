@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: dagre_layout.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: dagre_layout.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Dagre.js layout adaptor for dc.graph.js
+ * @module dagre_layout
+ */
+
+// External dependencies
+import * as dagre from '@dagrejs/dagre';
+import { dispatch } from 'd3-dispatch';
+import { uuid } from './core.js';
+import { regenerateObjects } from './generate_objects.js';
+import { graphvizAttrs } from './graphviz_attrs.js';
+
+/**
+ * `dagreLayout` is an adaptor for dagre.js layouts in dc.graph.js
+ *
+ * In addition to the below layout attributes, `dagreLayout` also implements the attributes from
+ * {@link graphvizAttrs graphviz_attrs}
+ * @param {String} [id=uuid()] - Unique identifier
+ * @return {Object} dagre layout engine
+ */
+export function dagreLayout(id) {
+    const _layoutId = id || uuid();
+    let _dagreGraph = null, _tick, _done;
+    const _dispatch = dispatch('tick', 'start', 'end');
+    // node and edge objects preserved from one iteration
+    // to the next (as long as the object is still in the layout)
+    const _nodes = {}, _edges = {};
+
+    function init(options) {
+        // Create a new directed graph
+        _dagreGraph = new dagre.graphlib.Graph({multigraph: true, compound: true});
+
+        // Set an object for the graph label
+        _dagreGraph.setGraph({
+            rankdir: options.rankdir,
+            nodesep: options.nodesep,
+            ranksep: options.ranksep,
+        });
+
+        // Default to assigning a new object as a label for each new edge.
+        _dagreGraph.setDefaultEdgeLabel(() => ({}));
+    }
+
+    function data(nodes, edges, clusters) {
+        const wnodes = regenerateObjects(_nodes, nodes, null, v => v.dcg_nodeKey, (v1, v) => {
+            v1.dcg_nodeKey = v.dcg_nodeKey;
+            v1.width = v.width;
+            v1.height = v.height;
+            /*
+              dagre does not seem to accept input positions
+              if(v.dcg_nodeFixed) {
+                v1.x = v.dcg_nodeFixed.x;
+                v1.y = v.dcg_nodeFixed.y;
+              }
+             */
+        }, (k, o) => {
+            _dagreGraph.setNode(k, o);
+        }, k => {
+            _dagreGraph.removeNode(k);
+        });
+        const wedges = regenerateObjects(_edges, edges, null, e => e.dcg_edgeKey, (e1, e) => {
+            e1.dcg_edgeKey = e.dcg_edgeKey;
+            e1.dcg_edgeSource = e.dcg_edgeSource;
+            e1.dcg_edgeTarget = e.dcg_edgeTarget;
+        }, (k, o, e) => {
+            _dagreGraph.setEdge(e.dcg_edgeSource, e.dcg_edgeTarget, o);
+        }, (k, e) => {
+            _dagreGraph.removeEdge(e.dcg_edgeSource, e.dcg_edgeTarget, e.dcg_edgeKey);
+        });
+        clusters = clusters.filter(c => /^cluster/.test(c.dcg_clusterKey));
+        clusters.forEach(c => {
+            _dagreGraph.setNode(c.dcg_clusterKey, c);
+        });
+        clusters.forEach(c => {
+            if (c.dcg_clusterParent)
+                _dagreGraph.setParent(c.dcg_clusterKey, c.dcg_clusterParent);
+        });
+        nodes.forEach(n => {
+            if (n.dcg_nodeParentCluster)
+                _dagreGraph.setParent(n.dcg_nodeKey, n.dcg_nodeParentCluster);
+        });
+
+        function dispatchState(event) {
+            _dispatch.call(
+                event,
+                null,
+                wnodes,
+                wedges.map(e => ({dcg_edgeKey: e.dcg_edgeKey})),
+                clusters.map(c => {
+                    const cluster = Object.assign({}, _dagreGraph.node(c.dcg_clusterKey));
+                    cluster.bounds = {
+                        left: cluster.x-cluster.width/2,
+                        top: cluster.y-cluster.height/2,
+                        right: cluster.x+cluster.width/2,
+                        bottom: cluster.y+cluster.height/2,
+                    };
+                    return cluster;
+                }),
+            );
+        }
+        _tick = function() {
+            dispatchState('tick');
+        };
+        _done = function() {
+            dispatchState('end');
+        };
+    }
+
+    function start(_options) {
+        _dispatch.call('start');
+        dagre.layout(_dagreGraph);
+        _done();
+    }
+
+    function stop() {
+    }
+
+    const graphviz = graphvizAttrs(), graphviz_keys = Object.keys(graphviz);
+    return Object.assign(graphviz, {
+        layoutAlgorithm() {
+            return 'dagre';
+        },
+        layoutId() {
+            return _layoutId;
+        },
+        supportsWebworker() {
+            return true;
+        },
+        on(event, f) {
+            if (arguments.length === 1)
+                return _dispatch.on(event);
+            _dispatch.on(event, f);
+            return this;
+        },
+        init(options) {
+            this.optionNames().forEach(option => {
+                options[option] = options[option] || this[option]();
+            });
+            init(options);
+            return this;
+        },
+        data(graph, nodes, edges, clusters) {
+            data(nodes, edges, clusters);
+        },
+        start() {
+            start();
+        },
+        stop() {
+            stop();
+        },
+        optionNames() {
+            return graphviz_keys;
+        },
+        populateLayoutNode() {},
+        populateLayoutEdge() {},
+    });
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-cola_layout.html">cola_layout</a></li><li><a href="module-core.html">core</a></li><li><a href="module-d3v4_force_layout.html">d3v4_force_layout</a></li><li><a href="module-dagre_layout.html">dagre_layout</a></li><li><a href="module-dc-graph.html">dc-graph</a></li><li><a href="module-depth_first_traversal.html">depth_first_traversal</a></li><li><a href="module-diagram.html">diagram</a></li><li><a href="module-dynagraph_layout.html">dynagraph_layout</a></li><li><a href="module-engine.html">engine</a></li><li><a href="module-flexbox_layout.html">flexbox_layout</a></li><li><a href="module-generate_objects.html">generate_objects</a></li><li><a href="module-graphviz_attrs.html">graphviz_attrs</a></li><li><a href="module-graphviz_layout.html">graphviz_layout</a></li><li><a href="module-layered_layout.html">layered_layout</a></li><li><a href="module-manual_layout.html">manual_layout</a></li><li><a href="module-tree_layout.html">tree_layout</a></li><li><a href="module-webworker_layout.html">webworker_layout</a></li></ul><h3>Classes</h3><ul><li><a href="brush.html">brush</a></li><li><a href="dc_graph.flexbox_layout.html">flexbox_layout</a></li><li><a href="dc_graph.tip.html">tip</a></li></ul><h3>Global</h3><ul><li><a href="global.html#constraintPattern">constraintPattern</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Nov 24 2025 01:51:28 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

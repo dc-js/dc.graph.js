@@ -1,19 +1,40 @@
-!function() {
-    var path = document.location.pathname;
-    var filename = path.substring(path.lastIndexOf('/')+1);
-    var jsFilename = filename.replace('html', 'js');
-    document.write([
-        '<div id="header" style="padding: 1em;">',
+// ES6 version of example-header.js
+import { version } from './dc-graph.js';
+
+// Create header when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', createHeader);
+} else {
+    createHeader();
+}
+
+function createHeader() {
+    const path = document.location.pathname;
+    const filename = path.substring(path.lastIndexOf('/')+1);
+    const jsFilename = filename.replace('html', 'js');
+
+    // Find the script tag that loaded this module
+    const scriptTag = document.querySelector('script[src*="example-header.js"]');
+    const parentElement = scriptTag ? scriptTag.parentElement : document.body;
+
+    // Create header element
+    const headerDiv = document.createElement('div');
+    headerDiv.id = 'header';
+    headerDiv.style.padding = '1em';
+
+    headerDiv.innerHTML = [
         '<a href="."><span style="font-size: 24px; font-weight: bold;">dc.graph</span></a>',
-        '<span style="font-size: 18px; padding-left: 5em;">', document.title, '</span>',
+        `<span style="font-size: 18px; padding-left: 5em;">${document.title}</span>`,
         '<span id="right-header" style="position: absolute; right: 2em; top: 2em; font-size: 12px;">',
-        '<a href="https://github.com/dc-js/dc.graph.js/tree/develop/web/js/' + jsFilename,
-        '">source</a>',
-        '<span id="version" style="padding-left: 2em;"></span>',
+        `<a href="https://github.com/dc-js/dc.graph.js/tree/develop/web/js/${jsFilename}">source</a>`,
+        `<span id="version" style="padding-left: 2em;">v${version}</span>`,
         '</span>',
-        '</div>'
-    ].join(''));
-    window.onload = function() {
-        d3.select('#version').text('v' + dc_graph.version);
-    };
-}();
+    ].join('');
+
+    // Insert header at the beginning of parent element
+    if (scriptTag) {
+        parentElement.insertBefore(headerDiv, scriptTag);
+    } else {
+        parentElement.insertBefore(headerDiv, parentElement.firstChild);
+    }
+}

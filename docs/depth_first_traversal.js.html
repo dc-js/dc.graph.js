@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: depth_first_traversal.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: depth_first_traversal.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// arguably depth first search is a stupid algorithm to modularize -
+// there are many, many interesting moments to insert a behavior
+// and those end up being almost bigger than the function itself
+
+// this is an argument for providing a graph API which could make it
+// easy to just write a recursive function instead of using this
+/**
+ * Depth first traversal utility
+ * @module depth_first_traversal
+ */
+
+export function depthFirstTraversal(callbacks) { // {[init, root, row, tree, place, sib, push, pop, skip,] finish, nodeid, sourceid, targetid}
+    return function(nodes, edges) {
+        callbacks.init &amp;&amp; callbacks.init();
+        if (callbacks.tree)
+            edges = edges.filter(e => callbacks.tree(e));
+        const indegree = {};
+        const outmap = edges.reduce((m, e) => {
+            const tail = callbacks.sourceid(e),
+                head = callbacks.targetid(e);
+            if (!m[tail]) m[tail] = [];
+            m[tail].push(e);
+            indegree[head] = (indegree[head] || 0)+1;
+            return m;
+        }, {});
+        const nmap = nodes.reduce((m, n) => {
+            const key = callbacks.nodeid(n);
+            m[key] = n;
+            return m;
+        }, {});
+
+        const rows = [];
+        const placed = {};
+        function place_tree(n, r) {
+            const key = callbacks.nodeid(n);
+            if (placed[key]) {
+                callbacks.skip &amp;&amp; callbacks.skip(n, indegree[key]);
+                return;
+            }
+            if (!rows[r])
+                rows[r] = [];
+            callbacks.place &amp;&amp; callbacks.place(n, r, rows[r]);
+            rows[r].push(n);
+            placed[key] = true;
+            if (outmap[key])
+                outmap[key].forEach((e, ei) => {
+                    const target = nmap[callbacks.targetid(e)];
+                    if (ei &amp;&amp; callbacks.sib)
+                        callbacks.sib(false, nmap[callbacks.targetid(outmap[key][ei-1])], target);
+                    callbacks.push &amp;&amp; callbacks.push();
+                    place_tree(target, r+1);
+                });
+            callbacks.pop &amp;&amp; callbacks.pop(n);
+        }
+
+        let roots;
+        if (callbacks.root)
+            roots = nodes.filter(n => callbacks.root(n));
+        else {
+            roots = nodes.filter(n => !indegree[callbacks.nodeid(n)]);
+            if (nodes.length &amp;&amp; !roots.length) // all nodes are in a cycle
+                roots = [nodes[0]];
+        }
+        roots.forEach((n, ni) => {
+            if (ni &amp;&amp; callbacks.sib)
+                callbacks.sib(true, roots[ni-1], n);
+            callbacks.push &amp;&amp; callbacks.push();
+            place_tree(n, callbacks.row &amp;&amp; callbacks.row(n) || 0);
+        });
+        callbacks.finish(rows);
+    };
+}
+
+// basically, see if it's any simpler if we start from scratch
+// (well, of course it's simpler because we have less callbacks)
+// same caveats as above
+export function undirectedDfs(callbacks) { // {[comp, node], nodeid, sourceid, targetid}
+    return function(nodes, edges) {
+        const adjacencies = edges.reduce((m, e) => {
+            const tail = callbacks.sourceid(e),
+                head = callbacks.targetid(e);
+            if (!m[tail]) m[tail] = [];
+            if (!m[head]) m[head] = [];
+            m[tail].push(head);
+            m[head].push(tail);
+            return m;
+        }, {});
+        const nmap = nodes.reduce((m, n) => {
+            const key = callbacks.nodeid(n);
+            m[key] = n;
+            return m;
+        }, {});
+        const found = {};
+        function recurse(n) {
+            const nid = callbacks.nodeid(n);
+            callbacks.node(compid, n);
+            found[nid] = true;
+            if (adjacencies[nid])
+                adjacencies[nid].forEach(adj => {
+                    if (!found[adj])
+                        recurse(nmap[adj]);
+                });
+        }
+        let compid = 0;
+        nodes.forEach(n => {
+            if (!found[callbacks.nodeid(n)]) {
+                callbacks.comp &amp;&amp; callbacks.comp(compid);
+                recurse(n);
+                ++compid;
+            }
+        });
+    };
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-cola_layout.html">cola_layout</a></li><li><a href="module-core.html">core</a></li><li><a href="module-d3v4_force_layout.html">d3v4_force_layout</a></li><li><a href="module-dagre_layout.html">dagre_layout</a></li><li><a href="module-dc-graph.html">dc-graph</a></li><li><a href="module-depth_first_traversal.html">depth_first_traversal</a></li><li><a href="module-diagram.html">diagram</a></li><li><a href="module-dynagraph_layout.html">dynagraph_layout</a></li><li><a href="module-engine.html">engine</a></li><li><a href="module-flexbox_layout.html">flexbox_layout</a></li><li><a href="module-generate_objects.html">generate_objects</a></li><li><a href="module-graphviz_attrs.html">graphviz_attrs</a></li><li><a href="module-graphviz_layout.html">graphviz_layout</a></li><li><a href="module-layered_layout.html">layered_layout</a></li><li><a href="module-manual_layout.html">manual_layout</a></li><li><a href="module-tree_layout.html">tree_layout</a></li><li><a href="module-webworker_layout.html">webworker_layout</a></li></ul><h3>Classes</h3><ul><li><a href="brush.html">brush</a></li><li><a href="dc_graph.flexbox_layout.html">flexbox_layout</a></li><li><a href="dc_graph.tip.html">tip</a></li></ul><h3>Global</h3><ul><li><a href="global.html#constraintPattern">constraintPattern</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Nov 24 2025 01:51:28 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

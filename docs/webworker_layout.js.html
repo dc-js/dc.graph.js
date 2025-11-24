@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: webworker_layout.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: webworker_layout.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Web worker layout wrapper
+ * @module webworker_layout
+ */
+
+import { dispatch } from 'd3-dispatch';
+import { scriptPath } from './utils.js';
+
+const _workers = {};
+const NUMBER_RESULTS = 3;
+function createWorker(workerName) {
+    if (!_workers[workerName]) {
+        const worker = _workers[workerName] = {
+            worker: new Worker(`${scriptPath()}dc.graph.${workerName}.worker.js`, {type: 'module'}),
+            layouts: {},
+        };
+        worker.worker.onmessage = function(e) {
+            const layoutId = e.data.layoutId;
+            if (!worker.layouts[layoutId])
+                throw new Error(`layoutId "${layoutId}" unknown!`);
+            const engine = worker.layouts[layoutId].getEngine();
+            const _layoutName = engine.layoutAlgorithm?.() || 'unknown';
+            if (e.data.args.length > NUMBER_RESULTS &amp;&amp; engine.processExtraWorkerResults)
+                engine.processExtraWorkerResults.apply(engine, e.data.args.slice(NUMBER_RESULTS));
+            const dispatch = worker.layouts[layoutId].dispatch();
+            dispatch.call(e.data.response, null, ...e.data.args);
+        };
+        worker.worker.onerror = function(e) {
+            console.error(`[WORKER] Worker error for layout ${workerName}:`, e);
+        };
+    }
+    return _workers[workerName];
+}
+
+export function webworkerLayout(layoutEngine, workerName) {
+    const _dispatch = dispatch('init', 'start', 'tick', 'end');
+    let _tick, _done;
+    const _worker = createWorker(workerName || layoutEngine.layoutAlgorithm());
+    const engine = {};
+    _worker.layouts[layoutEngine.layoutId()] = engine;
+
+    engine.parent = function(parent) {
+        if (layoutEngine.parent)
+            layoutEngine.parent(parent);
+    };
+    // Helper function to clone options while filtering out functions
+    function serializeOptions(obj) {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (typeof obj === 'function') {
+            console.warn(
+                '[WORKER] Filtering out function from options:',
+                `${obj.toString().slice(0, 100)}...`,
+            );
+            return null; // Remove functions
+        }
+        if (Array.isArray(obj)) return obj.map(serializeOptions);
+
+        const result = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const value = serializeOptions(obj[key]);
+                if (value !== null) { // Only include non-null values
+                    result[key] = value;
+                }
+            }
+        }
+        return result;
+    }
+
+    engine.init = async function(options) {
+        options = layoutEngine.optionNames().reduce(
+            (options, option) => {
+                const value = layoutEngine[option]();
+                // Serialize each option value as we collect it
+                options[option] = serializeOptions(value);
+                return options;
+            },
+            options,
+        );
+        if (layoutEngine.propagateOptions)
+            layoutEngine.propagateOptions(options);
+
+        return new Promise((resolve, reject) => {
+            // Set up one-time listener for init completion
+            const originalOnMessage = _worker.worker.onmessage;
+            const initTimeout = setTimeout(() => {
+                _worker.worker.onmessage = originalOnMessage;
+                reject(new Error('Worker init timeout'));
+            }, 10000); // 10 second timeout
+
+            _worker.worker.onmessage = function(e) {
+                if (e.data.response === 'init' &amp;&amp; e.data.layoutId === layoutEngine.layoutId()) {
+                    clearTimeout(initTimeout);
+                    _worker.worker.onmessage = originalOnMessage;
+                    resolve();
+                } else {
+                    // Pass other messages to original handler
+                    originalOnMessage.call(this, e);
+                }
+            };
+
+            _worker.worker.postMessage({
+                command: 'init',
+                args: {
+                    layoutId: layoutEngine.layoutId(),
+                    options: serializeOptions(options),
+                },
+            });
+        });
+    };
+    engine.data = function(graph, nodes, edges, clusters, constraints) {
+        _worker.worker.postMessage({
+            command: 'data',
+            args: {
+                layoutId: layoutEngine.layoutId(),
+                graph,
+                nodes,
+                edges,
+                clusters,
+                constraints,
+            },
+        });
+    };
+    engine.start = function() {
+        _worker.worker.postMessage({
+            command: 'start',
+            args: {
+                layoutId: layoutEngine.layoutId(),
+            },
+        });
+    };
+    engine.stop = function() {
+        _worker.worker.postMessage({
+            command: 'stop',
+            args: {
+                layoutId: layoutEngine.layoutId(),
+            },
+        });
+        return this;
+    };
+    // stopgap while layout options are still on diagram
+    engine.getEngine = function() {
+        return layoutEngine;
+    };
+    // somewhat sketchy - do we want this object to be transparent or not?
+    const passthroughs = [
+        'layoutAlgorithm',
+        'populateLayoutNode',
+        'populateLayoutEdge',
+        'rankdir',
+        'ranksep',
+    ];
+    passthroughs.concat(
+        layoutEngine.optionNames(),
+        layoutEngine.passThru ? layoutEngine.passThru() : [],
+    ).forEach(name => {
+        engine[name] = function() {
+            const ret = layoutEngine[name].apply(layoutEngine, arguments);
+            return arguments.length ? this : ret;
+        };
+    });
+    engine.on = function(event, f) {
+        if (arguments.length === 1)
+            return _dispatch.on(event);
+        _dispatch.on(event, f);
+        return this;
+    };
+    engine.dispatch = function() {
+        return _dispatch;
+    };
+    return engine;
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-cola_layout.html">cola_layout</a></li><li><a href="module-core.html">core</a></li><li><a href="module-d3v4_force_layout.html">d3v4_force_layout</a></li><li><a href="module-dagre_layout.html">dagre_layout</a></li><li><a href="module-dc-graph.html">dc-graph</a></li><li><a href="module-depth_first_traversal.html">depth_first_traversal</a></li><li><a href="module-diagram.html">diagram</a></li><li><a href="module-dynagraph_layout.html">dynagraph_layout</a></li><li><a href="module-engine.html">engine</a></li><li><a href="module-flexbox_layout.html">flexbox_layout</a></li><li><a href="module-generate_objects.html">generate_objects</a></li><li><a href="module-graphviz_attrs.html">graphviz_attrs</a></li><li><a href="module-graphviz_layout.html">graphviz_layout</a></li><li><a href="module-layered_layout.html">layered_layout</a></li><li><a href="module-manual_layout.html">manual_layout</a></li><li><a href="module-tree_layout.html">tree_layout</a></li><li><a href="module-webworker_layout.html">webworker_layout</a></li></ul><h3>Classes</h3><ul><li><a href="brush.html">brush</a></li><li><a href="dc_graph.flexbox_layout.html">flexbox_layout</a></li><li><a href="dc_graph.tip.html">tip</a></li></ul><h3>Global</h3><ul><li><a href="global.html#constraintPattern">constraintPattern</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Nov 24 2025 01:51:28 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
