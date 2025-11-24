@@ -86,7 +86,7 @@
     "x-editable": "1.5.x"
   },
   "scripts": {
-    "vendor": "cp sync-url-options.js querystring.js chart.registry.js d3.flexdivs.js dc.graph.tracker.domain.js timeline.js web/js/ && cp dc.graph.css web/css/ && cp incrface.mjs web/js/",
+    "vendor": "cp sync-url-options.js querystring.js chart.registry.js d3.flexdivs.js dc.graph.tracker.domain.js timeline.js web/js/ && cp dc.graph.css web/css/ && cp incrface.mjs web/js/ && cp assets/dynagraph.* web/js/",
     "vendor:thirdparty": "cp node_modules/jquery/dist/jquery.min.js web/js/jquery.js && cp node_modules/jquery-ui-dist/jquery-ui.min.js web/js/jquery-ui.js && cp node_modules/x-editable/dist/bootstrap3-editable/js/bootstrap-editable.min.js web/js/jqueryui-editable.js && cp node_modules/bootstrap/dist/js/bootstrap.min.js web/js/bootstrap.js && cp node_modules/colorbrewer/index.js web/js/colorbrewer.js && cp node_modules/d3-tip/index.js web/js/d3-tip.js",
     "build": "rollup -c && rollup -c worker.rollup.config.js",
     "build:workers": "rollup -c worker.rollup.config.js",
