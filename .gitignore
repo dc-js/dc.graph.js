@@ -2,6 +2,8 @@ node_modules
 .grunt
 web/docs/html
 *~
+web/docs/
+web/import-map.json
 
 # Build outputs
 dist/
@@ -12,6 +14,9 @@ web/js/dc-graph.js.map
 web/css/dc.graph.css
 d3v4-force.js
 lysenko-interval-tree.js
+
+# OS noise
+.DS_Store
 
 # Package manager lock files (keep package-lock.json, ignore yarn)
 yarn.lock

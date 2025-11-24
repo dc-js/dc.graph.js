@@ -24,8 +24,7 @@ function formatInlineImportMap(map, indent = INLINE_INDENT) {
         .map(line => `${indent}${line}`)
         .join('\n');
     // Match Prettier’s style: closing tag aligned with its opening indent (no extra spaces)
-    const closingIndent = indent.slice(0, -2) || '';
-    return `<script type="importmap">\n${jsonText}\n${closingIndent}</script>`;
+    return `<script type="importmap">\n${jsonText}\n    </script>`;
 }
 
 export function generateImportMap() {
