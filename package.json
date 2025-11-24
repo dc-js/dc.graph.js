@@ -152,5 +152,16 @@
         "puppeteer-mcp-server"
       ]
     }
+  },
+  "optionalDependencies": {
+    "@dprint/win32-x64": "0.50.1",
+    "@dprint/win32-arm64": "0.50.1",
+    "@dprint/darwin-x64": "0.50.1",
+    "@dprint/darwin-arm64": "0.50.1",
+    "@dprint/linux-x64-glibc": "0.50.1",
+    "@dprint/linux-x64-musl": "0.50.1",
+    "@dprint/linux-arm64-glibc": "0.50.1",
+    "@dprint/linux-arm64-musl": "0.50.1",
+    "@dprint/linux-riscv64-glibc": "0.50.1"
   }
 }
